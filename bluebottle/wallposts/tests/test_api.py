@@ -1,44 +1,6 @@
 from bluebottle.test.utils import BluebottleTestCase
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
-
-# from rest_framework import status
-# from rest_framework.test import APITestCase
-#
-# from bluebottle.test.factory_models.wallposts import TextWallpostFactory
-#
-# class TextWallpostTestCase(APITestCase)
-#     """
-#     Base class for test cases for ``text wall post`` module.
-#
-#     The testing classes for ``text wall post`` module related to the API must
-#     subclass this.
-#     """
-#     def setUp(self):
-#     	self.textwallpost = TextWallpostFactory.create()
-#
-#
-# class TextWallpostListTestCase(TextWallpostTestCase)
-#     """
-#     Test case for ``TextWallpostList`` API view.
-#
-#     Endpoint: /api/textwallposts/
-#     """
-#     def test_api_textwallposts_list_endpoint(self):
-#         """
-#         Ensure we return a text wall post.
-#         """
-#         response = self.client.get(reverse('textwallposts'))
-#         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-#         self.assertEqual(response.data, data)
-#
-#
-
-#
-#
-# ================================
-#
-#
 import json
 
 from django.core import mail
@@ -51,8 +13,94 @@ from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, \
     ProjectThemeFactory, ProjectPhaseFactory
+from bluebottle.test.factory_models.fundraisers import FundraiserFactory
+from bluebottle.test.factory_models.tasks import TaskFactory
 from ..models import Reaction
 from bluebottle.wallposts import mails
+
+
+class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
+    def setUp(self):
+        super(WallpostPermissionsTest, self).setUp()
+
+        self.init_projects()
+
+        self.owner = BlueBottleUserFactory.create(
+            password='testing', first_name='someName', last_name='someLast')
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+
+        self.project = ProjectFactory.create(owner=self.owner)
+        self.fundraiser = FundraiserFactory.create(owner=self.owner)
+        self.task = TaskFactory.create(author=self.owner)
+
+        self.other_user = BlueBottleUserFactory.create()
+        self.other_token = "JWT {0}".format(
+            self.other_user.get_jwt_token())
+
+        self.media_wallpost_url = reverse('media_wallpost_list')
+
+    def test_permissions_on_project_wallpost_sharing(self):
+        """
+        Tests that only the project creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': self.project.slug,
+                         'parent_type': 'project',
+                         'text': 'I can share stuff!',
+                         'email_followers': True}
+
+        # The owner can share a wallpost
+        wallpost = self.client.post(self.media_wallpost_url,
+                            wallpost_data,
+                            token=self.owner_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Project owners can share a wallpost.')
+
+        # Non-owner users can't share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                            wallpost_data,
+                            token=self.other_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_403_FORBIDDEN,
+            'Only the project owner can share a wallpost.')
+
+    def test_permissions_on_task_wallpost_sharing(self):
+        """
+        Tests that only the task creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': str(self.task.id),
+                         'parent_type': 'task',
+                         'text': 'I can share stuff!',
+                         'share_with_twitter': True}
+
+        # Non-owner users can't share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                            wallpost_data,
+                            token=self.other_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_403_FORBIDDEN,
+            'Only the task owner can share a wallpost.')
+
+    def test_permissions_on_fundraiser_wallpost_sharing(self):
+        """
+        Tests that only the fundraiser creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': str(self.fundraiser.id),
+                         'parent_type': 'task',
+                         'text': 'I can share stuff!',
+                         'share_with_facebook': True}
+
+        # Non-owner users can't share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                            wallpost_data,
+                            token=self.other_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_403_FORBIDDEN,
+            'Only the fundraiser owner can share a wallpost.')
 
 
 class WallpostReactionApiIntegrationTest(BluebottleTestCase):
@@ -254,95 +302,6 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
             response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED,
             response.data)
 
-        # def test_embedded_reactions(self):
-        """
-            Test reactions embedded in Project Wallpost Api calls
-        """
-        #
-        # Create two Reactions and retrieve the related Project Text Wallpost should have the embedded
-        # self.client.login(email=self.some_user.email, password='testing')
-        # reaction1_text = "Hear! Hear!"
-        # response = self.client.post(self.wallpost_reaction_url,
-        #                             {'text': reaction1_text, 'wallpost': self.some_wallpost.id})
-        #
-        # reaction1_detail_url = reverse(self.wallpost_reaction_url, kwargs={'pk':response.data['id']})
-        # reaction2_text = "This is cool!"
-        # self.client.post(self.wallpost_reaction_url, {'text': reaction2_text, 'wallpost': self.some_wallpost.id})
-        # some_wallpost_detail_url = "{0}{1}".format(self.wallpost_url, str(self.some_wallpost.id))
-        # response = self.client.get(some_wallpost_detail_url)
-        # self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        # self.assertEqual(len(response.data['reactions']), 2)
-        # self.assertTrue(reaction1_text in response.data['reactions'][0]['text'])
-        # self.assertTrue(reaction2_text in response.data['reactions'][1]['text'])
-
-
-#
-# Create a Reaction to another Wallpost and retrieve that Wallpost should return one embedded reaction
-#         reaction3_text = "That other post was way better..."
-#         self.client.post(self.wallpost_reaction_url, {'text': reaction3_text, 'wallpost': self.another_wallpost.id})
-#         another_wallpost_detail_url = "{0}{1}".format(self.wallpost_url, str(self.another_wallpost.id))
-#         response = self.client.get(another_wallpost_detail_url)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-#         self.assertEqual(len(response.data['reactions']), 1)
-#         self.assertTrue(reaction3_text in response.data['reactions'][0]['text'])
-#
-# The first Wallpost should still have just two reactions
-#         response = self.client.get(some_wallpost_detail_url)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-#         self.assertEqual(len(response.data['reactions']), 2)
-#
-# Delete the first reaction
-#         response = self.client.delete(reaction1_detail_url)
-#         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
-#
-# The first Wallpost should have only one reaction now
-#         response = self.client.get(some_wallpost_detail_url)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-#         self.assertEqual(len(response.data['reactions']), 1)
-#
-#
-# class WallpostApiRegressionTests(UserTestsMixin, TestCase): #ProjectWallpostTestsMixin,
-#     """
-#     Integration tests for the Project Media Wallpost API.
-#     """
-#
-#     def setUp(self):
-#         self.user = self.create_user()
-#         self.wallpost = self.create_project_text_wallpost(author=self.user)
-#
-#         self.media_wallposts_url = '/api/wallposts/mediawallposts/'
-#         self.text_wallposts_url = '/api/wallposts/textwallposts/'
-#         self.wallposts_url = '/api/wallposts/'
-#         self.wallpost_reaction_url = '/api/wallposts/reactions/'
-#
-#     def test_html_javascript_propperly_escaped(self):
-#         """
-#         https://onepercentclub.atlassian.net/browse/BB-130
-#         """
-#
-# Create a Reaction and check that the HTML is escaped.
-#         self.client.login(email=self.user.email, password='password')
-#         reaction_text = "<marquee>WOOOOOO</marquee>"
-# The paragraph tags are added by the linebreak filter.
-#         escaped_reaction_text = "<p>WOOOOOO</p>"
-#         response = self.client.post(self.wallpost_reaction_url, {'text': reaction_text, 'wallpost': self.wallpost.id})
-#         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
-#         self.assertEqual(escaped_reaction_text, response.data['text'])
-#
-#     def test_link_properly_created(self):
-#         """
-#         https://onepercentclub.atlassian.net/browse/BB-136
-#         """
-#
-# Create a Reaction and check that the HTML link is properly created.
-#         self.client.login(email=self.user.email, password='password')
-#         reaction_text = "www.1procentclub.nl"
-# The paragraph tags and the anchor are added by the filters we're using.
-#         escaped_reaction_text = '<p><a target="_blank" href="http://www.1procentclub.nl" rel="nofollow">www.1procentclub.nl</a></p>'
-#         response = self.client.post(self.wallpost_reaction_url, {'text': reaction_text, 'wallpost': self.wallpost.id})
-#         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
-#         self.assertEqual(escaped_reaction_text, response.data['text'])
-
 
 # ProjectWallpostTestsMixin,
 class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
@@ -375,39 +334,6 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
             owner=self.user_a, status=self.phase_1, theme=self.theme_1)
 
         self.task_1 = TaskFactory(author=self.user_a, project=self.project_1)
-
-    # def test_translated_mail_subject(self):
-    #     self.user_a.primary_language = 'en'
-    #     self.user_a.save()
-
-    #     send_mail(
-    #         template_name='project_wallpost_reaction_new.mail',
-    #         subject=_('Username'),
-    #         obj=self.project_1,
-    #         to=self.user_a,
-    #         author=self.user_b
-    #     )
-
-    #     self.assertEqual(len(mail.outbox), 1)
-    #     mail_message = mail.outbox[0]
-
-    #     self.assertEquals(mail_message.subject, 'Username')
-
-    #     self.user_a.primary_language = 'nl'
-    #     self.user_a.save()
-
-    #     send_mail(
-    #         template_name='project_wallpost_reaction_new.mail',
-    #         subject=_('Username'),
-    #         obj=self.project_1,
-    #         to=self.user_a,
-    #         author=self.user_b
-    #     )
-
-    #     self.assertEqual(len(mail.outbox), 2)
-    #     mail_message = mail.outbox[1]
-
-    #     self.assertEquals(mail_message.subject, 'Gebruikersnaam')
 
     def test_new_wallpost_by_a_on_project_by_a(self):
         """

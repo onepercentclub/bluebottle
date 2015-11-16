@@ -91,15 +91,14 @@ class TextWallpostList(ListCreateAPIView):
     def pre_save(self, obj):
         can_save = False
 
-        # If the wallpost is to be shared then check the request user
+        # If followers will be emailed then check the request user
         # has permissions, eg they are the owner / author of the
         # parent object (project, task, fundraiser).
-        if obj.share_with_twitter or obj.share_with_facebook or \
-           obj.share_with_linkedin or obj.email_followers:
-
+        if obj.email_followers:
             parent_obj = obj.content_object
 
-            if isinstance(parent_obj, PROJECT_MODEL) or isinstance(parent_obj, FUNDRAISER_MODEL):
+            if isinstance(parent_obj, PROJECT_MODEL) or \
+               isinstance(parent_obj, FUNDRAISER_MODEL):
                 can_save = parent_obj.owner == self.request.user
             elif isinstance(parent_obj, TASK_MODEL):
                 can_save = parent_obj.author == self.request.user
@@ -110,7 +109,10 @@ class TextWallpostList(ListCreateAPIView):
             raise exceptions.PermissionDenied()
 
         # Set the author / editor and ip address for the request
-        set_author_editor_ip(self.request, obj)
+        if not obj.author:
+            obj.author = self.request.user
+        else:
+            obj.editor = self.request.user
 
 
 class MediaWallpostList(TextWallpostList):

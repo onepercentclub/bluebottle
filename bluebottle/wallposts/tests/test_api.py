@@ -46,7 +46,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         wallpost_data = {'parent_id': self.project.slug,
                          'parent_type': 'project',
                          'text': 'I can share stuff!',
-                         'email_followers': True}
+                         'share_with_twitter': True}
 
         # The owner can share a wallpost
         wallpost = self.client.post(self.media_wallpost_url,
@@ -73,7 +73,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         wallpost_data = {'parent_id': str(self.task.id),
                          'parent_type': 'task',
                          'text': 'I can share stuff!',
-                         'share_with_twitter': True}
+                         'share_with_linkedin': True}
 
         # Non-owner users can't share a post
         wallpost = self.client.post(self.media_wallpost_url,

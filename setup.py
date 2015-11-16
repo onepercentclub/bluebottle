@@ -16,7 +16,7 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
     'git+https://github.com/onepercentclub/django-fluent-contents.git@8439c7ffc1ba8877247aa7d012928c9bb170dc79#egg=fluent_contents-1.0c3',
     'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.1.18#egg=django-bb-salesforce-1.1.18',
-    'git+https://github.com/onepercentclub/django-tenant-extras.git@1.9.0#egg=django-tenant-extras-1.9.0',
+    'git+https://github.com/onepercentclub/django-tenant-extras.git@1.9.3#egg=django-tenant-extras-1.9.0',
     'git+https://github.com/onepercentclub/django-token-auth.git@0.2.5#egg=django-token-auth-0.2.5'
 ]
 

@@ -86,8 +86,8 @@ install_requires = [
     'django-taggit-autocomplete-modified==0.1.1b1',
     'django-fluent-contents==1.0c3',
     'django-bb-salesforce==1.1.18',
-    'django-token-auth==0.2.6'
-    'django-tenant-extras==1.9.3',
+    'django-token-auth==0.2.6',
+    'django-tenant-extras==1.9.3'
 ]
 
 tests_requires = [

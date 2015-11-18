@@ -490,3 +490,7 @@ AUTHENTICATION_BACKENDS = (
     'social.backends.facebook.FacebookAppOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
+
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
+    'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4
+}

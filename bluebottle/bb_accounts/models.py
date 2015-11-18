@@ -103,7 +103,7 @@ def get_language_choices():
 
 def get_default_language():
     """ Lazyly get the default language."""
-    return properties.DEFAULT_LANGUAGE
+    return properties.LANGUAGE_CODE
 
 
 class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):

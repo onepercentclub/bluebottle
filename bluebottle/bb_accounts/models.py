@@ -174,7 +174,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     primary_language = models.CharField(
         _('primary language'), max_length=5,
         help_text=_('Language used for website and emails.'),
-        choices=lazy(get_language_choices, tuple)(), default=lazy(get_default_language, str)())
+        choices=lazy(get_language_choices, tuple)(),
+        default=lazy(get_default_language, str)())
     share_time_knowledge = models.BooleanField(_('share time and knowledge'),
                                                default=False)
     share_money = models.BooleanField(_('share money'), default=False)

@@ -50,12 +50,9 @@ def set_language(strategy, user, response, details,
         language = response['locale'][:2]
         if language in supported_langauges:
             user.primary_language = language
-        else:
-            user.primary_language = properties.LANGUAGE_CODE
-
-        user.save()
+            user.save()
     except KeyError:
-        user.primary_language = properties.LANGUAGE_CODE
+        pass
 
 
 def get_extra_facebook_data(strategy, user, response, details,

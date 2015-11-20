@@ -1,18 +1,19 @@
 from babel.dates import format_date
 from babel.numbers import format_currency
+
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.clients import properties
-from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
+
+from tenant_extras.utils import TenantLanguage
 
 
 def mail_monthly_donation_processed_notification(monthly_order):
-
     cur_language = translation.get_language()
     receiver = monthly_order.user
-    subject = _("Thank you for your monthly support")
+    with TenantLanguage(receiver.primary_language):
+        subject = _("Thank you for your monthly support")
 
     translation.activate(cur_language)
 
@@ -29,8 +30,8 @@ def mail_monthly_donation_processed_notification(monthly_order):
 
 
 def mail_project_funded_monthly_donor_notification(receiver, project):
-
-    subject = _("Congratulations: project completed!")
+    with TenantLanguage(receiver.primary_language):
+        subject = _("Congratulations: project completed!")
 
     send_mail(
         template_name='recurring_donations/mails/project_full_monthly_donor.mail',

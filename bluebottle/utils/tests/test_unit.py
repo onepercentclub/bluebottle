@@ -24,7 +24,6 @@ from bluebottle.utils.utils import clean_for_hashtag
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from ..email_backend import send_mail, create_message
 
-
 BB_USER_MODEL = get_user_model()
 
 
@@ -37,7 +36,6 @@ def generate_random_email():
 
 
 class CustomSettingsTestCase(TestCase):
-
     """
     A TestCase which makes extra models available in the Django project, just
     for testing.
@@ -66,7 +64,6 @@ class CustomSettingsTestCase(TestCase):
 
 
 class HashTagTestCase(unittest.TestCase):
-
     def test_clean_text_for_hashtag(self):
         """
         Test that non-alphanumeric characters are excluded and proper joining
@@ -83,7 +80,6 @@ class HashTagTestCase(unittest.TestCase):
 
 
 class MetaTestCase(BluebottleTestCase):
-
     def setUp(self):
         """
         The complex work is using the fluent_contents stuff.
@@ -133,7 +129,7 @@ class MetaTestCase(BluebottleTestCase):
 
         # Imgur
         self.imgur = OEmbedItem.objects.create(
-            embed_url='http://imgur.com/gallery/CXLgSVc',
+            embed_url='http://i.imgur.com/ZtRTS9h.jpg',
             parent=self.object,
             placeholder=self.ph,
             sort_order=4
@@ -212,7 +208,6 @@ class MetaTestCase(BluebottleTestCase):
 
 
 class UserTestsMixin(object):
-
     """ Mixin base class for tests requiring users. """
 
     def create_user(self, email=None, password=None, **extra_fields):
@@ -241,7 +236,6 @@ from django.core.exceptions import SuspiciousFileOperation
 
 
 class TenantAwareStorageTest(unittest.TestCase):
-
     def test_location_with_tenant(self):
         """
         Test that the proper location path is generated when a tenant is
@@ -289,7 +283,6 @@ class TenantAwareStorageTest(unittest.TestCase):
         """
         with mock.patch("django.utils._os.safe_join") as safe_join, \
                 mock.patch("django.db.connection") as connection:
-
             from ..storage import TenantFileSystemStorage
 
             # Make sure that the 2nd safe_join is called in the storage code
@@ -305,7 +298,6 @@ class TenantAwareStorageTest(unittest.TestCase):
 
 
 class SendMailTestCase(BluebottleTestCase):
-
     def setUp(self):
         self.user = BlueBottleUserFactory.create(email="testuser@example.com")
 
@@ -366,16 +358,18 @@ class SendMailTestCase(BluebottleTestCase):
 from bluebottle.utils.email_backend import TenantAwareBackend
 from bluebottle.clients.mail import EmailMultiAlternatives
 
+
 class TestTenantAwareMailServer(unittest.TestCase):
     @override_settings(
-       EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
-       EMAIL_HOST='somehost',
-       EMAIL_PORT=1337)
+        EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
+        EMAIL_HOST='somehost',
+        EMAIL_PORT=1337)
     @mock.patch("smtplib.SMTP")
     def test_settings_config(self, smtp):
         """ Test simple / traditional case where config comes from settings """
         be = TenantAwareBackend()
-        msg = EmailMultiAlternatives(subject="test", body="test", to=["test@example.com"])
+        msg = EmailMultiAlternatives(subject="test", body="test",
+                                     to=["test@example.com"])
 
         # open the connection explicitly so we can get the
         # connection reference. It will be cleared once closed
@@ -390,18 +384,20 @@ class TestTenantAwareMailServer(unittest.TestCase):
         self.assertTrue(connection.sendmail.called)
 
     @override_settings(
-       EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
-       EMAIL_HOST='somehost',
-       EMAIL_PORT=1337)
+        EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
+        EMAIL_HOST='somehost',
+        EMAIL_PORT=1337)
     @mock.patch("smtplib.SMTP")
     def test_tenant_config(self, smtp):
         """ test setup where tenant config differs from global settings """
 
-        with mock.patch("bluebottle.utils.email_backend.properties", new=mock.Mock([])) as properties:
-            properties.MAIL_CONFIG = {'HOST':'tenanthost', 'PORT':4242}
+        with mock.patch("bluebottle.utils.email_backend.properties",
+                        new=mock.Mock([])) as properties:
+            properties.MAIL_CONFIG = {'HOST': 'tenanthost', 'PORT': 4242}
 
             be = TenantAwareBackend()
-            msg = EmailMultiAlternatives(subject="test", body="test", to=["test@example.com"])
+            msg = EmailMultiAlternatives(subject="test", body="test",
+                                         to=["test@example.com"])
 
             # open the connection explicitly so we can get the
             # connection reference. It will be cleared once closed

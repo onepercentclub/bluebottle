@@ -13,11 +13,11 @@ readme = read_file('README.rst')
 changes = ''
 
 dependency_links = [
-    'https://github.com/onepercentclub/django-taggit-autocomplete-modified/archive/8e41e333ce1f0690e1041515b1f2cbf12e0452ce.zip#egg=django-taggit-autocomplete-modified-0.1.1',
-    'https://github.com/onepercentclub/django-fluent-contents/archive/8439c7ffc1ba8877247aa7d012928c9bb170dc79.zip#egg=fluent_contents-1.0c3',
-    'https://github.com/onepercentclub/django-bb-salesforce/archive/1.1.15.zip#egg=django-bb-salesforce-1.1.15',
-    'https://github.com/onepercentclub/django-tenant-extras/archive/1.9.0.zip#egg=django-tenant-extras-1.9.0',
-    'https://github.com/onepercentclub/django-token-auth/archive/0.1.3.zip#egg=django-token-auth-0.1.3'
+    'git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
+    'git+https://github.com/onepercentclub/django-fluent-contents.git@8439c7ffc1ba8877247aa7d012928c9bb170dc79#egg=fluent_contents-1.0c3',
+    'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.1.18#egg=django-bb-salesforce-1.1.18',
+    'git+https://github.com/onepercentclub/django-tenant-extras.git@1.9.3#egg=django-tenant-extras-1.9.3',
+    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.6#egg=django-token-auth-0.2.6'
 ]
 
 install_requires = [
@@ -35,7 +35,7 @@ install_requires = [
     'django-compressor==1.3',
     'ember-compressor-compiler==0.3.1',
     'django-extensions==1.1.1',
-    'django-exportdb==0.4.4',
+    'django-exportdb==0.4.5',
     'django-filter==0.6',
     'django-geoposition==0.2.2',
     'django-iban==0.2.1',
@@ -51,6 +51,7 @@ install_requires = [
     'djangorestframework==2.3.14',
     'dkimpy==0.5.4',
     'html5lib==0.95',
+    'httmock==1.2.3',
     'micawber==0.2.6',
     'requests==2.3.0',
     'sorl-thumbnail==11.12',
@@ -64,9 +65,9 @@ install_requires = [
     'suds-jurko==0.6',
     'django-ipware==0.0.8',
     'pygeoip==0.3.1',
-    'python-social-auth==0.1.26',
+    'python-social-auth==0.2.12',
     'python-memcached==1.53',
-    'lxml==3.1.2',
+    'lxml==3.4.4',
     'unicodecsv==0.9.4',
     'python-dateutil==1.5',
     'gunicorn==19.2.1',
@@ -79,13 +80,14 @@ install_requires = [
     'djangorestframework-jwt==1.1.1',
     'django-filetransfers==0.1.0',
     'django-admin-tools==0.5.2',
+    'django-rest-swagger==0.3.4',
 
     # Github requirements
-    'django-taggit-autocomplete-modified==0.1.1',
+    'django-taggit-autocomplete-modified==0.1.1b1',
     'django-fluent-contents==1.0c3',
-    'django-bb-salesforce==1.1.15',
-    'django-tenant-extras==1.9.0',
-    'django-token-auth==0.1.3'
+    'django-bb-salesforce==1.1.18',
+    'django-token-auth==0.2.6',
+    'django-tenant-extras==1.9.3'
 ]
 
 tests_requires = [

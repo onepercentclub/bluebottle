@@ -1,10 +1,8 @@
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
 from rest_framework import serializers
-from bluebottle.bluebottle_drf2.serializers import EuroField
 
 
 class StatisticSerializer(serializers.Serializer):
-
+    id = serializers.IntegerField(source='id')
     donated = serializers.DecimalField(source='donated')
     projects_online = serializers.IntegerField(source='projects_online')
     projects_realized = serializers.IntegerField(source='projects_realized')
@@ -12,4 +10,5 @@ class StatisticSerializer(serializers.Serializer):
     people_involved = serializers.IntegerField(source='people_involved')
 
     class Meta:
-        fields = ('donated', 'projects_online', 'projects_realized', 'tasks_realized', 'people_involved')
+        fields = ('id', 'donated', 'projects_online', 'projects_realized',
+                  'tasks_realized', 'people_involved')

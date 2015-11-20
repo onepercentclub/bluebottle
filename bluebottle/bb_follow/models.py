@@ -5,6 +5,9 @@ from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
 from django.utils import translation
+
+from tenant_extras.utils import TenantLanguage
+
 from bluebottle.utils.model_dispatcher import get_user_model
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
@@ -13,13 +16,12 @@ from bluebottle.bb_fundraisers.models import BaseFundraiser
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients import properties
-
+from bluebottle.votes.models import Vote
 
 USER_MODEL = get_user_model()
 
 
 class Follow(models.Model):
-
     """
     Generic Follow class. A Follow object is a generic reference between a
     user and another Django model.
@@ -64,15 +66,13 @@ def create_follow(sender, instance, created, **kwargs):
             - user creates a task for a project (user will follow project),
             - user creates a fundraiser for a project (user will follow
               project)
+            - user votes on a project
 
             Users do not follow their own project or task.
 
     """
     if not created:
         return
-
-    from bluebottle.wallposts.models import Wallpost, Reaction, SystemWallpost
-    # Imported inside the signal to prevent circular imports
 
     # A user does a donation
     if isinstance(instance, BaseDonation):
@@ -159,17 +159,39 @@ def create_follow(sender, instance, created, **kwargs):
                     follow = Follow(user=user, followed_object=followed_object)
                     follow.save()
 
+    elif isinstance(instance, Vote):
+        user = instance.voter
+        project = instance.project
+
+        if user and project:
+            content_type = ContentType.objects.get_for_model(project)
+
+            try:
+                follow = Follow.objects.get(user=user,
+                                            object_id=project.id,
+                                            content_type=content_type)
+            except Follow.DoesNotExist:
+                if user != project.owner:
+                    follow = Follow(user=user, followed_object=project)
+                    follow.save()
+
 
 @receiver(post_save)
 def email_followers(sender, instance, created, **kwargs):
     """
-        When a Wallpost is created, project owners, task owners and fundraiser owners can check a box wether to email their followers. This
-        signal handler looksup the appropriate followers depending on the type of page (project, task, fundraiser). It then sends out an email
-        to those followers if they have campaign notifications enabled.
+    When a Wallpost is created, project owners, task owners and fundraiser
+    owners can check a box wether to email their followers. This signal
+    handler looksup the appropriate followers depending on the type of page
+    (project, task, fundraiser). It then sends out an email
+    to those followers if they have campaign notifications enabled.
     """
     from bluebottle.wallposts.models import Wallpost, SystemWallpost
 
-    if isinstance(instance, Wallpost) and not isinstance(instance, SystemWallpost):
+    if not created:
+        return
+
+    if isinstance(instance, Wallpost) and not isinstance(instance,
+                                                         SystemWallpost):
         if instance.email_followers:
             content_type = ContentType.objects.get_for_model(
                 instance.content_object)  # content_type references project
@@ -186,7 +208,8 @@ def email_followers(sender, instance, created, **kwargs):
                 # the wall)
                 followers = Follow.objects.filter(
                     content_type=content_type,
-                    object_id=instance.content_object.id).distinct().exclude(user=instance.author)
+                    object_id=instance.content_object.id).distinct().exclude(
+                    user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
                 follow_object = _('project')
                 link = '/go/projects/{0}'.format(instance.content_object.slug)
@@ -195,7 +218,9 @@ def email_followers(sender, instance, created, **kwargs):
                 # Send update to all task members and to people who posted to
                 # the wall --> Follower
                 followers = Follow.objects.filter(
-                    content_type=content_type, object_id=instance.content_object.id).distinct().exclude(user=instance.author)
+                    content_type=content_type,
+                    object_id=instance.content_object.id).distinct().exclude(
+                    user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
                 follow_object = _('task')
                 link = '/go/tasks/{0}'.format(instance.content_object.id)
@@ -204,7 +229,9 @@ def email_followers(sender, instance, created, **kwargs):
                 # Send update to all people who donated or posted to the wall
                 # --> Followers
                 followers = Follow.objects.filter(
-                    content_type=content_type, object_id=instance.content_object.id).distinct().exclude(user=instance.author)
+                    content_type=content_type,
+                    object_id=instance.content_object.id).distinct().exclude(
+                    user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
                 follow_object = _('fundraiser')
                 link = '/go/fundraisers/{0}'.format(instance.content_object.id)
@@ -225,8 +252,9 @@ def email_followers(sender, instance, created, **kwargs):
                     else:
                         translation.activate(properties.LANGUAGE_CODE)
 
-                    subject = _("New wallpost on %(name)s") % {
-                        'name': instance.content_object.title}
+                    with TenantLanguage(mailee.primary_language):
+                        subject = _("New wallpost on %(name)s") % {
+                            'name': instance.content_object.title}
 
                     translation.activate(cur_language)
 

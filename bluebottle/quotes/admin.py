@@ -9,10 +9,10 @@ class QuoteAdmin(admin.ModelAdmin):
     list_display = ('quote', 'status_column', 'modification_date', 'language')
     list_filter = ('status', 'language')
     date_hierarchy = 'publication_date'
-    search_fields = ('quote', )
+    search_fields = ('quote',)
     model = Quote
 
-    raw_id_fields = ('user', )
+    raw_id_fields = ('user',)
 
     fieldsets = (
         (None, {
@@ -35,10 +35,12 @@ class QuoteAdmin(admin.ModelAdmin):
 
     def status_column(self, quote):
         status = quote.status
-        title = [rec[1] for rec in quote.QuoteStatus.choices if rec[0] == status].pop()
-        icon  = self.STATUS_ICONS[status]
+        title = [rec[1] for rec in quote.QuoteStatus.choices if
+                 rec[0] == status].pop()
+        icon = self.STATUS_ICONS[status]
         admin = settings.STATIC_URL + 'admin/img/'
-        return u'<img src="{admin}{icon}" width="10" height="10" alt="{title}" title="{title}" />'.format(admin=admin, icon=icon, title=title)
+        return u'<img src="{admin}{icon}" width="10" height="10" alt="{title}" title="{title}" />'.format(
+            admin=admin, icon=icon, title=title)
 
     def save_model(self, request, obj, form, change):
         # Automatically store the user in the author field.
@@ -53,5 +55,6 @@ class QuoteAdmin(admin.ModelAdmin):
 
     status_column.allow_tags = True
     status_column.short_description = _('Status')
+
 
 admin.site.register(Quote, QuoteAdmin)

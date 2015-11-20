@@ -1,32 +1,37 @@
-from bluebottle.utils.model_dispatcher import get_donation_model, get_order_model
 from django.conf import settings
 from django.db import models
+from django.db.models import options
 from django.db.models.aggregates import Sum
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
-from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
-from django.db.models import options
+
+from django_extensions.db.fields import (ModificationDateTimeField,
+                                         CreationDateTimeField)
 from django_fsm.db.fields import FSMField, transition
 
+from bluebottle.utils.model_dispatcher import get_donation_model
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer', 'preview_serializer', 'manage_serializer')
+options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
+                                                 'preview_serializer',
+                                                 'manage_serializer')
 
 
 class BaseOrder(models.Model, FSMTransition):
     """
-    An Order is a collection of Donations with one or more OrderPayments referring to it.
+    An Order is a collection of Donations with one or more OrderPayments
+    referring to it.
     """
     # Mapping the Order Payment Status to the Order Status
     STATUS_MAPPING = {
-        StatusDefinition.CREATED:      StatusDefinition.LOCKED,
-        StatusDefinition.STARTED:      StatusDefinition.LOCKED,
-        StatusDefinition.AUTHORIZED:   StatusDefinition.PENDING,
-        StatusDefinition.SETTLED:      StatusDefinition.SUCCESS,
+        StatusDefinition.CREATED: StatusDefinition.LOCKED,
+        StatusDefinition.STARTED: StatusDefinition.LOCKED,
+        StatusDefinition.AUTHORIZED: StatusDefinition.PENDING,
+        StatusDefinition.SETTLED: StatusDefinition.SUCCESS,
         StatusDefinition.CHARGED_BACK: StatusDefinition.FAILED,
-        StatusDefinition.REFUNDED:     StatusDefinition.FAILED,
-        StatusDefinition.FAILED:       StatusDefinition.FAILED,
-        StatusDefinition.UNKNOWN:      StatusDefinition.FAILED
+        StatusDefinition.REFUNDED: StatusDefinition.FAILED,
+        StatusDefinition.FAILED: StatusDefinition.FAILED,
+        StatusDefinition.UNKNOWN: StatusDefinition.FAILED
     }
 
     STATUS_CHOICES = (
@@ -37,34 +42,48 @@ class BaseOrder(models.Model, FSMTransition):
         (StatusDefinition.FAILED, _('Failed')),
     )
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True, null=True)
-    status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES, protected=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"),
+                             blank=True, null=True)
+    status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES,
+                      protected=True)
 
     order_type = models.CharField(max_length='100', default='one-off')
 
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
-    confirmed = models.DateTimeField(_("Confirmed"), blank=True, editable=False, null=True)
-    completed = models.DateTimeField(_("Completed"), blank=True, editable=False, null=True)
+    confirmed = models.DateTimeField(_("Confirmed"), blank=True, editable=False,
+                                     null=True)
+    completed = models.DateTimeField(_("Completed"), blank=True, editable=False,
+                                     null=True)
 
-    total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2, default=0)
+    total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
+                                default=0)
 
-    @transition(field=status, save=True, source=StatusDefinition.CREATED, target=StatusDefinition.LOCKED)
+    @transition(field=status, save=True, source=StatusDefinition.CREATED,
+                target=StatusDefinition.LOCKED)
     def locked(self):
         # TODO: add locked state behaviour here
         pass
 
-    @transition(field=status, save=True, source=[StatusDefinition.LOCKED, StatusDefinition.FAILED], target=StatusDefinition.PENDING)
+    @transition(field=status, save=True,
+                source=[StatusDefinition.LOCKED, StatusDefinition.FAILED],
+                target=StatusDefinition.PENDING)
     def pending(self):
         self.confirmed = now()
 
-    @transition(field=status, save=True, source=[StatusDefinition.PENDING, StatusDefinition.LOCKED, StatusDefinition.FAILED], target=StatusDefinition.SUCCESS)
+    @transition(field=status, save=True,
+                source=[StatusDefinition.PENDING, StatusDefinition.LOCKED,
+                        StatusDefinition.FAILED],
+                target=StatusDefinition.SUCCESS)
     def succeeded(self):
         if not self.confirmed:
             self.confirmed = now()
         self.completed = now()
 
-    @transition(field=status, save=True, source=[StatusDefinition.LOCKED, StatusDefinition.PENDING, StatusDefinition.SUCCESS], target=StatusDefinition.FAILED)
+    @transition(field=status, save=True,
+                source=[StatusDefinition.LOCKED, StatusDefinition.PENDING,
+                        StatusDefinition.SUCCESS],
+                target=StatusDefinition.FAILED)
     def failed(self):
         self.completed = None
         self.confirmed = None
@@ -77,7 +96,8 @@ class BaseOrder(models.Model, FSMTransition):
             self.save()
 
     def get_status_mapping(self, order_payment_status):
-        return self.STATUS_MAPPING.get(order_payment_status, StatusDefinition.FAILED)
+        return self.STATUS_MAPPING.get(order_payment_status,
+                                       StatusDefinition.FAILED)
 
     def set_status(self, status, save=True):
         self.status = status
@@ -94,8 +114,9 @@ class BaseOrder(models.Model, FSMTransition):
 
     class Meta:
         abstract = True
-        default_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
-        preview_serializer = 'bluebottle.bb_orders.serializers.OrderSerializer'
-        manage_serializer = 'bluebottle.bb_orders.serializers.ManageOrderSerializer'
+        default_serializer = 'bluebottle.orders.serializers.OrderSerializer'
+        preview_serializer = 'bluebottle.orders.serializers.OrderSerializer'
+        manage_serializer = 'bluebottle.orders.serializers.ManageOrderSerializer'
+
 
 import signals

@@ -10,22 +10,28 @@ from bluebottle.bb_projects.models import ProjectTheme
 
 PROJECT_MODEL = get_project_model()
 
+
 class Suggestion(models.Model):
     class Statuses(DjangoChoices):
         unconfirmed = ChoiceItem('unconfirmed', label=_('Unconfirmed email'))
         draft = ChoiceItem('draft', label=_('Draft'))
         accepted = ChoiceItem('accepted', label=_('Accepted'))
         rejected = ChoiceItem('rejected', label=_('Rejected'))
-        # To prevent the translationsin booking for overwriting this translation we use pgettext
-        in_progress = ChoiceItem('in_progress', label=pgettext('suggestion label', 'In progress'))
+        # To prevent the translationsin booking for overwriting this
+        # translation we use pgettext
+        in_progress = ChoiceItem('in_progress',
+                                 label=pgettext('suggestion label',
+                                                'In progress'))
         submitted = ChoiceItem('submitted', label=_('Submitted'))
 
-    created = CreationDateTimeField(_('created'), help_text=_('When this project was created.'))
-    updated = ModificationDateTimeField(_('updated'), help_text=_('When this project was updated.'))
+    created = CreationDateTimeField(_('created'), help_text=_(
+        'When this project was created.'))
+    updated = ModificationDateTimeField(_('updated'), help_text=_(
+        'When this project was updated.'))
 
-    title = models.TextField() ## description
-    pitch = models.TextField() ## requirements
-    deadline = models.DateField() ## date
+    title = models.TextField()  # description
+    pitch = models.TextField()  # requirements
+    deadline = models.DateField()  # date
     theme = models.ForeignKey(ProjectTheme)
     destination = models.CharField(max_length=100)
 
@@ -35,7 +41,8 @@ class Suggestion(models.Model):
     org_phone = models.CharField(max_length=64)
     org_website = models.URLField()
 
-    status = models.CharField(_("status"), choices=Statuses.choices, max_length=64,
+    status = models.CharField(_("status"), choices=Statuses.choices,
+                              max_length=64,
                               default="unconfirmed")
     token = models.CharField(max_length=100)
 
@@ -56,4 +63,5 @@ class Suggestion(models.Model):
         return self.deadline - date.today() < timedelta(0)
 
     def __unicode__(self):
-        return u'Suggestion "{0}" from {1}'.format(self.title, self.org_contactname)
+        return u'Suggestion "{0}" from {1}'.format(self.title,
+                                                   self.org_contactname)

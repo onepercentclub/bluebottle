@@ -5,20 +5,21 @@ from django.core import mail
 from django.db import IntegrityError
 from django.test.utils import override_settings
 
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.utils.model_dispatcher import get_taskmember_model
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.projects import ProjectPhaseFactory, ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectPhaseFactory, \
+    ProjectFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 
 TASKS_MEMBER_MODEL = get_taskmember_model()
 
 
 class BlueBottleUserManagerTestCase(BluebottleTestCase):
-
     """
     Test case for the model manager of the abstract user model.
     """
@@ -39,14 +40,14 @@ class BlueBottleUserManagerTestCase(BluebottleTestCase):
         Tests exception raising when trying to create a new user without
         providing an email.
         """
-        with self.assertRaisesMessage(IntegrityError, 'null value in column "email" violates not-null constraint'):
+        with self.assertRaisesMessage(IntegrityError,
+                                      'null value in column "email" violates not-null constraint'):
             user = BlueBottleUserFactory.build()
             user.email = None
             user.save()
 
 
 class BlueBottleUserTestCase(BluebottleTestCase):
-
     """
     Test case for the implementation of the abstract user model.
     """
@@ -87,26 +88,12 @@ class BlueBottleUserTestCase(BluebottleTestCase):
     def test_generate_username_from_email(self):
         """
         Tests the ``generate_username`` method when no username was provided.
-        It should create the username from the name of the user email.
+        It should set the email as username.
         """
-        user = BlueBottleUserFactory.create(
-            username='', first_name='', last_name='')
+        user = BlueBottleUserFactory.create(email='piet@puk.nl', username='',
+                                            first_name='', last_name='')
         user.generate_username()
-
-        email_name, domain_part = user.email.strip().rsplit('@', 1)
-
-        self.assertEqual(user.username, email_name)
-
-    def test_generate_username_from_names(self):
-        """
-        Tests the ``generate_username`` method when no username was provided
-        but ``first_name`` and ``last_name`` are defined.
-        """
-        user = BlueBottleUserFactory.create(
-            username='', first_name=u'John', last_name=u'Doe')
-        user.generate_username()
-
-        self.assertEqual(user.username, 'johndoe')
+        self.assertEqual(user.username, user.email)
 
     def test_get_full_name(self):
         """
@@ -182,7 +169,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
     def test_calculate_task_count(self):
         """
         Test that the task_count property on a user is calculated correctly.
-        We count a) tasks where a user is a task author and 
+        We count a) tasks where a user is a task author and
         b) TaskMembers where a user is applied, accepted or realized
         """
         self.assertEqual(self.user.task_count, 0)
@@ -224,13 +211,16 @@ class BlueBottleUserTestCase(BluebottleTestCase):
     def test_calculate_project_count(self):
         """ Test the counter for the number of projects a user has started """
         self.assertEqual(self.user.project_count, 0)
+        ProjectFactory.create(owner=self.user)
 
-        project = ProjectFactory.create(owner=self.user)
+        self.assertEqual(self.user.project_count, 0)
 
+        status = ProjectPhase.objects.get(slug='done-complete')
+
+        ProjectFactory.create(owner=self.user, status=status)
         self.assertEqual(self.user.project_count, 1)
 
-        project2 = ProjectFactory.create(owner=self.user)
-
+        ProjectFactory.create(owner=self.user, status=status)
         self.assertEqual(self.user.project_count, 2)
 
     def test_calculate_fundraiser_count(self):
@@ -249,10 +239,14 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         """ Test that a base user model has all the expected fields """
         from bluebottle.members.models import Member
 
-        user_fields = set(['email', 'username', 'is_staff', 'is_active', 'date_joined', 'updated', 'deleted',
-                           'user_type', 'first_name', 'last_name', 'location', 'picture', 'about_me',
-                           'primary_language', 'share_time_knowledge', 'share_money', 'newsletter', 'phone_number',
-                           'gender', 'birthdate', 'disable_token', 'campaign_notifications'])
+        user_fields = set(
+            ['email', 'username', 'is_staff', 'is_active', 'date_joined',
+             'updated', 'deleted',
+             'user_type', 'first_name', 'last_name', 'location', 'picture',
+             'about_me',
+             'primary_language', 'share_time_knowledge', 'share_money',
+             'newsletter', 'phone_number',
+             'gender', 'birthdate', 'disable_token', 'campaign_notifications'])
 
         self.assertEquals(
             set(f.name for f in Member._meta.fields) & user_fields, user_fields)

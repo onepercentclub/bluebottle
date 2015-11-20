@@ -1,7 +1,8 @@
 from django.db import models
 from django.conf import settings
 from django.utils.timezone import now
-from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
+from django_extensions.db.fields import CreationDateTimeField, \
+    ModificationDateTimeField
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -21,7 +22,7 @@ class Terms(models.Model):
 
     class Meta:
         verbose_name_plural = 'Terms'
-        ordering = ('-date', )
+        ordering = ('-date',)
 
     @classmethod
     def get_current(cls):
@@ -32,7 +33,6 @@ class Terms(models.Model):
 
 
 class TermsAgreement(models.Model):
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     terms = models.ForeignKey(Terms)
     created = CreationDateTimeField(_('Date'))

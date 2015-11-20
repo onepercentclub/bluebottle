@@ -23,9 +23,15 @@ started:
     $ virtualenv env
     $ source env/bin/activate
 
+#. Create a secrets.py base on secrets.py.example
+
 #. Install the project::
 
-    $ python setup.py develop
+    $ python setup.py setup
+    $ python manage.py sync_schemas --shared --settings=bluebottle.settings.testing
+    $ python manage.py migrate_schemas --shared --settings=bluebottle.settings.testing
+    $ ... createtenant
+    $ ...
 
 #.  You're ready to roll now, baby!
 

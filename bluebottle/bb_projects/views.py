@@ -1,22 +1,37 @@
-from bluebottle.utils.serializers import DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin
 from django.db.models.query_utils import Q
-from django.db.models import Count, Sum
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-
-from bluebottle.utils.model_dispatcher import get_project_model, get_project_phaselog_model, get_project_document_model
-from bluebottle.utils.utils import get_client_ip
-from .models import ProjectTheme, ProjectPhase
-from .serializers import (ProjectThemeSerializer, ProjectPhaseSerializer, ProjectPhaseLogSerializer,
-                          ProjectDocumentSerializer)
-from .permissions import IsProjectOwner, IsEditableOrReadOnly
-
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
+
+from bluebottle.projects.serializers import (
+    ProjectThemeSerializer, ProjectPhaseSerializer,
+    ProjectPhaseLogSerializer, ProjectDocumentSerializer,
+    ProjectTinyPreviewSerializer)
+from bluebottle.utils.model_dispatcher import (
+    get_project_model, get_project_phaselog_model, get_project_document_model)
+from bluebottle.utils.serializers import (
+    DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin)
+from bluebottle.utils.utils import get_client_ip
+
+from .models import ProjectTheme, ProjectPhase
+from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
 PROJECT_MODEL = get_project_model()
 PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
 PROJECT_DOCUMENT_MODEL = get_project_document_model()
+
+
+class ProjectTinyPreviewList(generics.ListAPIView):
+    model = PROJECT_MODEL
+    paginate_by = 8
+    paginate_by_param = 'page_size'
+    serializer_class = ProjectTinyPreviewSerializer
+
+    def get_queryset(self):
+        query = self.request.QUERY_PARAMS
+        qs = PROJECT_MODEL.objects.search(query=query)
+        return qs.filter(status__viewable=True)
 
 
 class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
@@ -47,7 +62,7 @@ class ProjectPhaseList(generics.ListAPIView):
     def get_query(self):
         qs = ProjectPhase.objects
 
-        name = self.request.QUERY_PARAMS.get('name',None)
+        name = self.request.QUERY_PARAMS.get('name', None)
         text = self.request.QUERY_PARAMS.get('text')
 
         qs = qs.order_by('sequence')
@@ -124,7 +139,8 @@ class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
         obj.owner = self.request.user
 
 
-class ManageProjectDetail(ManageSerializerMixin, generics.RetrieveUpdateAPIView):
+class ManageProjectDetail(ManageSerializerMixin,
+                          generics.RetrieveUpdateAPIView):
     model = PROJECT_MODEL
     permission_classes = (IsProjectOwner, IsEditableOrReadOnly)
 
@@ -147,7 +163,8 @@ class ProjectThemeList(generics.ListAPIView):
 class ProjectUsedThemeList(ProjectThemeList):
     def get_queryset(self):
         qs = super(ProjectUsedThemeList, self).get_queryset()
-        theme_ids = PROJECT_MODEL.objects.filter(status__viewable=True).values_list('theme', flat=True).distinct()
+        theme_ids = PROJECT_MODEL.objects.filter(
+            status__viewable=True).values_list('theme', flat=True).distinct()
         return qs.filter(id__in=theme_ids)
 
 

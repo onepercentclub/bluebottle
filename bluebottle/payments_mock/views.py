@@ -1,10 +1,9 @@
+from django.core.urlresolvers import reverse
 from django.http import Http404, HttpResponseRedirect, HttpResponse
-from django.views.generic import TemplateView
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.views.generic import View
-from django.core.urlresolvers import reverse
-from django.contrib.sites.models import get_current_site
+from django.views.generic import TemplateView, View
+
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.services import PaymentService
 
@@ -21,8 +20,10 @@ class PaymentMock(TemplateView):
 
         order_payment_id = kwargs.get('order_payment_id', None)
 
-        result = {'return_url': reverse('payment-service-provider-handler'), 'order_payment_id': order_payment_id}
-        return render_to_response(self.template_name, result, context_instance=RequestContext(request))
+        result = {'return_url': reverse('payment-service-provider-handler'),
+                  'order_payment_id': order_payment_id}
+        return render_to_response(self.template_name, result,
+                                  context_instance=RequestContext(request))
 
 
 class PaymentResponseMockHandler(TemplateView):
@@ -44,7 +45,7 @@ class PaymentResponseMockHandler(TemplateView):
         order_payment.authorized()
 
         if order_payment and status in self.payment_responses:
-            url = "/en/#!/orders/{0}/{1}".format(order_payment.order.id, status)
+            url = "/en/orders/{0}/{1}".format(order_payment.order.id, status)
 
         else:
             raise Http404
@@ -78,11 +79,7 @@ class PaymentStatusListener(View):
 
         service = PaymentService(order_payment)
 
-        #We pass the MockPayment status and get back the status name of our OrderStatus definition
+        # We pass the MockPayment status and get back the status name of our OrderStatus definition
         service.adapter.set_order_payment_new_status(status)
 
         return HttpResponse('success')
-
-
-
-

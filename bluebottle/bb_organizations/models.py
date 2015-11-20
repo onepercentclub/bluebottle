@@ -1,4 +1,3 @@
-from django_iban.fields import IBANField, SWIFTBICField
 from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
@@ -10,13 +9,11 @@ from django.db.models import options
 from djchoices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
 
-
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
                                                  'manage_serializer')
 
 
 class BaseOrganizationMember(models.Model):
-
     """ Members from a Organization """
 
     class MemberFunctions(DjangoChoices):
@@ -40,7 +37,6 @@ class BaseOrganizationMember(models.Model):
 
 
 class BaseOrganization(models.Model):
-
     """
     Organizations can run Projects. An organization has one or more members.
     """
@@ -77,8 +73,8 @@ class BaseOrganization(models.Model):
         ordering = ['name']
         verbose_name = _('organization')
         verbose_name_plural = _('organizations')
-        default_serializer = 'bluebottle.bb_organizations.serializers.OrganizationSerializer'
-        manage_serializer = 'bluebottle.bb_organizations.serializers.ManageOrganizationSerializer'
+        default_serializer = 'bluebottle.organizations.serializers.OrganizationSerializer'
+        manage_serializer = 'bluebottle.organizations.serializers.ManageOrganizationSerializer'
 
     def __unicode__(self):
         return self.name

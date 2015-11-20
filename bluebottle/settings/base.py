@@ -1,6 +1,7 @@
 # Django settings for BlueBottle project.
 
-import os, datetime
+import os
+import datetime
 
 PROJECT_ROOT = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
@@ -113,8 +114,9 @@ MIDDLEWARE_CLASSES = (
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
+    'tenant_extras.middleware.LocaleRedirectMiddleware',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
+    'tenant_extras.middleware.TenantLocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
@@ -140,9 +142,16 @@ JWT_AUTH = {
 
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
+SWAGGER_SETTINGS = {
+  'api_version': '1.1',
+  'resource_url_prefix': 'api/',
+  'resource_access_handler': 'bluebottle.auth.handlers.resource_access_handler',
+  'is_authenticated': True
+}
 
 SHARED_APPS = (
-    'bluebottle.clients', # you must list the app where your tenant model resides in
+    'bluebottle.clients',
+    # you must list the app where your tenant model resides in
 
     # Django apps
     'south',
@@ -172,7 +181,7 @@ TENANT_APPS = (
     'south',
     'polymorphic',
 
-    #'social_auth',
+    # 'social_auth',
     'social.apps.django_app.default',
 
     # Custom dashboard
@@ -191,7 +200,7 @@ TENANT_APPS = (
     # FB Auth
     'bluebottle.auth',
 
-    #Widget
+    # Widget
     'bluebottle.widget',
 
     'rest_framework.authtoken',
@@ -225,6 +234,7 @@ TENANT_APPS = (
     'bluebottle.payments_logger',
     'bluebottle.payments_voucher',
     'bluebottle.redirects',
+    'bluebottle.votes',
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
@@ -254,7 +264,7 @@ TENANT_APPS = (
     'django_tools',
 )
 
-INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('tenant_schemas',)
+INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('rest_framework_swagger', 'tenant_schemas',)
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"
@@ -279,7 +289,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
-
 
 THUMBNAIL_DEBUG = True
 THUMBNAIL_QUALITY = 85
@@ -394,8 +403,10 @@ DONATIONS_ENABLED = True
 
 
 # For building frontend code
-BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 'slides', 'quotes',
-           'payments', 'payments-docdata', 'payments-voucher', 'payments-mock', 'members', 'organizations',
+BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 'slides',
+           'quotes',
+           'payments', 'payments-docdata', 'payments-voucher', 'payments-mock',
+           'members', 'organizations',
            'projects', 'tasks', 'fundraisers', 'donations', 'orders',
            'homepage', 'recurring-donations', 'partners']
 
@@ -437,10 +448,9 @@ PROJECT_PAYOUT_FEES = {
     'not_fully_funded': .05
 }
 
-
-EXPOSED_TENANT_PROPERTIES = ['mixpanel', 'analytics', 'maps_api_key', 'git_commit', \
-                             'debug', 'compress_templates', 'facebook_auth_id', 'installed_apps', \
-                             'bb_apps', ]
+EXPOSED_TENANT_PROPERTIES = ['mixpanel', 'analytics', 'maps_api_key',
+                             'git_commit', 'debug', 'compress_templates',
+                             'facebook_auth_id', 'installed_apps', 'bb_apps']
 
 MIXPANEL = ''
 MAPS_API_KEY = ''
@@ -450,10 +460,33 @@ DEBUG = True
 COMPRESS_TEMPLATES = False
 FACEBOOK_AUTH_ID = ''
 
-
 CELERY_MAIL = False
 SEND_MAIL = True
 
-IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', )
+IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif',)
 
 CLOSED_SITE = False
+
+SOCIAL_AUTH_PIPELINE = (
+    'bluebottle.auth.utils.user_from_request',
+    'social.pipeline.social_auth.social_details',
+    'social.pipeline.social_auth.social_uid',
+    'social.pipeline.social_auth.auth_allowed',
+    'social.pipeline.social_auth.social_user',
+    'social.pipeline.user.get_username',
+    'social.pipeline.social_auth.associate_by_email',
+    'social.pipeline.user.create_user',
+    'social.pipeline.social_auth.associate_user',
+    'social.pipeline.social_auth.load_extra_data',
+    'social.pipeline.user.user_details',
+    'bluebottle.auth.utils.set_language',
+    'bluebottle.auth.utils.save_profile_picture',
+    'bluebottle.auth.utils.get_extra_facebook_data',
+    'bluebottle.auth.utils.send_welcome_mail_pipe'
+)
+
+AUTHENTICATION_BACKENDS = (
+    'bluebottle.social.backends.NoStateFacebookOAuth2',
+    'social.backends.facebook.FacebookAppOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+)

@@ -1,29 +1,8 @@
-from django.utils import translation
 from bluebottle.clients.utils import tenant_url
-from bluebottle.clients import properties
 
 
-class Observer:
+class WallpostObserver(object):
     def __init__(self, instance):
-        self.cur_language = translation.get_language()
-
-    def activate_language(self, user):
-        self.cur_language = translation.get_language()
-
-        language = properties.LANGUAGE_CODE
-        if user.primary_language:
-            language = user.primary_language
-
-        translation.activate(language)
-
-    def deactivate_language(self):
-        translation.activate(self.cur_language)
-
-
-class WallpostObserver(Observer):
-
-    def __init__(self, instance):
-
         # the object wall the post is left (project, task...)
         self.post = instance.content_object
 
@@ -36,8 +15,7 @@ class WallpostObserver(Observer):
         pass
 
 
-class ReactionObserver(Observer):
-
+class ReactionObserver(object):
     def __init__(self, instance):
         self.reaction = instance
         self.post = instance.wallpost
@@ -50,7 +28,6 @@ class ReactionObserver(Observer):
 
 
 class ObserversContainer:
-
     wallpost_observer_list = []
     reaction_observer_list = []
 

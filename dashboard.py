@@ -69,9 +69,6 @@ class Metrics():
 
         # the explicit project_isnull check is a bit redundant - a submitted
         # suggestion always (?) has a project.
-
-        suggestion_metrics['adopted'] = Suggestion.objects.filter(project__isnull=False,
-                                                                  status="submitted").count()
         suggestion_metrics['expired'] = Suggestion.objects.filter(deadline__lt=self.today).count()
 
         for status in ('unconfirmed',
@@ -189,17 +186,19 @@ class MetricsModule(DashboardModule):
             {'title': '---'},
 
             {'title': 'Projects', 'value': Project.objects.count(), 'url': project_url},
-            {'title': 'Projects - new', 'value': Project.objects.filter(status_id=1).count(),
+            {'title': 'Projects - new', 'value': Project.objects.filter(status__slug='plan-new').count(),
              'url': project_url + '?status__exact=1'},
-            {'title': 'Projects - submitted', 'value': Project.objects.filter(status_id=2).count(),
+            {'title': 'Projects - submitted', 'value': Project.objects.filter(status__slug='plan-submitted').count(),
              'url': project_url + '?status__exact=2'},
-            {'title': 'Projects - needs work', 'value': Project.objects.filter(status_id=3).count(),
+            {'title': 'Projects - needs work', 'value': Project.objects.filter(status__slug='plan-needs-work').count(),
              'url': project_url + '?status__exact=3'},
-            {'title': 'Projects - running', 'value': Project.objects.filter(status_id=4).count(),
+            {'title': 'Projects - running', 'value': Project.objects.filter(status__slug='campaign').count(),
              'url': project_url + '?status__exact=4'},
-            {'title': 'Projects - realised', 'value': Project.objects.filter(status_id=5).count(),
+            {'title': 'Projects - realised', 'value': Project.objects.filter(status__slug='done-complete').count(),
              'url': project_url + '?status__exact=5'},
-            {'title': 'Projects - cancelled', 'value': Project.objects.filter(status_id=6).count(),
+            {'title': 'Projects - expired', 'value': Project.objects.filter(status__slug='done-incomplete').count(),
+             'url': project_url + '?status__exact=5'},
+            {'title': 'Projects - cancelled', 'value': Project.objects.filter(status__slug='closed').count(),
              'url': project_url + '?status__exact=6'},
             {'title': 'Intiators', 'value': initiators,
              'url': project_url},
@@ -255,9 +254,6 @@ class MetricsModule(DashboardModule):
             {'title': 'Suggestions - accepted',
              'value': suggestion_metrics.get('accepted', 0),
              'url': suggestion_url + "?status__exact=accepted"},
-            {'title': 'Suggestions - adopted',
-             'value': suggestion_metrics.get('adopted', 0),
-             'url': suggestion_url + "?status__exact=submitted"},
             {'title': 'Suggestions - submitted',
              'value': suggestion_metrics.get('submitted', 0),
              'url': suggestion_url + "?status__exact=submitted"},

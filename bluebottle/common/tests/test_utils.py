@@ -7,7 +7,6 @@ from bluebottle.payments.services import get_payment_methods
 
 
 class TestUtilsTestCase(BluebottleTestCase):
-
     def test_no_ip(self):
         self.assertEqual(get_country_by_ip(), None)
 
@@ -32,7 +31,6 @@ class TestUtilsTestCase(BluebottleTestCase):
 
 
 class TestCeleryMail(BluebottleTestCase):
-
     def test_no_unicode_encode_error(self):
         """ Test handling a unicode character in subject or body """
         s = u'\u2019'
@@ -51,3 +49,7 @@ class TestCeleryMail(BluebottleTestCase):
                                      body=s,
                                      to=['test@testing.com'])
         _send_celery_mail(msg)
+
+
+class TestFacebookWallpost(BluebottleTestCase):
+    pass

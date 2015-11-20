@@ -22,8 +22,8 @@ class TenantProperties(local):
         try:
             for settings_file in ['properties', 'secrets']:
                 props_mod = safe_join(settings.MULTI_TENANT_DIR,
-                                             tenant.client_name,
-                                             "{0}.py".format(settings_file))
+                                      tenant.client_name,
+                                      "{0}.py".format(settings_file))
                 # try to load tenant specific properties. We're using execfile since tenant
                 # directories are not python packages (e.g. no __init__.py)
                 execfile(props_mod, dict(settings=settings),

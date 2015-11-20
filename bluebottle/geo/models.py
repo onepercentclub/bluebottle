@@ -2,8 +2,8 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from geoposition.fields import GeopositionField
 
-from .validators import Alpha2CodeValidator, Alpha3CodeValidator, NumericCodeValidator
-
+from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
+    NumericCodeValidator
 
 
 class GeoBaseModel(models.Model):
@@ -17,15 +17,17 @@ class GeoBaseModel(models.Model):
     name = models.CharField(_("name"), max_length=100)
     # https://en.wikipedia.org/wiki/ISO_3166-1_numeric
     # http://unstats.un.org/unsd/methods/m49/m49alpha.htm
-    numeric_code = models.CharField(_("numeric code"), max_length=3, blank=True, null=True, unique=True, validators=[NumericCodeValidator],
-        help_text=_("ISO 3166-1 or M.49 numeric code")
-    )
+    numeric_code = models.CharField(_("numeric code"), max_length=3, blank=True,
+                                    null=True, unique=True,
+                                    validators=[NumericCodeValidator],
+                                    help_text=_(
+                                        "ISO 3166-1 or M.49 numeric code")
+                                    )
 
     def __unicode__(self):
         return self.name
 
     def save(self, *args, **kwargs):
-
         if self.numeric_code == '':
             self.numeric_code = None
 
@@ -66,15 +68,17 @@ class Country(GeoBaseModel):
 
     subregion = models.ForeignKey(SubRegion, verbose_name=_("sub region"))
     # https://en.wikipedia.org/wiki/ISO_3166-1
-    alpha2_code = models.CharField(_("alpha2 code"), max_length=2, blank=True, validators=[Alpha2CodeValidator], help_text=_("ISO 3166-1 alpha-2 code"))
-    alpha3_code = models.CharField(_("alpha3 code"), max_length=3, blank=True, validators=[Alpha3CodeValidator], help_text=_("ISO 3166-1 alpha-3 code"))
+    alpha2_code = models.CharField(_("alpha2 code"), max_length=2, blank=True,
+                                   validators=[Alpha2CodeValidator],
+                                   help_text=_("ISO 3166-1 alpha-2 code"))
+    alpha3_code = models.CharField(_("alpha3 code"), max_length=3, blank=True,
+                                   validators=[Alpha3CodeValidator],
+                                   help_text=_("ISO 3166-1 alpha-3 code"))
     # http://www.oecd.org/dac/aidstatistics/daclistofodarecipients.htm
-    oda_recipient = models.BooleanField(_("ODA recipient"), default=False,
-        help_text=_(
+    oda_recipient = models.BooleanField(
+        _("ODA recipient"), default=False, help_text=_(
             "Whether a country is a recipient of Official Development"
-            "Assistance from the OECD's Development Assistance Committee."
-        )
-    )
+            "Assistance from the OECD's Development Assistance Committee."))
 
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']
@@ -83,7 +87,6 @@ class Country(GeoBaseModel):
 
 
 class Location(models.Model):
-
     name = models.CharField(_('name'), max_length=255)
     position = GeopositionField(null=True)
 

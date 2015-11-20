@@ -5,6 +5,7 @@ class PaymentLogHandler(logging.Handler):
     """
     Log handler for storing payment events as PaymentLogEntry entries in the db
     """
+
     def __init__(self):
         logging.Handler.__init__(self)
 
@@ -18,7 +19,8 @@ class PaymentLogHandler(logging.Handler):
         payment = record.args.get('payment')
         message = "{0} - {1}".format(payment, record.msg)
 
-        log_entry = PaymentLogEntry(payment=payment, level=record.levelname, message=message)
+        log_entry = PaymentLogEntry(payment=payment, level=record.levelname,
+                                    message=message)
         log_entry.save()
 
         return log_entry.pk

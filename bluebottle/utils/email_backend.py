@@ -3,8 +3,10 @@ import re
 import dkim
 
 from django.core.mail.backends.smtp import EmailBackend
+from django.db import connection
 from django.utils import translation
 from django.template.loader import get_template
+
 from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients.context import ClientContext
@@ -13,9 +15,6 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 
 from tenant_extras.utils import TenantLanguage
-from django.utils.encoding import force_unicode
-
-from django.db import connection
 
 logger = logging.getLogger('console')
 
@@ -41,7 +40,6 @@ class TenantAwareBackend(EmailBackend):
 
         return super(TenantAwareBackend, self).open()
 
-
     def _send(self, email_message):
         """A helper method that does the actual sending + DKIM signing."""
         if not email_message.recipients():
@@ -66,10 +64,11 @@ class TenantAwareBackend(EmailBackend):
             return False
         return True
 
+
 DKIMBackend = TenantAwareBackend
 
-class TestMailBackend(EmailBackend):
 
+class TestMailBackend(EmailBackend):
     def _send(self, email_message):
         """ Force recipient to the current user."""
         request = ThreadLocal.get_current_request()
@@ -84,7 +83,7 @@ class TestMailBackend(EmailBackend):
 
         try:
             email_message.subject += ' || To: ' + \
-                str(email_message.recipients()[0])
+                                     str(email_message.recipients()[0])
             message_string = email_message.message().as_string()
 
             self.connection.sendmail(
@@ -96,8 +95,8 @@ class TestMailBackend(EmailBackend):
         return True
 
 
-def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None, from_email=None, **kwargs):
-
+def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
+                   from_email=None, **kwargs):
     if hasattr(to, 'primary_language') and to.primary_language:
         language = to.primary_language
     else:

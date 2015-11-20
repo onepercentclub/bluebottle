@@ -13,33 +13,64 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.importlib import import_module
 
 from rest_framework import status, views, response, generics
+from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUser
 from bluebottle.clients.utils import tenant_url, tenant_name
 from bluebottle.clients import properties
+from bluebottle.members.serializers import (
+    UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
+    PasswordResetSerializer, PasswordSetSerializer)
 
-# this belongs now to onepercent should be here in bluebottle
-from .serializers import (UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
-                          PasswordResetSerializer, PasswordSetSerializer, BB_USER_MODEL)
-
-from tenant_extras.drf_permissions import TenantConditionalOpenClose
+USER_MODEL = get_user_model()
 
 
 class UserProfileDetail(generics.RetrieveAPIView):
-    model = BB_USER_MODEL
-    permission_classes = (TenantConditionalOpenClose, )
+    """
+    Fetch User Details
+
+    """
+    model = USER_MODEL
+    permission_classes = (TenantConditionalOpenClose,)
     serializer_class = UserProfileSerializer
 
 
 class ManageProfileDetail(generics.RetrieveUpdateAPIView):
-    model = BB_USER_MODEL
-    permission_classes = (TenantConditionalOpenClose, IsCurrentUser, )
+    """
+    Manage User Details
+    ---
+    PUT:
+        serializer: ManageProfileSerializer
+        omit_serializer: false
+        parameters_strategy: merge
+        parameters:
+            - name: location
+              type: geo.Location
+              paramType: form
+            - name: avatar
+              type: file
+        responseMessages:
+            - code: 401
+              message: Not authenticated
+        consumes:
+            - application/json
+            - multipart/form-data
+        produces:
+            - application/json
+    """
+    documentable = True
+    model = USER_MODEL
+    permission_classes = (TenantConditionalOpenClose, IsCurrentUser)
     serializer_class = ManageProfileSerializer
 
 
 class CurrentUser(generics.RetrieveAPIView):
-    model = BB_USER_MODEL
+    """
+    Fetch Current User
+
+    """
+    model = USER_MODEL
 
     def get_serializer_class(self):
         dotted_path = self.model._meta.current_user_serializer
@@ -56,22 +87,18 @@ class CurrentUser(generics.RetrieveAPIView):
 
 
 class UserCreate(generics.CreateAPIView):
-    model = BB_USER_MODEL
+    """
+    Create User
+
+    """
+    model = USER_MODEL
     serializer_class = UserCreateSerializer
 
     def get_name(self):
         return "Users"
 
     def pre_save(self, obj):
-        supported_langauges = [
-            lang_code for (lang_code, lang_name) in getattr(properties,
-                                                            'LANGUAGES')]
-
-        # Check if request includes supported language for tenant otherwise
-        # the user is created with the default language.
-        if self.request.LANGUAGE_CODE[:2] in supported_langauges:
-            obj.primary_language = self.request.LANGUAGE_CODE[:2]
-        else:
+        if not obj.primary_language:
             obj.primary_language = properties.LANGUAGE_CODE
 
     # Overriding the default create so that we can return extra info in the
@@ -94,12 +121,12 @@ class UserCreate(generics.CreateAPIView):
         # reponse should include these details
         errors = serializer.errors
         try:
-            if request.DATA.has_key('email'):
-                user = BB_USER_MODEL.objects.get(email=request.DATA['email'])
+            if 'email' in request.DATA:
+                user = USER_MODEL.objects.get(email=request.DATA['email'])
 
                 # Return whether the conflict was with a user created via
                 # email or social auth
-                errors['conflict'] = {
+                conflict = {
                     'email': user.email,
                     'id': user.id
                 }
@@ -108,12 +135,17 @@ class UserCreate(generics.CreateAPIView):
                 # it
                 if user.social_auth.count() > 0:
                     social_auth = user.social_auth.all()[0]
-                    errors['conflict']['provider'] = social_auth.provider
-                    errors['conflict']['type'] = 'social'
+                    conflict['provider'] = social_auth.provider
+                    conflict['type'] = 'social'
                 else:
-                    errors['conflict']['type'] = 'email'
+                    conflict['type'] = 'email'
 
-        except BB_USER_MODEL.DoesNotExist:
+                if errors.get('non_field_errors', None):
+                  errors['non_field_errors'].append(conflict)
+                else:
+                  errors['non_field_errors'] = [conflict]
+
+        except USER_MODEL.DoesNotExist:
             pass
 
         # TODO: should we be returing something like a 409_CONFLICT if there is
@@ -144,9 +176,8 @@ class PasswordResetForm(forms.Form):
         """
         Validates that an active user exists with the given email address.
         """
-        user_model = get_user_model()
         email = self.cleaned_data["email"]
-        self.users_cache = user_model._default_manager.filter(
+        self.users_cache = USER_MODEL._default_manager.filter(
             email__iexact=email)
         if not len(self.users_cache):
             raise forms.ValidationError(self.error_messages['unknown'])
@@ -160,7 +191,6 @@ class PasswordResetForm(forms.Form):
 
 
 class PasswordReset(views.APIView):
-
     """
     Allows a password reset to be initiated for valid users in the system. An
     email will be sent to the user with a
@@ -182,10 +212,9 @@ class PasswordReset(views.APIView):
         """
         # TODO: Create a patch to Django to use user.email_user instead of
         # send_email.
-        user_model = get_user_model()
         email = password_reset_form.cleaned_data["email"]
 
-        active_users = user_model._default_manager.filter(
+        active_users = USER_MODEL._default_manager.filter(
             email__iexact=email, is_active=True)
         for user in active_users:
             if not domain_override:
@@ -247,7 +276,6 @@ class PasswordReset(views.APIView):
 
 
 class PasswordSet(views.APIView):
-
     """
     Allows a new password to be set in the resource that is a valid password
     reset hash.
@@ -255,10 +283,9 @@ class PasswordSet(views.APIView):
     serializer_class = PasswordSetSerializer
 
     def _get_user(self, uidb36):
-        user_model = get_user_model()
         try:
             uid_int = base36_to_int(uidb36)
-            user = user_model._default_manager.get(pk=uid_int)
+            user = USER_MODEL._default_manager.get(pk=uid_int)
         except (ValueError, OverflowError, user.DoesNotExist):
             user = None
 
@@ -304,7 +331,7 @@ class DisableAccount(views.APIView):
         user_id = self.kwargs.get("user_id")
         token = self.kwargs.get("token")
 
-        user = BB_USER_MODEL.objects.get(id=int(user_id))
+        user = USER_MODEL.objects.get(id=int(user_id))
 
         if user.get_disable_token() != token:
             return response.Response(status=status.HTTP_400_BAD_REQUEST)

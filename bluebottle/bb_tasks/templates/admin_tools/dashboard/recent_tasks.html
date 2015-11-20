@@ -6,7 +6,7 @@
         {% spaceless %}
             {% for task in module.children %}
                 <li class="{% cycle 'odd' 'even' %}">
-                    <a href="{{ admin_url }}tasks/task/{{ task.id }}">{{ task.title }}</a>
+                    <a href="{% url 'admin:tasks_task_change' task.id %}">{{ task.title }}</a>
                     <ul>
                         <li>
                             <b>{{ task.status }}</b>
@@ -21,7 +21,7 @@
     </ul>
     <div class="dashboard-module-content">
         <p>
-            <a href="{{ admin_url }}tasks/task/">{% trans "View all tasks" %}</a>
+        <a href="{% url 'admin:tasks_task_changelist' %}">{% trans "View all tasks" %}</a>
         </p>
     </div>
 

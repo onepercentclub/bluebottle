@@ -170,7 +170,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     actions = (export_as_csv_action(fields=export_fields), )
 
     def get_actions(self, request):
-        "Order the action in reverse (delete at the bottom)."
+        """Order the action in reverse (delete at the bottom)."""
         actions = super(ProjectAdmin, self).get_actions(request)
         return OrderedDict(reversed(actions.items()))
 

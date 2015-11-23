@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Sum
+from django.utils.functional import lazy
 
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -94,6 +95,17 @@ class BlueBottleUserManager(BaseUserManager):
         return u
 
 
+
+def get_language_choices():
+    """ Lazyly get the language choices."""
+    return properties.LANGUAGES
+
+
+def get_default_language():
+    """ Lazyly get the default language."""
+    return properties.LANGUAGE_CODE
+
+
 class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     """
     Custom user model for BlueBottle.
@@ -103,7 +115,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     The Django Meta attribute seems the best place for this configuration, so we
     have to add this.
     """
-
     class Gender(DjangoChoices):
         male = ChoiceItem('male', label=_('Male'))
         female = ChoiceItem('female', label=_('Female'))
@@ -117,7 +128,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     email = models.EmailField(_('email address'), max_length=254, unique=True,
                               db_index=True)
-    username = models.SlugField(_('username'), unique=True)
+    username = models.CharField(_('username'), unique=True, max_length=254)
     is_staff = models.BooleanField(
         _('staff status'), default=False, help_text=_(
             'Designates whether the user can log into this admin site.'))
@@ -157,10 +168,14 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     about_me = models.TextField(_('about me'), max_length=265, blank=True)
 
     # Private Settings
+
+    # Use lazy for the choices and default, so that tenant properties
+    # will be correctly loaded
     primary_language = models.CharField(
         _('primary language'), max_length=5,
         help_text=_('Language used for website and emails.'),
-        choices=properties.LANGUAGES, default=properties.LANGUAGE_CODE)
+        choices=lazy(get_language_choices, tuple)(),
+        default=lazy(get_default_language, str)())
     share_time_knowledge = models.BooleanField(_('share time and knowledge'),
                                                default=False)
     share_money = models.BooleanField(_('share money'), default=False)

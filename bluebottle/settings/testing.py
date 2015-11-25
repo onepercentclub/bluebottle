@@ -2,12 +2,12 @@ from .base import *
 from .secrets import *
 from bluebottle.payments_docdata.settings import *
 
-# Supress naive date warnings
 import warnings
 
+# Raise exception on naive datetime...
 warnings.filterwarnings(
-    'ignore',
-    r"DateTimeField received a naive datetime .* while time zone support is active",
+    'error',
+    r"DateTimeField .* received a naive datetime",
     RuntimeWarning, r'django\.db\.models\.fields')
 
 DOCDATA_MERCHANT_NAME = 'merchant_name'

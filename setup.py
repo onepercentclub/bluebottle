@@ -48,7 +48,7 @@ install_requires = [
     'django-wysiwyg==0.5.1',
     'django-dynamic-fixture==1.8.0',
     'django-fluent-dashboard==0.3.2',
-    'djangorestframework==2.3.14',
+    'djangorestframework==2.4.8',
     'dkimpy==0.5.4',
     'html5lib==0.95',
     'httmock==1.2.3',

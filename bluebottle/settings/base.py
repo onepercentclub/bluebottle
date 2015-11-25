@@ -114,13 +114,12 @@ MIDDLEWARE_CLASSES = (
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
-    'tenant_extras.middleware.LocaleRedirectMiddleware',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
-    'tenant_extras.middleware.TenantLocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
-    'bluebottle.bb_accounts.middleware.LocaleMiddleware',
+    'tenant_extras.middleware.LocaleRedirectMiddleware',
+    'tenant_extras.middleware.TenantLocaleMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
@@ -132,7 +131,9 @@ REST_FRAMEWORK = {
     # Don't do basic authentication.
     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     )
 }
 
@@ -141,6 +142,8 @@ JWT_AUTH = {
 }
 
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
+
+LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata')
 
 SWAGGER_SETTINGS = {
   'api_version': '1.1',

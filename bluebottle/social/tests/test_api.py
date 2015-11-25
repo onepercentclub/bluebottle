@@ -4,6 +4,7 @@ import mock
 import httmock
 
 from django.core.urlresolvers import reverse
+from rest_framework import status
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -21,7 +22,7 @@ def facebook_me_permissions_mock(url, request):
         return json.dumps({"data": [{"permission": "publish_actions", "status": "granted"}]})
     else:
         content = json.dumps({'error': 'invalid token'})
-        return {'content': content, 'status_code': 401}
+        return {'content': content, 'status_code': status.HTTP_401_UNAUTHORIZED}
 
 
 def load_signed_request_mock(self, signed_request):
@@ -67,7 +68,7 @@ class SocialTokenAPITestCase(BluebottleTestCase):
                     token=self.user_token
                 )
 
-                self.assertEqual(response.status_code, 201)
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
                 self.assertEqual(json.loads(response.content), {})
 
     @mock.patch(
@@ -91,7 +92,7 @@ class SocialTokenAPITestCase(BluebottleTestCase):
                             'access_token': 'test-token'
                         },
                         token=self.user_token)
-                    self.assertEqual(response.status_code, 400)
+                    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @mock.patch(
         'social.apps.django_app.utils.BACKENDS',
@@ -114,7 +115,7 @@ class SocialTokenAPITestCase(BluebottleTestCase):
                             'access_token': 'test-token'
                         },
                         token=self.user_token)
-                    self.assertEqual(response.status_code, 400)
+                    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @mock.patch(
         'social.apps.django_app.utils.BACKENDS',
@@ -137,7 +138,7 @@ class SocialTokenAPITestCase(BluebottleTestCase):
                             'access_token': 'invalid-token'
                         },
                         token=self.user_token)
-                    self.assertEqual(response.status_code, 404)
+                    self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 
@@ -162,7 +163,7 @@ class SocialTokenAPITestCase(BluebottleTestCase):
                             'access_token': 'test-token'
                         }
                     )
-                    self.assertEqual(response.status_code, 403)
+                    self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @mock.patch(
         'social.apps.django_app.utils.BACKENDS',
@@ -180,4 +181,4 @@ class SocialTokenAPITestCase(BluebottleTestCase):
                 with httmock.HTTMock(facebook_me_mock):
                     response = self.client.post(self.token_url,
                                                 token=self.user_token)
-                    self.assertEqual(response.status_code, 400)
+                    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

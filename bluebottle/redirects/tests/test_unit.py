@@ -14,6 +14,7 @@ from bluebottle.redirects.models import Redirect
                        [
                            'bluebottle.redirects.middleware.RedirectFallbackMiddleware'],
     SITE_ID=1,
+    LOCALE_REDIRECT_IGNORE=('/initial', '/news', '/project', '/external_https', '/external_http'),
 )
 class RedirectTests(BluebottleTestCase):
     def test_model(self):

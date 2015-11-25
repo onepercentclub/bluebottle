@@ -333,7 +333,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         # management API.
         response = self.client.get(project_url)
         self.assertEquals(
-            response.status_code, status.HTTP_403_FORBIDDEN, response)
+            response.status_code, status.HTTP_401_UNAUTHORIZED, response)
 
         # Also it should not be visible by the first user.
         response = self.client.get(project_url, token=self.some_user_token)
@@ -813,7 +813,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.text_wallposts_url, {
             'text': text1, 'parent_type': 'project',
             'parent_id': self.some_project.slug})
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # Create TextWallpost as a logged in member should be allowed
         response = self.client.post(self.text_wallposts_url,

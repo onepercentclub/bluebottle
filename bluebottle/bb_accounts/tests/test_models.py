@@ -40,8 +40,7 @@ class BlueBottleUserManagerTestCase(BluebottleTestCase):
         Tests exception raising when trying to create a new user without
         providing an email.
         """
-        with self.assertRaisesMessage(IntegrityError,
-                                      'null value in column "email" violates not-null constraint'):
+        with self.assertRaises(IntegrityError):
             user = BlueBottleUserFactory.build()
             user.email = None
             user.save()

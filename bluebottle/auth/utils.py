@@ -42,9 +42,7 @@ def refresh(strategy, social, *args, **kwargs):
 
 def set_language(strategy, user, response, details,
                  is_new=False, *args, **kwargs):
-    supported_langauges = [
-        lang_code for (lang_code, lang_name) in getattr(properties,
-                                                        'LANGUAGES')]
+    supported_langauges = dict(properties.LANGUAGES).keys()
 
     try:
         language = response['locale'][:2]

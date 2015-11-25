@@ -8,6 +8,7 @@ from django.db.models import Count, Sum, options
 from django.template.defaultfilters import slugify
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
+from django.utils.timezone import now
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
@@ -230,7 +231,7 @@ class BaseProject(models.Model, GetTweetMixin):
     def people_registered(self):
         counts = self.task_set.filter(
             status='open',
-            deadline__gt=datetime.now(),
+            deadline__gt=now(),
             members__status__in=['accepted', 'realized']
         ).aggregate(total=Count('members'), externals=Sum('members__externals'))
 
@@ -241,7 +242,7 @@ class BaseProject(models.Model, GetTweetMixin):
     def people_requested(self):
         return self.task_set.filter(
             status='open',
-            deadline__gt=datetime.now(),
+            deadline__gt=now(),
         ).aggregate(total=Sum('people_needed'))['total']
 
     _initial_status = None

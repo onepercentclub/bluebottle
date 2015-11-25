@@ -12,23 +12,21 @@ from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.serializers import ManageOrderPaymentSerializer
 from bluebottle.payments.services import get_payment_methods, PaymentService
-from bluebottle.utils.utils import get_country_by_ip
+from bluebottle.utils.utils import get_country_code_by_ip
 
 
 class PaymentMethodList(APIView):
     def get(self, request, *args, **kwargs):
-        ip = get_ip(request)
-        # get_payment_methods returns all methods when 'all' is specified
-        if ip == '127.0.0.1':
-            country = 'all'
-        else:
-            country = get_country_by_ip(ip)
 
-        # TODO: 1) Determine available methods based on GET params (amount).
-        #       2) Re-enable country-based filtering when front-end can handle
-        #          manually setting the country. For now send all methods.
-        methods = get_payment_methods('all', 500)
-
+        if 'country' in request.GET:
+            country = request.GET['country']
+        else :
+            ip = get_ip(request)
+            if ip == '127.0.0.1':
+                country = 'all'
+            else:
+                country = get_country_code_by_ip(ip)
+        methods = get_payment_methods(country, 500)
         result = {'country': country, 'results': methods}
         response = Response(result, status=status.HTTP_200_OK)
         return response

@@ -1,3 +1,4 @@
+from ipware import ip
 from mock import patch
 
 from django.core.urlresolvers import reverse
@@ -64,15 +65,49 @@ class TestOrderPaymentPermissions(BluebottleTestCase):
                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_get_payment_method_detail_unauthenticated(self):
-        """ Test that unauthenticated users may retrieve details of a payment method """
-        self.skipTest("This view is currently unused")
-        response = self.client.get(reverse('payment-method-list'), {})
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+    def test_get_payment_methods_for_country(self):
+        """ Test that passing a country will restrict the payment methods """
 
-    def test_get_payment_method_detail_authenticated(self):
-        """ Test that authenticated users may retrieve details of a payment methods """
-        self.skipTest("This view is currently unused")
+        # Check that NL shows 3 methods (including iDEAL)
+        response = self.client.get(reverse('payment-method-list'),
+                                   {'country': 'NL'},
+                                   token=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['country'], 'NL')
+        self.assertEqual(len(response.data['results']), 3)
+
+        # Check that BG is showing only 2 methods
+        response = self.client.get(reverse('payment-method-list'),
+                                   {'country': 'BG'},
+                                   token=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['country'], 'BG')
+        self.assertEqual(len(response.data['results']), 2)
+
+        # Check that not specifying a country whos all methods
         response = self.client.get(reverse('payment-method-list'), {},
                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['country'], 'all')
+        self.assertEqual(len(response.data['results']), 3)
+
+    @patch('bluebottle.payments.views.get_ip')
+    def test_get_payment_methods_for_ip(self, get_ip):
+        """ Test that passing a IP will restrict the payment methods """
+
+        # Zimbawian IP should show 2 methods
+        get_ip.return_value = '41.220.16.16'
+        response = self.client.get(reverse('payment-method-list'), {},
+                                   token=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['country'], 'ZW')
+        self.assertEqual(len(response.data['results']), 2)
+
+        # Dutch IP should show 3 methods
+        get_ip.return_value = '213.127.165.114'
+        response = self.client.get(reverse('payment-method-list'), {},
+                                   token=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # self.assertEqual(response.data['country'], 'NL')
+        self.assertEqual(len(response.data['results']), 3)
+

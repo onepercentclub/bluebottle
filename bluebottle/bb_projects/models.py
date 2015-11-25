@@ -9,6 +9,7 @@ from django.template.defaultfilters import slugify
 from django.utils.timezone import now
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
+from django.utils.timezone import now
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)

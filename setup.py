@@ -77,7 +77,7 @@ install_requires = [
     'fabric',
     'django-tenant-schemas==1.5.2',
     'raven==5.1.1',
-    'djangorestframework-jwt==1.1.1',
+    'djangorestframework-jwt==1.7.2',
     'django-filetransfers==0.1.0',
     'django-admin-tools==0.5.2',
     'django-rest-swagger==0.3.4',

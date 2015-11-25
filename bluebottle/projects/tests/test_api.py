@@ -1001,7 +1001,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 class ChangeProjectStatuses(ProjectEndpointTestCase):
     def set_date_submitted(self, project):
         # Set a date_submitted value for the project
-        yesterday = datetime.now() - timedelta(days=1)
+        yesterday = timezone.now() - timedelta(days=1)
         project.date_submitted = yesterday
         project.save()
         self.assertEquals(project.date_submitted, yesterday)

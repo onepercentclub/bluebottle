@@ -143,7 +143,7 @@ JWT_AUTH = {
 
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
-LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api')
+LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata')
 
 SWAGGER_SETTINGS = {
   'api_version': '1.1',

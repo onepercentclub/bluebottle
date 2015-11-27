@@ -335,6 +335,19 @@ class TestManageProjectList(ProjectEndpointTestCase):
         self.assertIn('editable', data)
 
 
+    def test_none_accepted_for_project_amount_asked(self):
+        post_data = {
+            'slug': 'test-project',
+            'title': 'Testing Project POST request',
+            'pitch': 'A new project to be used in unit tests',
+            'amount_asked': None,
+            'amount_donated': 0
+        }
+
+        response = self.client.post(reverse('project_manage_list'), post_data, token=self.user_token)
+        self.assertEqual(response.status_code, 201)
+
+
 class TestManageProjectDetail(ProjectEndpointTestCase):
     """
     Test case for the ``ManageProjectDetail`` API view.

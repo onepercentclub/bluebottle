@@ -65,7 +65,7 @@ install_requires = [
     'suds-jurko==0.6',
     'django-ipware==0.0.8',
     'pygeoip==0.3.1',
-    'python-social-auth==0.2.13',
+    'python-social-auth==0.2.12',
     'python-memcached==1.53',
     'lxml==3.4.4',
     'unicodecsv==0.9.4',
@@ -87,7 +87,7 @@ install_requires = [
     'django-fluent-contents==1.0c3',
     'django-bb-salesforce==1.1.18',
     'django-tenant-extras==1.9.3',
-    'django-token-auth==0.2.12'
+    'django-token-auth==0.2.13'
 ]
 
 tests_requires = [

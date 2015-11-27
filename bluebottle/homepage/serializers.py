@@ -7,7 +7,7 @@ from rest_framework import serializers
 
 class HomePageSerializer(serializers.Serializer):
     id = serializers.CharField(source='id')
-    quotes = QuoteSerializer(source='quotes')
-    slides = SlideSerializer(source='slides')
+    quotes = QuoteSerializer(source='quotes', many=True)
+    slides = SlideSerializer(source='slides', many=True)
     impact = StatisticSerializer(source='stats')
-    projects = ProjectPreviewSerializer(source='projects')
+    projects = ProjectPreviewSerializer(source='projects', many=True)

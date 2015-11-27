@@ -58,7 +58,7 @@ class SuggestionsTokenTest(BluebottleTestCase):
         response = self.client.put(
             reverse('suggestion_token_validate', kwargs={'token': token}))
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         suggestion = Suggestion.objects.get(pk=suggestion.pk)
 

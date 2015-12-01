@@ -137,12 +137,17 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count',
-                  'supporter_count', 'people_requested', 'people_registered',
+                  'supporter_count',
                   'voting_deadline', 'latitude', 'longitude', 'video_url',
                   'video_html', 'partner', 'location', 'project_type')
 
 
 class ProjectPreviewSerializer(ProjectSerializer):
+    image = SorlImageField('image', '400x300', crop='center')
+    theme = ProjectThemeSerializer(source='theme')
+
+    owner = get_serializer_class('AUTH_USER_MODEL', 'preview')()
+
     class Meta:
         model = PROJECT_MODEL
         fields = ('id', 'title', 'status', 'image', 'country', 'pitch',

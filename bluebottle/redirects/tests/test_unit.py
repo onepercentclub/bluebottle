@@ -144,6 +144,18 @@ class RedirectTests(BluebottleTestCase):
 
     @override_settings(LANGUAGE_CODE='nl',
                        MIDDLEWARE_CLASSES=(
+                               'tenant_extras.middleware.TenantLocaleMiddleware',
+                               'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
+                       ))
+    def test_redirect_with_locale_middleware(self):
+        Redirect.objects.create(
+            old_path='/faq', new_path='https://example.com')
+        response = self.client.get('/faq')
+        self.assertEquals(response.status_code, 301)
+        self.assertEquals(response['location'], "https://example.com")
+
+    @override_settings(LANGUAGE_CODE='nl',
+                       MIDDLEWARE_CLASSES=(
                                'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
                        ))
     def test_redirect_thread_has_language(self):

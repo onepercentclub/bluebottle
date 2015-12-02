@@ -137,7 +137,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count',
-                  'supporter_count',
+                  'supporter_count', 'people_requested', 'people_registered',
                   'voting_deadline', 'latitude', 'longitude', 'video_url',
                   'video_html', 'partner', 'location', 'project_type')
 

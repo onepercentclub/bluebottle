@@ -118,6 +118,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',
+    'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

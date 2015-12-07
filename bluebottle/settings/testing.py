@@ -10,8 +10,8 @@ warnings.filterwarnings(
     r"DateTimeField received a naive datetime .* while time zone support is active",
     RuntimeWarning, r'django\.db\.models\.fields')
 
-DOCDATA_MERCHANT_NAME = 'merchant_name'
-DOCDATA_MERCHANT_PASSWORD = 'merchant_password'
+# DOCDATA_MERCHANT_NAME = 'merchant_name'
+# DOCDATA_MERCHANT_PASSWORD = 'merchant_password'
 
 
 # Set up a proper testing email backend

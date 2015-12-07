@@ -191,6 +191,7 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
                 source=[StatusDefinition.IN_PROGRESS, StatusDefinition.RETRY], target=StatusDefinition.SETTLED)
     def settled(self, completed=None):
         self.completed = completed
+        self.protected = True
 
     @transition(field=status, save=True, source=StatusDefinition.SETTLED, target=StatusDefinition.RETRY)
     def retry(self):

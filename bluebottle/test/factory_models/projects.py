@@ -27,7 +27,7 @@ class ProjectThemeFactory(factory.DjangoModelFactory):
 
 class ProjectPhaseFactory(factory.DjangoModelFactory):
     FACTORY_FOR = ProjectPhase
-    FACTORY_DJANGO_GET_OR_CREATE = ('name',)
+    FACTORY_DJANGO_GET_OR_CREATE = ('sequence',)
 
     name = factory.Sequence(lambda n: 'Phase_{0}'.format(n))
     sequence = factory.Sequence(lambda n: n)
@@ -39,7 +39,7 @@ class ProjectFactory(factory.DjangoModelFactory):
     owner = factory.SubFactory(BlueBottleUserFactory)
     organization = factory.SubFactory(OrganizationFactory)
     title = factory.Sequence(lambda n: 'Project_{0}'.format(n))
-    status = factory.SubFactory(ProjectPhaseFactory, name='Plan - New')
+    status = factory.SubFactory(ProjectPhaseFactory, sequence=1)
     theme = factory.SubFactory(ProjectThemeFactory, name='Education')
     country = factory.SubFactory(CountryFactory)
 

@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from django.db.models import Sum
 from django.core.urlresolvers import reverse
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from django_webtest import WebTestMixin
@@ -37,15 +38,17 @@ class RemoteDocdataPaymentActionTests(WebTestMixin, BluebottleTestCase):
         Initialize some projects, donations, payments.
         """
         # required for project save
-        ProjectPhaseFactory.create(name='Plan - submitted', slug='plan-submitted', sequence=2)
+        self.init_projects()
 
-        self.project1 = ProjectFactory.create(status__name='Campaign', status__sequence=5)  # has no payout
+        yesterday = timezone.now() - timedelta(days=1)
+
+        self.project1 = ProjectFactory.create(status__sequence=5, campaign_started=yesterday)  # has no payout
         # has a new payout
-        self.project2 = ProjectFactory.create(status__name='Done - Complete', status__sequence=9)
+        self.project2 = ProjectFactory.create(status__sequence=8, campaign_started=yesterday)
         # has an in_progress payout
-        self.project3 = ProjectFactory.create(status__name='Done - Complete', status__sequence=9)
+        self.project3 = ProjectFactory.create(status__sequence=8, campaign_started=yesterday)
         # has a settled payout
-        self.project4 = ProjectFactory.create(status__name='Done - Complete', status__sequence=9)
+        self.project4 = ProjectFactory.create(status__sequence=8, campaign_started=yesterday)
 
         # make donations for each project
         status_progressions = [

@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.db.models import Sum
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
@@ -21,6 +22,7 @@ from bluebottle.payments_manual.models import ManualPayment
 from ..models import BankTransaction
 
 
+@override_settings(MINIMAL_PAYOUT_AMOUNT=-1)
 class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
 
     def setUp(self):
@@ -50,10 +52,10 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
                                               amount_asked=200)
 
         # Add some donations so the amount_donated isn't below threshold.
-        self._add_completed_donation(self.project1, 100)
-        self._add_completed_donation(self.project2, 100)
-        self._add_completed_donation(self.project3, 100)
-        self._add_completed_donation(self.project4, 100)
+        # self._add_completed_donation(self.project1, 100)
+        # self._add_completed_donation(self.project2, 100)
+        # self._add_completed_donation(self.project3, 100)
+        # self._add_completed_donation(self.project4, 100)
 
         # Close some of the projects
         self.project2.status = status_done
@@ -157,7 +159,7 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
             self.assertEqual(response.follow().status_code, 200)
 
             # verify that an extra donation is created
-            self.assertEqual(project.donation_set.count(), 2)
+            self.assertEqual(project.donation_set.count(), 1)
             donation = project.donation_set.last()
             self.assertTrue(donation.anonymous)
             self.assertEqual(donation.amount, Decimal(75))
@@ -192,19 +194,19 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         payouts1 = self.project1.projectpayout_set.count()
         self.assertEqual(payouts1, 0)
         project1 = self.project1.__class__.objects.get(pk=self.project1.pk)
-        self.assertEqual(project1.amount_donated, Decimal(175))
+        self.assertEqual(project1.amount_donated, Decimal(75))
 
         payouts2 = self.project2.projectpayout_set.all()
         self.assertEqual(payouts2.count(), 2)  # a new one must be created
         # check that the sum and status are correct
         new_payout = payouts2.first()  # order by created
         self.assertTrue(new_payout.protected)
-        self.assertEqual(new_payout.amount_raised, Decimal(175))
+        self.assertEqual(new_payout.amount_raised, Decimal(75))
         project2 = self.project2.__class__.objects.get(pk=self.project2.pk)
-        self.assertEqual(project2.amount_donated, Decimal(175))
-        self.assertEqual(new_payout.amount_raised, Decimal(175))
-        self.assertEqual(new_payout.amount_payable, Decimal('166.25'))
-        self.assertEqual(new_payout.organization_fee, Decimal('8.75'))
+        self.assertEqual(project2.amount_donated, Decimal(75))
+        self.assertEqual(new_payout.amount_raised, Decimal(75))
+        self.assertEqual(new_payout.amount_payable, Decimal('71.25'))
+        self.assertEqual(new_payout.organization_fee, Decimal('3.75'))
 
         # similar to case 2
         payouts3 = self.project3.projectpayout_set.all()

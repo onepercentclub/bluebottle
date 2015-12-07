@@ -82,7 +82,7 @@ install_requires = [
     'django-filetransfers==0.1.0',
     'django-admin-tools==0.5.2',
     'django-rest-swagger==0.3.4',
-
+    'mixpanel==4.2.0',
     # Github requirements
     'django-taggit-autocomplete-modified==0.1.1b1',
     'django-fluent-contents==1.0c3',

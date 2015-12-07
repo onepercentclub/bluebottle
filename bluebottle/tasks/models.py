@@ -65,6 +65,7 @@ class Task(BaseTask):
         # errors such as "TASK_MEMBER_MODEL has not been installed" 
         from mixpanel import Mixpanel
 
+        mp = None
         KEY = getattr(properties, 'MIXPANEL', None)
         if KEY:
             mp = Mixpanel(KEY)

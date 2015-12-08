@@ -5,6 +5,7 @@ from django.conf import settings
 
 from bluebottle.bb_orders.views import ManageOrderDetail
 from django.core.urlresolvers import reverse
+from bluebottle.clients import properties
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -464,6 +465,7 @@ class TestProjectDonationList(DonationApiTestCase):
         self.assertEqual(donation['project'], self.project3.pk)
 
     def test_successful_project_donation_list(self, check_status_psp):
+        setattr(properties, 'SHOW_DONATION_AMOUNTS', True)
         # Unsuccessful donations should not be shown
         order = OrderFactory.create(user=self.user2)
         DonationFactory.create(amount=2000, project=self.project3,
@@ -475,6 +477,22 @@ class TestProjectDonationList(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1,
                          'Only the successful donation should be returned')
+        self.assertIn('amount', response.data['results'][0])
+
+    def test_project_donation_list_without_amounts(self, check_status_psp):
+        setattr(properties, 'SHOW_DONATION_AMOUNTS', False)
+        order = OrderFactory.create(user=self.user2)
+        DonationFactory.create(amount=2000, project=self.project3,
+                               order=order)
+
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug},
+                                   token=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1,
+                         'Only the successful donation should be returned')
+        self.assertNotIn('amount', response.data['results'][0])
+
 
     def test_successful_project_donation_list_paged(self, check_status_psp):
         for i in range(30):

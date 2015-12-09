@@ -470,6 +470,21 @@ class Project(BaseProject):
         self.campaign_ended = now()
         self.save()
 
+        # Importing mixpanel on the top of the file causes a circular import and results in
+        # errors such as "TASK_MEMBER_MODEL has not been installed"
+        from mixpanel import Mixpanel
+
+        mp = None
+        KEY = getattr(properties, 'MIXPANEL', None)
+        if KEY:
+            mp = Mixpanel(KEY)
+
+        if mp:
+            mp.track(None, "Project Deadline Reached", {
+                "Task": self.title,
+                "Author": self.owner.username,
+            })
+
 
 class ProjectBudgetLine(models.Model):
     """

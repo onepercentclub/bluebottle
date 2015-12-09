@@ -30,6 +30,21 @@ class Task(BaseTask):
         self.status = 'realized'
         self.save()
 
+        # Importing mixpanel on the top of the file causes a circular import and results in
+        # errors such as "TASK_MEMBER_MODEL has not been installed" 
+        from mixpanel import Mixpanel
+
+        mp = None
+        KEY = getattr(properties, 'MIXPANEL', None)
+        if KEY:
+            mp = Mixpanel(KEY)
+
+        if mp:
+            mp.track(None, "Task Deadline Reached", {
+                "Task": self.title,
+                "Author": self.author.username,
+            })
+
     def status_changed(self, oldstate, newstate):
         """ called by post_save signal handler, if status changed """
         # confirm everything with task owner

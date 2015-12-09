@@ -13,6 +13,7 @@ from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
 
+
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
@@ -20,6 +21,7 @@ from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument)
 from bluebottle.utils.fields import ImageField
+from bluebottle.clients import properties
 
 from .mails import (mail_project_funded_internal, mail_project_complete,
                     mail_project_incomplete)
@@ -417,6 +419,7 @@ class Project(BaseProject):
         super(Project, self).save(*args, **kwargs)
 
     def status_changed(self, old_status, new_status):
+
         status_complete = ProjectPhase.objects.get(slug="done-complete")
         status_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
 
@@ -424,6 +427,25 @@ class Project(BaseProject):
             mail_project_complete(self)
         if new_status == status_incomplete:
             mail_project_incomplete(self)
+
+        # Importing mixpanel on the top of the file causes a circular import and results in
+        # errors such as "XXX_MODEL has not been installed"
+        from mixpanel import Mixpanel
+
+        data = {
+            "Project": self.title,
+            "Owner": self.owner.email,
+        }
+        mp = None
+        KEY = getattr(properties, 'MIXPANEL', None)
+
+        if KEY:
+            mp = Mixpanel(KEY)
+
+        if mp and old_status.sequence in (1, 2, 3, 4, 5, 6) and new_status.sequence in (8, 9, 10):
+            data['old_status'] = old_status.name
+            data['new_status'] = new_status.name
+            mp.track(None, "Project Completed", data)
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."

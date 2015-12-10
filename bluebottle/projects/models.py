@@ -442,7 +442,14 @@ class Project(BaseProject):
         if KEY:
             mp = Mixpanel(KEY)
 
-        if mp and old_status.sequence in (1, 2, 3, 4, 5, 6) and new_status.sequence in (8, 9, 10):
+        if mp and old_status.slug in ('plan-new',
+                                      'plan-submitted',
+                                      'plan-needs-work',
+                                      'voting',
+                                      'voting-done',
+                                      'campaign') and new_status.slug in ('done-complete',
+                                                                          'done-incomplete',
+                                                                          'closed'):
             data['old_status'] = old_status.name
             data['new_status'] = new_status.name
             mp.track(None, "Project Completed", data)
@@ -481,7 +488,7 @@ class Project(BaseProject):
 
         if mp:
             mp.track(None, "Project Deadline Reached", {
-                "Task": self.title,
+                "Project": self.title,
                 "Author": self.owner.username,
             })
 

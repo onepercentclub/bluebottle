@@ -12,8 +12,6 @@ from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
-
-
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
@@ -22,6 +20,7 @@ from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument)
 from bluebottle.utils.fields import ImageField
 from bluebottle.clients import properties
+from bluebottle.bb_metrics.utils import bb_track
 
 from .mails import (mail_project_funded_internal, mail_project_complete,
                     mail_project_incomplete)
@@ -477,20 +476,12 @@ class Project(BaseProject):
         self.campaign_ended = now()
         self.save()
 
-        # Importing mixpanel on the top of the file causes a circular import and results in
-        # errors such as "TASK_MEMBER_MODEL has not been installed"
-        from mixpanel import Mixpanel
+        data = {
+            "Project": self.title,
+            "Author": self.owner.username
+        }
 
-        mp = None
-        KEY = getattr(properties, 'MIXPANEL', None)
-        if KEY:
-            mp = Mixpanel(KEY)
-
-        if mp:
-            mp.track(None, "Project Deadline Reached", {
-                "Project": self.title,
-                "Author": self.owner.username,
-            })
+        bb_track("Project Deadline Reached", data)
 
 
 class ProjectBudgetLine(models.Model):

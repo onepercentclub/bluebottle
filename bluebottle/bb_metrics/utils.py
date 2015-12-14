@@ -9,13 +9,15 @@ def bb_track(title="", data={}):
         multiple metrics.
     """
     if not title:
-        return
+        return False
 
     mp = None
     key = getattr(properties, 'MIXPANEL', None)
 
     if key:
         mp = Mixpanel(key)
+    else:
+        return False
 
     if mp:
         mp.track(None, title, data)

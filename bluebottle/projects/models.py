@@ -427,31 +427,23 @@ class Project(BaseProject):
         if new_status == status_incomplete:
             mail_project_incomplete(self)
 
-        # Importing mixpanel on the top of the file causes a circular import and results in
-        # errors such as "XXX_MODEL has not been installed"
-        from mixpanel import Mixpanel
-
         data = {
             "Project": self.title,
             "Owner": self.owner.email,
+            "old_status": old_status.name,
+            "new_status": new_status.name
         }
-        mp = None
-        KEY = getattr(properties, 'MIXPANEL', None)
 
-        if KEY:
-            mp = Mixpanel(KEY)
+        if old_status.slug in ('plan-new',
+                               'plan-submitted',
+                               'plan-needs-work',
+                               'voting',
+                               'voting-done',
+                               'campaign') and new_status.slug in ('done-complete',
+                                                                   'done-incomplete',
+                                                                   'closed'):
 
-        if mp and old_status.slug in ('plan-new',
-                                      'plan-submitted',
-                                      'plan-needs-work',
-                                      'voting',
-                                      'voting-done',
-                                      'campaign') and new_status.slug in ('done-complete',
-                                                                          'done-incomplete',
-                                                                          'closed'):
-            data['old_status'] = old_status.name
-            data['new_status'] = new_status.name
-            mp.track(None, "Project Completed", data)
+            bb_track("Project Completed", data)
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."

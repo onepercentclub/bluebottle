@@ -9,7 +9,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, ImageSerializer)
 
 from bluebottle.clients import properties
-from bluebottle.geo.serializers import LocationSerializer
+from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
 
 BB_USER_MODEL = get_user_model()
 
@@ -55,8 +55,10 @@ class CurrentUserSerializer(UserPreviewSerializer):
     full_name = serializers.Field(source='get_full_name')
     task_count = serializers.Field(source='task_count')
     project_count = serializers.Field(source='project_count')
+    has_projects = serializers.BooleanField(source='has_projects')
     donation_count = serializers.Field(source='donation_count')
     fundraiser_count = serializers.Field(source='fundraiser_count')
+    country = CountrySerializer(source='address.country')
     location = LocationSerializer()
 
     class Meta:
@@ -64,7 +66,8 @@ class CurrentUserSerializer(UserPreviewSerializer):
         fields = UserPreviewSerializer.Meta.fields + (
             'id_for_ember', 'primary_language', 'email', 'full_name',
             'last_login', 'date_joined', 'task_count', 'project_count',
-            'donation_count', 'fundraiser_count', 'location')
+            'has_projects', 'donation_count', 'fundraiser_count', 'location',
+            'country')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

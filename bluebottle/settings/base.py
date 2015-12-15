@@ -115,11 +115,11 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
-    'bluebottle.utils.middleware.LocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
-    'bluebottle.bb_accounts.middleware.LocaleMiddleware',
+    'tenant_extras.middleware.TenantLocaleMiddleware',
+    'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
@@ -131,7 +131,9 @@ REST_FRAMEWORK = {
     # Don't do basic authentication.
     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     )
 }
 
@@ -140,6 +142,8 @@ JWT_AUTH = {
 }
 
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
+
+LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata')
 
 SWAGGER_SETTINGS = {
   'api_version': '1.1',
@@ -462,6 +466,8 @@ DEBUG = True
 COMPRESS_TEMPLATES = False
 FACEBOOK_AUTH_ID = ''
 
+SHOW_DONATION_AMOUNTS = True
+
 CELERY_MAIL = False
 SEND_MAIL = True
 
@@ -492,3 +498,7 @@ AUTHENTICATION_BACKENDS = (
     'social.backends.facebook.FacebookAppOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
+
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
+    'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4
+}

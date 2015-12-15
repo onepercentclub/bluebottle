@@ -16,8 +16,8 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
     'git+https://github.com/onepercentclub/django-fluent-contents.git@8439c7ffc1ba8877247aa7d012928c9bb170dc79#egg=fluent_contents-1.0c3',
     'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.1.18#egg=django-bb-salesforce-1.1.18',
-    'git+https://github.com/onepercentclub/django-tenant-extras.git@1.9.0#egg=django-tenant-extras-1.9.0',
-    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.1#egg=django-token-auth-0.2.1'
+    'git+https://github.com/onepercentclub/django-tenant-extras.git@1.9.7#egg=django-tenant-extras-1.9.7',
+    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.11#egg=django-token-auth-0.2.12'
 ]
 
 install_requires = [
@@ -48,7 +48,7 @@ install_requires = [
     'django-wysiwyg==0.5.1',
     'django-dynamic-fixture==1.8.0',
     'django-fluent-dashboard==0.3.2',
-    'djangorestframework==2.3.14',
+    'djangorestframework==2.4.8',
     'dkimpy==0.5.4',
     'html5lib==0.95',
     'httmock==1.2.3',
@@ -67,7 +67,7 @@ install_requires = [
     'pygeoip==0.3.1',
     'python-social-auth==0.2.12',
     'python-memcached==1.53',
-    'lxml==3.1.2',
+    'lxml==3.4.4',
     'unicodecsv==0.9.4',
     'python-dateutil==1.5',
     'gunicorn==19.2.1',
@@ -77,18 +77,19 @@ install_requires = [
     'fabric',
     'django-tenant-schemas==1.5.2',
     'raven==5.1.1',
-    'djangorestframework-jwt==1.1.1',
+    'regex==2015.11.22',
+    'djangorestframework-jwt==1.7.2',
     'django-filetransfers==0.1.0',
     'django-admin-tools==0.5.2',
     'django-rest-swagger==0.3.4',
     'django-webtest==1.7.8',
-
+    'mixpanel==4.2.0',
     # Github requirements
     'django-taggit-autocomplete-modified==0.1.1b1',
     'django-fluent-contents==1.0c3',
     'django-bb-salesforce==1.1.18',
-    'django-tenant-extras==1.9.0',
-    'django-token-auth==0.2.1'
+    'django-tenant-extras==1.9.7',
+    'django-token-auth==0.2.12'
 ]
 
 tests_requires = [

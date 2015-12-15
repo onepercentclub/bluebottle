@@ -14,6 +14,7 @@ from bluebottle.redirects.models import Redirect
                        [
                            'bluebottle.redirects.middleware.RedirectFallbackMiddleware'],
     SITE_ID=1,
+    LOCALE_REDIRECT_IGNORE=('/initial', '/news', '/project', '/external_https', '/external_http'),
 )
 class RedirectTests(BluebottleTestCase):
     def test_model(self):
@@ -140,6 +141,18 @@ class RedirectTests(BluebottleTestCase):
             old_path='/initial', new_path='/new_target')
         res = self.client.get('/initial')
         self.assertEqual(res.url.split('/')[3], 'nl')
+
+    @override_settings(LANGUAGE_CODE='nl',
+                       MIDDLEWARE_CLASSES=(
+                               'tenant_extras.middleware.TenantLocaleMiddleware',
+                               'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
+                       ))
+    def test_redirect_with_locale_middleware(self):
+        Redirect.objects.create(
+            old_path='/faq', new_path='https://example.com')
+        response = self.client.get('/faq')
+        self.assertEquals(response.status_code, 301)
+        self.assertEquals(response['location'], "https://example.com")
 
     @override_settings(LANGUAGE_CODE='nl',
                        MIDDLEWARE_CLASSES=(

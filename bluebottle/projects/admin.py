@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import logging
 
 from django import forms
@@ -9,7 +10,7 @@ from django.db.models import Count
 
 from sorl.thumbnail.admin import AdminImageMixin
 
-from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter
@@ -168,6 +169,11 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     actions = (export_as_csv_action(fields=export_fields), )
 
+    def get_actions(self, request):
+        """Order the action in reverse (delete at the bottom)."""
+        actions = super(ProjectAdmin, self).get_actions(request)
+        return OrderedDict(reversed(actions.items()))
+
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization', 'partner_organization',
                                 'status', 'title', 'slug', 'project_type',
@@ -257,3 +263,5 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
 
 admin.site.register(Project, ProjectAdmin)
+
+admin.site.register(ProjectPhase)

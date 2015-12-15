@@ -5,6 +5,7 @@ from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, \
     BaseSkill
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
+from bluebottle.clients import properties
 
 from tenant_extras.utils import TenantLanguage
 
@@ -16,7 +17,6 @@ GROUP_PERMS = {
         )
     }
 }
-
 
 class Task(BaseTask):
     # This could also belong to bb_tasks.models but we need the actual, non-abstract
@@ -60,6 +60,23 @@ class Task(BaseTask):
                 site=tenant_url(),
                 link='/go/tasks/{0}'.format(self.id)
             )
+
+        # Importing mixpanel on the top of the file causes a circular import and results in
+        # errors such as "TASK_MEMBER_MODEL has not been installed" 
+        from mixpanel import Mixpanel
+
+        mp = None
+        KEY = getattr(properties, 'MIXPANEL', None)
+        if KEY:
+            mp = Mixpanel(KEY)
+
+        if mp and oldstate in ("in progress", "open") and newstate in ("realized", "closed"):
+            mp.track(None, "Task Completed", {
+                "Task": self.title,
+                "Author": self.author.username,
+                "Old status": oldstate,
+                "New status": newstate
+            })
 
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver

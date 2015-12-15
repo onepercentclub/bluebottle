@@ -39,12 +39,12 @@ class PaymentLogEntryAdmin(admin.ModelAdmin):
     link_to_order_payment.allow_tags = True
 
     def related_payment_method(self, obj):
-        order_payment = obj.payment.order_payment
-        if not order_payment or not order_payment.payment:
-            return '?'
-        icon = static(order_payment.payment.method_icon)
-        return '<img src="{0}" height="16px" title="{1}" />'\
-            .format(icon, order_payment.payment.method_name)
+        payment = obj.payment
+        if not payment:
+            return 'Payment not found!'
+        if not payment.method_name:
+            return 'Payment method not found!'
+        return payment.method_name
 
     related_payment_method.short_description = 'Payment method'
     related_payment_method.allow_tags = True

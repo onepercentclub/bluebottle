@@ -38,6 +38,13 @@ class PreviewDonationSerializer(serializers.ModelSerializer):
                   'anonymous', 'amount')
 
 
+class PreviewDonationWithoutAmountSerializer(PreviewDonationSerializer):
+    class Meta:
+        model = DONATION_MODEL
+        fields = ('id', 'project', 'fundraiser', 'user', 'created',
+                  'anonymous')
+
+
 class DefaultDonationSerializer(PreviewDonationSerializer):
     class Meta:
         model = DONATION_MODEL

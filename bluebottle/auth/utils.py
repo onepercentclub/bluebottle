@@ -42,21 +42,14 @@ def refresh(strategy, social, *args, **kwargs):
 
 def set_language(strategy, user, response, details,
                  is_new=False, *args, **kwargs):
-    supported_langauges = [
-        lang_code for (lang_code, lang_name) in getattr(properties,
-                                                        'LANGUAGES')]
+    supported_langauges = dict(properties.LANGUAGES).keys()
 
-    # Check if request includes supported language for tenant otherwise
-    # the user is created with the default language.
     try:
-        language = kwargs['request'].LANGUAGE_CODE[:2]
+        language = response['locale'][:2]
         if language in supported_langauges:
             user.primary_language = language
-        else:
-            user.primary_language = properties.LANGUAGE_CODE
-
-        user.save()
-    except AttributeError:
+            user.save()
+    except KeyError:
         pass
 
 

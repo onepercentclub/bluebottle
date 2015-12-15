@@ -121,6 +121,13 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         # Test retrieving the first project detail from the list.
         project = response.data['results'][0]
         response = self.client.get(self.projects_url + str(project['id']))
+
+        owner = response.data['owner']
+        self.assertEquals(owner['date_joined'].__class__.__name__, 'datetime')
+        self.assertEquals(owner['project_count'], 1)
+        self.assertEquals(owner['task_count'], 0)
+        self.assertEquals(owner['donation_count'], 0)
+        self.assertTrue(owner.get('email', None) is None)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_project_detail_view_bank_details(self):
@@ -326,7 +333,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         # management API.
         response = self.client.get(project_url)
         self.assertEquals(
-            response.status_code, status.HTTP_403_FORBIDDEN, response)
+            response.status_code, status.HTTP_401_UNAUTHORIZED, response)
 
         # Also it should not be visible by the first user.
         response = self.client.get(project_url, token=self.some_user_token)
@@ -595,6 +602,9 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                      'parent_type': 'project',
                                      'parent_id': self.some_project.slug},
                                     token=self.owner_token)
+        self.assertEqual(
+            response.status_code, status.HTTP_201_CREATED, response.data)
+
         project_wallpost_detail_url = "{0}{1}".format(
             self.wallposts_url, str(response.data['id']))
 
@@ -635,10 +645,11 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         second_wallpost_text = "My project rocks!"
         response = self.client.post(self.media_wallposts_url,
                                     {'text': second_wallpost_text,
-                                     'parent_type':
-                                         'project',
+                                     'parent_type': 'project',
                                      'parent_id': self.some_project.slug},
-                                    token=self.some_user_token)
+                                    token=self.owner_token)
+        self.assertEqual(
+            response.status_code, status.HTTP_201_CREATED, response.data)
 
         response = self.client.put(project_wallpost_detail_url,
                                    {'text': new_wallpost_text, 'parent_type':
@@ -663,6 +674,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                    token=self.some_user_token)
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
+
         self.assertEqual(len(response.data['results']), 2)
         self.assertEqual(
             response.data['results'][0]['text'],
@@ -731,7 +743,8 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.media_wallposts_url,
                                     {'text': wallpost_text,
                                      'parent_type': 'project',
-                                     'parent_id': self.another_project.slug},
+                                     'parent_id': self.another_project.slug,
+                                     'email_followers': False},
                                     token=self.another_user_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
@@ -763,8 +776,10 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         #  Create a text wallpost.
         text = "You have something nice going on here."
         response = self.client.post(self.text_wallposts_url,
-                                    {'text': text, 'parent_type': 'project',
-                                     'parent_id': self.another_project.slug},
+                                    {'text': text,
+                                     'parent_type': 'project',
+                                     'parent_id': self.another_project.slug,
+                                     'email_followers': False},
                                     token=self.owner_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
@@ -798,12 +813,14 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.text_wallposts_url, {
             'text': text1, 'parent_type': 'project',
             'parent_id': self.some_project.slug})
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         # Create TextWallpost as a logged in member should be allowed
         response = self.client.post(self.text_wallposts_url,
-                                    {'text': text1, 'parent_type': 'project',
-                                     'parent_id': self.some_project.slug},
+                                    {'text': text1,
+                                     'parent_type': 'project',
+                                     'parent_id': self.some_project.slug,
+                                     'email_followers': False},
                                     token=self.some_user_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
@@ -849,8 +866,10 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 
         # Create TextWallpost as another logged in member should be allowed
         response = self.client.post(self.text_wallposts_url,
-                                    {'text': text2, 'parent_type': 'project',
-                                     'parent_id': self.some_project.slug},
+                                    {'text': text2,
+                                     'parent_type': 'project',
+                                     'parent_id': self.some_project.slug,
+                                     'email_followers': False},
                                     token=self.another_user_token)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
@@ -887,21 +906,26 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         # Create a bunch of Project Text Wallposts
         for char in 'abcdefghijklmnopqrstuv':
             text = char * 15
-            self.client.post(self.text_wallposts_url,
-                             {'text': text,
-                              'parent_type': 'project',
-                              'parent_id': self.some_project.slug},
-                             token=self.some_user_token)
+            response = self.client.post(self.text_wallposts_url,
+                                        {'text': text,
+                                         'parent_type': 'project',
+                                         'parent_id': self.some_project.slug,
+                                         'email_followers': False},
+                                        token=self.some_user_token)
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
 
         # And a bunch of Project Media Wallposts
         self.owner_token = "JWT {0}".format(
             self.some_project.owner.get_jwt_token())
         for char in 'wxyz':
             text = char * 15
-            self.client.post(self.media_wallposts_url,
-                             {'text': text, 'parent_type': 'project',
-                              'parent_id': self.some_project.slug},
-                             token=self.owner_token)
+            response = self.client.post(self.media_wallposts_url,
+                                       {'text': text, 'parent_type': 'project',
+                                        'parent_id': self.some_project.slug},
+                                       token=self.owner_token)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Retrieve a list of the 26 Project Wallposts
         # View Project Wallpost list works for author
@@ -946,12 +970,18 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['count'], 25)
 
         # Test filtering wallposts by different projects works.
+        self.another_token = "JWT {0}".format(
+            self.another_project.owner.get_jwt_token())
+
         for char in 'ABCD':
             text = char * 15
-            self.client.post(self.media_wallposts_url,
-                             {'text': text, 'parent_type': 'project',
-                              'parent_id': self.another_project.slug},
-                             token=self.owner_token)
+            response = self.client.post(self.media_wallposts_url,
+                                       {'text': text, 'parent_type': 'project',
+                                        'parent_id': self.another_project.slug},
+                                       token=self.another_token)
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
         response = self.client.get(
             self.wallposts_url, {'parent_type': 'project',
                                  'parent_id': self.some_project.slug})
@@ -971,7 +1001,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 class ChangeProjectStatuses(ProjectEndpointTestCase):
     def set_date_submitted(self, project):
         # Set a date_submitted value for the project
-        yesterday = datetime.now() - timedelta(days=1)
+        yesterday = timezone.now() - timedelta(days=1)
         project.date_submitted = yesterday
         project.save()
         self.assertEquals(project.date_submitted, yesterday)

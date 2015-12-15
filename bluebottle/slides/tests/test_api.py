@@ -2,7 +2,6 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from rest_framework.compat import patterns, url
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status

@@ -95,7 +95,7 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
-    owner = get_serializer_class('AUTH_USER_MODEL', 'preview')()
+    owner = get_serializer_class('AUTH_USER_MODEL', 'default')()
     image = ImageSerializer(required=False)
     tags = TagSerializer()
     task_count = serializers.IntegerField(source='task_count')
@@ -112,6 +112,9 @@ class ProjectSerializer(serializers.ModelSerializer):
     vote_count = serializers.IntegerField(source='vote_count')
     supporter_count = serializers.IntegerField(source='supporter_count')
 
+    people_requested = serializers.Field()
+    people_registered = serializers.Field()
+
     meta_data = MetaField(
         title='get_meta_title',
         fb_title='get_fb_title',
@@ -127,33 +130,23 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = PROJECT_MODEL
         fields = ('id', 'created', 'title', 'pitch', 'organization',
-                  'description', 'owner', 'status', 'meta_data', 'image',
+                  'description', 'owner', 'status', 'image',
                   'country', 'theme', 'tags', 'meta_data', 'language',
                   'latitude', 'longitude', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'allow_overfunding',
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count',
-                  'supporter_count',
+                  'supporter_count', 'people_requested', 'people_registered',
                   'voting_deadline', 'latitude', 'longitude', 'video_url',
                   'video_html', 'partner', 'location', 'project_type')
 
 
-class ProjectPreviewSerializer(serializers.ModelSerializer):
-    id = serializers.CharField(source='slug', read_only=True)
+class ProjectPreviewSerializer(ProjectSerializer):
     image = SorlImageField('image', '400x300', crop='center')
-    country = ProjectCountrySerializer(source='country')
-    pitch = serializers.CharField(source='pitch')
     theme = ProjectThemeSerializer(source='theme')
+
     owner = get_serializer_class('AUTH_USER_MODEL', 'preview')()
-    task_count = serializers.IntegerField(source='task_count')
-    partner = serializers.SlugRelatedField(slug_field='slug',
-                                           source='partner_organization')
-    is_funding = serializers.Field()
-    people_requested = serializers.Field()
-    people_registered = serializers.Field()
-    location = serializers.PrimaryKeyRelatedField(required=False)
-    vote_count = serializers.IntegerField(source='vote_count')
 
     class Meta:
         model = PROJECT_MODEL
@@ -189,7 +182,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     pitch = serializers.CharField(required=False)
     slug = serializers.CharField(read_only=True)
     tags = TagSerializer()
-    amount_asked = serializers.CharField(required=False)
+    amount_asked = serializers.CharField(required=False, allow_none=True)
     amount_donated = serializers.CharField(read_only=True)
     amount_needed = serializers.CharField(read_only=True)
     budget_lines = ProjectBudgetLineSerializer(many=True,

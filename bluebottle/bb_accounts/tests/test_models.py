@@ -5,6 +5,7 @@ from django.core import mail
 from django.db import IntegrityError
 from django.test.utils import override_settings
 
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
@@ -39,8 +40,7 @@ class BlueBottleUserManagerTestCase(BluebottleTestCase):
         Tests exception raising when trying to create a new user without
         providing an email.
         """
-        with self.assertRaisesMessage(IntegrityError,
-                                      'null value in column "email" violates not-null constraint'):
+        with self.assertRaises(IntegrityError):
             user = BlueBottleUserFactory.build()
             user.email = None
             user.save()
@@ -168,7 +168,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
     def test_calculate_task_count(self):
         """
         Test that the task_count property on a user is calculated correctly.
-        We count a) tasks where a user is a task author and 
+        We count a) tasks where a user is a task author and
         b) TaskMembers where a user is applied, accepted or realized
         """
         self.assertEqual(self.user.task_count, 0)
@@ -210,13 +210,16 @@ class BlueBottleUserTestCase(BluebottleTestCase):
     def test_calculate_project_count(self):
         """ Test the counter for the number of projects a user has started """
         self.assertEqual(self.user.project_count, 0)
+        ProjectFactory.create(owner=self.user)
 
-        project = ProjectFactory.create(owner=self.user)
+        self.assertEqual(self.user.project_count, 0)
 
+        status = ProjectPhase.objects.get(slug='done-complete')
+
+        ProjectFactory.create(owner=self.user, status=status)
         self.assertEqual(self.user.project_count, 1)
 
-        project2 = ProjectFactory.create(owner=self.user)
-
+        ProjectFactory.create(owner=self.user, status=status)
         self.assertEqual(self.user.project_count, 2)
 
     def test_calculate_fundraiser_count(self):

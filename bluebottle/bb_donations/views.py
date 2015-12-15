@@ -3,7 +3,9 @@ from django.http.response import Http404
 from rest_framework import permissions, generics
 
 from bluebottle.bb_orders.permissions import OrderIsNew, IsOrderCreator
-from bluebottle.donations.serializers import LatestDonationSerializer
+from bluebottle.clients import properties
+from bluebottle.donations.serializers import LatestDonationSerializer, PreviewDonationSerializer, \
+    PreviewDonationWithoutAmountSerializer
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.model_dispatcher import (get_project_model,
                                                get_donation_model,
@@ -23,7 +25,6 @@ class ValidDonationsMixin(object):
     """
     Filter query set on "valid" donations.
     """
-
     def get_queryset(self):
         queryset = super(ValidDonationsMixin, self).get_queryset()
         queryset = queryset.filter(order__status__in=[StatusDefinition.SUCCESS,
@@ -45,8 +46,11 @@ class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 
 class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
     model = DONATION_MODEL
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'preview')
+
+    def get_serializer_class(self):
+        if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
+            return PreviewDonationSerializer
+        return PreviewDonationWithoutAmountSerializer
 
     paginate_by = 20
 
@@ -77,7 +81,8 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
             raise Http404(u"No %(verbose_name)s found matching the query" %
                           {'verbose_name': PROJECT_MODEL._meta.verbose_name})
 
-        filter_kwargs['order__user__is_co_financer'] = co_financing
+        if co_financing:
+            filter_kwargs['order__user__is_co_financer'] = co_financing
 
         queryset = queryset.filter(**filter_kwargs)
         queryset = queryset.order_by("-created")

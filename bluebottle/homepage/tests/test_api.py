@@ -124,18 +124,22 @@ class HomepageEndpointTestCase(BluebottleTestCase):
             - 10 campaigners (eg 10 new people involved)
         """
         self.user1 = BlueBottleUserFactory.create()
-        self.campaign_phase = ProjectPhase.objects.get(slug='campaign')
+        self.campaign_phase = ProjectPhase.objects.get(slug='campaign', viewable=True)
         self.plan_phase = ProjectPhase.objects.get(slug='done-complete')
+        self.en = Language.objects.get(code='en')
         projects = []
 
         for char in 'abcdefghij':
             # Put half of the projects in the campaign phase.
             if ord(char) % 2 == 1:
                 project = ProjectFactory.create(title=char * 3, slug=char * 3,
-                                                status=self.campaign_phase)
+                                                status=self.campaign_phase,
+                                                language=self.en,
+                                                is_campaign=True)
             else:
                 project = ProjectFactory.create(title=char * 3, slug=char * 3,
-                                                status=self.plan_phase)
+                                                status=self.plan_phase,
+                                                language=self.en)
 
             projects.append(project)
 
@@ -179,10 +183,13 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         self.stats.clear_cached()
 
     def test_homepage_stats(self):
-        response = self.client.get(reverse('stats'))
+        response = self.client.get(reverse('stats', kwargs={'language': 'en'}))
 
-        self.assertEqual(response.data['donated'], Decimal('10000.00'))
-        self.assertEqual(response.data['projects_online'], 5)
-        self.assertEqual(response.data['projects_realized'], 5)
-        self.assertEqual(response.data['tasks_realized'], 1)
-        self.assertEqual(response.data['people_involved'], 36)
+        self.assertEqual(len(response.data['projects']), 3)
+
+        impact = response.data['impact']
+        self.assertEqual(impact['donated'], Decimal('10000.00'))
+        self.assertEqual(impact['projects_online'], 5)
+        self.assertEqual(impact['projects_realized'], 5)
+        self.assertEqual(impact['tasks_realized'], 1)
+        self.assertEqual(impact['people_involved'], 36)

@@ -2,9 +2,11 @@ import json
 import uuid
 import mock
 import dkim
+from mock import patch
+from bunch import bunchify
 
 from django.utils import unittest
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
@@ -14,6 +16,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from django.test.client import Client
 from django.test.utils import override_settings
 from django.utils.encoding import force_bytes
+from django.conf import settings
 
 from fluent_contents.models import Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
@@ -22,7 +25,8 @@ from fluent_contents.plugins.text.models import TextItem
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.utils.models import MetaDataModel
 from bluebottle.utils.utils import clean_for_hashtag
-
+from bluebottle.clients.middleware import TenantProperties
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from ..email_backend import send_mail, create_message
 
@@ -35,6 +39,43 @@ def generate_random_slug():
 
 def generate_random_email():
     return str(uuid.uuid4())[:10] + '@' + str(uuid.uuid4())[:30] + '.com'
+
+def mock_attr(self, k):
+    if k == 'TOKEN_AUTH':
+        return  {
+            'assertion_mapping': {
+                'email': 'email_attr',
+                'first_name': 'first_name_attr',
+                'last_name': 'last_name_attr'
+            }
+        }
+    else:
+        return getattr(settings, k)
+
+class TenantPropertiesTokenAuthTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.rf = RequestFactory()
+
+    @mock.patch(
+        'bluebottle.clients.middleware.TenantProperties.__getattr__',
+        mock_attr
+    )
+    def test_read_only_settings(self):
+        from ..context_processors import tenant_properties
+
+        context = tenant_properties(self.rf)
+        tenant_settings = json.loads(context['settings'])
+
+        self.assertEqual(tenant_settings['readOnlyFields']['user'], ['first_name', 'last_name', 'email'])
+
+    def test_without_token_auth(self):
+        from ..context_processors import tenant_properties
+
+        context = tenant_properties(self.rf)
+        tenant_settings = json.loads(context['settings'])
+
+        with self.assertRaises(KeyError):
+            read_only = tenant_settings['readOnlyFields']
 
 
 class CustomSettingsTestCase(TestCase):

@@ -12,7 +12,6 @@ from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
-
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
@@ -20,6 +19,8 @@ from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument)
 from bluebottle.utils.fields import ImageField
+from bluebottle.clients import properties
+from bluebottle.bb_metrics.utils import bb_track
 
 from .mails import (mail_project_funded_internal, mail_project_complete,
                     mail_project_incomplete)
@@ -417,6 +418,7 @@ class Project(BaseProject):
         super(Project, self).save(*args, **kwargs)
 
     def status_changed(self, old_status, new_status):
+
         status_complete = ProjectPhase.objects.get(slug="done-complete")
         status_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
 
@@ -424,6 +426,24 @@ class Project(BaseProject):
             mail_project_complete(self)
         if new_status == status_incomplete:
             mail_project_incomplete(self)
+
+        data = {
+            "Project": self.title,
+            "Owner": self.owner.email,
+            "old_status": old_status.name,
+            "new_status": new_status.name
+        }
+
+        if old_status.slug in ('plan-new',
+                               'plan-submitted',
+                               'plan-needs-work',
+                               'voting',
+                               'voting-done',
+                               'campaign') and new_status.slug in ('done-complete',
+                                                                   'done-incomplete',
+                                                                   'closed'):
+
+            bb_track("Project Completed", data)
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
@@ -447,6 +467,13 @@ class Project(BaseProject):
                 self.status = ProjectPhase.objects.get(slug="done-complete")
         self.campaign_ended = now()
         self.save()
+
+        data = {
+            "Project": self.title,
+            "Author": self.owner.username
+        }
+
+        bb_track("Project Deadline Reached", data)
 
 
 class ProjectBudgetLine(models.Model):

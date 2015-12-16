@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX
@@ -63,6 +64,22 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
     model = USER_MODEL
     permission_classes = (TenantConditionalOpenClose, IsCurrentUser)
     serializer_class = ManageProfileSerializer
+
+    def pre_save(self, obj):
+        try:
+            # Read only properties come from the TOKEN_AUTH / SAML settings
+            assertion_mapping = properties.TOKEN_AUTH['assertion_mapping']
+            user_properties = assertion_mapping.keys()
+
+            # Ensure read-only user properties are not being changed
+            previous = USER_MODEL.objects.get(pk=obj.pk)
+            for prop in user_properties:
+                if getattr(previous, prop) != getattr(obj, prop):
+                    raise PermissionDenied
+
+        except AttributeError, KeyError:
+            # Continue if the tenant doesn't have read-only fields
+            super(ManageProfileDetail, self).pre_save(obj)
 
 
 class CurrentUser(generics.RetrieveAPIView):

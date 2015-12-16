@@ -24,7 +24,7 @@ from bluebottle.contentplugins.models import PictureItem
 from bluebottle.utils.models import MetaDataModel
 from bluebottle.utils.utils import clean_for_hashtag
 from bluebottle.clients.middleware import TenantProperties
-
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from ..email_backend import send_mail, create_message
 
@@ -50,9 +50,7 @@ def mock_attr(self, k):
     else:
         return getattr(settings, k)
 
-@mock.patch('django.db.connection',
-            bunchify({'tenant': {'name': 'My Test', 'client_name': 'test'}}))
-class TenantPropertiesTokenAuthTestCase(TestCase):
+class TenantPropertiesTokenAuthTestCase(BluebottleTestCase):
     def setUp(self):
         self.rf = RequestFactory()
 

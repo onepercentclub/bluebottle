@@ -2,11 +2,19 @@ import json
 import re
 
 from django.core import mail
-from bluebottle.test.utils import BluebottleTestCase
+from django.test.utils import override_settings
 
 from rest_framework import status
 
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+
+ASSERTION_MAPPING = {
+    'assertion_mapping': {
+        'first_name': 'first_name_attr',
+        'last_name': 'last_name_attr'
+    }
+}
 
 
 class UserApiIntegrationTest(BluebottleTestCase):
@@ -84,6 +92,42 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)
+
+    @override_settings(TOKEN_AUTH=ASSERTION_MAPPING)
+    def test_user_profile_read_only_forbidden(self):
+        """
+        Test read only fields can't be updated.
+        """
+        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
+                                           self.user_1.id)
+
+        full_name = {'first_name': 'Nijntje', 'last_name': 'het Konijntje'}
+
+        # User should not be able to be updated read only fields in their profile.
+        response = self.client.put(user_profile_url, full_name,
+                                   token=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN,
+                         'Read-only profile fields should not be editable.')
+
+        self.client.logout()
+
+    @override_settings(TOKEN_AUTH=ASSERTION_MAPPING)
+    def test_user_profile_read_only_allowed(self):
+        """
+        Test other fields can be updated when tenant has read-only fields.
+        """
+        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
+                                           self.user_1.id)
+
+        email_field = {'email': 'user_allowed@onepercentclub.com'}
+
+        # User should not be able to be updated read only fields in their profile.
+        response = self.client.put(user_profile_url, email_field,
+                                   token=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
+                         'Non-read-only profile fields are editable.')
+
+        self.client.logout()
 
     def test_user_profile_retrieve_and_update(self):
         """

@@ -249,6 +249,7 @@ TENANT_APPS = (
     'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
+    'bluebottle.bb_metrics',
 
     # Basic Bb implementations
     'bluebottle.fundraisers',

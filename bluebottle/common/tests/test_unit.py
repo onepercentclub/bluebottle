@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-
+from django.utils import timezone
 from bluebottle.test.utils import BluebottleTestCase
 from dashboard import Metrics
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
@@ -26,7 +26,7 @@ class MetricsTest(BluebottleTestCase):
     def test_partners_year(self):
         """ Test correct calculation of partners """
 
-        task = TaskFactory()
+        task = TaskFactory(deadline=timezone.now())
 
         task_member = TaskMemberFactory(task=task, externals=1,
                                         status='applied')  # count 0
@@ -46,7 +46,7 @@ class MetricsTest(BluebottleTestCase):
     def test_partners_hours(self):
         """ Test correct calculation of hours of partners """
 
-        task = TaskFactory()
+        task = TaskFactory(deadline=timezone.now())
 
         task_member = TaskMemberFactory(task=task, externals=2,
                                         status='applied',

@@ -13,9 +13,9 @@ from bluebottle.bb_projects.models import ProjectPhase
 
 class MetricsTest(BluebottleTestCase):
     def setUp(self):
-        self.init_projects()  # Intialize varies objects such as ProjectPhases
+        self.init_projects()  # Intialize various objects such as ProjectPhases
         self.metrics = Metrics()
-        self.future = datetime.today() + timedelta(days=10)
+        self.future = datetime.today() + timedelta(days=1)
 
         self.new = ProjectPhase.objects.get(slug="plan-new")
         self.campaign = ProjectPhase.objects.get(slug="campaign")

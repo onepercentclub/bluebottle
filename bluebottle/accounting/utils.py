@@ -1,5 +1,6 @@
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
+from datetime import datetime
 
 from .models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout, BankTransactionCategory, BankAccount
 from decimal import Decimal
@@ -78,9 +79,10 @@ def get_datefiltered_qs(start, stop):
     data['remote_docdata_payouts'] = RemoteDocdataPayout.objects.filter(payout_date__gte=start, payout_date__lte=stop)
 
     # on this date there was an import of old data that should not appear in the statistics
-    excluded_date = timezone.datetime(2014, 7, 8)
-    data['project_payouts'] = ProjectPayout.objects.exclude(created__gte=excluded_date,
-                                                            created__lt=excluded_date + timezone.timedelta(days=1))
+    # excluded_date = timezone.datetime(2014, 7, 8)
+    # data['project_payouts'] = ProjectPayout.objects.exclude(created__gte=excluded_date,
+    #                                                         created__lt=excluded_date + timezone.timedelta(days=1))
+    data['project_payouts'] = ProjectPayout.objects.all()
     data['donations'] = Donation.objects.filter(created__gte=start, created__lte=stop)
     return data
 

@@ -1,4 +1,8 @@
+import pytz
+import datetime
+
 from datetime import date, timedelta
+from django.utils import timezone
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounting import (
@@ -23,10 +27,10 @@ class AccountingStatisticsTests(BluebottleTestCase):
     def setUp(self):
         super(AccountingStatisticsTests, self).setUp()
 
-        self.today = date.today()
+        self.today = timezone.now()
         last_year = self.today.year - 1
-        self.last_year = date(last_year, 1, 1)
-        self.middle_date = date(last_year, 6, 1) # june 1st
+        self.last_year = datetime.datetime(last_year, 1, 1, tzinfo=pytz.timezone('Europe/Amsterdam'))
+        self.middle_date = datetime.datetime(last_year, 6, 1, tzinfo=pytz.timezone('Europe/Amsterdam'))
 
         # other categories from the fixtures are [u'Checking to savings', u'Savings to checking',
         # u'Bank costs', u'Donations to be transferred', u'Interest', u'Settle Bank costs', u'Total']
@@ -42,7 +46,8 @@ class AccountingStatisticsTests(BluebottleTestCase):
         self.project1_owner = BlueBottleUserFactory(username='proj1_owner', email='owner@proj1.nl', password='proj1')
         self.project2_owner = BlueBottleUserFactory(username='proj2_owner', email='owner@proj2.nl', password='proj2')
 
-         # deadline defaults to timezone.now() + timedelta(days=100) # allow_overfunding defaults to True
+        # deadline defaults to timezone.now() + timedelta(days=100)
+        #  allow_overfunding defaults to True
         self.project1 =  ProjectFactory(owner=self.project1_owner, organization=self.organization,
                                         title='Project 1', amount_needed=1111, amount_asked=1111)
         self.project2 = ProjectFactory(owner=self.project2_owner, organization=self.organization,

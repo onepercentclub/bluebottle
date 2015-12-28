@@ -1,0 +1,62 @@
+======================================================================
+ERROR: test_journal_created_when_donation_is_made (bluebottle.journals.tests.test_models.JournalModelTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/gannetson/Projects/bluebottle/bluebottle/journals/tests/test_models.py", line 114, in test_journal_created_when_donation_is_made
+    donation_from_db.save()
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/base.py", line 545, in save
+    force_update=force_update, update_fields=update_fields)
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/base.py", line 573, in save_base
+    updated = self._save_table(raw, cls, force_insert, force_update, using, update_fields)
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/base.py", line 635, in _save_table
+    forced_update)
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/base.py", line 679, in _do_update
+    return filtered._update(values) > 0
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/query.py", line 510, in _update
+    return query.get_compiler(self.db).execute_sql(None)
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 980, in execute_sql
+    cursor = super(SQLUpdateCompiler, self).execute_sql(result_type)
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 776, in execute_sql
+    sql, params = self.as_sql()
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/sql/compiler.py", line 945, in as_sql
+    val = field.get_db_prep_save(val, connection=self.connection)
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/fields/__init__.py", line 350, in get_db_prep_save
+    prepared=False)
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/fields/__init__.py", line 911, in get_db_prep_value
+    value = self.get_prep_value(value)
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/fields/__init__.py", line 895, in get_prep_value
+    value = self.to_python(value)
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/db/models/fields/__init__.py", line 848, in to_python
+    RuntimeWarning)
+RuntimeWarning: DateTimeField Donation.completed received a naive datetime (2015-12-28 00:00:00) while time zone support is active.
+
+======================================================================
+FAIL: test_manual_donation (bluebottle.accounting.tests.test_banktransaction_actions.BankTransactionActionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/gannetson/Projects/bluebottle/bluebottle/accounting/tests/test_banktransaction_actions.py", line 200, in test_manual_donation
+    self.assertEqual(payouts2.count(), 2)  # a new one must be created
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_multiple_manual_donations (bluebottle.accounting.tests.test_banktransaction_actions.BankTransactionActionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/gannetson/Projects/bluebottle/bluebottle/accounting/tests/test_banktransaction_actions.py", line 271, in test_multiple_manual_donations
+    self.assertEqual(project.donation_set.count(), i+2)
+AssertionError: 1 != 2
+
+======================================================================
+FAIL: test_payout_retry (bluebottle.accounting.tests.test_banktransaction_actions.BankTransactionActionTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/gannetson/Projects/bluebottle/bluebottle/accounting/tests/test_banktransaction_actions.py", line 355, in test_payout_retry
+    self.assertRedirects(response, redirect_url)
+  File "/Users/gannetson/.virtualenvs/reef/lib/python2.7/site-packages/django/test/testcases.py", line 282, in assertRedirects
+    (response.status_code, status_code))
+AssertionError: Response didn't redirect as expected: Response code was 200 (expected 302)
+
+----------------------------------------------------------------------
+Ran 455 tests in 335.951s
+
+FAILED (failures=5, errors=1, skipped=12)

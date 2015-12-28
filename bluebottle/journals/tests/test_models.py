@@ -10,6 +10,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from ..models import DonationJournal, ProjectPayoutJournal
 
 from datetime import date
+from django.utils import timezone
 from decimal import Decimal
 
 
@@ -110,7 +111,7 @@ class JournalModelTests(BluebottleTestCase):
         # Change the donation without changing the amount, no journal should be created.
         donation_from_db = self._get_only_one_from_db(Donation)
         self.assertEqual(DonationJournal.objects.all().count(), 3)
-        donation_from_db.completed = date.today()
+        donation_from_db.completed = timezone.now()
         donation_from_db.save()
         self.assertEqual(DonationJournal.objects.all().count(), 3)
 

@@ -6,6 +6,7 @@ from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, \
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients import properties
+from bluebottle.bb_metrics.utils import bb_track
 
 from tenant_extras.utils import TenantLanguage
 
@@ -29,6 +30,12 @@ class Task(BaseTask):
 
         self.status = 'realized'
         self.save()
+
+        data = {
+            "Task": self.title,
+            "Author": self.author.username
+        }
+        bb_track("Task Deadline Reached", data)
 
     def status_changed(self, oldstate, newstate):
         """ called by post_save signal handler, if status changed """
@@ -61,22 +68,16 @@ class Task(BaseTask):
                 link='/go/tasks/{0}'.format(self.id)
             )
 
-        # Importing mixpanel on the top of the file causes a circular import and results in
-        # errors such as "TASK_MEMBER_MODEL has not been installed" 
-        from mixpanel import Mixpanel
-
-        mp = None
-        KEY = getattr(properties, 'MIXPANEL', None)
-        if KEY:
-            mp = Mixpanel(KEY)
-
-        if mp and oldstate in ("in progress", "open") and newstate in ("realized", "closed"):
-            mp.track(None, "Task Completed", {
+        if oldstate in ("in progress", "open") and newstate in ("realized", "closed"):
+            data = {
                 "Task": self.title,
                 "Author": self.author.username,
                 "Old status": oldstate,
                 "New status": newstate
-            })
+            }
+
+            bb_track("Task Completed", data)
+
 
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver

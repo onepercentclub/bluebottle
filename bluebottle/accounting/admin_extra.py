@@ -20,9 +20,9 @@ class DocdataPaymentMatchedListFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == YesOrNo.yes:
-            return queryset.filter(local_payment__docdatapayment__merchant_order_id=F('merchant_reference'))
+            return queryset.filter(local_payment__isnull=False)
         if self.value() == YesOrNo.no:
-            return queryset.exclude(local_payment__docdatapayment__merchant_order_id=F('merchant_reference'))
+            return queryset.filter(local_payment__isnull=True)
 
 
 class IntegrityStatusListFilter(SimpleListFilter):

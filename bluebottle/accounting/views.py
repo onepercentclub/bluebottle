@@ -1,5 +1,6 @@
 from django import forms
 from django.db import connection
+from django.http import HttpResponseForbidden
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView
@@ -105,7 +106,22 @@ class AccountingDashboardView(InitialDatesMixin, FormView):
         return context
 
 
-class MultiTenantAccountingOverviewView(InitialDatesMixin, FormView):
+class OnepercentOnlyPermissionMixin(object):
+    """
+    Until we find something smarter
+    """
+    def get(self, request, *args, **kwargs):
+        if connection.tenant.client_name != 'onepercent':
+            return HttpResponseForbidden()
+        return super(OnepercentOnlyPermissionMixin, self).get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if connection.tenant.client_name != 'onepercent':
+            return HttpResponseForbidden()
+        return super(OnepercentOnlyPermissionMixin, self).post(request, *args, **kwargs)
+
+
+class MultiTenantAccountingOverviewView(InitialDatesMixin, OnepercentOnlyPermissionMixin, FormView):
     """
     Same as AccountingOverviewView but context data will contain
     totals for all tenants (or just one).
@@ -152,7 +168,7 @@ class MultiTenantAccountingOverviewView(InitialDatesMixin, FormView):
         return context
 
 
-class MultiTenantAccountingDashboardView(InitialDatesMixin, FormView):
+class MultiTenantAccountingDashboardView(InitialDatesMixin, OnepercentOnlyPermissionMixin,FormView):
     """
     Same as AccountingDashboardView, but for multiple tenants.
     Could be subclassed, but the distinction should be very clear,

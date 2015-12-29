@@ -16,7 +16,7 @@ from .models import BankTransactionCategory
 from .signals import match_transaction_with_payout
 from ..csvimport.admin import IncrementalCSVImportMixin
 
-from .models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout
+from .models import BankTransaction, RemoteDocdataPayment, RemoteDocdataPayout, BankTransactionTenant
 from .forms import (
     BankTransactionImportForm, DocdataPaymentImportForm,
     update_remote_docdata_status,
@@ -35,6 +35,7 @@ from .admin_views import (
 
 admin.site.register(BankTransactionCategory)
 
+admin.site.register(BankTransactionTenant)
 
 class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
     date_hierarchy = 'book_date'
@@ -45,16 +46,16 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
         'counter_account', 'counter_name',
         'description1', 'description2', 'description3', 'description4',
         'description5', 'description6',
-        'amount'
+        'amount', 'tenant'
     ]
 
     list_display = [
         'book_date', 'counter_name', 'counter_account', 'credit_debit', 'amount', 'status',
-        'status_remarks', 'show_actions', 'category',
+        'status_remarks', 'show_actions', 'category', 'tenant'
     ]
 
     list_filter = [
-        'credit_debit', 'book_date', 'category', IntegrityStatusListFilter,
+        'tenant', 'credit_debit', 'book_date', 'category', IntegrityStatusListFilter,
     ]
 
     raw_id_fields = ('payout', 'remote_payout', 'remote_payment')
@@ -68,7 +69,7 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('status', 'status_remarks', 'category')
+            'fields': ('tenant', 'status', 'status_remarks', 'category')
         }),
         ('Data', {
             'fields': readonly_fields

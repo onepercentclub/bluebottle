@@ -25,7 +25,10 @@ class BankTransactionCategory(models.Model):
 
 
 class BankTransactionTenant(models.Model):
-
+    """
+    For now we use this simple way to set tenant on BankTransactions.
+    We definitely want to have a better solution for this.
+    """
     name = models.CharField(_('Tenant name'), max_length=35)
 
     def __unicode__(self):

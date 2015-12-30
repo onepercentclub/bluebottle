@@ -42,7 +42,7 @@ class ImageSerializerExt(ImageSerializer):
 class BaseFundraiserSerializer(serializers.ModelSerializer):
     """ Serializer to view/create fundraisers """
 
-    owner = get_serializer_class('AUTH_USER_MODEL', 'preview')(read_only=True)
+    owner = get_serializer_class('AUTH_USER_MODEL', 'default')(read_only=True)
     project = serializers.SlugRelatedField(source='project', slug_field='slug')
     image = ImageSerializerExt()
     amount_donated = serializers.DecimalField(source='amount_donated',

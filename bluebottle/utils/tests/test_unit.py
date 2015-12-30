@@ -1,9 +1,12 @@
 import json
 import uuid
 import mock
+import dkim
+from mock import patch
+from bunch import bunchify
 
 from django.utils import unittest
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
@@ -12,6 +15,8 @@ from django.db.models import loading
 from bluebottle.test.utils import BluebottleTestCase
 from django.test.client import Client
 from django.test.utils import override_settings
+from django.utils.encoding import force_bytes
+from django.conf import settings
 
 from fluent_contents.models import Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
@@ -20,7 +25,8 @@ from fluent_contents.plugins.text.models import TextItem
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.utils.models import MetaDataModel
 from bluebottle.utils.utils import clean_for_hashtag
-
+from bluebottle.clients.middleware import TenantProperties
+from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from ..email_backend import send_mail, create_message
 
@@ -33,6 +39,43 @@ def generate_random_slug():
 
 def generate_random_email():
     return str(uuid.uuid4())[:10] + '@' + str(uuid.uuid4())[:30] + '.com'
+
+def mock_attr(self, k):
+    if k == 'TOKEN_AUTH':
+        return  {
+            'assertion_mapping': {
+                'email': 'email_attr',
+                'first_name': 'first_name_attr',
+                'last_name': 'last_name_attr'
+            }
+        }
+    else:
+        return getattr(settings, k)
+
+class TenantPropertiesTokenAuthTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.rf = RequestFactory()
+
+    @mock.patch(
+        'bluebottle.clients.middleware.TenantProperties.__getattr__',
+        mock_attr
+    )
+    def test_read_only_settings(self):
+        from ..context_processors import tenant_properties
+
+        context = tenant_properties(self.rf)
+        tenant_settings = json.loads(context['settings'])
+
+        self.assertEqual(tenant_settings['readOnlyFields']['user'], ['first_name', 'last_name', 'email'])
+
+    def test_without_token_auth(self):
+        from ..context_processors import tenant_properties
+
+        context = tenant_properties(self.rf)
+        tenant_settings = json.loads(context['settings'])
+
+        with self.assertRaises(KeyError):
+            read_only = tenant_settings['readOnlyFields']
 
 
 class CustomSettingsTestCase(TestCase):
@@ -359,6 +402,28 @@ from bluebottle.utils.email_backend import TenantAwareBackend
 from bluebottle.clients.mail import EmailMultiAlternatives
 
 
+DKIM_PRIVATE_KEY = b"""-----BEGIN RSA PRIVATE KEY-----
+MIICXgIBAAKBgQDcw49R0Dy5F8mkP31iCQdgHl9TzZV8n9puQf4pYl0GnHcnj+jo
+sc9s1PRMI9rxvYFdM7Vxpw9w2ryxejzWuxXPMNhn5m9Z1XNVRaxTIVEsQAYemMFM
+BGVnyfELBS9QR+ewNCy7E8maIFW3CLpeMtBnGIqOjhR2zLfswkVaXQ+89QIDAQAB
+AoGBAJSMluzjZWjbA9kcy77i+m6IIXcfmB5C5lVY3LB2OsiPEnKxmHSz6TJ/XV+6
+pMIT1W+ksswmMPKsjVoTOcr4GqSPNMNXJFsTwSJMwso2bWLFz5stUkb9A+TLM3bV
+SlGB/IoxADRbMGPnAOa/WaWwQBrBsDKwTDjp080alal5t56BAkEA931WqgtHU0Ob
+k46DTgYQOdOmFE254feMcN7znwobcmanO+QiYRoONT1ZNVHM+kPE+rkhmildrCKu
+nOSb/riPFQJBAORa9DAImAyD8hxMIYrzyyJv1jZjKezRzIPqsR086mkcTbYBFMS/
+Nsuq2rc46a4Oy66t5uFz6XkGkJ37Cxqs7mECQH81p5Qj0/eSaqc/u3IhX7m5dkY9
+ZWwmp8Nkdeirc0wsQ41fR+SNVfw7mlzzvN5ucxNEkWcCGCngccwnHZ+iEbkCQQC8
+3QjW7VSsDTjh9IlNfiMEoVCe/NcA+efXNvUzhF0vf+w52p0NuEQeoHlyTkze23fU
+ShoJXy+7HBXhw27EqkAhAkEAvizvS5bTzkAi7T94zWYoS0rbO/pSqzcGcNGjyisM
+pk501YSTBeanQ7Y9PL17TLQjXquz0u5oqhGlRujFnt9HwA==
+-----END RSA PRIVATE KEY----"""
+
+DKIM_PUBLIC_KEY = b"""MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDcw49R0Dy
+5F8mkP31iCQdgHl9TzZV8n9puQf4pYl0GnHcnj+josc9s1PRMI9rxvYFdM7Vxpw9w2ryxe
+jzWuxXPMNhn5m9Z1XNVRaxTIVEsQAYemMFMBGVnyfELBS9QR+ewNCy7E8maIFW3CLpeMtB
+nGIqOjhR2zLfswkVaXQ+89QIDAQAB"""
+
+
 class TestTenantAwareMailServer(unittest.TestCase):
     @override_settings(
         EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
@@ -382,6 +447,44 @@ class TestTenantAwareMailServer(unittest.TestCase):
         self.assertTrue(smtp.called)
         self.assertEquals(smtp.call_args[0], ('somehost', 1337))
         self.assertTrue(connection.sendmail.called)
+
+    @override_settings(
+        EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
+        EMAIL_HOST='somehost',
+        EMAIL_PORT=1337)
+    @mock.patch("smtplib.SMTP")
+    def test_tenant_dkim_settings(self, smtp):
+        """ test setup where tenant config differs from global settings """
+
+        with mock.patch("bluebottle.utils.email_backend.properties",
+                        new=mock.Mock([])) as properties:
+            properties.MAIL_CONFIG = {'HOST': 'tenanthost', 'PORT': 4242}
+
+            properties.DKIM_SELECTOR = "key2"
+            properties.DKIM_DOMAIN = "testserver"
+            properties.DKIM_PRIVATE_KEY = DKIM_PRIVATE_KEY
+
+            be = TenantAwareBackend()
+            msg = EmailMultiAlternatives(subject="test", body="test",
+                                         to=["test@example.com"])
+
+            be.open()
+            connection = be.connection
+            be.send_messages([msg])
+
+            to_bytes = lambda s: force_bytes(s, 'utf-8')
+
+            def _plain_key(s):
+                return b"".join([l for l in s.split(b'\n') if not l.startswith(b'---')])
+
+            signed_msg = connection.sendmail.call_args[0][2]
+            dkim_message = dkim.DKIM(message=to_bytes(signed_msg))
+            dkim_check = dkim_message.verify(dnsfunc=lambda name: b"".join([b"v=DKIM1; p=", _plain_key(DKIM_PUBLIC_KEY)]))
+
+            self.assertTrue(signed_msg.find("d=testserver") >= 0)
+            self.assertTrue(signed_msg.find("s=key2") >= 0)
+            self.assertTrue(dkim_check, "Email should be signed by tenant")
+
 
     @override_settings(
         EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',

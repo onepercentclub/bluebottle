@@ -168,14 +168,15 @@ class MultiTenantAccountingOverviewView(InitialDatesMixin, OnepercentOnlyPermiss
         return context
 
 
-class MultiTenantAccountingDashboardView(InitialDatesMixin, OnepercentOnlyPermissionMixin,FormView):
+class MultiTenantAccountingDashboardView(InitialDatesMixin,
+                                         OnepercentOnlyPermissionMixin,
+                                         FormView):
     """
     Same as AccountingDashboardView, but for multiple tenants.
     Could be subclassed, but the distinction should be very clear,
     this view can contain data from all tenants, the other view can NOT.
     """
     template_name = 'admin/accounting/dashboard.html'
-    #template_name = 'admin/accounting/multiadmin/multi_tenant_dashboard.html'
     form_class = PeriodTenantForm
 
     def form_valid(self, form):
@@ -209,6 +210,7 @@ class MultiTenantAccountingDashboardView(InitialDatesMixin, OnepercentOnlyPermis
                 all_tenants = {}  # contains data for each tenant when all are selected
 
                 for tenant in get_tenant_model().objects.all():
+                    
                     connection.set_tenant(tenant)
 
                     stats = get_accounting_statistics(self.selected_start, self.selected_stop)

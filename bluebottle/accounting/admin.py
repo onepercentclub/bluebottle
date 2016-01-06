@@ -193,10 +193,10 @@ class DocdataPayoutAdmin(admin.ModelAdmin):
             'fields': ('payout_reference', 'payout_date', 'payout_amount',
                        'start_date', 'end_date', 'collected_amount')
         }),
-        ('Calculated from remote payments', {
+        (_('Calculated from remote payments'), {
             'fields': ('payments_count', 'payments_total', 'fee_total', 'costs_total', 'vat_costs')
         }),
-        ('Calculated from local order-payments', {
+        (_('Calculated from local order-payments'), {
             'fields': ('local_payments_count', 'local_payments_total', )
         })
     )

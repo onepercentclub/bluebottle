@@ -190,11 +190,7 @@ class CreateManualDonationView(AdminOptsMixin, BaseManualEntryView):
             payouts = ProjectPayout.objects.filter(project=project)
 
             # check the payouts and only update 'new' payouts, else create a new payout
-            if not payouts.exists():
-                # if no payouts exist yet, it's because the project is not finished yet.
-                # the donations will be collected when the project finishes
-                pass
-            else:
+            if payouts.exists():
                 updateable = payouts.filter(status=StatusDefinition.NEW).first()  # only new payouts can be updated
                 if updateable is None:
                     rules = payouts.values_list('payout_rule', flat=True).distinct()

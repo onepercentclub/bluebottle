@@ -303,7 +303,7 @@ class PasswordSet(views.APIView):
         try:
             uid_int = base36_to_int(uidb36)
             user = USER_MODEL._default_manager.get(pk=uid_int)
-        except (ValueError, OverflowError, user.DoesNotExist):
+        except (ValueError, OverflowError, USER_MODEL.DoesNotExist):
             user = None
 
         return user
@@ -337,9 +337,8 @@ class PasswordSet(views.APIView):
         if user is not None and default_token_generator.check_token(user,
                                                                     token):
             return response.Response(status=status.HTTP_200_OK)
-        return response.Response({'message': 'Token expired',
-                                  'email': user.email},
-                                 status=status.HTTP_400_BAD_REQUEST)
+        return response.Response({'message': 'Token expired'},
+                                  status=status.HTTP_400_BAD_REQUEST)
 
 
 class DisableAccount(views.APIView):

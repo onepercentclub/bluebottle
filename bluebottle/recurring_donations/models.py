@@ -2,7 +2,8 @@ from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import CreationDateTimeField, \
     ModificationDateTimeField
-from django_iban.fields import IBANField, SWIFTBICField
+
+from localflavor.generic.models import IBANField, BICField
 from django.utils.translation import ugettext as _
 
 
@@ -19,7 +20,7 @@ class MonthlyDonor(models.Model):
     amount = models.DecimalField(_("amount"), max_digits=6, decimal_places=2)
 
     iban = IBANField()
-    bic = SWIFTBICField(blank=True, default='')
+    bic = BICField(blank=True, default='')
     name = models.CharField(max_length=35)
     city = models.CharField(max_length=35)
     country = models.ForeignKey('geo.Country', blank=True, null=True)
@@ -87,7 +88,7 @@ class MonthlyOrder(models.Model):
     name = models.CharField(max_length=35)
     city = models.CharField(max_length=35)
     iban = IBANField(blank=True, default='')
-    bic = SWIFTBICField(blank=True, default='')
+    bic = BICField(blank=True, default='')
     country = models.CharField(max_length=2, default='')
 
     processed = models.BooleanField(

@@ -434,7 +434,9 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         # This will just pass now because we removed Iban check
         # because the field can hold a non-Iban account too.
         self.assertEquals(response.status_code,
-                          status.HTTP_201_CREATED)
+                          status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(json.loads(response.content)['account_number'][0],
+                          'NL IBANs must contain 18 characters.')
 
     def test_set_invalid_bic(self):
         """ Set invalid bic bank detail """
@@ -451,6 +453,20 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                           status.HTTP_400_BAD_REQUEST)
         self.assertEquals(json.loads(response.content)['account_bic'][0],
                           'Ensure this value has at most 11 characters (it has 14).')
+
+    def test_skip_iban_validation(self):
+        """ The iban validation should be skipped for other account formats """
+
+        project_data = {
+            'title': 'Project with bank details',
+            'account_number': '56105910810182',
+        }
+
+        response = self.client.post(self.manage_projects_url, project_data,
+                                    token=self.some_user_token)
+
+        self.assertEquals(response.status_code,
+                          status.HTTP_201_CREATED)
 
     def test_project_budgetlines_crud(self):
         project_data = {"title": "Some project with a goal & budget"}

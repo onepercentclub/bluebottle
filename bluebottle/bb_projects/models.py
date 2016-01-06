@@ -13,7 +13,7 @@ from django.utils.timezone import now
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
-from django_iban.fields import SWIFTBICField
+from localflavor.generic.models import BICField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
@@ -207,7 +207,7 @@ class BaseProject(models.Model, GetTweetMixin):
     # Bank details
     account_number = models.CharField(_("Account number"), max_length=255,
                                       null=True, blank=True)
-    account_bic = SWIFTBICField(_("account SWIFT-BIC"), null=True, blank=True)
+    account_bic = BICField(_("account SWIFT-BIC"), null=True, blank=True)
     account_bank_country = models.ForeignKey(
         'geo.Country', blank=True, null=True,
         related_name="project_account_bank_country")

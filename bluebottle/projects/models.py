@@ -526,6 +526,11 @@ class PartnerOrganization(models.Model):
             return self.name
         return self.slug
 
+    def save(self, *args, **kwargs):
+        if not self.slug.islower():
+            self.slug = self.slug.lower()
+        super(PartnerOrganization, self).save(*args, **kwargs)
+
 
 @receiver(project_funded, weak=False, sender=Project,
           dispatch_uid="email-project-team-project-funded")

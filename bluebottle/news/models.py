@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 from django_extensions.db.fields import (CreationDateTimeField,
                                          ModificationDateTimeField)
 from djchoices import DjangoChoices, ChoiceItem
-from fluent_contents.models import PlaceholderField
+from fluent_contents.models import PlaceholderField, ContentItemRelation
 from fluent_contents.rendering import render_placeholder
 
 from bluebottle.utils.fields import ImageField
@@ -37,6 +37,9 @@ class NewsItem(models.Model):
     language = models.CharField(_("language"), max_length=5,
                                 choices=settings.LANGUAGES)
     contents = PlaceholderField("blog_contents")
+    # This should not be nessecary, but fixes deletion of some news items
+    # See https://github.com/edoburu/django-fluent-contents/issues/19
+    contentitem_set = ContentItemRelation()
 
     # Publication
     status = models.CharField(_('status'), max_length=20,

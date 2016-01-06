@@ -1,8 +1,10 @@
+import re
+
 from django.utils.translation import ugettext as _
 
-from django_iban.validators import iban_validator, swift_bic_validator
 from rest_framework import serializers
 from bs4 import BeautifulSoup
+from localflavor.generic.validators import IBANValidator, BICValidator
 
 from bluebottle.projects.models import ProjectBudgetLine
 from bluebottle.bluebottle_drf2.serializers import (
@@ -202,16 +204,29 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     documents = ProjectDocumentSerializer(
         many=True, source='documents', read_only=True)
 
-    def validate_account_iban(self, attrs, source):
+    def validate_account_number(self, attrs, source):
         value = attrs.get(source)
+
         if value:
-            iban_validator(value)
+            country_code = value[:2]
+            digits_regex = re.compile('\d{2}')
+            check_digits = value[2:4]
+
+            # Only try iban validaton when the field matches start of
+            # iban format as the field can also contain non-iban
+            # account numbers.
+            # Expecting something like: NL18xxxxxxxxxx
+            iban_validator = IBANValidator()
+            if country_code in iban_validator.validation_countries.keys() and \
+              digits_regex.match(check_digits):
+                iban_validator(value)
         return attrs
 
     def validate_account_bic(self, attrs, source):
         value = attrs.get(source)
         if value:
-            swift_bic_validator(value)
+            bic_validator = BICValidator()
+            bic_validator(value)
         return attrs
 
     def validate_status(self, attrs, source):

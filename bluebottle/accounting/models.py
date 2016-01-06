@@ -24,6 +24,17 @@ class BankTransactionCategory(models.Model):
         verbose_name_plural = _('Bank transaction categories')
 
 
+class BankTransactionTenant(models.Model):
+    """
+    For now we use this simple way to set tenant on BankTransactions.
+    We definitely want to have a better solution for this.
+    """
+    name = models.CharField(_('Tenant name'), max_length=35)
+
+    def __unicode__(self):
+        return self.name
+
+
 class BankTransaction(models.Model):
     """ Rabobank transaction as incrementally imported from CSV. """
 
@@ -40,6 +51,7 @@ class BankTransaction(models.Model):
     payout = models.ForeignKey('payouts.ProjectPayout', verbose_name=_('Campaign payout'), blank=True, null=True)
     remote_payout = models.ForeignKey('accounting.RemoteDocdataPayout', verbose_name=_('Docdata payout'), blank=True, null=True)
     remote_payment = models.ForeignKey('accounting.RemoteDocdataPayment', verbose_name=_('Docdata payment'), blank=True, null=True)
+    tenant = models.ForeignKey('accounting.BankTransactionTenant', verbose_name=_('Tenant'), blank=True, null=True)
 
     sender_account = models.CharField(_('holder account number'), max_length=35)
     currency = models.CharField(_('currency'), max_length=3)

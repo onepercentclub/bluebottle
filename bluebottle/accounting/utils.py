@@ -39,6 +39,22 @@ def add_up(first, second):
 
 
 class mydict(dict):
+    """
+    Dictionary with a custom add method that uses the 'add_up' function
+    to handle all kinds of values (another dict, a list, value, string,
+    None, ..)
+
+    When dictA (self) is an empty dict, return dictB (without lookint
+    at the structure)
+
+    Only add up two dicts when both have exactly the same keys (return
+    empyty MyDict when they do not have the same keys)
+    
+    Construct a new MyDict, with exactly the same keys as the two dicts,
+    and with values that are calculated by the add_up function that can
+    handle any kind of nested dicts, lists (of dicts) etc. (this same
+    add_up function is used when each item in two MyLists are added up)
+    """
 
     def __add__(self, dict2):
         if self == mydict():
@@ -57,6 +73,18 @@ class mydict(dict):
 
 
 class mylist(list):
+    """
+    List with a custom add method that uses the 'add_up' function to handle all
+    kinds of values (another dict, a list, value, string, None, ..)
+
+    Return an empty mylist when the two given lists do not have the same length.
+
+    When both lists have the same length, construct a new MyList, with the same
+    length as the two given lists, and with values that are calculated by the
+    add_up function that can handle any kind of nested dicts, lists (of dicts)
+    etc. (this same add_up function is used when each value in two
+    MyDicts are added up)
+    """
 
     def add(self, list2):
         length = len(self)

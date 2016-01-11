@@ -153,9 +153,9 @@ SWAGGER_SETTINGS = {
 }
 
 SHARED_APPS = (
-    'bluebottle.clients',
-    # you must list the app where your tenant model resides in
-
+    'bluebottle.clients',  
+    'bluebottle.accounting',
+    
     # Django apps
     'south',
     'django.contrib.auth',
@@ -235,8 +235,13 @@ TENANT_APPS = (
     'bluebottle.payments',
     'bluebottle.payments_docdata',
     'bluebottle.payments_logger',
+    'bluebottle.payments_manual',
     'bluebottle.payments_voucher',
     'bluebottle.redirects',
+    'bluebottle.votes',
+    'bluebottle.journals',
+    'bluebottle.accounting',
+    'bluebottle.csvimport',
     'bluebottle.votes',
 
     # Bluebottle apps with abstract models
@@ -409,10 +414,8 @@ DONATIONS_ENABLED = True
 
 
 # For building frontend code
-BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 'slides',
-           'quotes',
-           'payments', 'payments-docdata', 'payments-voucher', 'payments-mock',
-           'members', 'organizations',
+BB_APPS = ['wallposts', 'utils', 'contacts', 'geo', 'pages', 'news', 'slides', 'quotes',
+           'payments', 'payments-docdata', 'payments-voucher', 'payments-mock', 'members', 'organizations',
            'projects', 'tasks', 'fundraisers', 'donations', 'orders',
            'homepage', 'recurring-donations', 'partners']
 

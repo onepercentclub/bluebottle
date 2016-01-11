@@ -1,6 +1,7 @@
 import decimal
 import datetime
 from decimal import Decimal
+from dateutil.relativedelta import relativedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -12,6 +13,7 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
+from django_fsm.db.fields import FSMField, transition
 
 from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.bb_projects.fields import MoneyField
@@ -19,11 +21,9 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import StatusDefinition
 
-from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_donation_model,
-                                               get_project_payout_model)
-
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
+from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_project_payout_model
+from bluebottle.utils.utils import FSMTransition
 
 PROJECT_MODEL = get_project_model()
 DONATION_MODEL = get_donation_model()
@@ -103,22 +103,25 @@ class CompletedDateTimeMixin(models.Model):
         super(CompletedDateTimeMixin, self).save(*args, **kwargs)
 
 
-class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
+class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FSMTransition):
     """
     Common abstract base class for ProjectPayout and OrganizationPayout.
     """
-    STATUS_CHOICES = (
-        (StatusDefinition.NEW, _('New')),
-        (StatusDefinition.IN_PROGRESS, _('In progress')),
-        (StatusDefinition.SETTLED, _('Settled')),
-    )
 
-    planned = models.DateField(_("Planned"), help_text=_(
-        "Date on which this batch should be processed."))
+    class Statuses(DjangoChoices):
+        NEW = ChoiceItem(StatusDefinition.NEW, _('New'))
+        IN_PROGRESS = ChoiceItem(StatusDefinition.IN_PROGRESS, _('In progress'))
+        SETTLED = ChoiceItem(StatusDefinition.SETTLED, _('Settled'))
+        RETRY = ChoiceItem(StatusDefinition.RETRY, _('Retry'))
 
-    status = models.CharField(_("status"), max_length=20,
-                              choices=STATUS_CHOICES,
-                              default=StatusDefinition.NEW)
+    planned = models.DateField(_("Planned"),
+                               help_text=_("Date on which this batch should be processed."))
+
+    status = FSMField(_("status"), max_length=20, default=Statuses.NEW,
+                      choices=Statuses.choices, protected=True)
+    protected = models.BooleanField(
+        _("protected"), default=False,
+        help_text=_('If a payout is protected, the amounts can only be updated via journals.'))
 
     created = CreationDateTimeField(_("created"))
     updated = ModificationDateTimeField(_("updated"))
@@ -170,6 +173,30 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model):
         self._log_status_change()
 
         return result
+
+    @staticmethod
+    def get_next_planned_date():
+        now = timezone.now()
+        if now.day <= 15:
+            next_date = timezone.datetime(now.year, now.month, 15)
+        else:
+            next_date = timezone.datetime(now.year, now.month, 1) + relativedelta(months=1)
+        return next_date
+
+    @transition(field=status, save=True, source=StatusDefinition.NEW, target=StatusDefinition.IN_PROGRESS)
+    def in_progress(self):
+        self.submitted = timezone.now()
+
+    @transition(field=status, save=True,
+                source=[StatusDefinition.IN_PROGRESS, StatusDefinition.RETRY], target=StatusDefinition.SETTLED)
+    def settled(self, completed=None):
+        self.completed = completed
+        self.protected = True
+
+    @transition(field=status, save=True, source=StatusDefinition.SETTLED, target=StatusDefinition.RETRY)
+    def retry(self):
+        self.protected = True
+        self.planned = self.__class__.get_next_planned_date()
 
 
 class PayoutLogBase(models.Model):
@@ -280,9 +307,7 @@ class BaseProjectPayout(PayoutBase):
         if not self.amount_payable:
             return "-"
 
-        return "{}%".format(round(((
-                                       self.amount_raised - self.amount_payable) / self.amount_raised) * 100,
-                                  1))
+        return "{}%".format(round(((self.amount_raised - self.amount_payable) / self.amount_raised) * 100,1))
 
     def get_payout_rule(self):
         """
@@ -291,7 +316,7 @@ class BaseProjectPayout(PayoutBase):
 
         Default is just payout rule 5.
         """
-        return self.PayoutRules.five
+        return self.PayoutRules.fully_funded
 
     def calculate_amount_payable_rule_five(self, total):
         """
@@ -312,6 +337,7 @@ class BaseProjectPayout(PayoutBase):
         Should only be called for Payouts with status 'new'.
         """
         assert self.status == StatusDefinition.NEW, 'Can only recalculate for new Payout.'
+        assert not self.protected, 'Can only recalculate for un-protected payouts'
 
         # Set payout rule if none set.
         if not self.payout_rule:
@@ -323,24 +349,33 @@ class BaseProjectPayout(PayoutBase):
             calculator_name = "calculate_amount_payable_rule_{0}".format(
                 self.payout_rule)
             try:
-                calculator = getattr(self,
-                                     "calculate_amount_payable_rule_{0}".format(
-                                         self.payout_rule))
+                cmd = "calculate_amount_payable_rule_{0}".format(self.payout_rule)
+                calculator = getattr(self, cmd)
             except AttributeError:
-                message = "Missing calculator for payout rule '{0}': '{1}'".format(
-                    self.payout_rule, calculator_name)
+                message = "Missing calculator for payout rule '{0}':" \
+                          " '{1}'".format(self.payout_rule, calculator_name)
                 raise PayoutException(message)
 
             self.amount_payable = Decimal(
                 round(calculator(self.get_amount_raised()), 2))
 
-        if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
-            self.status = StatusDefinition.SETTLED
-
         self.organization_fee = self.amount_raised - self.amount_payable
+
+        if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
+            self.in_progress()
+            self.settled()
 
         if save:
             self.save()
+
+    def get_calculator(self):
+        calculator_name = "calculate_amount_payable_rule_{0}".format(self.payout_rule)
+        try:
+            calculator = getattr(self, "calculate_amount_payable_rule_{0}".format(self.payout_rule))
+        except AttributeError:
+            message = "Missing calculator for payout rule '{0}': '{1}'".format(self.payout_rule, calculator_name)
+            raise PayoutException(message)
+        return calculator
 
     def generate_invoice_reference(self):
         """
@@ -356,18 +391,24 @@ class BaseProjectPayout(PayoutBase):
         """
         Real time amount of raised ('paid', 'pending') donations.
         """
+        if self.protected:
+            return self.amount_raised
         return self.project.amount_donated
 
     def get_amount_safe(self):
         """
         Real time amount of safe ('paid') donations.
         """
+        if self.protected:
+            return self.amount_raised
         return self.project.amount_safe
 
     def get_amount_pending(self):
         """
         Real time amount of pending donations.
         """
+        if self.protected:
+            return 0
         return self.project.amount_pending
 
     def get_amount_failed(self):
@@ -376,6 +417,9 @@ class BaseProjectPayout(PayoutBase):
 
         Note: amount_raised is the saved property, other values are real time.
         """
+
+        if self.protected:
+            return 0
 
         amount_safe = self.get_amount_safe()
         amount_pending = self.get_amount_pending()
@@ -522,6 +566,7 @@ class BaseOrganizationPayout(PayoutBase):
         Should only be called for Payouts with status 'new'.
         """
         assert self.status == StatusDefinition.NEW, 'Can only recalculate for new Payout.'
+        assert not self.protected, 'Can only recalculate for un-protected payouts'
 
         # Calculate original values
         self.organization_fee_incl = self._get_organization_fee()

@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.projects.models import PartnerOrganization
 
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.utils.utils import StatusDefinition
@@ -224,3 +225,10 @@ class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
         suggestion = Suggestion.objects.get(project=project)
 
         self.assertEquals(suggestion.status, 'in_progress')
+
+
+class PartnerOrganizationTests(BluebottleTestCase):
+    def test_convert_to_lowercase_slug(self):
+        po = PartnerOrganization.objects.create(name="YADA", slug="YADA",
+                                                description="blabla")
+        self.assertEquals(po.slug, 'yada')

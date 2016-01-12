@@ -5,8 +5,8 @@ from .models import Reward
 
 class RewardSerializer(serializers.ModelSerializer):
 
-    count = serializers.IntgerField(source='count')
+    count = serializers.IntegerField(source='count')
 
     class Meta:
         model = Reward
-        fields = ('id', 'title', 'description', 'amount', 'count')
+        fields = ('id', 'title', 'description', 'amount', 'count', 'limit')

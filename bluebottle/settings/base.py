@@ -238,6 +238,7 @@ TENANT_APPS = (
     'bluebottle.payments_voucher',
     'bluebottle.redirects',
     'bluebottle.votes',
+    'bluebottle.rewards',
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',

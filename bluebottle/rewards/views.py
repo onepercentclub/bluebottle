@@ -1,6 +1,7 @@
 from rest_framework import generics
 
 from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
+from .permissions import NoDonationsOrReadOnly
 from .models import Reward
 from .serializers import RewardSerializer
 

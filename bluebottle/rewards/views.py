@@ -21,6 +21,7 @@ class ProjectRewardList(generics.ListCreateAPIView):
 class ProjectRewardDetail(generics.RetrieveDestroyAPIView):
     model = Reward
     serializer_class = RewardSerializer
+    permission_classes = (IsProjectOwnerOrReadOnly, NoDonationsOrReadOnly)
 
     def get_queryset(self):
         project_slug = self.kwargs.get('project_slug', None)

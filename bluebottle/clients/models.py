@@ -10,3 +10,6 @@ class Client(TenantMixin):
     updated = ModificationDateTimeField()
 
     auto_create_schema = True
+
+    def __unicode__(self):
+        return self.name

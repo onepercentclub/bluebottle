@@ -1,7 +1,13 @@
 from decimal import Decimal
 
 from django.utils.translation import ugettext as _
+
+from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
+from bluebottle.clients import properties
+from bluebottle.sepa.sepa import SepaDocument, SepaAccount
+
 from django.utils import timezone
+from django.utils.translation import ugettext as _
 from django.conf import settings
 
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -12,8 +18,10 @@ from bluebottle.clients import properties
 from bluebottle.sepa.sepa import SepaDocument, SepaAccount
 from bluebottle.utils.utils import StatusDefinition
 
+from djchoices.choices import DjangoChoices, ChoiceItem
 
 class ProjectPayout(BaseProjectPayout):
+    
     class PayoutRules(DjangoChoices):
         """ Which rules to use to calculate fees. """
         beneath_threshold = ChoiceItem('beneath_threshold',
@@ -145,12 +153,8 @@ class ProjectPayout(BaseProjectPayout):
         sepa.set_info(message_identification=batch_id, payment_info_id=batch_id)
         sepa.set_initiating_party(name=settings.BANK_ACCOUNT_DONATIONS['name'])
 
-        now = timezone.now()
-
         for payout in qs.all():
-            payout.status = StatusDefinition.IN_PROGRESS
-            payout.submitted = now
-            payout.save()
+            payout.in_progress()
             creditor = SepaAccount(
                 name=payout.receiver_account_name,
                 iban=payout.receiver_account_iban,
@@ -189,12 +193,8 @@ class OrganizationPayout(BaseOrganizationPayout):
             message_identification=batch_id, payment_info_id=batch_id)
         sepa.set_initiating_party(name=settings.BANK_ACCOUNT_DONATIONS['name'])
 
-        now = timezone.now()
-
         for payout in qs.all():
-            payout.status = StatusDefinition.IN_PROGRESS
-            payout.submitted = now
-            payout.save()
+            payout.in_progress()
             creditor = SepaAccount(
                 name=settings.BANK_ACCOUNT_ORGANISATION['name'],
                 iban=settings.BANK_ACCOUNT_ORGANISATION['iban'],
@@ -208,3 +208,6 @@ class OrganizationPayout(BaseOrganizationPayout):
             )
 
         return sepa.as_xml()
+
+
+from .signals import *

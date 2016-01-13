@@ -10,4 +10,9 @@ GROUP_PERMS = {
 
 
 class Donation(BaseDonation):
-    pass
+
+    def __unicode__(self):
+        return u'{} for {}'.format(self.amount, self.project)
+
+
+from .signals import *

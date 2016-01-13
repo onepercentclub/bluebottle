@@ -16,8 +16,8 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
     'git+https://github.com/onepercentclub/django-fluent-contents.git@8439c7ffc1ba8877247aa7d012928c9bb170dc79#egg=fluent_contents-1.0c3',
     'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.1.18#egg=django-bb-salesforce-1.1.18',
-    'git+https://github.com/onepercentclub/django-tenant-extras.git@1.9.7#egg=django-tenant-extras-1.9.7',
-    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.11#egg=django-token-auth-0.2.12'
+    'git+https://github.com/onepercentclub/django-tenant-extras.git@1.9.8#egg=django-tenant-extras-1.9.8',
+    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.12#egg=django-token-auth-0.2.12'
 ]
 
 install_requires = [
@@ -25,7 +25,7 @@ install_requires = [
     'BeautifulSoup==3.2.1',
     'Django==1.6.8',
     'Pillow==2.3.0',
-    'South==1.0',
+    'South==1.0.2',
     'Sphinx==1.2b1',
     'bunch==1.0.1',
     'celery==3.1.17',
@@ -52,21 +52,21 @@ install_requires = [
     'html5lib==0.95',
     'httmock==1.2.3',
     'micawber==0.2.6',
-    'requests==2.3.0',
+    'requests==2.5.1',
     'sorl-thumbnail==11.12',
     'transifex-client==0.11b3',
     'django-tools==0.25.0',
     'django-loginas==0.1.3',
     'pygraphviz==1.2',
     'beautifulsoup4==4.3.2',
-    'psycopg2==2.5.5',
+    'psycopg2==2.6.1',
     'django-fsm==1.6.0',
     'suds-jurko==0.6',
     'django-ipware==0.0.8',
     'pygeoip==0.3.1',
     'python-social-auth==0.2.12',
-    'python-memcached==1.53',
-    'lxml==3.4.4',
+    'python-memcached==1.57',
+    'lxml==3.5.0',
     'unicodecsv==0.9.4',
     'python-dateutil==1.5',
     'gunicorn==19.2.1',
@@ -74,7 +74,7 @@ install_requires = [
     'django_polymorphic==0.6.1',
     'dnspython',
     'fabric',
-    'django-tenant-schemas==1.5.2',
+    'django-tenant-schemas==1.5.7',
     'raven==5.1.1',
     'regex==2015.11.22',
     'djangorestframework-jwt==1.7.2',
@@ -86,7 +86,7 @@ install_requires = [
     'django-taggit-autocomplete-modified==0.1.1b1',
     'django-fluent-contents==1.0c3',
     'django-bb-salesforce==1.1.18',
-    'django-tenant-extras==1.9.7',
+    'django-tenant-extras==1.9.8',
     'django-token-auth==0.2.12'
 ]
 
@@ -98,7 +98,10 @@ tests_requires = [
     'mock==1.0.1',
     'nose==1.3.4',
     'pylint==1.1.0',
-    'tdaemon==0.1.1'
+    'tdaemon==0.1.1',
+    'WebTest==2.0.18',
+    'django-webtest==1.7.7',
+    'pyquery==1.2.9'
 ]
 
 dev_requires = [

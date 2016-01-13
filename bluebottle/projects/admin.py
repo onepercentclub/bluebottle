@@ -11,6 +11,7 @@ from django.db.models import Count
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
+from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter
@@ -73,6 +74,16 @@ class ProjectDocumentInline(admin.StackedInline):
     download_url.allow_tags = True
 
 
+class RewardInlineAdmin(admin.TabularInline):
+
+    model = Reward
+    readonly_fields = ('title', 'description', 'amount', 'limit', 'count')
+    extra = 0
+
+    def count(self, obj):
+        return obj.count
+
+
 class ProjectPhaseLogInline(admin.TabularInline):
     model = PROJECT_PHASELOG_MODEL
     can_delete = False
@@ -133,7 +144,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     prepopulated_fields = {'slug': ('title',)}
 
     inlines = (ProjectBudgetLineInline, TaskAdminInline, ProjectDocumentInline,
-               ProjectPhaseLogInline)
+               ProjectPhaseLogInline, RewardInlineAdmin)
 
     list_filter = ('country__subregion__region',)
 

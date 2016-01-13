@@ -14,3 +14,4 @@ class RewardAdmin(admin.ModelAdmin):
     fields = ('title', 'description', 'project', 'amount')
 
 admin.site.register(Reward, RewardAdmin)
+

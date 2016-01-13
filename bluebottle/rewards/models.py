@@ -18,8 +18,8 @@ class Reward(models.Model):
     limit = models.IntegerField(_('Limit'), null=True, blank=True,
                                 help_text=_('How many of this rewards are available'))
 
-    creation_date = CreationDateTimeField(_('creation date'))
-    modification_date = ModificationDateTimeField(_('last modification'))
+    created = CreationDateTimeField(_('creation date'))
+    updated = ModificationDateTimeField(_('last modification'))
 
     @property
     def count(self):

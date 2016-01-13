@@ -77,7 +77,7 @@ class ProjectDocumentInline(admin.StackedInline):
 class RewardInlineAdmin(admin.TabularInline):
 
     model = Reward
-    readonly_fields = ('title', 'description', 'amount', 'limit', 'count')
+    readonly_fields = ('count', )
     extra = 0
 
     def count(self, obj):

@@ -1,9 +1,11 @@
+from django import forms
 from django.contrib.admin.filters import SimpleListFilter
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.payouts.admin_utils import link_to
+from bluebottle.rewards.models import Reward
 from bluebottle.utils.admin import (
     export_as_csv_action, TotalAmountAdminChangeList)
 from bluebottle.utils.model_dispatcher import (
@@ -76,7 +78,23 @@ class DonationUserFilter(SimpleListFilter):
         return queryset
 
 
+class DonationAdminForm(forms.ModelForm):
+    class Meta:
+        model = DONATION_MODEL
+
+    def __init__(self, *args, **kwargs):
+        super(DonationAdminForm, self).__init__(*args, **kwargs)
+        if self.instance:
+            if self.instance.id:
+                # You can only select a reward if the project is set on the donation
+                self.fields['reward'].queryset = Reward.objects.filter(project=self.instance.project)
+            else:
+                self.fields['reward'].queryset = Reward.objects.none()
+
+
+
 class DonationAdmin(admin.ModelAdmin):
+    form = DonationAdminForm
     date_hierarchy = 'created'
     list_display = ('created', 'completed', 'admin_project', 'fundraiser',
                     'user', 'user_full_name', 'amount',
@@ -88,7 +106,7 @@ class DonationAdmin(admin.ModelAdmin):
     readonly_fields = ('order_link', 'created', 'updated', 'completed',
                        'status', 'user_link', 'project_link',
                        'fundraiser_link')
-    fields = readonly_fields + ('amount', 'project', 'fundraiser')
+    fields = readonly_fields + ('amount', 'project', 'fundraiser', 'reward')
     search_fields = ('order__user__first_name', 'order__user__last_name',
                      'order__user__email', 'project__title')
 

@@ -56,6 +56,9 @@ urlpatterns = patterns('',
                        url(r'^api/partners/',
                            include('bluebottle.partners.urls.api')),
 
+                       url(r'^api/rewards/',
+                           include('bluebottle.rewards.urls.api')),
+
                        # Homepage API urls
                        url(r'^api/homepage/',
                            include('bluebottle.homepage.urls.api')),

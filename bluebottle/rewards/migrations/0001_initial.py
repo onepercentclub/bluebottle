@@ -8,15 +8,23 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'Donation.reward'
-        db.add_column(u'donations_donation', 'reward',
-                      self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='reward', null=True, to=orm['rewards.Reward']),
-                      keep_default=False)
+        # Adding model 'Reward'
+        db.create_table(u'rewards_reward', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('amount', self.gf('django.db.models.fields.DecimalField')(max_digits=16, decimal_places=2)),
+            ('title', self.gf('django.db.models.fields.CharField')(max_length=30)),
+            ('description', self.gf('django.db.models.fields.CharField')(max_length=200)),
+            ('project', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['projects.Project'])),
+            ('limit', self.gf('django.db.models.fields.IntegerField')(null=True, blank=True)),
+            ('creation_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+            ('modification_date', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now, blank=True)),
+        ))
+        db.send_create_signal(u'rewards', ['Reward'])
 
 
     def backwards(self, orm):
-        # Deleting field 'Donation.reward'
-        db.delete_column(u'donations_donation', 'reward_id')
+        # Deleting model 'Reward'
+        db.delete_table(u'rewards_reward')
 
 
     models = {
@@ -60,36 +68,6 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
-        },
-        u'donations.donation': {
-            'Meta': {'object_name': 'Donation'},
-            'amount': ('django.db.models.fields.DecimalField', [], {'max_digits': '16', 'decimal_places': '2'}),
-            'anonymous': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'completed': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'fundraiser': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['fundraisers.Fundraiser']", 'null': 'True', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'order': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'donations'", 'null': 'True', 'to': u"orm['orders.Order']"}),
-            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.Project']"}),
-            'reward': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'reward'", 'null': 'True', 'to': u"orm['rewards.Reward']"}),
-            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
-        },
-        u'fundraisers.fundraiser': {
-            'Meta': {'object_name': 'Fundraiser'},
-            'amount': ('django.db.models.fields.DecimalField', [], {'max_digits': '10', 'decimal_places': '2'}),
-            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'currency': ('django.db.models.fields.CharField', [], {'default': "'EUR'", 'max_length': "'10'"}),
-            'deadline': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
-            'deleted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'image': ('bluebottle.utils.fields.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'location': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Location']", 'null': 'True', 'blank': 'True'}),
-            'owner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['members.Member']"}),
-            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['projects.Project']"}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'video_url': ('django.db.models.fields.URLField', [], {'default': "''", 'max_length': '100', 'blank': 'True'})
         },
         u'geo.country': {
             'Meta': {'ordering': "['name']", 'object_name': 'Country'},
@@ -160,18 +138,6 @@ class Migration(SchemaMigration):
             'user_type': ('django.db.models.fields.CharField', [], {'default': "'person'", 'max_length': '25'}),
             'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '254'}),
             'website': ('django.db.models.fields.URLField', [], {'max_length': '200', 'blank': 'True'})
-        },
-        u'orders.order': {
-            'Meta': {'object_name': 'Order'},
-            'completed': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'confirmed': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
-            'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'order_type': ('django.db.models.fields.CharField', [], {'default': "'one-off'", 'max_length': "'100'"}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [], {'default': "'created'", 'max_length': '50'}),
-            'total': ('django.db.models.fields.DecimalField', [], {'default': '0', 'max_digits': '16', 'decimal_places': '2'}),
-            'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['members.Member']", 'null': 'True', 'blank': 'True'})
         },
         u'organizations.organization': {
             'Meta': {'ordering': "['name']", 'object_name': 'Organization'},
@@ -280,4 +246,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['donations']
+    complete_apps = ['rewards']

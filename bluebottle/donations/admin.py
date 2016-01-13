@@ -85,7 +85,12 @@ class DonationAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(DonationAdminForm, self).__init__(*args, **kwargs)
         if self.instance:
-            self.fields['reward'].queryset = Reward.objects.filter(project=self.instance.project)
+            if self.instance.id:
+                # You can only select a reward if the project is set on the donation
+                self.fields['reward'].queryset = Reward.objects.filter(project=self.instance.project)
+            else:
+                self.fields['reward'].queryset = Reward.objects.none()
+
 
 
 class DonationAdmin(admin.ModelAdmin):

@@ -2,12 +2,11 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from bluebottle.test.factory_models.projects import (
-    ProjectFactory, ProjectThemeFactory,
-    ProjectPhaseFactory)
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import InitProjectDataMixin, BluebottleTestCase
 from rest_framework import status
+
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 from ..models import ProjectPhase, ProjectTheme
 

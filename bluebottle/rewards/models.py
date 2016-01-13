@@ -15,7 +15,8 @@ class Reward(models.Model):
     title = models.CharField(_('Title'), max_length=30)
     description = models.CharField(_('Description'), max_length=200)
     project = models.ForeignKey('projects.Project', verbose_name=_('Project'))
-    limit = models.IntegerField(_('Limit'), help_text=_('How many of this rewards are available'), null=True)
+    limit = models.IntegerField(_('Limit'), null=True, blank=True,
+                                help_text=_('How many of this rewards are available'))
 
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
@@ -31,3 +32,7 @@ class Reward(models.Model):
 
     def __unicode__(self):
         return self.title
+
+
+    class Meta:
+        ordering = ['-project__created', 'amount']

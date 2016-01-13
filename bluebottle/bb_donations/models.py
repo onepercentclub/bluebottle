@@ -26,6 +26,10 @@ class BaseDonation(models.Model):
                               verbose_name=_("Order"), related_name='donations',
                               null=True, blank=True)
 
+    reward = models.ForeignKey('rewards.Reward',
+                              verbose_name=_("Reward"), related_name='reward',
+                              null=True, blank=True)
+
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
     completed = models.DateTimeField(_("Ready"), blank=True, editable=False,

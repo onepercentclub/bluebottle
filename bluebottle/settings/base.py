@@ -153,9 +153,9 @@ SWAGGER_SETTINGS = {
 }
 
 SHARED_APPS = (
-    'bluebottle.clients',  
+    'bluebottle.clients',
     'bluebottle.accounting',
-    
+
     # Django apps
     'south',
     'django.contrib.auth',
@@ -243,6 +243,7 @@ TENANT_APPS = (
     'bluebottle.accounting',
     'bluebottle.csvimport',
     'bluebottle.votes',
+    'bluebottle.rewards',
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',

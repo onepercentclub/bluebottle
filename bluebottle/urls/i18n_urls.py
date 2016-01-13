@@ -1,6 +1,8 @@
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.conf.urls import patterns
+from django.core.urlresolvers import reverse_lazy
+from django.views.generic import RedirectView
 
 from bluebottle.views import HomeView
 
@@ -40,15 +42,6 @@ urlpatterns = patterns(
     url(r'^accounts/',
         include('django.contrib.auth.urls', namespace='accounts')),
 
-    # The homepage (no Ember url)
-    url(r'^$', HomeView.as_view(), name='home'),
-
-    # The home page with Ember url
-    # We need the explicit slash so urls without a slash e.g. /admin/projects
-    # will get a slash appended and not end up at a Ember 404 page.
-    url(r'^.*/$', HomeView.as_view(), name='home'),
-
-
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$', 'django.contrib.auth.views.password_reset',
         name='admin_password_reset'),
@@ -66,4 +59,10 @@ urlpatterns = patterns(
     # account login/logout, password reset, and password change
     url(r'^accounts/',
         include('django.contrib.auth.urls', namespace='accounts')),
+
+
+    url(r'^admin', RedirectView.as_view(url=reverse_lazy('admin:index')), name='admin-slash'),
+
+    url(r'^', HomeView.as_view(), name='home'),
+
 )

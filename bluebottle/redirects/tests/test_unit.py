@@ -24,10 +24,10 @@ class RedirectTests(BluebottleTestCase):
 
     def test_redirect(self):
         Redirect.objects.create(
-            old_path='/initial', new_path='/new_target')
+            old_path='/initial', new_path='/new_target/')
         response = self.client.get('/initial')
         self.assertRedirects(response,
-                             '/en/new_target', status_code=301,
+                             '/en/new_target/', status_code=301,
                              target_status_code=200)
 
     @override_settings(APPEND_SLASH=True)
@@ -66,51 +66,51 @@ class RedirectTests(BluebottleTestCase):
         """
         Redirect.objects.create(
             old_path='/project/foo',
-            new_path='/my/project/foo')
+            new_path='/my/project/foo/')
 
         Redirect.objects.create(
             old_path='/project/foo/(.*)',
-            new_path='/my/project/foo/$1',
+            new_path='/my/project/foo/$1/',
             regular_expression=True)
 
         Redirect.objects.create(
             old_path='/project/(.*)',
-            new_path='/projects',
+            new_path='/projects/',
             regular_expression=True,
             fallback_redirect=True)
 
         Redirect.objects.create(
             old_path='/project/bar/(.*)',
-            new_path='/my/project/bar/$1',
+            new_path='/my/project/bar/$1/',
             regular_expression=True)
 
         Redirect.objects.create(
             old_path='/project/bar',
-            new_path='/my/project/bar')
+            new_path='/my/project/bar/')
 
         response = self.client.get('/project/foo')
         self.assertRedirects(response,
-                             '/en/my/project/foo',
+                             '/en/my/project/foo/',
                              status_code=301, target_status_code=200)
 
         response = self.client.get('/project/bar')
         self.assertRedirects(response,
-                             '/en/my/project/bar',
+                             '/en/my/project/bar/',
                              status_code=301, target_status_code=200)
 
         response = self.client.get('/project/bar/details')
         self.assertRedirects(response,
-                             '/en/my/project/bar/details',
+                             '/en/my/project/bar/details/',
                              status_code=301, target_status_code=200)
 
         response = self.client.get('/project/foobar')
         self.assertRedirects(response,
-                             '/en/projects',
+                             '/en/projects/',
                              status_code=301, target_status_code=200)
 
         response = self.client.get('/project/foo/details')
         self.assertRedirects(response,
-                             '/en/my/project/foo/details',
+                             '/en/my/project/foo/details/',
                              status_code=301, target_status_code=200)
 
     def test_redirect_external_http(self):

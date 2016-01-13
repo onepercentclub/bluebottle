@@ -1,9 +1,11 @@
+from django import forms
 from django.contrib.admin.filters import SimpleListFilter
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.payouts.admin_utils import link_to
+from bluebottle.rewards.models import Reward
 from bluebottle.utils.admin import (
     export_as_csv_action, TotalAmountAdminChangeList)
 from bluebottle.utils.model_dispatcher import (
@@ -76,7 +78,18 @@ class DonationUserFilter(SimpleListFilter):
         return queryset
 
 
+class DonationAdminForm(forms.ModelForm):
+    class Meta:
+        model = DONATION_MODEL
+
+    def __init__(self, *args, **kwargs):
+        super(DonationAdminForm, self).__init__(*args, **kwargs)
+        if self.instance:
+            self.fields['reward'].queryset = Reward.objects.filter(project=self.instance.project)
+
+
 class DonationAdmin(admin.ModelAdmin):
+    form = DonationAdminForm
     date_hierarchy = 'created'
     list_display = ('created', 'completed', 'admin_project', 'fundraiser',
                     'user', 'user_full_name', 'amount',

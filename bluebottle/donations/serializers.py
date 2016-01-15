@@ -21,7 +21,7 @@ class ManageDonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = DONATION_MODEL
         fields = ('id', 'project', 'fundraiser', 'amount', 'status', 'order',
-                  'anonymous', 'completed', 'created')
+                  'anonymous', 'completed', 'created', 'reward')
 
         # FIXME Add validations for amount and project phase
 
@@ -35,7 +35,7 @@ class PreviewDonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = DONATION_MODEL
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
-                  'anonymous', 'amount')
+                  'anonymous', 'amount', 'reward')
 
 
 class PreviewDonationWithoutAmountSerializer(PreviewDonationSerializer):
@@ -48,7 +48,7 @@ class PreviewDonationWithoutAmountSerializer(PreviewDonationSerializer):
 class DefaultDonationSerializer(PreviewDonationSerializer):
     class Meta:
         model = DONATION_MODEL
-        fields = PreviewDonationSerializer.Meta.fields + ('amount',)
+        fields = PreviewDonationSerializer.Meta.fields + ('amount', 'reward')
 
 
 class LatestDonationProjectSerializer(BaseProjectPreviewSerializer):

@@ -51,7 +51,45 @@ class ProjectPayoutForm(forms.ModelForm):
         model = PROJECT_PAYOUT_MODEL
 
 
-class BaseProjectPayoutAdmin(admin.ModelAdmin):
+class BasePayoutAdmin(admin.ModelAdmin):
+    actions = ['change_status_to_in_progress',
+               'change_status_to_settled',
+               'change_status_to_retry',
+               'recalculate_amounts']
+
+    def change_status_to_retry(self, request, queryset):
+        for payout in queryset.all():
+            payout.retry()
+
+    def change_status_to_in_progress(self, request, queryset):
+        for payout in queryset.all():
+            payout.in_progress()
+
+    def change_status_to_settled(self, request, queryset):
+        for payout in queryset.all():
+            payout.settled()
+
+    def recalculate_amounts(self, request, queryset):
+        # Only recalculate for 'new' payouts
+        filter_args = {'status': StatusDefinition.NEW}
+        qs_new = queryset.all().filter(**filter_args)
+
+        for payout in qs_new:
+            payout.calculate_amounts()
+
+        new_payouts = qs_new.count()
+        skipped_payouts = queryset.exclude(**filter_args).count()
+        message = ("Fees for {0} new payouts were recalculated. "
+                   "{1} progressing or closed payouts have"
+                   "been skipped.").format(new_payouts, skipped_payouts)
+
+        self.message_user(request, message)
+
+    recalculate_amounts.short_description = _("Recalculate amounts for new "
+                                              "payouts.")
+
+
+class BaseProjectPayoutAdmin(BasePayoutAdmin):
     model = PROJECT_PAYOUT_MODEL
     form = ProjectPayoutForm
     inlines = (PayoutLogInline,)
@@ -66,33 +104,7 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
 
     list_filter = ['status', 'payout_rule']
 
-    actions = ['change_status_to_new', 'change_status_to_progress',
-               'change_status_to_settled',
-               'recalculate_amounts']
-
-    def change_status_to_new(self, request, queryset):
-        for payout in queryset.all():
-            payout.status = StatusDefinition.NEW
-            payout.save()
-
-    def change_status_to_progress(self, request, queryset):
-        for payout in queryset.all():
-            payout.status = StatusDefinition.IN_PROGRESS
-            payout.save()
-
-    def change_status_to_settled(self, request, queryset):
-        for payout in queryset.all():
-            payout.status = StatusDefinition.SETTLED
-            payout.save()
-
-    list_display = ['payout', 'status', 'admin_project', 'amount_pending',
-                    'amount_raised', 'amount_payable', 'rule',
-                    'admin_has_iban', 'created_date', 'submitted_date',
-                    'completed_date']
-
-    list_display_links = ['payout']
-
-    readonly_fields = ['admin_project', 'admin_organization', 'created',
+    readonly_fields = ['admin_project', 'admin_organization', 'created', 'status',
                        'updated']
 
     fieldsets = (
@@ -186,25 +198,6 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
-    def recalculate_amounts(self, request, queryset):
-        # Only recalculate for 'new' payouts
-        filter_args = {'status': StatusDefinition.NEW}
-        qs_new = queryset.all().filter(**filter_args)
-
-        for payout in qs_new:
-            payout.calculate_amounts()
-
-        new_payouts = qs_new.count()
-        skipped_payouts = queryset.exclude(**filter_args).count()
-        message = ("Fees for {0} new payouts were recalculated. "
-                   "{1} progressing or closed payouts have"
-                   "been skipped.").format(new_payouts, skipped_payouts)
-
-        self.message_user(request, message)
-
-    recalculate_amounts.short_description = _("Recalculate amounts for new "
-                                              "payouts.")
-
     def rule(self, obj):
         return dict(PROJECT_PAYOUT_MODEL.PayoutRules.choices)[obj.payout_rule]
 
@@ -212,7 +205,7 @@ class BaseProjectPayoutAdmin(admin.ModelAdmin):
 admin.site.register(PROJECT_PAYOUT_MODEL, BaseProjectPayoutAdmin)
 
 
-class BaseOrganizationPayoutAdmin(admin.ModelAdmin):
+class BaseOrganizationPayoutAdmin(BasePayoutAdmin):
     inlines = [OrganizationPayoutLogInline]
 
     can_delete = False
@@ -233,7 +226,7 @@ class BaseOrganizationPayoutAdmin(admin.ModelAdmin):
         'invoice_reference', 'organization_fee_excl', 'organization_fee_vat',
         'organization_fee_incl', 'psp_fee_excl', 'psp_fee_vat', 'psp_fee_incl',
         'payable_amount_excl', 'payable_amount_vat', 'payable_amount_incl',
-        'other_costs_vat'
+        'other_costs_vat', 'status'
     ]
 
     fieldsets = (
@@ -270,27 +263,6 @@ class BaseOrganizationPayoutAdmin(admin.ModelAdmin):
             )
         })
     )
-
-    actions = ('recalculate_amounts',)
-
-    def recalculate_amounts(self, request, queryset):
-        # Only recalculate for 'new' payouts
-        filter_args = {'status': StatusDefinition.NEW}
-        qs_new = queryset.all().filter(**filter_args)
-
-        for payout in qs_new:
-            payout.calculate_amounts()
-
-        new_payouts = qs_new.count()
-        skipped_payouts = queryset.exclude(**filter_args).count()
-        message = ("Amounts for {0} new payouts were recalculated. "
-                   "{1} progressing or closed payouts have been "
-                   "skipped.").format(new_payouts, skipped_payouts)
-
-        self.message_user(request, message)
-
-    recalculate_amounts.short_description = _("Recalculate amounts for new "
-                                              "payouts.")
 
 
 admin.site.register(ORGANIZATION_PAYOUT_MODEL, BaseOrganizationPayoutAdmin)

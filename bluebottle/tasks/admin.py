@@ -67,13 +67,13 @@ class TaskAdminInline(admin.TabularInline):
     model = BB_TASK_MODEL
     extra = 0
 
-    readonly_fields = ('task_link', 'project', 'status', 'deadline')
-    fields = readonly_fields
+    fields = ('title', 'project', 'status', 'deadline')
 
     def task_link(self, obj):
         object = obj
         url = reverse('admin:{0}_{1}_change'.format(
-            object._meta.app_label, object._meta.module_name), args=[object.id])
+            object._meta.app_label, object._meta.module_name),
+            args=[object.id])
         return "<a href='{0}'>{1}</a>".format(str(url), obj.title)
 
     task_link.allow_tags = True

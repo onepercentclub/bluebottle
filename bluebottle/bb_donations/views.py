@@ -61,7 +61,6 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
         project_slug = self.request.QUERY_PARAMS.get('project', None)
         fundraiser_id = self.request.QUERY_PARAMS.get('fundraiser', None)
-        co_financing = 'co_financing' in self.request.QUERY_PARAMS
 
         if fundraiser_id:
             try:
@@ -81,8 +80,9 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
             raise Http404(u"No %(verbose_name)s found matching the query" %
                           {'verbose_name': PROJECT_MODEL._meta.verbose_name})
 
-        if co_financing:
-            filter_kwargs['order__user__is_co_financer'] = co_financing
+
+        if 'co_financing' in self.request.QUERY_PARAMS:
+            filter_kwargs['order__user__is_co_financer'] = self.request.QUERY_PARAMS['co_financing'] == 'true'
 
         queryset = queryset.filter(**filter_kwargs)
         queryset = queryset.order_by("-created")

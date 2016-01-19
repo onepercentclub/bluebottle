@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-import datetime
 from south.db import db
 from south.v2 import DataMigration
-from django.db import models
+from django.db import connection
 
 from bluebottle.utils.model_dispatcher import get_model_mapping
 from bluebottle.clients import properties
+from bluebottle.clients.utils import LocalTenant
 
 MODEL_MAP = get_model_mapping()
 
@@ -13,16 +13,12 @@ MODEL_MAP = get_model_mapping()
 class Migration(DataMigration):
 
     def forwards(self, orm):
-        count = 0
-        for member in orm['Members.member'].objects.all():
-
+        with LocalTenant(connection.tenant):
             languages = dict(properties.LANGUAGES).keys()
+            qs = orm['Members.member'].objects.exclude(primary_language__in=languages)
+            print "Updating the primary language for {0} members".format(len(qs))
 
-            if not member.primary_language or member.primary_language not in languages:
-                member.primary_language = properties.LANGUAGE_CODE
-                count += 1
-
-        print "Updated the primary language for {0} members".format(count)
+            qs.update(primary_language=properties.LANGUAGE_CODE)
 
     def backwards(self, orm):
         "Write your backwards methods here."

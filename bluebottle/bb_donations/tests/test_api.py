@@ -1,3 +1,4 @@
+import json
 from mock import patch
 
 from bluebottle.test.utils import BluebottleTestCase
@@ -511,16 +512,31 @@ class TestProjectDonationList(DonationApiTestCase):
 
     def test_project_donation_list_co_financing(self, check_status_psp):
         order = OrderFactory.create(user=self.user2, status=StatusDefinition.SUCCESS)
-        DonationFactory.create(amount=1000, project=self.project3,
+        DonationFactory.create(amount=1500, project=self.project3,
                                order=order)
 
         response = self.client.get(self.project_donation_list_url,
-                                   {'project': self.project3.slug, 'co_financing': None},
+                                   {'project': self.project3.slug, 'co_financing': 'true'},
                                    token=self.user1_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1,
                          'Only donations by co-financers should be returned')
+        self.assertEqual(response.data['results'][0]['amount'], 1500)
+
+    def test_project_donation_list_no_co_financing(self, check_status_psp):
+        order = OrderFactory.create(user=self.user2, status=StatusDefinition.SUCCESS)
+        DonationFactory.create(amount=1500, project=self.project3,
+                               order=order)
+
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug, 'co_financing': 'false'},
+                                   token=self.user1_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1,
+                         'Only donations by co-financers should be returned')
+        self.assertEqual(response.data['results'][0]['amount'], 1000)
 
 
 @patch.object(ManageOrderDetail, 'check_status_psp')

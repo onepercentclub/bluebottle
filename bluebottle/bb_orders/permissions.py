@@ -31,7 +31,7 @@ class IsOrderCreator(permissions.BasePermission):
         if hasattr(obj, 'order'):
             order = obj.order
         else:
-            order = order
+            order = obj
 
         # Permission is granted if:
         #   * the order user is the logged in user

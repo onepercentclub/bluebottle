@@ -66,10 +66,9 @@ admin.site.register(BB_TASK_MODEL, TaskAdmin)
 class TaskAdminInline(admin.TabularInline):
     model = BB_TASK_MODEL
     extra = 0
+    fields = ('title', 'project', 'status', 'deadline', 'time_needed')
 
-    fields = ('title', 'project', 'status', 'deadline')
-
-    def task_link(self, obj):
+    def task_link(self, obj):   
         object = obj
         url = reverse('admin:{0}_{1}_change'.format(
             object._meta.app_label, object._meta.module_name),

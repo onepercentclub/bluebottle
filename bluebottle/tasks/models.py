@@ -78,6 +78,10 @@ class Task(BaseTask):
 
             bb_track("Task Completed", data)
 
+    def save(self, *args, **kwargs):
+        if not self.author_id:
+            self.author = self.project.owner
+        super(Task, self).save(*args, **kwargs)
 
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver

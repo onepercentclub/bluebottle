@@ -30,6 +30,8 @@ class IsOrderCreator(permissions.BasePermission):
         # Use duck typing to check if we have an order or a payment/donation.
         if hasattr(obj, 'order'):
             order = obj.order
+        else:
+            order = order
 
         # Permission is granted if:
         #   * the order user is the logged in user

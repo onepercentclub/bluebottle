@@ -26,7 +26,7 @@ class Statistic(models.Model):
                               choices=StatisticType.choices,
                               default=StatisticType.manual, db_index=True)
     sequence = models.IntegerField()
-    value = models.IntegerField(null=True, blank=True, help_text=_('This overwrites the calculated value, if available'))
+    value = models.CharField(null=True, blank=True, max_length=12, help_text=_('This overwrites the calculated value, if available'))
     active = models.BooleanField(help_text=_('Should this be shown or hidden.'))
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))

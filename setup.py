@@ -39,6 +39,7 @@ install_requires = [
     'django-filter==0.6',
     'django-geoposition==0.2.2',
     'django-localflavor==1.2',
+    'django-modeltranslation==0.11',
     'django-social-auth==0.7.23',
     'django-taggit==0.12.1',
     'django-templatetag-handlebars==1.2.0',

@@ -53,6 +53,8 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
         return PreviewDonationWithoutAmountSerializer
 
     paginate_by = 20
+    paginate_by_param = 'page_size'
+
 
     def get_queryset(self):
         queryset = super(ProjectDonationList, self).get_queryset()

@@ -121,7 +121,7 @@ class Statistics(object):
         return project_count
 
     @property
-    def donated(self):
+    def donated_total(self):
         from bluebottle.donations.models import Donation
 
         """ Add all donation amounts for all donations ever """
@@ -129,7 +129,6 @@ class Statistics(object):
             return self._get_cached('donations-total')
         donations = Donation.objects.filter(order__status__in=(
             StatusDefinition.PENDING, StatusDefinition.SUCCESS))
-        donated = donations.aggregate(sum=Sum('amount'))['sum'] or '000'
+        donated = int(donations.aggregate(sum=Sum('amount'))['sum'] or '000')
         self._set_cached('donations-total', donated)
-
         return donated

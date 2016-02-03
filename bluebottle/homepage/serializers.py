@@ -9,5 +9,5 @@ class HomePageSerializer(serializers.Serializer):
     id = serializers.CharField(source='id')
     quotes = QuoteSerializer(source='quotes', many=True)
     slides = SlideSerializer(source='slides', many=True)
-    impact = StatisticSerializer(source='stats')
+    statistics = StatisticSerializer(source='statistics', many=True)
     projects = ProjectPreviewSerializer(source='projects', many=True)

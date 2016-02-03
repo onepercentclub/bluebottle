@@ -183,6 +183,7 @@ SHARED_APPS = (
 TENANT_APPS = (
     'south',
     'polymorphic',
+    'modeltranslation',
 
     # 'social_auth',
     'social.apps.django_app.default',

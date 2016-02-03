@@ -36,7 +36,7 @@ class InitialStatisticsTest(BluebottleTestCase):
         self.assertEqual(self.stats.projects_realized, 0)
         self.assertEqual(self.stats.tasks_realized, 0)
         self.assertEqual(self.stats.people_involved, 0)
-        self.assertEqual(self.stats.donated, '000')
+        self.assertEqual(self.stats.donated_total, 0)
 
 
 class StatisticsTest(BluebottleTestCase):
@@ -111,7 +111,7 @@ class StatisticsTest(BluebottleTestCase):
                                                project=self.some_project,
                                                fundraiser=None)
 
-        self.assertEqual(self.stats.donated, 1000)
+        self.assertEqual(self.stats.donated_total, 1000)
         # People involved:
         # - campaigner
         # - donator (another_user)
@@ -133,7 +133,7 @@ class StatisticsTest(BluebottleTestCase):
                                                 project=self.some_project,
                                                 fundraiser=None)
 
-        self.assertEqual(self.stats.donated, 2000)
+        self.assertEqual(self.stats.donated_total, 2000)
         # People involved:
         # - campaigner
         # - donator (another_user)

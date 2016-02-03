@@ -36,7 +36,7 @@ class InitialStatisticsTest(BluebottleTestCase):
         self.assertEqual(self.stats.projects_realized, 0)
         self.assertEqual(self.stats.tasks_realized, 0)
         self.assertEqual(self.stats.people_involved, 0)
-        self.assertEqual(self.stats.donated_total, '000')
+        self.assertEqual(self.stats.donated_total, 0)
 
 
 class StatisticsTest(BluebottleTestCase):

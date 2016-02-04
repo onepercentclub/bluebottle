@@ -13,6 +13,9 @@ urlpatterns = patterns('',
                        # they're not redirected to /en/.
                        url(r'^docs/', include('rest_framework_swagger.urls')),
 
+                       url(r'^api/config/',
+                           include('bluebottle.clients.urls.api')),
+
                        url(r'^api/users/',
                            include('bluebottle.bb_accounts.urls.api')),
                        url(r'^api/bb_organizations/',

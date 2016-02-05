@@ -1,6 +1,7 @@
 import json
 from rest_framework import views, response
-from bluebottle.utils.context_processors import tenant_properties
+
+from bluebottle.clients.utils import get_public_properties
 
 
 class SettingsView(views.APIView):
@@ -12,5 +13,5 @@ class SettingsView(views.APIView):
         """
         Return settings
         """
-        obj = tenant_properties(request)
-        return response.Response(json.loads(obj['settings']))
+        obj = get_public_properties(request)
+        return response.Response(obj)

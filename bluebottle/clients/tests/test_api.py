@@ -32,3 +32,5 @@ class ClientSettingsTestCase(BluebottleTestCase):
         response = self.client.get(self.settings_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('topSecret', response.data)
+
+        setattr(properties, 'CLOSED_SITE', False)

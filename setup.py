@@ -18,7 +18,7 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.1.18#egg=django-bb-salesforce-1.1.18',
     'git+https://github.com/onepercentclub/django-tenant-extras.git@1.9.9#egg=django-tenant-extras-1.9.9',
     'git+https://github.com/onepercentclub/django-token-auth.git@0.2.12#egg=django-token-auth-0.2.12',
-    'git+https://github.com/onepercentclub/django-reef-extras.git@1.1.1#egg=reef_extras-1.1.1',
+    'git+https://github.com/onepercentclub/django-reef-extras.git@1.1.1#egg=django-reef-extras-1.1.1',
 
 ]
 

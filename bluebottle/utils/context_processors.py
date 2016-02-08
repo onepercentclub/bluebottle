@@ -10,22 +10,29 @@ from tenant_extras.context_processors import tenant_properties as tenant_extra_p
 
 def tenant_properties(request):
     extra_properties = tenant_extra_properties(request)
-    settings = json.loads(extra_properties['settings'])
+    tenant_settings = json.loads(extra_properties['settings'])
+
 
     # If tenant has SAML enabled then we also return a list
     # of read-only user profile properties.
     try:
         mappings = properties.TOKEN_AUTH['assertion_mapping']
-        settings['readOnlyFields'] = {
+        tenant_settings['readOnlyFields'] = {
             'user': mappings.keys()
         }
 
-        extra_properties['settings'] = json.dumps(settings)
+        extra_properties['settings'] = json.dumps(tenant_settings)
     except KeyError:
         pass
     except AttributeError:
         pass
 
+    static_url = getattr(settings, 'STATIC_URL')
+
+    extra_properties['TENANT_STATIC_PATH'] = "{0}frontend/{1}/".format(static_url,
+                                                                       connection.tenant.client_name)
+    extra_properties['STATIC_PATH'] = "{0}frontend/".format(static_url)
+    extra_properties['GIT_COMMIT'] = getattr(settings, 'GIT_COMMIT', 'dummy')
     return extra_properties
 
 

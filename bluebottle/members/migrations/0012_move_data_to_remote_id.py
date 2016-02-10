@@ -19,7 +19,7 @@ class Migration(DataMigration):
             value as the remote_id.
         """
         from bluebottle.clients import properties
-        if properties.get('TOKEN_AUTH', {}).get(
+        if getattr(properties, 'TOKEN_AUTH', {}).get(
             'assertion_mapping', {}).get(
                 'remote_id', None):
             for member in orm['members.Member'].objects.all():

@@ -101,9 +101,9 @@ STATICFILES_DIRS = (
     ("moxie", os.path.join(PROJECT_ROOT, 'frontend', 'bower_components', 'moxie', 'bin'))
 )
 
-ROOT_URLCONF = 'reef.urls'
+ROOT_URLCONF = 'bluebottle.urls'
 
-MULTI_TENANT_DIR = os.path.join(PROJECT_ROOT, 'reef', 'tenants')
+MULTI_TENANT_DIR = os.path.join(PROJECT_ROOT, 'tenants')
 MULTI_TENANT_DIST_DIR = os.path.join(PROJECT_ROOT, 'frontend', 'dist')
 
 COMPRESS_OUTPUT_DIR = 'compressed'
@@ -357,7 +357,7 @@ TENANT_APPS = (
     'taggit_autocomplete_modified',
 )
 
-INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('rest_framework_swagger', 'lockdown', 'tenant_schemas', 'reef')
+INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('rest_framework_swagger', 'lockdown', 'tenant_schemas')
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"

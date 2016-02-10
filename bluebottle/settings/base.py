@@ -92,19 +92,11 @@ STATICFILES_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     # You can also name this tuple like: ('css', '/path/to/css')
-    ("app", os.path.join(PROJECT_ROOT, 'frontend', 'app')),
-    ("vendor", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'vendor')),
-    ("images", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'images')),
-    ("frontend", os.path.join(PROJECT_ROOT, 'frontend', 'dist')),
-    ("examples", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'examples')),
-    ("widgets", os.path.join(PROJECT_ROOT, 'frontend', 'static', 'widgets')),
-    ("moxie", os.path.join(PROJECT_ROOT, 'frontend', 'bower_components', 'moxie', 'bin'))
 )
 
 ROOT_URLCONF = 'bluebottle.urls'
 
 MULTI_TENANT_DIR = os.path.join(PROJECT_ROOT, 'tenants')
-MULTI_TENANT_DIST_DIR = os.path.join(PROJECT_ROOT, 'frontend', 'dist')
 
 COMPRESS_OUTPUT_DIR = 'compressed'
 
@@ -510,10 +502,7 @@ PROJECT_CREATE_TYPES = ['funding']
 PROJECT_CREATE_FLOW = 'combined'
 
 # For building frontend code
-BB_APPS = ['wallposts', 'contacts', 'geo', 'pages', 'news', 'slides', 'quotes',
-           'payments', 'payments-docdata', 'payments-voucher', 'payments-mock', 'members', 'organizations',
-           'projects', 'my-projects', 'tasks', 'fundraisers', 'donations', 'orders',
-           'homepage', 'recurring-donations', 'partners']
+BB_APPS = []
 
 # Required for handlebars_template to work properly
 USE_EMBER_STYLE_ATTRS = True

@@ -140,7 +140,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'reef_extras.middleware.LockdownMiddleware',
+    'bluebottle.auth.middleware.LockdownMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
@@ -246,7 +246,6 @@ SHARED_APPS = (
     'filetransfers',
     'loginas',
     'geoposition',
-    'reef_extras',
     'tenant_extras',
     'bb_salesforce',
     'localflavor'

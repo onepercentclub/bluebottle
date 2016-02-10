@@ -124,10 +124,9 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.eggs.Loader',
 )
 
-TEMPLATE_DIRS = (
-    (os.path.join(PROJECT_ROOT, 'reef', 'templates')),
-    (os.path.join(PROJECT_ROOT, 'frontend', 'app', 'templates'))
-)
+# TEMPLATE_DIRS = (
+#     (os.path.join(PROJECT_ROOT, 'bluebottle', 'templates')),
+# )
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',

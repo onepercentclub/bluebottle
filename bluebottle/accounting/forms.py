@@ -76,6 +76,7 @@ class BankTransactionImportForm(CSVImportForm):
         for row in reader:
             book_date = self._reformat_date(row[7])
             sender_account = row[0]
+            # Check that this file is not yet imported for this bank account
             if self.model.objects.filter(book_date=book_date, sender_account=sender_account).exists():
                 raise forms.ValidationError(
                     _(

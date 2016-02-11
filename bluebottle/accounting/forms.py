@@ -75,8 +75,8 @@ class BankTransactionImportForm(CSVImportForm):
 
         for row in reader:
             book_date = self._reformat_date(row[7])
-
-            if self.model.objects.filter(book_date=book_date).exists():
+            sender_account = row[0]
+            if self.model.objects.filter(book_date=book_date, sender_account=sender_account).exists():
                 raise forms.ValidationError(
                     _(
                         'Duplicate date %s in CSV file. '

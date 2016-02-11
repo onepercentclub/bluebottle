@@ -46,7 +46,7 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
         'counter_account', 'counter_name',
         'description1', 'description2', 'description3', 'description4',
         'description5', 'description6',
-        'amount', 'tenant'
+        'amount', 'status_remarks'
     ]
 
     list_display = [
@@ -55,7 +55,7 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
     ]
 
     list_filter = [
-        'tenant', 'credit_debit', 'book_date', 'category', IntegrityStatusListFilter,
+        'tenant', 'credit_debit', 'book_date', 'category', 'sender_account', IntegrityStatusListFilter,
     ]
 
     raw_id_fields = ('payout', 'remote_payout', 'remote_payment')

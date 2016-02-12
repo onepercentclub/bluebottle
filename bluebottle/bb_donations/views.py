@@ -55,7 +55,6 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
     paginate_by = 20
     paginate_by_param = 'page_size'
 
-
     def get_queryset(self):
         queryset = super(ProjectDonationList, self).get_queryset()
 
@@ -82,9 +81,16 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
             raise Http404(u"No %(verbose_name)s found matching the query" %
                           {'verbose_name': PROJECT_MODEL._meta.verbose_name})
 
-
         if 'co_financing' in self.request.QUERY_PARAMS:
-            filter_kwargs['order__user__is_co_financer'] = self.request.QUERY_PARAMS['co_financing'] == 'true'
+            is_cofinancing = self.request.QUERY_PARAMS['co_financing'] == 'true'
+            if is_cofinancing:
+                filter_kwargs['order__user__is_co_financer'] = True
+            else:
+                from django.db.models import Q
+                queryset = queryset.filter(Q(order__user__is_co_financer=False) | Q(order__user__isnull=True) | Q(anonymous=True))
+                return queryset.order_by("-created")
+        else:
+            filter_kwargs['order__user__is_co_financer'] = False
 
         queryset = queryset.filter(**filter_kwargs)
         queryset = queryset.order_by("-created")

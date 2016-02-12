@@ -17,20 +17,12 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.CharField')(max_length=75, null=True, blank=True),
                       keep_default=False)
 
-
         # Changing field 'Member.username'
         db.alter_column(MODEL_MAP['user']['table'], 'username', self.gf('django.db.models.fields.CharField')(unique=True, max_length=254))
-        # Removing index on 'Member', fields ['username']
-        db.delete_index(MODEL_MAP['user']['table'], ['username'])
-
 
     def backwards(self, orm):
-        # Adding index on 'Member', fields ['username']
-        db.create_index(MODEL_MAP['user']['table'], ['username'])
-
         # Deleting field 'Member.remote_id'
         db.delete_column(MODEL_MAP['user']['table'], 'remote_id')
-
 
         # Changing field 'Member.username'
         db.alter_column(MODEL_MAP['user']['table'], 'username', self.gf('django.db.models.fields.SlugField')(max_length=50, unique=True))

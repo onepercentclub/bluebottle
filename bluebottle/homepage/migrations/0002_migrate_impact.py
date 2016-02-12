@@ -140,6 +140,38 @@ class Migration(DataMigration):
                                                            type='projects_involved',
                                                            active=True)
 
+            if name in ['almelo', 'utrecht', 'breda', 'goes', 'tilburg', 'haarlemmermeer', 'hollandskroon']:
+                orm['statistics.Statistic'].objects.create(sequence=1,
+                                                           title="Projects Online",
+                                                           title_en="Projects Online",
+                                                           title_nl="Projecten Online",
+                                                           type='projects_online',
+                                                           active=True)
+                orm['statistics.Statistic'].objects.create(sequence=2,
+                                                           title="Projects Realized",
+                                                           title_en="Projects Realized",
+                                                           title_nl="Projecten Gerealiseerd",
+                                                           type='projects_realized',
+                                                           active=True)
+                orm['statistics.Statistic'].objects.create(sequence=3,
+                                                           title="Tasks Realized",
+                                                           title_en="Tasks Realized",
+                                                           title_nl="Taken Gerealiseerd",
+                                                           type='tasks_realized',
+                                                           active=True)
+                orm['statistics.Statistic'].objects.create(sequence=4,
+                                                           title="People Involved",
+                                                           title_en="People Involved",
+                                                           title_nl="Mensen Betrokken",
+                                                           type='projects_involved',
+                                                           active=True)
+                orm['statistics.Statistic'].objects.create(sequence=5,
+                                                           title="Raised",
+                                                           title_en="Raised",
+                                                           title_nl="Opgehaald",
+                                                           type='donated_total',
+                                                           active=True)
+
             if name == 'abn':
                 pass
 

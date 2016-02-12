@@ -21,83 +21,122 @@ class Migration(DataMigration):
             name = connection.tenant.client_name
             if name == 'innovating_justice':
                 orm['statistics.Statistic'].objects.create(sequence=1,
-                                                           title="Innovations Realized",
+                                                           title="Innovations",
+                                                           title_en="Innovations",
                                                            type='projects_realized',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=2,
                                                            title="People Involved",
+                                                           title_en="People Involved",
                                                            type='people_involved',
                                                            active=True)
 
             if name in ['gent', 'west-friesland']:
                 orm['statistics.Statistic'].objects.create(sequence=1,
                                                            title="Projects Online",
+                                                           title_en="Projects Online",
+                                                           title_nl="Projecten Online",
                                                            type='projects_online',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=2,
                                                            title="Projects Realized",
+                                                           title_en="Projects Realized",
+                                                           title_nl="Projecten Gerealiseerd",
                                                            type='projects_realized',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=3,
                                                            title="People Involved",
+                                                           title_en="People Involved",
+                                                           title_nl="Mensen Betrokken",
                                                            type='projects_involved',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=4,
                                                            title="Raised",
+                                                           title_en="Raised",
+                                                           title_nl="Opgehaald",
                                                            type='donated_total',
                                                            active=True)
 
             if name in ['onepercent', 'booking']:
                 orm['statistics.Statistic'].objects.create(sequence=1,
                                                            title="Projects Online",
+                                                           title_en="Projects Online",
+                                                           title_nl="Projecten Online",
                                                            type='projects_online',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=2,
                                                            title="Projects Realized",
+                                                           title_en="Projects Realized",
+                                                           title_nl="Projecten Gerealiseerd",
                                                            type='projects_realized',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=3,
                                                            title="Tasks Realized",
+                                                           title_en="Tasks Realized",
+                                                           title_nl="Taken Gerealiseerd",
                                                            type='tasks_realized',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=4,
                                                            title="People Involved",
+                                                           title_en="People Involved",
+                                                           title_nl="Mensen Betrokken",
                                                            type='projects_involved',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=5,
                                                            title="Raised",
+                                                           title_en="Raised",
+                                                           title_nl="Opgehaald",
                                                            type='donated_total',
                                                            active=True)
             if name == 'kerstactie':
-                orm['statistics.Statistic'].objects.create(sequence=1, title="Projects Online", type='projects_online', active=True)
+                orm['statistics.Statistic'].objects.create(sequence=1,
+                                                           title="Projects Online",
+                                                           title_en="Projects Online",
+                                                           title_nl="Projecten Online",
+                                                           type='projects_online',
+                                                           active=True)
                 orm['statistics.Statistic'].objects.create(sequence=2,
                                                            title="Projects Realized",
+                                                           title_en="Projects Online",
+                                                           title_nl="Projecten Online",
                                                            type='projects_realized',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=3,
                                                            title="People Involved",
+                                                           title_en="People Involved",
+                                                           title_nl="Mensen Betrokken",
                                                            type='projects_involved',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=4,
                                                            title="Raised",
+                                                           title_en="Raised",
+                                                           title_nl="Opgehaald",
                                                            type='donated_total',
                                                            active=True)
 
             if name == 'dll':
                 orm['statistics.Statistic'].objects.create(sequence=1,
                                                            title="Projects Online",
+                                                           title_en="Projects Online",
+                                                           title_nl="Projecten Online",
                                                            type='projects_online',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=2,
                                                            title="Projects Realized",
+                                                           title_en="Projects Realized",
+                                                           title_nl="Projecten Gerealiseerd",
                                                            type='projects_realized',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=3,
                                                            title="Tasks Realized",
+                                                           title_en="Tasks Realized",
+                                                           title_nl="Taken Gerealiseerd",
                                                            type='tasks_realized',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=4,
                                                            title="People Involved",
+                                                           title_en="People Involved",
+                                                           title_nl="Mensen Betrokken",
                                                            type='projects_involved',
                                                            active=True)
 
@@ -121,7 +160,7 @@ class Migration(DataMigration):
 
 
     def backwards(self, orm):
-        "Write your backwards methods here."
+        orm['statistics.Statistic'].objects.delete()
 
     models = {
         u'statistics.statistic': {

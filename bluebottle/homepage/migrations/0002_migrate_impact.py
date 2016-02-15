@@ -19,7 +19,7 @@ class Migration(DataMigration):
     def forwards(self, orm):
         with LocalTenant(connection.tenant):
             name = connection.tenant.client_name
-            if name == 'innovating_justice':
+            if name == 'innovating-justice':
                 orm['statistics.Statistic'].objects.create(sequence=1,
                                                            title="Innovations",
                                                            title_en="Innovations",
@@ -192,7 +192,7 @@ class Migration(DataMigration):
 
 
     def backwards(self, orm):
-        orm['statistics.Statistic'].objects.delete()
+        orm['statistics.Statistic'].objects.all().delete()
 
     models = {
         u'statistics.statistic': {

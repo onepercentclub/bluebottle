@@ -48,7 +48,7 @@ class Migration(DataMigration):
                                                            title="People Involved",
                                                            title_en="People Involved",
                                                            title_nl="Mensen Betrokken",
-                                                           type='projects_involved',
+                                                           type='people_involved',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=4,
                                                            title="Raised",
@@ -80,7 +80,7 @@ class Migration(DataMigration):
                                                            title="People Involved",
                                                            title_en="People Involved",
                                                            title_nl="Mensen Betrokken",
-                                                           type='projects_involved',
+                                                           type='people_involved',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=5,
                                                            title="Raised",
@@ -105,7 +105,7 @@ class Migration(DataMigration):
                                                            title="People Involved",
                                                            title_en="People Involved",
                                                            title_nl="Mensen Betrokken",
-                                                           type='projects_involved',
+                                                           type='people_involved',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=4,
                                                            title="Raised",
@@ -137,7 +137,7 @@ class Migration(DataMigration):
                                                            title="People Involved",
                                                            title_en="People Involved",
                                                            title_nl="Mensen Betrokken",
-                                                           type='projects_involved',
+                                                           type='people_involved',
                                                            active=True)
 
             if name in ['almelo', 'utrecht', 'breda', 'goes', 'tilburg', 'haarlemmermeer', 'hollandskroon']:
@@ -163,7 +163,7 @@ class Migration(DataMigration):
                                                            title="People Involved",
                                                            title_en="People Involved",
                                                            title_nl="Mensen Betrokken",
-                                                           type='projects_involved',
+                                                           type='people_involved',
                                                            active=True)
                 orm['statistics.Statistic'].objects.create(sequence=5,
                                                            title="Raised",

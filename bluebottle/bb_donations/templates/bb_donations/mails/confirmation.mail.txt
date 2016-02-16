@@ -1,0 +1,38 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with first_name=donation.user.first_name initiator=donation.project.owner.full_name %}
+
+    Thanks {{ first_name }}, for your donation. You rock! The project initiator {{initiator}} will keep you up to 
+    date about the progress of the project.
+    {% endblocktrans %}
+
+    {% trans "Donation" %} - {{donation.project.title}}  EUR {{donation.amount}}
+    {{donation.project.pitch}}
+
+    {{donation.user.full_name}}
+
+
+    {% if donation.user.address.street %}
+        {{donation.user.address.street}}
+    {% endif %}
+
+     {% if donation.user.address.city %}
+         {{donation.user.address.postal_code}} {{donation.user.address.street}}
+    {% endif %}
+        
+    {% if donation.user.address.coutry %}
+        {{donation.user.address.country.name}}
+    {% endif %}
+    
+    {% trans 'Date' %} {{donation.created}}
+
+    {% trans 'Method' %} {{donation.method}}
+
+    {% trans 'Order' %} {{donation.order.id}}
+
+    {% blocktrans %}
+        Support even more by sharing the project with your network
+    {% endblocktrans %}
+{% endblock content %} 

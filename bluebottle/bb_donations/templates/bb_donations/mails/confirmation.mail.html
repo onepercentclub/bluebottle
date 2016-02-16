@@ -1,0 +1,41 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with first_name=donation.user.first_name initiator=donation.project.owner.full_name %}
+
+    Thanks {{ first_name }}, for your donation. You rock! The project initiator {{initiator}} will keep you up to 
+    date about the progress of the project.
+    {% endblocktrans %}
+
+    {% trans "Donation" %}} - {{donation.project.title}}  {{amount}}
+    <p>{{donation.project.pitch}}</p>
+
+    <p>{{donation.user.full_name}}</p>
+
+
+    {% if donation.user.address.street %}
+        <p>{{donation.user.address.street}}</p>
+    {% endif %}
+
+     {% if donation.user.address.city %}
+         <p>{{donation.user.address.postal_code}} {{donation.user.address.street}}</p>
+    {% endif %}
+        
+    {% if donation.user.address.coutry %}
+        <p>{{donation.user.address.country.name}}</p>
+    {% endif %}
+    
+    <p>{% trans 'Date' %} {{donation.created}}</p>
+
+    <p>{% trans 'Method' %} {{donation.method}}</p>
+
+    <p>{% trans 'Order' %} {{donation.order.id}}</p>
+
+    {% blocktrans %}
+        Support even more by sharing the project with your network
+    {% endblocktrans %}
+
+    <a href="https://www.facebook.com/sharer/sharer.php?u={{site}}{{link}}" id="facebook">{% trans "Share on Facebook" %}</a>
+    <a href="https://twitter.com/intent/tweet?url={{site}}{{link}}" id="twitter">{% trans "Share on Twitter" %}</a>
+{% endblock content %} 

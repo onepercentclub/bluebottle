@@ -106,7 +106,6 @@ def get_public_properties(request):
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
             'recurringDonationsEnabled': getattr(properties, 'RECURRING_DONATIONS_ENABLED', False),
             'siteName': current_tenant.name,
-            'languageCode': getattr(request, 'LANGUAGE_CODE', ''),
             'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')]
          }
     else:

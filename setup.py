@@ -91,8 +91,8 @@ install_requires = [
     'django-fluent-contents==1.0c3',
     'django-bb-salesforce==1.1.18',
     'django-tenant-extras==1.9.9',
-    'django-reef-extras==1.1.1',
-    'django-token-auth==0.2.15'
+    'django-token-auth==0.2.15',
+    'django-reef-extras==1.1.1'
 ]
 
 tests_requires = [

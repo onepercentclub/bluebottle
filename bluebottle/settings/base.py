@@ -183,6 +183,7 @@ SHARED_APPS = (
 TENANT_APPS = (
     'south',
     'polymorphic',
+    'modeltranslation',
 
     # 'social_auth',
     'social.apps.django_app.default',
@@ -458,9 +459,12 @@ PROJECT_PAYOUT_FEES = {
     'not_fully_funded': .05
 }
 
-EXPOSED_TENANT_PROPERTIES = ['mixpanel', 'analytics', 'maps_api_key',
-                             'git_commit', 'debug', 'compress_templates',
-                             'facebook_auth_id', 'installed_apps', 'bb_apps']
+EXPOSED_TENANT_PROPERTIES = ['closed_site', 'mixpanel', 'analytics', 'maps_api_key',
+                             'git_commit', 'social_auth_facebook_key', 'date_format',
+                             'bb_apps', 'donation_amounts', 'facebook_sharing_reviewed',
+                             'project_create_flow', 'project_create_types', 'project_contact_types',
+                             'closed_site', 'partner_login', 'share_options', 'sso_url',
+                             'project_suggestions', 'readOnlyFields']
 
 MIXPANEL = ''
 MAPS_API_KEY = ''

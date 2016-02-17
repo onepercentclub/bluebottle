@@ -13,6 +13,7 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.utils.model_dispatcher import get_order_model, get_model_class
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
+from bluebottle.test.factory_models.rewards import RewardFactory
 
 from django.utils.importlib import import_module
 
@@ -469,7 +470,8 @@ class TestProjectDonationList(DonationApiTestCase):
         setattr(properties, 'SHOW_DONATION_AMOUNTS', True)
         # Unsuccessful donations should not be shown
         order = OrderFactory.create(user=self.user2)
-        DonationFactory.create(amount=2000, project=self.project3,
+        reward = RewardFactory.create(project=self.project3)
+        DonationFactory.create(amount=2000, project=self.project3, reward=reward,
                                order=order)
 
         response = self.client.get(self.project_donation_list_url,
@@ -479,11 +481,13 @@ class TestProjectDonationList(DonationApiTestCase):
         self.assertEqual(response.data['count'], 1,
                          'Only the successful donation should be returned')
         self.assertIn('amount', response.data['results'][0])
+        self.assertIn('reward', response.data['results'][0])
 
     def test_project_donation_list_without_amounts(self, check_status_psp):
         setattr(properties, 'SHOW_DONATION_AMOUNTS', False)
+        reward = RewardFactory.create(project=self.project3)
         order = OrderFactory.create(user=self.user2)
-        DonationFactory.create(amount=2000, project=self.project3,
+        DonationFactory.create(amount=2000, project=self.project3, reward=reward,
                                order=order)
 
         response = self.client.get(self.project_donation_list_url,
@@ -493,6 +497,7 @@ class TestProjectDonationList(DonationApiTestCase):
         self.assertEqual(response.data['count'], 1,
                          'Only the successful donation should be returned')
         self.assertNotIn('amount', response.data['results'][0])
+        self.assertNotIn('reward', response.data['results'][0])
 
 
     def test_successful_project_donation_list_paged(self, check_status_psp):

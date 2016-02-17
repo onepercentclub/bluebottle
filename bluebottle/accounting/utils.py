@@ -179,7 +179,11 @@ def get_accounting_statistics(start, stop):
     remote_docdata_payouts = data['remote_docdata_payouts']
     remote_docdata_payouts_aggregated = remote_docdata_payouts.aggregate(Sum('payout_amount'))
 
-    project_payouts = data['project_payouts'].filter(completed__gte=start, completed__lte=stop)  # , status='settled')
+    project_payouts = data['project_payouts'].filter(completed__gte=start, completed__lte=stop)
+
+    # Exclude payouts from the date we shifted from PHP to Python
+    project_payouts = project_payouts.exclude(completed=datetime(2014,7,8))
+
     project_payouts_aggregated = project_payouts.aggregate(Sum('amount_raised'), Sum('amount_payable'), Sum('organization_fee'))
 
     donations = data['donations'].filter(order__status='success')

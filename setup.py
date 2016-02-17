@@ -16,8 +16,9 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
     'git+https://github.com/onepercentclub/django-fluent-contents.git@8439c7ffc1ba8877247aa7d012928c9bb170dc79#egg=fluent_contents-1.0c3',
     'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.1.18#egg=django-bb-salesforce-1.1.18',
-    'git+https://github.com/onepercentclub/django-tenant-extras.git@1.9.8#egg=django-tenant-extras-1.9.8',
-    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.12#egg=django-token-auth-0.2.14'
+    'git+https://github.com/onepercentclub/django-tenant-extras.git@1.9.9#egg=django-tenant-extras-1.9.9',
+    'git+https://github.com/onepercentclub/django-reef-extras.git@1.1.1#egg=django-reef-extras-1.1.1',
+    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.15#egg=django-token-auth-0.2.15'
 ]
 
 install_requires = [
@@ -39,6 +40,7 @@ install_requires = [
     'django-filter==0.6',
     'django-geoposition==0.2.2',
     'django-localflavor==1.2',
+    'django-modeltranslation==0.11',
     'django-social-auth==0.7.23',
     'django-taggit==0.12.1',
     'django-templatetag-handlebars==1.2.0',
@@ -81,13 +83,16 @@ install_requires = [
     'django-filetransfers==0.1.0',
     'django-admin-tools==0.5.2',
     'django-rest-swagger==0.3.4',
+    'django-lockdown==1.0',
     'mixpanel==4.2.0',
+    'grequests==0.2.0',
     # Github requirements
     'django-taggit-autocomplete-modified==0.1.1b1',
     'django-fluent-contents==1.0c3',
     'django-bb-salesforce==1.1.18',
-    'django-tenant-extras==1.9.8',
-    'django-token-auth==0.2.14'
+    'django-tenant-extras==1.9.9',
+    'django-reef-extras==1.1.1',
+    'django-token-auth==0.2.15'
 ]
 
 tests_requires = [

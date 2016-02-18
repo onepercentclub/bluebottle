@@ -82,7 +82,7 @@ class Migration(SchemaMigration):
 
         # Adding field 'Organization.account_iban'
         db.add_column(u'organizations_organization', 'account_iban',
-                      self.gf('django_iban.fields.IBANField')(default='',
+                      self.gf('localflavor.generic.models.IBANField')(default='',
                                                               max_length=34,
                                                               blank=True),
                       keep_default=False)
@@ -103,7 +103,7 @@ class Migration(SchemaMigration):
 
         # Adding field 'Organization.account_bic'
         db.add_column(u'organizations_organization', 'account_bic',
-                      self.gf('django_iban.fields.SWIFTBICField')(default='',
+                      self.gf('localflavor.generic.models.BICField')(default='',
                                                                   max_length=11,
                                                                   blank=True),
                       keep_default=False)

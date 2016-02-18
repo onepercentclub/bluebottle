@@ -2,11 +2,123 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans with first_name=donation.user.first_name initiator=donation.project.owner.full_name %}
+<p class="donation-intro">
+    Thanks {{first_name}}, for your donation. You rock! The project intiator <a>{{project_intiator}}</a> will keep you up to date about the progress of the project.
+</p>
+<table class="donation-table twelve columns">
+    <tr class="donation-table-row">
+      <th class="donation-title">{{Donation}} {{- reward}} <!-- with dash --></th>
+      <th class="donation-amount">&euro; 25,-</th>
+      <tr class="donation-location">
+        <td>{{location}}</td>
+      </tr>
+    </tr>
 
-    Thanks {{ first_name }}, for your donation. You rock! The project initiator {{initiator}} will keep you up to 
-    date about the progress of the project.
-    {% endblocktrans %}
+    <tr class="donation-table-row">
+        <tr>
+          <th></th>
+          <th></th>
+        </tr>
+        <tr class="donation-table-address">
+          <td>
+            {{full_name}} <br />
+            {{address}}<br />
+            {{postal_code}} {{city}}<br />
+            {{country}}
+          </td>
+          <td>
+            <table>
+              <tr class="order-block">
+                <td>Date</td>
+                <td>{{date}}</td>
+              </tr>
+              <tr class="order-block">
+                <td>Method</td>
+                <td>{{payment_method}}</td>
+              </tr>
+              <tr class="order-block">
+                <td>Order</td>
+                <td>{{order_number}}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+    </tr>
+</table>
+<table class="donation-table-share twelve columns">
+  <tr class="donation-table-share-title">Support even more by sharing the project with your network:</tr>
+  <tr class="donation-share-buttons">
+    <td>
+      <a class="action-facebook" href="{{share_link_facebook}}">Share on facebook</a>
+      <a class="action-twitter" href="{{share_link_twitter}}">Share on Twitter</a>
+    </td>
+  </tr>
+</table>
+
+    <p class="donation-intro">
+        {% blocktrans with first_name=donation.user.first_name 
+           initiator_name=donation.project.owner.full_name slug=donation.project.slug%}
+
+        Thanks {{first_name}}, for your donation. You rock! The project intiator <a href="{{site}}/projects/{{slug}}">
+            {{intiator_name}}</a> will keep you up to date about the progress of the project.
+        {% endblocktrans %}
+        <table class="donation-table twelve columns">
+            <tr class="donation-table-row">
+                <th class="donation-title">
+                    {% trans "Donation" %} {% if donation.reward %} - {{donation.reward.title}} {% endif %}
+                </th>
+                <th class="donation-amount">&euro; {{ donation.amount }}</th>
+                <tr class="donation-location">
+                    <td>{{donation.project.title}}</td>
+                </tr>
+            </tr>
+            <tr class="donation-table-row">
+                <tr>
+                    <th></th>
+                    <th></th>
+                </tr>
+                <tr class="donation-table-address">
+                    <td>
+                        {{donation.user.full_name}} <br />
+                        {{donation.user.address.line1}}<br />
+                        {{donation.user.address.postal_code}} {{donation.user.address.city}}<br />
+                        {{donation.user.address.city}}
+                    </td>
+                    <td>
+                        <table>
+                            <tr class="order-block">
+                                <td>Date</td>
+                                <td>{{donation.created}}</td>
+                            </tr>
+                            <tr class="order-block">
+                                <td>Method</td>
+                                <td>{{payment_method}}</td>
+                            </tr>
+                            <tr class="order-block">
+                                <td>Order</td>
+                                <td>{{donation.order.id}}</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </tr>
+            </tr>
+        </table>
+        <table class="donation-table-share twelve columns">
+            <tr class="donation-table-share-title">{% trans "Support even more by sharing the project with your network:" %}</tr>
+            <tr class="donation-share-buttons">
+                <td>
+                    <a class="action-facebook" href=""https://www.facebook.com/sharer/sharer.php?u={{site}}{{link}}">
+                        {% trans 'Share on facebook' %}
+                    </a>
+                    <a class="action-twitter" href="https://twitter.com/intent/tweet?url={{site}}{{link}}">
+                        {% trans 'Share on Twitter' %}
+                    </a>
+                </td>
+            </tr>
+        </table>
+
+
 
     {% trans "Donation" %}} - {{donation.project.title}}  {{amount}}
     <p>{{donation.project.pitch}}</p>

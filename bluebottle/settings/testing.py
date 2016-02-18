@@ -1,5 +1,5 @@
-from .base import *
 from .secrets import *
+from .base import *
 from bluebottle.payments_docdata.settings import *
 
 import warnings

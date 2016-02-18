@@ -64,7 +64,7 @@ from bluebottle.payments_mock.settings import (MOCK_PAYMENT_METHODS,
                                                MOCK_FEES)
 
 PAYMENT_METHODS = MOCK_PAYMENT_METHODS
-
+MINIMAL_PAYOUT_AMOUNT = 10
 DOCDATA_FEES = {
     'transaction': 0.15,
     'payment_methods': {

@@ -16,7 +16,7 @@ from rest_framework_jwt.settings import api_settings
 from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware, 
                                 _default_url_exceptions, _default_form)
 
-from lockdown import settings
+from lockdown import settings as lockdown_settings
 
 
 def isAdminRequest(request):
@@ -206,11 +206,11 @@ class LockdownMiddleware(BaseLockdownMiddleware):
 
         # Don't lock down if outside of the lockdown dates.
         if self.until_date is None:
-            until_date = settings.UNTIL_DATE
+            until_date = lockdown_settings.UNTIL_DATE
         else:
             until_date = self.until_date
         if self.after_date is None:
-            after_date = settings.AFTER_DATE
+            after_date = lockdown_settings.AFTER_DATE
         else:
             after_date = self.after_date
         if until_date or after_date:

@@ -132,3 +132,14 @@ class Statistics(object):
         donated = int(donations.aggregate(sum=Sum('amount'))['sum'] or '000')
         self._set_cached('donations-total', donated)
         return donated
+
+    @property
+    def votes_cast(self):
+        from bluebottle.votes.models import Vote
+        if self._get_cached('votes-cast-total'):
+            return self._get_cached('votes-cast-total')
+
+        votes = len(Vote.objects.all())
+        self._set_cached('votes-cast-total', votes)
+
+        return votes

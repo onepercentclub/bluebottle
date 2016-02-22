@@ -33,6 +33,7 @@ class Reward(models.Model):
     def __unicode__(self):
         return self.title
 
-
     class Meta:
         ordering = ['-project__created', 'amount']
+        verbose_name = _("Gift")
+        verbose_name_plural = _("Gifts")

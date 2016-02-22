@@ -28,7 +28,8 @@ class WallpostListSerializer(serializers.Field):
         content_type = ContentType.objects.get_for_model(obj)
         wallposts = Wallpost.objects.filter(object_id=obj.id).filter(
             content_type=content_type)
-        return wallposts.values_list('id', flat=True).order_by('-created').all()
+        return wallposts.values_list('id',
+                                     flat=True).order_by('-created').all()
 
 
 class ReactionSerializer(serializers.ModelSerializer):
@@ -89,7 +90,8 @@ class WallpostParentIdField(serializers.IntegerField):
 
 class WallpostSerializerBase(serializers.ModelSerializer):
     """
-        Base class serializer for Wallposts. This is not used directly; please subclass it.
+        Base class serializer for Wallposts. This is not used directly;
+        please subclass it.
     """
 
     author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
@@ -99,9 +101,10 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     parent_id = WallpostParentIdField(source='object_id')
 
     class Meta:
-        fields = ('id', 'type', 'author', 'created', 'reactions', 'parent_type',
+        fields = ('id', 'type', 'author', 'created', 'reactions',
+                  'parent_type',
                   'parent_id', 'email_followers', 'share_with_facebook',
-                  'share_with_twitter', 'share_with_linkedin', )
+                  'share_with_twitter', 'share_with_linkedin', 'donation')
 
 
 class MediaWallpostPhotoSerializer(serializers.ModelSerializer):
@@ -116,7 +119,8 @@ class MediaWallpostPhotoSerializer(serializers.ModelSerializer):
 
 class MediaWallpostSerializer(WallpostSerializerBase):
     """
-    Serializer for MediaWallposts. This should not be used directly but instead should be subclassed for the specific
+    Serializer for MediaWallposts. This should not be used directly but instead
+    should be subclassed for the specific
     model it's a Wallpost about. See ProjectMediaWallpost for an example.
     """
     type = WallpostTypeField(type='media')
@@ -134,7 +138,8 @@ class MediaWallpostSerializer(WallpostSerializerBase):
 
 class TextWallpostSerializer(WallpostSerializerBase):
     """
-    Serializer for TextWallposts. This should not be used directly but instead should be subclassed for the specific
+    Serializer for TextWallposts. This should not be used directly but instead
+    should be subclassed for the specific
     model it's a Wallpost about. See ProjectTextWallpost for an example.
     """
     type = WallpostTypeField(type='text')
@@ -152,7 +157,8 @@ class WallpostRelatedField(serializers.RelatedField):
 
 class SystemWallpostSerializer(WallpostSerializerBase):
     """
-    Serializer for TextWallposts. This should not be used directly but instead should be subclassed for the specific
+    Serializer for TextWallposts. This should not be used directly but instead
+    should be subclassed for the specific
     model it's a Wallpost about. See ProjectTextWallpost for an example.
     """
     type = WallpostTypeField(type='system')

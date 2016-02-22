@@ -20,11 +20,12 @@ class Statistic(models.Model):
         projects_realized = ChoiceItem('projects_realized', label=_("Projects realized"))
         tasks_realized = ChoiceItem('tasks_realized', label=_("Tasks realized"))
         people_involved = ChoiceItem('people_involved', label=_("People involved"))
+        votes_cast = ChoiceItem('votes_cast', label=_("Number of votes cast"))
 
     title = models.CharField(_("Title"), max_length=100, blank=True)
     type = models.CharField(_('Type'), max_length=20,
-                              choices=StatisticType.choices,
-                              default=StatisticType.manual, db_index=True)
+                            choices=StatisticType.choices,
+                            default=StatisticType.manual, db_index=True)
     sequence = models.IntegerField()
     value = models.CharField(null=True, blank=True, max_length=12, help_text=_('This overwrites the calculated value, if available'))
     active = models.BooleanField(help_text=_('Should this be shown or hidden.'))

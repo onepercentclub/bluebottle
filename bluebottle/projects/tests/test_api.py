@@ -950,7 +950,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                     'parent_id': self.some_project.slug},
                                    token=self.owner_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 5)
+        self.assertEqual(len(response.data['results']), 10)
         self.assertEqual(response.data['count'], 26)
         mediawallpost = response.data['results'][0]
 
@@ -982,7 +982,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
             'parent_id': self.some_project.slug})
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(len(response.data['results']), 5)
+        self.assertEqual(len(response.data['results']), 10)
         self.assertEqual(response.data['count'], 25)
 
         # Test filtering wallposts by different projects works.

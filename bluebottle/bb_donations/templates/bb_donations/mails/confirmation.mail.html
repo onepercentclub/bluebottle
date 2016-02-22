@@ -3,8 +3,7 @@
 
 {% block content %}
     <p class="donation-intro">
-        {% blocktrans with first_name=donation.user.first_name 
-           initiator_name=donation.project.owner.full_name slug=donation.project.slug%}
+        {% blocktrans with first_name=donation.user.first_name initiator_name=donation.project.owner.full_name slug=donation.project.slug%}
 
         Thanks {{first_name}}, for your donation. You rock! The project intiator <a href="{{site}}/projects/{{slug}}">
             {{intiator_name}}</a> will keep you up to date about the progress of the project.

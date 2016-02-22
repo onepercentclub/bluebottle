@@ -37,7 +37,7 @@ class WallpostFilter(django_filters.FilterSet):
 class WallpostList(ListAPIView):
     model = Wallpost
     serializer_class = WallpostSerializer
-    paginate_by = 5
+    paginate_by = 10
 
     def get_queryset(self):
         queryset = super(WallpostList, self).get_queryset()

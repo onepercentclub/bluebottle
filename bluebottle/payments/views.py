@@ -7,6 +7,7 @@ from rest_framework.generics import (RetrieveUpdateAPIView, ListCreateAPIView,
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.utils.translation import ugettext as _
 from bluebottle.bb_orders.permissions import IsOrderCreator
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
@@ -17,7 +18,6 @@ from bluebottle.utils.utils import get_country_code_by_ip
 
 class PaymentMethodList(APIView):
     def get(self, request, *args, **kwargs):
-
         if 'country' in request.GET:
             country = request.GET['country']
         else :
@@ -26,7 +26,13 @@ class PaymentMethodList(APIView):
                 country = 'all'
             else:
                 country = get_country_code_by_ip(ip)
+
+        # Payment methods are loaded from the settings so they
+        # aren't translated at run time. We need to do it manually
         methods = get_payment_methods(country, 500)
+        for method in methods:
+            method['name'] = _(method['name'])
+
         result = {'country': country, 'results': methods}
         response = Response(result, status=status.HTTP_200_OK)
         return response

@@ -5,8 +5,8 @@
     <p class="donation-intro">
         {% blocktrans with first_name=donation.user.first_name initiator_name=donation.project.owner.full_name slug=donation.project.slug%}
 
-        Thanks {{first_name}}, for your donation. You rock! The project intiator <a href="{{site}}/projects/{{slug}}">
-            {{intiator_name}}</a> will keep you up to date about the progress of the project.
+        Thanks {{fist_name}}, for your donation! Be sure to follow the project page for the latest updates on the project.
+        Give some extra support and share this project with your network.
         {% endblocktrans %}
     </p>
     <table class="donation-table twelve columns">

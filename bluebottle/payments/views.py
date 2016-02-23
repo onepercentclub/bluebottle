@@ -7,6 +7,7 @@ from rest_framework.generics import (RetrieveUpdateAPIView, ListCreateAPIView,
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.utils.translation import ugettext as _
 from bluebottle.bb_orders.permissions import IsOrderCreator
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
@@ -28,7 +29,6 @@ class PaymentMethodList(APIView):
 
         # Payment methods are loaded from the settings so they
         # aren't translated at run time. We need to do it manually
-        from django.utils.translation import ugettext as _
         methods = get_payment_methods(country, 500)
         for method in methods:
             method['name'] = _(method['name'])

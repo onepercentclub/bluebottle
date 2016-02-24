@@ -112,7 +112,7 @@ class MemberVotesInline(admin.TabularInline):
 
 class MemberAdmin(UserAdmin):
     standard_fieldsets = (
-        (None, {'fields': ('email', 'password')}),
+        (None, {'fields': ('email', 'password', 'remote_id')}),
         (_('Personal info'), {'fields': (
             'first_name', 'last_name', 'username', 'gender', 'birthdate',
             'phone_number')}),

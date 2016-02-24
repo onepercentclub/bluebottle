@@ -1,0 +1,20 @@
+[
+    {
+        "pk": 1,
+        "model": "utils.language",
+        "fields": {
+            "code": "en",
+            "language_name": "English",
+            "native_name": "English"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "utils.language",
+        "fields": {
+            "code": "nl",
+            "language_name": "Dutch",
+            "native_name": "Nederlands"
+        }
+    }
+]

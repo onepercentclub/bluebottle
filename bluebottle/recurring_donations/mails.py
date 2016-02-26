@@ -12,6 +12,7 @@ from tenant_extras.utils import TenantLanguage
 def mail_monthly_donation_processed_notification(monthly_order):
     cur_language = translation.get_language()
     receiver = monthly_order.user
+
     with TenantLanguage(receiver.primary_language):
         subject = _("Thank you for your monthly support")
 

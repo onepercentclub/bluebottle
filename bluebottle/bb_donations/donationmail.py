@@ -54,7 +54,7 @@ def new_oneoff_donation(instance):
     if donation.order.order_type != "one-off":
         return
 
-    project_url = '/go/projects/{0}'.format(donation.project.slug)
+    project_url = '/projects/{0}'.format(donation.project.slug)
 
     if donation.project.owner.email:
 
@@ -80,13 +80,17 @@ def new_oneoff_donation(instance):
                 first_name=donation.project.owner.first_name
             )
 
-        # TODO: This is the logic for sending mail to a supporter once he/she has
-        # donated.
-        # if donation.order.user.email:
-        #     # Send email to the project supporter
-        #     send_mail(
-        #         template_name="bb_donations/new_oneoff_donation.mail",
-        #         subject=_("You supported {0}".format(donation.project.title)),
-        #         to=donation.order.user,
-        #         link=project_url
-        #     )
+    if donation.order.user.email:
+        # Send email to the project supporter
+        donor = donation.order.user
+
+        with TenantLanguage(donor.primary_language):
+            subject = _('Thanks for your donation')
+
+        send_mail(
+            template_name="bb_donations/mails/confirmation.mail",
+            subject=subject,
+            to=donor,
+            link=project_url,
+            donation=donation
+        )

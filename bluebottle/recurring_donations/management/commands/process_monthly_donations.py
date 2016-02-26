@@ -32,6 +32,8 @@ DONATION_MODEL = get_donation_model()
 ORDER_MODEL = get_order_model()
 PROJECT_MODEL = get_project_model()
 
+PAYMENT_METHOD = 'docdataDirectdebit'
+
 logger = logging.getLogger(__name__)
 
 
@@ -353,7 +355,7 @@ def _process_monthly_order(monthly_order, send_email=False):
                         'agree': True}
 
     order_payment = OrderPayment(order=order, user=monthly_order.user,
-                                 payment_method='docdataDirectdebit',
+                                 payment_method=PAYMENT_METHOD,
                                  integration_data=integration_data)
 
     order_payment.save()

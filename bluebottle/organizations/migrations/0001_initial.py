@@ -82,10 +82,10 @@ class Migration(SchemaMigration):
                                                                    to=orm[
                                                                        'geo.Country'])),
             ('account_iban',
-             self.gf('django_iban.fields.IBANField')(max_length=34,
+             self.gf('localflavor.generic.models.IBANField')(max_length=34,
                                                      blank=True)),
             ('account_bic',
-             self.gf('django_iban.fields.SWIFTBICField')(max_length=11,
+             self.gf('localflavor.generic.models.BICField')(max_length=11,
                                                          blank=True)),
             ('account_number',
              self.gf('django.db.models.fields.CharField')(max_length=255,
@@ -327,7 +327,7 @@ class Migration(SchemaMigration):
             'account_bank_postal_code': (
             'django.db.models.fields.CharField', [],
             {'max_length': '20', 'blank': 'True'}),
-            'account_bic': ('django_iban.fields.SWIFTBICField', [],
+            'account_bic': ('localflavor.generic.models.BICField', [],
                             {'max_length': '11', 'blank': 'True'}),
             'account_holder_address': ('django.db.models.fields.CharField', [],
                                        {'max_length': '255', 'blank': 'True'}),
@@ -342,7 +342,7 @@ class Migration(SchemaMigration):
             'account_holder_postal_code': (
             'django.db.models.fields.CharField', [],
             {'max_length': '20', 'blank': 'True'}),
-            'account_iban': ('django_iban.fields.IBANField', [],
+            'account_iban': ('localflavor.generic.models.IBANField', [],
                              {'max_length': '34', 'blank': 'True'}),
             'account_number': ('django.db.models.fields.CharField', [],
                                {'max_length': '255', 'blank': 'True'}),

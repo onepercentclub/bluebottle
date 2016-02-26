@@ -291,7 +291,7 @@ class Migration(DataMigration):
                 {'blank': 'True',
                  'related_name': "'project_account_bank_country'",
                  'null': 'True', 'to': u"orm['geo.Country']"}),
-            'account_bic': ('django_iban.fields.SWIFTBICField', [],
+            'account_bic': ('localflavor.generic.models.BICField', [],
                             {'max_length': '11', 'null': 'True',
                              'blank': 'True'}),
             'account_holder_address': ('django.db.models.fields.CharField', [],

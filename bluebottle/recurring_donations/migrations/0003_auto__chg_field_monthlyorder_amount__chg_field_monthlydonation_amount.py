@@ -231,7 +231,7 @@ class Migration(SchemaMigration):
             'account_bank_postal_code': (
             'django.db.models.fields.CharField', [],
             {'max_length': '20', 'blank': 'True'}),
-            'account_bic': ('django_iban.fields.SWIFTBICField', [],
+            'account_bic': ('localflavor.generic.models.BICField', [],
                             {'max_length': '11', 'blank': 'True'}),
             'account_holder_address': ('django.db.models.fields.CharField', [],
                                        {'max_length': '255', 'blank': 'True'}),
@@ -246,7 +246,7 @@ class Migration(SchemaMigration):
             'account_holder_postal_code': (
             'django.db.models.fields.CharField', [],
             {'max_length': '20', 'blank': 'True'}),
-            'account_iban': ('django_iban.fields.IBANField', [],
+            'account_iban': ('localflavor.generic.models.IBANField', [],
                              {'max_length': '34', 'blank': 'True'}),
             'account_number': ('django.db.models.fields.CharField', [],
                                {'max_length': '255', 'blank': 'True'}),
@@ -431,7 +431,7 @@ class Migration(SchemaMigration):
             'django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'amount': ('django.db.models.fields.DecimalField', [],
                        {'max_digits': '6', 'decimal_places': '2'}),
-            'bic': ('django_iban.fields.SWIFTBICField', [],
+            'bic': ('localflavor.generic.models.BICField', [],
                     {'default': "''", 'max_length': '11', 'blank': 'True'}),
             'city': (
             'django.db.models.fields.CharField', [], {'max_length': '35'}),
@@ -440,7 +440,7 @@ class Migration(SchemaMigration):
                          'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'iban': ('django_iban.fields.IBANField', [],
+            'iban': ('localflavor.generic.models.IBANField', [],
                      {'default': "''", 'max_length': '34', 'blank': 'True'}),
             u'id': (
             'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -469,7 +469,7 @@ class Migration(SchemaMigration):
             'batch': ('django.db.models.fields.related.ForeignKey', [],
                       {'related_name': "'orders'",
                        'to': u"orm['recurring_donations.MonthlyBatch']"}),
-            'bic': ('django_iban.fields.SWIFTBICField', [],
+            'bic': ('localflavor.generic.models.BICField', [],
                     {'default': "''", 'max_length': '11', 'blank': 'True'}),
             'city': (
             'django.db.models.fields.CharField', [], {'max_length': '35'}),
@@ -482,7 +482,7 @@ class Migration(SchemaMigration):
             'error': ('django.db.models.fields.CharField', [],
                       {'default': "''", 'max_length': '1000', 'null': 'True',
                        'blank': 'True'}),
-            'iban': ('django_iban.fields.IBANField', [],
+            'iban': ('localflavor.generic.models.IBANField', [],
                      {'default': "''", 'max_length': '34', 'blank': 'True'}),
             u'id': (
             'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),

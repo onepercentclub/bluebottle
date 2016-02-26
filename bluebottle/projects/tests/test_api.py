@@ -327,7 +327,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEquals(
             response.data['title'][0],
-            'Campaign with this Title already exists.')
+            'Project with this Title already exists.')
 
         # Anonymous user should not be able to find this project through
         # management API.

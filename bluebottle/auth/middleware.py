@@ -13,7 +13,7 @@ from rest_framework import exceptions
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
-from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware, 
+from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
                                 _default_url_exceptions, _default_form)
 
 from lockdown import settings as lockdown_settings
@@ -182,7 +182,7 @@ class AdminOnlyCsrf(object):
 
 class LockdownMiddleware(BaseLockdownMiddleware):
     """
-    LockdownMiddleware taken from the Django Lockdown package with the addition 
+    LockdownMiddleware taken from the Django Lockdown package with the addition
     of password coming from request header: X-Lockdown
     """
     def process_request(self, request):
@@ -266,6 +266,8 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         if not hasattr(form, 'show_form') or form.show_form():
             page_data['form'] = form
 
-        return render_to_response('lockdown/form.html', page_data,
+        response =  render_to_response('lockdown/form.html', page_data,
                                   context_instance=RequestContext(request))
+        response.status_code = 401
+        return response
 

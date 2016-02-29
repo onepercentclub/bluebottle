@@ -5,18 +5,14 @@ import os
 from celery import Celery
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
+try:
+    app = Celery('reef',
+                 broker=getattr(settings, 'BROKER_URL', 'amqp://guest@localhost//'))
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", 'bluebottle.settings.server')
+    app.config_from_object('celeryconfig')
 
-app = Celery('bluebottle',
-             broker=getattr(settings, 'BROKER_URL', 'amqp://guest@localhost//'))
-
-app.config_from_object('celeryconfig')
-
-app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
-
-
-@app.task(bind=True)
-def debug_task(self):
-    print ('Request: {0!r}').format(self.request)
+    app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+except ImproperlyConfigured:
+    app = None

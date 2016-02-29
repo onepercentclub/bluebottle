@@ -7,9 +7,9 @@ from celery import Celery
 from django.conf import settings
 
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", 'reef.settings.local')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", 'bluebottle.settings.local')
 
-app = Celery('reef',
+app = Celery('bluebottle',
              broker=getattr(settings, 'BROKER_URL', 'amqp://guest@localhost//'))
 
 app.config_from_object('celeryconfig')

@@ -87,11 +87,16 @@ def new_oneoff_donation(instance):
         with TenantLanguage(donor.primary_language):
             subject = _('Thanks for your donation')
 
+        try:
+            payment_method = donation.order.order_payments.all()[0].payment.method_name
+        except IndexError:
+            payment_method = ''
+
         send_mail(
             template_name="bb_donations/mails/confirmation.mail",
             subject=subject,
             to=donor,
             link=project_url,
             donation=donation,
-            payment_method=donation.order.order_payments.all()[0].payment.method_name
+            payment_method=payment_method
         )

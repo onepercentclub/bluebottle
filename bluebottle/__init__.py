@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 VERSION = (2,0,0,'beta',1)
 
 def get_version():

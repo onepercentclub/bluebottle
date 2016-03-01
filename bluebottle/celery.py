@@ -7,12 +7,11 @@ from celery import Celery
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-try:
-    app = Celery('reef',
-                 broker=getattr(settings, 'BROKER_URL', 'amqp://guest@localhost//'))
+app = Celery('reef',
+             broker=getattr(settings, 'BROKER_URL', 'amqp://guest@localhost//'))
 
-    app.config_from_object('celeryconfig')
+app.config_from_object('celeryconfig')
 
-    app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
-except ImproperlyConfigured:
-    app = None
+app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+
+celery_app = app

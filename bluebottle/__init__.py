@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-from .celery import app as celery_app
 
 VERSION = (2,0,0,'beta',1)
 

@@ -92,5 +92,6 @@ def new_oneoff_donation(instance):
             subject=subject,
             to=donor,
             link=project_url,
-            donation=donation
+            donation=donation,
+            payment_method=donation.order.order_payments.all()[0].payment.method_name
         )

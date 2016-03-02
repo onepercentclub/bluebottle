@@ -499,7 +499,6 @@ class TestProjectDonationList(DonationApiTestCase):
         self.assertNotIn('amount', response.data['results'][0])
         self.assertNotIn('reward', response.data['results'][0])
 
-
     def test_successful_project_donation_list_paged(self, check_status_psp):
         for i in range(30):
             order = OrderFactory.create(user=self.user1, status=StatusDefinition.SUCCESS)
@@ -520,28 +519,62 @@ class TestProjectDonationList(DonationApiTestCase):
         DonationFactory.create(amount=1500, project=self.project3,
                                order=order)
 
+        anonymous_order = OrderFactory.create(status=StatusDefinition.SUCCESS)
+        DonationFactory.create(amount=1000, project=self.project3,
+                               order=anonymous_order, anonymous=True)
+
         response = self.client.get(self.project_donation_list_url,
                                    {'project': self.project3.slug, 'co_financing': 'true'},
                                    token=self.user1_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         self.assertEqual(response.data['count'], 1,
                          'Only donations by co-financers should be returned')
         self.assertEqual(response.data['results'][0]['amount'], 1500)
 
-    def test_project_donation_list_no_co_financing(self, check_status_psp):
+    def test_project_donation_list_co_financing_is_false(self, check_status_psp):
+        # Co_financing order and donation
         order = OrderFactory.create(user=self.user2, status=StatusDefinition.SUCCESS)
         DonationFactory.create(amount=1500, project=self.project3,
                                order=order)
+
+        # Anonymous order and donation
+        anonymous_order = OrderFactory.create(status=StatusDefinition.SUCCESS)
+        DonationFactory.create(amount=1500, project=self.project3,
+                               order=order, anonymous=True)
 
         response = self.client.get(self.project_donation_list_url,
                                    {'project': self.project3.slug, 'co_financing': 'false'},
                                    token=self.user1_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['count'], 1,
-                         'Only donations by co-financers should be returned')
-        self.assertEqual(response.data['results'][0]['amount'], 1000)
+        self.assertEqual(response.data['count'], 2,
+                         'Only donations and anonymous donations should be returned')
+        self.assertEqual(response.data['results'][0]['amount'], 1500)
+        self.assertEqual(response.data['results'][1]['amount'], 1000)
+
+    def test_project_donation_list_co_financing_is_unspecified(self, check_status_psp):
+        # Co_financing order and donation
+        order = OrderFactory.create(user=self.user2, status=StatusDefinition.SUCCESS)
+        DonationFactory.create(amount=1500, project=self.project3,
+                               order=order)
+
+        # Anonymous order and donation
+        anonymous_order = OrderFactory.create(status=StatusDefinition.SUCCESS)
+        DonationFactory.create(amount=1500, project=self.project3,
+                               order=anonymous_order, anonymous=True)
+
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug},
+                                   token=self.user1_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2,
+                         'Donations and anonymous donations should be returned')
+        self.assertEqual(response.data['results'][0]['amount'], 1500)
+        self.assertEqual(response.data['results'][1]['amount'], 1000)
+
 
 
 @patch.object(ManageOrderDetail, 'check_status_psp')

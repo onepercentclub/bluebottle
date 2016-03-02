@@ -84,8 +84,6 @@ class TaskList(DefaultSerializerMixin, generics.ListCreateAPIView):
         elif ordering == 'deadline':
             qs = qs.order_by('deadline')
 
-        qs = qs.exclude(status=BB_TASK_MODEL.TaskStatuses.closed)
-
         return qs
 
     def pre_save(self, obj):

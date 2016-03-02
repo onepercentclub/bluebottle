@@ -16,20 +16,20 @@ def successful_donation_fundraiser_mail(instance):
 
     fundraiser_link = '/go/fundraisers/{0}'.format(instance.fundraiser.id)
 
-    if instance.fundraiser.owner.email:
-
-        if instance.anonymous:
-            donor_name = _('an anonymous person')
-        elif instance.order.user:
-            if instance.order.user.first_name:
-                donor_name = instance.order.user.first_name
-            else:
-                donor_name = instance.order.user.email
-        else:
-            donor_name = _('a guest')
-
     with TenantLanguage(receiver.primary_language):
         subject = _('You received a new donation')
+
+        if instance.fundraiser.owner.email:
+
+            if instance.anonymous:
+                donor_name = _('an anonymous person')
+            elif instance.order.user:
+                if instance.order.user.first_name:
+                    donor_name = instance.order.user.first_name
+                else:
+                    donor_name = instance.order.user.email
+            else:
+                donor_name = _('a guest')
 
     send_mail(
         template_name='bb_donations/mails/new_oneoff_donation_fundraiser.mail',
@@ -54,40 +54,49 @@ def new_oneoff_donation(instance):
     if donation.order.order_type != "one-off":
         return
 
-    project_url = '/go/projects/{0}'.format(donation.project.slug)
+    project_url = '/projects/{0}'.format(donation.project.slug)
 
     if donation.project.owner.email:
 
-        if donation.anonymous:
-            donor_name = _('an anonymous person')
-        elif donation.order.user:
-            donor_name = donation.order.user.first_name
-        else:
-            donor_name = _('a guest')
-
         receiver = donation.project.owner
-
         with TenantLanguage(receiver.primary_language):
             subject = _('You received a new donation')
 
-        # Send email to the project owner.
-        send_mail(
-            template_name='bb_donations/mails/new_oneoff_donation.mail',
-            subject=subject,
-            to=receiver,
-            amount=donation.amount,
-            donor_name=donor_name,
-            link=project_url,
-            first_name=donation.project.owner.first_name
-        )
+            if donation.anonymous:
+                donor_name = _('an anonymous person')
+            elif donation.order.user:
+                donor_name = donation.order.user.first_name
+            else:
+                donor_name = _('a guest')
 
-        # TODO: This is the logic for sending mail to a supporter once he/she has
-        # donated.
-        # if donation.order.user.email:
-        #     # Send email to the project supporter
-        #     send_mail(
-        #         template_name="bb_donations/new_oneoff_donation.mail",
-        #         subject=_("You supported {0}".format(donation.project.title)),
-        #         to=donation.order.user,
-        #         link=project_url
-        #     )
+            # Send email to the project owner.
+            send_mail(
+                template_name='bb_donations/mails/new_oneoff_donation.mail',
+                subject=subject,
+                to=receiver,
+                amount=donation.amount,
+                donor_name=donor_name,
+                link=project_url,
+                first_name=donation.project.owner.first_name
+            )
+
+    if donation.order.user.email:
+        # Send email to the project supporter
+        donor = donation.order.user
+
+        with TenantLanguage(donor.primary_language):
+            subject = _('Thanks for your donation')
+
+        try:
+            payment_method = donation.order.order_payments.all()[0].payment.method_name
+        except IndexError:
+            payment_method = ''
+
+        send_mail(
+            template_name="bb_donations/mails/confirmation.mail",
+            subject=subject,
+            to=donor,
+            link=project_url,
+            donation=donation,
+            payment_method=payment_method
+        )

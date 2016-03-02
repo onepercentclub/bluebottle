@@ -48,6 +48,7 @@ def _order_status_changed(sender, instance, **kwargs):
                 post = SystemWallpost()
                 post.content_object = donation.project
                 post.related_object = donation
+                post.donation = donation
                 post.author = author
                 post.ip = '127.0.0.1'
                 post.save()
@@ -57,6 +58,7 @@ def _order_status_changed(sender, instance, **kwargs):
                     fr_post = SystemWallpost()
                     fr_post.content_object = donation.fundraiser
                     fr_post.related_object = donation
+                    fr_post.donation = donation
                     fr_post.author = author
                     fr_post.ip = '127.0.0.1'
                     fr_post.save()

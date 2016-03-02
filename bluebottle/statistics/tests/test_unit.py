@@ -8,6 +8,7 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.votes import VoteFactory
 
 from bluebottle.statistics.views import Statistics
 from bluebottle.bb_projects.models import ProjectPhase
@@ -139,3 +140,10 @@ class StatisticsTest(BluebottleTestCase):
         # - donator (another_user)
         # - donator (anon)
         self.assertEqual(self.stats.people_involved, 3)
+
+    def test_votes_stats(self):
+        VoteFactory.create(voter=self.some_user)
+        VoteFactory.create(voter=self.some_user)
+        VoteFactory.create(voter=self.another_user)
+
+        self.assertEqual(self.stats.votes_cast, 3)

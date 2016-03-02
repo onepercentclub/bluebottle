@@ -76,8 +76,8 @@ class TestDonationEmails(BluebottleTestCase):
         self.order.locked()
         self.order.succeeded()
 
-        # No fundraiser so one mail should be sent: one to the owner
-        self.assertEqual(len(mail.outbox), 1)
+        # No fundraiser so 2 mails should be sent: one to the owner, and one to the donor
+        self.assertEqual(len(mail.outbox), 2)
 
         # Test email to owner
         self.assertEqual(mail.outbox[0].to[0], self.project_owner.email)
@@ -85,6 +85,30 @@ class TestDonationEmails(BluebottleTestCase):
                          _('You received a new donation'))
         self.assertTrue(
             "EUR {0}".format(self.donation.amount) in mail.outbox[0].body)
+
+    def test_mail_donor_successful_donation(self):
+        """ Test that an email is sent to the donor after a succesful donation """
+        # Clear the email folder
+        mail.outbox = []
+
+        # Prepare the order
+        self.order.locked()
+        self.order.succeeded()
+
+        # No fundraiser so 2 mails should be sent: one to the owner, and one to the donor
+        self.assertEqual(len(mail.outbox), 2)
+
+        # Test email to donor
+        self.assertEqual(mail.outbox[1].to[0], self.user.email)
+        self.assertEqual(mail.outbox[1].subject,
+                         _('Thanks for your donation'))
+
+        body = mail.outbox[1].body
+
+        self.assertTrue(
+            "EUR {0}".format(self.donation.amount) in body)
+        self.assertTrue(
+            "Thanks {0}".format(self.user.first_name) in body)
 
     def test_mail_no_mail_not_one_off(self):
         """ Test that no email is sent when its not a one-off donation"""
@@ -108,8 +132,8 @@ class TestDonationEmails(BluebottleTestCase):
         self.fund_order.locked()
         self.fund_order.succeeded()
 
-        # With fundraiser so two mails should be sent: one to the owner and one to fundraiser.
-        self.assertEqual(len(mail.outbox), 2)
+        # With fundraiser so 3 mails should be sent: one to the owner, one to the donor and one to fundraiser.
+        self.assertEqual(len(mail.outbox), 3)
         self.assertEqual(mail.outbox[0].to[0], self.fund_owner.email)
         self.assertEqual(mail.outbox[0].subject,
                          _('You received a new donation'))

@@ -34,14 +34,20 @@ class ValidDonationsMixin(object):
 
 class DonationList(ValidDonationsMixin, generics.ListAPIView):
     model = DONATION_MODEL
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'preview')
+
+    def get_serializer_class(self):
+        if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
+            return PreviewDonationSerializer
+        return PreviewDonationWithoutAmountSerializer
 
 
 class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
     model = DONATION_MODEL
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'preview')
+
+    def get_serializer_class(self):
+        if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
+            return PreviewDonationSerializer
+        return PreviewDonationWithoutAmountSerializer
 
 
 class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
@@ -97,8 +103,11 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 class ProjectDonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
     model = DONATION_MODEL
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'preview')
+
+    def get_serializer_class(self):
+        if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
+            return PreviewDonationSerializer
+        return PreviewDonationWithoutAmountSerializer
 
 
 class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):

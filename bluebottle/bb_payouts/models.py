@@ -183,17 +183,26 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
             next_date = timezone.datetime(now.year, now.month, 1) + relativedelta(months=1)
         return next_date
 
-    @transition(field=status, save=True, source=StatusDefinition.NEW, target=StatusDefinition.IN_PROGRESS)
+    @transition(field=status, save=True,
+                source=[StatusDefinition.NEW,
+                        StatusDefinition.IN_PROGRESS,
+                        StatusDefinition.RETRY],
+                target=StatusDefinition.IN_PROGRESS)
     def in_progress(self):
         self.submitted = timezone.now()
 
     @transition(field=status, save=True,
-                source=[StatusDefinition.IN_PROGRESS, StatusDefinition.RETRY], target=StatusDefinition.SETTLED)
+                source=[StatusDefinition.IN_PROGRESS,
+                        StatusDefinition.RETRY],
+                target=StatusDefinition.SETTLED)
     def settled(self, completed=None):
         self.completed = completed
         self.protected = True
 
-    @transition(field=status, save=True, source=StatusDefinition.SETTLED, target=StatusDefinition.RETRY)
+    @transition(field=status, save=True,
+                source=[StatusDefinition.SETTLED,
+                        StatusDefinition.IN_PROGRESS],
+                target=StatusDefinition.RETRY)
     def retry(self):
         self.protected = True
         self.planned = self.__class__.get_next_planned_date()

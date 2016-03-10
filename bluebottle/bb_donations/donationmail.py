@@ -80,7 +80,7 @@ def new_oneoff_donation(instance):
                 first_name=donation.project.owner.first_name
             )
 
-    if donation.order.user.email:
+    if donation.order.user and donation.order.user.email:
         # Send email to the project supporter
         donor = donation.order.user
 

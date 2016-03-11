@@ -3,6 +3,7 @@ from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.views.generic import TemplateView, View
+from django.conf import settings
 
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.services import PaymentService
@@ -44,8 +45,9 @@ class PaymentResponseMockHandler(TemplateView):
         # Set the order payment to authorized
         order_payment.authorized()
 
+        return_domain = getattr(settings, 'MOCK_PAYMENT_RETURN_DOMAIN', 'http://bluebottle.localhost:4200')
         if order_payment and status in self.payment_responses:
-            url = "/en/orders/{0}/{1}".format(order_payment.order.id, status)
+            url = "{0}/en/orders/{1}/{2}".format(return_domain, order_payment.order.id, status)
 
         else:
             raise Http404

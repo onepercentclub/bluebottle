@@ -16,7 +16,7 @@
             </th>
             <th class="donation-amount">&euro; {{ donation.amount }}</th>
             <tr class="donation-location">
-                <td>{{donation.project.title}}</td>
+                <td><a href="{{ site }}/projects/{{donation.project.slug}}">{{donation.project.title}}</a></td>
             </tr>
         </tr>
         <tr class="donation-table-row">
@@ -34,7 +34,7 @@
                     <table>
                         <tr class="order-block">
                             <td>Date</td>
-                            <td>{{donation.created}}</td>
+                            <td nowrap="true">{{donation.created}}</td>
                         </tr>
                         <tr class="order-block">
                             <td>Method</td>
@@ -48,19 +48,24 @@
                 </td>
             </tr>
         </tr>
-        </tr>
     </table>
-    <table class="donation-table-share twelve columns">
-        <tr class="donation-table-share-title">{% trans "Support even more by sharing the project with your network:" %}</tr>
-        <tr class="donation-share-buttons">
-            <td>
-                <a class="action-facebook" href="https://www.facebook.com/sharer/sharer.php?u={{site}}{{link}}">
-                    {% trans 'Share on facebook' %}
-                </a>
-                <a class="action-twitter" href="https://twitter.com/intent/tweet?url={{site}}{{link}}">
-                    {% trans 'Share on Twitter' %}
-                </a>
-            </td>
-        </tr>
-    </table>
+    {% if SHARE_OPTIONS.facebook or SHARE_OPTIONS.twitter %}
+        <table class="donation-table-share twelve columns">
+            <tr class="donation-table-share-title">{% trans "Support even more by sharing the project with your network:" %}</tr>
+            <tr class="donation-share-buttons">
+                <td>
+                    {% if SHARE_OPTIONS.facebook %}
+                        <a class="action-facebook" href="https://www.facebook.com/sharer/sharer.php?u={{site}}{{link}}">
+                            {% trans 'Share on facebook' %}
+                        </a>
+                    {%  endif %}
+                    {% if SHARE_OPTIONS.twitter %}
+                        <a class="action-twitter" href="https://twitter.com/intent/tweet?url={{site}}{{link}}">
+                            {% trans 'Share on Twitter' %}
+                        </a>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    {% endif %}
 {% endblock content %} 

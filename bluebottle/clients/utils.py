@@ -96,12 +96,10 @@ def get_public_properties(request):
     if connection.tenant:
         current_tenant = connection.tenant
         properties = get_tenant_properties()
-        static_url = "{0}frontend/{1}/".format(getattr(properties, 'STATIC_URL'), current_tenant.client_name)
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
-            'staticUrl': static_url,
-            'defaultAvatarUrl': "{0}images/default-avatar.png".format(static_url),
-            'logoUrl': "{0}images/logo.svg".format(static_url),
+            'defaultAvatarUrl': "/images/default-avatar.png",
+            'logoUrl': "/images/logo.svg",
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
             'recurringDonationsEnabled': getattr(properties, 'RECURRING_DONATIONS_ENABLED', False),

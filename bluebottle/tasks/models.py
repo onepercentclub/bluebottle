@@ -115,3 +115,7 @@ class TaskMember(BaseTaskMember):
 
 class TaskFile(BaseTaskFile):
     pass
+
+
+from bluebottle.bb_tasks.taskwallmails import *
+from bluebottle.bb_tasks.taskmail import *

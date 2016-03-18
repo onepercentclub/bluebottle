@@ -24,8 +24,8 @@ class HomePage(object):
 
         projects = projects.order_by('?')
 
-        if len(projects) > 3:
-            self.projects = projects[0:3]
+        if len(projects) > 4:
+            self.projects = projects[0:4]
         elif len(projects) > 0:
             self.projects = projects[0:len(projects)]
         else:

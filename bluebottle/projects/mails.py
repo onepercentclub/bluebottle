@@ -38,7 +38,7 @@ def mail_project_complete(project):
         title=project.title,
         to=project.owner,
         site=tenant_url(),
-        link='/go/projects/{0}'.format(project.id)
+        link='/go/projects/{0}'.format(project.slug)
     )
 
 
@@ -52,5 +52,5 @@ def mail_project_incomplete(project):
         title=project.title,
         to=project.owner,
         site=tenant_url(),
-        link='/go/projects/{0}'.format(project.id)
+        link='/go/projects/{0}'.format(project.slug)
     )

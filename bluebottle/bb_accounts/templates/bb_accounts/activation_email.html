@@ -2,13 +2,10 @@
 {% load i18n %}
 
 {% block content %}
-    {% blocktrans %}
-
-        <h1>Welcome {{ first_name }}</h1>
-        <p class="lead">You're officially part of {{ site_name }}</p>
-        <br>
-        [info about the platform]
-    {% endblocktrans %}
+{% blocktrans %}
+<h1>Welcome {{ first_name }}</h1>
+<p class="lead">You're officially part of {{ site_name }}</p>
+{% endblocktrans %}
 {% endblock %}
 
 {% block action %}

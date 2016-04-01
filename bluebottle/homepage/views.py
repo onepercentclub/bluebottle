@@ -1,3 +1,5 @@
+from django.utils import translation
+
 from rest_framework import generics, response
 
 from .models import HomePage
@@ -9,6 +11,11 @@ class HomePageDetail(generics.GenericAPIView):
     serializer_class = HomePageSerializer
 
     def get(self, request, language='en'):
+
+        # Force requested language
+        translation.activate(language)
+        request.LANGUAGE_CODE = translation.get_language()
+
         homepage = HomePage().get(language)
         serialized = HomePageSerializer().to_native(homepage)
         return response.Response(serialized)

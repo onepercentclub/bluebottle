@@ -70,6 +70,4 @@ class TestTenantMiddleware(TestCase):
              mock.patch("__builtin__.execfile") as execfile:
             self.middleware.process_request(Mock())
             self.assertEquals(execfile.call_args_list[0][0][0],
-                              "/some/client/path/valid/properties.py")
-            self.assertEquals(execfile.call_args_list[1][0][0],
-                              "/some/client/path/valid/secrets.py")
+                              "/some/client/path/valid/settings.py")

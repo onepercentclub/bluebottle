@@ -167,7 +167,7 @@ class Migration(SchemaMigration):
         u'projects.project': {
             'Meta': {'ordering': "['title']", 'object_name': 'Project'},
             'account_bank_country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'project_account_bank_country'", 'null': 'True', 'to': u"orm['geo.Country']"}),
-            'account_bic': ('django_iban.fields.SWIFTBICField', [], {'max_length': '11', 'null': 'True', 'blank': 'True'}),
+            'account_bic': ('localflavor.generic.models.BICField', [], {'max_length': '11', 'null': 'True', 'blank': 'True'}),
             'account_holder_address': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'account_holder_city': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'account_holder_country': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'project_account_holder_country'", 'null': 'True', 'to': u"orm['geo.Country']"}),

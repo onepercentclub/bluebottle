@@ -3,11 +3,8 @@
 
 {% block content %}
 {% blocktrans %}
-
 Welcome {{ first_name }}
 You're officially part of {{ site_name }}
-
-[info about the platform]
 {% endblocktrans %}
 {% endblock %}
 

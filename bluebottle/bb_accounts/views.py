@@ -68,7 +68,7 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
     def pre_save(self, obj):
         if obj.location:
             # When the location changes, make sure we set the user's country.
-            # This decided the payment method they use for example
+            # This decides the payment method they use for example
             obj.address.country = obj.location.country
 
         try:

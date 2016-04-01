@@ -32,3 +32,4 @@ class LocationFactory(factory.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Location_{0}'.format(n))
     position = Geoposition(52.5, 13.4)
+    country = factory.SubFactory(CountryFactory)

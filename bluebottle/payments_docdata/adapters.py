@@ -142,7 +142,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         if payment.default_pm == 'ideal':
             # For ideal we fake the country to be NL
-            user['country'] = 'nl'
+            user['country'] = 'NL'
 
         # Store user data on payment too
         payment.customer_id = user['id']

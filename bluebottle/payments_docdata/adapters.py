@@ -140,6 +140,9 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         amount = gateway.Amount(value=self.order_payment.amount, currency='EUR')
         user = self.get_user_data()
 
+        if payment.default_pm = 'ideal':
+            user['country'] = 'nl'
+
         # Store user data on payment too
         payment.customer_id = user['id']
         payment.email = user['email']

@@ -79,17 +79,3 @@ def get_extra_facebook_data(strategy, user, response, details,
         user.facebook = fb_link
 
     user.save()
-
-
-def send_welcome_mail_pipe(strategy, user, response, details,
-                           is_new=False, *args, **kwargs):
-    """
-    The post_save signal handler in bb_accounts.models deals with sending a
-    welcome mail. However, because the User object passes through the social
-    pipeline it gets saved several time and therefore losing the "new" status
-    to trigger sending an email. This pipe in the social pipeline therefore
-    sends an explicit welcome email.
-    """
-
-    if is_new and valid_email(user.email):
-        send_welcome_mail(user)

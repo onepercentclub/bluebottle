@@ -9,8 +9,9 @@ FUNDRAISER_MODEL = get_fundraiser_model()
 
 
 class FundraiserAdmin(admin.ModelAdmin):
-    list_display = ('title', 'amount_override', 'deadline',
-                    'amount_donated_override')
+    list_display = ('title', 'owner_link',
+                    'amount_override', 'amount_donated_override',
+                    'deadline')
     raw_id_fields = ('project', 'owner')
 
     search_fields = ('title', 'project__title')
@@ -18,15 +19,12 @@ class FundraiserAdmin(admin.ModelAdmin):
     readonly_fields = ('project_link', 'owner_link')
 
     def amount_override(self, obj):
-        language = translation.get_language().split('-')[0]
-        return format_currency(obj.amount / 100, obj.currency, locale=language)
+        return obj.amount
 
-    amount_override.short_description = 'amount'
+    amount_override.short_description = 'amount asked'
 
     def amount_donated_override(self, obj):
-        language = translation.get_language().split('-')[0]
-        return format_currency(int(obj.amount) / 100, obj.currency,
-                               locale=language)
+        return obj.amount
 
     amount_donated_override.short_description = 'amount donated'
 
@@ -45,9 +43,9 @@ class FundraiserAdmin(admin.ModelAdmin):
                                                     object._meta.module_name),
                       args=[object.id])
         return "<a href='{0}'>{1}</a>".format(
-            str(url), object.first_name + ' ' + object.last_name)
+            str(url), object.email)
 
     owner_link.allow_tags = True
-
+    owner_link.short_description = 'initiator'
 
 admin.site.register(FUNDRAISER_MODEL, FundraiserAdmin)

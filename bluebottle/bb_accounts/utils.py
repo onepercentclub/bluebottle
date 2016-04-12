@@ -1,19 +1,18 @@
 import re
-from django.template import loader
-from django.utils import translation
+
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.clients.utils import tenant_url, tenant_name
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.clients import properties
+
+from tenant_extras.utils import TenantLanguage
 
 
 def send_welcome_mail(user=None):
-    cur_language = translation.get_language()
-
+    subject = _("Welcome to %(site_name)s") % {'site_name': tenant_name()}
     if user and user.primary_language:
-        translation.activate(user.primary_language)
-    else:
-        translation.activate(properties.LANGUAGE_CODE)
+        with TenantLanguage(user.primary_language):
+            subject = _("Welcome to %(site_name)s") % {'site_name': tenant_name()}
 
     c = {
         'email': user.email,
@@ -24,20 +23,12 @@ def send_welcome_mail(user=None):
         'LANGUAGE_CODE': user.primary_language,
     }
 
-    subject_template_name = 'bb_accounts/activation_email_subject.txt'
-    subject = loader.render_to_string(subject_template_name, c)
-
-    # Email subject *must not* contain newlines
-    subject = ''.join(subject.splitlines())
-
     send_mail(
         template_name='bb_accounts/activation_email',
         subject=subject,
         to=user,
         **c
     )
-
-    translation.activate(cur_language)
 
 
 def valid_email(email=None):

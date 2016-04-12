@@ -132,8 +132,8 @@ class CSVImportForm(forms.Form):
 
         # Read CSV file
         reader = csv.reader(csv_file,
-            dialect=dialect, encoding=self.charset
-        )
+                            dialect=dialect, encoding=self.charset
+                            )
 
         if has_header:
             # Update mapping using header

@@ -101,7 +101,7 @@ FLUENT_DASHBOARD_APP_GROUPS = (
     }),
 )
 
-ADMIN_TOOLS_THEMING_CSS = 'css/admin/dashboard.css'
+ADMIN_TOOLS_THEMING_CSS = 'admin/css/dashboard.css'
 
 # Icon filenames can either be relative to the theme directory (if no path separators are used),
 # or be a relative to the STATIC_URL (if path separators are used in the icon name)
@@ -113,7 +113,6 @@ FLUENT_DASHBOARD_APP_ICONS = {
     'members/member': 'icons/flaticons_stroke/SVGs/user-1.svg',
     'auth/group': 'icons/flaticons_stroke/SVGs/group-1.svg',
     'registration/registrationprofile': 'icons/flaticons_stroke/SVGs/add-user-1.svg',
-
 
     # Projects
     'bb_projects/projectphase': 'icons/flaticons_stroke/SVGs/history-1.svg',

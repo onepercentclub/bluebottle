@@ -15,5 +15,5 @@ class DonationFactory(factory.DjangoModelFactory):
     fundraiser = factory.SubFactory(FundraiserFactory)
     order = factory.SubFactory(OrderFactory)
     project = factory.SubFactory(ProjectFactory)
+    reward = None
     amount = 25
-

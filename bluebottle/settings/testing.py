@@ -2,12 +2,13 @@ from .base import *
 from .secrets import *
 from bluebottle.payments_docdata.settings import *
 
-# Supress naive date warnings
 import warnings
-warnings.filterwarnings(
-        'ignore', r"DateTimeField received a naive datetime .* while time zone support is active",
-        RuntimeWarning, r'django\.db\.models\.fields')
 
+# Raise exception on naive datetime...
+warnings.filterwarnings(
+    'error',
+    r"DateTimeField .* received a naive datetime",
+    RuntimeWarning, r'django\.db\.models\.fields')
 
 DOCDATA_MERCHANT_NAME = 'merchant_name'
 DOCDATA_MERCHANT_PASSWORD = 'merchant_password'
@@ -31,10 +32,10 @@ SOUTH_TESTS_MIGRATE = False
 ROOT_URLCONF = 'bluebottle.urls'
 
 
-#Graphviz
+# Graphviz
 GRAPH_MODELS = {
-  'all_applications': True,
-  'group_models': True,
+    'all_applications': True,
+    'group_models': True,
 }
 
 DEFAULT_DB_ALIAS = 'default'
@@ -61,6 +62,7 @@ INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('django_nose', 'tenant_schemas',)
 
 from bluebottle.payments_mock.settings import (MOCK_PAYMENT_METHODS,
                                                MOCK_FEES)
+
 PAYMENT_METHODS = MOCK_PAYMENT_METHODS
 
 DOCDATA_FEES = {

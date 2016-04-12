@@ -15,6 +15,7 @@ from bluebottle.bb_projects.models import ProjectTheme
 
 from bluebottle.projects.models import Project
 
+
 class SuggestionsTokenTest(BluebottleTestCase):
     def setUp(self):
         super(SuggestionsTokenTest, self).setUp()
@@ -37,7 +38,8 @@ class SuggestionsTokenTest(BluebottleTestCase):
                 'org_email': 'test@example.com',
                 'org_phone': '+31612345678',
                 'org_contactname': 'test',
-                'deadline': datetime.datetime.now() + datetime.timedelta(days=1),
+                'deadline': datetime.datetime.now() + datetime.timedelta(
+                    days=1),
                 'theme': ProjectTheme.objects.all()[0].pk,
                 'destination': 'test destination'
             }
@@ -54,9 +56,9 @@ class SuggestionsTokenTest(BluebottleTestCase):
         suggestion = SuggestionFactory.create(token=token, status='unconfirmed')
 
         response = self.client.put(
-            reverse('suggestion_token_validate', kwargs={'token':token}))
+            reverse('suggestion_token_validate', kwargs={'token': token}))
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         suggestion = Suggestion.objects.get(pk=suggestion.pk)
 
@@ -68,7 +70,7 @@ class SuggestionsTokenTest(BluebottleTestCase):
         suggestion = SuggestionFactory.create(token=token, status='unconfirmed')
 
         response = self.client.put(
-            reverse('suggestion_token_validate', kwargs={'token':token}),
+            reverse('suggestion_token_validate', kwargs={'token': token}),
             HTTP_AUTHORIZATION=self.user_1_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -83,7 +85,7 @@ class SuggestionsTokenTest(BluebottleTestCase):
         suggestion = SuggestionFactory.create(token=token, status='draft')
 
         response = self.client.put(
-            reverse('suggestion_token_validate', kwargs={'token':token}),
+            reverse('suggestion_token_validate', kwargs={'token': token}),
             HTTP_AUTHORIZATION=self.user_1_token)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -97,6 +99,7 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
     """
     Integration tests for the Suggestion API.
     """
+
     def setUp(self):
         super(SuggestionsListIntegrationTest, self).setUp()
         self.user_1 = BlueBottleUserFactory.create()
@@ -121,7 +124,8 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         """
         Test the status when retrieving all suggestions
         """
-        response = self.client.get(self.suggestion_list_url, HTTP_AUTHORIZATION=self.user_1_token)
+        response = self.client.get(self.suggestion_list_url,
+                                   HTTP_AUTHORIZATION=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_retrieve_suggestion_list_all_items(self):
@@ -131,7 +135,8 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         suggestion_2 = SuggestionFactory.create(deadline=date.today())
         suggestion_3 = SuggestionFactory.create(deadline=date.today())
 
-        response = self.client.get(self.suggestion_list_url, HTTP_AUTHORIZATION=self.user_1_token)
+        response = self.client.get(self.suggestion_list_url,
+                                   HTTP_AUTHORIZATION=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = json.loads(response.content)
@@ -141,10 +146,13 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         """
         Test that no suggestions are returned if there deadline is 'lower' than today
         """
-        suggestion_2 = SuggestionFactory.create(deadline=date.today() - timedelta(1))
-        suggestion_3 = SuggestionFactory.create(deadline=date.today() - timedelta(1))
+        suggestion_2 = SuggestionFactory.create(
+            deadline=date.today() - timedelta(1))
+        suggestion_3 = SuggestionFactory.create(
+            deadline=date.today() - timedelta(1))
 
-        response = self.client.get(self.suggestion_list_url, HTTP_AUTHORIZATION=self.user_1_token)
+        response = self.client.get(self.suggestion_list_url,
+                                   HTTP_AUTHORIZATION=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = json.loads(response.content)
@@ -157,11 +165,14 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         """
         destination = 'amsterdam'
 
-        suggestion_amsterdam_1 = SuggestionFactory.create(destination="Amsterdam")
-        suggestion_amsterdam_2 = SuggestionFactory.create(destination="amsterdam")
+        suggestion_amsterdam_1 = SuggestionFactory.create(
+            destination="Amsterdam")
+        suggestion_amsterdam_2 = SuggestionFactory.create(
+            destination="amsterdam")
 
-        response = self.client.get(self.suggestion_list_url, {'destination': destination},
-                                    HTTP_AUTHORIZATION=self.user_1_token)
+        response = self.client.get(self.suggestion_list_url,
+                                   {'destination': destination},
+                                   HTTP_AUTHORIZATION=self.user_1_token)
 
         data = json.loads(response.content)
         self.assertEqual(len(data), 2)
@@ -179,9 +190,8 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         suggestion_accepted_2 = SuggestionFactory.create(status=status)
         suggestion_other = SuggestionFactory.create(status='other')
 
-
         response = self.client.get(self.suggestion_list_url, {'status': status},
-                                    HTTP_AUTHORIZATION=self.user_1_token)
+                                   HTTP_AUTHORIZATION=self.user_1_token)
 
         data = json.loads(response.content)
         self.assertEqual(len(data), 2)
@@ -196,8 +206,9 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         project = ProjectFactory.create()
         suggestion_accepted_1 = SuggestionFactory.create(project=project)
 
-        response = self.client.get(self.suggestion_list_url, {'project_slug': project.slug},
-                                    HTTP_AUTHORIZATION=self.user_1_token)
+        response = self.client.get(self.suggestion_list_url,
+                                   {'project_slug': project.slug},
+                                   HTTP_AUTHORIZATION=self.user_1_token)
 
         data = json.loads(response.content)
         self.assertEqual(len(data), 1)
@@ -211,8 +222,9 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         project = ProjectFactory.create()
         suggestion_accepted_1 = SuggestionFactory.create(project=project)
 
-        response = self.client.get(self.suggestion_list_url, {'project_slug': "non-existing-slug"},
-                                    HTTP_AUTHORIZATION=self.user_1_token)
+        response = self.client.get(self.suggestion_list_url,
+                                   {'project_slug': "non-existing-slug"},
+                                   HTTP_AUTHORIZATION=self.user_1_token)
 
         data = json.loads(response.content)
         self.assertEqual(len(data), 0)
@@ -222,6 +234,7 @@ class AdoptTestCase(BluebottleTestCase):
     """
     Simulate the adoption of a suggestion
     """
+
     def setUp(self):
         super(AdoptTestCase, self).setUp()
         self.user_1 = BlueBottleUserFactory.create()
@@ -244,8 +257,9 @@ class AdoptTestCase(BluebottleTestCase):
                                  pitch='Eat more cheese'
                                  )
         response = self.client.get(self.suggestion_list_url,
-                      {'destination': "Amsterdam", status: "accepted"},
-                      HTTP_AUTHORIZATION=self.user_1_token)
+                                   {'destination': "Amsterdam",
+                                    status: "accepted"},
+                                   HTTP_AUTHORIZATION=self.user_1_token)
 
         data = json.loads(response.content)[0]
         project = ProjectFactory.create(title="Adopting project")
@@ -253,9 +267,10 @@ class AdoptTestCase(BluebottleTestCase):
         data['project'] = project.slug
 
         r = self.client.put(reverse('suggestion_detail',
-                                    kwargs={'pk':data['id']}),
+                                    kwargs={'pk': data['id']}),
                             HTTP_AUTHORIZATION=self.user_1_token,
                             data=data)
 
         suggestion = Suggestion.objects.get(pk=data['id'])
-        self.assertEquals(Project.objects.get(pk=project.pk), suggestion.project)
+        self.assertEquals(Project.objects.get(pk=project.pk),
+                          suggestion.project)

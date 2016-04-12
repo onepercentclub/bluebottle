@@ -12,35 +12,40 @@ class LoggedInUser(permissions.BasePermission):
             return True
         return False
 
+
 class IsUser(permissions.BasePermission):
     """ Read / write permissions are only allowed if the obj.user is the logged in user. """
+
     def has_object_permission(self, request, view, obj):
         return obj.user == request.user
 
 
 class IsOrderCreator(permissions.BasePermission):
     """
-    Allows the access to a payment or order only if the user created the Order that the payment belongs to.
+    Allows the access to a payment or order only if the user created the Order
+    that the payment belongs to.
     """
-    def has_object_permission(self, request, view, obj):
-        # Use duck typing to check if we have an order or a payment.
-        if hasattr(obj, 'user'):
-            order = obj
-        else:
-            order = obj.order
 
-        # Permission is granted if: 
+    def has_object_permission(self, request, view, obj):
+        # Use duck typing to check if we have an order or a payment/donation.
+        if hasattr(obj, 'order'):
+            order = obj.order
+        else:
+            order = obj
+
+        # Permission is granted if:
         #   * the order user is the logged in user
         #   * the order has no user but the current
-        #     order in the session has the same order_id as the order being 
+        #     order in the session has the same order_id as the order being
         #     accessed. This will happen if the order was created anonymously
         #     and then the user logged in / signed up.
 
         # Case 1: Authenticated user.
         if request.user.is_authenticated():
-            # Does the order match the current user, or do they have an order 
+            # Does the order match the current user, or do they have an order
             # in the session which matches this order?
-            return (order.user == request.user or order.pk == request.session.get('new_order_id'))
+            return (order.user == request.user or
+                    order.pk == request.session.get('new_order_id'))
 
         # Case 2: Anonymous user.
         else:
@@ -70,20 +75,21 @@ class IsOrderCreator(permissions.BasePermission):
 
         if view.model == ORDER_MODEL:
             # Order must belong to the current user or have no user assigned (anonymous)
-            order_user = request.DATA.get('user', None)
-            if order_user and order_user != request.user.pk:
+            order_user_id = int(request.DATA.get('user', 0))
+            if order_user_id and order_user_id != request.user.pk:
                 return False
             return True
-        else: # This is for creating new objects that have a relation (fk) to Order.
+        else:  # This is for creating new objects that have a relation (fk) to Order.
             order = self._get_order_from_request(request)
             if order:
                 # Allow action if order belongs to user or if the user is anonymous
                 # and the current order in the session is the same as this order
                 if request.user.is_authenticated():
-                    return (order.user == request.user or order.pk == request.session.get('new_order_id'))
+                    return (order.user == request.user or order.pk ==
+                            request.session.get('new_order_id'))
                 elif order.pk == request.session.get('new_order_id'):
                     return True
-            else: # deny if no order present
+            else:  # deny if no order present
                 return False
 
 
@@ -91,7 +97,7 @@ class OrderIsNew(permissions.BasePermission):
     """
     Check if the Order has status new. This also works for objects that have a foreign key to order.
 
-    """ 
+    """
 
     def _get_order_from_request(self, request):
         if request.DATA:
@@ -131,4 +137,3 @@ class OrderIsNew(permissions.BasePermission):
         if isinstance(obj, ORDER_MODEL):
             return obj.status == StatusDefinition.CREATED
         return obj.order.status == StatusDefinition.CREATED
-

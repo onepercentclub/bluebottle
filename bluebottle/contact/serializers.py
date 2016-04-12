@@ -1,13 +1,12 @@
 from rest_framework import serializers
 
-from bluebottle.bb_accounts.serializers import UserPreviewSerializer
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 
 from .models import ContactMessage
 
 
 class ContactMessageSerializer(serializers.ModelSerializer):
-
-    author = UserPreviewSerializer()
+    author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
 
     class Meta:
         model = ContactMessage

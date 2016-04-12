@@ -11,11 +11,12 @@ from bluebottle.redirects.models import Redirect
 @override_settings(
     APPEND_SLASH=False,
     MIDDLEWARE_CLASSES=list(settings.MIDDLEWARE_CLASSES) +
-        ['bluebottle.redirects.middleware.RedirectFallbackMiddleware'],
+                       [
+                           'bluebottle.redirects.middleware.RedirectFallbackMiddleware'],
     SITE_ID=1,
+    LOCALE_REDIRECT_IGNORE=('/initial', '/news', '/project', '/external_https', '/external_http'),
 )
 class RedirectTests(BluebottleTestCase):
-
     def test_model(self):
         r1 = Redirect.objects.create(
             old_path='/initial', new_path='/new_target')
@@ -23,10 +24,11 @@ class RedirectTests(BluebottleTestCase):
 
     def test_redirect(self):
         Redirect.objects.create(
-            old_path='/initial', new_path='/new_target')
+            old_path='/initial', new_path='/new_target/')
         response = self.client.get('/initial')
         self.assertRedirects(response,
-            '/en/new_target', status_code=301, target_status_code=404)
+                             '/en/new_target/', status_code=301,
+                             target_status_code=200)
 
     @override_settings(APPEND_SLASH=True)
     def test_redirect_with_append_slash(self):
@@ -34,7 +36,8 @@ class RedirectTests(BluebottleTestCase):
             old_path='/initial/', new_path='/new_target/')
         response = self.client.get('/initial')
         self.assertRedirects(response,
-            '/en/new_target/', status_code=301, target_status_code=404)
+                             '/en/new_target/', status_code=301,
+                             target_status_code=200)
 
     @override_settings(APPEND_SLASH=True)
     def test_redirect_with_append_slash_and_query_string(self):
@@ -42,7 +45,8 @@ class RedirectTests(BluebottleTestCase):
             old_path='/initial/?foo', new_path='/new_target/')
         response = self.client.get('/initial?foo')
         self.assertRedirects(response,
-            '/en/new_target/', status_code=301, target_status_code=404)
+                             '/en/new_target/', status_code=301,
+                             target_status_code=200)
 
     def test_regular_expression(self):
         Redirect.objects.create(
@@ -52,7 +56,7 @@ class RedirectTests(BluebottleTestCase):
         response = self.client.get('/news/index/12345/foobar/')
         self.assertRedirects(response,
                              '/en/my/news/foobar/',
-                             status_code=301, target_status_code=404)
+                             status_code=301, target_status_code=200)
         redirect = Redirect.objects.get(regular_expression=True)
         self.assertEqual(redirect.nr_times_visited, 1)
 
@@ -62,52 +66,52 @@ class RedirectTests(BluebottleTestCase):
         """
         Redirect.objects.create(
             old_path='/project/foo',
-            new_path='/my/project/foo')
-        
+            new_path='/my/project/foo/')
+
         Redirect.objects.create(
             old_path='/project/foo/(.*)',
-            new_path='/my/project/foo/$1',
+            new_path='/my/project/foo/$1/',
             regular_expression=True)
 
         Redirect.objects.create(
             old_path='/project/(.*)',
-            new_path='/projects',
+            new_path='/projects/',
             regular_expression=True,
             fallback_redirect=True)
 
         Redirect.objects.create(
             old_path='/project/bar/(.*)',
-            new_path='/my/project/bar/$1',
+            new_path='/my/project/bar/$1/',
             regular_expression=True)
 
         Redirect.objects.create(
             old_path='/project/bar',
-            new_path='/my/project/bar')
+            new_path='/my/project/bar/')
 
         response = self.client.get('/project/foo')
         self.assertRedirects(response,
-                             '/en/my/project/foo',
-                             status_code=301, target_status_code=404)
+                             '/en/my/project/foo/',
+                             status_code=301, target_status_code=200)
 
         response = self.client.get('/project/bar')
         self.assertRedirects(response,
-                             '/en/my/project/bar',
-                             status_code=301, target_status_code=404)
+                             '/en/my/project/bar/',
+                             status_code=301, target_status_code=200)
 
         response = self.client.get('/project/bar/details')
         self.assertRedirects(response,
-                             '/en/my/project/bar/details',
-                             status_code=301, target_status_code=404)
+                             '/en/my/project/bar/details/',
+                             status_code=301, target_status_code=200)
 
         response = self.client.get('/project/foobar')
         self.assertRedirects(response,
-                             '/en/projects',
-                             status_code=301, target_status_code=404)
+                             '/en/projects/',
+                             status_code=301, target_status_code=200)
 
         response = self.client.get('/project/foo/details')
         self.assertRedirects(response,
-                             '/en/my/project/foo/details',
-                             status_code=301, target_status_code=404)
+                             '/en/my/project/foo/details/',
+                             status_code=301, target_status_code=200)
 
     def test_redirect_external_http(self):
         Redirect.objects.create(
@@ -128,9 +132,9 @@ class RedirectTests(BluebottleTestCase):
         self.assertEquals(response['location'], "https://example.com")
 
     @override_settings(LANGUAGE_CODE='nl',
-                        MIDDLEWARE_CLASSES=(
-                        'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
-    ))   
+                       MIDDLEWARE_CLASSES=(
+                               'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
+                       ))
     def test_redirect_language_code(self):
         translation.deactivate()
         r1 = Redirect.objects.create(
@@ -139,9 +143,21 @@ class RedirectTests(BluebottleTestCase):
         self.assertEqual(res.url.split('/')[3], 'nl')
 
     @override_settings(LANGUAGE_CODE='nl',
-                        MIDDLEWARE_CLASSES=(
-                        'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
-    ))
+                       MIDDLEWARE_CLASSES=(
+                               'tenant_extras.middleware.TenantLocaleMiddleware',
+                               'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
+                       ))
+    def test_redirect_with_locale_middleware(self):
+        Redirect.objects.create(
+            old_path='/faq', new_path='https://example.com')
+        response = self.client.get('/faq')
+        self.assertEquals(response.status_code, 301)
+        self.assertEquals(response['location'], "https://example.com")
+
+    @override_settings(LANGUAGE_CODE='nl',
+                       MIDDLEWARE_CLASSES=(
+                               'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
+                       ))
     def test_redirect_thread_has_language(self):
         translation.activate('en')
         r1 = Redirect.objects.create(
@@ -152,8 +168,8 @@ class RedirectTests(BluebottleTestCase):
     @override_settings(LANGUAGE_CODE='nl',
                        LANGUAGES=(('nl', 1),),
                        MIDDLEWARE_CLASSES=(
-                        'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
-    ))
+                               'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
+                       ))
     def test_redirect_language_code_not_in_languages(self):
         translation.activate('en')
         r1 = Redirect.objects.create(

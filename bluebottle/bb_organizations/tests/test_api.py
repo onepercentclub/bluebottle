@@ -10,7 +10,6 @@ from bluebottle.test.factory_models.organizations import (
 
 
 class OrganizationsEndpointTestCase(BluebottleTestCase):
-
     """
     Base class for test cases for ``organizations`` module.
 
@@ -46,7 +45,6 @@ class OrganizationsEndpointTestCase(BluebottleTestCase):
 
 
 class OrganizationListTestCase(OrganizationsEndpointTestCase):
-
     """
     Test case for ``OrganizationsList`` API view.
 
@@ -68,7 +66,6 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
 
 
 class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
-
     """
     Test case for ``OrganizationsList`` API view.
 
@@ -84,7 +81,6 @@ class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
 
 
 class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
-
     """
     Test case for ``ManageOrganizationsList`` API view.
 
@@ -148,7 +144,6 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
 
 
 class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
-
     """
     Test case for ``OrganizationsList`` API view.
 
@@ -164,7 +159,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
             reverse('manage_organization_detail',
                     kwargs={'pk': self.organization_1.pk}))
         self.assertEqual(
-            response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+            response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
     def test_manage_organizations_detail_user_restricted(self):
         """
@@ -185,7 +180,8 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         Tests a successful GET request over the endpoint.
         """
         response = self.client.get(reverse('manage_organization_detail',
-                                   kwargs={'pk': self.organization_1.pk}),
+                                           kwargs={
+                                           'pk': self.organization_1.pk}),
                                    token=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)

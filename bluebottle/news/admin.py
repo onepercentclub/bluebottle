@@ -2,18 +2,18 @@ from django.conf import settings
 from django.conf.urls import patterns, url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
-from django.forms import ModelForm
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import simplejson
+from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django.utils.safestring import mark_safe
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.models import Placeholder
 from fluent_contents.rendering import render_content_items
+
 from .models import NewsItem
 
 
@@ -29,7 +29,8 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
             'fields': ('title', 'slug', 'language', 'main_image', 'contents'),
         }),
         (_('Publication settings'), {
-            'fields': ('status', 'publication_date', 'publication_end_date', 'allow_comments'),
+            'fields': ('status', 'publication_date', 'publication_end_date',
+                       'allow_comments'),
         }),
     )
 
@@ -44,9 +45,15 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         base_urls = super(NewsItemAdmin, self).get_urls()
         info = self.model._meta.app_label, self.model._meta.module_name
         urlpatterns = patterns('',
-            url(r'^(?P<pk>\d+)/preview-canvas/$', self.admin_site.admin_view(self.preview_canvas), name="{0}_{1}_preview_canvas".format(*info)),
-            url(r'^(?P<pk>\d+)/get_preview/$', self.admin_site.admin_view(self.get_preview_html), name="{0}_{1}_get_preview".format(*info))
-        )
+                               url(r'^(?P<pk>\d+)/preview-canvas/$',
+                                   self.admin_site.admin_view(
+                                       self.preview_canvas),
+                                   name="{0}_{1}_preview_canvas".format(*info)),
+                               url(r'^(?P<pk>\d+)/get_preview/$',
+                                   self.admin_site.admin_view(
+                                       self.get_preview_html),
+                                   name="{0}_{1}_get_preview".format(*info))
+                               )
 
         return urlpatterns + base_urls
 
@@ -54,9 +61,9 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         # Give a workable object, no matter whether it's a news or blogpost.
         pk = long(pk)
         if pk:
-            return BlogPost.objects.get(pk=pk)
+            return NewsItem.objects.get(pk=pk)
         else:
-            return BlogPost()
+            return NewsItem()
 
     @xframe_options_sameorigin
     def preview_canvas(self, request, pk):
@@ -82,25 +89,33 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
             'title': blogpost.title,
             'contents': contents_html,
         }
-        return HttpResponse(simplejson.dumps(json), content_type='application/javascript', status=status)
+        return HttpResponse(simplejson.dumps(json),
+                            content_type='application/javascript',
+                            status=status)
 
     def _get_preview_items(self, request, blogpost):
         """
-        Construct all ContentItem models with the latest unsaved client-side data applied to them.
+        Construct all ContentItem models with the latest unsaved
+        client-side data applied to them.
 
-        This functionality could ideally be included in django-fluent-contents directly,
-        however that would require more testing and dealing with the "placeholder editor" interface too,
-        in contrast to a single "placeholder field", the placeholder editor allows to move ContentItems between placeholders.
+        This functionality could ideally be included in django-fluent-contents
+        directly, however that would require more testing and dealing with
+        the "placeholder editor" interface too, in contrast to a single
+        "placeholder field", the placeholder editor allows to move
+        ContentItems between placeholders.
         """
         new_items = []
 
         # Simulate the django-admin POST process, without saving.
 
-        # Each ContentItem type is hosted in the Django admin as an inline with a formset.
+        # Each ContentItem type is hosted in the Django admin as an inline
+        # with a formset.
         prefixes = {}
         inline_instances = self.get_inline_instances(request)
-        for FormSet, inline in zip(self.get_formsets(request), inline_instances):
-            if not getattr(inline, 'is_fluent_editor_inline', False) or inline.model is Placeholder:
+        for FormSet, inline in zip(self.get_formsets(request),
+                                   inline_instances):
+            if not getattr(inline, 'is_fluent_editor_inline',
+                           False) or inline.model is Placeholder:
                 continue
 
             prefix = FormSet.get_default_prefix()
@@ -114,7 +129,8 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
             )
 
             # Extract all items out of the formset
-            # NOTE: no filtering of items for a placeholder, assume there is only one PlaceholderField in the page.
+            # NOTE: no filtering of items for a placeholder, assume there is
+            # only one PlaceholderField in the page.
             new_items += self._get_formset_objects(formset)
 
         # Reorder items by ordering
@@ -137,23 +153,33 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
             if not form.is_valid():
                 obj = form.instance  # Keep old data
                 # TODO: merge validated fields into object.
-                # Before Django 1.5 that means manually constructing the values as form.cleaned_data is removed.
+                # Before Django 1.5 that means manually constructing the values
+                # as form.cleaned_data is removed.
             else:
                 obj = form.save(commit=False)
                 obj.save_base = dummy_save_base  # Disable actual saving code.
-                obj.save()  # Trigger any pre-save code (e.g. fetch OEmbedItem, render CodeItem)
+                # Trigger any pre-save code (e.g. fetch OEmbedItem,
+                # render CodeItem)
+                obj.save()
 
             all_objects.append(obj)
 
         return all_objects
 
-    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
+    def render_change_form(self, request, context, add=False, change=False,
+                           form_url='', obj=None):
         info = self.model._meta.app_label, self.model._meta.module_name
         context.update({
-            'preview_canvas_url': reverse('admin:{0}_{1}_preview_canvas'.format(*info), kwargs={'pk': obj.pk if obj else 0}),
-            'get_preview_url': reverse('admin:{0}_{1}_get_preview'.format(*info), kwargs={'pk': obj.pk if obj else 0}),
+            'preview_canvas_url': reverse(
+                'admin:{0}_{1}_preview_canvas'.format(*info),
+                kwargs={'pk': obj.pk if obj else 0}),
+            'get_preview_url': reverse(
+                'admin:{0}_{1}_get_preview'.format(*info),
+                kwargs={'pk': obj.pk if obj else 0}),
         })
-        return super(NewsItemAdmin, self).render_change_form(request, context, add, change, form_url, obj)
+        return super(NewsItemAdmin, self).render_change_form(request, context,
+                                                             add, change,
+                                                             form_url, obj)
 
     def save_model(self, request, obj, form, change):
         # Automatically store the user in the author field.
@@ -173,11 +199,13 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
 
     def status_column(self, blogpost):
         status = blogpost.status
-        title = [rec[1] for rec in blogpost.PostStatus.choices if rec[0] == status].pop()
+        title = [rec[1] for rec in blogpost.PostStatus.choices if
+                 rec[0] == status].pop()
         icon = self.STATUS_ICONS[status]
         admin_url = settings.STATIC_URL + 'admin/img/'
-        return u'<img src="{admin}{icon}" width="10" height="10" alt="{title}" title="{title}" />'.format(
-            admin=admin_url, icon=icon, title=title)
+        html = u'<img src="{admin}{icon}" width="10" height="10" ' \
+               u'alt="{title}" title="{title}" />'
+        return html.format(admin=admin_url, icon=icon, title=title)
 
     status_column.allow_tags = True
     status_column.short_description = _('Status')
@@ -188,9 +216,11 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         if rows_updated == 1:
             message = "1 entry was marked as published."
         else:
-            message = "{0} entries were marked as published.".format(rows_updated)
+            message = "{0} entries were marked as published.".format(
+                rows_updated)
         self.message_user(request, message)
 
     make_published.short_description = _("Mark selected entries as published")
+
 
 admin.site.register(NewsItem, NewsItemAdmin)

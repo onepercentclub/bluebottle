@@ -6,7 +6,7 @@
     {% for pitch in module.children %}
     <li class="{% cycle 'odd' 'even' %}">
         <span class="float-right">{{ pitch.created|date }}</span>
-        <a href="{{ admin_url }}projects/projectpitch/{{ pitch.id }}" >{{ pitch.title }}</a>
+        <a href="{% url 'admin:projects_projectpitch_change' pitch.id %}" >{{ pitch.title }}</a>
     </li>
     {% endfor %}
     {% endspaceless %}

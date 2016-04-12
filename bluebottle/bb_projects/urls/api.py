@@ -3,8 +3,9 @@ from django.conf.urls import patterns, url
 from ..views import (
     ManageProjectDetail, ManageProjectList, ProjectDetail,
     ProjectList, ProjectThemeDetail, ProjectThemeList,
-    ProjectPreviewDetail, ProjectPreviewList,
-    ProjectPhaseDetail, ProjectPhaseList, ProjectUsedThemeList, ProjectPhaseLogList, ProjectPhaseLogDetail,
+    ProjectPreviewDetail, ProjectPreviewList, ProjectTinyPreviewList,
+    ProjectPhaseDetail, ProjectPhaseList, ProjectUsedThemeList,
+    ProjectPhaseLogList, ProjectPhaseLogDetail,
     ManageProjectDocumentList, ManageProjectDocumentDetail)
 
 
@@ -14,6 +15,8 @@ urlpatterns = patterns(
     url(r'^projects/(?P<slug>[\w-]+)$', ProjectDetail.as_view(),
         name='project_detail'),
 
+    url(r'^tiny-previews/$', ProjectTinyPreviewList.as_view(),
+        name='project_tiny_preview_list'),
     url(r'^previews/$', ProjectPreviewList.as_view(),
         name='project_preview_list'),
     url(r'^previews/(?P<slug>[\w-]+)$', ProjectPreviewDetail.as_view(),

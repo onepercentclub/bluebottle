@@ -1,7 +1,5 @@
 from decimal import Decimal
-from django.db import models
-from djchoices import DjangoChoices, ChoiceItem
-from django.utils.translation import gettext as _
+
 from bluebottle.payments.models import Payment
 
 

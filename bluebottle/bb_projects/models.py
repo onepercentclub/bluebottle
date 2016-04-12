@@ -1,25 +1,27 @@
-from django.conf import settings
-from django.db import models
-from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext as _
-from django.db.models import options
-from django_iban.fields import IBANField, SWIFTBICField
-from django.db.models.aggregates import Sum
-from django.db.models.query_utils import Q
-from django.core.urlresolvers import reverse
-from django.contrib.contenttypes.models import ContentType
-from django.utils.functional import cached_property
-from django.db.models import Count, Sum
+from datetime import datetime
 
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
+from django.db import models
+from django.db.models import Count, Sum, options
+from django.template.defaultfilters import slugify
+from django.utils.timezone import now
+from django.utils.functional import cached_property
+from django.utils.translation import ugettext as _
+from django.utils.timezone import now
+
+from django_extensions.db.fields import (ModificationDateTimeField,
+                                         CreationDateTimeField)
+from localflavor.generic.models import BICField
+from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
-from django_extensions.db.fields import (
-    ModificationDateTimeField, CreationDateTimeField)
 
 from bluebottle.bb_projects.fields import MoneyField
-from bluebottle.utils.utils import StatusDefinition
-from bluebottle.utils.model_dispatcher import get_project_phaselog_model, get_taskmember_model
-from bluebottle.utils.utils import GetTweetMixin
+from bluebottle.utils.model_dispatcher import (get_project_phaselog_model,
+                                               get_taskmember_model)
+from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
                                                  'preview_serializer',
@@ -64,13 +66,20 @@ class ProjectPhase(models.Model):
                                    help_text=_('For ordering phases.'))
 
     active = models.BooleanField(default=True,
-                                 help_text=_('Whether this phase is in use or has been discarded.'))
+                                 help_text=_('Whether this phase is in use or '
+                                             'has been discarded.'))
     editable = models.BooleanField(default=True,
-                                   help_text=_('Whether the project owner can change the details of the project.'))
+                                   help_text=_('Whether the project owner can '
+                                               'change the details of the'
+                                               'project.'))
     viewable = models.BooleanField(default=True,
-                                   help_text=_('Whether this phase, and projects in it show up at the website'))
+                                   help_text=_('Whether this phase, and '
+                                               'projects in it show up at the '
+                                               'website'))
     owner_editable = models.BooleanField(default=False,
-                                         help_text=_('The owner can manually select between these phases'))
+                                         help_text=_('The owner can manually '
+                                                     'select between these '
+                                                     'phases'))
 
     class Meta():
         ordering = ['sequence']
@@ -83,50 +92,6 @@ class ProjectPhase(models.Model):
         super(ProjectPhase, self).save(*args, **kwargs)
 
 
-class BaseProjectManager(models.Manager):
-
-    def search(self, query):
-        qs = super(BaseProjectManager, self).get_query_set()
-
-        # Apply filters
-        status = query.getlist(u'status[]', None)
-        if status:
-            qs = qs.filter(status_id__in=status)
-        else:
-            status = query.get('status', None)
-            if status:
-                qs = qs.filter(status_id=status)
-
-        country = query.get('country', None)
-        if country:
-            qs = qs.filter(country=country)
-
-        theme = query.get('theme', None)
-        if theme:
-            qs = qs.filter(theme_id=theme)
-
-        text = query.get('text', None)
-        if text:
-            qs = qs.filter(Q(title__icontains=text) |
-                           Q(pitch__icontains=text) |
-                           Q(description__icontains=text))
-
-        return self._ordering(query.get('ordering', None), qs)
-
-    def _ordering(self, ordering, queryset):
-
-        if ordering == 'deadline':
-            qs = queryset.order_by('deadline')
-        elif ordering == 'newest':
-            qs = queryset.order_by('-created')
-        elif ordering:
-            qs = queryset.order_by(ordering)
-        else:
-            qs = queryset
-
-        return qs
-
-
 class BaseProjectDocument(models.Model):
 
     """ Document for an Project """
@@ -136,7 +101,7 @@ class BaseProjectDocument(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
                                verbose_name=_('author'), blank=True, null=True)
     project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL,
-                                     related_name="documents")
+                                related_name="documents")
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
 
@@ -163,6 +128,11 @@ class BaseProjectDocument(models.Model):
 
 class BaseProject(models.Model, GetTweetMixin):
 
+    class Type(DjangoChoices):
+        sourcing = ChoiceItem('sourcing', label=_('Crowd-sourcing'))
+        funding = ChoiceItem('funding', label=_('Crowd-funding'))
+        both = ChoiceItem('both', label=_('Crowd-funding & Crowd-sourcing'))
+
     """ The base Project model. """
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('initiator'),
@@ -173,6 +143,9 @@ class BaseProject(models.Model, GetTweetMixin):
             'organization'),
         help_text=_('Project organization'),
         related_name='organization', null=True, blank=True)
+
+    project_type = models.CharField(_('Project type'), max_length=50,
+                                    choices=Type.choices, null=True, blank=True)
 
     # Basics
     created = CreationDateTimeField(
@@ -193,7 +166,8 @@ class BaseProject(models.Model, GetTweetMixin):
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
     location = models.ForeignKey('geo.Location', null=True, blank=True)
-    place = models.CharField(help_text=_('Geographical location'), max_length=100, null=True, blank=True)
+    place = models.CharField(help_text=_('Geographical location'),
+                             max_length=100, null=True, blank=True)
 
     # Extended Description
     description = models.TextField(_('why, what and how'), help_text=_(
@@ -231,8 +205,9 @@ class BaseProject(models.Model, GetTweetMixin):
         related_name="project_account_holder_country")
 
     # Bank details
-    account_number = models.CharField(_("Account number"), max_length=255, null=True, blank=True)
-    account_bic = SWIFTBICField(_("account SWIFT-BIC"), null=True, blank=True)
+    account_number = models.CharField(_("Account number"), max_length=255,
+                                      null=True, blank=True)
+    account_bic = BICField(_("account SWIFT-BIC"), null=True, blank=True)
     account_bank_country = models.ForeignKey(
         'geo.Country', blank=True, null=True,
         related_name="project_account_bank_country")
@@ -255,24 +230,32 @@ class BaseProject(models.Model, GetTweetMixin):
 
     @property
     def people_registered(self):
-        return self.task_set.filter(members__status__in=['accepted', 'realized']).aggregate(total=Count('members'))['total']
+        counts = self.task_set.filter(
+            status='open',
+            deadline__gt=now(),
+            members__status__in=['accepted', 'realized']
+        ).aggregate(total=Count('members'), externals=Sum('members__externals'))
+
+        # If there are no members, externals is None
+        return counts['total'] + (counts['externals'] or 0)
 
     @property
     def people_requested(self):
-        return self.task_set.aggregate(total=Sum('people_needed'))['total']
+        return self.task_set.filter(
+            status='open',
+            deadline__gt=now(),
+        ).aggregate(total=Sum('people_needed'))['total']
 
     _initial_status = None
-
-    objects = BaseProjectManager()
 
     class Meta:
         abstract = True
         ordering = ['title']
         verbose_name = _('project')
         verbose_name_plural = _('projects')
-        default_serializer = 'bluebottle.bb_projects.serializers.ProjectSerializer'
-        preview_serializer = 'bluebottle.bb_projects.serializers.ProjectPreviewSerializer'
-        manage_serializer = 'bluebottle.bb_projects.serializers.ManageProjectSerializer'
+        default_serializer = 'bluebottle.projects.serializers.ProjectSerializer'
+        preview_serializer = 'bluebottle.projects.serializers.ProjectPreviewSerializer'
+        manage_serializer = 'bluebottle.projects.serializers.ManageProjectSerializer'
 
     def __unicode__(self):
         return self.slug if not self.title else self.title
@@ -297,11 +280,6 @@ class BaseProject(models.Model, GetTweetMixin):
         if self is not None and previous_status != self.status:
             get_project_phaselog_model().objects.create(
                 project=self, status=self.status)
-
-    @models.permalink
-    def get_absolute_url(self):
-        url = "/#!/projects/{0}".format(self.slug)
-        return url
 
     def update_amounts(self, save=True):
         """
@@ -360,7 +338,8 @@ class BaseProject(models.Model, GetTweetMixin):
         Return the amount of people funding this project
         """
         return self.donation_set.filter(
-            order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+            order__status__in=[StatusDefinition.PENDING,
+                               StatusDefinition.SUCCESS]
         ).distinct('order__user').count()
 
     @cached_property

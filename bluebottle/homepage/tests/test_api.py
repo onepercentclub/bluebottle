@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.core.urlresolvers import reverse
 
+from bluebottle.test.factory_models.statistics import StatisticFactory
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.utils.models import Language
 
@@ -17,6 +18,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
 
 from ..models import HomePage
+
 
 class HomepagePreviewProjectsTestCase(BluebottleTestCase):
     def setUp(self):
@@ -103,10 +105,12 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               status=self.phases['done-complete'])
         self.assertEquals(HomePage().get('en').projects, None)
 
+
 class HomepageEndpointTestCase(BluebottleTestCase):
     """
     Integration tests for the Statistics API.
     """
+
     def setUp(self):
         super(HomepageEndpointTestCase, self).setUp()
         self.init_projects()
@@ -121,16 +125,22 @@ class HomepageEndpointTestCase(BluebottleTestCase):
             - 10 campaigners (eg 10 new people involved)
         """
         self.user1 = BlueBottleUserFactory.create()
-        self.campaign_phase = ProjectPhase.objects.get(slug='campaign')
+        self.campaign_phase = ProjectPhase.objects.get(slug='campaign', viewable=True)
         self.plan_phase = ProjectPhase.objects.get(slug='done-complete')
+        self.en = Language.objects.get(code='en')
         projects = []
 
         for char in 'abcdefghij':
             # Put half of the projects in the campaign phase.
             if ord(char) % 2 == 1:
-                project = ProjectFactory.create(title=char * 3, slug=char * 3, status=self.campaign_phase)
+                project = ProjectFactory.create(title=char * 3, slug=char * 3,
+                                                status=self.campaign_phase,
+                                                language=self.en,
+                                                is_campaign=True)
             else:
-                project = ProjectFactory.create(title=char * 3, slug=char * 3, status=self.plan_phase)
+                project = ProjectFactory.create(title=char * 3, slug=char * 3,
+                                                status=self.plan_phase,
+                                                language=self.en)
 
             projects.append(project)
 
@@ -141,7 +151,8 @@ class HomepageEndpointTestCase(BluebottleTestCase):
             - 1 task owner (eg 1 new person involved)
             - 10 task members (eg 10 new people involved)
         """
-        self.task = TaskFactory.create(project=projects[0], status=Task.TaskStatuses.realized)
+        self.task = TaskFactory.create(project=projects[0],
+                                       status=Task.TaskStatuses.realized)
         for char in 'abcdefghij':
             # Put half of the projects in the campaign phase.
             if ord(char) % 2 == 1:
@@ -158,20 +169,43 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         """
         for char in 'abcdefghij':
             if ord(char) % 2 == 1:
-                self.order = OrderFactory.create(status=StatusDefinition.SUCCESS)
-                self.donation = DonationFactory.create(amount=1000, order=self.order, fundraiser=None)
+                self.order = OrderFactory.create(
+                    status=StatusDefinition.SUCCESS)
+                self.donation = DonationFactory.create(amount=1000,
+                                                       order=self.order,
+                                                       fundraiser=None)
             else:
-                self.order = OrderFactory.create(status=StatusDefinition.SUCCESS)
-                self.donation = DonationFactory.create(amount=1000, order=self.order)
+                self.order = OrderFactory.create(
+                    status=StatusDefinition.SUCCESS)
+                self.donation = DonationFactory.create(amount=1000,
+                                                       order=self.order)
+
+        StatisticFactory.create(type='donated_total', title='Donated')
+        StatisticFactory.create(type='projects_online', title='Projects online')
+        StatisticFactory.create(type='projects_realized', title='Projects realised')
+        StatisticFactory.create(type='tasks_realized', title='Tasks realised')
+        StatisticFactory.create(type='people_involved', title='Peeps')
+        StatisticFactory.create(type='manual', title='Rating', value='9.3')
 
     def tearDown(self):
         self.stats.clear_cached()
 
     def test_homepage_stats(self):
-        response = self.client.get(reverse('stats'))
+        response = self.client.get(reverse('stats', kwargs={'language': 'en'}))
 
-        self.assertEqual(response.data['donated'], Decimal('10000.00'))
-        self.assertEqual(response.data['projects_online'], 5)
-        self.assertEqual(response.data['projects_realized'], 5)
-        self.assertEqual(response.data['tasks_realized'], 1)
-        self.assertEqual(response.data['people_involved'], 36)
+        self.assertEqual(len(response.data['projects']), 3)
+
+        impact = response.data['statistics']
+        self.assertEqual(impact[0]['title'], 'Donated')
+        self.assertEqual(impact[0]['value'], 10000)
+        self.assertEqual(impact[1]['title'], 'Projects online')
+        self.assertEqual(impact[1]['value'], 5)
+        self.assertEqual(impact[2]['title'], 'Projects realised')
+        self.assertEqual(impact[2]['value'], 5)
+        self.assertEqual(impact[3]['title'], 'Tasks realised')
+        self.assertEqual(impact[3]['value'], 1)
+        self.assertEqual(impact[4]['title'], 'Peeps')
+        self.assertEqual(impact[4]['value'], 36)
+
+        self.assertEqual(impact[5]['title'], 'Rating')
+        self.assertEqual(impact[5]['value'], '9.3')

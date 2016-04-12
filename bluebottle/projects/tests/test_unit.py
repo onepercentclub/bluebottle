@@ -1,9 +1,9 @@
 from datetime import timedelta, time
-from decimal import Decimal
 from django.utils import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.projects.models import PartnerOrganization
 
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.utils.utils import StatusDefinition
@@ -24,6 +24,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         save() automatically updates some fields, specifically
         the status field. Make sure it picks the right one
     """
+
     def setUp(self):
         super(TestProjectStatusUpdate, self).setUp()
 
@@ -35,11 +36,10 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.complete = ProjectPhase.objects.get(slug="done-complete")
         self.campaign = ProjectPhase.objects.get(slug="campaign")
 
-        self.expired_project = ProjectFactory.create(amount_asked=5000,
-                                                     campaign_started=now -
-                                                     timezone.
-                                                     timedelta(days=15),
-                                                     status=self.campaign)
+        some_days_ago = now - timezone.timedelta(days=15)
+        self.expired_project = ProjectFactory.create(
+            amount_asked=5000, campaign_started=some_days_ago,
+            status=self.campaign)
 
         self.expired_project.deadline = timezone.now() - timedelta(days=1)
 
@@ -105,10 +105,9 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.failUnless(self.expired_project.status == self.complete)
 
 
-class CalculateProjectMoneyDonatedTest(BluebottleTestCase):
-
+class SupporterCountTest(BluebottleTestCase):
     def setUp(self):
-        super(CalculateProjectMoneyDonatedTest, self).setUp()
+        super(SupporterCountTest, self).setUp()
 
         # Required by Project model save method
         self.init_projects()
@@ -119,56 +118,71 @@ class CalculateProjectMoneyDonatedTest(BluebottleTestCase):
         self.some_user = BlueBottleUserFactory.create()
         self.another_user = BlueBottleUserFactory.create()
 
-    # def test_donated_amount(self):
-    #     # Some project have amount_asked of 5000000 (cents that is)
-    #     self.assertEqual(self.some_project.amount_asked, 5000)
-    #
-    #     # A project without donations should have amount_donated of 0
-    #     self.assertEqual(self.some_project.amount_donated, 0)
-    #
-    #     # Create a new donation of 15 in status 'new'. project money donated should be 0
-    #     first_donation = self._create_donation(user=self.some_user, project=self.some_project, amount=1500,
-    #                                            status=DonationStatuses.new)
-    #     self.assertEqual(self.some_project.amount_donated, 0)
-    #
-    #
-    #     # Create a new donation of 25 in status 'in_progress'. project money donated should be 0.
-    #     second_donation = self._create_donation(user=self.some_user, project=self.some_project, amount=2500,
-    #                                             status=DonationStatuses.in_progress)
-    #     self.assertEqual(self.some_project.amount_donated, 0)
-    #
-    #     # Setting the first donation to status 'paid' money donated should be 1500
-    #     first_donation.order.status = StatusDefinition.PENDING
-    #     first_donation.order.save()
-    #     self.assertEqual(self.some_project.amount_donated, 15)
-    #
-    #     # Setting the second donation to status 'pending' money donated should be 40
-    #     second_donation.order.status = StatusDefinition.PENDING
-    #     second_donation.order.save()
-    #     self.assertEqual(self.some_project.amount_donated, 40)
+    def test_supporter_count_new(self):
+        self.assertEqual(self.some_project.supporter_count(), 0)
 
-    def _create_donation(self, user=None, amount=None, project=None,
-                         status=StatusDefinition.NEW):
+        self._create_donation(user=self.some_user, status=StatusDefinition.NEW)
+
+        self.assertEqual(self.some_project.supporter_count(), 0)
+
+    def test_supporter_count_success(self):
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.SUCCESS)
+
+        self.assertEqual(self.some_project.supporter_count(), 1)
+
+    def test_supporter_count_pending(self):
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.PENDING)
+
+        self.assertEqual(self.some_project.supporter_count(), 1)
+
+    def test_supporter_count_unique(self):
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.SUCCESS)
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.SUCCESS)
+
+        self.assertEqual(self.some_project.supporter_count(), 1)
+
+        self._create_donation(user=self.another_user,
+                              status=StatusDefinition.SUCCESS)
+
+        self.assertEqual(self.some_project.supporter_count(), 2)
+
+    def test_supporter_count_anonymous(self):
+        self._create_donation(status=StatusDefinition.SUCCESS)
+        self.assertEqual(self.some_project.supporter_count(), 1)
+
+    def test_supporter_count_anonymous_not_unique(self):
+        self._create_donation(status=StatusDefinition.SUCCESS)
+        self._create_donation(status=StatusDefinition.SUCCESS)
+        self.assertEqual(self.some_project.supporter_count(), 2)
+
+    def test_supporter_count_anonymous_and_user(self):
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.SUCCESS)
+        self._create_donation(user=self.some_user,
+                              status=StatusDefinition.SUCCESS)
+
+        self._create_donation(user=self.another_user,
+                              status=StatusDefinition.SUCCESS)
+
+        self._create_donation(status=StatusDefinition.SUCCESS)
+        self._create_donation(status=StatusDefinition.SUCCESS)
+        self.assertEqual(self.some_project.supporter_count(), 4)
+
+    def _create_donation(self, user=None, status=StatusDefinition.NEW):
         """ Helper method for creating donations."""
-        if not project:
-            project = ProjectFactory.create()
-            project.save()
-
-        if not user:
-            user = BlueBottleUserFactory.create()
-
-        if not amount:
-            amount = Decimal('10.00')
-
-        order = Order.objects.create(status=status)
-        donation = Donation.objects.create(user=user, amount=amount,
-                                           project=project, order=order)
+        order = Order.objects.create(status=status, user=user)
+        donation = Donation.objects.create(amount=100,
+                                           project=self.some_project,
+                                           order=order)
 
         return donation
 
 
 class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
-
     def setUp(self):
         super(TestProjectStatusChangeSuggestionUpdate, self).setUp()
 
@@ -211,3 +225,10 @@ class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
         suggestion = Suggestion.objects.get(project=project)
 
         self.assertEquals(suggestion.status, 'in_progress')
+
+
+class PartnerOrganizationTests(BluebottleTestCase):
+    def test_convert_to_lowercase_slug(self):
+        po = PartnerOrganization.objects.create(name="YADA", slug="YADA",
+                                                description="blabla")
+        self.assertEquals(po.slug, 'yada')

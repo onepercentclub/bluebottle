@@ -11,10 +11,16 @@ from bluebottle.clients import properties
 USER_MODEL = get_user_model()
 
 
-def save_profile_picture(strategy, user, response, details,
-                         is_new=False, *args, **kwargs):
+def user_from_request(strategy, backend, *args, **kwargs):
+    user = strategy.request.user
 
-    if is_new and strategy.backend.name == 'facebook':
+    if user.is_authenticated():
+        return {'user': strategy.request.user}
+
+
+def save_profile_picture(strategy, user, response, details, backend,
+                         is_new=False, *args, **kwargs):
+    if is_new and backend.name == 'facebook':
         url = 'http://graph.facebook.com/{0}/picture'.format(response['id'])
 
         try:
@@ -29,22 +35,22 @@ def save_profile_picture(strategy, user, response, details,
                 user.save()
 
 
+def refresh(strategy, social, *args, **kwargs):
+    """Refresh the facebook token, so that we get a long lived backend token."""
+    social.refresh_token(strategy)
+
+
 def set_language(strategy, user, response, details,
-                         is_new=False, *args, **kwargs):
+                 is_new=False, *args, **kwargs):
+    supported_langauges = dict(properties.LANGUAGES).keys()
 
-    supported_langauges = [
-        lang_code for (lang_code, lang_name) in getattr(properties,
-                                                        'LANGUAGES')]
-
-    # Check if request includes supported language for tenant otherwise
-    # the user is created with the default language.
-    language = kwargs['request'].LANGUAGE_CODE[:2]
-    if language in supported_langauges:
-        user.primary_language = language
-    else:
-        user.primary_language = properties.LANGUAGE_CODE
-
-    user.save()
+    try:
+        language = response['locale'][:2]
+        if language in supported_langauges:
+            user.primary_language = language
+            user.save()
+    except KeyError:
+        pass
 
 
 def get_extra_facebook_data(strategy, user, response, details,
@@ -69,7 +75,7 @@ def get_extra_facebook_data(strategy, user, response, details,
         birthdate = time.strptime(birthday, "%m/%d/%Y")
         user.birthdate = datetime.fromtimestamp(time.mktime(birthdate))
 
-    if len(fb_link) < 50:
+    if fb_link and len(fb_link) < 50:
         user.facebook = fb_link
 
     user.save()

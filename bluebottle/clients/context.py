@@ -1,6 +1,7 @@
 from django.template import Context
 from bluebottle.clients import properties
 
+
 class ClientContext(Context):
     """
     A Context with builtin properties support. Mostly meant
@@ -11,7 +12,8 @@ class ClientContext(Context):
         super(ClientContext, self).__init__(*args, **kw)
         try:
             self.update({
-                'TENANT_MAIL_PROPERTIES':properties.TENANT_MAIL_PROPERTIES
+                'TENANT_MAIL_PROPERTIES': properties.TENANT_MAIL_PROPERTIES,
+                'SHARE_OPTIONS': properties.SHARE_OPTIONS
             })
         except AttributeError:
             pass

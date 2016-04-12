@@ -1,7 +1,32 @@
-from django.db import connection
 import re
+import json
 
+from django.db import connection
 from django.conf import settings
+
+from bluebottle.clients import properties
+from tenant_extras.context_processors import tenant_properties as tenant_extra_properties
+
+
+def tenant_properties(request):
+    extra_properties = tenant_extra_properties(request)
+    settings = json.loads(extra_properties['settings'])
+
+    # If tenant has SAML enabled then we also return a list
+    # of read-only user profile properties.
+    try:
+        mappings = properties.TOKEN_AUTH['assertion_mapping']
+        settings['readOnlyFields'] = {
+            'user': mappings.keys()
+        }
+
+        extra_properties['settings'] = json.dumps(settings)
+    except KeyError:
+        pass
+    except AttributeError:
+        pass
+
+    return extra_properties
 
 
 def sentry_dsn(request):
@@ -10,10 +35,14 @@ def sentry_dsn(request):
     """
     try:
         raven_config = settings.RAVEN_CONFIG['dsn']
-    except AttributeError, KeyError:
+    except AttributeError:
+        return {}
+    except KeyError:
         return {}
 
-    match = re.search( r"https:\/\/([a-z|0-9]+):([a-z|0-9]+)\@app.getsentry.com\/(\d+)", raven_config, re.M|re.I)
+    match = re.search(
+        r"https:\/\/([a-z|0-9]+):([a-z|0-9]+)\@app.getsentry.com\/(\d+)",
+        raven_config, re.M | re.I)
 
     if not match:
         return {}
@@ -21,7 +50,9 @@ def sentry_dsn(request):
         public_key = match.group(1)
         project_id = match.group(3)
 
-        return {'RAVEN_DSN': "https://{0}@app.getsentry.com/{1}".format(public_key, project_id)}
+        return {
+            'RAVEN_DSN': "https://{0}@app.getsentry.com/{1}".format(public_key,
+                                                                    project_id)}
 
 
 def tenant(request):
@@ -32,7 +63,7 @@ def tenant(request):
         tenant = connection.tenant
         return {
             'TENANT': connection,
-            'TENANT_LANGUAGE': '{0}{1}'.format(tenant.client_name, request.LANGUAGE_CODE)
+            'TENANT_LANGUAGE': '{0}{1}'.format(tenant.client_name,
+                                               request.LANGUAGE_CODE)
         }
     return {}
-

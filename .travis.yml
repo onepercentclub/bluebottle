@@ -2,6 +2,11 @@ sudo: false
 language: python
 addons:
   postgresql: "9.1"
+  apt:
+    packages:
+    - libxmlsec1
+    - libxmlsec1-dev
+    - swig
 cache:
   directories:
   - $HOME/.pip-cache/

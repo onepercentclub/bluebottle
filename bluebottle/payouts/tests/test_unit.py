@@ -32,9 +32,10 @@ class PayoutTestAdmin(BluebottleTestCase):
         self.failUnless('amount_raised' in ProjectPayoutAdmin.list_display)
 
 
-@override_settings(MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test', 'properties'))
+@override_settings(
+    MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
+                                  'properties'))
 class PayoutTestCase(BluebottleTestCase):
-
     """ Test case for Payouts. """
 
     def setUp(self):
@@ -45,20 +46,14 @@ class PayoutTestCase(BluebottleTestCase):
         # Set up a project ready for payout
         organization = OrganizationFactory.create()
         organization.save()
-        self.project = ProjectFactory.create(
-            organization=organization, amount_asked=50)
-        self.project_incomplete = ProjectFactory.create(
-            organization=organization, amount_asked=100)
+        self.project = ProjectFactory.create(organization=organization, amount_asked=50)
+        self.project_incomplete = ProjectFactory.create(organization=organization, amount_asked=100)
 
         # Update phase to campaign.
         self.project.status = ProjectPhase.objects.get(slug='campaign')
-        self.project.campaign_started = (timezone.now() -
-                                         timezone.timedelta(days=10))
         self.project.save()
 
-        self.project_incomplete.campaign_started = (timezone.now() -
-                                                    timezone.
-                                                    timedelta(days=10))
+        self.project_incomplete.status = ProjectPhase.objects.get(slug='campaign')
         self.project_incomplete.save()
 
         self.order = OrderFactory.create()
@@ -110,8 +105,7 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertFalse(payout.completed)
 
         # Change status to settled
-        payout.status = StatusDefinition.SETTLED
-        payout.save()
+        payout.settled()
 
         # Completed date should now be set
         self.assertTrue(payout.completed)
@@ -355,8 +349,7 @@ class PayoutTestCase(BluebottleTestCase):
 
         # Update phase to act.
         self._reload_project()
-        self.project_incomplete.status = ProjectPhase.objects.get(
-            slug='done-incomplete')
+        self.project_incomplete.status = ProjectPhase.objects.get(slug='done-incomplete')
         self.project_incomplete.save()
 
         # Fetch payout
@@ -371,6 +364,8 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
         self.assertEquals(payout.amount_failed, Decimal('0.00'))
 
+
+    @override_settings(PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .5})
     def test_changed_fees_amounts_paid_fully_funded(self):
         """ Test amounts for paid donations. """
 
@@ -402,6 +397,7 @@ class PayoutTestCase(BluebottleTestCase):
         self.assertEquals(payout.amount_safe, Decimal('60.00'))
         self.assertEquals(payout.amount_failed, Decimal('0.00'))
 
+    @override_settings(PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .5})
     def test_changed_fees_amounts_paid_not_fully_funded(self):
         """ Test amounts for paid donations. """
 
@@ -448,8 +444,10 @@ class PayoutTestCase(BluebottleTestCase):
             organization=organization, amount_asked=50)
 
         # Update phase to campaign.
-        beneath_threshold_project.status = ProjectPhase.objects.get(slug='campaign')
-        beneath_threshold_project.campaign_started = (timezone.now() - timezone.timedelta(days=10))
+        beneath_threshold_project.status = ProjectPhase.objects.get(
+            slug='campaign')
+        a_week_ago = timezone.now() - timezone.timedelta(days=7)
+        beneath_threshold_project.campaign_started = a_week_ago
         beneath_threshold_project.save()
 
         order = OrderFactory.create()
@@ -489,7 +487,7 @@ class PayoutTestCase(BluebottleTestCase):
 
         project = ProjectFactory.create(amount_asked=100)
         project.campaign_started = timezone.now() - timezone.timedelta(days=10)
-        project.status = ProjectPhase.objects.get(slug='closed')
+        project.status = ProjectPhase.objects.get(slug='done-incomplete')
         project.save()
 
         # Fetch payout
@@ -612,3 +610,40 @@ class PayoutTestCase(BluebottleTestCase):
 
         self.assertEqual(payout.receiver_account_iban,
                          'DE89370400440532013000')
+
+    def test_protected_payout(self):
+        """
+        Test that a protected payout cannot be recalculated and does not return
+        the `project` amounts.
+        """
+        self.donation.order.locked()
+        self.donation.order.pending()
+        self.donation.order.save()
+
+        self._reload_project()
+        self.assertEqual(self.project.amount_donated, Decimal(60))
+
+        payout1 = ProjectPayoutFactory.create(
+            project=self.project,
+            status=StatusDefinition.NEW,
+            protected=False
+        )
+        payout1 = payout1.__class__.objects.get(pk=payout1.pk)
+        payout1.calculate_amounts()
+        self.assertEqual(payout1.amount_raised, Decimal(60))
+
+        payout2 = ProjectPayoutFactory.create(
+            completed=None,
+            status=StatusDefinition.NEW,
+            protected=True,
+            amount_raised=Decimal(10),
+            amount_payable=Decimal(10),
+            organization_fee=0
+        )
+        self.assertEqual(payout2.get_amount_raised(), Decimal(10))
+        self.assertEqual(payout2.get_amount_safe(), Decimal(10))
+        self.assertEqual(payout2.get_amount_pending(), 0)
+        self.assertEqual(payout2.get_amount_failed(), 0)
+
+        with self.assertRaises(AssertionError):
+            payout2.calculate_amounts()

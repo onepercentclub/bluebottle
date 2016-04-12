@@ -1,6 +1,14 @@
 from collections import namedtuple
+import json
+import re
+
 from django.db import connection
+from django.conf import settings
+
 from bluebottle.clients import properties
+from tenant_extras.utils import get_tenant_properties
+
+
 import logging
 
 logger = logging.getLogger()
@@ -40,10 +48,77 @@ def tenant_url():
         return "http://{0}:8000".format(domain)
     return "https://{0}".format(domain)
 
+
 def tenant_name():
     return connection.tenant.name
+
 
 def tenant_site():
     """ somewhat simulates the old 'Site' object """
     return namedtuple('Site', ['name', 'domain'])(tenant_name(),
                                                   connection.tenant.domain_url)
+
+def get_public_properties(request):
+    """
+
+        Dynamically populate a tenant context with exposed tenant specific properties
+        from reef/clients/client_name/properties.py.
+
+        The context processor looks in tenant settings for the uppercased variable names that are defined in
+        "EXPOSED_TENANT_PROPERTIES" to generate the context.
+
+        Example:
+
+        EXPOSED_TENANT_PROPERTIES = ['mixpanel', 'analytics']
+
+        This adds the value of the keys MIXPANEL and ANALYTICS from the settings file.
+
+    """
+
+    config = {}
+
+    properties = get_tenant_properties()
+
+    props = None
+
+    try:
+        props = getattr(properties, 'EXPOSED_TENANT_PROPERTIES')
+    except AttributeError:
+        pass
+
+    if not props:
+        try:
+            props = getattr(settings, 'EXPOSED_TENANT_PROPERTIES')
+        except AttributeError:
+            return config
+
+    # First load tenant settings that should always be exposed
+    if connection.tenant:
+        current_tenant = connection.tenant
+        properties = get_tenant_properties()
+        static_url = "{0}frontend/{1}/".format(getattr(properties, 'STATIC_URL'), current_tenant.client_name)
+        config = {
+            'mediaUrl': getattr(properties, 'MEDIA_URL'),
+            'staticUrl': static_url,
+            'defaultAvatarUrl': "{0}images/default-avatar.png".format(static_url),
+            'logoUrl': "{0}images/logo.svg".format(static_url),
+            'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
+            'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
+            'recurringDonationsEnabled': getattr(properties, 'RECURRING_DONATIONS_ENABLED', False),
+            'siteName': current_tenant.name,
+            'languageCode': getattr(request, 'LANGUAGE_CODE', ''),
+            'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')]
+         }
+    else:
+        config = {}
+
+    # Now load the tenant specific properties
+    for item in props:
+        try:
+            key = re.sub('_.',lambda x: x.group()[1].upper(), item)
+            # Use camelcase for setting keys (convert from snakecase)
+            config[key] = getattr(properties, item.upper())
+        except AttributeError:
+            pass
+
+    return config

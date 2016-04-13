@@ -34,6 +34,7 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.categories.*',
             'bluebottle.bb_organizations.*',
             'bluebottle.votes.*',
+            'bluebottle.geo.models.Location',
             'bluebottle.rewards.*',
         ),
         'module': 'fluent_dashboard.modules.AppIconList',

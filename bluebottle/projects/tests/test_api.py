@@ -15,6 +15,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.votes import VoteFactory
@@ -52,14 +53,19 @@ class ProjectEndpointTestCase(BluebottleTestCase):
             if ord(char) % 2 == 1:
                 project = ProjectFactory.create(title=char * 3, slug=char * 3,
                                                 status=self.campaign_phase,
+                                                amount_asked=0,
                                                 organization=organization)
+                project.save()
             else:
                 project = ProjectFactory.create(title=char * 3, slug=char * 3,
                                                 status=self.plan_phase,
                                                 organization=organization)
 
-            project.save()
+                task = TaskFactory.create(project=project)
+                project.save()
+                task.save()
 
+        self.projects_preview_url = reverse('project_preview_list')
         self.projects_url = reverse('project_list')
         self.manage_projects_url = reverse('project_manage_list')
 
@@ -73,10 +79,10 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         """
 
         # Basic test of DRF2.
-        response = self.client.get(self.projects_url)
+        response = self.client.get(self.projects_preview_url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data['count'], 26)
-        self.assertEquals(len(response.data['results']), 10)
+        self.assertEquals(len(response.data['results']), 8)
         self.assertNotEquals(response.data['next'], None)
         self.assertEquals(response.data['previous'], None)
 
@@ -89,10 +95,16 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
 
         # Tests that the phase filter works.
         response = self.client.get(
-            '%s?status=%i' % (self.projects_url, self.plan_phase.id))
+            '%s?status=%s' % (self.projects_preview_url, self.plan_phase.slug))
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data['count'], 13)
-        self.assertEquals(len(response.data['results']), 10)
+        self.assertEquals(len(response.data['results']), 8)
+
+        # Tests that the phase filter works.
+        response = self.client.get(self.projects_preview_url + '?project_type=volenteering')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data['count'], 13)
+        self.assertEquals(len(response.data['results']), 8)
 
         # Test that ordering works
         response = self.client.get(self.projects_url + '?ordering=newest')
@@ -101,7 +113,7 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.status_code, 200)
         response = self.client.get(self.projects_url + '?ordering=deadline')
         self.assertEquals(response.status_code, 200)
-        response = self.client.get(self.projects_url + '?ordering=needed')
+        response = self.client.get(self.projects_url + '?ordering=amount_needed')
         self.assertEquals(response.status_code, 200)
         response = self.client.get(self.projects_url + '?ordering=popularity')
         self.assertEquals(response.status_code, 200)

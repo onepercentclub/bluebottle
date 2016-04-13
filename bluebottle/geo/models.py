@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from geoposition.fields import GeopositionField
+from sorl.thumbnail import ImageField
 
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
@@ -89,10 +90,12 @@ class Country(GeoBaseModel):
 class Location(models.Model):
     name = models.CharField(_('name'), max_length=255)
     position = GeopositionField(null=True)
-
     city = models.CharField(_('city'), blank=True, null=True, max_length=255)
-
     country = models.ForeignKey('geo.Country', blank=True, null=True)
+    description = models.TextField(_('description'), blank=True)
+    image = ImageField(
+        _('image'), max_length=255, null=True, blank=True, 
+        upload_to='location_images/', help_text=_('Location picture'))
 
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']

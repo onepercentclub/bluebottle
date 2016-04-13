@@ -1,9 +1,9 @@
 from django.contrib import admin
 
 from bluebottle.statistics.models import Statistic
-from modeltranslation.admin import TranslationAdmin
+# from modeltranslation.admin import TranslationAdmin
 
-class StatisticAdmin(TranslationAdmin):
+class StatisticAdmin(admin.ModelAdmin):
     model = Statistic
     list_editable = ('sequence', )
     list_display_links = ('title',)

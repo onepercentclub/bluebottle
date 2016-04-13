@@ -1,7 +1,7 @@
-from modeltranslation.translator import translator, TranslationOptions
-from .models import Statistic
+# from modeltranslation.translator import translator, TranslationOptions
+# from .models import Statistic
 
-class StatisticTranslationOptions(TranslationOptions):
-    fields = ('title', )
+# class StatisticTranslationOptions(TranslationOptions):
+#     fields = ('title', )
 
-translator.register(Statistic, StatisticTranslationOptions)
+# translator.register(Statistic, StatisticTranslationOptions)

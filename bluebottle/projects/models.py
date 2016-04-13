@@ -61,6 +61,14 @@ class ProjectManager(models.Manager):
         if money_needed:
             qs = qs.filter(amount_needed__gt=0)
 
+        project_type = query.get('project_type', None)
+        if project_type == 'volenteering':
+            qs = qs.annotate(Count('task')).filter(task__count__gt=0)
+        elif project_type == 'funding':
+            qs = qs.filter(amount_asked__gt=0)
+        elif project_type == 'voting':
+            qs = qs.filter(status__slug__in=['voting', 'voting-done'])
+
         text = query.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |

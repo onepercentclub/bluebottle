@@ -7,7 +7,7 @@ from bluebottle.projects.serializers import ProjectBudgetLineSerializer, \
 from bluebottle.projects.permissions import IsProjectOwner
 from bluebottle.utils.utils import get_client_ip
 
-from .models import Project, ProjectDocument
+from .models import ProjectDocument
 
 
 class ManageProjectBudgetLineList(generics.ListCreateAPIView):
@@ -43,14 +43,3 @@ class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
     def pre_save(self, obj):
         obj.author = self.request.user
         obj.ip_address = get_client_ip(self.request)
-
-
-class MacroMicroListView(generics.ListAPIView):
-    model = Project
-    queryset = Project.objects.filter(partner_organization__slug='macro_micro')
-
-    def render_to_response(self, context, **response_kwargs):
-        return super(MacroMicroListView, self).render_to_response(
-            context,
-            mimetype='application/xml',
-            **response_kwargs)

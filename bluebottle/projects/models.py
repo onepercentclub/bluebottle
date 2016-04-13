@@ -54,6 +54,14 @@ class ProjectManager(models.Manager):
         if country:
             qs = qs.filter(country=country)
 
+        location = query.get('location', None)
+        if location:
+            qs = qs.filter(location=location)
+
+        category = query.get('category', None)
+        if category:
+            qs = qs.filter(categories__in=[category])
+
         theme = query.get('theme', None)
         if theme:
             qs = qs.filter(theme_id=theme)
@@ -155,7 +163,7 @@ class Project(BaseProject):
     voting_deadline = models.DateTimeField(_('Voting Deadline'), null=True,
                                            blank=True)
 
-    categories = models.ManyToManyField('categories.Category')
+    categories = models.ManyToManyField('categories.Category', null=True, blank=True)
 
     objects = ProjectManager()
 

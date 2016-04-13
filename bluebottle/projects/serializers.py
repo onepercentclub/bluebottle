@@ -133,7 +133,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = PROJECT_MODEL
         fields = ('id', 'created', 'title', 'pitch', 'organization',
                   'description', 'owner', 'status', 'image',
-                  'country', 'theme', 'tags', 'meta_data', 'language',
+                  'country', 'theme', 'categories', 'tags', 'meta_data', 'language',
                   'latitude', 'longitude', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'allow_overfunding',
                   'task_count', 'amount_asked', 'amount_donated',
@@ -153,7 +153,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
     class Meta:
         model = PROJECT_MODEL
         fields = ('id', 'title', 'status', 'image', 'country', 'pitch',
-                  'theme', 'owner', 'amount_asked', 'amount_donated',
+                  'theme', 'categories', 'owner', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'deadline', 'latitude',
                   'longitude', 'task_count', 'allow_overfunding', 'is_campaign',
                   'partner', 'is_funding', 'people_requested',
@@ -286,7 +286,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
         model = PROJECT_MODEL
         fields = ('id', 'title', 'description', 'editable', 'viewable',
                   'status', 'image', 'pitch', 'slug', 'tags', 'created',
-                  'url', 'country', 'location', 'place', 'theme',
+                  'url', 'country', 'location', 'place', 'theme', 'categories',
                   'organization', 'language', 'account_holder_name',
                   'account_holder_address', 'account_holder_postal_code',
                   'account_holder_city', 'account_holder_country',

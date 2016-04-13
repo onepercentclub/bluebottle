@@ -293,6 +293,7 @@ TENANT_APPS = (
     # Plain Bluebottle apps
     'bluebottle.wallposts',
     'bluebottle.utils',
+    'bluebottle.categories',
     'bluebottle.contentplugins',
     'bluebottle.contact',
     'bluebottle.geo',

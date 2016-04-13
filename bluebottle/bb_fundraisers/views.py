@@ -24,8 +24,6 @@ class FundraiserListView(ListCreateAPIView):
     serializer_class = FUNDRAISER_SERIALIZER
     permission_classes = (TenantConditionalOpenClose,
                           permissions.IsAuthenticatedOrReadOnly,)
-    paginate_by = 10
-    paginate_by_param = 'page_size'
 
     # because we overwrite get_queryset, this is ignored
     # TODO: Write cleaner code that takes this argument into account.

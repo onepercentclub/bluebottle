@@ -3,7 +3,7 @@ from rest_framework import status
 
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.geo.models import Country
+from bluebottle.geo.models import Country, Location
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -23,7 +23,6 @@ class GeoTestCase(BluebottleTestCase):
 
         self.country_1 = Country.objects.get(name="Abkhazia")
 
-\
 
 class CountryListTestCase(GeoTestCase):
     """
@@ -75,3 +74,30 @@ class UsedCountryListTestCase(GeoTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+
+
+class LocationListTestCase(GeoTestCase):
+    """
+    Test case for ``LocationList`` API view.
+
+    Endpoint: /api/geo/locations
+    """
+    def setUp(self):
+        super(GeoTestCase, self).setUp()
+
+        self.count = 10
+        self.locations = []
+        for i in range(0, self.count):
+            self.locations.append(Location.objects.create(name="Name {}".format(i),
+                description="Description {}".format(i)))
+
+    def test_api_country_list_endpoint(self):
+        """
+        Ensure get request returns 200.
+        """
+        response = self.client.get(reverse('location-list'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), self.count)
+        self.assertEqual(response.data[0]['name'], self.locations[0].name)
+        self.assertEqual(response.data[0]['description'], self.locations[0].description)

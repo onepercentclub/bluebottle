@@ -53,6 +53,10 @@ class ProjectManager(models.Manager):
         if country:
             qs = qs.filter(country=country)
 
+        location = query.get('location', None)
+        if location:
+            qs = qs.filter(location=location)
+
         theme = query.get('theme', None)
         if theme:
             qs = qs.filter(theme_id=theme)

@@ -192,7 +192,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
         (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
 
-        (_('Details'), {'fields': ('language', 'theme', 'image',
+        (_('Details'), {'fields': ('language', 'theme', 'categories', 'image',
                                    'video_url', 'country',
                                    'latitude', 'longitude',
                                    'location', 'place', 'tags')}),

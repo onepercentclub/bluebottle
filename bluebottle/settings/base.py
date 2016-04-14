@@ -293,6 +293,7 @@ TENANT_APPS = (
     # Plain Bluebottle apps
     'bluebottle.wallposts',
     'bluebottle.utils',
+    'bluebottle.categories',
     'bluebottle.contentplugins',
     'bluebottle.contact',
     'bluebottle.geo',
@@ -570,6 +571,7 @@ PROJECT_PAYOUT_FEES = {
 }
 
 LIVE_PAYMENTS_ENABLED = False
+MINIMAL_PAYOUT_AMOUNT = 20
 
 CELERY_MAIL = False
 SEND_MAIL = False

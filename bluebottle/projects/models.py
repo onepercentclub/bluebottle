@@ -15,6 +15,7 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
+from bluebottle.categories.models import Category
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument)
@@ -56,6 +57,10 @@ class ProjectManager(models.Manager):
         location = query.get('location', None)
         if location:
             qs = qs.filter(location=location)
+
+        category = query.get('category', None)
+        if category:
+            qs = qs.filter(categories__in=[category])
 
         theme = query.get('theme', None)
         if theme:
@@ -157,6 +162,8 @@ class Project(BaseProject):
 
     voting_deadline = models.DateTimeField(_('Voting Deadline'), null=True,
                                            blank=True)
+
+    categories = models.ManyToManyField('categories.Category', null=True, blank=True)
 
     objects = ProjectManager()
 

@@ -6,6 +6,11 @@ from django.db import models
 
 
 class Migration(SchemaMigration):
+
+    depends_on = (
+        ('categories', '0001_initial'),
+    )
+
     def forwards(self, orm):
         # Adding M2M table for field categories on 'Project'
         m2m_table_name = db.shorten_name(u'projects_project_categories')

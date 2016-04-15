@@ -1,6 +1,7 @@
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
-from bluebottle.projects.models import PartnerOrganization
 from rest_framework import serializers
+
+from bluebottle.categories.models import Category
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -10,5 +11,5 @@ class CategorySerializer(serializers.ModelSerializer):
     title = serializers.CharField()
 
     class Meta:
-        model = PartnerOrganization
+        model = Category
         fields = ('id', 'title', 'description', 'image')

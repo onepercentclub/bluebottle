@@ -280,7 +280,6 @@ TENANT_APPS = (
     # Newly moved BB apps
     'bluebottle.members',
     'bluebottle.projects',
-    'bluebottle.partners',
     'bluebottle.organizations',
     'bluebottle.tasks',
     'bluebottle.hbtemplates',
@@ -560,7 +559,7 @@ EXPOSED_TENANT_PROPERTIES = ['closed_site', 'mixpanel', 'analytics', 'maps_api_k
                              'bb_apps', 'donation_amounts', 'facebook_sharing_reviewed',
                              'project_create_flow', 'project_create_types', 'project_contact_types',
                              'closed_site', 'partner_login', 'share_options', 'sso_url',
-                             'project_suggestions', 'readOnlyFields']
+                             'project_suggestions', 'readOnlyFields', 'search_options']
 
 DEFAULT_FILE_STORAGE = 'bluebottle.utils.storage.TenantFileSystemStorage'
 

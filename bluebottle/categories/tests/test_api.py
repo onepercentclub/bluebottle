@@ -4,12 +4,8 @@ from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
-from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.projects.models import PartnerOrganization
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory
 
 
 class CategoriesTestCase(BluebottleTestCase):

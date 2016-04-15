@@ -28,9 +28,7 @@ from .mails import (mail_project_funded_internal, mail_project_complete,
 from .signals import project_funded
 
 GROUP_PERMS = {'Staff': {'perms': ('add_project', 'change_project',
-                                   'delete_project', 'add_partnerorganization',
-                                   'change_partnerorganization',
-                                   'delete_partnerorganization')}}
+                                   'delete_project')}}
 
 
 class ProjectPhaseLog(BaseProjectPhaseLog):

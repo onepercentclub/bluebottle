@@ -106,9 +106,6 @@ class ProjectDocument(BaseProjectDocument):
 
 
 class Project(BaseProject):
-    partner_organization = models.ForeignKey('projects.PartnerOrganization',
-                                             null=True, blank=True)
-
     latitude = models.DecimalField(
         _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
     longitude = models.DecimalField(
@@ -507,40 +504,6 @@ class ProjectBudgetLine(models.Model):
 
     def __unicode__(self):
         return u'{0} - {1}'.format(self.description, self.amount / 100.0)
-
-
-class PartnerOrganization(models.Model):
-    """
-        Some projects are run in cooperation with a partner
-        organization like EarthCharter & MacroMicro
-    """
-    name = models.CharField(_("name"), max_length=255, unique=True)
-    slug = models.SlugField(_("slug"), max_length=100, unique=True)
-    description = models.TextField(_("description"))
-    image = ImageField(_("image"), max_length=255, blank=True, null=True,
-                       upload_to='partner_images/',
-                       help_text=_("Main partner picture"))
-
-    @property
-    def projects(self):
-        return self.project_set.order_by('-favorite', '-popularity').filter(
-            status__slug__in=['campaign', 'done-complete', 'done-incomplete',
-                              'voting', 'voting-done'])
-
-    class Meta:
-        db_table = 'projects_partnerorganization'
-        verbose_name = _("partner organization")
-        verbose_name_plural = _("partner organizations")
-
-    def __unicode__(self):
-        if self.name:
-            return self.name
-        return self.slug
-
-    def save(self, *args, **kwargs):
-        if not self.slug.islower():
-            self.slug = self.slug.lower()
-        super(PartnerOrganization, self).save(*args, **kwargs)
 
 
 @receiver(project_funded, weak=False, sender=Project,

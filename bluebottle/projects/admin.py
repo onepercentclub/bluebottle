@@ -23,7 +23,7 @@ from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
 
 from .forms import ProjectDocumentForm
-from .models import (PartnerOrganization, ProjectBudgetLine, Project)
+from .models import (ProjectBudgetLine, Project)
 
 logger = logging.getLogger(__name__)
 
@@ -113,13 +113,6 @@ class FundingFilter(admin.SimpleListFilter):
         return queryset
 
 
-class PartnerOrganizationAdmin(AdminImageMixin, admin.ModelAdmin):
-    prepopulated_fields = {"slug": ("name",)}
-
-
-admin.site.register(PartnerOrganization, PartnerOrganizationAdmin)
-
-
 class ProjectBudgetLineInline(admin.TabularInline):
     model = ProjectBudgetLine
     extra = 0
@@ -150,7 +143,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_filter(self, request):
         filters = ('status', 'is_campaign', ProjectThemeFilter,
-                   'country__subregion__region', 'partner_organization',
+                   'country__subregion__region',
                    FundingFilter)
 
         # Only show Location column if there are any
@@ -186,7 +179,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return OrderedDict(reversed(actions.items()))
 
     fieldsets = (
-        (_('Main'), {'fields': ('owner', 'organization', 'partner_organization',
+        (_('Main'), {'fields': ('owner', 'organization',
                                 'status', 'title', 'slug', 'project_type',
                                 'is_campaign')}),
 

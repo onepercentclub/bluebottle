@@ -136,8 +136,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     prepopulated_fields = {'slug': ('title',)}
 
-    inlines = (ProjectBudgetLineInline, TaskAdminInline, ProjectDocumentInline,
-               ProjectPhaseLogInline, RewardInlineAdmin)
+    inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
+               ProjectPhaseLogInline)
 
     list_filter = ('country__subregion__region',)
 

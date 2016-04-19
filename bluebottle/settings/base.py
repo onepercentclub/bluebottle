@@ -206,12 +206,12 @@ SOCIAL_AUTH_PIPELINE = (
     'bluebottle.auth.utils.set_language',
     'bluebottle.auth.utils.save_profile_picture',
     'bluebottle.auth.utils.get_extra_facebook_data',
-    'bluebottle.auth.utils.send_welcome_mail_pipe'
 )
 
 AFOM_ENABLED = False
 
-SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', 'first_name', 'last_name', ]
+SOCIAL_AUTH_USER_FIELDS = ('username', 'email', 'first_name', 'last_name',)
+SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 
 SHARED_APPS = (

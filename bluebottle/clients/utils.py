@@ -4,6 +4,7 @@ import re
 
 from django.db import connection
 from django.conf import settings
+from django.utils.translation import get_language
 
 from bluebottle.clients import properties
 from tenant_extras.utils import get_tenant_properties
@@ -104,7 +105,8 @@ def get_public_properties(request):
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
             'recurringDonationsEnabled': getattr(properties, 'RECURRING_DONATIONS_ENABLED', False),
             'siteName': current_tenant.name,
-            'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')]
+            'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')],
+            'languageCode': get_language()
          }
     else:
         config = {}

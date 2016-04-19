@@ -35,8 +35,9 @@ def mail_project_complete(project):
     send_mail(
         template_name="projects/mails/project_complete.mail",
         subject=subject,
-        title=project.title,
         to=project.owner,
+        title=project.title,
+        receiver_name=project.owner.short_name,
         site=tenant_url(),
         link='/go/projects/{0}'.format(project.slug)
     )
@@ -49,8 +50,9 @@ def mail_project_incomplete(project):
     send_mail(
         template_name="projects/mails/project_incomplete.mail",
         subject=subject,
-        title=project.title,
         to=project.owner,
+        title=project.title,
+        receiver_name=project.owner.short_name,
         site=tenant_url(),
         link='/go/projects/{0}'.format(project.slug)
     )

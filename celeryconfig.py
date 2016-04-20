@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.conf import settings
 
 from celery.schedules import crontab
@@ -26,6 +27,11 @@ CELERYBEAT_SCHEDULE = {
             'log_to_salesforce': True
         }
     },
+    'update-popularity': {
+        'task': 'bluebottle.projects.tasks.update_popularity',
+        'schedule': timedelta(hours=1),
+    },
+
 }
 
 CELERY_TIMEZONE = 'Europe/Amsterdam'

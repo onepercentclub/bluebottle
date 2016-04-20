@@ -175,33 +175,53 @@ class Project(BaseProject):
             return self.title
         return self.slug
 
-    def update_popularity(self, save=True):
+    @classmethod
+    def update_popularity(self):
+        """
+        Update popularity score for all projects
+
+        Popularity is calculated by the number of new donations, task members and votes
+        in the last 30 days.
+
+        Donations and task members have a weight 5 times that fo a vote.
+        """
         from bluebottle.donations.models import Donation
+        from bluebottle.tasks.models import TaskMember
+        from bluebottle.votes.models import Vote
+
+        weight = 5
 
         last_month = timezone.now() - timezone.timedelta(days=30)
         donations = Donation.objects.filter(
-            order__status__in=[StatusDefinition.PENDING,
-                               StatusDefinition.SUCCESS])
-        donations = donations.filter(created__gte=last_month)
-        donations = donations.exclude(order__order_type='recurring')
+            order__status__in=[
+                StatusDefinition.PENDING,
+                StatusDefinition.SUCCESS
+            ],
+            created__gte=last_month
+        ).exclude(order__order_type='recurring')
 
-        # For all projects.
-        total_recent_donors = len(donations)
-        total_recent_donations = donations.aggregate(sum=Sum('amount'))['sum']
+        task_members = TaskMember.objects.filter(
+            created__gte=last_month
+        )
 
-        # For this project
-        donations = donations.filter(project=self)
-        recent_donors = len(donations)
-        recent_donations = donations.aggregate(sum=Sum('amount'))['sum']
+        votes = Vote.objects.filter(
+            created__gte=last_month
+        )
 
-        if recent_donors and recent_donations:
-            self.popularity = 50 * (
-                float(recent_donors) / float(total_recent_donors)) + 50 * (
-                float(recent_donations) / float(total_recent_donations))
-        else:
-            self.popularity = 0
-        if save:
-            self.save()
+        # Loop over all projects that where changed, or where a donation was recently done
+        for project in self.objects.filter(
+                Q(updated__gte=last_month) |
+                Q(donation__created__gte=last_month,
+                  donation__order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING]) |
+                Q(task__members__created__gte=last_month) |
+                Q(vote__created__gte=last_month)).distinct():
+
+            project.popularity = (
+                weight * len(donations.filter(project=project)) +
+                weight * len(task_members.filter(task__project=project)) +
+                len(votes.filter(project=project))
+            )
+            project.save()
 
     def update_status_after_donation(self, save=True):
         if not self.campaign_funded and not self.campaign_ended and \
@@ -223,7 +243,6 @@ class Project(BaseProject):
             # Should never be less than zero
             self.amount_needed = 0
 
-        self.update_popularity(False)
         self.update_status_after_donation(False)
 
         if save:

@@ -91,12 +91,12 @@ class BankTransaction(models.Model):
 
     def __unicode__(self):
         if self.credit_debit == self.CreditDebit.credit:
-            return _('%s from %s') % (
-                self.amount, self.counter_name or self.counter_account
+            return _('{amount} from {counter}').format(
+                amount=self.amount, counter=self.counter_name or self.counter_account
             )
         else:
-            return _('%s to %s') % (
-                self.amount, self.counter_name or self.counter_account
+            return _('{amount} from {counter}').format(
+                amount=self.amount, counter=self.counter_name or self.counter_account
             )
 
 

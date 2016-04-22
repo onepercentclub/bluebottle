@@ -8,6 +8,7 @@ from rest_framework import status
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
 
 ASSERTION_MAPPING = {
     'assertion_mapping': {
@@ -162,6 +163,24 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['last_name'], full_name.get('last_name'))
 
         self.client.logout()
+
+    def test_user_profile_location_update(self):
+        """
+        Test that updating your location sets your country
+        """
+        country = CountryFactory.create()
+        location = LocationFactory.create(country=country)
+        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
+                                           self.user_1.id)
+        changes = {'location': location.id}
+
+        # Profile should not be able to be updated by anonymous users.
+        response = self.client.put(user_profile_url, changes,
+                                   token=self.user_1_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(country.id, response.data['address']['country'])
+
 
     def test_unauthenticated_user(self):
         """

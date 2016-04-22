@@ -1,5 +1,5 @@
-from .base import *
 from .secrets import *
+from .base import *
 from bluebottle.payments_docdata.settings import *
 
 import warnings
@@ -64,7 +64,7 @@ from bluebottle.payments_mock.settings import (MOCK_PAYMENT_METHODS,
                                                MOCK_FEES)
 
 PAYMENT_METHODS = MOCK_PAYMENT_METHODS
-
+MINIMAL_PAYOUT_AMOUNT = 10
 DOCDATA_FEES = {
     'transaction': 0.15,
     'payment_methods': {
@@ -77,3 +77,6 @@ DOCDATA_FEES = {
 }
 
 RECURRING_DONATIONS_ENABLED = True
+
+SEND_WELCOME_MAIL = False
+SEND_MAIL = True

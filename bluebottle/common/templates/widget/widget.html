@@ -1,0 +1,60 @@
+{% load i18n %}
+{% load thumbnail %}
+{% load static from staticfiles %}
+
+<div class="widget-holder">
+    <div class="widget-campaign-container {{ size }}">
+        {% for project in projects %}
+            <div class="campaign-item {{ size }}">
+                <a href="{{ host }}/go/projects/{{project.slug}}" class="campaign-item-holder">
+                    <header class="header">
+                        {% thumbnail project.image "400x380" as im %}
+                            <img src="{{ host }}{{ im.url }}" />
+                        {% endthumbnail %}
+                    </header>
+                    <div class="campaign-body">
+                        <div class="campaign-title">
+                            <span class="main">
+                                {{project.title}}
+                            </span>
+                        </div>
+                        <span class="profile-name">
+                            <span>{% trans "By" %} </span>{{project.owner.full_name}}
+                        </span>
+                        <span class="campaign-hover-body">
+                            {{project.pitch}}
+                        </span>
+                    </div>
+
+                    <div class="campaign-footer">
+                        <span class="campaign-location">
+                            {{project.country}}
+                        </span>
+                        <div class="campaign-fund-amount-slider">
+                            <div class="project-fund-amount-slider">
+                                <strong class="slider-progress is-in-progress" data-target-amount="{{project.amount_asked}}" data-donated-amount="{{project.amount_donated}}" data-donated-amount-extra="{{project.amount_extra}}">
+                                    <em class="slider-percentage slider-total"><span class="slider-hide-text"></span></em>
+                                    <em class="slider-percentage slider-extra" style="display: none;"><span class="slider-hide-text"></span></em>
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="campaign-fund-amount">
+                            <span class="amount-raised"><strong>&euro; {{project.amount_donated|floatformat:0}} </strong>{% trans "raised" %}</span>
+                            <span data-days-left="{{project.deadline| date:"Y,m,d"}}" data-translated-days-left="{% trans 'days left'%}" data-translated-funded="{% trans 'funded'%}" data-translated-expired="{% trans 'expired'%}" data-target-amount="{{project.amount_asked}}" data-donated-amount="{{project.amount_donated}}" class="days-left"></span>
+                        </div>
+                    </div>
+                    <div class="campaign-hover">
+                        <p class="campaign-hover-footer">
+                            <span class="go-to-campaign">
+                                {% trans "Go to project" %}
+                            </span>
+                        </p>
+                    </div>
+                </a>
+            </div>
+        {% endfor %}
+        <a href="{{ host }}" class="powered-by">
+            <span>{% trans 'Powered by'%}</span>
+        </a>
+    </div>
+</div>

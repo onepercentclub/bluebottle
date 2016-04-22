@@ -39,7 +39,7 @@ class Migration(SchemaMigration):
 
         # Changing field 'Project.account_bic'
         db.alter_column(u'projects_project', 'account_bic',
-                        self.gf('django_iban.fields.SWIFTBICField')(
+                        self.gf('localflavor.generic.models.BICField')(
                             max_length=11, null=True))
 
         # Changing field 'Project.account_holder_name'
@@ -107,7 +107,7 @@ class Migration(SchemaMigration):
 
         # Changing field 'Project.account_bic'
         db.alter_column(u'projects_project', 'account_bic',
-                        self.gf('django_iban.fields.SWIFTBICField')(default='',
+                        self.gf('localflavor.generic.models.BICField')(default='',
                                                                     max_length=11))
 
         # Changing field 'Project.account_holder_name'
@@ -400,7 +400,7 @@ class Migration(SchemaMigration):
                 {'blank': 'True',
                  'related_name': "'project_account_bank_country'",
                  'null': 'True', 'to': u"orm['geo.Country']"}),
-            'account_bic': ('django_iban.fields.SWIFTBICField', [],
+            'account_bic': ('localflavor.generic.models.BICField', [],
                             {'max_length': '11', 'null': 'True',
                              'blank': 'True'}),
             'account_holder_address': ('django.db.models.fields.CharField', [],

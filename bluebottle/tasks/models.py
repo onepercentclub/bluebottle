@@ -20,6 +20,10 @@ GROUP_PERMS = {
 }
 
 class Task(BaseTask):
+    def get_absolute_url(self):
+        """ Get the URL for the current task. """
+        return '/tasks/{}'.format(self.id)
+
     # This could also belong to bb_tasks.models but we need the actual, non-abstract
     # model for the signal handling anyway. Eventually, tasks/bb_tasks will have to be
     # merged.
@@ -115,3 +119,7 @@ class TaskMember(BaseTaskMember):
 
 class TaskFile(BaseTaskFile):
     pass
+
+
+from bluebottle.bb_tasks.taskwallmails import *
+from bluebottle.bb_tasks.taskmail import *

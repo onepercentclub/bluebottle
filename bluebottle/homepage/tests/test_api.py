@@ -193,7 +193,7 @@ class HomepageEndpointTestCase(BluebottleTestCase):
     def test_homepage_stats(self):
         response = self.client.get(reverse('stats', kwargs={'language': 'en'}))
 
-        self.assertEqual(len(response.data['projects']), 3)
+        self.assertEqual(len(response.data['projects']), 4)
 
         impact = response.data['statistics']
         self.assertEqual(impact[0]['title'], 'Donated')

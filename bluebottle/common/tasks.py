@@ -115,10 +115,7 @@ def _post_to_facebook(instance, tenant=None):
         base_url = 'https://{domain}'.format(
             domain=tenant.domain_url)
 
-        link = urljoin(
-            base_url,
-            '/go/projects/{slug}'.format(slug=instance.content_object.slug)
-        )
+        link = urljoin(base_url, instance.content_object.get_absolute_url())
 
         image = None
         # This code is executed via Celery, we assume the MediaWallpostPhoto
@@ -131,18 +128,20 @@ def _post_to_facebook(instance, tenant=None):
                                           "600x400").url
                             )
         else:
-            if instance.content_object.image:
+            if hasattr(instance.content_object, 'image') and instance.content_object.image:
                 image = urljoin(
                     base_url,
                     get_thumbnail(instance.content_object.image, "600x400").url
                 )
 
-        logger.info("Image url: {0}".format(image))
+        description = getattr(
+            instance.content_object, 'pitch', instance.content_object.description
+        )
 
         data = {
             'link': link,
             'name': instance.content_object.title,
-            'description': instance.content_object.pitch,
+            'description': description,
             'message': instance.text,
             'picture': image,
             'caption': tenant_url()

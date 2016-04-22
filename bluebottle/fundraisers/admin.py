@@ -10,7 +10,7 @@ FUNDRAISER_MODEL = get_fundraiser_model()
 
 class FundraiserAdmin(admin.ModelAdmin):
     list_display = ('title', 'owner_link',
-                    'amount_override', 'amount_donated_override',
+                    'amount_donated_override', 'amount_override',
                     'deadline')
     raw_id_fields = ('project', 'owner')
 
@@ -24,7 +24,7 @@ class FundraiserAdmin(admin.ModelAdmin):
     amount_override.short_description = 'amount asked'
 
     def amount_donated_override(self, obj):
-        return obj.amount
+        return obj.amount_donated
 
     amount_donated_override.short_description = 'amount donated'
 

@@ -14,7 +14,12 @@ cache:
 python:
 - '2.7.9'
 env:
-- DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
+  global:
+  - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
+  # hipchat api key
+  - secure: "Sg0+/6mi9rIqXB24xLF0b5ZzC6V4TrZG3dNKpdI61PRTbAOlRfznwT00RZz6sQoL0s6LxLG52P3ipitqfMsPrb70CzYCK8+wgyTSvVYcbJLOTFycdwWIBghYqElXT0u8vfcu6RLGJD+8j8WsIFZ6P2pcZ0mHXyTcKEXNljov4Fw="
+  # hipchat room id
+  - secure: "iMKjQ8xllvNCzPfFdLBZ2Xqv83XF0bgUHrJTH2Q5R9BwtVwtbiWS//9mWMfVX4lumkZmlX6cwVOGDPBTJVEJv4k7GHza01Kp7ax3WHT/ll+K0j8AFMwbvHRJUPihKc5DWVVFir/xfW4qyKss6yNbn+M94ZbiRMcno/3NLNN2dKw="
 install:
 - pip install --upgrade setuptools --use-mirrors
 - pip install -e .[test] --process-dependency-links

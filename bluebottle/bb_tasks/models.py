@@ -10,6 +10,8 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
 from bluebottle.utils.utils import GetTweetMixin
 
+
+
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 
@@ -171,6 +173,3 @@ class BaseTask(models.Model, GetTweetMixin):
     @property
     def people_applied(self):
         return self.members.count()
-
-
-from taskwallmails import *

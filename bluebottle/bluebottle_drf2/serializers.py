@@ -70,8 +70,6 @@ class SorlImageField(RestrictedImageField):
             return ""
         request = self.context.get('request')
         relative_url = settings.MEDIA_URL + thumbnail
-        if request:
-            return request.build_absolute_uri(relative_url)
         return relative_url
 
 

@@ -10,4 +10,6 @@ GROUP_PERMS = {
 
 
 class Fundraiser(BaseFundraiser):
-    pass
+    def get_absolute_url(self):
+        """ Get the URL for the current fundraiser. """
+        return '/fundraisers/{}'.format(self.id)

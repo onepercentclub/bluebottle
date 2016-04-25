@@ -15,7 +15,8 @@ urlpatterns = patterns('',
 
                        url(r'^api/config',
                            include('bluebottle.clients.urls.api')),
-
+                       url(r'^api/redirects',
+                           include('bluebottle.redirects.urls.api')),
                        url(r'^api/users/',
                            include('bluebottle.bb_accounts.urls.api')),
                        url(r'^api/bb_organizations/',

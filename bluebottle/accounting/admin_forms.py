@@ -73,7 +73,7 @@ class RetryPayoutForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('initial', {})
         transaction = kwargs.pop('transaction')
-        kwargs['initial']['description'] = _('Retry bounced payout (%r, <pk %d>)') % (transaction, transaction.pk)
+        kwargs['initial']['description'] = _('Retry bounced payout ({transaction}, <pk {pk}>)').format(transaction=transaction, pk=transaction.pk)
         super(RetryPayoutForm, self).__init__(*args, **kwargs)
         self.fields['payout'].queryset = self.fields['payout'].queryset.filter(status=PayoutBase.Statuses.SETTLED)
         self.fields['amount'].label = _('Bank costs')

@@ -6,10 +6,10 @@ from django.utils import translation
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import tenant_url
+from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.model_dispatcher import get_taskmember_model
 
-TASK_MEMBER_MODEL = get_taskmember_model()
 
 
 class TaskMemberMailSender:
@@ -126,10 +126,10 @@ class TaskMemberMailAdapter:
     """
 
     TASK_MEMBER_MAIL = {
-        TASK_MEMBER_MODEL.TaskMemberStatuses.applied: TaskMemberAppliedMail,
-        TASK_MEMBER_MODEL.TaskMemberStatuses.rejected: TaskMemberRejectMail,
-        TASK_MEMBER_MODEL.TaskMemberStatuses.accepted: TaskMemberAcceptedMail,
-        TASK_MEMBER_MODEL.TaskMemberStatuses.realized: TaskMemberRealizedMail,
+        TaskMember.TaskMemberStatuses.applied: TaskMemberAppliedMail,
+        TaskMember.TaskMemberStatuses.rejected: TaskMemberRejectMail,
+        TaskMember.TaskMemberStatuses.accepted: TaskMemberAcceptedMail,
+        TaskMember.TaskMemberStatuses.realized: TaskMemberRealizedMail,
         'withdraw': TaskMemberWithdrawMail,
     }
 
@@ -148,13 +148,13 @@ class TaskMemberMailAdapter:
             self.mail_sender.send()
 
 
-@receiver(post_save, weak=False, sender=TASK_MEMBER_MODEL)
+@receiver(post_save, weak=False, sender=TaskMember)
 def new_reaction_notification(sender, instance, created, **kwargs):
     mailer = TaskMemberMailAdapter(instance)
     mailer.send_mail()
 
 
-@receiver(pre_delete, weak=False, sender=TASK_MEMBER_MODEL)
+@receiver(pre_delete, weak=False, sender=TaskMember)
 def task_member_withdraw(sender, instance, **kwargs):
     mailer = TaskMemberMailAdapter(instance, 'withdraw')
     mailer.send_mail()

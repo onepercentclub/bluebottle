@@ -66,6 +66,11 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
     serializer_class = ManageProfileSerializer
 
     def pre_save(self, obj):
+        if obj.location:
+            # When the location changes, make sure we set the user's country.
+            # This decides the payment method they use for example
+            obj.address.country = obj.location.country
+
         try:
             # Read only properties come from the TOKEN_AUTH / SAML settings
             assertion_mapping = properties.TOKEN_AUTH['assertion_mapping']

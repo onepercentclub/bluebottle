@@ -1,75 +1,134 @@
 {% load i18n %} {% load static %}
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <meta name="viewport" content="width=device-width"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width" /> 
+
+    {# <link rel="stylesheet" href="base.mail.css"> For testing only #}
+
+    <style type="text/css">
+        {% include "base.mail.css" %}
+    </style>
+
 </head>
 
 <body>
-<table class="body">
-    <tr>
-        <td class="center" align="center" valign="top">
-            <center>
+    <table class="body">
+        <tr>
+            <td class="center" align="center" valign="top">
+                <center>
+                    <br>
+                    <table class="row header">
+                        <tr>
+                            <td class="center" align="center">
+                                <center>
+                                    <table class="container">
+                                        <tr>
+                                            <td class="wrapper last">
+                                                <table class="twelve columns">
+                                                    <tr>
+                                                        <td class="twelve columns">
 
-                <table class="container">
-                    <tr>
-                        <td>
+                                                            <img src="{{site}}/images/logo-email.gif">
 
-                            {# Content Block #}
-                            <table class="row">
-                                <tr>
-                                    <td class="wrapper last">
+                                                        </td>
+                                                        <td class="expander"></td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </center>
+                            </td>
+                        </tr>
+                    </table>
+                    <br>
+                    <table class="container">
+                        <tr>
+                            <td>
 
-                                        <table class="twelve columns">
-                                            <tr>
-                                                <td>
-                                                    {% block content %}{% endblock %}
-                                                </td>
-                                                <td class="expander"></td>
-                                            </tr>
-                                        </table>
+                                {# Content Block #}
+                                <table class="row">
+                                    <tr>
+                                        <td class="wrapper last">
 
-                                    </td>
-                                </tr>
-                            </table>
+                                            <table class="twelve columns">
+                                                <tr>
+                                                    <td>
+                                                        {% block content %}{% endblock %}
+                                                    </td>
+                                                    <td class="expander"></td>
+                                                </tr>
+                                            </table>
 
-                            <br>
+                                        </td>
+                                    </tr>
+                                </table>
 
-                            {# Action Block #}
-                            <table class="row">
-                                <tr>
-                                    <td class="wrapper last">
-                                        <table class="five columns">
-                                            <tr>
-                                                <td>
-                                                    <table class="button medium-button radius">
-                                                        <tr>
-                                                            <td>
-                                                                {% block action %}{% endblock %}
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                                <td class="expander"></td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
+                                <br>
+                                
+                                {# Action Block #}
+                                <table class="row">
+                                    <tr>
+                                        <td class="wrapper last">
+                                            <table class="five columns">
+                                                <tr>
+                                                    <td>
+                                                        <table class="button medium-button radius">
+                                                            <tr>
+                                                                <td>
+                                                                    {% block action %}{% endblock %}
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                    <td class="expander"></td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
 
-                            <br>
+                                <br>
 
-                        </td>
-                    </tr>
-                </table>
-            </center>
-        </td>
-    </tr>
-</table>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <br>
+
+                    <table class="row footer">
+                        <tr>
+                            <td class="center" align="center">
+                                <center>
+                                    <table class="container footer">
+                                        <tr>
+                                            <td class="wrapper last">
+                                                <table class="twelve columns">
+                                                    <tr>
+                                                        <td class="twelve columns">
+                                                            <small><b><a href="{{TENANT_MAIL_PROPERTIES.website}}" class="footer">{{TENANT_MAIL_PROPERTIES.sender}}</a></b> - {{TENANT_MAIL_PROPERTIES.footer}}</small>
+                                                            <br>
+                                                            <br>
+                                                        </td>
+                                                        <td class="expander"></td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </center>
+                            </td>
+                        </tr>
+                    </table>
+
+                </center>
+            </td>
+        </tr>
+    </table>
 </body>
 
 </html>

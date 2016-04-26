@@ -45,10 +45,6 @@ class WidgetView(View):
                 projects = PROJECT_MODEL.objects.filter(slug=project_slug)
             except PROJECT_MODEL.DoesNotExist:
                 pass
-        elif partner:
-            projects = PROJECT_MODEL.objects.filter(
-                partner_organization__slug=partner,
-                status__in=allowed_phases).order_by('?')[:3]
         else:
             projects = PROJECT_MODEL.objects.filter(deadline__gt=now).order_by(
                 '?')[:3]

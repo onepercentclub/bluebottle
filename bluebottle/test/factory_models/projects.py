@@ -6,7 +6,6 @@ import factory
 
 from bluebottle.utils.model_dispatcher import get_project_model
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.projects.models import PartnerOrganization
 
 from .accounts import BlueBottleUserFactory
 from .geo import CountryFactory
@@ -58,12 +57,3 @@ class ProjectFactory(factory.DjangoModelFactory):
     account_holder_city = 'test'
     account_holder_country = factory.SubFactory(CountryFactory)
 
-
-class PartnerFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = PartnerOrganization
-
-    FACTORY_DJANGO_GET_OR_CREATE = ('slug',)
-
-    name = factory.Sequence(lambda n: 'Partner_{0}'.format(n))
-    slug = factory.Sequence(lambda n: 'partner-{0}'.format(n))
-    description = 'Partner Organization factory model'

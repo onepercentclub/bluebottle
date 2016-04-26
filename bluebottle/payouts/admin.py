@@ -362,10 +362,9 @@ class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
         if PROJECT_PAYOUT_MODEL.objects.filter(
                 payout_rule__in=['old', 'five', 'seven', 'twelve',
                                  'hundred']).count():
-            return ['status', PayoutListFilter, LegacyPayoutListFilter,
-                    'project__partner_organization']
+            return ['status', PayoutListFilter, LegacyPayoutListFilter]
         else:
-            return ['status', PayoutListFilter, 'project__partner_organization']
+            return ['status', PayoutListFilter]
 
     def export_sepa(self, request, queryset):
         """

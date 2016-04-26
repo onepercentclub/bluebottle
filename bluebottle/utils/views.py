@@ -8,6 +8,7 @@ from django.views.generic.base import View
 from django.template.loader import render_to_string
 from django.template import Context
 from django.utils.translation import ugettext as _
+from django.utils import translation
 
 from sorl.thumbnail.shortcuts import get_thumbnail
 
@@ -22,6 +23,7 @@ from taggit.models import Tag
 
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.clients import properties
 
 from .serializers import ShareSerializer
 from .serializers import LanguageSerializer
@@ -155,6 +157,13 @@ class ShareFlyer(views.APIView):
         send_mail(**args)
 
         return response.Response({}, status=201)
+
+
+class ModelTranslationViewMixin(object):
+    def get(self, request, *args, **kwargs):
+        language = request.QUERY_PARAMS.get('language', properties.LANGUAGE_CODE)
+        translation.activate(language)
+        return super(ModelTranslationViewMixin, self).get(request, *args, **kwargs)
 
 
 # Non API views

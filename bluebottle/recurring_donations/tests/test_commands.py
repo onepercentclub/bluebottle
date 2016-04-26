@@ -9,6 +9,7 @@ from bluebottle.recurring_donations.models import MonthlyOrder
 from bluebottle.recurring_donations.tests.model_factory import \
     MonthlyDonorFactory, MonthlyDonorProjectFactory
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.projects.models import Project
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.recurring_donations.management.commands import process_monthly_donations
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -65,6 +66,7 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
 
         # Create a monthly donor without preferred projects
         self.monthly_donor2 = MonthlyDonorFactory(user=self.user2, amount=100)
+        Project.update_popularity()
 
     def test_prepare(self):
         call_command('process_monthly_donations', prepare=True,

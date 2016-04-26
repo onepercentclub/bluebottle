@@ -1,4 +1,5 @@
 import re
+import importlib
 
 from bluebottle.clients import properties
 from bluebottle.payments.exception import PaymentException
@@ -6,7 +7,7 @@ from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import import_class
 
 
-def get_payment_methods(country=None, amount=None):
+def get_payment_methods(country=None, amount=None, user=None):
     """
     Get all payment methods from settings.
     """
@@ -18,11 +19,41 @@ def get_payment_methods(country=None, amount=None):
     allowed_methods = []
 
     for method in all_methods:
+        allowed = False
+
+        # Check country restrictions
         try:
             countries = method['restricted_countries']
             if country in countries:
-                allowed_methods.append(method)
+                allowed = True
         except KeyError:
+            allowed = True
+
+        # Check if the method has an access handler
+        try:
+            handler = method['method_access_handler']
+
+            if handler:
+                try:
+                    # try to call handler
+                    parts = handler.split('.')
+                    module_path, class_name = '.'.join(parts[:-1]), parts[-1]
+                    module = importlib.import_module(module_path)
+                    func = getattr(module, class_name)
+
+                    # check if handler 
+                    allowed = func(user)
+
+                except (ImportError, AttributeError) as e:
+                    msg = "Could not import '%s'. %s: %s." % (handler, e.__class__.__name__, e)
+                    raise Exception(error_message)
+
+                method.pop('method_access_handler', None)
+
+        except KeyError:
+            pass
+
+        if allowed:
             allowed_methods.append(method)
 
     return allowed_methods

@@ -165,6 +165,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             'Donations by co-financers are shown in a separate list on the project page.'
             'These donation will always be visible.'))
 
+    can_pledge = models.BooleanField(
+        _('Can pledge'), default=False,
+        help_text=_('User can create a pledge donation.'))
+
     about_me = models.TextField(_('about me'), max_length=265, blank=True)
 
     # Private Settings

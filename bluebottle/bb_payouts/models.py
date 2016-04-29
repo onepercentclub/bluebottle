@@ -308,6 +308,10 @@ class BaseProjectPayout(PayoutBase):
         return self.get_amount_safe()
 
     @property
+    def amount_pledged(self):
+        return self.get_amount_pledged()
+
+    @property
     def amount_failed(self):
         return self.get_amount_failed()
 
@@ -316,7 +320,9 @@ class BaseProjectPayout(PayoutBase):
         if not self.amount_payable:
             return "-"
 
-        return "{}%".format(round(((self.amount_raised - self.amount_payable) / self.amount_raised) * 100,1))
+        raised_without_pledges = self.amount_raised - self.amount_pledged
+
+        return "{}%".format(round(((raised_without_pledges - self.amount_payable) / raised_without_pledges) * 100,1))
 
     def get_payout_rule(self):
         """
@@ -331,7 +337,7 @@ class BaseProjectPayout(PayoutBase):
         """
         Calculate the amount payable for 5% rule
         """
-        return self.amount_raised * Decimal(0.95)
+        return total * Decimal(0.95)
 
     def calculate_amounts(self, save=True):
         """
@@ -365,8 +371,10 @@ class BaseProjectPayout(PayoutBase):
                           " '{1}'".format(self.payout_rule, calculator_name)
                 raise PayoutException(message)
 
+            raised_without_pledges = self.get_amount_raised() - self.get_amount_pledged()
+
             self.amount_payable = Decimal(
-                round(calculator(self.get_amount_raised()), 2))
+                round(calculator(raised_without_pledges), 2))
 
         self.organization_fee = self.amount_raised - self.amount_payable
 
@@ -412,6 +420,14 @@ class BaseProjectPayout(PayoutBase):
             return self.amount_raised
         return self.project.amount_safe
 
+    def get_amount_pledged(self):
+        """
+        Real time amount of pledged ('pledged') donations.
+        """
+        if self.protected:
+            return self.amount_raised
+        return self.project.amount_pledged
+
     def get_amount_pending(self):
         """
         Real time amount of pending donations.
@@ -432,8 +448,9 @@ class BaseProjectPayout(PayoutBase):
 
         amount_safe = self.get_amount_safe()
         amount_pending = self.get_amount_pending()
+        amount_pledged = self.get_amount_pledged()
 
-        amount_failed = self.amount_raised - amount_safe - amount_pending
+        amount_failed = self.amount_raised - amount_safe - amount_pending - amount_pledged
 
         if amount_failed <= decimal.Decimal('0.00'):
             # Should never be less than 0

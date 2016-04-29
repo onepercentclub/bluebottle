@@ -286,7 +286,8 @@ class BaseProject(models.Model, GetTweetMixin):
         Update amount_donated and amount_needed
         """
         self.amount_donated = self.get_amount_total(
-            [StatusDefinition.SUCCESS, StatusDefinition.PENDING])
+            [StatusDefinition.SUCCESS, StatusDefinition.PENDING,
+             StatusDefinition.PLEDGED])
         self.amount_needed = self.amount_asked - self.amount_donated
 
         if self.amount_needed < 0:
@@ -338,7 +339,8 @@ class BaseProject(models.Model, GetTweetMixin):
         Return the amount of people funding this project
         """
         return self.donation_set.filter(
-            order__status__in=[StatusDefinition.PENDING,
+            order__status__in=[StatusDefinition.PLEDGED,
+                               StatusDefinition.PENDING,
                                StatusDefinition.SUCCESS]
         ).distinct('order__user').count()
 

@@ -4,6 +4,7 @@ from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
+from bluebottle.payments.models import Payment
 
 
 def successful_donation_fundraiser_mail(instance):
@@ -87,8 +88,16 @@ def new_oneoff_donation(instance):
         with TenantLanguage(donor.primary_language):
             subject = _('Thanks for your donation')
 
+        order_payment = donation.order.order_payments.all()[0]
+
         try:
-            payment_method = donation.order.order_payments.all()[0].payment.method_name
+            payment_method = order_payment.payment.method_name
+        except Payment.DoesNotExist:
+            # TODO: we need to properly handle the payment method
+            #       name here. Pledges will end up here but the
+            #       payment_method will be something like
+            #       'pledgeStandard'...
+            payment_method = order_payment.payment_method
         except IndexError:
             payment_method = ''
 

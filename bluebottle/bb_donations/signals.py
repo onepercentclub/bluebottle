@@ -17,14 +17,16 @@ def _order_status_changed(sender, instance, **kwargs):
     """
 
     if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.PENDING,
-                           StatusDefinition.FAILED]:
+                           StatusDefinition.PLEDGED, StatusDefinition.FAILED]:
         # Is order transitioning into the success or pending state - this should
         # only happen once.
 
         first_time_success = (
-            kwargs['source'] not in [StatusDefinition.SUCCESS,
+            kwargs['source'] not in [StatusDefinition.PLEDGED, 
+                                     StatusDefinition.SUCCESS,
                                      StatusDefinition.PENDING]
-            and kwargs['target'] in [StatusDefinition.SUCCESS,
+            and kwargs['target'] in [StatusDefinition.PLEDGED, 
+                                     StatusDefinition.SUCCESS,
                                      StatusDefinition.PENDING])
 
         # Process each donation in the order

@@ -54,6 +54,7 @@ class StatusDefinition:
     PENDING = 'pending'
     CREATED = 'created'
     LOCKED = 'locked'
+    PLEDGED = 'pledged'
     SUCCESS = 'success'
     STARTED = 'started'
     CANCELLED = 'cancelled'

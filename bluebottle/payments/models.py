@@ -42,6 +42,7 @@ class Payment(PolymorphicModel):
         (StatusDefinition.CREATED, _('Created')),
         (StatusDefinition.STARTED, _('Started')),
         (StatusDefinition.CANCELLED, _('Cancelled')),
+        (StatusDefinition.PLEDGED, _('Pledged')),
         (StatusDefinition.AUTHORIZED, _('Authorized')),
         (StatusDefinition.SETTLED, _('Settled')),
         (StatusDefinition.CHARGED_BACK, _('Charged_back')),
@@ -154,6 +155,11 @@ class OrderPayment(models.Model, FSMTransition):
                 target=StatusDefinition.STARTED)
     def started(self):
         # TODO: add started state behaviour here
+        pass
+
+    @transition(field=status, save=True, source=StatusDefinition.CREATED,
+                target=StatusDefinition.PLEDGED)
+    def pledged(self):
         pass
 
     @transition(field=status, save=True, source=[StatusDefinition.STARTED,

@@ -4,6 +4,7 @@ import re
 
 from django.db import connection
 from django.conf import settings
+from django.utils.translation import get_language
 
 from bluebottle.clients import properties
 from tenant_extras.utils import get_tenant_properties
@@ -96,18 +97,16 @@ def get_public_properties(request):
     if connection.tenant:
         current_tenant = connection.tenant
         properties = get_tenant_properties()
-        static_url = "{0}frontend/{1}/".format(getattr(properties, 'STATIC_URL'), current_tenant.client_name)
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
-            'staticUrl': static_url,
-            'defaultAvatarUrl': "{0}images/default-avatar.png".format(static_url),
-            'logoUrl': "{0}images/logo.svg".format(static_url),
+            'defaultAvatarUrl': "/images/default-avatar.png",
+            'logoUrl': "/images/logo.svg",
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
             'recurringDonationsEnabled': getattr(properties, 'RECURRING_DONATIONS_ENABLED', False),
             'siteName': current_tenant.name,
-            'languageCode': getattr(request, 'LANGUAGE_CODE', ''),
-            'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')]
+            'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')],
+            'languageCode': get_language()
          }
     else:
         config = {}

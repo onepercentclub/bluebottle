@@ -14,6 +14,9 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 def facebook_me_mock(url, request):
     return json.dumps({'firstname': 'bla', 'lastname': 'bla'})
 
+@httmock.urlmatch(netloc='graph.facebook.com', path='/v2.3/oauth/access_token')
+def facebook_access_token(url, request):
+    return json.dumps({})
 
 @httmock.urlmatch(netloc='graph.facebook.com', path='/me/permissions')
 def facebook_me_permissions_mock(url, request):
@@ -58,7 +61,8 @@ class SocialTokenAPITestCase(BluebottleTestCase):
     def test_token(self):
         with self.settings(SOCIAL_AUTH_FACEBOOK_SECRET='test-secret'):
             with httmock.HTTMock(facebook_me_mock,
-                                 facebook_me_permissions_mock):
+                                 facebook_me_permissions_mock,
+                                 facebook_access_token):
                 response = self.client.post(
                     self.token_url,
                     {
@@ -107,7 +111,8 @@ class SocialTokenAPITestCase(BluebottleTestCase):
             with mock.patch(
                     'social.apps.django_app.utils.BACKENDS',
                     ['bluebottle.social.backends.NoStateFacebookOAuth2']):
-                with httmock.HTTMock(facebook_me_mock):
+                with httmock.HTTMock(facebook_me_mock,
+                                     facebook_access_token):
                     response = self.client.post(
                         self.token_url,
                         {
@@ -130,7 +135,9 @@ class SocialTokenAPITestCase(BluebottleTestCase):
             with mock.patch(
                     'social.apps.django_app.utils.BACKENDS',
                     ['bluebottle.social.backends.NoStateFacebookOAuth2']):
-                with httmock.HTTMock(facebook_me_mock, facebook_me_permissions_mock):
+                with httmock.HTTMock(facebook_me_mock,
+                                     facebook_access_token,
+                                     facebook_me_permissions_mock):
                     response = self.client.post(
                         self.token_url,
                         {

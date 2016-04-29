@@ -1,8 +1,14 @@
+import logging
 from threading import local
 
 from django.db import connection
 from django.conf import settings
 from django.utils._os import safe_join
+
+from tenant_schemas.postgresql_backend.base import FakeTenant
+
+
+logger = logging.getLogger(__name__)
 
 
 class TenantProperties(local):
@@ -20,15 +26,18 @@ class TenantProperties(local):
         # when tenant has no specific config, has no directory
         # or when no MULTI_TENANT_DIR is configured
         try:
-            for settings_file in ['properties', 'secrets']:
-                props_mod = safe_join(settings.MULTI_TENANT_DIR,
-                                      tenant.client_name,
-                                      "{0}.py".format(settings_file))
-                # try to load tenant specific properties. We're using execfile since tenant
-                # directories are not python packages (e.g. no __init__.py)
-                execfile(props_mod, dict(settings=settings),
-                         self.tenant_properties)
+            props_mod = safe_join(settings.MULTI_TENANT_DIR,
+                                  tenant.client_name,
+                                  "settings.py")
+            # try to load tenant specific properties. We're using execfile since tenant
+            # directories are not python packages (e.g. no __init__.py)
+            execfile(props_mod, dict(settings=settings),
+                     self.tenant_properties)
+
         except (ImportError, AttributeError, IOError):
+            if not isinstance(tenant, FakeTenant):
+                logger.debug('No tenant properties found for: {0}'.format(tenant.client_name))
+
             pass
 
     def __getattr__(self, k):

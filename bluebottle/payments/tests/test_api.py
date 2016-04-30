@@ -2,6 +2,7 @@ from ipware import ip
 from mock import patch
 
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 
 from rest_framework import status
 
@@ -92,6 +93,7 @@ class TestOrderPaymentPermissions(BluebottleTestCase):
         self.assertEqual(len(response.data['results']), 3)
 
     @patch('bluebottle.payments.views.get_ip')
+    @override_settings(SKIP_IP_LOOKUP=False)
     def test_get_payment_methods_for_ip(self, get_ip):
         """ Test that passing a IP will restrict the payment methods """
 

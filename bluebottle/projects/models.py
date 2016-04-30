@@ -202,13 +202,8 @@ class Project(BaseProject):
         ).exclude(order__order_type='recurring')
 
         task_members = TaskMember.objects.filter(
-            order__status__in=[
-                StatusDefinition.PLEDGED,
-                StatusDefinition.PENDING,
-                StatusDefinition.SUCCESS
-            ],
             created__gte=last_month
-        ).exclude(order__order_type='recurring')
+        )
 
         votes = Vote.objects.filter(
             created__gte=last_month

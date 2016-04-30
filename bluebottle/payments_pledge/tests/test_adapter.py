@@ -19,4 +19,4 @@ class AdapterTestCase(BluebottleTestCase, FsmTestMixin):
         self.service = PaymentService(order_payment=self.order_payment)
 
         # Check that the status propagated through to order
-        self.assert_status(self.order, StatusDefinition.SUCCESS)
+        self.assert_status(self.order, StatusDefinition.PLEDGED)

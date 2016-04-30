@@ -88,16 +88,16 @@ def new_oneoff_donation(instance):
         with TenantLanguage(donor.primary_language):
             subject = _('Thanks for your donation')
 
-        order_payment = donation.order.order_payments.all()[0]
+        order_payments = donation.order.order_payments.all()
 
         try:
-            payment_method = order_payment.payment.method_name
+            payment_method = order_payments[0].payment.method_name
         except Payment.DoesNotExist:
             # TODO: we need to properly handle the payment method
             #       name here. Pledges will end up here but the
             #       payment_method will be something like
             #       'pledgeStandard'...
-            payment_method = order_payment.payment_method
+            payment_method = order_payments[0].payment_method
         except IndexError:
             payment_method = ''
 

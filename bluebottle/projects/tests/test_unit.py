@@ -3,15 +3,16 @@ from django.utils import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.utils.model_dispatcher import get_project_model
-from bluebottle.projects.models import PartnerOrganization
-
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.utils.utils import StatusDefinition
+from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.votes import VoteFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
 from bluebottle.suggestions.models import Suggestion
@@ -227,8 +228,22 @@ class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
         self.assertEquals(suggestion.status, 'in_progress')
 
 
-class PartnerOrganizationTests(BluebottleTestCase):
-    def test_convert_to_lowercase_slug(self):
-        po = PartnerOrganization.objects.create(name="YADA", slug="YADA",
-                                                description="blabla")
-        self.assertEquals(po.slug, 'yada')
+class TestProjectPopularity(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectPopularity, self).setUp()
+        self.init_projects()
+
+        self.project = ProjectFactory.create()
+
+        VoteFactory.create(project=self.project)
+        task = TaskFactory.create(project=self.project)
+        TaskMemberFactory.create(task=task)
+
+        order = OrderFactory.create(status=StatusDefinition.SUCCESS)
+
+        DonationFactory(order=order, project=self.project)
+
+    def test_update_popularity(self):
+        Project.update_popularity()
+
+        self.assertEqual(Project.objects.get(id=self.project.id).popularity, 11)

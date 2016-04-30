@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from bluebottle.geo.models import Location
+from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 
 from .models import Country
 
@@ -16,7 +17,8 @@ class CountrySerializer(serializers.ModelSerializer):
 class LocationSerializer(serializers.ModelSerializer):
     latitude = serializers.DecimalField(source='position.latitude')
     longitude = serializers.DecimalField(source='position.longitude')
+    image = ImageSerializer(required=False)
 
     class Meta:
         model = Location
-        fields = ('id', 'name', 'latitude', 'longitude')
+        fields = ('id', 'name', 'description', 'image', 'latitude', 'longitude')

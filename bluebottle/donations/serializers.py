@@ -54,15 +54,13 @@ class DefaultDonationSerializer(PreviewDonationSerializer):
 class LatestDonationProjectSerializer(BaseProjectPreviewSerializer):
     task_count = serializers.IntegerField(source='task_count')
     owner = get_serializer_class('AUTH_USER_MODEL', 'preview')(source='owner')
-    partner = serializers.SlugRelatedField(slug_field='slug',
-                                           source='partner_organization')
 
     class Meta(BaseProjectPreviewSerializer):
         model = BaseProjectPreviewSerializer.Meta.model
         fields = ('id', 'title', 'image', 'status', 'pitch', 'country',
                   'task_count', 'allow_overfunding', 'is_campaign',
                   'amount_asked', 'amount_donated', 'amount_needed',
-                  'deadline', 'status', 'owner', 'partner')
+                  'deadline', 'status', 'owner')
 
 
 class LatestDonationSerializer(serializers.ModelSerializer):

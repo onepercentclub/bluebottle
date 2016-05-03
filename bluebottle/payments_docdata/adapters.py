@@ -94,7 +94,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                 user_data['country'] = get_country_code_by_ip(ip_address)
             else:
                 user_data['country'] = default_country_code
-            print "User data 1", user_data['country']
         else:
             user_data['postal_code'] = 'Unknown'
             user_data['street'] = 'Unknown'
@@ -175,7 +174,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             mobile_phone_number=None,
             ipAddress=user['ip_address'])
 
-        print "COUNTRY CODE", user['country']
         address = gateway.Address(
             street=user['street'],
             house_number=user['house_number'],

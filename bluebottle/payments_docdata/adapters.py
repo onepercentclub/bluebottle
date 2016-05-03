@@ -65,7 +65,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         default_country_code = getattr(properties, 'DEFAULT_COUNTRY_CODE')
 
         if user and hasattr(user, 'address'):
-
             street = user.address.line1.split(' ')
             if street[-1] and any(char.isdigit() for char in street[-1]):
                 user_data['house_number'] = street.pop(-1)

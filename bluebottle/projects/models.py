@@ -69,7 +69,7 @@ class ProjectManager(models.Manager):
             qs = qs.filter(amount_needed__gt=0)
 
         project_type = query.get('project_type', None)
-        if project_type == 'volenteering':
+        if project_type == 'volunteering':
             qs = qs.annotate(Count('task')).filter(task__count__gt=0)
         elif project_type == 'funding':
             qs = qs.filter(amount_asked__gt=0)
@@ -101,6 +101,7 @@ class ProjectManager(models.Manager):
             queryset = queryset.order_by('status', '-popularity')
             if status == 5:
                 queryset = queryset.filter(amount_needed__gt=0)
+
         elif ordering:
             queryset = queryset.order_by('status', ordering)
 

@@ -3,11 +3,18 @@
 
 {% block content %}
     <p class="donation-intro">
+    {% if pledged %}
+        {% blocktrans with first_name=donation.user.first_name initiator_name=donation.project.owner.full_name slug=donation.project.slug%}
+
+        Thanks {{first_name}}, for your invoiced donation. You rock! The project initiator {{initiator_name}} is awaiting the donation amount to be transferred to their bank account: 
+        {% endblocktrans %}
+    {% else %}
         {% blocktrans with first_name=donation.user.first_name initiator_name=donation.project.owner.full_name slug=donation.project.slug%}
 
         Thanks {{first_name}}, for your donation! Be sure to follow the project page for the latest updates on the project.
         Give some extra support and share this project with your network.
         {% endblocktrans %}
+    {% endif %}
     </p>
     <table class="donation-table twelve columns">
         <tr class="donation-table-row">
@@ -49,6 +56,13 @@
             </tr>
         </tr>
     </table>
+    {% if pledged %}
+    <p class="twelve columns">
+        <strong>Please transfer the amount of &euro; {{ donation.amount }} to the following bank account:</strong>
+        {{donation.project.account_holder_name}}<br />
+        {{donation.project.account_number}}
+    </p>
+    {% endif %}
     {% if SHARE_OPTIONS.facebook or SHARE_OPTIONS.twitter %}
         <table class="donation-table-share twelve columns">
             <tr class="donation-table-share-title">{% trans "Support even more by sharing the project with your network:" %}</tr>

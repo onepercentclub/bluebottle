@@ -4,6 +4,7 @@ from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
+from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments.models import Payment
 
 
@@ -84,6 +85,7 @@ def new_oneoff_donation(instance):
     if donation.order.user and donation.order.user.email:
         # Send email to the project supporter
         donor = donation.order.user
+        pledged = (donation.order.status == StatusDefinition.PLEDGED)
 
         with TenantLanguage(donor.primary_language):
             subject = _('Thanks for your donation')
@@ -98,6 +100,8 @@ def new_oneoff_donation(instance):
             #       payment_method will be something like
             #       'pledgeStandard'...
             payment_method = order_payments[0].payment_method
+            if 'pledge' in payment_method:
+                payment_method = 'Invoiced'
         except IndexError:
             payment_method = ''
 
@@ -107,5 +111,6 @@ def new_oneoff_donation(instance):
             to=donor,
             link=project_url,
             donation=donation,
+            pledged=pledged,
             payment_method=payment_method
         )

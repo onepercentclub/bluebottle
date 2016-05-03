@@ -8,8 +8,8 @@ class PledgePaymentAdapter(BasePaymentAdapter):
 
     def create_payment(self):
         try:
-            can_pledge = self.order_payment.user.can_pledge
-        except:
+            can_pledge = self.order_payment.order.user.can_pledge
+        except AttributeError as e:
             can_pledge = False 
 
         if not can_pledge:

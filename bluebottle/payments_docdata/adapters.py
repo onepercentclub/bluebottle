@@ -65,7 +65,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         default_country_code = getattr(properties, 'DEFAULT_COUNTRY_CODE')
 
         if user and hasattr(user, 'address'):
-            print "Has address"
             street = user.address.line1.split(' ')
             if street[-1] and any(char.isdigit() for char in street[-1]):
                 user_data['house_number'] = street.pop(-1)
@@ -97,12 +96,10 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
                 user_data['country'] = default_country_code
             print "User data 1", user_data['country']
         else:
-            print "No address"
             user_data['postal_code'] = 'Unknown'
             user_data['street'] = 'Unknown'
             user_data['city'] = 'Unknown'
             country = get_country_code_by_ip(ip_address)
-            print "country", country
             if country:
                 user_data['country'] = country
             else:

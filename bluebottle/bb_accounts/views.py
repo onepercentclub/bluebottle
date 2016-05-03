@@ -84,7 +84,6 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
 
         except (AttributeError, KeyError):
             # Continue if the tenant doesn't have read-only fields
-            print "blabla"
             super(ManageProfileDetail, self).pre_save(obj)
 
 

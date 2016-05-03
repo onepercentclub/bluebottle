@@ -20,7 +20,7 @@ def check_access_handler(handler, user):
         allowed = func(user)
 
     except (ImportError, AttributeError) as e:
-        msg = "Could not import '%s'. %s: %s." % (handler, e.__class__.__name__, e)
+        error_message = "Could not import '%s'. %s: %s." % (handler, e.__class__.__name__, e)
         raise Exception(error_message)
 
     return allowed

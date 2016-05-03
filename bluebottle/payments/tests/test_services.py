@@ -37,6 +37,21 @@ class PaymentMethodHandlerTestCase(BluebottleTestCase):
         methods = get_payment_methods(country="nl", user=staff_user)
         self.assertEqual(len(methods), 2)
 
+    @override_settings(PAYMENT_METHODS=(
+        {
+            'provider': 'pledge',
+            'id': 'pledge-standard',
+            'name': 'Pledge',
+            'profile': 'standard',
+            'method_access_handler': 'bluebottle.foo.bar'
+        },
+    ))
+    def test_invalid_method_access_handler(self):
+        user = BlueBottleUserFactory.create()
+
+        with self.assertRaises(Exception):
+            methods = get_payment_methods(country="nl", user=user)
+
 
 class PaymentMethodTestCase(BluebottleTestCase):
     def test_load_all_payment_methods(self):

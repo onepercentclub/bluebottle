@@ -15,7 +15,7 @@ class HomePage(object):
         self.id = language
         self.quotes = Quote.objects.published().filter(language=language)
         self.slides = Slide.objects.published().filter(language=language)
-        self.statistics = Statistic.objects.filter(active=True).all()
+        self.statistics = Statistic.objects.filter(active=True, language=language).all()
 
         projects = PROJECT_MODEL.objects.filter(is_campaign=True,
                                                 status__viewable=True)

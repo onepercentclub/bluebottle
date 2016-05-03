@@ -1,7 +1,7 @@
 import json
 from mock import patch
 
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, SessionTestMixin
 from django.conf import settings
 
 from bluebottle.bb_orders.views import ManageOrderDetail
@@ -25,18 +25,11 @@ ORDER_MODEL = get_order_model()
 DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 
 
-class DonationApiTestCase(BluebottleTestCase):
+class DonationApiTestCase(BluebottleTestCase, SessionTestMixin):
     def setUp(self):
         super(DonationApiTestCase, self).setUp()
 
-        settings.SESSION_ENGINE = 'django.contrib.sessions.backends.file'
-        engine = import_module(settings.SESSION_ENGINE)
-        store = engine.SessionStore()
-        store.save()
-        self.session = store
-        self.client.cookies[settings.SESSION_COOKIE_NAME] = store.session_key
-
-        self.addCleanup(self._clear_session)
+        self.create_session()
 
         self.user1 = BlueBottleUserFactory.create()
         self.user1_token = "JWT {0}".format(self.user1.get_jwt_token())
@@ -60,9 +53,6 @@ class DonationApiTestCase(BluebottleTestCase):
 
         self.project = ProjectFactory.create()
         self.order = OrderFactory.create(user=self.user)
-
-    def _clear_session(self):
-        self.session.flush()
 
 
 # Mock the ManageOrderDetail check_status_psp function which will request status_check at PSP

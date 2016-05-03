@@ -1,4 +1,5 @@
 from bluebottle.payments.adapters import BasePaymentAdapter
+from bluebottle.payments.exception import PaymentException
 
 from .models import PledgeStandardPayment
 
@@ -6,6 +7,14 @@ from .models import PledgeStandardPayment
 class PledgePaymentAdapter(BasePaymentAdapter):
 
     def create_payment(self):
+        try:
+            can_pledge = self.order_payment.user.can_pledge
+        except:
+            can_pledge = False 
+
+        if not can_pledge:
+            raise PaymentException('User does not have permission to pledge')
+    
         # A little hacky but we can set the status to pledged here
         self.order_payment.pledged() 
 
@@ -14,5 +23,4 @@ class PledgePaymentAdapter(BasePaymentAdapter):
         return {'type': 'success'}
 
     def check_payment_status(self):
-        # The associated order should always be processed as pledged
-        self.order_payment.pledged()
+        pass

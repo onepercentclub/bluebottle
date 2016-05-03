@@ -7,6 +7,25 @@ from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import import_class
 
 
+def check_access_handler(handler, user):
+    allowed = False
+    try:
+        # try to call handler
+        parts = handler.split('.')
+        module_path, class_name = '.'.join(parts[:-1]), parts[-1]
+        module = importlib.import_module(module_path)
+        func = getattr(module, class_name)
+
+        # check if handler 
+        allowed = func(user)
+
+    except (ImportError, AttributeError) as e:
+        msg = "Could not import '%s'. %s: %s." % (handler, e.__class__.__name__, e)
+        raise Exception(error_message)
+
+    return allowed
+
+
 def get_payment_methods(country=None, amount=None, user=None):
     """
     Get all payment methods from settings.
@@ -34,20 +53,7 @@ def get_payment_methods(country=None, amount=None, user=None):
             handler = method['method_access_handler']
 
             if handler:
-                try:
-                    # try to call handler
-                    parts = handler.split('.')
-                    module_path, class_name = '.'.join(parts[:-1]), parts[-1]
-                    module = importlib.import_module(module_path)
-                    func = getattr(module, class_name)
-
-                    # check if handler 
-                    allowed = func(user)
-
-                except (ImportError, AttributeError) as e:
-                    msg = "Could not import '%s'. %s: %s." % (handler, e.__class__.__name__, e)
-                    raise Exception(error_message)
-
+                allowed = check_access_handler(handler, user)
                 method.pop('method_access_handler', None)
 
         except KeyError:

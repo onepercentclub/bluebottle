@@ -12,6 +12,7 @@ from django.utils.translation import ugettext as _
 from bluebottle.bb_orders.permissions import IsOrderCreator
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
+from bluebottle.payments.permissions import CanAccessPaymentMethod
 from bluebottle.payments.serializers import ManageOrderPaymentSerializer
 from bluebottle.payments.services import get_payment_methods, PaymentService
 from bluebottle.utils.utils import get_country_code_by_ip
@@ -51,7 +52,7 @@ class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
 class ManageOrderPaymentList(ListCreateAPIView):
     model = OrderPayment
     serializer_class = ManageOrderPaymentSerializer
-    permission_classes = (IsOrderCreator,)
+    permission_classes = (IsOrderCreator, CanAccessPaymentMethod)
 
     def pre_save(self, obj):
         if self.request.user and self.request.user.is_authenticated():

@@ -1,31 +1,43 @@
 # -*- coding: utf-8 -*-
-from south.utils import datetime_utils as datetime
+import datetime
 from south.db import db
 from south.v2 import DataMigration
 from django.db import models
+from django.core.files.base import ContentFile
+
+from bluebottle.utils.model_dispatcher import get_model_mapping
+from django.db import connection
+from bluebottle.clients.utils import LocalTenant
+
+MODEL_MAP = get_model_mapping()
+
 
 class Migration(DataMigration):
 
     def forwards(self, orm):
-        "Write your forwards methods here."
-        for partner in orm['projects.PartnerOrganization'].objects.all():
-            category = orm.Category.objects.create(
-                title=partner.name,
-                title_nl=partner.name,
-                title_en=partner.name,
-                description=partner.description,
-                description_nl=partner.description,
-                description_en=partner.description,
-                image=partner.image
-            )
-            category.save()
-            for project in orm['projects.Project'].objects.filter(partner_organization=partner).all():
-                project.categories.add(category)
+        with LocalTenant(connection.tenant):
+            for partner in orm['projects.PartnerOrganization'].objects.all():
+                category = orm.Category.objects.create(
+                    title=partner.name,
+                    description=partner.description,
+                )
+                category.slug = partner.slug
+                category.save()
+
+                try:
+                    file_contents = ContentFile(partner.image.read())
+                    category.image_logo.save(partner.image.name, file_contents)
+                    category.save()
+                except Exception as e:
+                    pass
+
+                for project in orm['projects.Project'].objects.filter(partner_organization=partner).all():
+                    project.categories.add(category)
+
 
     def backwards(self, orm):
         "Write your backwards methods here."
         orm.Category.objects.all().delete()
-
 
     models = {
         u'auth.group': {
@@ -65,13 +77,11 @@ class Migration(DataMigration):
         u'categories.category': {
             'Meta': {'object_name': 'Category'},
             'description': ('django.db.models.fields.TextField', [], {}),
-            'description_en': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'description_nl': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'image': ('bluebottle.utils.fields.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
-            'title_en': ('django.db.models.fields.CharField', [], {'max_length': '255', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
-            'title_nl': ('django.db.models.fields.CharField', [], {'max_length': '255', 'unique': 'True', 'null': 'True', 'blank': 'True'})
+            'image_logo': ('bluebottle.utils.fields.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
+            'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'})
         },
         u'contenttypes.contenttype': {
             'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},

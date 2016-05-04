@@ -9,4 +9,4 @@ class StatisticSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Statistic
-        fields = ('id', 'title', 'type', 'value')
+        fields = ('id', 'title', 'type', 'value', 'language')

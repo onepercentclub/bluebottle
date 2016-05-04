@@ -45,11 +45,6 @@ LANGUAGE_CODE = 'en'
 # django.utils.translation -- that module depends on the settings.
 gettext_noop = lambda s: s
 
-LANGUAGES = (
-    ('nl', gettext_noop('Dutch')),
-    ('en', gettext_noop('English')),
-)
-
 SITE_ID = 1
 
 # If you set this to False, Django will make some optimizations so as not

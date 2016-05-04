@@ -148,6 +148,8 @@ class ProjectPreviewSerializer(ProjectSerializer):
 
     owner = get_serializer_class('AUTH_USER_MODEL', 'preview')()
 
+    categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
+
     class Meta:
         model = PROJECT_MODEL
         fields = ('id', 'title', 'status', 'image', 'country', 'pitch',

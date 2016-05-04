@@ -58,7 +58,7 @@ class ProjectManager(models.Manager):
 
         category = query.get('category', None)
         if category:
-            qs = qs.filter(categories__in=[category])
+            qs = qs.filter(categories__slug=category)
 
         theme = query.get('theme', None)
         if theme:

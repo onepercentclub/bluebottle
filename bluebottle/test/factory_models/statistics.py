@@ -11,3 +11,4 @@ class StatisticFactory(factory.DjangoModelFactory):
     value = None
     sequence = factory.Sequence(lambda n: n)
     active = True
+    language = 'en'

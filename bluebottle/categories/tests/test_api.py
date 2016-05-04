@@ -19,10 +19,8 @@ class CategoriesTestCase(BluebottleTestCase):
 
     def test_partner_project(self):
         cat = {
-            'title_en': 'Nice things',
-            'title_nl': 'Leuke dingen',
-            'description_nl': 'Tralala bla bla',
-            'description_en': 'Chit chat blah blah'
+            'title': 'Nice things',
+            'description': 'Chit chat blah blah'
         }
 
         CategoryFactory.create(**cat)
@@ -33,13 +31,13 @@ class CategoriesTestCase(BluebottleTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEquals(len(data), 1)
-        self.assertEquals(data[0]['title'], cat['title_en'])
+        self.assertEquals(data[0]['title'], cat['title'])
 
         # Confirm that we can restrieve dutch titles too.
         response = self.client.get(url, {'language': 'nl'})
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
         self.assertEquals(len(data), 1)
-        self.assertEquals(data[0]['title'], cat['title_nl'])
+        self.assertEquals(data[0]['title'], cat['title'])
 
 

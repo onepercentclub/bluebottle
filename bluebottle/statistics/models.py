@@ -1,11 +1,17 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.utils.functional import lazy
 
 from djchoices import DjangoChoices, ChoiceItem
 from django_extensions.db.fields import CreationDateTimeField, \
     ModificationDateTimeField
 
+from bluebottle.clients import properties
 from bluebottle.statistics.statistics import Statistics
+
+
+def get_languages():
+    return properties.LANGUAGES
 
 
 class Statistic(models.Model):
@@ -23,6 +29,7 @@ class Statistic(models.Model):
         votes_cast = ChoiceItem('votes_cast', label=_("Number of votes cast"))
 
     title = models.CharField(_("Title"), max_length=100, blank=True)
+
     type = models.CharField(_('Type'), max_length=20,
                             choices=StatisticType.choices,
                             default=StatisticType.manual, db_index=True)
@@ -31,6 +38,12 @@ class Statistic(models.Model):
     active = models.BooleanField(help_text=_('Should this be shown or hidden.'))
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
+    language = models.CharField(
+        _('language'),
+        max_length=5,
+        blank=True,
+        null=True,
+        choices=lazy(get_languages, tuple)())
 
     def __unicode__(self):
         return self.title
@@ -40,7 +53,6 @@ class Statistic(models.Model):
         if self.value:
             return self.value
         return getattr(Statistics(), self.type, 0)
-
 
     class Meta:
         ordering = ('sequence', )

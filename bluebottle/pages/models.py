@@ -3,6 +3,7 @@ from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
+from django.utils.functional import lazy
 
 from django_extensions.db.fields import (
     CreationDateTimeField, ModificationDateTimeField)
@@ -11,6 +12,7 @@ from fluent_contents.models import PlaceholderField
 from fluent_contents.rendering import render_placeholder
 
 from bluebottle.utils.serializers import MLStripper
+from bluebottle.clients import properties
 
 GROUP_PERMS = {
     'Staff': {
@@ -19,6 +21,10 @@ GROUP_PERMS = {
         )
     }
 }
+
+
+def get_languages():
+    return properties.LANGUAGES
 
 
 class Page(models.Model):
@@ -37,7 +43,9 @@ class Page(models.Model):
 
     # Contents
     language = models.CharField(
-        _('language'), max_length=5, choices=settings.LANGUAGES)
+        _('language'),
+        max_length=5,
+        choices=lazy(get_languages, tuple)())
     body = PlaceholderField('blog_contents')
 
     # Publication

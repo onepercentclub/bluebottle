@@ -82,7 +82,7 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
                 if getattr(previous, prop) != getattr(obj, prop):
                     raise PermissionDenied
 
-        except AttributeError, KeyError:
+        except (AttributeError, KeyError):
             # Continue if the tenant doesn't have read-only fields
             super(ManageProfileDetail, self).pre_save(obj)
 

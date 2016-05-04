@@ -12,12 +12,10 @@ class Migration(SchemaMigration):
         db.create_table(u'categories_category', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('title', self.gf('django.db.models.fields.CharField')(unique=True, max_length=255)),
-            ('title_nl', self.gf('django.db.models.fields.CharField')(max_length=255, unique=True, null=True, blank=True)),
-            ('title_en', self.gf('django.db.models.fields.CharField')(max_length=255, unique=True, null=True, blank=True)),
+            ('slug', self.gf('django.db.models.fields.SlugField')(unique=True, max_length=100)),
             ('description', self.gf('django.db.models.fields.TextField')()),
-            ('description_nl', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('description_en', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
             ('image', self.gf('bluebottle.utils.fields.ImageField')(max_length=255, null=True, blank=True)),
+            ('image_logo', self.gf('bluebottle.utils.fields.ImageField')(max_length=255, null=True, blank=True)),
         ))
         db.send_create_signal(u'categories', ['Category'])
 
@@ -31,13 +29,11 @@ class Migration(SchemaMigration):
         u'categories.category': {
             'Meta': {'object_name': 'Category'},
             'description': ('django.db.models.fields.TextField', [], {}),
-            'description_en': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'description_nl': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'image': ('bluebottle.utils.fields.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
-            'title_en': ('django.db.models.fields.CharField', [], {'max_length': '255', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
-            'title_nl': ('django.db.models.fields.CharField', [], {'max_length': '255', 'unique': 'True', 'null': 'True', 'blank': 'True'})
+            'image_logo': ('bluebottle.utils.fields.ImageField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '100'}),
+            'title': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'})
         }
     }
 

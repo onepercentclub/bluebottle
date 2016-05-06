@@ -27,7 +27,8 @@ class ValidDonationsMixin(object):
     """
     def get_queryset(self):
         queryset = super(ValidDonationsMixin, self).get_queryset()
-        queryset = queryset.filter(order__status__in=[StatusDefinition.SUCCESS,
+        queryset = queryset.filter(order__status__in=[StatusDefinition.PLEDGED,
+                                                      StatusDefinition.SUCCESS,
                                                       StatusDefinition.PENDING])
         return queryset
 

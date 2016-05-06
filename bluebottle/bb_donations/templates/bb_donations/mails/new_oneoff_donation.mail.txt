@@ -1,17 +1,20 @@
-{% extends "base.mail.txt" %}
+{% extends "base.mail.html" %}
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with amount=amount donor_name=donor_name site=site link=link %}
+    {% if pledged %}
+        {% blocktrans with donor_name=donation.user.first_name first_name=donation.project.owner.full_name slug=donation.project.slug %}
 
-Hello {{ first_name }},
+        Hello {{ first_name }}, you've just received an invoiced donation by {{ donor_name }}. The amount will be transfered directly to your bank account by {{donor_name}}. If not, please contact the user via <email for platform admin>.
+        {% endblocktrans %}
+    {% else %}
+        {% blocktrans with donor_name=donation.user.first_name first_name=donation.project.owner.full_name slug=donation.project.slug%}
 
-You received a EUR {{ amount }} donation from {{ donor_name }}.
+        Hello {{ first_name }}, you received a donation from {{ donor_name }}. Quickly thank your supporter by posting a personal message on your project page.
+        {% endblocktrans %}
+    {% endif %}
+    
+    {% include 'bb_donations/mails/donation.html' %}
+    {% include 'bb_donations/mails/payment_details.html' %}
 
-Quickly thank your supporter by posting a personal message on your project page.
-{% endblocktrans %}
-{% endblock %}
-
-{% block action %}
-{% trans 'Say thanks' context 'email' %}: {{ site }}{{ link }}
-{% endblock %}
+{% endblock content %} 

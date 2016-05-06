@@ -112,6 +112,7 @@ def new_oneoff_donation(instance):
             subject=subject,
             to=receiver,
             link=project_url,
+            donor_name=donor_name,
             donation=donation,
             pledged=pledged,
             admin_email=admin_email,

@@ -17,7 +17,10 @@ from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 
 
-@override_settings(SEND_WELCOME_MAIL=False)
+@override_settings(
+    SEND_WELCOME_MAIL=False,
+    MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
+                                  'properties'))
 class TestPledgeMails(BluebottleTestCase):
     """
     Test the sending of email notifications when a Task' status changes
@@ -38,26 +41,29 @@ class TestPledgeMails(BluebottleTestCase):
         self.order = OrderFactory.create(user=self.user)
         self.donation = DonationFactory(amount=60, order=self.order, project=self.project, fundraiser=None)
 
-    @override_settings(
-        MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
-                                      'properties'))
-    def test_project_owner_mail(self):
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='pledgeStandard')
         self.order_payment.pledged()
 
+    def test_platform_admin_mail(self):
         body = mail.outbox[0].body
-        self.assertEquals(len(mail.outbox), 2)
-        self.assertNotEquals(body.find("received an invoiced donation"), -1)
+
+        self.assertEquals(len(mail.outbox), 3)
+        self.assertTrue("A project just received an invoiced donation" in body)
+        self.assertTrue(self.user.full_name in body)
+
+    def test_project_owner_mail(self):
+        body = mail.outbox[1].body
+
+        self.assertEquals(len(mail.outbox), 3)
+        self.assertTrue("received an invoiced donation" in body)
+        self.assertTrue(self.user.full_name in body)
 
         self.assertTrue('admin@example.com' in body, 'Email includes tenant admin address')
 
     def test_donator_mail(self):
-        self.order_payment = OrderPaymentFactory.create(order=self.order,
-                                                        payment_method='pledgeStandard')
-        self.order_payment.pledged()
+        body = mail.outbox[2].body
 
-        self.assertEquals(len(mail.outbox), 2)
-        body = mail.outbox[1].body
-        self.assertNotEquals(body.find("Please transfer the amount of"), -1)
-        self.assertNotEquals(body.find("Invoiced"), -1)
+        self.assertEquals(len(mail.outbox), 3)
+        self.assertTrue("Please transfer the amount of" in body)
+        self.assertTrue("Invoiced" in body)

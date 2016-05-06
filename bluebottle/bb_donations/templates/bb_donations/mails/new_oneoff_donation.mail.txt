@@ -5,7 +5,7 @@
     {% if pledged %}
         {% blocktrans with donor_name=donation.user.first_name first_name=donation.project.owner.full_name slug=donation.project.slug %}
 
-        Hello {{ first_name }}, you've just received an invoiced donation by {{ donor_name }}. The amount will be transfered directly to your bank account by {{donor_name}}. If not, please contact the user via <email for platform admin>.
+        Hello {{ first_name }}, you've just received an invoiced donation by {{ donor_name }}. The amount will be transfered directly to your bank account by {{donor_name}}. If not, please contact the user via {{ admin_email }}.
         {% endblocktrans %}
     {% else %}
         {% blocktrans with donor_name=donation.user.first_name first_name=donation.project.owner.full_name slug=donation.project.slug%}

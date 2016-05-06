@@ -1,7 +1,9 @@
 import logging
+import os
 
 from django.core import mail
 from django.test.utils import override_settings
+from django.conf import settings
 
 from mock import patch
 
@@ -36,13 +38,19 @@ class TestPledgeMails(BluebottleTestCase):
         self.order = OrderFactory.create(user=self.user)
         self.donation = DonationFactory(amount=60, order=self.order, project=self.project, fundraiser=None)
 
+    @override_settings(
+        MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
+                                      'properties'))
     def test_project_owner_mail(self):
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='pledgeStandard')
         self.order_payment.pledged()
 
+        body = mail.outbox[0].body
         self.assertEquals(len(mail.outbox), 2)
-        self.assertNotEquals(mail.outbox[0].body.find("You received a"), -1)
+        self.assertNotEquals(body.find("received an invoiced donation"), -1)
+
+        self.assertTrue('admin@example.com' in body, 'Email includes tenant admin address')
 
     def test_donator_mail(self):
         self.order_payment = OrderPaymentFactory.create(order=self.order,
@@ -52,4 +60,4 @@ class TestPledgeMails(BluebottleTestCase):
         self.assertEquals(len(mail.outbox), 2)
         body = mail.outbox[1].body
         self.assertNotEquals(body.find("Please transfer the amount of"), -1)
-        self.assertNotEquals(body.find("Method Invoiced"), -1)
+        self.assertNotEquals(body.find("Invoiced"), -1)

@@ -1,4 +1,5 @@
 from django.utils.translation import ugettext as _
+from django.db import connection
 
 from tenant_extras.utils import TenantLanguage
 
@@ -6,6 +7,7 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments.models import Payment
+from bluebottle.clients import properties
 
 
 def get_payment_method(donation):
@@ -80,6 +82,15 @@ def new_oneoff_donation(instance):
     project_url = '/projects/{0}'.format(donation.project.slug)
     pledged = (donation.order.status == StatusDefinition.PLEDGED)
 
+    # Setup tenant properties for accessing tenant admin email
+    if not properties.tenant_properties and connection.tenant:
+        properties.set_tenant(connection.tenant)
+
+    try:
+        admin_email = properties.TENANT_MAIL_PROPERTIES.get('address')
+    except AttributeError as e:
+        logger.critical('No mail properties found for {0}'.format(connection.tenant.client_name))
+
     if donation.project.owner.email:
         receiver = donation.project.owner
 
@@ -103,6 +114,7 @@ def new_oneoff_donation(instance):
             link=project_url,
             donation=donation,
             pledged=pledged,
+            admin_email=admin_email,
             payment_method=payment_method
         )
 

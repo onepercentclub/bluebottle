@@ -5,7 +5,7 @@
     {% if pledged %}
     {% blocktrans with first_name=donation.user.first_name initiator_name=donation.project.owner.full_name slug=donation.project.slug%}
 
-    Thanks {{first_name}}, for your invoiced donation. You rock! The project initiator {{initiator_name}} is awaiting the donation amount to be transferred to their bank account: 
+    Thanks {{first_name}}, for co-financing this project. The project initiator {{initiator_name}} has received an email with your pledge.
     {% endblocktrans %}
     {% else %}
     {% blocktrans with first_name=donation.user.first_name initiator=donation.project.owner.full_name %}

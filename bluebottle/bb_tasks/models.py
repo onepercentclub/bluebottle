@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db import models
 import django.db.models.options as options
 from django.utils.translation import ugettext as _
@@ -68,13 +67,13 @@ class BaseTaskMember(models.Model):
 
 
 class BaseTaskFile(models.Model):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
+    author = models.ForeignKey('members.Member',
                                related_name='%(app_label)s_%(class)s_related')
     title = models.CharField(max_length=255)
     file = models.FileField(_('file'), upload_to='task_files/')
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('Updated'))
-    task = models.ForeignKey(settings.TASKS_TASK_MODEL, related_name="files")
+    task = models.ForeignKey('tasks.Task', related_name="files")
 
     class Meta:
         abstract = True
@@ -96,10 +95,10 @@ class BaseTask(models.Model, GetTweetMixin):
                                 blank=True)
     people_needed = models.PositiveIntegerField(_('people needed'), default=1)
 
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    project = models.ForeignKey('projects.Project')
     # See Django docs on issues with related name and an (abstract) base class:
     # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
+    author = models.ForeignKey('members.Member',
                                related_name='%(app_label)s_%(class)s_related')
     status = models.CharField(
         _('status'), max_length=20, choices=TaskStatuses.choices,
@@ -117,7 +116,7 @@ class BaseTask(models.Model, GetTweetMixin):
         _('time_needed'),
         help_text=_('Estimated number of hours needed to perform this task.'))
 
-    skill = models.ForeignKey(settings.TASKS_SKILL_MODEL,
+    skill = models.ForeignKey('tasks.Skill',
                               verbose_name=_('Skill needed'), null=True)
 
     # internal usage

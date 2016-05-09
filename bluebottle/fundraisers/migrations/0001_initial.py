@@ -3,22 +3,18 @@
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding model 'Fundraiser'
-        db.create_table(MODEL_MAP['fundraiser']['table'], (
+        db.create_table('fundraisers_fundraiser', (
             (u'id',
              self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('owner', self.gf('django.db.models.fields.related.ForeignKey')(
-                to=orm[MODEL_MAP['user']['model']])),
+                to=orm['members.Member'])),
             ('project', self.gf('django.db.models.fields.related.ForeignKey')(
-                to=orm[MODEL_MAP['project']['model']])),
+                to=orm['projects.Project'])),
             ('title',
              self.gf('django.db.models.fields.CharField')(max_length=255)),
             ('description',
@@ -46,11 +42,11 @@ class Migration(SchemaMigration):
              self.gf('django.db.models.fields.DateTimeField')(null=True,
                                                               blank=True)),
         ))
-        db.send_create_signal(MODEL_MAP['fundraiser']['app'], ['Fundraiser'])
+        db.send_create_signal('fundraisers', ['Fundraiser'])
 
     def backwards(self, orm):
         # Deleting model 'Fundraiser'
-        db.delete_table(MODEL_MAP['fundraiser']['table'])
+        db.delete_table('fundraisers_fundraiser')
 
     models = {
         u'auth.group': {
@@ -126,8 +122,8 @@ class Migration(SchemaMigration):
             'name': (
             'django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        MODEL_MAP['fundraiser']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['fundraiser']['class']},
+        u'fundraisers.fundraiser': {
+            'Meta': {'object_name': 'Fundraiser'},
             'amount': ('django.db.models.fields.PositiveIntegerField', [], {}),
             'created': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
@@ -144,9 +140,9 @@ class Migration(SchemaMigration):
             'image': ('sorl.thumbnail.fields.ImageField', [],
                       {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [],
-                      {'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                      {'to': "orm['members.Member']"}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {
-            'to': "orm['{0}']".format(MODEL_MAP['project']['model'])}),
+            'to': "orm['projects.Project']"}),
             'title': (
             'django.db.models.fields.CharField', [], {'max_length': '255'}),
             'updated': ('django.db.models.fields.DateTimeField', [],
@@ -195,8 +191,8 @@ class Migration(SchemaMigration):
             'region': ('django.db.models.fields.related.ForeignKey', [],
                        {'to': u"orm['geo.Region']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.CharField', [],
@@ -270,9 +266,9 @@ class Migration(SchemaMigration):
             'why': ('django.db.models.fields.TextField', [],
                     {'max_length': '265', 'blank': 'True'})
         },
-        MODEL_MAP['organization']['model_lower']: {
+        u'organizations.organization': {
             'Meta': {'ordering': "['name']",
-                     'object_name': MODEL_MAP['organization']['class']},
+                     'object_name': 'Organization'},
             'account_bank_address': ('django.db.models.fields.CharField', [],
                                      {'max_length': '255', 'blank': 'True'}),
             'account_bank_city': ('django.db.models.fields.CharField', [],
@@ -362,9 +358,9 @@ class Migration(SchemaMigration):
             'slug': ('django.db.models.fields.SlugField', [],
                      {'unique': 'True', 'max_length': '100'})
         },
-        MODEL_MAP['project']['model_lower']: {
+        u'projects.project': {
             'Meta': {'ordering': "['title']",
-                     'object_name': MODEL_MAP['project']['class']},
+                     'object_name': 'Project'},
             'allow_overfunding': (
             'django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'amount_asked': ('bluebottle.bb_projects.fields.MoneyField', [],
@@ -422,11 +418,10 @@ class Migration(SchemaMigration):
                                  'blank': 'True'}),
             'organization': ('django.db.models.fields.related.ForeignKey', [],
                              {'blank': 'True', 'related_name': "'organization'",
-                              'null': 'True', 'to': "orm['{0}']".format(
-                                 MODEL_MAP['organization']['model'])}),
+                              'null': 'True', 'to': "orm['organizations.Organization']"}),
             'owner': ('django.db.models.fields.related.ForeignKey', [],
                       {'related_name': "'owner'",
-                       'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                       'to': "orm['members.Member']"}),
             'partner_organization': (
             'django.db.models.fields.related.ForeignKey', [],
             {'to': u"orm['projects.PartnerOrganization']", 'null': 'True',
@@ -492,4 +487,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = [MODEL_MAP['fundraiser']['app']]
+    complete_apps = ['fundraisers']

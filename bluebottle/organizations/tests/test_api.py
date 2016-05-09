@@ -1,12 +1,14 @@
 import json
 
 from django.core.urlresolvers import reverse
+
+from bluebottle.organizations.models import Organization
 from bluebottle.test.utils import BluebottleTestCase
 from rest_framework import status
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
-    OrganizationFactory, OrganizationMemberFactory, Organization)
+    OrganizationFactory, OrganizationMemberFactory)
 
 
 class OrganizationsEndpointTestCase(BluebottleTestCase):
@@ -36,19 +38,10 @@ class OrganizationsEndpointTestCase(BluebottleTestCase):
         self.member_3 = OrganizationMemberFactory.create(
             user=self.user_2, organization=self.organization_3)
 
-        # self.organization_1.members.add(self.member_1)
-        # self.organization_1.save()
-        # self.organization_2.members.add(self.member_1)
-        # self.organization_2.save()
-        # self.organization_3.members.add(self.member_2)
-        # self.organization_3.save()
-
 
 class OrganizationListTestCase(OrganizationsEndpointTestCase):
     """
     Test case for ``OrganizationsList`` API view.
-
-    Endpoint: /api/bb_organizations/
     """
 
     def test_api_organizations_list_endpoint(self):

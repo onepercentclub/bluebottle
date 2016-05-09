@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.utils.translation import ugettext as _
+from django.db import models
 
 from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
 from bluebottle.clients import properties
@@ -189,8 +190,8 @@ class OrganizationPayout(BaseOrganizationPayout):
 
         # Return aggregated value or 0.00
         fee = aggregate.get(
-            'organization_fee__sum', decimal.Decimal('0.00')
-        ) or decimal.Decimal('0.00')
+            'organization_fee__sum', Decimal('0.00')
+        ) or Decimal('0.00')
 
         return fee
 

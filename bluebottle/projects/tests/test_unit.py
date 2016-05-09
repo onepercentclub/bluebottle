@@ -104,6 +104,10 @@ class TestProjectStatusUpdate(BluebottleTestCase):
 
 
 class TestProjectPhaseLog(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectPhaseLog, self).setUp()
+        self.init_projects()
+
     def test_create_phase_log(self):
         phase1 = ProjectPhaseFactory.create()
         phase2 = ProjectPhaseFactory.create()

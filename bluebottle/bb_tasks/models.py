@@ -8,7 +8,6 @@ from django_extensions.db.fields import (
 from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
 
-from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.utils import GetTweetMixin
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
@@ -35,9 +34,9 @@ class BaseTaskMember(models.Model):
         stopped = ChoiceItem('stopped', label=_('Stopped'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
-    member = models.ForeignKey(settings.AUTH_USER_MODEL,
+    member = models.ForeignKey('members.Member',
                                related_name='%(app_label)s_%(class)s_related')
-    task = models.ForeignKey(settings.TASKS_TASK_MODEL, related_name="members")
+    task = models.ForeignKey('tasks.Task', related_name="members")
     status = models.CharField(_('status'), max_length=20,
                               choices=TaskMemberStatuses.choices,
                               default=TaskMemberStatuses.applied)
@@ -66,31 +65,6 @@ class BaseTaskMember(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(BaseTaskMember, self).__init__(*args, **kwargs)
-
-    def save(self, *args, **kwargs):
-        super(BaseTaskMember, self).save(*args, **kwargs)
-        self.check_number_of_members_needed(self.task)
-
-    def check_number_of_members_needed(self, task):
-        members = TaskMember.objects.filter(task=task,
-                                                        status='accepted')
-        total_externals = 0
-        for member in members:
-            total_externals += member.externals
-
-        members_accepted = members.count() + total_externals
-
-        if task.status == 'open' and task.people_needed <= members_accepted:
-            task.set_in_progress()
-        return members_accepted
-
-    def get_member_email(self):
-        if self.member.email:
-            return self.member.email
-        return _("No email address for this user")
-
-    get_member_email.admin_order_field = 'member__email'
-    get_member_email.short_description = "Member Email"
 
 
 class BaseTaskFile(models.Model):

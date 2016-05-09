@@ -109,7 +109,31 @@ class Skill(BaseSkill):
 
 
 class TaskMember(BaseTaskMember):
-    pass
+    def save(self, *args, **kwargs):
+        super(TaskMember, self).save(*args, **kwargs)
+        self.check_number_of_members_needed(self.task)
+
+    # TODO: refactor this to use a signal and move code to task model
+    def check_number_of_members_needed(self, task):
+        members = TaskMember.objects.filter(task=task,
+                                                        status='accepted')
+        total_externals = 0
+        for member in members:
+            total_externals += member.externals
+
+        members_accepted = members.count() + total_externals
+
+        if task.status == 'open' and task.people_needed <= members_accepted:
+            task.set_in_progress()
+        return members_accepted
+
+    def get_member_email(self):
+        if self.member.email:
+            return self.member.email
+        return _("No email address for this user")
+
+    get_member_email.admin_order_field = 'member__email'
+    get_member_email.short_description = "Member Email"
 
 
 class TaskFile(BaseTaskFile):

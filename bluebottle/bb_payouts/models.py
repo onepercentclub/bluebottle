@@ -18,7 +18,6 @@ from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.models import OrderPayment
-from bluebottle.payouts.models import ProjectPayout
 from bluebottle.projects.models import Project
 from bluebottle.utils.utils import StatusDefinition
 
@@ -517,29 +516,6 @@ class BaseOrganizationPayout(PayoutBase):
         ordering = ['start_date']
         abstract = True
 
-    def _get_organization_fee(self):
-        """
-        Calculate and return the organization fee for Payouts within this
-        OrganizationPayout's period, including VAT.
-
-        Note: this should *only* be called internally.
-        """
-        # Get Payouts
-        payouts = ProjectPayout.objects.filter(
-            completed__gte=self.start_date,
-            completed__lte=self.end_date
-        )
-
-        # Aggregate value
-        aggregate = payouts.aggregate(models.Sum('organization_fee'))
-
-        # Return aggregated value or 0.00
-        fee = aggregate.get(
-            'organization_fee__sum', decimal.Decimal('0.00')
-        ) or decimal.Decimal('0.00')
-
-        return fee
-
     def _get_psp_fee(self):
         """
         Calculate and return Payment Service Provider fee from
@@ -707,7 +683,7 @@ class BaseOrganizationPayout(PayoutBase):
 
 
 class OrganizationPayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(settings.PAYOUTS_ORGANIZATIONPAYOUT_MODEL,
+    payout = models.ForeignKey('payouts.OrganizationPayout',
                                related_name='payout_logs')
 
 # Connect signals after defining models

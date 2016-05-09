@@ -171,6 +171,30 @@ class ProjectPayout(BaseProjectPayout):
 
 
 class OrganizationPayout(BaseOrganizationPayout):
+    def _get_organization_fee(self):
+        """
+        Calculate and return the organization fee for Payouts within this
+        OrganizationPayout's period, including VAT.
+
+        Note: this should *only* be called internally.
+        """
+        # Get Payouts
+        payouts = ProjectPayout.objects.filter(
+            completed__gte=self.start_date,
+            completed__lte=self.end_date
+        )
+
+        # Aggregate value
+        aggregate = payouts.aggregate(models.Sum('organization_fee'))
+
+        # Return aggregated value or 0.00
+        fee = aggregate.get(
+            'organization_fee__sum', decimal.Decimal('0.00')
+        ) or decimal.Decimal('0.00')
+
+        return fee
+
+    
     @classmethod
     def create_sepa_xml(cls, qs):
         """ Create a SEPA XML file for OrganizationPayouts in QuerySet. """

@@ -1,11 +1,12 @@
 from django.db import models
+from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import cached_property
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.projects.models import Project
 from bluebottle.fundraisers.models import Fundraiser
-from bluebottle.tasks.models import Task
+from bluebottle.tasks.models import TaskMember
 
 GROUP_PERMS = {
     'Staff': {
@@ -23,7 +24,7 @@ class Member(BlueBottleBaseUser):
                                  null=True)
 
     def get_tasks_qs(self):
-        return Task.objects.filter(
+        return TaskMember.objects.filter(
             member=self, status__in=['applied', 'accepted', 'realized'])
 
     @property

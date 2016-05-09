@@ -9,7 +9,7 @@ from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from django_fsm.db.fields import FSMField, transition
 
-from bluebottle.utils.model_dispatcher import get_donation_model
+from bluebottle.donations.models import Donation
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
@@ -98,8 +98,7 @@ class BaseOrder(models.Model, FSMTransition):
         self.confirmed = None
 
     def update_total(self, save=True):
-        DONATION_MODEL = get_donation_model()
-        donations = DONATION_MODEL.objects.filter(order=self)
+        donations = Donation.objects.filter(order=self)
         self.total = donations.aggregate(Sum('amount'))['amount__sum'] or 0
         if save:
             self.save()

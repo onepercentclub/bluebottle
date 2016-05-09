@@ -3,7 +3,6 @@ import datetime
 from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 
-from django.conf import settings
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import post_save
@@ -19,14 +18,12 @@ from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.models import OrderPayment
+from bluebottle.payouts.models import ProjectPayout
+from bluebottle.projects.models import Project
 from bluebottle.utils.utils import StatusDefinition
 
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
-from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_project_payout_model
 from bluebottle.utils.utils import FSMTransition
-
-PROJECT_MODEL = get_project_model()
-DONATION_MODEL = get_donation_model()
 
 
 class InvoiceReferenceMixin(models.Model):
@@ -264,7 +261,7 @@ class BaseProjectPayout(PayoutBase):
         not_fully_funded = ChoiceItem('not_fully_funded',
                                       label=_("Not fully funded"))
 
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    project = models.ForeignKey('projects.Project')
 
     payout_rule = models.CharField(_("Payout rule"), max_length=20, help_text=_(
         "The payout rule for this project."))
@@ -465,7 +462,7 @@ class BaseProjectPayout(PayoutBase):
 
 
 class ProjectPayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(settings.PAYOUTS_PROJECTPAYOUT_MODEL,
+    payout = models.ForeignKey('payouts.ProjectPayout',
                                related_name='payout_logs')
 
 
@@ -527,9 +524,8 @@ class BaseOrganizationPayout(PayoutBase):
 
         Note: this should *only* be called internally.
         """
-        PROJECT_PAYOUT_MODEL = get_project_payout_model()
         # Get Payouts
-        payouts = PROJECT_PAYOUT_MODEL.objects.filter(
+        payouts = ProjectPayout.objects.filter(
             completed__gte=self.start_date,
             completed__lte=self.end_date
         )
@@ -721,4 +717,4 @@ class OrganizationPayoutLog(PayoutLogBase):
 from .signals import create_payout_finished_project
 
 post_save.connect(create_payout_finished_project, weak=False,
-                  sender=PROJECT_MODEL)
+                  sender=Project)

@@ -21,11 +21,8 @@ from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bb_accounts.utils import valid_email
-from bluebottle.utils.model_dispatcher import (get_task_model,
-                                               get_taskmember_model,
-                                               get_donation_model,
-                                               get_project_model,
-                                               get_fundraiser_model)
+from bluebottle.donations.models import Donation
+from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.clients import properties
 from bluebottle.geo.models import Country
@@ -321,8 +318,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         Returns the number of tasks a user is the author of  and / or is a
         task member in
         """
-        task_count = get_task_model().objects.filter(author=self).count()
-        taskmember_count = get_taskmember_model().objects.filter(
+        task_count = Task.objects.filter(author=self).count()
+        taskmember_count = TaskMember.objects.filter(
             member=self, status__in=['applied', 'accepted', 'realized']).count()
 
         return task_count + taskmember_count
@@ -330,11 +327,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def tasks_performed(self):
         """ Returns the number of tasks that the user participated in."""
-        return get_taskmember_model().objects.filter(
+        return TaskMember.objects.filter(
             member=self, status='realized').count()
 
     def get_donations_qs(self):
-        qs = get_donation_model().objects.filter(order__user=self)
+        qs = Donation.objects.filter(order__user=self)
         return qs.filter(order__status__in=[StatusDefinition.PENDING,
                                             StatusDefinition.SUCCESS])
 

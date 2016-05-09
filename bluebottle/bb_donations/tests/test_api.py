@@ -1,6 +1,8 @@
 import json
 from mock import patch
 
+from bluebottle.donations.models import Donation
+from bluebottle.orders.models import Order
 from bluebottle.test.utils import BluebottleTestCase, SessionTestMixin
 from django.conf import settings
 
@@ -11,7 +13,6 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.utils.model_dispatcher import get_order_model, get_model_class
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
 
@@ -20,9 +21,6 @@ from django.utils.importlib import import_module
 from bluebottle.utils.utils import StatusDefinition
 
 from rest_framework import status
-
-ORDER_MODEL = get_order_model()
-DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 
 
 class DonationApiTestCase(BluebottleTestCase, SessionTestMixin):
@@ -66,12 +64,12 @@ class TestDonationPermissions(DonationApiTestCase):
             "amount": 35
         }
 
-        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+        self.assertEqual(Donation.objects.count(), 0)
         response = self.client.post(reverse('manage-donation-list'), donation1,
                                     token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        self.assertEqual(Donation.objects.count(), 1)
 
     def test_user_is_not_order_owner(self, mock_check_status_psp):
         """ Test that a user who is not owner of an order cannot create a new donation """
@@ -82,12 +80,12 @@ class TestDonationPermissions(DonationApiTestCase):
             "amount": 35
         }
 
-        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+        self.assertEqual(Donation.objects.count(), 0)
         response = self.client.post(reverse('manage-donation-list'), donation1,
                                     token=self.user2_token)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+        self.assertEqual(Donation.objects.count(), 0)
 
     def test_order_status_not_new(self, mock_check_status_psp):
         """ Test that a non-new order status produces a forbidden response """
@@ -101,12 +99,12 @@ class TestDonationPermissions(DonationApiTestCase):
             "amount": 35
         }
 
-        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+        self.assertEqual(Donation.objects.count(), 0)
         response = self.client.post(reverse('manage-donation-list'), donation1,
                                     token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+        self.assertEqual(Donation.objects.count(), 0)
 
     def test_order_status_new(self, mock_check_status_psp):
         """ Test that a new order status produces a 201 created response """
@@ -120,12 +118,12 @@ class TestDonationPermissions(DonationApiTestCase):
             "amount": 35
         }
 
-        self.assertEqual(DONATION_MODEL.objects.count(), 0)
+        self.assertEqual(Donation.objects.count(), 0)
         response = self.client.post(reverse('manage-donation-list'), donation1,
                                     token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        self.assertEqual(Donation.objects.count(), 1)
 
     def test_donation_update_not_same_owner(self, mock_check_status_psp):
         """ Test that an update to a donation where the user is not the owner produces a 403"""
@@ -138,7 +136,7 @@ class TestDonationPermissions(DonationApiTestCase):
             "amount": 50
         }
 
-        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        self.assertEqual(Donation.objects.count(), 1)
         response = self.client.put(reverse('manage-donation-detail',
                                            kwargs={'pk': donation.id}),
                                    updated_donation,
@@ -158,14 +156,14 @@ class TestDonationPermissions(DonationApiTestCase):
             "amount": 50
         }
 
-        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        self.assertEqual(Donation.objects.count(), 1)
         response = self.client.put(reverse('manage-donation-detail',
                                            kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        self.assertEqual(Donation.objects.count(), 1)
 
     def test_donation_update_order_not_new(self, mock_check_status_psp):
         """ Test that an update to a donation where the order does not have status CREATED produces 403 FORBIDDEN"""
@@ -181,14 +179,14 @@ class TestDonationPermissions(DonationApiTestCase):
             "amount": 50
         }
 
-        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        self.assertEqual(Donation.objects.count(), 1)
         response = self.client.put(reverse('manage-donation-detail',
                                            kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        self.assertEqual(Donation.objects.count(), 1)
 
     def test_donation_update_order_new(self, mock_check_status_psp):
         """ Test that an update to a donation where the order does has status CREATED produces 200 OK response"""
@@ -204,14 +202,14 @@ class TestDonationPermissions(DonationApiTestCase):
             "amount": 50
         }
 
-        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        self.assertEqual(Donation.objects.count(), 1)
         response = self.client.put(reverse('manage-donation-detail',
                                            kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        self.assertEqual(Donation.objects.count(), 1)
 
 
 # Mock the ManageOrderDetail check_status_psp function which will request status_check at PSP
@@ -347,7 +345,7 @@ class TestCreateDonation(DonationApiTestCase):
         self.assertEqual(response.data['total'], 47)
 
         # Set order to status 'locked'
-        order = ORDER_MODEL.objects.get(id=order_id)
+        order = Order.objects.get(id=order_id)
         order.locked()
 
         donation3 = {

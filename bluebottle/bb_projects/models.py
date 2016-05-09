@@ -1,12 +1,9 @@
-from datetime import datetime
-
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Count, Sum, options
 from django.template.defaultfilters import slugify
-from django.utils.timezone import now
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 from django.utils.timezone import now
@@ -19,8 +16,8 @@ from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
 
 from bluebottle.bb_projects.fields import MoneyField
-from bluebottle.utils.model_dispatcher import (get_project_phaselog_model,
-                                               get_taskmember_model)
+from bluebottle.projects.models import ProjectDocument
+from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
@@ -114,9 +111,7 @@ class BaseProjectDocument(models.Model):
 
     @property
     def document_url(self):
-        from bluebottle.utils.model_dispatcher import get_project_document_model
-        document_model = get_project_document_model()
-        content_type = ContentType.objects.get_for_model(document_model).id
+        content_type = ContentType.objects.get_for_model(ProjectDocument).id
         # pk may be unset if not saved yet, in which case no url can be
         # generated.
         if self.pk is not None:
@@ -278,7 +273,7 @@ class BaseProject(models.Model, GetTweetMixin):
 
         # Only log project phase if the status has changed
         if self is not None and previous_status != self.status:
-            get_project_phaselog_model().objects.create(
+            ProjectPhase.objects.create(
                 project=self, status=self.status)
 
     def update_amounts(self, save=True):
@@ -346,7 +341,7 @@ class BaseProject(models.Model, GetTweetMixin):
 
     @cached_property
     def sourcing(self):
-        taskmembers = get_taskmember_model().objects.filter(
+        taskmembers = TaskMember.objects.filter(
             task__project=self,
             status__in=['applied', 'accepted', 'realized']
         ).distinct('member')

@@ -3,12 +3,7 @@ from django.utils.timezone import now
 
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, \
     BaseSkill
-from bluebottle.clients.utils import tenant_url
-from bluebottle.utils.email_backend import send_mail
-from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
-
-from tenant_extras.utils import TenantLanguage
 
 GROUP_PERMS = {
     'Staff': {

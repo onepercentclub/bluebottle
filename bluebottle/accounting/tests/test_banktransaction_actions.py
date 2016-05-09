@@ -9,6 +9,7 @@ from django.utils.translation import ugettext as _
 
 from django_webtest import WebTestMixin
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.payouts.models import OrganizationPayout
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -16,7 +17,6 @@ from bluebottle.test.factory_models.accounting import BankTransactionFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.bb_payouts.models import BaseProjectPayout
-from bluebottle.utils.model_dispatcher import get_organization_payout_model
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments_manual.models import ManualPayment
 from ..models import BankTransaction
@@ -91,7 +91,6 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
 
         # create an organization payout
         now = date.today()
-        OrganizationPayout = get_organization_payout_model()
         self.org_payout = OrganizationPayout(
             start_date=now - timedelta(days=7),
             end_date=now + timedelta(days=7),

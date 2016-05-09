@@ -1,4 +1,3 @@
-from bluebottle.utils.model_dispatcher import get_taskmember_model
 from django.conf import settings
 from django.db import models
 import django.db.models.options as options
@@ -8,9 +7,9 @@ from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
+
+from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.utils import GetTweetMixin
-
-
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
@@ -73,7 +72,7 @@ class BaseTaskMember(models.Model):
         self.check_number_of_members_needed(self.task)
 
     def check_number_of_members_needed(self, task):
-        members = get_taskmember_model().objects.filter(task=task,
+        members = TaskMember.objects.filter(task=task,
                                                         status='accepted')
         total_externals = 0
         for member in members:

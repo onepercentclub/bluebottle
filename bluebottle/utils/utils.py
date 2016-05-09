@@ -13,7 +13,6 @@ import pygeoip
 import logging
 
 from bluebottle.clients import properties
-from bluebottle.projects.models import Project
 
 
 def get_languages():
@@ -25,7 +24,7 @@ class GetTweetMixin:
         return self.get_meta_title()
 
     def get_meta_title(self, **kwargs):
-        if isinstance(self, Project):
+        if hasattr(self, 'country'):
             return u'{name_project} | {country}'.format(
                 name_project=self.title,
                 country=self.country.name if self.country else '')

@@ -49,7 +49,7 @@ class MonthlyDonorProject(models.Model):
     """
 
     donor = models.ForeignKey(MonthlyDonor, related_name='projects')
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    project = models.ForeignKey('projects.Project')
 
 
 class MonthlyBatch(models.Model):
@@ -71,7 +71,7 @@ class MonthlyProject(models.Model):
     """
 
     batch = models.ForeignKey(MonthlyBatch)
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    project = models.ForeignKey('projects.Project')
     amount = models.DecimalField(_("amount"), default=0, max_digits=6,
                                  decimal_places=2)
 
@@ -103,6 +103,6 @@ class MonthlyOrder(models.Model):
 class MonthlyDonation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     order = models.ForeignKey(MonthlyOrder, related_name='donations')
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    project = models.ForeignKey('projects.Project')
     amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
                                  default=0)

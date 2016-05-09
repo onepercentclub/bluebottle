@@ -143,7 +143,7 @@ class TestDonationPermissions(DonationApiTestCase):
                                    token=self.user2_token)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(DONATION_MODEL.objects.count(), 1)
+        self.assertEqual(Donation.objects.count(), 1)
 
     def test_donation_update_same_owner(self, mock_check_status_psp):
         """ Test that an update to a donation where the user is the owner produces a 200 OK"""

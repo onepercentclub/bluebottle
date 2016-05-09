@@ -1,18 +1,12 @@
 # -*- coding: utf-8 -*-
-# Generated with bb_schemamigration
-import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding field 'Order.order_type'
-        db.add_column(MODEL_MAP['order']['table'], 'order_type',
+        db.add_column('orders_order', 'order_type',
                       self.gf('django.db.models.fields.CharField')(
                           default='one-off', max_length='100', null=True,
                           blank=True),
@@ -20,7 +14,7 @@ class Migration(SchemaMigration):
 
     def backwards(self, orm):
         # Deleting field 'Order.order_type'
-        db.delete_column(MODEL_MAP['order']['table'], 'order_type')
+        db.delete_column('orders_order', 'order_type')
 
     models = {
         u'auth.group': {
@@ -62,8 +56,8 @@ class Migration(SchemaMigration):
             'name': (
             'django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members_member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.CharField', [],
@@ -137,8 +131,8 @@ class Migration(SchemaMigration):
             'why': ('django.db.models.fields.TextField', [],
                     {'max_length': '265', 'blank': 'True'})
         },
-        MODEL_MAP['order']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['order']['class']},
+        u'orders.order': {
+            'Meta': {'object_name': 'Order'},
             'completed': ('django.db.models.fields.DateTimeField', [],
                           {'null': 'True', 'blank': 'True'}),
             'confirmed': ('django.db.models.fields.DateTimeField', [],
@@ -185,4 +179,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = [MODEL_MAP['order']['app']]
+    complete_apps = ['orders']

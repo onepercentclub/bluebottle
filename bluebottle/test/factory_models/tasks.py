@@ -5,25 +5,20 @@ from django.utils.timezone import now
 import factory
 import factory.fuzzy
 
-from bluebottle.utils.model_dispatcher import get_task_model, \
-    get_taskmember_model, get_task_skill_model
+from bluebottle.tasks.models import Skill, Task, TaskMember
 from .accounts import BlueBottleUserFactory
 from .projects import ProjectFactory
 
-TASK_MODEL = get_task_model()
-TASK_MEMBER_MODEL = get_taskmember_model()
-TASK_SKILL_MODEL = get_task_skill_model()
-
 
 class SkillFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = TASK_SKILL_MODEL
+    FACTORY_FOR = Skill
 
     name = factory.Sequence(lambda n: 'Skill_{0}'.format(n))
     name_nl = factory.LazyAttribute(lambda o: o.name)
 
 
 class TaskFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = TASK_MODEL
+    FACTORY_FOR = Task
 
     author = factory.SubFactory(BlueBottleUserFactory)
     project = factory.SubFactory(ProjectFactory)
@@ -46,7 +41,7 @@ class TaskFactory(factory.DjangoModelFactory):
 
 
 class TaskMemberFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = TASK_MEMBER_MODEL
+    FACTORY_FOR = TaskMember
 
     member = factory.SubFactory(BlueBottleUserFactory)
     status = 'accepted'

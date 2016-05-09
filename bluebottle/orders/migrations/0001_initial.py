@@ -1,22 +1,17 @@
 # -*- coding: utf-8 -*-
-# Generated with bb_schemamigration
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding model 'Order'
-        db.create_table(MODEL_MAP['order']['table'], (
+        db.create_table('orders_order', (
             (u'id',
              self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(
-                to=orm[MODEL_MAP['user']['model']], null=True, blank=True)),
+                to=orm['members.Member'], null=True, blank=True)),
             ('status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(
                 default='created', max_length=50)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(
@@ -30,11 +25,11 @@ class Migration(SchemaMigration):
                                                                       max_digits=16,
                                                                       decimal_places=2)),
         ))
-        db.send_create_signal(MODEL_MAP['order']['app'], ['Order'])
+        db.send_create_signal('orders', ['Order'])
 
     def backwards(self, orm):
         # Deleting model 'Order'
-        db.delete_table(MODEL_MAP['order']['table'])
+        db.delete_table('orders_order')
 
     models = {
         u'auth.group': {
@@ -84,8 +79,8 @@ class Migration(SchemaMigration):
             'name': (
             'django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        MODEL_MAP['order']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['order']['class']},
+        u'orders.order': {
+            'Meta': {'object_name': 'Order'},
             'closed': ('django.db.models.fields.DateTimeField', [],
                        {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [],
@@ -125,8 +120,8 @@ class Migration(SchemaMigration):
                     {'related_name': "u'taggit_taggeditem_items'",
                      'to': u"orm['taggit.Tag']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [],
@@ -202,4 +197,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = [MODEL_MAP['order']['app']]
+    complete_apps = ['orders']

@@ -246,3 +246,4 @@ def update_group_permissions(sender, group_perms=None):
             group.save()
     except:
         pass
+

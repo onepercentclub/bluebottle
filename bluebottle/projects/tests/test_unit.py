@@ -2,10 +2,9 @@ from datetime import timedelta, time
 from django.utils import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.utils.model_dispatcher import get_project_model
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.projects.models import Project
+from bluebottle.projects.models import Project, ProjectPhaseLog
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.test.utils import BluebottleTestCase
@@ -16,8 +15,6 @@ from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
 from bluebottle.suggestions.models import Suggestion
-
-PROJECT_MODEL = get_project_model()
 
 
 class TestProjectStatusUpdate(BluebottleTestCase):
@@ -106,7 +103,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.failUnless(self.expired_project.status == self.complete)
 
 
-class TestProjectPhaseLog(TestProjectTestCase):
+class TestProjectPhaseLog(BluebottleTestCase):
     def test_create_phase_log(self):
         phase1 = ProjectPhaseFactory.create()
         phase2 = ProjectPhaseFactory.create()

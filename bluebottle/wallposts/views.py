@@ -6,10 +6,8 @@ from rest_framework import permissions, exceptions
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.bluebottle_drf2.views import (
     ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView)
-from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_fundraiser_model,
-                                               get_task_model)
 from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
+from bluebottle.projects.models import Project
 
 from .models import (TextWallpost, MediaWallpost, MediaWallpostPhoto,
                      Wallpost, Reaction)
@@ -19,10 +17,6 @@ from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
 from .permissions import IsConnectedWallpostAuthorOrReadOnly
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
-
-PROJECT_MODEL = get_project_model()
-FUNDRAISER_MODEL = get_fundraiser_model()
-TASK_MODEL = get_task_model()
 
 
 class WallpostFilter(django_filters.FilterSet):
@@ -46,7 +40,7 @@ class WallpostList(ListAPIView):
         parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
         parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
         if parent_type == 'project':
-            content_type = ContentType.objects.get_for_model(PROJECT_MODEL)
+            content_type = ContentType.objects.get_for_model(Project)
         else:
             white_listed_apps = ['projects', 'tasks', 'fundraisers']
             content_type = ContentType.objects.filter(

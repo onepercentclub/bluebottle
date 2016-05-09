@@ -16,6 +16,7 @@ from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
 from bluebottle.categories.models import Category
+from bluebottle.tasks.models import Task
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument)
@@ -342,18 +343,12 @@ class Project(BaseProject):
 
     @property
     def task_count(self):
-        from bluebottle.utils.model_dispatcher import get_task_model
-
-        TASK_MODEL = get_task_model()
         return len(
-            self.task_set.filter(status=TASK_MODEL.TaskStatuses.open).all())
+            self.task_set.filter(status=Task.TaskStatuses.open).all())
 
     @property
     def get_open_tasks(self):
-        from bluebottle.utils.model_dispatcher import get_task_model
-
-        TASK_MODEL = get_task_model()
-        return self.task_set.filter(status=TASK_MODEL.TaskStatuses.open).all()
+        return self.task_set.filter(status=Task.TaskStatuses.open).all()
 
     @property
     def date_funded(self):
@@ -519,10 +514,6 @@ class Project(BaseProject):
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
-        from bluebottle.utils.model_dispatcher import get_task_model
-
-        TASK_MODEL = get_task_model()
-
         if self.is_funding:
             if self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
@@ -532,8 +523,8 @@ class Project(BaseProject):
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
         else:
             if self.task_set.filter(
-                    status__in=[TASK_MODEL.TaskStatuses.in_progress,
-                                TASK_MODEL.TaskStatuses.open]).count() > 0:
+                    status__in=[Task.TaskStatuses.in_progress,
+                                Task.TaskStatuses.open]).count() > 0:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-complete")

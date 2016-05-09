@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.utils.translation import ugettext as _
+from django.db import models
 
 from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
 from bluebottle.clients import properties

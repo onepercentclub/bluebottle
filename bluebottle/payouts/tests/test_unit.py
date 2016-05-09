@@ -8,6 +8,7 @@ from django.utils import timezone
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.donations.models import Donation
 from bluebottle.payouts.models import ProjectPayout
+from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
@@ -67,7 +68,7 @@ class PayoutBaseTestCase(BluebottleTestCase):
     def _reload_project(self):
         # Stale project instances aren't updated, so we have to reload it
         # from the db again.
-        self.project = PROJECT_MODEL.objects.get(pk=self.project.id)
+        self.project = Project.objects.get(pk=self.project.id)
 
 @override_settings(
     MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',

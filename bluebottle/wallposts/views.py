@@ -6,6 +6,8 @@ from rest_framework import permissions, exceptions
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.bluebottle_drf2.views import (
     ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView)
+from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.tasks.models import Task
 from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
 from bluebottle.projects.models import Project
 
@@ -49,8 +51,8 @@ class WallpostList(ListAPIView):
 
         if parent_type == 'project' and parent_id:
             try:
-                project = PROJECT_MODEL.objects.get(slug=parent_id)
-            except PROJECT_MODEL.DoesNotExist:
+                project = Project.objects.get(slug=parent_id)
+            except Project.DoesNotExist:
                 return Wallpost.objects.none()
             queryset = queryset.filter(object_id=project.id)
         else:
@@ -67,15 +69,15 @@ class TextWallpostList(ListCreateAPIView):
     paginate_by = 5
     permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly)
 
-    def get_queryset(self):
+    def get_queryset(self, queryset=None):
         queryset = super(TextWallpostList, self).get_queryset()
         # Some custom filtering projects slugs.
         parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
         parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
         if parent_type == 'project' and parent_id:
             try:
-                project = PROJECT_MODEL.objects.get(slug=parent_id)
-            except PROJECT_MODEL.DoesNotExist:
+                project = Project.objects.get(slug=parent_id)
+            except Project.DoesNotExist:
                 return Wallpost.objects.none()
             queryset = queryset.filter(object_id=project.id)
 
@@ -91,10 +93,10 @@ class TextWallpostList(ListCreateAPIView):
         if obj.email_followers:
             parent_obj = obj.content_object
 
-            if isinstance(parent_obj, PROJECT_MODEL) or \
-               isinstance(parent_obj, FUNDRAISER_MODEL):
+            if isinstance(parent_obj, Project) or \
+               isinstance(parent_obj, Fundraiser):
                 can_save = parent_obj.owner == self.request.user
-            elif isinstance(parent_obj, TASK_MODEL):
+            elif isinstance(parent_obj, Task):
                 can_save = parent_obj.author == self.request.user
         else:
           can_save = True

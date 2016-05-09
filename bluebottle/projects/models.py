@@ -545,7 +545,7 @@ class ProjectBudgetLine(models.Model):
     This is the budget for the amount asked from this
     website.
     """
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    project = models.ForeignKey('projects.Project')
     description = models.CharField(_('description'), max_length=255, default='')
     currency = models.CharField(max_length=3, default='EUR')
     amount = models.PositiveIntegerField(_('amount (in cents)'))

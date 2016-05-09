@@ -8,7 +8,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding field 'Wallpost.donation'
         db.add_column(u'wallposts_wallpost', 'donation',
-                      self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='donation', null=True, to=orm[MODEL_MAP['donation']['model']]),
+                      self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='donation', null=True, to=orm['donations.Donation']),
                       keep_default=False)
 
 
@@ -65,10 +65,10 @@ class Migration(SchemaMigration):
             'anonymous': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'completed': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
-            'fundraiser': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['{0}']".format(MODEL_MAP['fundraiser']['model']), 'null': 'True', 'blank': 'True'}),
+            'fundraiser': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['fundraisers.Fundraiser']", 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'order': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'donations'", 'null': 'True', 'to': "orm['{0}']".format(MODEL_MAP['order']['model'])}),
-            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['{0}']".format(MODEL_MAP['project']['model'])}),
+            'order': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'donations'", 'null': 'True', 'to': "orm['orders.Order']"}),
+            'project': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['projects.Project']"}),
             'reward': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'reward'", 'null': 'True', 'to': u"orm['rewards.Reward']"}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'wallpost': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'wallpost'", 'null': 'True', 'to': u"orm['wallposts.Wallpost']"})
@@ -121,8 +121,8 @@ class Migration(SchemaMigration):
             'numeric_code': ('django.db.models.fields.CharField', [], {'max_length': '3', 'unique': 'True', 'null': 'True', 'blank': 'True'}),
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['geo.Region']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Members'},
             'about_me': ('django.db.models.fields.TextField', [], {'max_length': '265', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'campaign_notifications': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),

@@ -255,7 +255,7 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [],
-                     {'to': "orm['{0}']".format(MODEL_MAP['user']['model']),
+                     {'to': "orm['members.Member']",
                       'null': 'True', 'blank': 'True'})
         },
         u'taggit.tag': {

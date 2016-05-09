@@ -110,7 +110,7 @@ class Migration(DataMigration):
             'primary_language': ('django.db.models.fields.CharField', [], {'default': "u'en'", 'max_length': '5'}),
             'share_money': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'share_time_knowledge': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'skills': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': "orm['{0}']".format(MODEL_MAP['task_skill']['model']), 'null': 'True', 'blank': 'True'}),
+            'skills': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': "orm['tasks.Skill']", 'null': 'True', 'blank': 'True'}),
             'skypename': ('django.db.models.fields.CharField', [], {'max_length': '32', 'blank': 'True'}),
             'twitter': ('django.db.models.fields.CharField', [], {'max_length': '15', 'blank': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'}),

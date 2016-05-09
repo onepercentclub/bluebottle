@@ -387,8 +387,8 @@ class Migration(SchemaMigration):
                     {'related_name': "u'taggit_taggeditem_items'",
                      'to': u"orm['taggit.Tag']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [],

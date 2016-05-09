@@ -428,7 +428,7 @@ class Migration(SchemaMigration):
                 'django.db.models.fields.AutoField', [],
                 {'primary_key': 'True'}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {
-                'to': "orm['{0}']".format(MODEL_MAP['project']['model'])}),
+                'to': "orm['projects.Project']"}),
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'})
         },

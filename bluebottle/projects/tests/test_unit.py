@@ -106,6 +106,25 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.failUnless(self.expired_project.status == self.complete)
 
 
+class TestProjectPhaseLog(TestProjectTestCase):
+    def test_create_phase_log(self):
+        phase1 = ProjectPhaseFactory.create()
+        phase2 = ProjectPhaseFactory.create()
+
+        project = ProjectFactory.create(status=phase1)
+
+        phase_logs = ProjectPhaseLog.objects.all()
+        self.assertEquals(len(phase_logs), 1)
+        self.assertEquals(phase_logs[0].status, project.status)
+
+        project.status = phase2
+        project.save()
+
+        phase_logs = ProjectPhaseLog.objects.all().order_by("-start")
+        self.assertEquals(len(phase_logs), 2)
+        self.assertEquals(phase_logs[0].status, project.status)
+
+
 class SupporterCountTest(BluebottleTestCase):
     def setUp(self):
         super(SupporterCountTest, self).setUp()

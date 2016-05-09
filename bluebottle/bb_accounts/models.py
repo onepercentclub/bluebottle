@@ -345,40 +345,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """ Returns the number of projects a user has donated to """
         return self.get_donations_qs().distinct('project').count()
 
-    def get_tasks_qs(self):
-        return get_taskmember_model().objects.filter(
-            member=self, status__in=['applied', 'accepted', 'realized'])
-
-    @property
-    def time_spent(self):
-        """ Returns the number of donations a user has made """
-        return self.get_tasks_qs().aggregate(Sum('time_spent'))[
-            'time_spent__sum']
-
-    @cached_property
-    def sourcing(self):
-        return self.get_tasks_qs().distinct('task__project').count()
-
     @property
     def projects_supported(self):
         return self.funding + self.sourcing
-
-    @property
-    def project_count(self):
-        """ Return the number of projects a user started / is owner of """
-        return get_project_model().objects.filter(
-            owner=self,
-            status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done']
-        ).count()
-
-    @property
-    def has_projects(self):
-        """ Return the number of projects a user started / is owner of """
-        return get_project_model().objects.filter(owner=self).count() > 0
-
-    @property
-    def fundraiser_count(self):
-        return get_fundraiser_model().objects.filter(owner=self).count()
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):

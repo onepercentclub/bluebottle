@@ -3,7 +3,7 @@ from django_fsm.db.fields import TransitionNotAllowed
 from mock import patch
 
 from bluebottle import clients
-from bluebottle.payments.services import PaymentService
+from bluebottle.payments.services import PaymentService, get_payment_methods
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import (PaymentFactory,
@@ -12,9 +12,9 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
 
 
-class BlueBottlePaymentTestCase(BluebottleTestCase):
+class PaymentTestCase(BluebottleTestCase):
     def setUp(self):
-        super(BlueBottlePaymentTestCase, self).setUp()
+        super(PaymentTestCase, self).setUp()
         self.init_projects()
 
         self.order = OrderFactory.create()
@@ -114,9 +114,9 @@ class BlueBottlePaymentTestCase(BluebottleTestCase):
         )
 
 
-class BlueBottlePaymentFeeTestCase(BluebottleTestCase):
+class PaymentFeeTestCase(BluebottleTestCase):
     def setUp(self):
-        super(BlueBottlePaymentFeeTestCase, self).setUp()
+        super(PaymentFeeTestCase, self).setUp()
         self.init_projects()
 
         self.order = OrderFactory.create()

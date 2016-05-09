@@ -13,6 +13,7 @@ from bluebottle.utils.model_dispatcher import (get_project_model,
                                                get_donation_model)
 
 from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
+from bluebottle.test.factory_models.payments import OrderPaymentFactory, PaymentFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
@@ -32,22 +33,19 @@ class PayoutTestAdmin(BluebottleTestCase):
         self.failUnless('amount_raised' in ProjectPayoutAdmin.list_display)
 
 
-@override_settings(
-    MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
-                                  'properties'))
-class PayoutTestCase(BluebottleTestCase):
-    """ Test case for Payouts. """
+class PayoutBaseTestCase(BluebottleTestCase):
+    """ Base test case for Payouts. """
 
     def setUp(self):
-        super(PayoutTestCase, self).setUp()
+        super(PayoutBaseTestCase, self).setUp()
 
         self.init_projects()
 
         # Set up a project ready for payout
-        organization = OrganizationFactory.create()
-        organization.save()
-        self.project = ProjectFactory.create(organization=organization, amount_asked=50)
-        self.project_incomplete = ProjectFactory.create(organization=organization, amount_asked=100)
+        self.organization = OrganizationFactory.create()
+        self.organization.save()
+        self.project = ProjectFactory.create(organization=self.organization, amount_asked=50)
+        self.project_incomplete = ProjectFactory.create(organization=self.organization, amount_asked=100)
 
         # Update phase to campaign.
         self.project.status = ProjectPhase.objects.get(slug='campaign')
@@ -76,6 +74,12 @@ class PayoutTestCase(BluebottleTestCase):
         # Stale project instances aren't updated, so we have to reload it
         # from the db again.
         self.project = PROJECT_MODEL.objects.get(pk=self.project.id)
+
+@override_settings(
+    MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
+                                  'properties'))
+class PayoutTestCase(PayoutBaseTestCase):
+    """ Test case for Payouts. """
 
     def test_save(self):
         """ Test saving a payout. """
@@ -647,3 +651,87 @@ class PayoutTestCase(BluebottleTestCase):
 
         with self.assertRaises(AssertionError):
             payout2.calculate_amounts()
+
+
+@override_settings(PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .2})
+class PayoutPledgeTestCase(PayoutBaseTestCase):
+    """ Test case for Pledge Payouts. """
+
+    def setUp(self):
+        super(PayoutPledgeTestCase, self).setUp()
+
+        self.project = ProjectFactory.create(organization=self.organization, amount_asked=100)
+
+        # Update phase to campaign.
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        self.order = OrderFactory.create()
+
+        self.donation = DonationFactory.create(
+            project=self.project,
+            order=self.order,
+            amount=60
+        )
+
+        self.donation.save()
+
+        # Set status of donation to paid
+        self.donation.order.locked()
+        self.donation.order.succeeded()
+
+    def test_pledge_paid_fully_funded(self):
+        """ Test amounts for paid donations. """
+
+        pledge_order = OrderFactory.create()
+        pledge = DonationFactory.create(
+            project=self.project,
+            order=pledge_order,
+            amount=60
+        )
+        pledge.save()
+
+        # Set status of donation to pledged
+        pledge.order.pledged()
+
+        # Update phase to done-completed
+        self._reload_project()
+        self.project.status = ProjectPhase.objects.get(slug='done-complete')
+        self.project.save()
+
+        # Fetch payout
+        payout = ProjectPayout.objects.all()[0]
+
+        # Money is safe now, nothing pending
+        self.assertEquals(payout.amount_raised, Decimal('120.00'))
+        self.assertEquals(payout.payout_rule, 'fully_funded')
+        self.assertEquals(payout.amount_payable, Decimal('54.00'))
+        self.assertEquals(payout.amount_pledged, Decimal('60.00'))
+
+    def test_pledge_paid_not_fully_funded(self):
+        """ Test amounts for paid donations. """
+
+        pledge_order = OrderFactory.create()
+        pledge = DonationFactory.create(
+            project=self.project,
+            order=pledge_order,
+            amount=30
+        )
+        pledge.save()
+
+        # Set status of donation to pledged
+        pledge.order.pledged()
+
+        # Update phase to done-completed
+        self._reload_project()
+        self.project.status = ProjectPhase.objects.get(slug='done-complete')
+        self.project.save()
+
+        # Fetch payout
+        payout = ProjectPayout.objects.all()[0]
+
+        # Money is safe now, nothing pending
+        self.assertEquals(payout.amount_raised, Decimal('90.00'))
+        self.assertEquals(payout.payout_rule, 'not_fully_funded')
+        self.assertEquals(payout.amount_payable, Decimal('48.00'))
+        self.assertEquals(payout.amount_pledged, Decimal('30.00'))

@@ -1,20 +1,46 @@
 from django.utils.translation import ugettext as _
+from django.db import connection
 
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.payments.models import Payment
+from bluebottle.clients import properties
+
+
+def get_payment_method(donation):
+    order_payments = donation.order.order_payments.all()
+
+    try:
+        payment_method = order_payments[0].payment.method_name
+    except Payment.DoesNotExist:
+        # TODO: we need to properly handle the payment method
+        #       name here. Pledges will end up here but the
+        #       payment_method will be something like
+        #       'pledgeStandard'...
+        payment_method = order_payments[0].payment_method
+        if 'pledge' in payment_method:
+            payment_method = 'Invoiced'
+    except IndexError:
+        payment_method = ''
+
+    return payment_method
 
 
 def successful_donation_fundraiser_mail(instance):
+    donation = instance
+
     # should be only when the status is success
     try:
-        receiver = instance.fundraiser.owner
+        receiver = donation.fundraiser.owner
     except:
         # donation it's not coming from a fundraiser
         return
 
     fundraiser_link = '/go/fundraisers/{0}'.format(instance.fundraiser.id)
+    pledged = (donation.order.status == StatusDefinition.PLEDGED)
 
     with TenantLanguage(receiver.primary_language):
         subject = _('You received a new donation')
@@ -36,10 +62,9 @@ def successful_donation_fundraiser_mail(instance):
         subject=subject,
         site=tenant_url(),
         to=receiver,
-        amount=instance.amount,
-        donor_name=donor_name,
         link=fundraiser_link,
-        first_name=receiver.first_name
+        donation=donation,
+        pledged=pledged
     )
 
 
@@ -55,10 +80,20 @@ def new_oneoff_donation(instance):
         return
 
     project_url = '/projects/{0}'.format(donation.project.slug)
+    pledged = (donation.order.status == StatusDefinition.PLEDGED)
+
+    # Setup tenant properties for accessing tenant admin email
+    if not properties.tenant_properties and connection.tenant:
+        properties.set_tenant(connection.tenant)
+
+    try:
+        admin_email = properties.TENANT_MAIL_PROPERTIES.get('address')
+    except AttributeError as e:
+        logger.critical('No mail properties found for {0}'.format(connection.tenant.client_name))
 
     if donation.project.owner.email:
-
         receiver = donation.project.owner
+
         with TenantLanguage(receiver.primary_language):
             subject = _('You received a new donation')
 
@@ -69,16 +104,20 @@ def new_oneoff_donation(instance):
             else:
                 donor_name = _('a guest')
 
-            # Send email to the project owner.
-            send_mail(
-                template_name='bb_donations/mails/new_oneoff_donation.mail',
-                subject=subject,
-                to=receiver,
-                amount=donation.amount,
-                donor_name=donor_name,
-                link=project_url,
-                first_name=donation.project.owner.first_name
-            )
+        payment_method = get_payment_method(donation)
+
+        # Send email to the project owner.
+        send_mail(
+            template_name='bb_donations/mails/new_oneoff_donation.mail',
+            subject=subject,
+            to=receiver,
+            link=project_url,
+            donor_name=donor_name,
+            donation=donation,
+            pledged=pledged,
+            admin_email=admin_email,
+            payment_method=payment_method
+        )
 
     if donation.order.user and donation.order.user.email:
         # Send email to the project supporter
@@ -87,10 +126,7 @@ def new_oneoff_donation(instance):
         with TenantLanguage(donor.primary_language):
             subject = _('Thanks for your donation')
 
-        try:
-            payment_method = donation.order.order_payments.all()[0].payment.method_name
-        except IndexError:
-            payment_method = ''
+        payment_method = get_payment_method(donation)
 
         send_mail(
             template_name="bb_donations/mails/confirmation.mail",
@@ -98,5 +134,6 @@ def new_oneoff_donation(instance):
             to=donor,
             link=project_url,
             donation=donation,
+            pledged=pledged,
             payment_method=payment_method
         )

@@ -195,6 +195,7 @@ class Project(BaseProject):
         last_month = timezone.now() - timezone.timedelta(days=30)
         donations = Donation.objects.filter(
             order__status__in=[
+                StatusDefinition.PLEDGED,
                 StatusDefinition.PENDING,
                 StatusDefinition.SUCCESS
             ],
@@ -237,7 +238,8 @@ class Project(BaseProject):
         """ Update amount based on paid and pending donations. """
 
         self.amount_donated = self.get_money_total(
-            [StatusDefinition.PENDING, StatusDefinition.SUCCESS])
+            [StatusDefinition.PENDING, StatusDefinition.SUCCESS,
+             StatusDefinition.PLEDGED])
         self.amount_needed = self.amount_asked - self.amount_donated
 
         if self.amount_needed < 0:
@@ -286,7 +288,8 @@ class Project(BaseProject):
         # something like /projects/<slug>/donations
         donations = self.donation_set
         donations = donations.filter(
-            order__status__in=[StatusDefinition.PENDING,
+            order__status__in=[StatusDefinition.PLEDGED,
+                               StatusDefinition.PENDING,
                                StatusDefinition.SUCCESS])
         count = \
             donations.all().aggregate(
@@ -296,7 +299,8 @@ class Project(BaseProject):
         if with_guests:
             donations = self.donation_set
             donations = donations.filter(
-                order__status__in=[StatusDefinition.PENDING,
+                order__status__in=[StatusDefinition.PLEDGED,
+                                   StatusDefinition.PENDING,
                                    StatusDefinition.SUCCESS])
             donations = donations.filter(order__user__isnull=True)
             count += len(donations.all())
@@ -332,6 +336,10 @@ class Project(BaseProject):
     @property
     def amount_safe(self):
         return self.get_money_total([StatusDefinition.SUCCESS])
+
+    @property
+    def amount_pledged(self):
+        return self.get_money_total([StatusDefinition.PLEDGED])
 
     @property
     def donated_percentage(self):

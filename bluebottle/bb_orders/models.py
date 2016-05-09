@@ -26,6 +26,7 @@ class BaseOrder(models.Model, FSMTransition):
     STATUS_MAPPING = {
         StatusDefinition.CREATED: StatusDefinition.LOCKED,
         StatusDefinition.STARTED: StatusDefinition.LOCKED,
+        StatusDefinition.PLEDGED: StatusDefinition.PLEDGED,
         StatusDefinition.AUTHORIZED: StatusDefinition.PENDING,
         StatusDefinition.SETTLED: StatusDefinition.SUCCESS,
         StatusDefinition.CHARGED_BACK: StatusDefinition.FAILED,
@@ -37,6 +38,7 @@ class BaseOrder(models.Model, FSMTransition):
     STATUS_CHOICES = (
         (StatusDefinition.CREATED, _('Created')),
         (StatusDefinition.LOCKED, _('Locked')),
+        (StatusDefinition.PLEDGED, _('Pledged')),
         (StatusDefinition.PENDING, _('Pending')),
         (StatusDefinition.SUCCESS, _('Success')),
         (StatusDefinition.FAILED, _('Failed')),
@@ -59,10 +61,17 @@ class BaseOrder(models.Model, FSMTransition):
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
                                 default=0)
 
-    @transition(field=status, save=True, source=StatusDefinition.CREATED,
+    @transition(field=status, save=True, 
+                source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED],
                 target=StatusDefinition.LOCKED)
     def locked(self):
         # TODO: add locked state behaviour here
+        pass
+
+    @transition(field=status, save=True, 
+                source=[StatusDefinition.LOCKED, StatusDefinition.CREATED],
+                target=StatusDefinition.PLEDGED)
+    def pledged(self):
         pass
 
     @transition(field=status, save=True,

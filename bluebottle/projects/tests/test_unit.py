@@ -3,9 +3,9 @@ from django.utils import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.utils.model_dispatcher import get_project_model
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.projects import (ProjectFactory, ProjectPhaseFactory)
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.projects.models import Project
+from bluebottle.projects.models import (Project, ProjectPhaseLog)
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.test.utils import BluebottleTestCase

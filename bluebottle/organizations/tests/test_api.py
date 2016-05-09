@@ -6,7 +6,7 @@ from rest_framework import status
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
-    OrganizationFactory, OrganizationMemberFactory, ORGANIZATION_MODEL)
+    OrganizationFactory, OrganizationMemberFactory, Organization)
 
 
 class OrganizationsEndpointTestCase(BluebottleTestCase):
@@ -127,7 +127,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(response.status_code, 201)
 
         # Check the data.
-        organization = ORGANIZATION_MODEL.objects.latest('pk')
+        organization = Organization.objects.latest('pk')
         self.assertEqual(organization.name, post_data['name'])
         self.assertEqual(organization.slug, post_data['slug'])
         self.assertEqual(
@@ -212,7 +212,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(response.status_code, 200)
 
         # Check the data.
-        organization = ORGANIZATION_MODEL.objects.get(
+        organization = Organization.objects.get(
             pk=self.organization_1.pk)
         self.assertEqual(organization.name, put_data['name'])
         self.assertEqual(organization.slug, put_data['slug'])

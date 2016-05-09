@@ -242,27 +242,6 @@ class BaseProject(models.Model, GetTweetMixin):
     def __unicode__(self):
         return self.slug if not self.title else self.title
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            original_slug = slugify(self.title)
-            counter = 2
-            qs = self.__class__.objects
-
-            while qs.filter(slug=original_slug).exists():
-                original_slug = '{0}-{1}'.format(original_slug, counter)
-                counter += 1
-            self.slug = original_slug
-
-        previous_status = None
-        if self.pk:
-            previous_status = self.__class__.objects.get(pk=self.pk).status
-        super(BaseProject, self).save(*args, **kwargs)
-
-        # Only log project phase if the status has changed
-        if self is not None and previous_status != self.status:
-            ProjectPhase.objects.create(
-                project=self, status=self.status)
-
     def update_amounts(self, save=True):
         """
         Update amount_donated and amount_needed

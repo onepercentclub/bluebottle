@@ -234,6 +234,27 @@ class Project(BaseProject):
             )
             project.save()
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            original_slug = slugify(self.title)
+            counter = 2
+            qs = self.__class__.objects
+
+            while qs.filter(slug=original_slug).exists():
+                original_slug = '{0}-{1}'.format(original_slug, counter)
+                counter += 1
+            self.slug = original_slug
+
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
+        super(Project, self).save(*args, **kwargs)
+
+        # Only log project phase if the status has changed
+        if self is not None and previous_status != self.status:
+            ProjectPhaseLog.objects.create(
+                project=self, status=self.status)
+
     def update_status_after_donation(self, save=True):
         if not self.campaign_funded and not self.campaign_ended and \
                 self.status not in ProjectPhase.objects.filter(

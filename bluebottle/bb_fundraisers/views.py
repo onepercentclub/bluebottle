@@ -14,7 +14,7 @@ from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 
 class FundraiserListView(ListCreateAPIView):
-    model = Fundraiser
+    queryset = Fundraiser.objects.all()
     serializer_class = BaseFundraiserSerializer
     permission_classes = (TenantConditionalOpenClose,
                           permissions.IsAuthenticatedOrReadOnly,)
@@ -57,7 +57,7 @@ class FundraiserListView(ListCreateAPIView):
 
 
 class FundraiserDetailView(RetrieveUpdateDeleteAPIView):
-    model = Fundraiser
+    queryset = Fundraiser.objects.all()
     serializer_class = BaseFundraiserSerializer
     permission_classes = (TenantConditionalOpenClose,
                           permissions.IsAuthenticatedOrReadOnly,)

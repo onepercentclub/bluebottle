@@ -27,7 +27,7 @@ class ValidDonationsMixin(object):
 
 
 class DonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -36,7 +36,7 @@ class DonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -45,7 +45,7 @@ class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 
 
 class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -96,7 +96,7 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class ProjectDonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -105,7 +105,7 @@ class ProjectDonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 
 
 class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
     serializer_class = DefaultDonationSerializer
 
     def get_queryset(self):
@@ -126,7 +126,7 @@ class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
     serializer_class = DefaultDonationSerializer
 
     def get_queryset(self):
@@ -137,7 +137,7 @@ class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
         fundraiser_pk = self.request.QUERY_PARAMS.get('fundraiser', None)
         try:
             fundraiser = Fundraiser.objects.get(pk=fundraiser_pk,
-                                                      owner=self.request.user)
+                                                owner=self.request.user)
         except Fundraiser.DoesNotExist:
             raise Http404(u"No fundraiser found matching the query")
 
@@ -147,7 +147,7 @@ class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class ManageDonationList(generics.ListCreateAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
     serializer_class = ManageDonationSerializer
     permission_classes = (IsOrderCreator, OrderIsNew)
     paginate_by = 10
@@ -172,7 +172,7 @@ class ManageDonationList(generics.ListCreateAPIView):
 
 
 class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
     serializer_class = ManageDonationSerializer
 
     permission_classes = (OrderIsNew, IsOrderCreator)
@@ -180,7 +180,7 @@ class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
 
 # For showing the latest donations
 class LatestDonationsList(generics.ListAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
     serializer_class = LatestDonationSerializer
     permission_classes = (permissions.IsAdminUser,)
     paginate_by = 20

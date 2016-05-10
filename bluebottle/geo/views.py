@@ -12,7 +12,7 @@ class CountryList(generics.ListAPIView):
     queryset = Country.objects.all()
 
     def get_queryset(self):
-        return self.model.objects.filter(alpha2_code__isnull=False).order_by(
+        return self.queryset.filter(alpha2_code__isnull=False).order_by(
             'name').all()
 
 

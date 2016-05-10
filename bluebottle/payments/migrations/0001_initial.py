@@ -166,7 +166,7 @@ class Migration(SchemaMigration):
                 'django.db.models.fields.CharField', [], {'max_length': '100'})
         },
         u'orders.order': {
-            'Meta': {'object_name': 'ORder'},
+            'Meta': {'object_name': 'Order'},
             'closed': ('django.db.models.fields.DateTimeField', [],
                        {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [],

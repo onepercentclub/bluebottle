@@ -233,9 +233,9 @@ class Migration(DataMigration):
             'why': ('django.db.models.fields.TextField', [],
                     {'max_length': '265', 'blank': 'True'})
         },
-        u'organzation.orgranization': {
+        u'organization.orgranization': {
             'Meta': {'ordering': "['name']",
-                     'object_name': 'Organzation'},
+                     'object_name': 'Organization'},
             'account_bank_address': ('django.db.models.fields.CharField', [],
                                      {'max_length': '255', 'blank': 'True'}),
             'account_bank_city': ('django.db.models.fields.CharField', [],

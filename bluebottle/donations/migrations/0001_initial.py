@@ -19,7 +19,7 @@ class Migration(SchemaMigration):
              self.gf('django.db.models.fields.DecimalField')(max_digits=16,
                                                              decimal_places=2)),
             ('project', self.gf('django.db.models.fields.related.ForeignKey')(
-                to=orm['projects.Proejct'])),
+                to=orm['projects.Project'])),
             ('fundraiser',
              self.gf('django.db.models.fields.related.ForeignKey')(
                  to=orm['fundraisers.Fundraiser'], null=True,
@@ -28,7 +28,7 @@ class Migration(SchemaMigration):
              self.gf('django.db.models.fields.related.ForeignKey')(blank=True,
                                                                    related_name='donations',
                                                                    null=True,
-                                                                   to=orm['orders.ORder'])),
+                                                                   to=orm['orders.Order'])),
             ('created', self.gf('django.db.models.fields.DateTimeField')(
                 default=datetime.datetime.now, blank=True)),
             ('updated', self.gf('django.db.models.fields.DateTimeField')(
@@ -138,7 +138,7 @@ class Migration(SchemaMigration):
             'created': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'fundraiser': ('django.db.models.fields.related.ForeignKey', [], {
-            'to': "orm['fundtraisers.Fundraiser']",
+            'to': "orm['fundraisers.Fundraiser']",
             'null': 'True', 'blank': 'True'}),
             u'id': (
             'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),

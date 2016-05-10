@@ -1,9 +1,5 @@
 import os
 
-from bluebottle.organizations.models import Organization, OrganizationMember
-from bluebottle.utils.serializers import DefaultSerializerMixin, \
-    ManageSerializerMixin
-
 from django.http import HttpResponseForbidden
 from django.views.generic.detail import DetailView
 
@@ -12,23 +8,24 @@ from rest_framework import generics
 
 from bluebottle.organizations.serializers import OrganizationSerializer, \
     ManageOrganizationSerializer
+from bluebottle.organizations.models import Organization, OrganizationMember
 
 from .permissions import IsOrganizationMember
 
 
-class OrganizationList(DefaultSerializerMixin, generics.ListAPIView):
-    model = Organization
+class OrganizationList(generics.ListAPIView):
+    queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     paginate_by = 10
 
 
-class OrganizationDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
-    model = Organization
+class OrganizationDetail(generics.RetrieveAPIView):
+    queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
 
 
-class ManageOrganizationList(ManageSerializerMixin, generics.ListCreateAPIView):
-    model = Organization
+class ManageOrganizationList(generics.ListCreateAPIView):
+    queryset = Organization.objects.all()
     serializer_class = ManageOrganizationSerializer
     paginate_by = 10
 
@@ -36,7 +33,7 @@ class ManageOrganizationList(ManageSerializerMixin, generics.ListCreateAPIView):
     def get_queryset(self):
         org_members_ids = OrganizationMember.objects.filter(
             user=self.request.user).values_list('id', flat=True).all()
-        org_ids = self.model.objects.filter(
+        org_ids = self.queryset.filter(
             members__in=org_members_ids).values_list('id', flat=True).all()
         queryset = super(ManageOrganizationList, self).get_queryset()
         queryset = queryset.filter(id__in=org_ids)
@@ -48,9 +45,8 @@ class ManageOrganizationList(ManageSerializerMixin, generics.ListCreateAPIView):
             member.save()
 
 
-class ManageOrganizationDetail(ManageSerializerMixin,
-                               generics.RetrieveUpdateDestroyAPIView):
-    model = Organization
+class ManageOrganizationDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Organization.objects.all()
     serializer_class = ManageOrganizationSerializer
     permission_classes = (IsOrganizationMember,)
 
@@ -62,7 +58,7 @@ class ManageOrganizationDetail(ManageSerializerMixin,
 # Download private documents
 
 class RegistrationDocumentDownloadView(DetailView):
-    model = Organization
+    queryset = Organization.objects.all()
 
     def get(self, request, *args, **kwargs):
         obj = self.get_object()

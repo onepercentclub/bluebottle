@@ -9,9 +9,7 @@ from tenant_extras.drf_permissions import TenantConditionalOpenClose
 from bluebottle.projects.serializers import (
     ProjectThemeSerializer, ProjectPhaseSerializer,
     ProjectPhaseLogSerializer, ProjectDocumentSerializer,
-    ProjectTinyPreviewSerializer)
-from bluebottle.utils.serializers import (
-    DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin)
+    ProjectTinyPreviewSerializer, ProjectSerializer, ProjectPreviewSerializer, ManageProjectSerializer)
 from bluebottle.utils.utils import get_client_ip
 
 from .models import ProjectTheme, ProjectPhase
@@ -19,7 +17,7 @@ from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
 
 class ProjectTinyPreviewList(generics.ListAPIView):
-    model = Project
+    queryset = Project.objects.all()
     paginate_by = 8
     paginate_by_param = 'page_size'
     serializer_class = ProjectTinyPreviewSerializer
@@ -30,10 +28,11 @@ class ProjectTinyPreviewList(generics.ListAPIView):
         return qs.filter(status__viewable=True)
 
 
-class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
-    model = Project
+class ProjectPreviewList(generics.ListAPIView):
+    queryset = Project.objects.all()
     paginate_by = 8
     paginate_by_param = 'page_size'
+    serializer_class = ProjectPreviewSerializer
 
     def get_queryset(self):
         query = self.request.QUERY_PARAMS
@@ -41,16 +40,16 @@ class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
         return qs.filter(status__viewable=True)
 
 
-class ProjectPreviewDetail(PreviewSerializerMixin, generics.RetrieveAPIView):
-    model = Project
-
+class ProjectPreviewDetail(generics.RetrieveAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectPreviewSerializer
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
         return qs
 
 
 class ProjectPhaseList(generics.ListAPIView):
-    model = ProjectPhase
+    queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseSerializer
     paginate_by = 10
     filter_fields = ('viewable',)
@@ -73,12 +72,12 @@ class ProjectPhaseList(generics.ListAPIView):
 
 
 class ProjectPhaseDetail(generics.RetrieveAPIView):
-    model = ProjectPhase
+    queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseSerializer
 
 
 class ProjectPhaseLogList(generics.ListAPIView):
-    model = ProjectPhaseLog
+    queryset = ProjectPhaseLog.objects.all()
     serializer_class = ProjectPhaseLogSerializer
     paginate_by = 10
 
@@ -88,13 +87,14 @@ class ProjectPhaseLogList(generics.ListAPIView):
 
 
 class ProjectPhaseLogDetail(generics.RetrieveAPIView):
-    model = ProjectPhaseLog
+    queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseLogSerializer
 
 
-class ProjectList(DefaultSerializerMixin, generics.ListAPIView):
-    model = Project
+class ProjectList(generics.ListAPIView):
+    queryset = Project.objects.all()
     paginate_by = 10
+    serializer_class = ProjectSerializer
 
     def get_queryset(self):
         qs = super(ProjectList, self).get_queryset()
@@ -104,18 +104,20 @@ class ProjectList(DefaultSerializerMixin, generics.ListAPIView):
         return qs.filter(status__viewable=True)
 
 
-class ProjectDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
-    model = Project
+class ProjectDetail(generics.RetrieveAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
 
     def get_queryset(self):
         qs = super(ProjectDetail, self).get_queryset()
         return qs
 
 
-class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
-    model = Project
+class ManageProjectList(generics.ListCreateAPIView):
+    queryset = Project.objects.all()
     permission_classes = (TenantConditionalOpenClose, IsAuthenticated, )
     paginate_by = 100
+    serializer_class = ManageProjectSerializer
 
     def get_queryset(self):
         """
@@ -135,10 +137,10 @@ class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
         obj.owner = self.request.user
 
 
-class ManageProjectDetail(ManageSerializerMixin,
-                          generics.RetrieveUpdateAPIView):
-    model = Project
+class ManageProjectDetail(generics.RetrieveUpdateAPIView):
+    queryset = Project.objects.all()
     permission_classes = (IsProjectOwner, IsEditableOrReadOnly)
+    serializer_class = ManageProjectSerializer
 
     def get_object(self):
         # Call the superclass
@@ -151,7 +153,7 @@ class ManageProjectDetail(ManageSerializerMixin,
 
 
 class ProjectThemeList(generics.ListAPIView):
-    model = ProjectTheme
+    queryset = ProjectTheme.objects.all()
     serializer_class = ProjectThemeSerializer
     queryset = ProjectTheme.objects.all().filter(disabled=False)
 
@@ -165,12 +167,12 @@ class ProjectUsedThemeList(ProjectThemeList):
 
 
 class ProjectThemeDetail(generics.RetrieveAPIView):
-    model = ProjectTheme
+    queryset = ProjectTheme.objects.all()
     serializer_class = ProjectThemeSerializer
 
 
 class ManageProjectDocumentList(generics.ListCreateAPIView):
-    model = Project
+    queryset = Project.objects.all()
     serializer_class = ProjectDocumentSerializer
     paginate_by = 20
     filter = ('project', )
@@ -181,7 +183,7 @@ class ManageProjectDocumentList(generics.ListCreateAPIView):
 
 
 class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = ProjectDocument
+    queryset = ProjectDocument.objects.all()
     serializer_class = ProjectDocumentSerializer
     paginate_by = 20
     filter = ('project', )

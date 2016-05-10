@@ -28,6 +28,8 @@ from bluebottle.clients import properties
 from .serializers import ShareSerializer
 from .serializers import LanguageSerializer
 
+from .models import Language
+
 
 class TagList(views.APIView):
     """
@@ -41,7 +43,7 @@ class TagList(views.APIView):
 
 class LanguageList(generics.ListAPIView):
     serializer_class = LanguageSerializer
-    model = serializer_class.Meta.model
+    queryset = Language.objects.all()
 
     def get_queryset(self):
         return self.model.objects.order_by('language_name').all()
@@ -191,5 +193,5 @@ if INCLUDE_TEST_MODELS:
     from .serializers import MetaDataSerializer
 
     class MetaDataDetail(generics.RetrieveAPIView):
-        model = MetaDataModel
+        queryset = MetaDataModel.objects.all()
         serializer_class = MetaDataSerializer

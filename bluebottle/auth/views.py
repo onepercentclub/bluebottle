@@ -28,7 +28,7 @@ class GetAuthToken(APIView):
                       parsers.JSONParser,)
     renderer_classes = (renderers.JSONRenderer,)
     serializer_class = AuthTokenSerializer
-    model = Token
+    queryset = Token.objects.all()
 
     # Accept backend as a parameter and 'auth' for a login / pass
     def post(self, request, backend):

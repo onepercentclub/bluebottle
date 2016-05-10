@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
+from django.core.management import call_command
 from south.v2 import DataMigration
-
-from bluebottle.utils.model_dispatcher import load_fixture
 
 
 class Migration(DataMigration):
 
     def forwards(self, orm):
         if not orm['bb_projects.ProjectPhase'].objects.count():
-            load_fixture("project_data.json", orm)
+            call_command("loaddata", "project_data")
 
     def backwards(self, orm):
         "Write your backwards methods here."

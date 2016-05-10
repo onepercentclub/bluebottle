@@ -12,18 +12,18 @@ import os
 
 
 class OrganizationList(generics.ListAPIView):
-    model = Organization
+    queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     paginate_by = 10
 
 
 class OrganizationDetail(generics.RetrieveAPIView):
-    model = Organization
+    queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
 
 
 class ManageOrganizationList(generics.ListCreateAPIView):
-    model = Organization
+    queryset = Organization.objects.all()
     serializer_class = ManageOrganizationSerializer
     paginate_by = 10
 
@@ -44,7 +44,7 @@ class ManageOrganizationList(generics.ListCreateAPIView):
 
 
 class ManageOrganizationDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = Organization
+    queryset = Organization.objects.all()
     serializer_class = ManageOrganizationSerializer
     permission_classes = (IsOrganizationMember,)
 
@@ -54,7 +54,7 @@ class ManageOrganizationDetail(generics.RetrieveUpdateDestroyAPIView):
 # Download private documents
 
 class RegistrationDocumentDownloadView(DetailView):
-    model = Organization
+    queryset = Organization.objects.all()
 
     def get(self, request, pk):
         obj = self.get_object()

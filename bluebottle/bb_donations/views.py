@@ -5,10 +5,9 @@ from rest_framework import permissions, generics
 from bluebottle.bb_orders.permissions import OrderIsNew, IsOrderCreator
 from bluebottle.clients import properties
 from bluebottle.donations.serializers import LatestDonationSerializer, PreviewDonationSerializer, \
-    PreviewDonationWithoutAmountSerializer
+    PreviewDonationWithoutAmountSerializer, DefaultDonationSerializer, ManageDonationSerializer
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.projects.models import Project
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.donations.models import Donation
 from bluebottle.utils.utils import StatusDefinition
 
@@ -28,7 +27,7 @@ class ValidDonationsMixin(object):
 
 
 class DonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -37,7 +36,7 @@ class DonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -46,7 +45,7 @@ class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 
 
 class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -97,7 +96,7 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class ProjectDonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -106,9 +105,8 @@ class ProjectDonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 
 
 class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = Donation
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'default')
+    queryset = Donation.objects.all()
+    serializer_class = DefaultDonationSerializer
 
     def get_queryset(self):
         queryset = super(MyProjectDonationList, self).get_queryset()
@@ -128,9 +126,8 @@ class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = Donation
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'default')
+    queryset = Donation.objects.all()
+    serializer_class = DefaultDonationSerializer
 
     def get_queryset(self):
         queryset = super(MyFundraiserDonationList, self).get_queryset()
@@ -140,7 +137,7 @@ class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
         fundraiser_pk = self.request.QUERY_PARAMS.get('fundraiser', None)
         try:
             fundraiser = Fundraiser.objects.get(pk=fundraiser_pk,
-                                                      owner=self.request.user)
+                                                owner=self.request.user)
         except Fundraiser.DoesNotExist:
             raise Http404(u"No fundraiser found matching the query")
 
@@ -150,9 +147,8 @@ class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class ManageDonationList(generics.ListCreateAPIView):
-    model = Donation
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'manage')
+    queryset = Donation.objects.all()
+    serializer_class = ManageDonationSerializer
     permission_classes = (IsOrderCreator, OrderIsNew)
     paginate_by = 10
 
@@ -176,16 +172,15 @@ class ManageDonationList(generics.ListCreateAPIView):
 
 
 class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = Donation
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'manage')
+    queryset = Donation.objects.all()
+    serializer_class = ManageDonationSerializer
 
     permission_classes = (OrderIsNew, IsOrderCreator)
 
 
 # For showing the latest donations
 class LatestDonationsList(generics.ListAPIView):
-    model = Donation
+    queryset = Donation.objects.all()
     serializer_class = LatestDonationSerializer
     permission_classes = (permissions.IsAdminUser,)
     paginate_by = 20

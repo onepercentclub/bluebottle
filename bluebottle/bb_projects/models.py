@@ -18,10 +18,6 @@ from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
-                                                 'preview_serializer',
-                                                 'manage_serializer')
-
 
 class ProjectTheme(models.Model):
 
@@ -235,9 +231,6 @@ class BaseProject(models.Model, GetTweetMixin):
         ordering = ['title']
         verbose_name = _('project')
         verbose_name_plural = _('projects')
-        default_serializer = 'bluebottle.projects.serializers.ProjectSerializer'
-        preview_serializer = 'bluebottle.projects.serializers.ProjectPreviewSerializer'
-        manage_serializer = 'bluebottle.projects.serializers.ManageProjectSerializer'
 
     def __unicode__(self):
         return self.slug if not self.title else self.title

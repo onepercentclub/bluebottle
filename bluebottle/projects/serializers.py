@@ -6,6 +6,7 @@ from rest_framework import serializers
 from bs4 import BeautifulSoup
 from localflavor.generic.validators import IBANValidator, BICValidator
 
+from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.bluebottle_drf2.serializers import (
     EuroField, OEmbedField, SorlImageField, ImageSerializer,
@@ -13,7 +14,6 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
 from bluebottle.geo.serializers import CountrySerializer
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 
@@ -90,7 +90,7 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
-    owner = get_serializer_class('AUTH_USER_MODEL', 'default')()
+    owner = UserProfileSerializer()
     image = ImageSerializer(required=False)
     tags = TagSerializer()
     task_count = serializers.IntegerField(source='task_count')
@@ -139,7 +139,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
     image = SorlImageField('image', '400x300', crop='center')
     theme = ProjectThemeSerializer(source='theme')
 
-    owner = get_serializer_class('AUTH_USER_MODEL', 'preview')()
+    owner = UserPreviewSerializer()
 
     categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
 
@@ -188,9 +188,6 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     story = StoryField(required=False)
     is_funding = serializers.Field()
 
-    tasks = get_serializer_class('TASKS_TASK_MODEL')(many=True,
-                                                     source='task_set',
-                                                     read_only=True)
     documents = ProjectDocumentSerializer(
         many=True, source='documents', read_only=True)
 
@@ -281,7 +278,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                   'account_holder_address', 'account_holder_postal_code',
                   'account_holder_city', 'account_holder_country',
                   'account_number', 'account_bic', 'documents',
-                  'account_bank_country', 'tasks', 'amount_asked',
+                  'account_bank_country', 'amount_asked',
                   'amount_donated', 'amount_needed', 'video_url',
                   'video_html', 'is_funding', 'story',
                   'budget_lines', 'deadline', 'latitude', 'longitude',
@@ -292,7 +289,7 @@ class ProjectSupporterSerializer(serializers.ModelSerializer):
     """
     For displaying donations on project and member pages.
     """
-    member = get_serializer_class('AUTH_USER_MODEL', 'preview')(source='user')
+    member = UserPreviewSerializer(source='user')
     project = ProjectPreviewSerializer()
     date_donated = serializers.DateTimeField(source='ready')
 
@@ -302,7 +299,7 @@ class ProjectSupporterSerializer(serializers.ModelSerializer):
 
 
 class ProjectDonationSerializer(serializers.ModelSerializer):
-    member = get_serializer_class('AUTH_USER_MODEL', 'preview')(source='user')
+    member = UserPreviewSerializer(source='user')
     date_donated = serializers.DateTimeField(source='ready')
     amount = EuroField(source='amount')
 

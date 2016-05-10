@@ -29,11 +29,6 @@ from bluebottle.utils.models import Address
 
 from bluebottle.utils.fields import ImageField
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
-                                                 'preview_serializer',
-                                                 'manage_serializer',
-                                                 'current_user_serializer')
-
 
 # TODO: Make this generic for all user file uploads.
 def generate_picture_filename(instance, filename):
@@ -149,7 +144,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                  null=True, blank=True)
     favourite_themes = models.ManyToManyField(ProjectTheme, blank=True,
                                               null=True)
-    skills = models.ManyToManyField(settings.TASKS_SKILL_MODEL, blank=True,
+    skills = models.ManyToManyField('tasks.Skill', blank=True,
                                     null=True)
 
     # TODO Use generate_picture_filename (or something) for upload_to
@@ -216,16 +211,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         abstract = True
         verbose_name = _('member')
         verbose_name_plural = _('members')
-        # specifying the serializer here allows us to leave the urls/views untouched while
-        # modifying the serializer for the user model
-        default_serializer = \
-            'bluebottle.members.serializers.UserProfileSerializer'
-        preview_serializer = \
-            'bluebottle.members.serializers.UserPreviewSerializer'
-        manage_serializer = \
-            'bluebottle.members.serializers.UserProfileSerializer'
-        current_user_serializer = \
-            'bluebottle.members.serializers.CurrentUserSerializer'
 
     def update_deleted_timestamp(self):
         """ Automatically set or unset the deleted timestamp."""

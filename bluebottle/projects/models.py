@@ -468,9 +468,6 @@ class Project(BaseProject):
 
     class Meta(BaseProject.Meta):
         ordering = ['title']
-        default_serializer = 'bluebottle.projects.serializers.ProjectSerializer'
-        preview_serializer = 'bluebottle.projects.serializers.ProjectPreviewSerializer'
-        manage_serializer = 'bluebottle.projects.serializers.ManageProjectSerializer'
 
     def status_changed(self, old_status, new_status):
 

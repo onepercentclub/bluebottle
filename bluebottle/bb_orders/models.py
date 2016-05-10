@@ -12,10 +12,6 @@ from django_fsm.db.fields import FSMField, transition
 from bluebottle.donations.models import Donation
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
-                                                 'preview_serializer',
-                                                 'manage_serializer')
-
 
 class BaseOrder(models.Model, FSMTransition):
     """
@@ -122,9 +118,6 @@ class BaseOrder(models.Model, FSMTransition):
 
     class Meta:
         abstract = True
-        default_serializer = 'bluebottle.orders.serializers.OrderSerializer'
-        preview_serializer = 'bluebottle.orders.serializers.OrderSerializer'
-        manage_serializer = 'bluebottle.orders.serializers.ManageOrderSerializer'
 
 
 import signals

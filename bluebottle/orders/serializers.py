@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
+from bluebottle.donations.serializers import ManageDonationSerializer
 from bluebottle.orders.models import Order
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -17,8 +17,7 @@ class ManageOrderSerializer(serializers.ModelSerializer):
     total = serializers.DecimalField(read_only=True)
     status = serializers.ChoiceField(read_only=True)
     user = serializers.PrimaryKeyRelatedField(required=False)
-    donations = get_serializer_class('DONATIONS_DONATION_MODEL', 'manage')(
-        many=True, read_only=True)
+    donations = ManageDonationSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order

@@ -9,10 +9,6 @@ from django_extensions.db.fields import (ModificationDateTimeField,
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.utils import GetTweetMixin, StatusDefinition
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
-                                                 'preview_serializer',
-                                                 'manage_serializer')
-
 
 class BaseFundraiser(models.Model, GetTweetMixin):
     owner = models.ForeignKey('members.Member',
@@ -54,6 +50,3 @@ class BaseFundraiser(models.Model, GetTweetMixin):
 
     class Meta():
         abstract = True
-        default_serializer = 'bluebottle.fundraisers.serializers.BaseFundraiserSerializer'
-        preview_serializer = 'bluebottle.fundraisers.serializers.BaseFundraiserSerializer'
-        manage_serializer = 'bluebottle.fundraisers.serializers.BaseFundraiserSerializer'

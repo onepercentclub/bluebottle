@@ -9,8 +9,6 @@ from taggit.managers import TaggableManager
 
 from bluebottle.utils.utils import GetTweetMixin
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
-
 
 class BaseSkill(models.Model):
     name = models.CharField(_('english name'), max_length=100, unique=True)
@@ -125,7 +123,6 @@ class BaseTask(models.Model, GetTweetMixin):
     updated = ModificationDateTimeField(_('updated'))
 
     class Meta:
-        default_serializer = 'bluebottle.tasks.serializers.BaseTaskSerializer'
         abstract = True
         ordering = ['-created']
         verbose_name = _(u'task')

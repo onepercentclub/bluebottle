@@ -10,13 +10,13 @@ from bluebottle.terms.serializers import (TermsSerializer,
 
 
 class TermsListView(ListAPIView):
-    model = Terms
+    queryset = Terms.objects.all()
     serializer_class = TermsSerializer
     paginate_by = 1
 
 
 class TermsDetailView(RetrieveAPIView):
-    model = Terms
+    queryset = Terms.objects.all()
     serializer_class = TermsSerializer
 
 
@@ -29,7 +29,7 @@ class CurrentTermsDetailView(TermsDetailView):
 
 
 class TermsAgreementListView(ListCreateAPIView):
-    model = TermsAgreement
+    queryset = TermsAgreement.objects.all()
     serializer_class = TermsAgreementSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -43,13 +43,13 @@ class TermsAgreementListView(ListCreateAPIView):
 
 
 class TermsAgreementDetailView(RetrieveAPIView):
-    model = TermsAgreement
+    queryset = TermsAgreement.objects.all()
     serializer_class = TermsAgreementSerializer
     permission_classes = (IsAuthenticated, IsUser)
 
 
 class CurrentTermsAgreementDetailView(RetrieveAPIView):
-    model = TermsAgreement
+    queryset = TermsAgreement.objects.all()
     serializer_class = TermsAgreementSerializer
     permission_classes = (IsAuthenticated,)
 

@@ -4,20 +4,21 @@ from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.models import Project
 
 from .serializers import CountrySerializer
+from .models import Country
 
 
 class CountryList(generics.ListAPIView):
     serializer_class = CountrySerializer
-    model = serializer_class.Meta.model
+    queryset = Country.objects.all()
 
     def get_queryset(self):
-        return self.model.objects.filter(alpha2_code__isnull=False).order_by(
+        return self.queryset.filter(alpha2_code__isnull=False).order_by(
             'name').all()
 
 
 class CountryDetail(generics.RetrieveAPIView):
     serializer_class = CountrySerializer
-    model = serializer_class.Meta.model
+    queryset = Country.objects.all()
 
     def get_queryset(self):
         qs = super(CountryDetail, self).get_queryset()
@@ -35,4 +36,4 @@ class UsedCountryList(CountryList):
 
 class LocationList(generics.ListAPIView):
     serializer_class = LocationSerializer
-    model = Location
+    queryset = Location.objects.all()

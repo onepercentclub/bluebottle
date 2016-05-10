@@ -22,7 +22,7 @@ from bluebottle.clients.utils import tenant_url, tenant_name
 from bluebottle.clients import properties
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
-    PasswordResetSerializer, PasswordSetSerializer)
+    PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer)
 
 USER_MODEL = get_user_model()
 
@@ -32,8 +32,8 @@ class UserProfileDetail(generics.RetrieveAPIView):
     Fetch User Details
 
     """
-    model = USER_MODEL
     permission_classes = (TenantConditionalOpenClose,)
+    queryset = USER_MODEL.objects.all()
     serializer_class = UserProfileSerializer
 
 
@@ -61,7 +61,7 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
             - application/json
     """
     documentable = True
-    model = USER_MODEL
+    queryset = USER_MODEL.objects.all()
     permission_classes = (TenantConditionalOpenClose, IsCurrentUser)
     serializer_class = ManageProfileSerializer
 
@@ -92,15 +92,8 @@ class CurrentUser(generics.RetrieveAPIView):
     Fetch Current User
 
     """
-    model = USER_MODEL
-
-    def get_serializer_class(self):
-        dotted_path = self.model._meta.current_user_serializer
-        bits = dotted_path.split('.')
-        module_name = '.'.join(bits[:-1])
-        module = import_module(module_name)
-        cls_name = bits[-1]
-        return getattr(module, cls_name)
+    queryset = USER_MODEL.objects.all()
+    serializer_class = CurrentUserSerializer
 
     def get_object(self, queryset=None):
         if isinstance(self.request.user, AnonymousUser):
@@ -113,7 +106,7 @@ class UserCreate(generics.CreateAPIView):
     Create User
 
     """
-    model = USER_MODEL
+    queryset = USER_MODEL.objects.all()
     serializer_class = UserCreateSerializer
 
     def get_name(self):

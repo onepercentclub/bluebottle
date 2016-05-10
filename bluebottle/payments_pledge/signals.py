@@ -3,8 +3,8 @@ import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from bluebottle.donations.models import Donation
 from bluebottle.payments.models import OrderPayment
-from bluebottle.utils.model_dispatcher import get_donation_model
 from bluebottle.utils.utils import StatusDefinition
 
 from .mails import mail_pledge_platform_admin
@@ -22,9 +22,8 @@ def default_status_check(sender, instance, **kwargs):
 
     if instance.status in [StatusDefinition.PLEDGED]:
 
-        DONATION_MODEL = get_donation_model()
         try:
-            donation = DONATION_MODEL.objects.filter(order__id=instance.order.id)[0]
+            donation = Donation.objects.filter(order__id=instance.order.id)[0]
 
             # NOTE: Only handling a single donation per order
             if donation:

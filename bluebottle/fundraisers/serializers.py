@@ -1,12 +1,10 @@
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
-from bluebottle.utils.model_dispatcher import get_fundraiser_model
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer, OEmbedField
+from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.serializers import MetaField
-
-FUNDRAISER_MODEL = get_fundraiser_model()
 
 
 class ImageSerializerExt(ImageSerializer):
@@ -57,7 +55,7 @@ class BaseFundraiserSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = FUNDRAISER_MODEL
+        model = Fundraiser
         fields = ('id', 'owner', 'project', 'title', 'description', 'image',
                   'created', 'video_html', 'video_url', 'amount',
                   'amount_donated', 'deadline', 'meta_data')

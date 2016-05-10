@@ -2,14 +2,12 @@ from django.dispatch.dispatcher import receiver
 from django_fsm.signals import post_transition
 from bluebottle.bb_donations.donationmail import (
     new_oneoff_donation, successful_donation_fundraiser_mail)
-from bluebottle.utils.model_dispatcher import get_order_model
+from bluebottle.orders.models import Order
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.wallposts.models import SystemWallpost
 
-ORDER_MODEL = get_order_model()
 
-
-@receiver(post_transition, sender=ORDER_MODEL)
+@receiver(post_transition, sender=Order)
 def _order_status_changed(sender, instance, **kwargs):
     """
     - Update amount on project when order is in an ending status.
@@ -22,10 +20,10 @@ def _order_status_changed(sender, instance, **kwargs):
         # only happen once.
 
         first_time_success = (
-            kwargs['source'] not in [StatusDefinition.PLEDGED, 
+            kwargs['source'] not in [StatusDefinition.PLEDGED,
                                      StatusDefinition.SUCCESS,
                                      StatusDefinition.PENDING]
-            and kwargs['target'] in [StatusDefinition.PLEDGED, 
+            and kwargs['target'] in [StatusDefinition.PLEDGED,
                                      StatusDefinition.SUCCESS,
                                      StatusDefinition.PENDING])
 

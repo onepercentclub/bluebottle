@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-# Generated with bb_schemamigration
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
@@ -57,9 +53,9 @@ class Migration(SchemaMigration):
             (u'id',
              self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(
-                to=orm[MODEL_MAP['user']['model']], null=True, blank=True)),
+                to=orm['members.Member'], null=True, blank=True)),
             ('order', self.gf('django.db.models.fields.related.ForeignKey')(
-                related_name='payments', to=orm[MODEL_MAP['order']['model']])),
+                related_name='payments', to=orm['orders.Order'])),
             ('status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(
                 default='created', max_length=50)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(
@@ -169,8 +165,8 @@ class Migration(SchemaMigration):
             'name': (
                 'django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        MODEL_MAP['order']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['order']['class']},
+        u'orders.order': {
+            'Meta': {'object_name': 'Order'},
             'closed': ('django.db.models.fields.DateTimeField', [],
                        {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [],
@@ -186,7 +182,7 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [],
-                     {'to': "orm['{0}']".format(MODEL_MAP['user']['model']),
+                     {'to': "orm['members.Member']",
                       'null': 'True', 'blank': 'True'})
         },
         u'payments.orderpayment': {
@@ -209,7 +205,7 @@ class Migration(SchemaMigration):
                                   'blank': 'True'}),
             'order': ('django.db.models.fields.related.ForeignKey', [],
                       {'related_name': "'payments'",
-                       'to': "orm['{0}']".format(MODEL_MAP['order']['model'])}),
+                       'to': "orm['orders.Order']"}),
             'payment_method': ('django.db.models.fields.CharField', [],
                                {'default': "''", 'max_length': '20',
                                 'blank': 'True'}),
@@ -218,7 +214,7 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [],
-                     {'to': "orm['{0}']".format(MODEL_MAP['user']['model']),
+                     {'to': "orm['members.Member']",
                       'null': 'True', 'blank': 'True'})
         },
         u'payments.orderpaymentaction': {
@@ -297,8 +293,8 @@ class Migration(SchemaMigration):
                     {'related_name': "u'taggit_taggeditem_items'",
                      'to': u"orm['taggit.Tag']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.Member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [],

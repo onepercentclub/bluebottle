@@ -10,14 +10,11 @@ from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.utils.model_dispatcher import get_order_model
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments_mock.adapters import MockPaymentAdapter
 from mock import patch
 
 from bluebottle.utils.utils import StatusDefinition
-
-ORDER_MODEL = get_order_model()
 
 
 class OrderApiTestCase(BluebottleTestCase):

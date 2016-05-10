@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-from bluebottle.utils.model_dispatcher import load_fixture
-from south.utils import datetime_utils as datetime
-from south.db import db
 from south.v2 import DataMigration
-from django.db import models
+
+from bluebottle.utils.model_dispatcher import load_fixture
+
 
 class Migration(DataMigration):
 

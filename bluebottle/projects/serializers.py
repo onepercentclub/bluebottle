@@ -6,28 +6,21 @@ from rest_framework import serializers
 from bs4 import BeautifulSoup
 from localflavor.generic.validators import IBANValidator, BICValidator
 
-from bluebottle.projects.models import ProjectBudgetLine
+from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.bluebottle_drf2.serializers import (
     EuroField, OEmbedField, SorlImageField, ImageSerializer,
     TaggableSerializerMixin, TagSerializer, PrivateFileSerializer)
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
 from bluebottle.geo.serializers import CountrySerializer
-from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_project_phaselog_model,
-                                               get_project_document_model)
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 
-PROJECT_MODEL = get_project_model()
-PROJECT_DOCUMENT_MODEL = get_project_document_model()
-PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
-
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PROJECT_PHASELOG_MODEL
+        model = ProjectPhase
 
 
 class ProjectPhaseSerializer(serializers.ModelSerializer):
@@ -91,7 +84,7 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug')
 
     class Meta:
-        model = PROJECT_DOCUMENT_MODEL
+        model = ProjectDocument
         fields = ('id', 'project', 'file')
 
 
@@ -128,7 +121,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
 
     class Meta:
-        model = PROJECT_MODEL
+        model = Project
         fields = ('id', 'created', 'title', 'pitch', 'organization',
                   'description', 'owner', 'status', 'image',
                   'country', 'theme', 'categories', 'tags', 'meta_data', 'language',
@@ -151,7 +144,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
     categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
 
     class Meta:
-        model = PROJECT_MODEL
+        model = Project
         fields = ('id', 'title', 'status', 'image', 'country', 'pitch',
                   'theme', 'categories', 'owner', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'deadline', 'latitude',
@@ -166,7 +159,7 @@ class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
     image = SorlImageField('image', '400x300', crop='center')
 
     class Meta:
-        model = PROJECT_MODEL
+        model = Project
         fields = ('id', 'title', 'status', 'image', 'latitude', 'longitude')
 
 
@@ -254,7 +247,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
 
             # Get the current status or the first if not found
             try:
-                current_status = PROJECT_MODEL.objects.get(
+                current_status = Project.objects.get(
                     slug=self.data['slug']).status
             except KeyError:
                 current_status = ProjectPhase.objects.order_by(
@@ -280,7 +273,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
         return attrs
 
     class Meta:
-        model = PROJECT_MODEL
+        model = Project
         fields = ('id', 'title', 'description', 'editable', 'viewable',
                   'status', 'image', 'pitch', 'slug', 'tags', 'created',
                   'url', 'country', 'location', 'place', 'theme', 'categories',

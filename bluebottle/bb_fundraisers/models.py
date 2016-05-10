@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db import models
 from django.db.models import options
 from django.db.models.aggregates import Sum
@@ -16,10 +15,10 @@ options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
 
 
 class BaseFundraiser(models.Model, GetTweetMixin):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+    owner = models.ForeignKey('members.Member',
                               verbose_name=_("initiator"),
                               help_text=_("Project owner"))
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL,
+    project = models.ForeignKey('projects.Project',
                                 verbose_name=_("project"))
 
     title = models.CharField(_("title"), max_length=255)

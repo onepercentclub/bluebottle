@@ -6,17 +6,11 @@ from bluebottle.bb_orders.permissions import OrderIsNew, IsOrderCreator
 from bluebottle.clients import properties
 from bluebottle.donations.serializers import LatestDonationSerializer, PreviewDonationSerializer, \
     PreviewDonationWithoutAmountSerializer
+from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.projects.models import Project
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
-from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_donation_model,
-                                               get_fundraiser_model)
-from bluebottle.members.models import Member
 from bluebottle.donations.models import Donation
 from bluebottle.utils.utils import StatusDefinition
-
-PROJECT_MODEL = get_project_model()
-FUNDRAISER_MODEL = get_fundraiser_model()
-DONATION_MODEL = get_donation_model()
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +28,7 @@ class ValidDonationsMixin(object):
 
 
 class DonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = DONATION_MODEL
+    model = Donation
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -43,7 +37,7 @@ class DonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
-    model = DONATION_MODEL
+    model = Donation
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -52,7 +46,7 @@ class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 
 
 class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = DONATION_MODEL
+    model = Donation
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -72,21 +66,21 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
         if fundraiser_id:
             try:
-                fundraiser = FUNDRAISER_MODEL.objects.get(pk=fundraiser_id)
+                fundraiser = Fundraiser.objects.get(pk=fundraiser_id)
                 filter_kwargs['fundraiser'] = fundraiser
-            except FUNDRAISER_MODEL.DoesNotExist:
+            except Fundraiser.DoesNotExist:
                 raise Http404(u"No %(verbose_name)s found matching the query" %
-                              {'verbose_name': FUNDRAISER_MODEL._meta.verbose_name})
+                              {'verbose_name': Fundraiser._meta.verbose_name})
         elif project_slug:
             try:
-                project = PROJECT_MODEL.objects.get(slug=project_slug)
+                project = Project.objects.get(slug=project_slug)
                 filter_kwargs['project'] = project
-            except PROJECT_MODEL.DoesNotExist:
+            except Project.DoesNotExist:
                 raise Http404(u"No %(verbose_name)s found matching the query" %
                               {'verbose_name': queryset.model._meta.verbose_name})
         else:
             raise Http404(u"No %(verbose_name)s found matching the query" %
-                          {'verbose_name': PROJECT_MODEL._meta.verbose_name})
+                          {'verbose_name': Project._meta.verbose_name})
 
         if 'co_financing' in self.request.QUERY_PARAMS and \
            self.request.QUERY_PARAMS['co_financing'] == 'true':
@@ -103,7 +97,7 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class ProjectDonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
-    model = DONATION_MODEL
+    model = Donation
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -112,7 +106,7 @@ class ProjectDonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 
 
 class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = DONATION_MODEL
+    model = Donation
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
                                             'default')
 
@@ -123,9 +117,9 @@ class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
         project_slug = self.request.QUERY_PARAMS.get('project', None)
         try:
-            project = PROJECT_MODEL.objects.get(slug=project_slug,
+            project = Project.objects.get(slug=project_slug,
                                                 owner=self.request.user)
-        except PROJECT_MODEL.DoesNotExist:
+        except Project.DoesNotExist:
             raise Http404(u"No project found matching the query")
 
         filter_kwargs['project'] = project
@@ -134,7 +128,7 @@ class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
-    model = DONATION_MODEL
+    model = Donation
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
                                             'default')
 
@@ -145,9 +139,9 @@ class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
 
         fundraiser_pk = self.request.QUERY_PARAMS.get('fundraiser', None)
         try:
-            fundraiser = FUNDRAISER_MODEL.objects.get(pk=fundraiser_pk,
+            fundraiser = Fundraiser.objects.get(pk=fundraiser_pk,
                                                       owner=self.request.user)
-        except FUNDRAISER_MODEL.DoesNotExist:
+        except Fundraiser.DoesNotExist:
             raise Http404(u"No fundraiser found matching the query")
 
         filter_kwargs['fundraiser'] = fundraiser
@@ -156,7 +150,7 @@ class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 
 class ManageDonationList(generics.ListCreateAPIView):
-    model = DONATION_MODEL
+    model = Donation
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
                                             'manage')
     permission_classes = (IsOrderCreator, OrderIsNew)
@@ -182,7 +176,7 @@ class ManageDonationList(generics.ListCreateAPIView):
 
 
 class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = DONATION_MODEL
+    model = Donation
     serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
                                             'manage')
 

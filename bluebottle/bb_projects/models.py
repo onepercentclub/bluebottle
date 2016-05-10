@@ -1,12 +1,8 @@
-from datetime import datetime
-
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Count, Sum, options
 from django.template.defaultfilters import slugify
-from django.utils.timezone import now
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 from django.utils.timezone import now
@@ -19,8 +15,7 @@ from sorl.thumbnail import ImageField
 from taggit.managers import TaggableManager
 
 from bluebottle.bb_projects.fields import MoneyField
-from bluebottle.utils.model_dispatcher import (get_project_phaselog_model,
-                                               get_taskmember_model)
+from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
@@ -98,9 +93,9 @@ class BaseProjectDocument(models.Model):
 
     file = models.FileField(
         upload_to='projects/documents')
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
+    author = models.ForeignKey('members.Member',
                                verbose_name=_('author'), blank=True, null=True)
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL,
+    project = models.ForeignKey('projects.Project',
                                 related_name="documents")
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
@@ -112,19 +107,6 @@ class BaseProjectDocument(models.Model):
         verbose_name_plural = _('project documents')
         abstract = True
 
-    @property
-    def document_url(self):
-        from bluebottle.utils.model_dispatcher import get_project_document_model
-        document_model = get_project_document_model()
-        content_type = ContentType.objects.get_for_model(document_model).id
-        # pk may be unset if not saved yet, in which case no url can be
-        # generated.
-        if self.pk is not None:
-            return reverse('document_download_detail',
-                           kwargs={'content_type': content_type,
-                                   'pk': self.pk or 1})
-        return None
-
 
 class BaseProject(models.Model, GetTweetMixin):
 
@@ -135,11 +117,11 @@ class BaseProject(models.Model, GetTweetMixin):
 
     """ The base Project model. """
     owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name=_('initiator'),
+        'members.Member', verbose_name=_('initiator'),
         help_text=_('Project owner'), related_name='owner')
 
     organization = models.ForeignKey(
-        settings.ORGANIZATIONS_ORGANIZATION_MODEL, verbose_name=_(
+        'organizations.Organization', verbose_name=_(
             'organization'),
         help_text=_('Project organization'),
         related_name='organization', null=True, blank=True)
@@ -260,27 +242,6 @@ class BaseProject(models.Model, GetTweetMixin):
     def __unicode__(self):
         return self.slug if not self.title else self.title
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            original_slug = slugify(self.title)
-            counter = 2
-            qs = self.__class__.objects
-
-            while qs.filter(slug=original_slug).exists():
-                original_slug = '{0}-{1}'.format(original_slug, counter)
-                counter += 1
-            self.slug = original_slug
-
-        previous_status = None
-        if self.pk:
-            previous_status = self.__class__.objects.get(pk=self.pk).status
-        super(BaseProject, self).save(*args, **kwargs)
-
-        # Only log project phase if the status has changed
-        if self is not None and previous_status != self.status:
-            get_project_phaselog_model().objects.create(
-                project=self, status=self.status)
-
     def update_amounts(self, save=True):
         """
         Update amount_donated and amount_needed
@@ -346,7 +307,7 @@ class BaseProject(models.Model, GetTweetMixin):
 
     @cached_property
     def sourcing(self):
-        taskmembers = get_taskmember_model().objects.filter(
+        taskmembers = TaskMember.objects.filter(
             task__project=self,
             status__in=['applied', 'accepted', 'realized']
         ).distinct('member')
@@ -358,7 +319,7 @@ class BaseProject(models.Model, GetTweetMixin):
 
 
 class BaseProjectPhaseLog(models.Model):
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    project = models.ForeignKey('projects.Project')
     status = models.ForeignKey("bb_projects.ProjectPhase")
     start = CreationDateTimeField(
         _('created'), help_text=_('When this project entered in this status.'))

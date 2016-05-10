@@ -21,7 +21,7 @@ class Migration(SchemaMigration):
 
 
     models = {
-        u'{0}.projectphase'.format(settings.PROJECTS_PROJECT_MODEL.split('.')[0]): {
+        u'projects.projectphase': {
             'Meta': {'ordering': "['sequence']", 'object_name': 'ProjectPhase'},
             'active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '400', 'blank': 'True'}),
@@ -33,7 +33,7 @@ class Migration(SchemaMigration):
             'slug': ('django.db.models.fields.SlugField', [], {'unique': 'True', 'max_length': '200'}),
             'viewable': ('django.db.models.fields.BooleanField', [], {'default': 'True'})
         },
-        u'{0}.projecttheme'.format(settings.PROJECTS_PROJECT_MODEL.split('.')[0]): {
+        u'prokects.projecttheme': {
             'Meta': {'ordering': "['name']", 'object_name': 'ProjectTheme'},
             'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),

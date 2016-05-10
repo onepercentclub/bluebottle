@@ -1,8 +1,7 @@
-from bluebottle.utils.model_dispatcher import get_order_model
 from rest_framework import serializers
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
 
-ORDER_MODEL = get_order_model()
+from bluebottle.orders.models import Order
+from bluebottle.utils.serializer_dispatcher import get_serializer_class
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -10,7 +9,7 @@ class OrderSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
-        model = ORDER_MODEL
+        model = Order
         fields = ('id', 'user', 'created')
 
 
@@ -22,5 +21,5 @@ class ManageOrderSerializer(serializers.ModelSerializer):
         many=True, read_only=True)
 
     class Meta:
-        model = ORDER_MODEL
+        model = Order
         fields = ('id', 'user', 'total', 'status', 'donations', 'created')

@@ -1,17 +1,11 @@
+from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.test.utils import BluebottleTestCase
 from django.core import mail
 from django.test import TestCase
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory, \
-    TASK_MODEL
-
-from bluebottle.utils.model_dispatcher import get_taskmember_model
-
-TASKS_MEMBER_MODEL = get_taskmember_model()
-
-from bluebottle.bb_tasks import taskmail
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 
 
 class TaskEmailTests(BluebottleTestCase):
@@ -30,19 +24,19 @@ class TaskEmailTests(BluebottleTestCase):
         self.some_project.owner.primary_language = 'en'
 
         self.task = TaskFactory.create(
-            status=TASK_MODEL.TaskStatuses.in_progress,
+            status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
         )
 
         self.taskmember1 = TaskMemberFactory.create(
             member=self.some_user,
-            status=TASKS_MEMBER_MODEL.TaskMemberStatuses.applied,
+            status=TaskMember.TaskMemberStatuses.applied,
             task=self.task
 
         )
         self.taskmember2 = TaskMemberFactory.create(
             member=self.another_user,
-            status=TASKS_MEMBER_MODEL.TaskMemberStatuses.applied,
+            status=TaskMember.TaskMemberStatuses.applied,
             task=self.task
         )
 
@@ -74,7 +68,7 @@ class TaskEmailTests(BluebottleTestCase):
 
         # change the status from one member to accepted -> he should receive
         # an e-mail
-        self.taskmember1.status = TASKS_MEMBER_MODEL.TaskMemberStatuses.accepted
+        self.taskmember1.status = TaskMember.TaskMemberStatuses.accepted
         self.taskmember1.save()
 
         # test that the e-mail is indeed sent

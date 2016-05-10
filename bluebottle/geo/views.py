@@ -1,12 +1,9 @@
 from rest_framework import generics
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import LocationSerializer
-
-from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.projects.models import Project
 
 from .serializers import CountrySerializer
-
-PROJECT_MODEL = get_project_model()
 
 
 class CountryList(generics.ListAPIView):
@@ -30,7 +27,7 @@ class CountryDetail(generics.RetrieveAPIView):
 class UsedCountryList(CountryList):
     def get_queryset(self):
         qs = super(UsedCountryList, self).get_queryset()
-        project_country_ids = PROJECT_MODEL.objects.filter(
+        project_country_ids = Project.objects.filter(
             status__viewable=True).values_list('country', flat=True).distinct()
 
         return qs.filter(id__in=project_country_ids)

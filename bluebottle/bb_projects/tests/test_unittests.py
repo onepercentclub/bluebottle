@@ -3,7 +3,7 @@ import datetime
 from django.utils import timezone
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.projects.models import Project
+from bluebottle.projects.models import Project, ProjectPhaseLog
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -14,42 +14,15 @@ from bluebottle.test.factory_models.tasks import TaskFactory, \
     TaskMemberFactory
 
 
-from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_project_phaselog_model)
-
-
-PROJECT_MODEL = get_project_model()
-PROJECT_PHASE_LOG_MODEL = get_project_phaselog_model()
-
-
 class TestProjectTestCase(BluebottleTestCase):
     def setUp(self):
         super(TestProjectTestCase, self).setUp()
         self.init_projects()
 
     def test_fake(self):
-        self.assertEquals(PROJECT_MODEL.objects.count(), 0)
+        self.assertEquals(Project.objects.count(), 0)
         ProjectFactory.create()
-        self.assertEquals(PROJECT_MODEL.objects.count(), 1)
-
-
-class TestProjectPhaseLog(TestProjectTestCase):
-    def test_create_phase_log(self):
-        phase1 = ProjectPhaseFactory.create()
-        phase2 = ProjectPhaseFactory.create()
-
-        project = ProjectFactory.create(status=phase1)
-
-        phase_logs = PROJECT_PHASE_LOG_MODEL.objects.all()
-        self.assertEquals(len(phase_logs), 1)
-        self.assertEquals(phase_logs[0].status, project.status)
-
-        project.status = phase2
-        project.save()
-
-        phase_logs = PROJECT_PHASE_LOG_MODEL.objects.all().order_by("-start")
-        self.assertEquals(len(phase_logs), 2)
-        self.assertEquals(phase_logs[0].status, project.status)
+        self.assertEquals(Project.objects.count(), 1)
 
 
 class TestProjectDonationsStatusChanges(BluebottleTestCase):

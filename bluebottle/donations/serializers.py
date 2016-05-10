@@ -1,12 +1,10 @@
 # coding=utf-8
+from bluebottle.donations.models import Donation
 from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from rest_framework import serializers
 
-from bluebottle.utils.model_dispatcher import get_donation_model
 from bluebottle.projects.serializers import \
     ProjectPreviewSerializer as BaseProjectPreviewSerializer
-
-DONATION_MODEL = get_donation_model()
 
 
 class ManageDonationSerializer(serializers.ModelSerializer):
@@ -19,7 +17,7 @@ class ManageDonationSerializer(serializers.ModelSerializer):
     status = serializers.CharField(source='status', read_only=True)
 
     class Meta:
-        model = DONATION_MODEL
+        model = Donation
         fields = ('id', 'project', 'fundraiser', 'amount', 'status', 'order',
                   'anonymous', 'completed', 'created', 'reward')
 
@@ -33,21 +31,21 @@ class PreviewDonationSerializer(serializers.ModelSerializer):
         source='public_user')
 
     class Meta:
-        model = DONATION_MODEL
+        model = Donation
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
                   'anonymous', 'amount', 'reward')
 
 
 class PreviewDonationWithoutAmountSerializer(PreviewDonationSerializer):
     class Meta:
-        model = DONATION_MODEL
+        model = Donation
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
                   'anonymous')
 
 
 class DefaultDonationSerializer(PreviewDonationSerializer):
     class Meta:
-        model = DONATION_MODEL
+        model = Donation
         fields = PreviewDonationSerializer.Meta.fields + ('amount', 'reward')
 
 
@@ -68,6 +66,6 @@ class LatestDonationSerializer(serializers.ModelSerializer):
     user = get_serializer_class('AUTH_USER_MODEL', 'preview')()
 
     class Meta:
-        model = DONATION_MODEL
+        model = Donation
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
                   'anonymous', 'amount')

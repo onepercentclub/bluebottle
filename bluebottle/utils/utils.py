@@ -1,6 +1,6 @@
 import socket
 
-from django_fsm.db.fields import TransitionNotAllowed
+from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
 from django.conf import settings
 from django.utils.http import urlquote
@@ -91,19 +91,22 @@ class FSMTransition:
         # Check that the new_status is in the available transitions -
         # created with Django FSM decorator
         try:
-            transition_method = [i[1] for i in available_transitions if
-                                 i[0] == new_status].pop()
+            for transition in available_transitions:
+                if transition.name == new_status:
+                    instance_method = transition.method
+
         except IndexError:
             # TODO: should we raise exception here?
             raise TransitionNotAllowed(
                 "Can't switch from state '{0}' to state '{1}' for {2}".format(self.status, new_status, self.__class__.__name__))
 
         # Get the function method on the instance
-        instance_method = getattr(self, transition_method.__name__)
+        # instance_method = getattr(self, transition_method.__name__)
 
+        # import ipdb; ipdb.set_trace()
         # Call state transition method
         try:
-            instance_method()
+            instance_method(self)
         except Exception as e:
             raise e
 

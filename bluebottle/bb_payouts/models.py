@@ -12,7 +12,7 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
-from django_fsm.db.fields import FSMField, transition
+from django_fsm import FSMField, transition
 
 from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.bb_projects.fields import MoneyField
@@ -179,30 +179,33 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
             next_date = timezone.datetime(now.year, now.month, 1) + relativedelta(months=1)
         return next_date
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.NEW,
                         StatusDefinition.IN_PROGRESS,
                         StatusDefinition.RETRY],
                 target=StatusDefinition.IN_PROGRESS)
     def in_progress(self):
         self.submitted = timezone.now()
+        self.save()
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.IN_PROGRESS,
                         StatusDefinition.RETRY],
                 target=StatusDefinition.SETTLED)
     def settled(self, completed=None):
         self.completed = completed
         self.protected = True
+        self.save()
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.SETTLED,
                         StatusDefinition.IN_PROGRESS],
                 target=StatusDefinition.RETRY)
     def retry(self):
         self.protected = True
         self.planned = self.__class__.get_next_planned_date()
-
+        self.save()
+        
 
 class PayoutLogBase(models.Model):
     """

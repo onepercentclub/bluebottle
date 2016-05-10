@@ -7,7 +7,7 @@ from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
-from django_fsm.db.fields import FSMField, transition
+from django_fsm import FSMField, transition
 
 from bluebottle.donations.models import Donation
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
@@ -57,26 +57,26 @@ class BaseOrder(models.Model, FSMTransition):
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
                                 default=0)
 
-    @transition(field=status, save=True, 
+    @transition(field=status, 
                 source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED],
                 target=StatusDefinition.LOCKED)
     def locked(self):
-        # TODO: add locked state behaviour here
-        pass
+        self.save()
 
-    @transition(field=status, save=True, 
+    @transition(field=status, 
                 source=[StatusDefinition.LOCKED, StatusDefinition.CREATED],
                 target=StatusDefinition.PLEDGED)
     def pledged(self):
-        pass
+        self.save()
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.LOCKED, StatusDefinition.FAILED],
                 target=StatusDefinition.PENDING)
     def pending(self):
         self.confirmed = now()
+        self.save()
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.PENDING, StatusDefinition.LOCKED,
                         StatusDefinition.FAILED],
                 target=StatusDefinition.SUCCESS)
@@ -84,14 +84,16 @@ class BaseOrder(models.Model, FSMTransition):
         if not self.confirmed:
             self.confirmed = now()
         self.completed = now()
+        self.save()
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.LOCKED, StatusDefinition.PENDING,
                         StatusDefinition.SUCCESS],
                 target=StatusDefinition.FAILED)
     def failed(self):
         self.completed = None
         self.confirmed = None
+        self.save()
 
     def update_total(self, save=True):
         donations = Donation.objects.filter(order=self)

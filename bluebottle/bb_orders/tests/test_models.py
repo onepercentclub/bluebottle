@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from bluebottle.test.utils import BluebottleTestCase
-from django_fsm.db.fields import TransitionNotAllowed
+from django_fsm import TransitionNotAllowed
 
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory

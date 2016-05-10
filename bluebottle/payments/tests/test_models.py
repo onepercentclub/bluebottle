@@ -1,5 +1,5 @@
 from collections import namedtuple
-from django_fsm.db.fields import TransitionNotAllowed
+from django_fsm import TransitionNotAllowed
 from mock import patch
 
 from bluebottle import clients

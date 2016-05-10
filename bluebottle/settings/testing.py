@@ -84,6 +84,3 @@ RECURRING_DONATIONS_ENABLED = True
 
 SEND_WELCOME_MAIL = False
 SEND_MAIL = True
-
-if 'test' in sys.argv:
-    logging.disable(logging.WARNING)

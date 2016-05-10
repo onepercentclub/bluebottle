@@ -7,18 +7,15 @@ from bluebottle.bluebottle_drf2.views import RetrieveUpdateDeleteAPIView, \
 from rest_framework import permissions, exceptions
 
 from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.fundraisers.serializers import BaseFundraiserSerializer
 from bluebottle.projects.models import Project
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
-
-FUNDRAISER_SERIALIZER = get_serializer_class('FUNDRAISERS_FUNDRAISER_MODEL',
-                                             'default')
 
 
 class FundraiserListView(ListCreateAPIView):
     model = Fundraiser
-    serializer_class = FUNDRAISER_SERIALIZER
+    serializer_class = BaseFundraiserSerializer
     permission_classes = (TenantConditionalOpenClose,
                           permissions.IsAuthenticatedOrReadOnly,)
 
@@ -61,6 +58,6 @@ class FundraiserListView(ListCreateAPIView):
 
 class FundraiserDetailView(RetrieveUpdateDeleteAPIView):
     model = Fundraiser
-    serializer_class = FUNDRAISER_SERIALIZER
+    serializer_class = BaseFundraiserSerializer
     permission_classes = (TenantConditionalOpenClose,
                           permissions.IsAuthenticatedOrReadOnly,)

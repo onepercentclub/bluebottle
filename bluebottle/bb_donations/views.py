@@ -5,10 +5,9 @@ from rest_framework import permissions, generics
 from bluebottle.bb_orders.permissions import OrderIsNew, IsOrderCreator
 from bluebottle.clients import properties
 from bluebottle.donations.serializers import LatestDonationSerializer, PreviewDonationSerializer, \
-    PreviewDonationWithoutAmountSerializer
+    PreviewDonationWithoutAmountSerializer, DefaultDonationSerializer, ManageDonationSerializer
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.projects.models import Project
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.donations.models import Donation
 from bluebottle.utils.utils import StatusDefinition
 
@@ -107,8 +106,7 @@ class ProjectDonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 
 class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
     model = Donation
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'default')
+    serializer_class = DefaultDonationSerializer
 
     def get_queryset(self):
         queryset = super(MyProjectDonationList, self).get_queryset()
@@ -129,8 +127,7 @@ class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
     model = Donation
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'default')
+    serializer_class = DefaultDonationSerializer
 
     def get_queryset(self):
         queryset = super(MyFundraiserDonationList, self).get_queryset()
@@ -151,8 +148,7 @@ class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
 
 class ManageDonationList(generics.ListCreateAPIView):
     model = Donation
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'manage')
+    serializer_class = ManageDonationSerializer
     permission_classes = (IsOrderCreator, OrderIsNew)
     paginate_by = 10
 
@@ -177,8 +173,7 @@ class ManageDonationList(generics.ListCreateAPIView):
 
 class ManageDonationDetail(generics.RetrieveUpdateDestroyAPIView):
     model = Donation
-    serializer_class = get_serializer_class('DONATIONS_DONATION_MODEL',
-                                            'manage')
+    serializer_class = ManageDonationSerializer
 
     permission_classes = (OrderIsNew, IsOrderCreator)
 

@@ -5,7 +5,7 @@ from bluebottle.bb_orders.signals import order_requested
 from rest_framework import generics
 
 from bluebottle.orders.models import Order
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
+from bluebottle.orders.serializers import OrderSerializer, ManageOrderSerializer
 from bluebottle.payments.services import PaymentService
 from bluebottle.utils.utils import StatusDefinition
 
@@ -16,17 +16,17 @@ anonymous_order_id_session_key = 'new_order_id'
 
 class OrderList(generics.ListCreateAPIView):
     model = Order
-    serializer_class = get_serializer_class('ORDERS_ORDER_MODEL', 'preview')
+    serializer_class = OrderSerializer
 
 
 class OrderDetail(generics.RetrieveUpdateAPIView):
     model = Order
-    serializer_class = get_serializer_class('ORDERS_ORDER_MODEL', 'preview')
+    serializer_class = OrderSerializer
 
 
 class ManageOrderList(generics.ListCreateAPIView):
     model = Order
-    serializer_class = get_serializer_class('ORDERS_ORDER_MODEL', 'manage')
+    serializer_class = ManageOrderSerializer
     filter_fields = ('status',)
     paginate_by = 10
 
@@ -53,7 +53,7 @@ class ManageOrderList(generics.ListCreateAPIView):
 
 class ManageOrderDetail(generics.RetrieveUpdateAPIView):
     model = Order
-    serializer_class = get_serializer_class('ORDERS_ORDER_MODEL', 'manage')
+    serializer_class = ManageOrderSerializer
     permission_classes = (IsOrderCreator, OrderIsNew)
 
     def get(self, request, *args, **kwargs):

@@ -15,17 +15,17 @@ anonymous_order_id_session_key = 'new_order_id'
 
 
 class OrderList(generics.ListCreateAPIView):
-    model = Order
+    queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
 
 class OrderDetail(generics.RetrieveUpdateAPIView):
-    model = Order
+    queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
 
 class ManageOrderList(generics.ListCreateAPIView):
-    model = Order
+    queryset = Order.objects.all()
     serializer_class = ManageOrderSerializer
     filter_fields = ('status',)
     paginate_by = 10
@@ -52,7 +52,7 @@ class ManageOrderList(generics.ListCreateAPIView):
 
 
 class ManageOrderDetail(generics.RetrieveUpdateAPIView):
-    model = Order
+    queryset = Order.objects.all()
     serializer_class = ManageOrderSerializer
     permission_classes = (IsOrderCreator, OrderIsNew)
 

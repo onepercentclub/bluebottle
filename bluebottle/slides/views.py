@@ -7,7 +7,7 @@ from django.db.models import Q
 
 
 class SlideList(generics.ListAPIView):
-    model = Slide
+    queryset = Slide.objects.all()
     serializer_class = SlideSerializer
     permissions_classes = (permissions.SAFE_METHODS,)
     paginate_by = 10

@@ -5,7 +5,7 @@ from .serializers import ContactMessageSerializer
 
 
 class ContactRequestCreate(generics.CreateAPIView):
-    model = ContactMessage
+    queryset = ContactMessage.objects.all()
     serializer_class = ContactMessageSerializer
 
     def pre_save(self, obj):

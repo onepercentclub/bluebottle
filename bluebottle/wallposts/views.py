@@ -31,7 +31,7 @@ class WallpostFilter(django_filters.FilterSet):
 
 
 class WallpostList(ListAPIView):
-    model = Wallpost
+    queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     paginate_by = 10
 
@@ -63,7 +63,7 @@ class WallpostList(ListAPIView):
 
 
 class TextWallpostList(ListCreateAPIView):
-    model = TextWallpost
+    queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
     paginate_by = 5
@@ -113,20 +113,20 @@ class TextWallpostList(ListCreateAPIView):
 
 
 class MediaWallpostList(TextWallpostList):
-    model = MediaWallpost
+    queryset = MediaWallpost.objects.all()
     serializer_class = MediaWallpostSerializer
     filter_class = WallpostFilter
     paginate_by = 5
 
 
 class WallpostDetail(RetrieveUpdateDeleteAPIView):
-    model = Wallpost
+    queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
 
 
 class MediaWallpostPhotoList(ListCreateAPIView):
-    model = MediaWallpostPhoto
+    queryset = MediaWallpostPhoto.objects.all()
     serializer_class = MediaWallpostPhotoSerializer
     paginate_by = 4
 
@@ -164,7 +164,7 @@ class MediaWallpostPhotoList(ListCreateAPIView):
 
 
 class MediaWallpostPhotoDetail(RetrieveUpdateDeleteAPIView):
-    model = MediaWallpostPhoto
+    queryset = MediaWallpostPhoto.objects.all()
     serializer_class = MediaWallpostPhotoSerializer
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,
                           IsConnectedWallpostAuthorOrReadOnly)
@@ -183,7 +183,7 @@ class ReactionList(ListCreateAPIView):
 
 
 class ReactionDetail(RetrieveUpdateDeleteAPIView):
-    model = Reaction
+    queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
 

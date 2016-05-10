@@ -7,7 +7,7 @@ from .serializers import RewardSerializer
 
 
 class RewardList(generics.ListCreateAPIView):
-    model = Reward
+    queryset = Reward.objects.all()
     serializer_class = RewardSerializer
     permission_classes = (IsProjectOwnerOrReadOnly, )
     paginate_by = 100
@@ -21,6 +21,6 @@ class RewardList(generics.ListCreateAPIView):
 
 
 class RewardDetail(generics.RetrieveDestroyAPIView):
-    model = Reward
+    queryset = Reward.objects.all()
     serializer_class = RewardSerializer
     permission_classes = (IsProjectOwnerOrReadOnly, NoDonationsOrReadOnly)

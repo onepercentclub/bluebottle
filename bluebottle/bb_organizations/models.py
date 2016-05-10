@@ -9,9 +9,6 @@ from django.db.models import options
 from djchoices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
-                                                 'manage_serializer')
-
 
 class BaseOrganizationMember(models.Model):
     """ Members from a Organization """
@@ -24,7 +21,7 @@ class BaseOrganizationMember(models.Model):
     function = models.CharField(_('function'),
                                 max_length=20,
                                 choices=MemberFunctions.choices)
-    organization = models.ForeignKey(settings.ORGANIZATIONS_ORGANIZATION_MODEL,
+    organization = models.ForeignKey('organizations.Organization',
                                      related_name="members")
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
@@ -73,8 +70,6 @@ class BaseOrganization(models.Model):
         ordering = ['name']
         verbose_name = _('organization')
         verbose_name_plural = _('organizations')
-        default_serializer = 'bluebottle.organizations.serializers.OrganizationSerializer'
-        manage_serializer = 'bluebottle.organizations.serializers.ManageOrganizationSerializer'
 
     def __unicode__(self):
         return self.name

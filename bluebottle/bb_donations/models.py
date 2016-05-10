@@ -5,10 +5,6 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
-                                                 'preview_serializer',
-                                                 'manage_serializer')
-
 
 class BaseDonation(models.Model):
     """
@@ -52,7 +48,3 @@ class BaseDonation(models.Model):
 
     class Meta:
         abstract = True
-        default_serializer = 'bluebottle.donations.serializers.DefaultDonationSerializer'
-        preview_serializer = 'bluebottle.donations.serializers.PreviewDonationSerializer'
-        manage_serializer = 'bluebottle.donations.serializers.ManageDonationSerializer'
-

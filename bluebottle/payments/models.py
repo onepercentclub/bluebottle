@@ -18,8 +18,6 @@ from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.managers import PaymentManager
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer',)
-
 
 def trim_tenant_url(max_length, tenant_url):
     """
@@ -119,8 +117,7 @@ class OrderPayment(models.Model, FSMTransition):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True,
         null=True)
-    order = models.ForeignKey(
-        settings.ORDERS_ORDER_MODEL, related_name='order_payments')
+    order = models.ForeignKey('orders.Order', related_name='order_payments')
     status = FSMField(
         default=StatusDefinition.CREATED, choices=STATUS_CHOICES,
         protected=True)

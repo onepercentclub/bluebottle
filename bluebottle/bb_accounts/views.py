@@ -11,7 +11,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.http import Http404
 from django.utils.http import base36_to_int, int_to_base36
 from django.utils.translation import ugettext_lazy as _
-from django.utils.importlib import import_module
+from importlib import import_module
 
 from rest_framework import status, views, response, generics
 from tenant_extras.drf_permissions import TenantConditionalOpenClose

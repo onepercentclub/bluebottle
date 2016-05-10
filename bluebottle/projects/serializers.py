@@ -188,9 +188,6 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     story = StoryField(required=False)
     is_funding = serializers.Field()
 
-    tasks = get_serializer_class('TASKS_TASK_MODEL')(many=True,
-                                                     source='task_set',
-                                                     read_only=True)
     documents = ProjectDocumentSerializer(
         many=True, source='documents', read_only=True)
 
@@ -281,7 +278,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                   'account_holder_address', 'account_holder_postal_code',
                   'account_holder_city', 'account_holder_country',
                   'account_number', 'account_bic', 'documents',
-                  'account_bank_country', 'tasks', 'amount_asked',
+                  'account_bank_country', 'amount_asked',
                   'amount_donated', 'amount_needed', 'video_url',
                   'video_html', 'is_funding', 'story',
                   'budget_lines', 'deadline', 'latitude', 'longitude',
@@ -292,7 +289,7 @@ class ProjectSupporterSerializer(serializers.ModelSerializer):
     """
     For displaying donations on project and member pages.
     """
-    member = get_serializer_class('AUTH_USER_MODEL', 'preview')(source='user')
+    member = UserPreviewSerializer(source='user')
     project = ProjectPreviewSerializer()
     date_donated = serializers.DateTimeField(source='ready')
 
@@ -302,7 +299,7 @@ class ProjectSupporterSerializer(serializers.ModelSerializer):
 
 
 class ProjectDonationSerializer(serializers.ModelSerializer):
-    member = get_serializer_class('AUTH_USER_MODEL', 'preview')(source='user')
+    member = UserPreviewSerializer(source='user')
     date_donated = serializers.DateTimeField(source='ready')
     amount = EuroField(source='amount')
 

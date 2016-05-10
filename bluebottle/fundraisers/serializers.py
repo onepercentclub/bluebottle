@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer, OEmbedField
 from bluebottle.fundraisers.models import Fundraiser
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
+from bluebottle.members.serializers import UserProfileSerializer
 from bluebottle.utils.serializers import MetaField
 
 
@@ -40,7 +40,7 @@ class ImageSerializerExt(ImageSerializer):
 class BaseFundraiserSerializer(serializers.ModelSerializer):
     """ Serializer to view/create fundraisers """
 
-    owner = get_serializer_class('AUTH_USER_MODEL', 'default')(read_only=True)
+    owner = UserProfileSerializer(read_only=True)
     project = serializers.SlugRelatedField(source='project', slug_field='slug')
     image = ImageSerializerExt()
     amount_donated = serializers.DecimalField(source='amount_donated',

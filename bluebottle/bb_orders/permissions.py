@@ -71,7 +71,7 @@ class IsOrderCreator(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS or request.method == 'DELETE':
             return True
 
-        if view.model == Order:
+        if view.queryset.model == Order:
             # Order must belong to the current user or have no user assigned (anonymous)
             order_user_id = int(request.DATA.get('user', 0))
             if order_user_id and order_user_id != request.user.pk:
@@ -117,7 +117,7 @@ class OrderIsNew(permissions.BasePermission):
             return True
 
         # This is for creating new objects that have a relation (fk) to Order.
-        if not view.model == Order:
+        if not view.queryset.model == Order:
             order = self._get_order_from_request(request)
             if order:
                 return order.status == StatusDefinition.CREATED

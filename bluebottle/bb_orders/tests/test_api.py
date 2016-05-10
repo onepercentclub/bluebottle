@@ -65,6 +65,7 @@ class TestCreateUpdateOrder(OrderApiTestCase):
         # Create an order
         response = self.client.post(self.manage_order_list_url, {},
                                     token=self.user1_token)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], StatusDefinition.CREATED)
         self.assertEqual(response.data['total'], 0)

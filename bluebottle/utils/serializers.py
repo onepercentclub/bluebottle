@@ -5,7 +5,7 @@ import re
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
-from django.utils.importlib import import_module
+from importlib import import_module
 
 from django_tools.middlewares import ThreadLocal
 from rest_framework import serializers

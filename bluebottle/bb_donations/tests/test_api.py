@@ -16,8 +16,6 @@ from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
 
-from django.utils.importlib import import_module
-
 from bluebottle.utils.utils import StatusDefinition
 
 from rest_framework import status

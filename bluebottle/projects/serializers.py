@@ -6,6 +6,7 @@ from rest_framework import serializers
 from bs4 import BeautifulSoup
 from localflavor.generic.validators import IBANValidator, BICValidator
 
+from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.bluebottle_drf2.serializers import (
     EuroField, OEmbedField, SorlImageField, ImageSerializer,
@@ -13,7 +14,6 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
 from bluebottle.geo.serializers import CountrySerializer
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 
@@ -90,7 +90,7 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
-    owner = get_serializer_class('AUTH_USER_MODEL', 'default')()
+    owner = UserProfileSerializer()
     image = ImageSerializer(required=False)
     tags = TagSerializer()
     task_count = serializers.IntegerField(source='task_count')
@@ -139,7 +139,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
     image = SorlImageField('image', '400x300', crop='center')
     theme = ProjectThemeSerializer(source='theme')
 
-    owner = get_serializer_class('AUTH_USER_MODEL', 'preview')()
+    owner = UserPreviewSerializer()
 
     categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
 

@@ -6,8 +6,8 @@ from rest_framework import serializers
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, PolymorphicSerializer, ContentTextField, PhotoSerializer)
 from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.projects.models import Project
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
 
 from .models import (
     Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto,
@@ -33,7 +33,7 @@ class ReactionSerializer(serializers.ModelSerializer):
     """
     Serializer for Wallpost Reactions.
     """
-    author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
+    author = UserPreviewSerializer()
     text = ContentTextField()
     wallpost = serializers.PrimaryKeyRelatedField()
 
@@ -91,7 +91,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
         please subclass it.
     """
 
-    author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
+    author = UserPreviewSerializer()
     reactions = ReactionSerializer(many=True, read_only=True)
     parent_type = WallpostContentTypeField(slug_field='model',
                                            source='content_type')

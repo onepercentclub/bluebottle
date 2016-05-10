@@ -33,4 +33,3 @@ def _update_permissions(sender, **kwargs):
     # Load additional permissions after all models have been synced
     if kwargs['app'].__name__ == settings.INSTALLED_APPS[-1] + ".models":
         update_group_permissions(sender, ADDITIONAL_GROUP_PERMS)
-        

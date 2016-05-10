@@ -20,10 +20,10 @@ def _order_status_changed(sender, instance, **kwargs):
         # only happen once.
 
         first_time_success = (
-            kwargs['source'] not in [StatusDefinition.PLEDGED, 
+            kwargs['source'] not in [StatusDefinition.PLEDGED,
                                      StatusDefinition.SUCCESS,
                                      StatusDefinition.PENDING]
-            and kwargs['target'] in [StatusDefinition.PLEDGED, 
+            and kwargs['target'] in [StatusDefinition.PLEDGED,
                                      StatusDefinition.SUCCESS,
                                      StatusDefinition.PENDING])
 

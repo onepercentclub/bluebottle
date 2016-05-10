@@ -6,7 +6,7 @@ from rest_framework import serializers
 from bs4 import BeautifulSoup
 from localflavor.generic.validators import IBANValidator, BICValidator
 
-from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
+from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project, ProjectPhaseLog
 from bluebottle.bluebottle_drf2.serializers import (
     EuroField, OEmbedField, SorlImageField, ImageSerializer,
     TaggableSerializerMixin, TagSerializer, PrivateFileSerializer)
@@ -25,7 +25,7 @@ class ProjectPhaseLogSerializer(serializers.ModelSerializer):
 
 class ProjectPhaseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProjectPhase
+        model = ProjectPhaseLog
 
 
 class ProjectThemeSerializer(serializers.ModelSerializer):

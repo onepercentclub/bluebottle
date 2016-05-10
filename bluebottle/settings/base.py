@@ -464,26 +464,6 @@ LOGGING = {
 # Custom User model
 AUTH_USER_MODEL = 'members.Member'
 
-PROJECTS_PROJECT_MODEL = 'projects.Project'
-PROJECTS_PHASELOG_MODEL = 'projects.ProjectPhaseLog'
-PROJECT_DOCUMENT_MODEL = 'projects.ProjectDocument'
-
-FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.Fundraiser'
-
-TASKS_TASK_MODEL = 'tasks.Task'
-TASKS_SKILL_MODEL = 'tasks.Skill'
-TASKS_TASKMEMBER_MODEL = 'tasks.TaskMember'
-TASKS_TASKFILE_MODEL = 'tasks.TaskFile'
-
-ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
-ORGANIZATIONS_MEMBER_MODEL = 'organizations.OrganizationMember'
-
-ORDERS_ORDER_MODEL = 'orders.Order'
-DONATIONS_DONATION_MODEL = 'donations.Donation'
-
-PAYOUTS_PROJECTPAYOUT_MODEL = 'payouts.ProjectPayout'
-PAYOUTS_ORGANIZATIONPAYOUT_MODEL = 'payouts.OrganizationPayout'
-
 SOCIAL_AUTH_USER_MODEL = 'members.Member'
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_friends', 'public_profile', 'user_birthday']
 SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [('birthday', 'birthday')]

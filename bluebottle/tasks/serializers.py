@@ -52,7 +52,7 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
                                      default=Task.TaskStatuses.open)
     tags = TagSerializer()
     time_needed = serializers.DecimalField(min_value=0.0, max_digits=3,
-                                           decimal_places=10)
+                                           decimal_places=2)
 
     meta_data = MetaField(
         title='get_meta_title',

@@ -43,7 +43,7 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
     def get_urls(self):
         # Include extra API views in this admin page
         base_urls = super(NewsItemAdmin, self).get_urls()
-        info = self.model._meta.app_label, self.model._meta.module_name
+        info = self.model._meta.app_label, self.model._meta.model_name
         urlpatterns = patterns('',
                                url(r'^(?P<pk>\d+)/preview-canvas/$',
                                    self.admin_site.admin_view(
@@ -168,7 +168,7 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
 
     def render_change_form(self, request, context, add=False, change=False,
                            form_url='', obj=None):
-        info = self.model._meta.app_label, self.model._meta.module_name
+        info = self.model._meta.app_label, self.model._meta.model_name
         context.update({
             'preview_canvas_url': reverse(
                 'admin:{0}_{1}_preview_canvas'.format(*info),

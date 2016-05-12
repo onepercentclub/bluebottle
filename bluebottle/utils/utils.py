@@ -12,6 +12,12 @@ from django.contrib.auth.models import Permission
 import pygeoip
 import logging
 
+from bluebottle.clients import properties
+
+
+def get_languages():
+    return properties.LANGUAGES
+
 
 class GetTweetMixin:
     def get_fb_title(self, **kwargs):

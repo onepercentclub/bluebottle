@@ -101,7 +101,7 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(len(response.data['results']), 8)
 
         # Tests that the phase filter works.
-        response = self.client.get(self.projects_preview_url + '?project_type=volenteering')
+        response = self.client.get(self.projects_preview_url + '?project_type=volunteering')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data['count'], 13)
         self.assertEquals(len(response.data['results']), 8)

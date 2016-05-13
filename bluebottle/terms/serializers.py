@@ -1,6 +1,8 @@
 from bluebottle.terms.models import Terms, TermsAgreement
 from rest_framework import serializers
-
+from bluebottle.members.models import Member
+from bluebottle.terms.models import Terms
+\
 
 class TermsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,8 +11,8 @@ class TermsSerializer(serializers.ModelSerializer):
 
 
 class TermsAgreementSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
-    terms = serializers.PrimaryKeyRelatedField(read_only=True)
+    user = serializers.PrimaryKeyRelatedField(read_only=True, queryset=Member.objects)
+    terms = serializers.PrimaryKeyRelatedField(read_only=True, queryset=Terms.objects)
 
     class Meta:
         model = TermsAgreement

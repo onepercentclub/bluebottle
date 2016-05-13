@@ -16,7 +16,8 @@ from bluebottle.geo.models import Country
 from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-
+from bluebottle.geo.models import Location
+from bluebottle.categories.models import Category
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,7 +65,7 @@ class ProjectCountrySerializer(CountrySerializer):
 
 class ProjectBudgetLineSerializer(serializers.ModelSerializer):
     amount = EuroField()
-    project = serializers.SlugRelatedField(slug_field='slug')
+    project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
 
     class Meta:
         model = ProjectBudgetLine
@@ -81,7 +82,7 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
 
 class ProjectDocumentSerializer(serializers.ModelSerializer):
     file = PrivateFileSerializer()
-    project = serializers.SlugRelatedField(slug_field='slug')
+    project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
 
     class Meta:
         model = ProjectDocument
@@ -101,7 +102,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         many=True, source='projectbudgetline_set', read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
-    location = serializers.PrimaryKeyRelatedField(required=False)
+    location = serializers.PrimaryKeyRelatedField(required=False, queryset=Location.objects)
     vote_count = serializers.IntegerField(source='vote_count')
     supporter_count = serializers.IntegerField(source='supporter_count')
 
@@ -141,7 +142,9 @@ class ProjectPreviewSerializer(ProjectSerializer):
 
     owner = UserPreviewSerializer()
 
-    categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
+    categories = serializers.SlugRelatedField(many=True, read_only=True,
+                                              slug_field='slug',
+                                              queryset=Category.objects)
 
     class Meta:
         model = Project
@@ -171,8 +174,8 @@ class ManageProjectSerializer(TaggableSerializerMixin,
         view_name='project_manage_detail')
     editable = serializers.BooleanField(read_only=True)
     viewable = serializers.BooleanField(read_only=True)
-    status = serializers.PrimaryKeyRelatedField(required=False)
-    location = serializers.PrimaryKeyRelatedField(required=False)
+    status = serializers.PrimaryKeyRelatedField(required=False, queryset=ProjectPhase.objects)
+    location = serializers.PrimaryKeyRelatedField(required=False, queryset=Location.objects)
     image = ImageSerializer(required=False)
     pitch = serializers.CharField(required=False)
     slug = serializers.CharField(read_only=True)

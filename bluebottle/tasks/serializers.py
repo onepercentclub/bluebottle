@@ -9,6 +9,8 @@ from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.utils.serializers import MetaField
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallpostSerializer
+from bluebottle.projects.models import Project
+from bluebottle.members.models import Member
 
 
 class TaskPreviewSerializer(serializers.ModelSerializer):
@@ -45,8 +47,9 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     members = BaseTaskMemberSerializer(many=True, source='members',
                                        read_only=True)
     files = TaskFileSerializer(many=True, source='files', read_only=True)
-    project = serializers.SlugRelatedField(slug_field='slug')
-    skill = serializers.PrimaryKeyRelatedField()
+    project = serializers.SlugRelatedField(slug_field='slug',
+                                           queryset=Project.objects)
+    skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
     author = UserPreviewSerializer()
     status = serializers.ChoiceField(choices=Task.TaskStatuses.choices,
                                      default=Task.TaskStatuses.open)
@@ -79,7 +82,7 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
 
 class MyTaskPreviewSerializer(serializers.ModelSerializer):
     project = ProjectPreviewSerializer()
-    skill = serializers.PrimaryKeyRelatedField()
+    skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
 
     class Meta:
         model = Task
@@ -88,7 +91,7 @@ class MyTaskPreviewSerializer(serializers.ModelSerializer):
 
 class MyTaskMemberSerializer(BaseTaskMemberSerializer):
     task = MyTaskPreviewSerializer()
-    member = serializers.PrimaryKeyRelatedField()
+    member = serializers.PrimaryKeyRelatedField(queryset=Member.objects)
 
     class Meta(BaseTaskMemberSerializer.Meta):
         fields = BaseTaskMemberSerializer.Meta.fields + ('time_spent',)
@@ -96,7 +99,7 @@ class MyTaskMemberSerializer(BaseTaskMemberSerializer):
 
 class MyTasksSerializer(BaseTaskSerializer):
     task = MyTaskPreviewSerializer()
-    skill = serializers.PrimaryKeyRelatedField()
+    skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
 
     class Meta:
         model = Task
@@ -112,7 +115,7 @@ class TaskWallpostSerializer(TextWallpostSerializer):
 
     url = serializers.HyperlinkedIdentityField(
         view_name='task-twallpost-detail')
-    task = PrimaryKeyGenericRelatedField(Task)
+    task = PrimaryKeyGenericRelatedField(Task, queryset=Task.objects)
 
     class Meta(TextWallpostSerializer.Meta):
         # Add the project slug field.

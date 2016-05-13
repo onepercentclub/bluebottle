@@ -10,6 +10,9 @@ from bluebottle.bluebottle_drf2.serializers import (
 
 from bluebottle.clients import properties
 from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
+from bluebottle.geo.models import Location
+from bluebottle.tasks.models import Skill
+from bluebottle.bb_projects.models import ProjectTheme
 
 BB_USER_MODEL = get_user_model()
 
@@ -88,16 +91,18 @@ class UserProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=False)
     primary_language = serializers.CharField(required=False,
                                              default=properties.LANGUAGE_CODE)
-    location = serializers.PrimaryKeyRelatedField(required=False)
+    location = serializers.PrimaryKeyRelatedField(required=False,
+                                                  queryset=Location.objects)
 
     avatar = SorlImageField('picture', '133x133', crop='center',
                             required=False)
 
     skill_ids = serializers.PrimaryKeyRelatedField(many=True,
                                                    source='skills',
-                                                   required=False)
+                                                   required=False,
+                                                   queryset=Skill.objects)
     favourite_theme_ids = serializers.PrimaryKeyRelatedField(
-        many=True, source='favourite_themes')
+        many=True, source='favourite_themes', queryset=ProjectTheme.objects)
 
     project_count = serializers.Field()
     donation_count = serializers.Field()

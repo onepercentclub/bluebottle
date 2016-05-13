@@ -5,12 +5,13 @@ from rest_framework import serializers
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.projects.serializers import \
     ProjectPreviewSerializer as BaseProjectPreviewSerializer, ProjectPreviewSerializer
-
+from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.orders.models import Order
 
 class ManageDonationSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug')
-    fundraiser = serializers.PrimaryKeyRelatedField(required=False)
-    order = serializers.PrimaryKeyRelatedField()
+    fundraiser = serializers.PrimaryKeyRelatedField(required=False, queryset=Fundraiser.objects)
+    order = serializers.PrimaryKeyRelatedField(queryset=Order.objects)
     amount = serializers.DecimalField(
         max_digits=10, decimal_places=2, max_value=1500000
     )
@@ -26,7 +27,8 @@ class ManageDonationSerializer(serializers.ModelSerializer):
 
 class PreviewDonationSerializer(serializers.ModelSerializer):
     project = ProjectPreviewSerializer()
-    fundraiser = serializers.PrimaryKeyRelatedField(required=False)
+    fundraiser = serializers.PrimaryKeyRelatedField(required=False,
+                                                    queryset=Fundraiser.objects)
     user = UserPreviewSerializer(source='public_user')
 
     class Meta:

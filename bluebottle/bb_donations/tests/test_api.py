@@ -587,7 +587,7 @@ class TestMyProjectDonationList(DonationApiTestCase):
         order.locked()
         order.save()
         order.success()
-        order.saved()
+        order.save()
 
         self.project_donation_list_url = reverse('my-project-donation-list')
 

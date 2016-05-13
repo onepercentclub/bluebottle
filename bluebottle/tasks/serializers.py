@@ -115,7 +115,7 @@ class TaskWallpostSerializer(TextWallpostSerializer):
 
     url = serializers.HyperlinkedIdentityField(
         view_name='task-twallpost-detail')
-    task = PrimaryKeyGenericRelatedField(Task, queryset=Task.objects)
+    task = PrimaryKeyGenericRelatedField(Task)
 
     class Meta(TextWallpostSerializer.Meta):
         # Add the project slug field.

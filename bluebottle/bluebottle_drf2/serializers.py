@@ -203,7 +203,6 @@ class PrimaryKeyGenericRelatedField(serializers.RelatedField):
         queryset = self.to_model.objects.order_by('id').all()
         super(PrimaryKeyGenericRelatedField, self).__init__(*args,
                                                             source='object_id',
-                                                            queryset=queryset,
                                                             **kwargs)
 
     def label_from_instance(self, obj):

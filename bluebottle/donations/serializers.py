@@ -7,9 +7,10 @@ from bluebottle.projects.serializers import \
     ProjectPreviewSerializer as BaseProjectPreviewSerializer, ProjectPreviewSerializer
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.orders.models import Order
+from bluebottle.projects.models import Project
 
 class ManageDonationSerializer(serializers.ModelSerializer):
-    project = serializers.SlugRelatedField(slug_field='slug')
+    project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
     fundraiser = serializers.PrimaryKeyRelatedField(required=False, queryset=Fundraiser.objects)
     order = serializers.PrimaryKeyRelatedField(queryset=Order.objects)
     amount = serializers.DecimalField(

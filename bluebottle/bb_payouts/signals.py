@@ -2,7 +2,6 @@ import logging
 
 from django.core.exceptions import ValidationError
 
-from bluebottle.payouts.models import ProjectPayout
 from bluebottle.utils.utils import StatusDefinition
 
 logger = logging.getLogger()
@@ -13,6 +12,7 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
     Create or update Payout for finished projects.
     Project finish when deadline is hit or when it's changed manually in admin.
     """
+    from bluebottle.payouts.models import ProjectPayout
     from localflavor.generic.validators import IBANValidator
 
     project = instance

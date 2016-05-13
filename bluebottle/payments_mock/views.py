@@ -44,6 +44,7 @@ class PaymentResponseMockHandler(TemplateView):
 
         # Set the order payment to authorized
         order_payment.authorized()
+        order_payment.save()
 
         return_domain = getattr(settings, 'MOCK_PAYMENT_RETURN_DOMAIN', 'http://bluebottle.localhost:4200')
         if order_payment and status in self.payment_responses:

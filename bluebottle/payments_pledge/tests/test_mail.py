@@ -44,6 +44,7 @@ class TestPledgeMails(BluebottleTestCase):
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='pledgeStandard')
         self.order_payment.pledged()
+        self.order_payment.save()
 
     def test_platform_admin_mail(self):
         body = mail.outbox[0].body

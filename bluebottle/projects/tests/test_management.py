@@ -54,6 +54,7 @@ class TestStatusMC(BluebottleTestCase):
 
         # Set status of donation to paid
         donation.order.locked()
+        donation.order.save()
         donation.order.succeeded()
         donation.order.save()
 
@@ -87,6 +88,7 @@ class TestStatusMC(BluebottleTestCase):
 
         # Set status of donation to paid
         donation.order.locked()
+        donation.order.save()
         donation.order.succeeded()
         donation.order.save()
 
@@ -123,6 +125,7 @@ class TestStatusMC(BluebottleTestCase):
 
         # Set status of donation to paid
         donation.order.locked()
+        donation.order.save()
         donation.order.succeeded()
         donation.order.save()
 
@@ -159,6 +162,7 @@ class TestStatusMC(BluebottleTestCase):
 
         # Set status of donation to paid
         donation.order.locked()
+        donation.order.save()
         donation.order.succeeded()
         donation.order.save()
 

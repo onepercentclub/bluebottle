@@ -105,6 +105,7 @@ class PayoutTestCase(PayoutBaseTestCase):
 
         # Change status to settled
         payout.settled()
+        payout.save()
 
         # Completed date should now be set
         self.assertTrue(payout.completed)

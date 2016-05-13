@@ -376,8 +376,10 @@ class BaseProjectPayout(PayoutBase):
 
         if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
             self.in_progress()
+            self.save()
             self.settled()
-
+            self.save()
+            
         if save:
             self.save()
 

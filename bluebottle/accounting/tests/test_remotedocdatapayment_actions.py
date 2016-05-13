@@ -115,7 +115,9 @@ class RemoteDocdataPaymentActionTests(WebTestMixin, BluebottleTestCase):
             )
             _payments.append(payment)
             order_payment.authorized()
+            order_payment.save()
             order_payment.settled()
+            order_payment.save()
 
         DocdataPayment.objects.filter(id__in=[p.id for p in _payments]).update(status=StatusDefinition.SETTLED)
 

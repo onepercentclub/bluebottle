@@ -202,7 +202,9 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
         # Set donation to pending to be included in count
         order.locked()
+        order.save()
         order.pending()
+        order.save()
         self.assertEqual(self.user.donation_count, 1)
 
     def test_calculate_project_count(self):

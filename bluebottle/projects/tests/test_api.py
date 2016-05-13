@@ -1224,6 +1224,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         donation.save()
 
         order.locked()
+        order.save()
         order.succeeded()
         order.save()
 

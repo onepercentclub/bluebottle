@@ -48,6 +48,7 @@ class TestProjectDonationsStatusChanges(BluebottleTestCase):
         donation.save()
 
         order.locked()
+        order.save()
         order.succeeded()
         order.save()
 

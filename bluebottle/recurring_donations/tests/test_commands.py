@@ -49,7 +49,9 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         DonationFactory(order=order, project=self.projects[0], amount=10)
 
         order.locked()
+        order.save()
         order.succeeded()
+        order.save()
 
         # Since we force the transitions update_amounts isn't triggered by
         # signal, so we run it manually here.

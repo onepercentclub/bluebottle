@@ -345,6 +345,7 @@ class TestCreateDonation(DonationApiTestCase):
         # Set order to status 'locked'
         order = Order.objects.get(id=order_id)
         order.locked()
+        order.save()
 
         donation3 = {
             "project": self.project1.slug,
@@ -389,7 +390,9 @@ class TestAnonymousAuthenicatedDonationCreate(DonationApiTestCase):
 
         # Set the order to success
         self.order.locked()
+        self.order.save()
         self.order.succeeded()
+        self.order.save()
 
         # retrieve the donation through public API
         donation_url = reverse('donation-detail', kwargs={'pk': donation_id})
@@ -582,7 +585,9 @@ class TestMyProjectDonationList(DonationApiTestCase):
                                order=order)
 
         order.locked()
+        order.save()
         order.succeeded()
+        order.saved()
 
         self.project_donation_list_url = reverse('my-project-donation-list')
 
@@ -640,7 +645,9 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
                                order=order)
 
         order.locked()
+        order.save()
         order.succeeded()
+        order.save()
 
         self.fundraiser_donation_list_url = reverse(
             'my-fundraiser-donation-list')

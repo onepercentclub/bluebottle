@@ -28,7 +28,7 @@ class TestDonationSignals(BluebottleTestCase):
 
         self.order.locked()
         self.order.save()
-        self.order.succeeded()
+        self.order.success()
         self.order.save()
 
         self.assertEqual(SystemWallpost.objects.count(), 1)
@@ -49,7 +49,7 @@ class TestDonationSignals(BluebottleTestCase):
 
         order.locked()
         order.save()
-        order.succeeded()
+        order.success()
         order.save()
 
         self.assertEqual(SystemWallpost.objects.count(), 2)
@@ -68,7 +68,7 @@ class TestDonationSignals(BluebottleTestCase):
 
         order.locked()
         order.save()
-        order.succeeded()
+        order.success()
         order.save()
 
         self.assertEqual(SystemWallpost.objects.count(), 1)

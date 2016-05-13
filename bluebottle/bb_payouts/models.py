@@ -186,7 +186,6 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
                 target=StatusDefinition.IN_PROGRESS)
     def in_progress(self):
         self.submitted = timezone.now()
-        self.save()
 
     @transition(field=status,
                 source=[StatusDefinition.IN_PROGRESS,
@@ -195,7 +194,6 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
     def settled(self, completed=None):
         self.completed = completed
         self.protected = True
-        self.save()
 
     @transition(field=status,
                 source=[StatusDefinition.SETTLED,
@@ -204,7 +202,6 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
     def retry(self):
         self.protected = True
         self.planned = self.__class__.get_next_planned_date()
-        self.save()
         
 
 class PayoutLogBase(models.Model):

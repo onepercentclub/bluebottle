@@ -1225,7 +1225,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
 
         order.locked()
         order.save()
-        order.succeeded()
+        order.success()
         order.save()
 
         project.deadline = timezone.now() - timedelta(days=10)

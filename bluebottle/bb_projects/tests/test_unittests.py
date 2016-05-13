@@ -49,7 +49,7 @@ class TestProjectDonationsStatusChanges(BluebottleTestCase):
 
         order.locked()
         order.save()
-        order.succeeded()
+        order.success()
         order.save()
 
         project = Project.objects.get(title='test')

@@ -162,7 +162,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         # Set status of donation to paid
         self.donation.order.locked()
         self.donation.order.save()
-        self.donation.order.succeeded()
+        self.donation.order.success()
         self.donation.order.save()
 
         # Update phase to act.
@@ -182,7 +182,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         # Set status of donation to paid
         self.donation.order.locked()
         self.donation.order.save()
-        self.donation.order.succeeded()
+        self.donation.order.success()
         self.donation.order.save()
 
         # Update phase to act.
@@ -289,7 +289,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         # Set status of donation to paid
         self.donation.order.locked()
         self.donation.order.save()
-        self.donation.order.succeeded()
+        self.donation.order.success()
         self.donation.order.save()
 
         # Update phase to act.
@@ -323,7 +323,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         # Set status of donation to paid
         self.donation.order.locked()
         self.donation.order.save()
-        self.donation.order.succeeded()
+        self.donation.order.success()
         self.donation.order.save()
 
         # Update phase to act.
@@ -356,7 +356,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         # Set status of donation to paid
         self.donation2.order.locked()
         self.donation2.order.save()
-        self.donation2.order.succeeded()
+        self.donation2.order.success()
         self.donation2.order.save()
 
         # Update phase to act.
@@ -391,7 +391,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         # Set status of donation to paid
         self.donation.order.locked()
         self.donation.order.save()
-        self.donation.order.succeeded()
+        self.donation.order.success()
         self.donation.order.save()
 
         # Update phase to act.
@@ -425,7 +425,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         # Set status of donation to paid
         self.donation2.order.locked()
         self.donation2.order.save()
-        self.donation2.order.succeeded()
+        self.donation2.order.success()
         self.donation2.order.save()
 
         # Update phase to act.
@@ -475,7 +475,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         donation.save()
         donation.order.locked()
         donation.order.save()
-        donation.order.succeeded()
+        donation.order.success()
         donation.order.save()
 
         # Update phase to act.
@@ -572,7 +572,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         # Set status of donation to paid
         self.donation.order.locked()
         self.donation.order.save()
-        self.donation.order.succeeded()
+        self.donation.order.success()
         self.donation.order.save()
 
         # Update phase to act.
@@ -596,7 +596,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         # Set status of donation to paid
         self.donation.order.locked()
         self.donation.order.save()
-        self.donation.order.succeeded()
+        self.donation.order.success()
         self.donation.order.save()
 
         # Update phase to act.
@@ -619,7 +619,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         # Set status of donation to paid
         self.donation.order.locked()
         self.donation.order.save()
-        self.donation.order.succeeded()
+        self.donation.order.success()
         self.donation.order.save()
 
         # Update phase to act.
@@ -698,7 +698,7 @@ class PayoutPledgeTestCase(PayoutBaseTestCase):
         # Set status of donation to paid
         self.donation.order.locked()
         self.donation.order.save()
-        self.donation.order.succeeded()
+        self.donation.order.success()
         self.donation.order.save()
 
     def test_pledge_paid_fully_funded(self):

@@ -98,7 +98,7 @@ class RewardTestCase(BluebottleTestCase):
         donation = DonationFactory.create(reward=reward, project=self.project)
         donation.order.locked()
         donation.order.save()
-        donation.order.succeeded()
+        donation.order.success()
         donation.order.save()
         donation.save()
         response = self.client.delete(reward_url, token=self.user_token)

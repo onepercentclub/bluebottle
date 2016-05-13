@@ -62,7 +62,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
 
         order.locked()
         order.save()
-        order.succeeded()
+        order.success()
         order.save()
 
         self.expired_project.save()
@@ -81,7 +81,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
 
         order.locked()
         order.save()
-        order.succeeded()
+        order.success()
         order.save()
 
         self.expired_project.save()
@@ -100,7 +100,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
 
         order.locked()
         order.save()
-        order.succeeded()
+        order.success()
         order.save()
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.complete)

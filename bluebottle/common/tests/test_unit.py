@@ -127,17 +127,17 @@ class MetricsTest(BluebottleTestCase):
         order2 = OrderFactory.create(user=user2)
         donation2 = DonationFactory(order=order2, amount=25)
         order2.locked()
-        order2.succeeded()
+        order2.success()
 
         order3 = OrderFactory.create(user=user2)
         donation3 = DonationFactory(order=order3, amount=30)
         order3.locked()
-        order3.succeeded()
+        order3.success()
 
         order4 = OrderFactory.create(user=user3)
         donation4 = DonationFactory(order=order4, amount=35)
         order4.locked()
-        order4.succeeded()
+        order4.success()
 
         # User two should be counted once, and user 3 should be counted
         self.assertEqual(self.metrics.calculate_supporters(), 2)
@@ -159,17 +159,17 @@ class MetricsTest(BluebottleTestCase):
         order2 = OrderFactory.create(user=user2)
         donation2 = DonationFactory(order=order2, amount=10, project=project1)
         order2.locked()
-        order2.succeeded()
+        order2.success()
 
         order3 = OrderFactory.create(user=user2)
         donation3 = DonationFactory(order=order3, amount=10, project=project2)
         order3.locked()
-        order3.succeeded()
+        order3.success()
 
         order4 = OrderFactory.create(user=user3)
         donation4 = DonationFactory(order=order4, amount=10, project=project1)
         order4.locked()
-        order4.succeeded()
+        order4.success()
 
         # order2, order3, order4 should be counted
         self.assertEqual(self.metrics.calculate_total_raised(), 30)

@@ -47,14 +47,14 @@ class TestPledgeMails(BluebottleTestCase):
         self.order_payment.save()
 
     def test_platform_admin_mail(self):
-        body = mail.outbox[0].body
+        body = mail.outbox[2].body
 
         self.assertEquals(len(mail.outbox), 3)
         self.assertTrue("A project just received an invoiced donation" in body)
         self.assertTrue(self.user.full_name in body)
 
     def test_project_owner_mail(self):
-        body = mail.outbox[1].body
+        body = mail.outbox[0].body
 
         self.assertEquals(len(mail.outbox), 3)
         self.assertTrue("received an invoiced donation" in body)
@@ -63,8 +63,7 @@ class TestPledgeMails(BluebottleTestCase):
         self.assertTrue('admin@example.com' in body, 'Email includes tenant admin address')
 
     def test_donator_mail(self):
-        body = mail.outbox[2].body
-
+        body = mail.outbox[1].body
         self.assertEquals(len(mail.outbox), 3)
         self.assertTrue("Please transfer the amount of" in body)
         self.assertTrue("Invoiced" in body)

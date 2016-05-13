@@ -35,7 +35,7 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         donation = DonationFactory.create(project=project, amount=amount)
         donation.order.locked()
         donation.order.save()
-        donation.order.succeeded()
+        donation.order.success()
         donation.order.save()
 
     def _initialize_unmatched_transactions(self):

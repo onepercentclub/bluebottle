@@ -77,7 +77,7 @@ class FSMTransition:
     Class mixin to add transition_to method for Django FSM
     """
 
-    def transition_to(self, new_status):
+    def transition_to(self, new_status, save=True):
         # If the new_status is the same as then current then return early
         if self.status == new_status:
             return
@@ -90,25 +90,20 @@ class FSMTransition:
 
         # Check that the new_status is in the available transitions -
         # created with Django FSM decorator
-        try:
-            for transition in available_transitions:
-                if transition.name == new_status:
-                    instance_method = transition.method
+        for transition in available_transitions:
+            if transition.name == new_status:
+                transition_method = transition.method
 
-        except IndexError:
-            # TODO: should we raise exception here?
+        # Call state transition method
+        try:
+            instance_method = getattr(self, transition_method.__name__)
+            instance_method()
+        except UnboundLocalError as e:
             raise TransitionNotAllowed(
                 "Can't switch from state '{0}' to state '{1}' for {2}".format(self.status, new_status, self.__class__.__name__))
 
-        # Get the function method on the instance
-        # instance_method = getattr(self, transition_method.__name__)
-
-        # import ipdb; ipdb.set_trace()
-        # Call state transition method
-        try:
-            instance_method(self)
-        except Exception as e:
-            raise e
+        if save:
+            self.save()
 
     def refresh_from_db(self):
         """Refreshes this instance from db"""

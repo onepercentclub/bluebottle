@@ -151,19 +151,19 @@ class OrderPayment(models.Model, FSMTransition):
     @transition(field=status, source=StatusDefinition.CREATED,
                 target=StatusDefinition.STARTED)
     def started(self):
-        self.save()
+        pass
 
     @transition(field=status, source=StatusDefinition.CREATED,
                 target=StatusDefinition.PLEDGED)
     def pledged(self):
-        self.save()
+        pass
 
     @transition(field=status, source=[StatusDefinition.STARTED,
                                       StatusDefinition.CANCELLED,
                                       StatusDefinition.FAILED],
                 target=StatusDefinition.AUTHORIZED)
     def authorized(self):
-        self.save()
+        pass
 
     @transition(field=status, source=[StatusDefinition.AUTHORIZED,
                                       StatusDefinition.STARTED,
@@ -173,7 +173,6 @@ class OrderPayment(models.Model, FSMTransition):
                 target=StatusDefinition.SETTLED)
     def settled(self):
         self.closed = now()
-        self.save()
 
     @transition(field=status,
                 source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED,
@@ -181,34 +180,31 @@ class OrderPayment(models.Model, FSMTransition):
                 target=StatusDefinition.FAILED)
     def failed(self):
         self.closed = None
-        self.save()
 
     @transition(field=status, source=[StatusDefinition.STARTED,
                                       StatusDefinition.FAILED],
                 target=StatusDefinition.CANCELLED)
     def cancelled(self):
-        self.save()
+        pass
 
     @transition(field=status, source=[StatusDefinition.AUTHORIZED,
                                       StatusDefinition.SETTLED],
                 target=StatusDefinition.CHARGED_BACK)
     def charged_back(self):
         self.closed = None
-        self.save()
 
     @transition(field=status, source=[StatusDefinition.AUTHORIZED,
                                       StatusDefinition.SETTLED],
                 target=StatusDefinition.REFUNDED)
     def refunded(self):
         self.closed = None
-        self.save()
 
     @transition(field=status, source=[StatusDefinition.STARTED,
                                       StatusDefinition.AUTHORIZED,
                                       StatusDefinition.SETTLED],
                 target=StatusDefinition.UNKNOWN)
     def unknown(self):
-        self.save()
+        pass
 
     def get_status_mapping(self, payment_status):
         # Currently the status in Payment and OrderPayment is one to one.

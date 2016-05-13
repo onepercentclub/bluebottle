@@ -391,7 +391,7 @@ class TestAnonymousAuthenicatedDonationCreate(DonationApiTestCase):
         # Set the order to success
         self.order.locked()
         self.order.save()
-        self.order.succeeded()
+        self.order.success()
         self.order.save()
 
         # retrieve the donation through public API
@@ -586,7 +586,7 @@ class TestMyProjectDonationList(DonationApiTestCase):
 
         order.locked()
         order.save()
-        order.succeeded()
+        order.success()
         order.saved()
 
         self.project_donation_list_url = reverse('my-project-donation-list')
@@ -646,7 +646,7 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
 
         order.locked()
         order.save()
-        order.succeeded()
+        order.success()
         order.save()
 
         self.fundraiser_donation_list_url = reverse(

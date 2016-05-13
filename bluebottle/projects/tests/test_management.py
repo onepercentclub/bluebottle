@@ -55,7 +55,7 @@ class TestStatusMC(BluebottleTestCase):
         # Set status of donation to paid
         donation.order.locked()
         donation.order.save()
-        donation.order.succeeded()
+        donation.order.success()
         donation.order.save()
 
         some_project.status = self.campaign
@@ -89,7 +89,7 @@ class TestStatusMC(BluebottleTestCase):
         # Set status of donation to paid
         donation.order.locked()
         donation.order.save()
-        donation.order.succeeded()
+        donation.order.success()
         donation.order.save()
 
         some_project.status = self.campaign
@@ -126,7 +126,7 @@ class TestStatusMC(BluebottleTestCase):
         # Set status of donation to paid
         donation.order.locked()
         donation.order.save()
-        donation.order.succeeded()
+        donation.order.success()
         donation.order.save()
 
         some_project.status = self.campaign
@@ -163,7 +163,7 @@ class TestStatusMC(BluebottleTestCase):
         # Set status of donation to paid
         donation.order.locked()
         donation.order.save()
-        donation.order.succeeded()
+        donation.order.success()
         donation.order.save()
 
         some_project.status = self.campaign

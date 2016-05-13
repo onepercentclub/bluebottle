@@ -50,7 +50,7 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
 
         order.locked()
         order.save()
-        order.succeeded()
+        order.success()
         order.save()
 
         # Since we force the transitions update_amounts isn't triggered by

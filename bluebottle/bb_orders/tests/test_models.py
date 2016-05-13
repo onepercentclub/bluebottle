@@ -54,7 +54,7 @@ class BlueBottleOrderTestCase(BluebottleTestCase):
         self.assertEqual(self.order_payment.status, StatusDefinition.STARTED)
 
         # Set the Order to cancelled
-        self.order.succeeded()
+        self.order.success()
         self.order.save()
         self.assertEqual(self.order_payment.status, StatusDefinition.STARTED,
                          'Changing the Order status should not change the Order Payment status')

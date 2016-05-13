@@ -75,7 +75,7 @@ class TestDonationEmails(BluebottleTestCase):
         # Prepare the order
         self.order.locked()
         self.order.save()
-        self.order.succeeded()
+        self.order.success()
         self.order.save()
 
         # No fundraiser so 2 mails should be sent: one to the owner, and one to the donor
@@ -96,7 +96,7 @@ class TestDonationEmails(BluebottleTestCase):
         # Prepare the order
         self.order.locked()
         self.order.save()
-        self.order.succeeded()
+        self.order.success()
         self.order.save()
 
         # No fundraiser so 2 mails should be sent: one to the owner, and one to the donor
@@ -122,7 +122,7 @@ class TestDonationEmails(BluebottleTestCase):
         # Prepare the order
         self.recurring_order.locked()
         self.recurring_order.save()
-        self.recurring_order.succeeded()
+        self.recurring_order.success()
         self.recurring_order.save()
 
         # No mail because its not a one-off donation
@@ -137,7 +137,7 @@ class TestDonationEmails(BluebottleTestCase):
         # Prepare the order
         self.fund_order.locked()
         self.fund_order.save()
-        self.fund_order.succeeded()
+        self.fund_order.success()
         self.fund_order.save()
 
         # With fundraiser so 3 mails should be sent: one to the owner, one to the donor and one to fundraiser.

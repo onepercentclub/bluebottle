@@ -61,30 +61,28 @@ class BaseOrder(models.Model, FSMTransition):
                 source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED],
                 target=StatusDefinition.LOCKED)
     def locked(self):
-        self.save()
+        pass
 
     @transition(field=status, 
                 source=[StatusDefinition.LOCKED, StatusDefinition.CREATED],
                 target=StatusDefinition.PLEDGED)
     def pledged(self):
-        self.save()
+        pass
 
     @transition(field=status,
                 source=[StatusDefinition.LOCKED, StatusDefinition.FAILED],
                 target=StatusDefinition.PENDING)
     def pending(self):
         self.confirmed = now()
-        self.save()
 
     @transition(field=status,
                 source=[StatusDefinition.PENDING, StatusDefinition.LOCKED,
                         StatusDefinition.FAILED],
                 target=StatusDefinition.SUCCESS)
-    def succeeded(self):
+    def success(self):
         if not self.confirmed:
             self.confirmed = now()
         self.completed = now()
-        self.save()
 
     @transition(field=status,
                 source=[StatusDefinition.LOCKED, StatusDefinition.PENDING,
@@ -93,7 +91,6 @@ class BaseOrder(models.Model, FSMTransition):
     def failed(self):
         self.completed = None
         self.confirmed = None
-        self.save()
 
     def update_total(self, save=True):
         donations = Donation.objects.filter(order=self)

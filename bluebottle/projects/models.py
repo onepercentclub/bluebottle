@@ -16,6 +16,7 @@ from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
 from bluebottle.categories.models import Category
+from bluebottle.tasks.models import Task
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument)
@@ -109,7 +110,16 @@ class ProjectManager(models.Manager):
 
 
 class ProjectDocument(BaseProjectDocument):
-    pass
+    @property
+    def document_url(self):
+        content_type = ContentType.objects.get_for_model(ProjectDocument).id
+        # pk may be unset if not saved yet, in which case no url can be
+        # generated.
+        if self.pk is not None:
+            return reverse('document_download_detail',
+                           kwargs={'content_type': content_type,
+                                   'pk': self.pk or 1})
+        return None
 
 
 class Project(BaseProject):
@@ -225,6 +235,81 @@ class Project(BaseProject):
             )
             project.save()
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            original_slug = slugify(self.title)
+            counter = 2
+            qs = self.__class__.objects
+
+            while qs.filter(slug=original_slug).exists():
+                original_slug = '{0}-{1}'.format(original_slug, counter)
+                counter += 1
+            self.slug = original_slug
+
+        if not self.status:
+            self.status = ProjectPhase.objects.get(slug="plan-new")
+
+        # If the project status is moved to New or Needs Work, clear the
+        # date_submitted field
+        if self.status.slug in ["plan-new", "plan-needs-work"]:
+            self.date_submitted = None
+
+        # Set the submitted date
+        if self.status == ProjectPhase.objects.get(
+                slug="plan-submitted") and not self.date_submitted:
+            self.date_submitted = timezone.now()
+
+        # Set the campaign started date
+        if self.status == ProjectPhase.objects.get(
+                slug="campaign") and not self.campaign_started:
+            self.campaign_started = timezone.now()
+
+        # Set a default deadline of 30 days
+        if not self.deadline:
+            self.deadline = timezone.now() + datetime.timedelta(days=30)
+
+        # make sure the deadline is set to the end of the day, amsterdam time
+        tz = pytz.timezone('Europe/Amsterdam')
+        local_time = self.deadline.astimezone(tz)
+        if local_time.time() != datetime.time(23, 59, 59):
+            self.deadline = tz.localize(
+                datetime.datetime.combine(local_time.date(),
+                                          datetime.time(23, 59, 59))
+            )
+
+        if self.amount_asked:
+            self.update_amounts(False)
+
+        # FIXME: CLean up this code, make it readable
+        # Project is not ended, complete, funded or stopped and its deadline has expired.
+        if not self.campaign_ended and self.deadline < timezone.now() \
+                and self.status.slug not in ["done-complete",
+                                             "done-incomplete",
+                                             "closed"]:
+            if self.amount_asked > 0 and self.amount_donated <= 20 \
+                    or not self.campaign_started:
+                self.status = ProjectPhase.objects.get(slug="closed")
+            elif self.amount_asked > 0 \
+                    and self.amount_donated >= self.amount_asked:
+                self.status = ProjectPhase.objects.get(slug="done-complete")
+            else:
+                self.status = ProjectPhase.objects.get(slug="done-incomplete")
+            self.campaign_ended = self.deadline
+
+        if self.status.slug in ["done-complete", "done-incomplete", "closed"] \
+                and not self.campaign_ended:
+            self.campaign_ended = timezone.now()
+
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
+        super(Project, self).save(*args, **kwargs)
+
+        # Only log project phase if the status has changed
+        if self is not None and previous_status != self.status:
+            ProjectPhaseLog.objects.create(
+                project=self, status=self.status)
+
     def update_status_after_donation(self, save=True):
         if not self.campaign_funded and not self.campaign_ended and \
                 self.status not in ProjectPhase.objects.filter(
@@ -312,18 +397,12 @@ class Project(BaseProject):
 
     @property
     def task_count(self):
-        from bluebottle.utils.model_dispatcher import get_task_model
-
-        TASK_MODEL = get_task_model()
         return len(
-            self.task_set.filter(status=TASK_MODEL.TaskStatuses.open).all())
+            self.task_set.filter(status=Task.TaskStatuses.open).all())
 
     @property
     def get_open_tasks(self):
-        from bluebottle.utils.model_dispatcher import get_task_model
-
-        TASK_MODEL = get_task_model()
-        return self.task_set.filter(status=TASK_MODEL.TaskStatuses.open).all()
+        return self.task_set.filter(status=Task.TaskStatuses.open).all()
 
     @property
     def date_funded(self):
@@ -389,75 +468,6 @@ class Project(BaseProject):
 
     class Meta(BaseProject.Meta):
         ordering = ['title']
-        default_serializer = 'bluebottle.projects.serializers.ProjectSerializer'
-        preview_serializer = 'bluebottle.projects.serializers.ProjectPreviewSerializer'
-        manage_serializer = 'bluebottle.projects.serializers.ManageProjectSerializer'
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            original_slug = slugify(self.title)
-            counter = 2
-            qs = Project.objects
-            while qs.filter(slug=original_slug).exists():
-                original_slug = '%s-%d' % (original_slug, counter)
-                counter += 1
-            self.slug = original_slug
-
-        if not self.status:
-            self.status = ProjectPhase.objects.get(slug="plan-new")
-
-        # If the project status is moved to New or Needs Work, clear the
-        # date_submitted field
-        if self.status.slug in ["plan-new", "plan-needs-work"]:
-            self.date_submitted = None
-
-        # Set the submitted date
-        if self.status == ProjectPhase.objects.get(
-                slug="plan-submitted") and not self.date_submitted:
-            self.date_submitted = timezone.now()
-
-        # Set the campaign started date
-        if self.status == ProjectPhase.objects.get(
-                slug="campaign") and not self.campaign_started:
-            self.campaign_started = timezone.now()
-
-        # Set a default deadline of 30 days
-        if not self.deadline:
-            self.deadline = timezone.now() + datetime.timedelta(days=30)
-
-        # make sure the deadline is set to the end of the day, amsterdam time
-        tz = pytz.timezone('Europe/Amsterdam')
-        local_time = self.deadline.astimezone(tz)
-        if local_time.time() != datetime.time(23, 59, 59):
-            self.deadline = tz.localize(
-                datetime.datetime.combine(local_time.date(),
-                                          datetime.time(23, 59, 59))
-            )
-
-        if self.amount_asked:
-            self.update_amounts(False)
-
-        # FIXME: CLean up this code, make it readable
-        # Project is not ended, complete, funded or stopped and its deadline has expired.
-        if not self.campaign_ended and self.deadline < timezone.now() \
-                and self.status.slug not in ["done-complete",
-                                             "done-incomplete",
-                                             "closed"]:
-            if self.amount_asked > 0 and self.amount_donated <= 20 \
-                    or not self.campaign_started:
-                self.status = ProjectPhase.objects.get(slug="closed")
-            elif self.amount_asked > 0 \
-                    and self.amount_donated >= self.amount_asked:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
-            else:
-                self.status = ProjectPhase.objects.get(slug="done-incomplete")
-            self.campaign_ended = self.deadline
-
-        if self.status.slug in ["done-complete", "done-incomplete", "closed"] \
-                and not self.campaign_ended:
-            self.campaign_ended = timezone.now()
-
-        super(Project, self).save(*args, **kwargs)
 
     def status_changed(self, old_status, new_status):
 
@@ -489,10 +499,6 @@ class Project(BaseProject):
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
-        from bluebottle.utils.model_dispatcher import get_task_model
-
-        TASK_MODEL = get_task_model()
-
         if self.is_funding:
             if self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
@@ -502,8 +508,8 @@ class Project(BaseProject):
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
         else:
             if self.task_set.filter(
-                    status__in=[TASK_MODEL.TaskStatuses.in_progress,
-                                TASK_MODEL.TaskStatuses.open]).count() > 0:
+                    status__in=[Task.TaskStatuses.in_progress,
+                                Task.TaskStatuses.open]).count() > 0:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
@@ -524,7 +530,7 @@ class ProjectBudgetLine(models.Model):
     This is the budget for the amount asked from this
     website.
     """
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    project = models.ForeignKey('projects.Project')
     description = models.CharField(_('description'), max_length=255, default='')
     currency = models.CharField(max_length=3, default='EUR')
     amount = models.PositiveIntegerField(_('amount (in cents)'))

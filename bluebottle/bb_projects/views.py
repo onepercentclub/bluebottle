@@ -2,14 +2,14 @@ from django.db.models.query_utils import Q
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
+
+from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectDocument
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 from bluebottle.projects.serializers import (
     ProjectThemeSerializer, ProjectPhaseSerializer,
     ProjectPhaseLogSerializer, ProjectDocumentSerializer,
     ProjectTinyPreviewSerializer)
-from bluebottle.utils.model_dispatcher import (
-    get_project_model, get_project_phaselog_model, get_project_document_model)
 from bluebottle.utils.serializers import (
     DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin)
 from bluebottle.utils.utils import get_client_ip
@@ -17,36 +17,32 @@ from bluebottle.utils.utils import get_client_ip
 from .models import ProjectTheme, ProjectPhase
 from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
-PROJECT_MODEL = get_project_model()
-PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
-PROJECT_DOCUMENT_MODEL = get_project_document_model()
-
 
 class ProjectTinyPreviewList(generics.ListAPIView):
-    model = PROJECT_MODEL
+    model = Project
     paginate_by = 8
     paginate_by_param = 'page_size'
     serializer_class = ProjectTinyPreviewSerializer
 
     def get_queryset(self):
         query = self.request.QUERY_PARAMS
-        qs = PROJECT_MODEL.objects.search(query=query)
+        qs = Project.objects.search(query=query)
         return qs.filter(status__viewable=True)
 
 
 class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
-    model = PROJECT_MODEL
+    model = Project
     paginate_by = 8
     paginate_by_param = 'page_size'
 
     def get_queryset(self):
         query = self.request.QUERY_PARAMS
-        qs = PROJECT_MODEL.objects.search(query=query)
+        qs = Project.objects.search(query=query)
         return qs.filter(status__viewable=True)
 
 
 class ProjectPreviewDetail(PreviewSerializerMixin, generics.RetrieveAPIView):
-    model = PROJECT_MODEL
+    model = Project
 
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
@@ -82,7 +78,7 @@ class ProjectPhaseDetail(generics.RetrieveAPIView):
 
 
 class ProjectPhaseLogList(generics.ListAPIView):
-    model = PROJECT_PHASELOG_MODEL
+    model = ProjectPhaseLog
     serializer_class = ProjectPhaseLogSerializer
     paginate_by = 10
 
@@ -92,12 +88,12 @@ class ProjectPhaseLogList(generics.ListAPIView):
 
 
 class ProjectPhaseLogDetail(generics.RetrieveAPIView):
-    model = PROJECT_PHASELOG_MODEL
+    model = ProjectPhaseLog
     serializer_class = ProjectPhaseLogSerializer
 
 
 class ProjectList(DefaultSerializerMixin, generics.ListAPIView):
-    model = PROJECT_MODEL
+    model = Project
     paginate_by = 10
 
     def get_queryset(self):
@@ -109,7 +105,7 @@ class ProjectList(DefaultSerializerMixin, generics.ListAPIView):
 
 
 class ProjectDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
-    model = PROJECT_MODEL
+    model = Project
 
     def get_queryset(self):
         qs = super(ProjectDetail, self).get_queryset()
@@ -117,7 +113,7 @@ class ProjectDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
 
 
 class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
-    model = PROJECT_MODEL
+    model = Project
     permission_classes = (TenantConditionalOpenClose, IsAuthenticated, )
     paginate_by = 100
 
@@ -141,7 +137,7 @@ class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
 
 class ManageProjectDetail(ManageSerializerMixin,
                           generics.RetrieveUpdateAPIView):
-    model = PROJECT_MODEL
+    model = Project
     permission_classes = (IsProjectOwner, IsEditableOrReadOnly)
 
     def get_object(self):
@@ -163,7 +159,7 @@ class ProjectThemeList(generics.ListAPIView):
 class ProjectUsedThemeList(ProjectThemeList):
     def get_queryset(self):
         qs = super(ProjectUsedThemeList, self).get_queryset()
-        theme_ids = PROJECT_MODEL.objects.filter(
+        theme_ids = Project.objects.filter(
             status__viewable=True).values_list('theme', flat=True).distinct()
         return qs.filter(id__in=theme_ids)
 
@@ -174,7 +170,7 @@ class ProjectThemeDetail(generics.RetrieveAPIView):
 
 
 class ManageProjectDocumentList(generics.ListCreateAPIView):
-    model = PROJECT_DOCUMENT_MODEL
+    model = Project
     serializer_class = ProjectDocumentSerializer
     paginate_by = 20
     filter = ('project', )
@@ -185,7 +181,7 @@ class ManageProjectDocumentList(generics.ListCreateAPIView):
 
 
 class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = PROJECT_DOCUMENT_MODEL
+    model = ProjectDocument
     serializer_class = ProjectDocumentSerializer
     paginate_by = 20
     filter = ('project', )

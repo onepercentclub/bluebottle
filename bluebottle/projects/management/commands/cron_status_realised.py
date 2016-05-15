@@ -85,8 +85,7 @@ class Command(BaseCommand):
                 task.deadline_reached()
 
             self.stdout.write(
-                "Successfully updated the status of expired Project and Task \
-                  models.\n\n")
+                "Successfully updated the status of expired projects and Tasks")
 
             self.stdout.write("Checking projects with voting deadlines\n\n")
 

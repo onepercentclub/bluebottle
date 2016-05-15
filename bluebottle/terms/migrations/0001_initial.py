@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
-# Generated with bb_schemamigration
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
@@ -16,7 +11,7 @@ class Migration(SchemaMigration):
             (u'id',
              self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('author', self.gf('django.db.models.fields.related.ForeignKey')(
-                to=orm[MODEL_MAP['user']['model']])),
+                to=orm['members.Member'])),
             ('created', self.gf('django.db.models.fields.DateTimeField')(
                 default=datetime.datetime.now, blank=True)),
             ('updated', self.gf('django.db.models.fields.DateTimeField')(
@@ -34,7 +29,7 @@ class Migration(SchemaMigration):
             (u'id',
              self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(
-                to=orm[MODEL_MAP['user']['model']])),
+                to=orm['members.Member'])),
             ('terms', self.gf('django.db.models.fields.related.ForeignKey')(
                 to=orm['terms.Terms'])),
             ('created', self.gf('django.db.models.fields.DateTimeField')(
@@ -142,8 +137,8 @@ class Migration(SchemaMigration):
             'region': ('django.db.models.fields.related.ForeignKey', [],
                        {'to': u"orm['geo.Region']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.CharField', [],
@@ -217,8 +212,8 @@ class Migration(SchemaMigration):
             'share_time_knowledge': (
             'django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'skills': ('django.db.models.fields.related.ManyToManyField', [],
-                       {'symmetrical': 'False', 'to': "orm['{0}']".format(
-                           MODEL_MAP['task_skill']['model']), 'null': 'True',
+                       {'symmetrical': 'False', 'to': "orm['tasks.Skill']",
+                        'null': 'True',
                         'blank': 'True'}),
             'skypename': ('django.db.models.fields.CharField', [],
                           {'max_length': '32', 'blank': 'True'}),
@@ -276,9 +271,9 @@ class Migration(SchemaMigration):
                     {'related_name': "u'taggit_taggeditem_items'",
                      'to': u"orm['taggit.Tag']"})
         },
-        MODEL_MAP['task_skill']['model_lower']: {
+        u'tasks.skill': {
             'Meta': {'ordering': "('id',)",
-                     'object_name': MODEL_MAP['task_skill']['class']},
+                     'object_name': 'Skill'},
             'description': (
             'django.db.models.fields.TextField', [], {'blank': 'True'}),
             u'id': (
@@ -291,7 +286,7 @@ class Migration(SchemaMigration):
         u'terms.terms': {
             'Meta': {'ordering': "('-date',)", 'object_name': 'Terms'},
             'author': ('django.db.models.fields.related.ForeignKey', [],
-                       {'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                       {'to': "orm['members.Member']"}),
             'contents': (
             'django.db.models.fields.CharField', [], {'max_length': '500000'}),
             'created': ('django.db.models.fields.DateTimeField', [],
@@ -313,7 +308,7 @@ class Migration(SchemaMigration):
             'terms': ('django.db.models.fields.related.ForeignKey', [],
                       {'to': u"orm['terms.Terms']"}),
             'user': ('django.db.models.fields.related.ForeignKey', [],
-                     {'to': "orm['{0}']".format(MODEL_MAP['user']['model'])})
+                     {'to': "orm['members.Member']"})
         }
     }
 

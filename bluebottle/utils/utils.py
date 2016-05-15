@@ -24,9 +24,7 @@ class GetTweetMixin:
         return self.get_meta_title()
 
     def get_meta_title(self, **kwargs):
-        from bluebottle.utils.model_dispatcher import get_project_model
-
-        if isinstance(self, get_project_model()):
+        if hasattr(self, 'country'):
             return u'{name_project} | {country}'.format(
                 name_project=self.title,
                 country=self.country.name if self.country else '')
@@ -246,3 +244,4 @@ def update_group_permissions(sender, group_perms=None):
             group.save()
     except:
         pass
+

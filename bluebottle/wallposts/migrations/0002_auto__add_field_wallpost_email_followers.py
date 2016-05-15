@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
-# Generated with bb_schemamigration
-import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
@@ -83,8 +77,8 @@ class Migration(SchemaMigration):
                     {'related_name': "u'taggit_taggeditem_items'",
                      'to': u"orm['taggit.Tag']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.CharField', [],
@@ -179,11 +173,11 @@ class Migration(SchemaMigration):
                        {'blank': 'True',
                         'related_name': "'mediawallpostphoto_wallpost_photo'",
                         'null': 'True',
-                        'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                        'to': "orm['members.Member']"}),
             'deleted': ('django.db.models.fields.DateTimeField', [],
                         {'null': 'True', 'blank': 'True'}),
             'editor': ('django.db.models.fields.related.ForeignKey', [],
-                       {'to': "orm['{0}']".format(MODEL_MAP['user']['model']),
+                       {'to': "orm['members.Member']",
                         'null': 'True', 'blank': 'True'}),
             u'id': (
             'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -201,14 +195,14 @@ class Migration(SchemaMigration):
             'Meta': {'ordering': "('created',)", 'object_name': 'Reaction'},
             'author': ('django.db.models.fields.related.ForeignKey', [],
                        {'related_name': "'wallpost_reactions'",
-                        'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                        'to': "orm['members.Member']"}),
             'created': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'deleted': ('django.db.models.fields.DateTimeField', [],
                         {'null': 'True', 'blank': 'True'}),
             'editor': ('django.db.models.fields.related.ForeignKey', [],
                        {'blank': 'True', 'related_name': "'+'", 'null': 'True',
-                        'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                        'to': "orm['members.Member']"}),
             u'id': (
             'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'ip_address': ('django.db.models.fields.IPAddressField', [],
@@ -252,7 +246,7 @@ class Migration(SchemaMigration):
             'author': ('django.db.models.fields.related.ForeignKey', [],
                        {'blank': 'True', 'related_name': "'wallpost_wallpost'",
                         'null': 'True',
-                        'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                        'to': "orm['members.Member']"}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [],
                              {'related_name': "'content_type_set_for_wallpost'",
                               'to': u"orm['contenttypes.ContentType']"}),
@@ -261,7 +255,7 @@ class Migration(SchemaMigration):
             'deleted': ('django.db.models.fields.DateTimeField', [],
                         {'null': 'True', 'blank': 'True'}),
             'editor': ('django.db.models.fields.related.ForeignKey', [],
-                       {'to': "orm['{0}']".format(MODEL_MAP['user']['model']),
+                       {'to': "orm['members.Member']",
                         'null': 'True', 'blank': 'True'}),
             'email_followers': (
             'django.db.models.fields.BooleanField', [], {'default': 'True'}),

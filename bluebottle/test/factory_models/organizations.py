@@ -1,16 +1,12 @@
 import factory
 
-from bluebottle.utils.model_dispatcher import get_organization_model, \
-    get_organizationmember_model
+from bluebottle.organizations.models import Organization, OrganizationMember
 from .geo import CountryFactory
 from .accounts import BlueBottleUserFactory
 
-ORGANIZATION_MODEL = get_organization_model()
-ORGANIZATION_MEMBER_MODEL = get_organizationmember_model()
-
 
 class OrganizationFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = ORGANIZATION_MODEL
+    FACTORY_FOR = Organization
 
     name = factory.Sequence(lambda n: 'Organization_{0}'.format(n))
     slug = factory.Sequence(lambda n: 'organization_{0}'.format(n))
@@ -29,7 +25,7 @@ class OrganizationFactory(factory.DjangoModelFactory):
 
 
 class OrganizationMemberFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = ORGANIZATION_MEMBER_MODEL
+    FACTORY_FOR = OrganizationMember
 
     user = factory.SubFactory(BlueBottleUserFactory)
     function = 'owner'

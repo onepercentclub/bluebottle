@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from bluebottle.bb_follow.models import Follow
-from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.projects.models import Project
 
 
 class FollowedObjectRelatedField(serializers.RelatedField):
@@ -9,7 +9,7 @@ class FollowedObjectRelatedField(serializers.RelatedField):
     def to_native(self, value):
         """ Serialize followed objects to a simple representation """
 
-        if isinstance(value, get_project_model()):
+        if isinstance(value, Project):
             # For now, simply return only slug of the project. Alternatively,
             # we could consider returning a nested objects
             return value.slug

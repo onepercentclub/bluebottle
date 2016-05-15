@@ -12,6 +12,7 @@ from django.utils import translation
 
 from sorl.thumbnail.shortcuts import get_thumbnail
 
+from bluebottle.projects.models import Project
 from tenant_extras.utils import TenantLanguage
 
 from filetransfers.api import serve_file
@@ -22,13 +23,10 @@ from bunch import bunchify
 from taggit.models import Tag
 
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.utils.model_dispatcher import get_project_model
 from bluebottle.clients import properties
 
 from .serializers import ShareSerializer
 from .serializers import LanguageSerializer
-
-PROJECT_MODEL = get_project_model()
 
 
 class TagList(views.APIView):
@@ -65,8 +63,8 @@ class ShareFlyer(views.APIView):
 
     def project_args(self, projectid):
         try:
-            project = PROJECT_MODEL.objects.get(slug=projectid)
-        except PROJECT_MODEL.DoesNotExist:
+            project = Project.objects.get(slug=projectid)
+        except Project.DoesNotExist:
             return None
 
         if project.image:

@@ -4,11 +4,8 @@ from django.core.urlresolvers import reverse
 from polymorphic.admin import PolymorphicChildModelAdmin
 
 from bluebottle.payments.models import Payment
-from bluebottle.utils.model_dispatcher import get_donation_model
 
 from .models import Voucher, VoucherPayment
-
-DONATION_MODEL = get_donation_model()
 
 
 class VoucherPaymentAdmin(PolymorphicChildModelAdmin):

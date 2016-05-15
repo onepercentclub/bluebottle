@@ -12,7 +12,6 @@ from django.db.models import options as options
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
-from django.db.models import Sum
 from django.utils.functional import lazy
 
 from django_extensions.db.fields import ModificationDateTimeField
@@ -21,22 +20,14 @@ from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bb_accounts.utils import valid_email
-from bluebottle.utils.model_dispatcher import (get_task_model,
-                                               get_taskmember_model,
-                                               get_donation_model,
-                                               get_project_model,
-                                               get_fundraiser_model)
+from bluebottle.donations.models import Donation
+from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.clients import properties
 from bluebottle.geo.models import Country
 from bluebottle.utils.models import Address
 
 from bluebottle.utils.fields import ImageField
-
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
-                                                 'preview_serializer',
-                                                 'manage_serializer',
-                                                 'current_user_serializer')
 
 
 # TODO: Make this generic for all user file uploads.
@@ -153,7 +144,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                  null=True, blank=True)
     favourite_themes = models.ManyToManyField(ProjectTheme, blank=True,
                                               null=True)
-    skills = models.ManyToManyField(settings.TASKS_SKILL_MODEL, blank=True,
+    skills = models.ManyToManyField('tasks.Skill', blank=True,
                                     null=True)
 
     # TODO Use generate_picture_filename (or something) for upload_to
@@ -220,16 +211,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         abstract = True
         verbose_name = _('member')
         verbose_name_plural = _('members')
-        # specifying the serializer here allows us to leave the urls/views untouched while
-        # modifying the serializer for the user model
-        default_serializer = \
-            'bluebottle.members.serializers.UserProfileSerializer'
-        preview_serializer = \
-            'bluebottle.members.serializers.UserPreviewSerializer'
-        manage_serializer = \
-            'bluebottle.members.serializers.UserProfileSerializer'
-        current_user_serializer = \
-            'bluebottle.members.serializers.CurrentUserSerializer'
 
     def update_deleted_timestamp(self):
         """ Automatically set or unset the deleted timestamp."""
@@ -321,8 +302,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         Returns the number of tasks a user is the author of  and / or is a
         task member in
         """
-        task_count = get_task_model().objects.filter(author=self).count()
-        taskmember_count = get_taskmember_model().objects.filter(
+        task_count = Task.objects.filter(author=self).count()
+        taskmember_count = TaskMember.objects.filter(
             member=self, status__in=['applied', 'accepted', 'realized']).count()
 
         return task_count + taskmember_count
@@ -330,11 +311,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     @property
     def tasks_performed(self):
         """ Returns the number of tasks that the user participated in."""
-        return get_taskmember_model().objects.filter(
+        return TaskMember.objects.filter(
             member=self, status='realized').count()
 
     def get_donations_qs(self):
-        qs = get_donation_model().objects.filter(order__user=self)
+        qs = Donation.objects.filter(order__user=self)
         return qs.filter(order__status__in=[StatusDefinition.PENDING,
                                             StatusDefinition.SUCCESS])
 
@@ -348,40 +329,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         """ Returns the number of projects a user has donated to """
         return self.get_donations_qs().distinct('project').count()
 
-    def get_tasks_qs(self):
-        return get_taskmember_model().objects.filter(
-            member=self, status__in=['applied', 'accepted', 'realized'])
-
-    @property
-    def time_spent(self):
-        """ Returns the number of donations a user has made """
-        return self.get_tasks_qs().aggregate(Sum('time_spent'))[
-            'time_spent__sum']
-
-    @cached_property
-    def sourcing(self):
-        return self.get_tasks_qs().distinct('task__project').count()
-
     @property
     def projects_supported(self):
         return self.funding + self.sourcing
-
-    @property
-    def project_count(self):
-        """ Return the number of projects a user started / is owner of """
-        return get_project_model().objects.filter(
-            owner=self,
-            status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done']
-        ).count()
-
-    @property
-    def has_projects(self):
-        """ Return the number of projects a user started / is owner of """
-        return get_project_model().objects.filter(owner=self).count() > 0
-
-    @property
-    def fundraiser_count(self):
-        return get_fundraiser_model().objects.filter(owner=self).count()
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):

@@ -1,13 +1,10 @@
+from bluebottle.tasks.models import Task
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.utils.model_dispatcher import get_task_model, get_project_model
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 
 from bluebottle.bb_projects.models import ProjectPhase
-
-BB_TASK_MODEL = get_task_model()
-BB_PROJECT_MODEL = get_project_model()
 
 
 class TaskApiTestcase(BluebottleTestCase):
@@ -26,7 +23,7 @@ class TaskApiTestcase(BluebottleTestCase):
                                                   status=campaign_status)
 
         self.task1 = TaskFactory.create(
-            status=BB_TASK_MODEL.TaskStatuses.open,
+            status=Task.TaskStatuses.open,
             author=self.some_project.owner,
             project=self.some_project,
             people_needed=2
@@ -75,7 +72,7 @@ class TaskApiTestcase(BluebottleTestCase):
         # response = self.client.get(self.previews_url, HTTP_AUTHORIZATION=self.some_token)
         # self.assertEqual(response.data['results'][0]['task_count'], 1)
 
-        self.task1.status = BB_TASK_MODEL.TaskStatuses.closed
+        self.task1.status = Task.TaskStatuses.closed
         self.task1.save()
 
         # The task is closed, so don't give a task_count
@@ -83,7 +80,7 @@ class TaskApiTestcase(BluebottleTestCase):
                                    HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.data['results'][0]['task_count'], 0)
 
-        self.task1.status = BB_TASK_MODEL.TaskStatuses.realized
+        self.task1.status = Task.TaskStatuses.realized
         self.task1.save()
 
         # The task is realized, so don't give a task_count
@@ -91,11 +88,11 @@ class TaskApiTestcase(BluebottleTestCase):
                                    HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.data['results'][0]['task_count'], 0)
 
-        self.task1.status = BB_TASK_MODEL.TaskStatuses.open
+        self.task1.status = Task.TaskStatuses.open
         self.task1.save()
 
         task2 = TaskFactory.create(
-            status=BB_TASK_MODEL.TaskStatuses.open,
+            status=Task.TaskStatuses.open,
             author=self.some_project.owner,
             project=self.some_project,
             people_needed=2

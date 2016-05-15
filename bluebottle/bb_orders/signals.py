@@ -4,23 +4,22 @@ from django.dispatch.dispatcher import Signal
 
 from django_fsm.signals import post_transition
 
+from bluebottle.donations.models import Donation
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.services import PaymentService
-from bluebottle.utils.model_dispatcher import get_donation_model
 from bluebottle.utils.utils import StatusDefinition
 
-DONATION_MODEL = get_donation_model()
 
 order_requested = Signal(providing_args=["order"])
 
 
-@receiver(post_save, weak=False, sender=DONATION_MODEL,
+@receiver(post_save, weak=False, sender=Donation,
           dispatch_uid='donation_model')
 def update_order_amount_post_save(sender, instance, **kwargs):
     instance.order.update_total()
 
 
-@receiver(post_delete, weak=False, sender=DONATION_MODEL,
+@receiver(post_delete, weak=False, sender=Donation,
           dispatch_uid='donation_model')
 def update_order_amount(sender, instance, **kwargs):
     # If we're deleting order and donations do nothing.

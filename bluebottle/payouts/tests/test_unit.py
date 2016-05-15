@@ -6,23 +6,18 @@ from django.conf import settings
 from django.utils import timezone
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.donations.models import Donation
 from bluebottle.payouts.models import ProjectPayout
+from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_donation_model)
-
 from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
-from bluebottle.test.factory_models.payments import OrderPaymentFactory, PaymentFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.test.factory_models.projects import ProjectFactory
 
 from ..admin import ProjectPayoutAdmin
-
-PROJECT_MODEL = get_project_model()
-DONATION_MODEL = get_donation_model()
 
 
 class PayoutTestAdmin(BluebottleTestCase):
@@ -73,7 +68,7 @@ class PayoutBaseTestCase(BluebottleTestCase):
     def _reload_project(self):
         # Stale project instances aren't updated, so we have to reload it
         # from the db again.
-        self.project = PROJECT_MODEL.objects.get(pk=self.project.id)
+        self.project = Project.objects.get(pk=self.project.id)
 
 @override_settings(
     MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
@@ -499,7 +494,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
         self.assertEquals(payout.payout_rule, 'beneath_threshold')
         self.assertEquals(payout.amount_payable, Decimal('0.00'))
-        self.assertEqual(DONATION_MODEL.objects.filter(project=project)
+        self.assertEqual(Donation.objects.filter(project=project)
                          .count(), 0)
         self.assertEqual(payout.completed, timezone.now().date())
         self.assertEqual(payout.status, 'settled')
@@ -541,7 +536,7 @@ class PayoutTestCase(PayoutBaseTestCase):
 
         self.assertEquals(payout.payout_rule, 'beneath_threshold')
         self.assertEquals(payout.amount_payable, Decimal('0.00'))
-        self.assertEqual(DONATION_MODEL.objects.filter(project=project)
+        self.assertEqual(Donation.objects.filter(project=project)
                          .count(), 1)
         self.assertEqual(payout.status, 'new')
         self.assertTrue(not payout.completed)

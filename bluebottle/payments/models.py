@@ -10,7 +10,7 @@ from django_extensions.db.fields import (
 from django_extensions.db.fields.json import JSONField
 
 from djchoices import DjangoChoices, ChoiceItem
-from polymorphic.polymorphic_model import PolymorphicModel
+from polymorphic.models import PolymorphicModel
 from django_fsm import FSMField, transition
 
 from bluebottle import clients

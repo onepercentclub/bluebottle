@@ -63,7 +63,7 @@ install_requires = [
     'python-dateutil==2.5.3',
     'gunicorn==19.5.0',
     'surlex==0.2.0',
-    'django_polymorphic==0.6.1',
+    'django_polymorphic==0.9.2',
     'fabric',
     'django-tenant-schemas==1.5.8',
     'raven==5.16.0',
@@ -77,7 +77,7 @@ install_requires = [
     'wheel==0.29.0',
     # Github requirements
     'django-taggit-autocomplete-modified==0.1.1b1',
-    'django-fluent-contents==1.0c3',
+    'django-fluent-contents==1.1.4',
     'django-bb-salesforce==1.1.18',
     'django-tenant-extras==2.0.0',
     'django-token-auth==0.2.16',

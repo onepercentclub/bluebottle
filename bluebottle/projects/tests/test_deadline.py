@@ -19,7 +19,8 @@ class TestDeadlineStatus(BluebottleTestCase):
         order = OrderFactory.create()
         DonationFactory.create(project=project, order=order, amount=amount)
         order.locked()
-        order.succeeded()
+        order.save()
+        order.success()
         order.save()
 
         return order

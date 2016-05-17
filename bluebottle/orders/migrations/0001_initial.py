@@ -12,7 +12,7 @@ class Migration(SchemaMigration):
              self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(
                 to=orm['members.Member'], null=True, blank=True)),
-            ('status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(
+            ('status', self.gf('django_fsm.FSMField')(
                 default='created', max_length=50)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(
                 default=datetime.datetime.now, blank=True)),
@@ -87,7 +87,7 @@ class Migration(SchemaMigration):
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             u'id': (
             'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [],
+            'status': ('django_fsm.FSMField', [],
                        {'default': "'created'", 'max_length': '50'}),
             'total': ('django.db.models.fields.DecimalField', [],
                       {'default': '0', 'max_digits': '16',

@@ -7,7 +7,8 @@ from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 
 
 class DonationFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Donation
+    class Meta(object):
+        model = Donation
 
     fundraiser = factory.SubFactory(FundraiserFactory)
     order = factory.SubFactory(OrderFactory)

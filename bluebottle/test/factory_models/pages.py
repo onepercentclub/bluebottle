@@ -6,7 +6,8 @@ from .accounts import BlueBottleUserFactory
 
 
 class PageFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Page
+    class Meta(object):
+        model = Page
 
     language = 'en'
     title = factory.Sequence(lambda n: 'Page Title {0}'.format(n))

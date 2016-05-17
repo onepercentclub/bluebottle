@@ -144,7 +144,7 @@ class Migration(SchemaMigration):
             'order_type': ('django.db.models.fields.CharField', [],
                            {'default': "'single'", 'max_length': "'100'",
                             'null': 'True', 'blank': 'True'}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [],
+            'status': ('django_fsm.FSMField', [],
                        {'default': "'created'", 'max_length': '50'}),
             'total': ('django.db.models.fields.DecimalField', [],
                       {'default': '0', 'max_digits': '16',

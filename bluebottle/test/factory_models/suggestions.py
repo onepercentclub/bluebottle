@@ -7,7 +7,8 @@ from .projects import ProjectFactory, ProjectThemeFactory
 
 
 class SuggestionFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Suggestion
+    class Meta(object):
+        model = Suggestion
 
     deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=4))
     project = factory.SubFactory(ProjectFactory)

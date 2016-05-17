@@ -1,5 +1,5 @@
 from collections import namedtuple
-from django_fsm.db.fields import TransitionNotAllowed
+from django_fsm import TransitionNotAllowed
 from mock import patch
 
 from bluebottle import clients
@@ -28,18 +28,22 @@ class PaymentTestCase(BluebottleTestCase):
                          'Order Payment should start with created status')
 
         self.order_payment.started()
+        self.order_payment.save()
+
         self.assertEqual(self.order.status, StatusDefinition.LOCKED,
                          'Starting an Order Payment should change Order to locked')
         self.assertEqual(self.order_payment.status, StatusDefinition.STARTED,
                          'Starting an Order Payment should change status to started')
 
         self.order_payment.authorized()
+        self.order_payment.save()
         self.assertEqual(self.order.status, StatusDefinition.PENDING,
                          'Authorizing an Order Payment should change Order to pending')
         self.assertEqual(self.order_payment.status, StatusDefinition.AUTHORIZED,
                          'Authorizing an Order Payment should status to authorized')
 
         self.order_payment.settled()
+        self.order_payment.save()
         self.assertEqual(self.order.status, StatusDefinition.SUCCESS,
                          'Settling an Order Payment should change Order to success')
         self.assertEqual(self.order_payment.status, StatusDefinition.SETTLED,
@@ -47,15 +51,19 @@ class PaymentTestCase(BluebottleTestCase):
 
     def test_invalid_order_payment_flow(self):
         self.order_payment.started()
+        self.order_payment.save()
         self.order_payment.authorized()
+        self.order_payment.save()
 
         # Try to transition back to started
         with self.assertRaises(TransitionNotAllowed):
             self.order_payment.started()
+            self.order_payment.save()
 
         # Try to transition to cancelled
         with self.assertRaises(TransitionNotAllowed):
             self.order_payment.cancelled()
+            self.order_payment.save()
 
         self.assertEqual(self.order.status, StatusDefinition.PENDING,
                          'A failed Order Payment transition should not change Order status')

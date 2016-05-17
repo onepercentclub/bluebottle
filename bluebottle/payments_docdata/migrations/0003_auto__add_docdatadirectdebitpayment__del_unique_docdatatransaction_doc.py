@@ -214,7 +214,7 @@ class Migration(SchemaMigration):
             u'id': (
                 'django.db.models.fields.AutoField', [],
                 {'primary_key': 'True'}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [],
+            'status': ('django_fsm.FSMField', [],
                        {'default': "'created'", 'max_length': '50'}),
             'total': ('django.db.models.fields.DecimalField', [],
                       {'default': '0', 'max_digits': '16',
@@ -249,7 +249,7 @@ class Migration(SchemaMigration):
             'payment_method': ('django.db.models.fields.CharField', [],
                                {'default': "''", 'max_length': '20',
                                 'blank': 'True'}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [],
+            'status': ('django_fsm.FSMField', [],
                        {'default': "'created'", 'max_length': '50'}),
             'transaction_fee': ('django.db.models.fields.DecimalField', [],
                                 {'null': 'True', 'max_digits': '16',
@@ -289,7 +289,7 @@ class Migration(SchemaMigration):
                 'django.db.models.fields.related.ForeignKey', [],
                 {'related_name': "u'polymorphic_payments.payment_set'",
                  'null': 'True', 'to': u"orm['contenttypes.ContentType']"}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [],
+            'status': ('django_fsm.FSMField', [],
                        {'default': "'started'", 'max_length': '50'}),
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'})

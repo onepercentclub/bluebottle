@@ -17,6 +17,7 @@ class PledgePaymentAdapter(BasePaymentAdapter):
     
         # A little hacky but we can set the status to pledged here
         self.order_payment.pledged() 
+        self.order_payment.save()
 
     def get_authorization_action(self):
         # Return type success to indicate no further authorization is required.

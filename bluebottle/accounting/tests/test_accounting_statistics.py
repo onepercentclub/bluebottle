@@ -70,12 +70,15 @@ class AccountingStatisticsTests(BluebottleTestCase):
         self.assertEqual(self.order1.status, 'locked')
         self.assertEqual(Payment.objects.all().count(), 0)
         self.order_payment.started()
+        self.order_payment.save()
         self.payment = PaymentFactory.create(order_payment=self.order_payment)
         self.assertEqual(Payment.objects.all().count(), 1)
         self.assertEqual(self.order1.status, StatusDefinition.LOCKED)
         self.order_payment.authorized()
+        self.order_payment.save()
         self.assertEqual(self.order1.status, StatusDefinition.PENDING)
         self.order_payment.settled()
+        self.order_payment.save()
         self.assertEqual(self.order1.status, StatusDefinition.SUCCESS)
         # #####
 

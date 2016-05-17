@@ -61,7 +61,8 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         donation.save()
 
         order.locked()
-        order.succeeded()
+        order.save()
+        order.success()
         order.save()
 
         self.expired_project.save()
@@ -79,7 +80,8 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         donation.save()
 
         order.locked()
-        order.succeeded()
+        order.save()
+        order.success()
         order.save()
 
         self.expired_project.save()
@@ -97,7 +99,8 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         donation.save()
 
         order.locked()
-        order.succeeded()
+        order.save()
+        order.success()
         order.save()
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.complete)

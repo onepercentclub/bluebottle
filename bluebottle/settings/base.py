@@ -100,7 +100,6 @@ COMPRESS_OUTPUT_DIR = 'compressed'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'compressor.finders.CompressorFinder'
 )
 
 # List of callables that know how to import templates from various sources.
@@ -210,7 +209,7 @@ SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 
 SHARED_APPS = (
-    'bluebottle.clients', # you must list the app where your tenant model resides in
+    'bluebottle.clients',  # you must list the app where your tenant model resides in
 
     # Django apps
     'south',
@@ -222,13 +221,10 @@ SHARED_APPS = (
 
     # 3rd party apps
     'django_extensions',
-    'django_extensions.tests',
     'raven.contrib.django.raven_compat',
     'djcelery',
-    'compressor',
     'sorl.thumbnail',
     'micawber.contrib.mcdjango',  # Embedding videos
-    'templatetag_handlebars',
     'rest_framework',
     'filetransfers',
     'loginas',
@@ -481,9 +477,6 @@ PROJECT_CREATE_FLOW = 'combined'
 # For building frontend code
 BB_APPS = []
 
-# Required for handlebars_template to work properly
-USE_EMBER_STYLE_ATTRS = True
-
 # Twitter handles, per language
 TWITTER_HANDLES = {
     'nl': '1procentclub',
@@ -507,10 +500,10 @@ SEND_WELCOME_MAIL = True
 EMAIL_BACKEND = 'bluebottle.utils.email_backend.TestMailBackend'
 
 SWAGGER_SETTINGS = {
-  'api_version': '1.1',
-  'resource_url_prefix': 'api/',
-  'resource_access_handler': 'bluebottle.auth.handlers.resource_access_handler',
-  'is_authenticated': True
+    'api_version': '1.1',
+    'resource_url_prefix': 'api/',
+    'resource_access_handler': 'bluebottle.auth.handlers.resource_access_handler',
+    'is_authenticated': True
 }
 
 # and provide a default (without it django-rest-framework-jwt will default

@@ -228,7 +228,7 @@ class Migration(SchemaMigration):
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             u'id': (
             'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [],
+            'status': ('django_fsm.FSMField', [],
                        {'default': "'created'", 'max_length': '50'}),
             'total': ('django.db.models.fields.DecimalField', [],
                       {'default': '0', 'max_digits': '16',

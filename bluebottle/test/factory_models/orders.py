@@ -7,11 +7,13 @@ from .accounts import BlueBottleUserFactory
 
 
 class OrderFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Order
+    class Meta(object):
+        model = Order
 
     user = factory.SubFactory(BlueBottleUserFactory)
     status = StatusDefinition.CREATED
 
 
 class OrderActionFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = OrderPaymentAction
+    class Meta(object):
+        model = OrderPaymentAction

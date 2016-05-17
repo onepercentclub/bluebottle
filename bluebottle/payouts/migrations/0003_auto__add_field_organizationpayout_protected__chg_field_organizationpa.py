@@ -15,7 +15,7 @@ class Migration(SchemaMigration):
 
 
         # Changing field 'OrganizationPayout.status'
-        db.alter_column(u'payouts_organizationpayout', 'status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(max_length=20))
+        db.alter_column(u'payouts_organizationpayout', 'status', self.gf('django_fsm.FSMField')(max_length=20))
         # Adding field 'ProjectPayout.protected'
         db.add_column(u'payouts_projectpayout', 'protected',
                       self.gf('django.db.models.fields.BooleanField')(default=False),
@@ -23,7 +23,7 @@ class Migration(SchemaMigration):
 
 
         # Changing field 'ProjectPayout.status'
-        db.alter_column(u'payouts_projectpayout', 'status', self.gf('django_fsm.db.fields.fsmfield.FSMField')(max_length=20))
+        db.alter_column(u'payouts_projectpayout', 'status', self.gf('django_fsm.FSMField')(max_length=20))
 
     def backwards(self, orm):
         # Deleting field 'OrganizationPayout.protected'
@@ -193,7 +193,7 @@ class Migration(SchemaMigration):
             'psp_fee_incl': ('bluebottle.bb_projects.fields.MoneyField', [], {'max_digits': '12', 'decimal_places': '2'}),
             'psp_fee_vat': ('bluebottle.bb_projects.fields.MoneyField', [], {'max_digits': '12', 'decimal_places': '2'}),
             'start_date': ('django.db.models.fields.DateField', [], {}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [], {'default': "'new'", 'max_length': '20'}),
+            'status': ('django_fsm.FSMField', [], {'default': "'new'", 'max_length': '20'}),
             'submitted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
@@ -221,7 +221,7 @@ class Migration(SchemaMigration):
             'receiver_account_name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'receiver_account_number': ('django.db.models.fields.CharField', [], {'max_length': '100', 'blank': 'True'}),
             'sender_account_number': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [], {'default': "'new'", 'max_length': '20'}),
+            'status': ('django_fsm.FSMField', [], {'default': "'new'", 'max_length': '20'}),
             'submitted': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'updated': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now', 'blank': 'True'})
         },

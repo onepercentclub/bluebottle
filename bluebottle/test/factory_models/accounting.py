@@ -15,7 +15,8 @@ TODAY = date.today()
 
 
 class RemoteDocdataPayoutFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = RemoteDocdataPayout
+    class Meta(object):
+        model = RemoteDocdataPayout
 
     payout_reference = factory.Sequence(lambda n: 'Reference_{0}'.format(n))
 
@@ -27,7 +28,8 @@ class RemoteDocdataPayoutFactory(factory.DjangoModelFactory):
 
 
 class RemoteDocdataPaymentFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = RemoteDocdataPayment
+    class Meta(object):
+        model = RemoteDocdataPayment
 
     merchant_reference = 'merchant reference'
     triple_deal_reference = 'triple deal reference'
@@ -45,14 +47,16 @@ class RemoteDocdataPaymentFactory(factory.DjangoModelFactory):
 
 
 class BankTransactionCategoryFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = BankTransactionCategory
-    FACTORY_DJANGO_GET_OR_CREATE = ('name', )
+    class Meta(object):
+        model = BankTransactionCategory
+        django_get_or_create = ('name',)
 
     name = factory.Sequence(lambda n: 'Category_{0}'.format(n))
 
 
 class BankTransactionFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = BankTransaction
+    class Meta(object):
+        model = BankTransaction
 
     category = factory.SubFactory(BankTransactionCategoryFactory)
     # only one of these three make sense, so set 2 on None when using this factory

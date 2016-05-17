@@ -1,6 +1,6 @@
 from django.contrib.sessions import middleware
 from django.conf import settings
-from django.utils.importlib import import_module
+from importlib import import_module
 
 
 class SubDomainSessionMiddleware(middleware.SessionMiddleware):

@@ -4,14 +4,12 @@ from django.utils import timezone
 
 import factory
 
-from bluebottle.utils.model_dispatcher import get_project_model
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
+from bluebottle.projects.models import Project
 
 from .accounts import BlueBottleUserFactory
 from .geo import CountryFactory
 from .organizations import OrganizationFactory
-
-PROJECT_MODEL = get_project_model()
 
 
 class ProjectThemeFactory(factory.DjangoModelFactory):
@@ -33,7 +31,7 @@ class ProjectPhaseFactory(factory.DjangoModelFactory):
 
 
 class ProjectFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = PROJECT_MODEL
+    FACTORY_FOR = Project
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     organization = factory.SubFactory(OrganizationFactory)

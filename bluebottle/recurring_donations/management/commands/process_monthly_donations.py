@@ -2,7 +2,6 @@ from decimal import Decimal
 import math
 import sys
 import logging
-import importlib
 
 from collections import namedtuple
 from optparse import make_option
@@ -13,24 +12,19 @@ from django.utils import timezone
 from django.db import connection
 
 from bluebottle.clients.models import Client
-from bluebottle.clients.utils import LocalTenant
+from bluebottle.donations.models import Donation
+from bluebottle.orders.models import Order
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
-from bluebottle.payments_docdata.exceptions import DocdataPaymentException
+from bluebottle.projects.models import Project
 from bluebottle.recurring_donations.models import MonthlyProject
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.utils.model_dispatcher import get_donation_model, \
-    get_order_model, get_project_model
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments.services import PaymentService
 from bluebottle.clients.utils import LocalTenant
 
 from ...models import MonthlyDonor, MonthlyDonation, MonthlyOrder, MonthlyBatch
 from ...mails import mail_monthly_donation_processed_notification
-
-DONATION_MODEL = get_donation_model()
-ORDER_MODEL = get_order_model()
-PROJECT_MODEL = get_project_model()
 
 PAYMENT_METHOD = 'docdataDirectdebit'
 
@@ -165,7 +159,7 @@ def prepare_monthly_donations():
                                          'recurring_payment orders')
     donation_count = 0
 
-    popular_projects_all = PROJECT_MODEL.objects.exclude(skip_monthly=True,
+    popular_projects_all = Project.objects.exclude(skip_monthly=True,
                                                          amount_needed=0).filter(
         status=ProjectPhase.objects.get(slug="campaign")).order_by(
         '-popularity')
@@ -317,7 +311,7 @@ def _process_monthly_order(monthly_order, send_email=False):
         return False
 
     ten_days_ago = timezone.now() + timezone.timedelta(days=-10)
-    recent_orders = ORDER_MODEL.objects.filter(user=monthly_order.user,
+    recent_orders = Order.objects.filter(user=monthly_order.user,
                                                order_type='recurring',
                                                updated__gt=ten_days_ago)
 
@@ -333,7 +327,7 @@ def _process_monthly_order(monthly_order, send_email=False):
         monthly_order.save()
         return False
 
-    order = ORDER_MODEL.objects.create(status=StatusDefinition.LOCKED,
+    order = Order.objects.create(status=StatusDefinition.LOCKED,
                                        user=monthly_order.user,
                                        order_type='recurring')
     order.save()
@@ -342,7 +336,7 @@ def _process_monthly_order(monthly_order, send_email=False):
         "Creating Order for {0} with {1} donations".format(monthly_order.user,
                                                            monthly_order.donations.count()))
     for monthly_donation in monthly_order.donations.all():
-        donation = DONATION_MODEL.objects.create(amount=monthly_donation.amount,
+        donation = Donation.objects.create(amount=monthly_donation.amount,
                                                  user=monthly_donation.user,
                                                  project=monthly_donation.project,
                                                  order=order)

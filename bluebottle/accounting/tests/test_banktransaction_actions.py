@@ -9,6 +9,7 @@ from django.utils.translation import ugettext as _
 
 from django_webtest import WebTestMixin
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.payouts.models import OrganizationPayout
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -16,7 +17,6 @@ from bluebottle.test.factory_models.accounting import BankTransactionFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.bb_payouts.models import BaseProjectPayout
-from bluebottle.utils.model_dispatcher import get_organization_payout_model
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.payments_manual.models import ManualPayment
 from ..models import BankTransaction
@@ -34,7 +34,9 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
     def _add_completed_donation(self, project, amount):
         donation = DonationFactory.create(project=project, amount=amount)
         donation.order.locked()
-        donation.order.succeeded()
+        donation.order.save()
+        donation.order.success()
+        donation.order.save()
 
     def _initialize_unmatched_transactions(self):
         # required for project save
@@ -64,12 +66,16 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         payout2 = self.project2.projectpayout_set.first()
         payout2.payout_rule = BaseProjectPayout.PayoutRules.not_fully_funded
         payout2.in_progress()
+        payout2.save()
         payout2.settled()
+        payout2.save()
 
         payout3 = self.project3.projectpayout_set.first()
         payout3.payout_rule = BaseProjectPayout.PayoutRules.not_fully_funded
         payout3.in_progress()
+        payout3.save()
         payout3.settled()
+        payout3.save()
 
         # should be updated with new donation
         payout4 = self.project4.projectpayout_set.first()
@@ -91,7 +97,6 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
 
         # create an organization payout
         now = date.today()
-        OrganizationPayout = get_organization_payout_model()
         self.org_payout = OrganizationPayout(
             start_date=now - timedelta(days=7),
             end_date=now + timedelta(days=7),
@@ -199,7 +204,9 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         # check that the sum and status are correct
         new_payout = payouts2.first()  # order by created
         new_payout.in_progress()
+        new_payout.save()
         new_payout.settled()
+        new_payout.save()
         self.assertTrue(new_payout.protected)
         self.assertEqual(new_payout.amount_raised, Decimal(75))
         project2 = self.project2.__class__.objects.get(pk=self.project2.pk)
@@ -214,7 +221,9 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         # check that the sum and status are correct
         new_payout = payouts3.first()  # order by created
         new_payout.in_progress()
+        new_payout.save()
         new_payout.settled()
+        new_payout.save()
         self.assertTrue(new_payout.protected)
         self.assertEqual(new_payout.amount_raised, Decimal(75))
         project3 = self.project3.__class__.objects.get(pk=self.project3.pk)
@@ -228,7 +237,9 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         self.assertEqual(payouts4.count(), 1)
         payout = payouts4.first()
         payout.in_progress()
+        payout.save()
         payout.settled()
+        payout.save()
         self.assertTrue(payout.protected)
         self.assertEqual(payout.amount_raised, Decimal(75))
         self.assertEqual(payout.amount_payable, Decimal('71.25'))
@@ -245,7 +256,9 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
         # advance a manual donation payout to settled
         payout = payouts3.first()
         payout.in_progress()
+        payout.save()
         payout.settled()
+        payout.save()
         self.org_payout.calculate_amounts()
         self.assertEqual(self.org_payout.payable_amount_incl, Decimal('15.00'))
 

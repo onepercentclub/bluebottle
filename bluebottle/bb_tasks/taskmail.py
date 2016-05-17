@@ -8,8 +8,6 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.clients.utils import tenant_url
 from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.utils.model_dispatcher import get_taskmember_model
-
 
 
 class TaskMemberMailSender:

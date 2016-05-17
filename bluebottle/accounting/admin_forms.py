@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.utils.model_dispatcher import get_donation_model
+from bluebottle.donations.models import Donation
 from bluebottle.journals.models import ProjectPayoutJournal
 from bluebottle.bb_payouts.models import PayoutBase
 
@@ -44,7 +44,6 @@ def journalform_factory(model, rel_field):
 
 
 def donationform_factory(fields=None):
-    Donation = get_donation_model()
     widgets = {
         'project': ForeignKeyRawIdWidget(Donation._meta.get_field('project').rel, admin.site),
         'fundraiser': ForeignKeyRawIdWidget(Donation._meta.get_field('fundraiser').rel, admin.site),

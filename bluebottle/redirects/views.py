@@ -6,5 +6,5 @@ from .serializers import RedirectSerializer
 
 class RedirectListView(generics.ListAPIView):
     paginate_by = 100
-    model = Redirect
+    queryset = Redirect.objects.all()
     serializer_class = RedirectSerializer

@@ -4,7 +4,7 @@ from .serializers import NewsItemSerializer, NewsItemPreviewSerializer
 
 
 class NewsItemPreviewList(generics.ListAPIView):
-    model = NewsItem
+    queryset = NewsItem.objects.all()
     serializer_class = NewsItemPreviewSerializer
     paginate_by = 5
     filter_fields = ('language',)
@@ -17,7 +17,7 @@ class NewsItemPreviewList(generics.ListAPIView):
 
 
 class NewsItemList(generics.ListAPIView):
-    model = NewsItem
+    queryset = NewsItem.objects.all()
     serializer_class = NewsItemSerializer
     paginate_by = 5
     filter_fields = ('language',)
@@ -30,7 +30,7 @@ class NewsItemList(generics.ListAPIView):
 
 
 class NewsItemDetail(generics.RetrieveAPIView):
-    model = NewsItem
+    queryset = NewsItem.objects.all()
     serializer_class = NewsItemSerializer
 
     def get_queryset(self, *args, **kwargs):

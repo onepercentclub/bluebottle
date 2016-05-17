@@ -41,7 +41,7 @@ class PaymentMethodList(APIView):
 
 
 class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
-    model = OrderPayment
+    queryset = OrderPayment.objects.all()
     serializer_class = ManageOrderPaymentSerializer
     permission_classes = (IsOrderCreator,)
 
@@ -50,7 +50,7 @@ class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
 
 
 class ManageOrderPaymentList(ListCreateAPIView):
-    model = OrderPayment
+    queryset = OrderPayment.objects.all()
     serializer_class = ManageOrderPaymentSerializer
     permission_classes = (IsOrderCreator, CanAccessPaymentMethod)
 

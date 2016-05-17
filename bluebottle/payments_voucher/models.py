@@ -1,4 +1,3 @@
-from bluebottle.utils.model_dispatcher import get_order_model
 from django.conf import settings
 from django.db import models
 from decimal import Decimal
@@ -7,8 +6,6 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import ModificationDateTimeField, \
     CreationDateTimeField
-
-ORDER_MODEL = get_order_model()
 
 
 class VoucherPayment(Payment):
@@ -75,7 +72,7 @@ class Voucher(models.Model):
     receiver_name = models.CharField(_("Receiver name"), blank=True, default="",
                                      max_length=100)
 
-    order = models.ForeignKey(ORDER_MODEL, verbose_name=_("Order"),
+    order = models.ForeignKey('orders.Order', verbose_name=_("Order"),
                               help_text=_("The order that bought this voucher"),
                               null=True)
 

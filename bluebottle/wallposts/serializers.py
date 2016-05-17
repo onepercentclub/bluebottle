@@ -5,16 +5,13 @@ from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, PolymorphicSerializer, ContentTextField, PhotoSerializer)
-from bluebottle.utils.model_dispatcher import get_project_model, \
-    get_fundraiser_model
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
+from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.members.serializers import UserPreviewSerializer
+from bluebottle.projects.models import Project
 
 from .models import (
     Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto,
     Reaction)
-
-PROJECT_MODEL = get_project_model()
-FUNDRAISER_MODEL = get_fundraiser_model()
 
 
 class WallpostListSerializer(serializers.Field):
@@ -36,7 +33,7 @@ class ReactionSerializer(serializers.ModelSerializer):
     """
     Serializer for Wallpost Reactions.
     """
-    author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
+    author = UserPreviewSerializer()
     text = ContentTextField()
     wallpost = serializers.PrimaryKeyRelatedField()
 
@@ -65,9 +62,9 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
 
     def from_native(self, data):
         if data == 'project':
-            data = ContentType.objects.get_for_model(PROJECT_MODEL).model
+            data = ContentType.objects.get_for_model(Project).model
         if data == 'fundraiser':
-            data = ContentType.objects.get_for_model(FUNDRAISER_MODEL).model
+            data = ContentType.objects.get_for_model(Fundraiser).model
         return super(WallpostContentTypeField, self).from_native(data)
 
 
@@ -81,8 +78,8 @@ class WallpostParentIdField(serializers.IntegerField):
         if not value.isnumeric():
             # Assume a project slug here
             try:
-                project = PROJECT_MODEL.objects.get(slug=value)
-            except PROJECT_MODEL.DoesNotExist:
+                project = Project.objects.get(slug=value)
+            except Project.DoesNotExist:
                 raise ValidationError("No project with that slug")
             value = project.id
         return value
@@ -94,7 +91,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
         please subclass it.
     """
 
-    author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
+    author = UserPreviewSerializer()
     reactions = ReactionSerializer(many=True, read_only=True)
     parent_type = WallpostContentTypeField(slug_field='model',
                                            source='content_type')

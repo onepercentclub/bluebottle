@@ -13,18 +13,13 @@ from django.utils.translation import ugettext as _
 from bluebottle.bb_payouts.models import (ProjectPayoutLog,
                                           OrganizationPayoutLog)
 from bluebottle.clients import properties
+from bluebottle.payouts.models import ProjectPayout, OrganizationPayout
 from bluebottle.utils.admin import export_as_csv_action
-from bluebottle.utils.model_dispatcher import (
-    get_project_payout_model, get_organization_payout_model, get_model_mapping)
 from bluebottle.utils.utils import StatusDefinition
 
 from .admin_utils import link_to
 
 logger = logging.getLogger(__name__)
-
-PROJECT_PAYOUT_MODEL = get_project_payout_model()
-ORGANIZATION_PAYOUT_MODEL = get_organization_payout_model()
-MODEL_MAP = get_model_mapping()
 
 
 class PayoutLogBase(admin.TabularInline):
@@ -45,10 +40,10 @@ class OrganizationPayoutLogInline(PayoutLogBase):
 
 class ProjectPayoutForm(forms.ModelForm):
     payout_rule = forms.ChoiceField(
-        choices=PROJECT_PAYOUT_MODEL.PayoutRules.choices)
+        choices=ProjectPayout.PayoutRules.choices)
 
     class Meta:
-        model = PROJECT_PAYOUT_MODEL
+        model = ProjectPayout
 
 
 class BasePayoutAdmin(admin.ModelAdmin):
@@ -90,7 +85,7 @@ class BasePayoutAdmin(admin.ModelAdmin):
 
 
 class BaseProjectPayoutAdmin(BasePayoutAdmin):
-    model = PROJECT_PAYOUT_MODEL
+    model = ProjectPayout
     form = ProjectPayoutForm
     inlines = (PayoutLogInline,)
 
@@ -168,8 +163,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
     # Link to project
     admin_project = link_to(
         lambda obj: obj.project,
-        'admin:{0}_{1}_change'.format(MODEL_MAP['project']['app'],
-                                      MODEL_MAP['project']['class'].lower()),
+        'admin:payouts_projectpayout_change',
         view_args=lambda obj: (obj.project.id,),
         short_description=_('project'),
         truncate=50
@@ -199,10 +193,10 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
         return False
 
     def rule(self, obj):
-        return dict(PROJECT_PAYOUT_MODEL.PayoutRules.choices)[obj.payout_rule]
+        return dict(ProjectPayout.PayoutRules.choices)[obj.payout_rule]
 
 
-admin.site.register(PROJECT_PAYOUT_MODEL, BaseProjectPayoutAdmin)
+admin.site.register(ProjectPayout, BaseProjectPayoutAdmin)
 
 
 class BaseOrganizationPayoutAdmin(BasePayoutAdmin):
@@ -265,7 +259,7 @@ class BaseOrganizationPayoutAdmin(BasePayoutAdmin):
     )
 
 
-admin.site.register(ORGANIZATION_PAYOUT_MODEL, BaseOrganizationPayoutAdmin)
+admin.site.register(OrganizationPayout, BaseOrganizationPayoutAdmin)
 
 
 class PayoutListFilter(admin.SimpleListFilter):
@@ -330,17 +324,17 @@ class OrganizationPayoutAdmin(BaseOrganizationPayoutAdmin):
         date = timezone.datetime.strftime(timezone.now(), '%Y%m%d%H%I%S')
         response['Content-Disposition'] = 'attachment; ' \
                                           'filename=payments_sepa%s.xml' % date
-        response.write(ORGANIZATION_PAYOUT_MODEL.create_sepa_xml(objs))
+        response.write(OrganizationPayout.create_sepa_xml(objs))
         return response
 
     export_sepa.short_description = "Export SEPA file."
 
 
 try:
-    admin.site.unregister(ORGANIZATION_PAYOUT_MODEL)
+    admin.site.unregister(OrganizationPayout)
 except NotRegistered:
     pass
-admin.site.register(ORGANIZATION_PAYOUT_MODEL, OrganizationPayoutAdmin)
+admin.site.register(OrganizationPayout, OrganizationPayoutAdmin)
 
 
 class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
@@ -359,7 +353,7 @@ class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
 
     def get_list_filter(self, request):
         # If site has a legacy payout rule then display the legacy filter
-        if PROJECT_PAYOUT_MODEL.objects.filter(
+        if ProjectPayout.objects.filter(
                 payout_rule__in=['old', 'five', 'seven', 'twelve',
                                  'hundred']).count():
             return ['status', PayoutListFilter, LegacyPayoutListFilter]
@@ -377,14 +371,14 @@ class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
         date = timezone.datetime.strftime(timezone.now(), '%Y%m%d%H%I%S')
         response['Content-Disposition'] = 'attachment; ' \
                                           'filename=payments_sepa%s.xml' % date
-        response.write(PROJECT_PAYOUT_MODEL.create_sepa_xml(objs))
+        response.write(ProjectPayout.create_sepa_xml(objs))
         return response
 
     export_sepa.short_description = "Export SEPA file."
 
 
 try:
-    admin.site.unregister(PROJECT_PAYOUT_MODEL)
+    admin.site.unregister(ProjectPayout)
 except NotRegistered:
     pass
-admin.site.register(PROJECT_PAYOUT_MODEL, ProjectPayoutAdmin)
+admin.site.register(ProjectPayout, ProjectPayoutAdmin)

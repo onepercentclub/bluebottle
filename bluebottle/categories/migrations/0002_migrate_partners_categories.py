@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
-import datetime
-from south.db import db
 from south.v2 import DataMigration
-from django.db import models
 from django.core.files.base import ContentFile
-
-from bluebottle.utils.model_dispatcher import get_model_mapping
 from django.db import connection
-from bluebottle.clients.utils import LocalTenant
 
-MODEL_MAP = get_model_mapping()
+from bluebottle.clients.utils import LocalTenant
 
 
 class Migration(DataMigration):

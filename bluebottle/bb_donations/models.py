@@ -1,14 +1,9 @@
-from django.conf import settings
 from django.db import models
 from django.db.models import options
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
-
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
-                                                 'preview_serializer',
-                                                 'manage_serializer')
 
 
 class BaseDonation(models.Model):
@@ -17,12 +12,12 @@ class BaseDonation(models.Model):
     """
     amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
 
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL,
+    project = models.ForeignKey('projects.Project',
                                 verbose_name=_("Project"))
-    fundraiser = models.ForeignKey(settings.FUNDRAISERS_FUNDRAISER_MODEL,
+    fundraiser = models.ForeignKey('fundraisers.Fundraiser',
                                    verbose_name=_("Fundraiser"), null=True,
                                    blank=True)
-    order = models.ForeignKey(settings.ORDERS_ORDER_MODEL,
+    order = models.ForeignKey('orders.Order',
                               verbose_name=_("Order"), related_name='donations',
                               null=True, blank=True)
 
@@ -53,9 +48,3 @@ class BaseDonation(models.Model):
 
     class Meta:
         abstract = True
-        default_serializer = 'bluebottle.donations.serializers.DefaultDonationSerializer'
-        preview_serializer = 'bluebottle.donations.serializers.PreviewDonationSerializer'
-        manage_serializer = 'bluebottle.donations.serializers.ManageDonationSerializer'
-
-
-import signals

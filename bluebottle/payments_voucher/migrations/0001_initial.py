@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
-# Generated with bb_schemamigration
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
@@ -56,10 +52,7 @@ class Migration(SchemaMigration):
              self.gf('django.db.models.fields.related.ForeignKey')(blank=True,
                                                                    related_name='buyer',
                                                                    null=True,
-                                                                   to=orm[
-                                                                       MODEL_MAP[
-                                                                           'user'][
-                                                                           'model']])),
+                                                                   to=orm['members.Member'])),
             ('sender_email',
              self.gf('django.db.models.fields.EmailField')(max_length=75)),
             ('sender_name',
@@ -70,10 +63,7 @@ class Migration(SchemaMigration):
              self.gf('django.db.models.fields.related.ForeignKey')(blank=True,
                                                                    related_name='casher',
                                                                    null=True,
-                                                                   to=orm[
-                                                                       MODEL_MAP[
-                                                                           'user'][
-                                                                           'model']])),
+                                                                   to=orm['members.Member'])),
             ('receiver_email',
              self.gf('django.db.models.fields.EmailField')(max_length=75)),
             ('receiver_name',
@@ -81,7 +71,7 @@ class Migration(SchemaMigration):
                                                           max_length=100,
                                                           blank=True)),
             ('order', self.gf('django.db.models.fields.related.ForeignKey')(
-                to=orm[MODEL_MAP['order']['model']], null=True)),
+                to=orm['orders.Order'], null=True)),
         ))
         db.send_create_signal(u'payments_voucher', ['Voucher'])
 
@@ -135,8 +125,8 @@ class Migration(SchemaMigration):
             'name': (
                 'django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        MODEL_MAP['order']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['order']['class']},
+        u'orders.order': {
+            'Meta': {'object_name': 'Order'},
             'completed': ('django.db.models.fields.DateTimeField', [],
                           {'null': 'True', 'blank': 'True'}),
             'confirmed': ('django.db.models.fields.DateTimeField', [],
@@ -148,7 +138,7 @@ class Migration(SchemaMigration):
                 {'primary_key': 'True'}),
             'order_type': ('django.db.models.fields.CharField', [],
                            {'default': "'one-off'", 'max_length': "'100'"}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [],
+            'status': ('django_fsm.FSMField', [],
                        {'default': "'created'", 'max_length': '50'}),
             'total': ('django.db.models.fields.DecimalField', [],
                       {'default': '0', 'max_digits': '16',
@@ -156,7 +146,7 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [],
-                     {'to': "orm['{0}']".format(MODEL_MAP['user']['model']),
+                     {'to': "orm['members.Member']",
                       'null': 'True', 'blank': 'True'})
         },
         u'payments.orderpayment': {
@@ -179,11 +169,11 @@ class Migration(SchemaMigration):
                                   'blank': 'True'}),
             'order': ('django.db.models.fields.related.ForeignKey', [],
                       {'related_name': "'order_payments'",
-                       'to': "orm['{0}']".format(MODEL_MAP['order']['model'])}),
+                       'to': "orm['orders.Order']"}),
             'payment_method': ('django.db.models.fields.CharField', [],
                                {'default': "''", 'max_length': '20',
                                 'blank': 'True'}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [],
+            'status': ('django_fsm.FSMField', [],
                        {'default': "'created'", 'max_length': '50'}),
             'transaction_fee': ('django.db.models.fields.DecimalField', [],
                                 {'null': 'True', 'max_digits': '16',
@@ -191,7 +181,7 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [],
-                     {'to': "orm['{0}']".format(MODEL_MAP['user']['model']),
+                     {'to': "orm['members.Member']",
                       'null': 'True', 'blank': 'True'})
         },
         u'payments.orderpaymentaction': {
@@ -223,7 +213,7 @@ class Migration(SchemaMigration):
                 'django.db.models.fields.related.ForeignKey', [],
                 {'related_name': "u'polymorphic_payments.payment_set'",
                  'null': 'True', 'to': u"orm['contenttypes.ContentType']"}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [],
+            'status': ('django_fsm.FSMField', [],
                        {'default': "'started'", 'max_length': '50'}),
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'})
@@ -246,12 +236,12 @@ class Migration(SchemaMigration):
                         {'default': "''", 'max_length': '500',
                          'blank': 'True'}),
             'order': ('django.db.models.fields.related.ForeignKey', [],
-                      {'to': "orm['{0}']".format(MODEL_MAP['order']['model']),
+                      {'to': "orm['orders.Order']",
                        'null': 'True'}),
             'receiver': ('django.db.models.fields.related.ForeignKey', [],
                          {'blank': 'True', 'related_name': "'casher'",
                           'null': 'True', 'to':
-                              "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                              "orm['members.Member']"}),
             'receiver_email': ('django.db.models.fields.EmailField',
                                [], {'max_length': '75'}),
             'receiver_name': ('django.db.models.fields.CharField', [],
@@ -260,7 +250,7 @@ class Migration(SchemaMigration):
             'sender': ('django.db.models.fields.related.ForeignKey', [],
                        {'blank': 'True', 'related_name': "'buyer'",
                         'null': 'True',
-                        'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                        'to': "orm['members.Member']"}),
             'sender_email': (
                 'django.db.models.fields.EmailField', [], {'max_length': '75'}),
             'sender_name': ('django.db.models.fields.CharField', [],
@@ -309,8 +299,8 @@ class Migration(SchemaMigration):
                     {'related_name': "u'taggit_taggeditem_items'",
                      'to': u"orm['taggit.Tag']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.CharField', [],

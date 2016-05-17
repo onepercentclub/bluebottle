@@ -1,11 +1,7 @@
 from django.contrib import admin
 from django.core.urlresolvers import reverse
-from django.utils import translation
 
-from babel.numbers import format_currency
-from bluebottle.utils.model_dispatcher import get_fundraiser_model
-
-FUNDRAISER_MODEL = get_fundraiser_model()
+from bluebottle.fundraisers.models import Fundraiser
 
 
 class FundraiserAdmin(admin.ModelAdmin):
@@ -48,4 +44,4 @@ class FundraiserAdmin(admin.ModelAdmin):
     owner_link.allow_tags = True
     owner_link.short_description = 'initiator'
 
-admin.site.register(FUNDRAISER_MODEL, FundraiserAdmin)
+admin.site.register(Fundraiser, FundraiserAdmin)

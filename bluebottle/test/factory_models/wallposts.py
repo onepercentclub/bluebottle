@@ -6,7 +6,8 @@ from bluebottle.wallposts.models import TextWallpost, Reaction
 
 
 class TextWallpostFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = TextWallpost
+    class Meta(object):
+        model = TextWallpost
 
     content_object = factory.SubFactory(ProjectFactory)
     author = factory.SubFactory(BlueBottleUserFactory)
@@ -31,4 +32,5 @@ class TextWallpostFactory(factory.DjangoModelFactory):
 
 
 class ReactionFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Reaction
+    class Meta(object):
+        model = Reaction

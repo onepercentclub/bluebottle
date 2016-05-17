@@ -11,14 +11,16 @@ from .projects import ProjectFactory
 
 
 class SkillFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Skill
+    class Meta(object):
+        model = Skill
 
     name = factory.Sequence(lambda n: 'Skill_{0}'.format(n))
     name_nl = factory.LazyAttribute(lambda o: o.name)
 
 
 class TaskFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Task
+    class Meta(object):
+        model = Task
 
     author = factory.SubFactory(BlueBottleUserFactory)
     project = factory.SubFactory(ProjectFactory)
@@ -41,7 +43,8 @@ class TaskFactory(factory.DjangoModelFactory):
 
 
 class TaskMemberFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = TaskMember
+    class Meta(object):
+        model = TaskMember
 
     member = factory.SubFactory(BlueBottleUserFactory)
     status = 'accepted'

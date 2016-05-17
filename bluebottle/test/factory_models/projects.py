@@ -13,8 +13,9 @@ from .organizations import OrganizationFactory
 
 
 class ProjectThemeFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = ProjectTheme
-    FACTORY_DJANGO_GET_OR_CREATE = ('name',)
+    class Meta(object):
+        model = ProjectTheme
+        django_get_or_create = ('name',)
 
     name = factory.Sequence(lambda n: 'Theme_{0}'.format(n))
     name_nl = name
@@ -23,15 +24,17 @@ class ProjectThemeFactory(factory.DjangoModelFactory):
 
 
 class ProjectPhaseFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = ProjectPhase
-    FACTORY_DJANGO_GET_OR_CREATE = ('sequence',)
+    class Meta(object):
+        model = ProjectPhase
+        django_get_or_create = ('sequence',)
 
     name = factory.Sequence(lambda n: 'Phase_{0}'.format(n))
     sequence = factory.Sequence(lambda n: n)
 
 
 class ProjectFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Project
+    class Meta(object):
+        model = Project
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     organization = factory.SubFactory(OrganizationFactory)

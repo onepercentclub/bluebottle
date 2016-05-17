@@ -1,3 +1,6 @@
+import logging
+import sys
+
 from .secrets import *
 from .base import *
 from bluebottle.payments_docdata.settings import *

@@ -5,16 +5,12 @@ from bluebottle.test.factory_models.projects import ProjectFactory, \
     ProjectPhaseFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
-from bluebottle.wallposts.models import Reaction
 from bluebottle.bb_follow.models import Follow
-from bluebottle.utils.model_dispatcher import get_model_class
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.utils.utils import StatusDefinition
-
-DONATION_MODEL = get_model_class("DONATIONS_DONATION_MODEL")
 
 
 class FollowTests(BluebottleTestCase):

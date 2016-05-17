@@ -4,7 +4,7 @@ from django.db import connection
 from django.test.utils import override_settings
 from django.test import TestCase
 from django.conf import settings
-from django.utils.importlib import import_module
+from importlib import import_module
 
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient

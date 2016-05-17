@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
-import datetime
 from django.core.management import call_command
-from south.db import db
 from south.v2 import DataMigration
-from django.db import models
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(DataMigration):
@@ -69,8 +63,8 @@ class Migration(DataMigration):
             'name': (
             'django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [],
@@ -148,7 +142,7 @@ class Migration(DataMigration):
             'Meta': {'ordering': "('language', 'sequence')",
                      'object_name': 'Slide'},
             'author': ('django.db.models.fields.related.ForeignKey', [], {
-            'to': u"orm['{0}']".format(MODEL_MAP['user']['model'])}),
+            'to': u"orm['members.Member']"}),
             'background_image': ('sorl.thumbnail.fields.ImageField', [],
                                  {'max_length': '255', 'null': 'True',
                                   'blank': 'True'}),

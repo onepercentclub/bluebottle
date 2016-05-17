@@ -27,7 +27,9 @@ class TestDonationSignals(BluebottleTestCase):
         self.assertEqual(SystemWallpost.objects.count(), 0)
 
         self.order.locked()
-        self.order.succeeded()
+        self.order.save()
+        self.order.success()
+        self.order.save()
 
         self.assertEqual(SystemWallpost.objects.count(), 1)
         self.assertEqual(SystemWallpost.objects.all()[0].content_object,
@@ -46,7 +48,9 @@ class TestDonationSignals(BluebottleTestCase):
                                     fundraiser=fundraiser)
 
         order.locked()
-        order.succeeded()
+        order.save()
+        order.success()
+        order.save()
 
         self.assertEqual(SystemWallpost.objects.count(), 2)
         self.assertEqual(SystemWallpost.objects.all()[1].content_object,
@@ -63,7 +67,9 @@ class TestDonationSignals(BluebottleTestCase):
                                     anonymous=True)
 
         order.locked()
-        order.succeeded()
+        order.save()
+        order.success()
+        order.save()
 
         self.assertEqual(SystemWallpost.objects.count(), 1)
         self.assertEqual(SystemWallpost.objects.all()[0].author, None)

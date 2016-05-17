@@ -1,9 +1,8 @@
 from admin_tools.dashboard.modules import DashboardModule
-from bluebottle.utils.model_dispatcher import get_task_model
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
-TASK_MODEL = get_task_model()
+from bluebottle.tasks.models import Task
 
 
 class TaskModule(DashboardModule):
@@ -20,7 +19,7 @@ class TaskModule(DashboardModule):
         super(TaskModule, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
-        qs = TASK_MODEL.objects.order_by('-created')
+        qs = Task.objects.order_by('-created')
 
         self.children = qs[:self.limit]
         if not len(self.children):
@@ -36,7 +35,7 @@ class RealizedTaskModule(TaskModule):
 
     def init_with_context(self, context):
         try:
-            qs = TASK_MODEL.objects.filter(status='realized').exclude(
+            qs = Task.objects.filter(status='realized').exclude(
                 members__status__in=['realized']).distinct().order_by(
                 self.order_by)
         except:
@@ -45,7 +44,7 @@ class RealizedTaskModule(TaskModule):
         self.children = qs[:self.limit]
         for c in self.children:
             c.admin_url = reverse('admin:{0}_{1}_change'.format(
-                TASK_MODEL._meta.app_label, TASK_MODEL._meta.module_name),
+                Task._meta.app_label, Task._meta.module_name),
                 args=(c.pk,))
 
         if not len(self.children):
@@ -67,7 +66,7 @@ class RecentTasks(DashboardModule):
         super(RecentTasks, self).__init__(title, **kwargs)
 
     def init_with_context(self, context):
-        qs = TASK_MODEL.objects.order_by('-created')
+        qs = Task.objects.order_by('-created')
 
         self.children = qs[:self.limit]
         if not len(self.children):

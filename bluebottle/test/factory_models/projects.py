@@ -4,19 +4,18 @@ from django.utils import timezone
 
 import factory
 
-from bluebottle.utils.model_dispatcher import get_project_model
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
+from bluebottle.projects.models import Project
 
 from .accounts import BlueBottleUserFactory
 from .geo import CountryFactory
 from .organizations import OrganizationFactory
 
-PROJECT_MODEL = get_project_model()
-
 
 class ProjectThemeFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = ProjectTheme
-    FACTORY_DJANGO_GET_OR_CREATE = ('name',)
+    class Meta(object):
+        model = ProjectTheme
+        django_get_or_create = ('name',)
 
     name = factory.Sequence(lambda n: 'Theme_{0}'.format(n))
     name_nl = name
@@ -25,15 +24,17 @@ class ProjectThemeFactory(factory.DjangoModelFactory):
 
 
 class ProjectPhaseFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = ProjectPhase
-    FACTORY_DJANGO_GET_OR_CREATE = ('sequence',)
+    class Meta(object):
+        model = ProjectPhase
+        django_get_or_create = ('sequence',)
 
     name = factory.Sequence(lambda n: 'Phase_{0}'.format(n))
     sequence = factory.Sequence(lambda n: n)
 
 
 class ProjectFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = PROJECT_MODEL
+    class Meta(object):
+        model = Project
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     organization = factory.SubFactory(OrganizationFactory)

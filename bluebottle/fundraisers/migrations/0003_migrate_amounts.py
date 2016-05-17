@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 from decimal import Decimal
 from south.v2 import DataMigration
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(DataMigration):
@@ -91,8 +88,8 @@ class Migration(DataMigration):
             'name': (
             'django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        MODEL_MAP['fundraiser']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['fundraiser']['class']},
+        u'fundraisers.fundraiser': {
+            'Meta': {'object_name': 'Fundraiser'},
             'amount': ('django.db.models.fields.DecimalField', [],
                        {'max_digits': '10', 'decimal_places': '2'}),
             'created': ('django.db.models.fields.DateTimeField', [],
@@ -110,9 +107,9 @@ class Migration(DataMigration):
             'image': ('sorl.thumbnail.fields.ImageField', [],
                       {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [],
-                      {'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                      {'to': "orm['memberds.Member']"}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {
-            'to': "orm['{0}']".format(MODEL_MAP['project']['model'])}),
+            'to': "orm['projects.Project']"}),
             'title': (
             'django.db.models.fields.CharField', [], {'max_length': '255'}),
             'updated': ('django.db.models.fields.DateTimeField', [],
@@ -161,8 +158,8 @@ class Migration(DataMigration):
             'region': ('django.db.models.fields.related.ForeignKey', [],
                        {'to': u"orm['geo.Region']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.CharField', [],
@@ -236,9 +233,9 @@ class Migration(DataMigration):
             'why': ('django.db.models.fields.TextField', [],
                     {'max_length': '265', 'blank': 'True'})
         },
-        MODEL_MAP['organization']['model_lower']: {
+        u'organization.orgranization': {
             'Meta': {'ordering': "['name']",
-                     'object_name': MODEL_MAP['organization']['class']},
+                     'object_name': 'Organization'},
             'account_bank_address': ('django.db.models.fields.CharField', [],
                                      {'max_length': '255', 'blank': 'True'}),
             'account_bank_city': ('django.db.models.fields.CharField', [],
@@ -328,9 +325,9 @@ class Migration(DataMigration):
             'slug': ('django.db.models.fields.SlugField', [],
                      {'unique': 'True', 'max_length': '100'})
         },
-        MODEL_MAP['project']['model_lower']: {
+        u'projects.project': {
             'Meta': {'ordering': "['title']",
-                     'object_name': MODEL_MAP['project']['class']},
+                     'object_name': 'Project'},
             'allow_overfunding': (
             'django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'amount_asked': ('bluebottle.bb_projects.fields.MoneyField', [],
@@ -388,11 +385,10 @@ class Migration(DataMigration):
                                  'blank': 'True'}),
             'organization': ('django.db.models.fields.related.ForeignKey', [],
                              {'blank': 'True', 'related_name': "'organization'",
-                              'null': 'True', 'to': "orm['{0}']".format(
-                                 MODEL_MAP['organization']['model'])}),
+                              'null': 'True', 'to': "orm['organizations.Oranization']"}),
             'owner': ('django.db.models.fields.related.ForeignKey', [],
                       {'related_name': "'owner'",
-                       'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                       'to': "orm['members.Member']"}),
             'partner_organization': (
             'django.db.models.fields.related.ForeignKey', [],
             {'to': u"orm['projects.PartnerOrganization']", 'null': 'True',
@@ -458,6 +454,6 @@ class Migration(DataMigration):
         }
     }
 
-    complete_apps = [MODEL_MAP['fundraiser']['app']]
+    complete_apps = ['fundraisers']
 
     symmetrical = True

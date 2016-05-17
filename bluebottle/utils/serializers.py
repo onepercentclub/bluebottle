@@ -5,7 +5,7 @@ import re
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.template.defaultfilters import truncatechars
-from django.utils.importlib import import_module
+from importlib import import_module
 
 from django_tools.middlewares import ThreadLocal
 from rest_framework import serializers
@@ -280,29 +280,6 @@ class MetaField(serializers.Field):
         except AttributeError:  # not a model/object attribute or relation does not exist
             pass
         return None
-
-
-class DefaultSerializerMixin(object):
-    def get_custom_serializer(self):
-        return self.model._meta.default_serializer
-
-    def get_serializer_class(self):
-        dotted_path = self.get_custom_serializer()
-        bits = dotted_path.split('.')
-        module_name = '.'.join(bits[:-1])
-        module = import_module(module_name)
-        cls_name = bits[-1]
-        return getattr(module, cls_name)
-
-
-class ManageSerializerMixin(DefaultSerializerMixin):
-    def get_custom_serializer(self):
-        return self.model._meta.manage_serializer
-
-
-class PreviewSerializerMixin(DefaultSerializerMixin):
-    def get_custom_serializer(self):
-        return self.model._meta.preview_serializer
 
 
 class HumanReadableChoiceField(serializers.ChoiceField):

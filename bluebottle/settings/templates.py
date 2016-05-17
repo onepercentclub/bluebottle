@@ -9,10 +9,6 @@ TEMPLATE_LOADERS = (
     )),
 )
 
-COMPRESS_PRECOMPILERS = (
-    ('text/x-handlebars', 'embercompressorcompiler.filter.EmberHandlebarsCompiler'),
-)
-
 CACHES = {
     'default': {
         'BACKEND': 'tenant_extras.cache.TenantAwareMemcachedCache',

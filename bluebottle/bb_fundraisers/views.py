@@ -6,22 +6,16 @@ from bluebottle.bluebottle_drf2.views import RetrieveUpdateDeleteAPIView, \
     ListCreateAPIView
 from rest_framework import permissions, exceptions
 
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
-from bluebottle.utils.model_dispatcher import get_project_model, \
-    get_fundraiser_model
+from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.fundraisers.serializers import BaseFundraiserSerializer
+from bluebottle.projects.models import Project
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
-PROJECT_MODEL = get_project_model()
-FUNDRAISER_MODEL = get_fundraiser_model()
-
-FUNDRAISER_SERIALIZER = get_serializer_class('FUNDRAISERS_FUNDRAISER_MODEL',
-                                             'default')
-
 
 class FundraiserListView(ListCreateAPIView):
-    model = FUNDRAISER_MODEL
-    serializer_class = FUNDRAISER_SERIALIZER
+    queryset = Fundraiser.objects.all()
+    serializer_class = BaseFundraiserSerializer
     permission_classes = (TenantConditionalOpenClose,
                           permissions.IsAuthenticatedOrReadOnly,)
 
@@ -37,11 +31,11 @@ class FundraiserListView(ListCreateAPIView):
         project_slug = self.request.QUERY_PARAMS.get('project', None)
         if project_slug:
             try:
-                project = PROJECT_MODEL.objects.get(slug=project_slug)
-            except PROJECT_MODEL.DoesNotExist:
+                project = Project.objects.get(slug=project_slug)
+            except Project.DoesNotExist:
                 raise Http404(
                     _(u"No %(verbose_name)s found matching the query") %
-                    {'verbose_name': PROJECT_MODEL._meta.verbose_name})
+                    {'verbose_name': Project._meta.verbose_name})
 
             filter_kwargs['project'] = project
 
@@ -63,7 +57,7 @@ class FundraiserListView(ListCreateAPIView):
 
 
 class FundraiserDetailView(RetrieveUpdateDeleteAPIView):
-    model = FUNDRAISER_MODEL
-    serializer_class = FUNDRAISER_SERIALIZER
+    queryset = Fundraiser.objects.all()
+    serializer_class = BaseFundraiserSerializer
     permission_classes = (TenantConditionalOpenClose,
                           permissions.IsAuthenticatedOrReadOnly,)

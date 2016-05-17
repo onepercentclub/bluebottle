@@ -41,24 +41,8 @@ import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from bluebottle.utils.model_dispatcher import get_project_model, get_task_model
 from bluebottle.wallposts.models import Reaction, TextWallpost
 from bluebottle.wallposts.notifiers import ObserversContainer
-
-
-# NOTE
-# The following two calls (TASK_MODEL, PROJECT_MODEL )are needed for no
-# clear reason...
-# if you take them out you will receive the following error message:
-# ===========
-# django.core.management.base.CommandError: One or more models did not validate:
-# vouchers.voucher: 'order' has a relation with model fund.Order, which has
-# either not been installed or is abstract. cowry.payment: 'order' has a
-# relation with model fund.Order, which has either not been installed
-# or is abstract.
-# ===========
-TASK_MODEL = get_task_model()
-PROJECT_MODEL = get_project_model()
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,7 @@
 from bluebottle.quotes.models import Quote
 from bluebottle.slides.models import Slide
 from bluebottle.statistics.models import Statistic
-from bluebottle.utils.model_dispatcher import get_project_model
-
-PROJECT_MODEL = get_project_model()
+from bluebottle.projects.models import Project
 
 
 class HomePage(object):
@@ -17,7 +15,7 @@ class HomePage(object):
         self.slides = Slide.objects.published().filter(language=language)
         self.statistics = Statistic.objects.filter(active=True, language=language).all()
 
-        projects = PROJECT_MODEL.objects.filter(is_campaign=True,
+        projects = Project.objects.filter(is_campaign=True,
                                                 status__viewable=True)
         if language == 'en':
             projects = projects.filter(language__code=language)

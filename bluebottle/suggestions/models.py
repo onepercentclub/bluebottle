@@ -5,10 +5,8 @@ from django.utils.translation import ugettext as _
 from django.utils.translation import pgettext
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
-from bluebottle.utils.model_dispatcher import get_project_model
 from bluebottle.bb_projects.models import ProjectTheme
-
-PROJECT_MODEL = get_project_model()
+from bluebottle.projects.models import Project
 
 
 class Suggestion(models.Model):
@@ -46,7 +44,7 @@ class Suggestion(models.Model):
                               default="unconfirmed")
     token = models.CharField(max_length=100)
 
-    project = models.ForeignKey(PROJECT_MODEL, related_name="suggestions",
+    project = models.ForeignKey(Project, related_name="suggestions",
                                 null=True, blank=True)
 
     def confirm(self):

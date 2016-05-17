@@ -7,14 +7,10 @@ from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
-from django_fsm.db.fields import FSMField, transition
+from django_fsm import FSMField, transition
 
-from bluebottle.utils.model_dispatcher import get_donation_model
+from bluebottle.donations.models import Donation
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
-
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
-                                                 'preview_serializer',
-                                                 'manage_serializer')
 
 
 class BaseOrder(models.Model, FSMTransition):
@@ -61,35 +57,34 @@ class BaseOrder(models.Model, FSMTransition):
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
                                 default=0)
 
-    @transition(field=status, save=True, 
+    @transition(field=status, 
                 source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED],
                 target=StatusDefinition.LOCKED)
     def locked(self):
-        # TODO: add locked state behaviour here
         pass
 
-    @transition(field=status, save=True, 
+    @transition(field=status, 
                 source=[StatusDefinition.LOCKED, StatusDefinition.CREATED],
                 target=StatusDefinition.PLEDGED)
     def pledged(self):
         pass
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.LOCKED, StatusDefinition.FAILED],
                 target=StatusDefinition.PENDING)
     def pending(self):
         self.confirmed = now()
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.PENDING, StatusDefinition.LOCKED,
                         StatusDefinition.FAILED],
                 target=StatusDefinition.SUCCESS)
-    def succeeded(self):
+    def success(self):
         if not self.confirmed:
             self.confirmed = now()
         self.completed = now()
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.LOCKED, StatusDefinition.PENDING,
                         StatusDefinition.SUCCESS],
                 target=StatusDefinition.FAILED)
@@ -98,8 +93,7 @@ class BaseOrder(models.Model, FSMTransition):
         self.confirmed = None
 
     def update_total(self, save=True):
-        DONATION_MODEL = get_donation_model()
-        donations = DONATION_MODEL.objects.filter(order=self)
+        donations = Donation.objects.filter(order=self)
         self.total = donations.aggregate(Sum('amount'))['amount__sum'] or 0
         if save:
             self.save()
@@ -123,9 +117,6 @@ class BaseOrder(models.Model, FSMTransition):
 
     class Meta:
         abstract = True
-        default_serializer = 'bluebottle.orders.serializers.OrderSerializer'
-        preview_serializer = 'bluebottle.orders.serializers.OrderSerializer'
-        manage_serializer = 'bluebottle.orders.serializers.ManageOrderSerializer'
 
 
 import signals

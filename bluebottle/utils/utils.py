@@ -1,6 +1,6 @@
 import socket
 
-from django_fsm.db.fields import TransitionNotAllowed
+from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
 from django.conf import settings
 from django.utils.http import urlquote
@@ -24,9 +24,7 @@ class GetTweetMixin:
         return self.get_meta_title()
 
     def get_meta_title(self, **kwargs):
-        from bluebottle.utils.model_dispatcher import get_project_model
-
-        if isinstance(self, get_project_model()):
+        if hasattr(self, 'country'):
             return u'{name_project} | {country}'.format(
                 name_project=self.title,
                 country=self.country.name if self.country else '')
@@ -79,7 +77,7 @@ class FSMTransition:
     Class mixin to add transition_to method for Django FSM
     """
 
-    def transition_to(self, new_status):
+    def transition_to(self, new_status, save=True):
         # If the new_status is the same as then current then return early
         if self.status == new_status:
             return
@@ -92,22 +90,20 @@ class FSMTransition:
 
         # Check that the new_status is in the available transitions -
         # created with Django FSM decorator
-        try:
-            transition_method = [i[1] for i in available_transitions if
-                                 i[0] == new_status].pop()
-        except IndexError:
-            # TODO: should we raise exception here?
-            raise TransitionNotAllowed(
-                "Can't switch from state '{0}' to state '{1}' for {2}".format(self.status, new_status, self.__class__.__name__))
-
-        # Get the function method on the instance
-        instance_method = getattr(self, transition_method.__name__)
+        for transition in available_transitions:
+            if transition.name == new_status:
+                transition_method = transition.method
 
         # Call state transition method
         try:
+            instance_method = getattr(self, transition_method.__name__)
             instance_method()
-        except Exception as e:
-            raise e
+        except UnboundLocalError as e:
+            raise TransitionNotAllowed(
+                "Can't switch from state '{0}' to state '{1}' for {2}".format(self.status, new_status, self.__class__.__name__))
+
+        if save:
+            self.save()
 
     def refresh_from_db(self):
         """Refreshes this instance from db"""
@@ -246,3 +242,4 @@ def update_group_permissions(sender, group_perms=None):
             group.save()
     except:
         pass
+

@@ -7,7 +7,8 @@ from .accounts import BlueBottleUserFactory
 
 
 class NewsItemFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = NewsItem
+    class Meta(object):
+        model = NewsItem
 
     title = factory.Sequence(lambda n: 'News Title {0}'.format(n))
     status = NewsItem.PostStatus.published
@@ -18,8 +19,8 @@ class NewsItemFactory(factory.DjangoModelFactory):
 
     make_placeholder = factory.PostGeneration(
         lambda obj, create, extracted,
-               **kwargs: Placeholder.objects.create_for_object(obj,
-                                                               'blog_contents'))
+        **kwargs: Placeholder.objects.create_for_object(obj,
+                                                        'blog_contents'))
 
 
 class DraftNewsItemFactory(NewsItemFactory):

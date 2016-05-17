@@ -10,15 +10,13 @@ from django_extensions.db.fields import (
 from django_extensions.db.fields.json import JSONField
 
 from djchoices import DjangoChoices, ChoiceItem
-from polymorphic.polymorphic_model import PolymorphicModel
-from django_fsm.db.fields import FSMField, transition
+from polymorphic.models import PolymorphicModel
+from django_fsm import FSMField, transition
 
 from bluebottle import clients
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.managers import PaymentManager
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
-
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('serializer',)
 
 
 def trim_tenant_url(max_length, tenant_url):
@@ -119,8 +117,7 @@ class OrderPayment(models.Model, FSMTransition):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_("user"), blank=True,
         null=True)
-    order = models.ForeignKey(
-        settings.ORDERS_ORDER_MODEL, related_name='order_payments')
+    order = models.ForeignKey('orders.Order', related_name='order_payments')
     status = FSMField(
         default=StatusDefinition.CREATED, choices=STATUS_CHOICES,
         protected=True)
@@ -151,66 +148,62 @@ class OrderPayment(models.Model, FSMTransition):
             return order_payments[0]
         return None
 
-    @transition(field=status, save=True, source=StatusDefinition.CREATED,
+    @transition(field=status, source=StatusDefinition.CREATED,
                 target=StatusDefinition.STARTED)
     def started(self):
-        # TODO: add started state behaviour here
         pass
 
-    @transition(field=status, save=True, source=StatusDefinition.CREATED,
+    @transition(field=status, source=StatusDefinition.CREATED,
                 target=StatusDefinition.PLEDGED)
     def pledged(self):
         pass
 
-    @transition(field=status, save=True, source=[StatusDefinition.STARTED,
-                                                 StatusDefinition.CANCELLED,
-                                                 StatusDefinition.FAILED],
+    @transition(field=status, source=[StatusDefinition.STARTED,
+                                      StatusDefinition.CANCELLED,
+                                      StatusDefinition.FAILED],
                 target=StatusDefinition.AUTHORIZED)
     def authorized(self):
-        # TODO: add authorized state behaviour here
         pass
 
-    @transition(field=status, save=True, source=[StatusDefinition.AUTHORIZED,
-                                                 StatusDefinition.STARTED,
-                                                 StatusDefinition.CANCELLED,
-                                                 StatusDefinition.FAILED,
-                                                 StatusDefinition.UNKNOWN],
+    @transition(field=status, source=[StatusDefinition.AUTHORIZED,
+                                      StatusDefinition.STARTED,
+                                      StatusDefinition.CANCELLED,
+                                      StatusDefinition.FAILED,
+                                      StatusDefinition.UNKNOWN],
                 target=StatusDefinition.SETTLED)
     def settled(self):
         self.closed = now()
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED,
                         StatusDefinition.SETTLED],
                 target=StatusDefinition.FAILED)
     def failed(self):
         self.closed = None
 
-    @transition(field=status, save=True, source=[StatusDefinition.STARTED,
-                                                 StatusDefinition.FAILED],
+    @transition(field=status, source=[StatusDefinition.STARTED,
+                                      StatusDefinition.FAILED],
                 target=StatusDefinition.CANCELLED)
     def cancelled(self):
-        # TODO: add cancelled state behaviour here
         pass
 
-    @transition(field=status, save=True, source=[StatusDefinition.AUTHORIZED,
-                                                 StatusDefinition.SETTLED],
+    @transition(field=status, source=[StatusDefinition.AUTHORIZED,
+                                      StatusDefinition.SETTLED],
                 target=StatusDefinition.CHARGED_BACK)
     def charged_back(self):
         self.closed = None
 
-    @transition(field=status, save=True, source=[StatusDefinition.AUTHORIZED,
-                                                 StatusDefinition.SETTLED],
+    @transition(field=status, source=[StatusDefinition.AUTHORIZED,
+                                      StatusDefinition.SETTLED],
                 target=StatusDefinition.REFUNDED)
     def refunded(self):
         self.closed = None
 
-    @transition(field=status, save=True, source=[StatusDefinition.STARTED,
-                                                 StatusDefinition.AUTHORIZED,
-                                                 StatusDefinition.SETTLED],
+    @transition(field=status, source=[StatusDefinition.STARTED,
+                                      StatusDefinition.AUTHORIZED,
+                                      StatusDefinition.SETTLED],
                 target=StatusDefinition.UNKNOWN)
     def unknown(self):
-        # TODO: add unknown state behaviour here
         pass
 
     def get_status_mapping(self, payment_status):

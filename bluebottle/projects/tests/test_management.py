@@ -54,7 +54,8 @@ class TestStatusMC(BluebottleTestCase):
 
         # Set status of donation to paid
         donation.order.locked()
-        donation.order.succeeded()
+        donation.order.save()
+        donation.order.success()
         donation.order.save()
 
         some_project.status = self.campaign
@@ -87,7 +88,8 @@ class TestStatusMC(BluebottleTestCase):
 
         # Set status of donation to paid
         donation.order.locked()
-        donation.order.succeeded()
+        donation.order.save()
+        donation.order.success()
         donation.order.save()
 
         some_project.status = self.campaign
@@ -123,7 +125,8 @@ class TestStatusMC(BluebottleTestCase):
 
         # Set status of donation to paid
         donation.order.locked()
-        donation.order.succeeded()
+        donation.order.save()
+        donation.order.success()
         donation.order.save()
 
         some_project.status = self.campaign
@@ -159,7 +162,8 @@ class TestStatusMC(BluebottleTestCase):
 
         # Set status of donation to paid
         donation.order.locked()
-        donation.order.succeeded()
+        donation.order.save()
+        donation.order.success()
         donation.order.save()
 
         some_project.status = self.campaign
@@ -233,5 +237,6 @@ class TestMultiTenant(BluebottleTestCase):
 
             self.assertEquals(len(mail.outbox), 2)
 
-            mocked_init.assert_once_called_with(LocalTenant, self.tenant1)
-            mocked_init.assert_once_called_with(LocalTenant, self.tenant2)
+        self.assertEqual(mocked_init.call_count, 2)
+        mocked_init.assert_any_call(LocalTenant, self.tenant1, clear_tenant=True)
+        mocked_init.assert_any_call(LocalTenant, self.tenant2, clear_tenant=True)

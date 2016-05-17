@@ -10,7 +10,8 @@ from .projects import ProjectFactory
 
 
 class FundraiserFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Fundraiser
+    class Meta(object):
+        model = Fundraiser
 
     owner = factory.SubFactory(BlueBottleUserFactory)
     project = factory.SubFactory(ProjectFactory)

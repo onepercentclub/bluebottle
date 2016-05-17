@@ -9,7 +9,7 @@ from .serializers import PageSerializer
 
 
 class PageList(generics.ListAPIView):
-    model = Page
+    queryset = Page.objects.all()
     serializer_class = PageSerializer
     paginate_by = 10
 
@@ -29,7 +29,7 @@ class PageList(generics.ListAPIView):
 
 
 class PageDetail(generics.RetrieveAPIView):
-    model = Page
+    queryset = Page.objects.all()
     serializer_class = PageSerializer
 
     def get_queryset(self):

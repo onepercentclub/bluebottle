@@ -72,7 +72,7 @@ class StatusDefinition:
     UNKNOWN = 'unknown'
 
 
-class FSMTransition:
+class FSMTransition(object):
     """
     Class mixin to add transition_to method for Django FSM
     """

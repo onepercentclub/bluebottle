@@ -6,7 +6,8 @@ from .accounts import BlueBottleUserFactory
 
 
 class OrganizationFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Organization
+    class Meta(object):
+        model = Organization
 
     name = factory.Sequence(lambda n: 'Organization_{0}'.format(n))
     slug = factory.Sequence(lambda n: 'organization_{0}'.format(n))
@@ -25,7 +26,8 @@ class OrganizationFactory(factory.DjangoModelFactory):
 
 
 class OrganizationMemberFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = OrganizationMember
+    class Meta(object):
+        model = OrganizationMember
 
     user = factory.SubFactory(BlueBottleUserFactory)
     function = 'owner'

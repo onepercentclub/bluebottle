@@ -87,10 +87,6 @@ urlpatterns = patterns('',
                        url(r'^documents/',
                            include('bluebottle.organizations.urls.documents')),
 
-                       # handlebar templates
-                       url(r'^templates/',
-                           include('bluebottle.hbtemplates.urls')),
-
                        url(r'^embed/', include('bluebottle.widget.urls.core')),
 
                        # JSON Web Token based authentication for Django REST framework

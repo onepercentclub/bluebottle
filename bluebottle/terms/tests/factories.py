@@ -7,8 +7,9 @@ from datetime import timedelta
 
 
 class TermsFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Terms
-    FACTORY_DJANGO_GET_OR_CREATE = ('version',)
+    class Meta(object):
+        model = Terms
+        django_get_or_create = ('version',)
 
     author = factory.SubFactory(BlueBottleUserFactory)
     date = now() - timedelta(weeks=4)

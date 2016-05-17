@@ -6,7 +6,8 @@ from .accounts import BlueBottleUserFactory
 
 
 class SlideFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Slide
+    class Meta(object):
+        model = Slide
 
     author = factory.SubFactory(BlueBottleUserFactory)
     publication_date = now()

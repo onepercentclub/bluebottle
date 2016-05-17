@@ -7,7 +7,8 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 
 
 class MonthlyDonorFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = MonthlyDonor
+    class Meta(object):
+        model = MonthlyDonor
 
     user = factory.SubFactory(BlueBottleUserFactory)
 
@@ -21,7 +22,8 @@ class MonthlyDonorFactory(factory.DjangoModelFactory):
 
 
 class MonthlyDonorProjectFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = MonthlyDonorProject
+    class Meta(object):
+        model = MonthlyDonorProject
 
     project = factory.SubFactory(ProjectFactory)
     donor = factory.SubFactory(MonthlyDonorFactory)

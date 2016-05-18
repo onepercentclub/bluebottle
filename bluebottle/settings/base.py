@@ -103,15 +103,34 @@ STATICFILES_FINDERS = (
 )
 
 # List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    'django.template.loaders.eggs.Loader',
-)
 
-# TEMPLATE_DIRS = (
-#     (os.path.join(PROJECT_ROOT, 'bluebottle', 'templates')),
-# )
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'OPTIONS': {
+            'loaders': [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+                'django.template.loaders.eggs.Loader',
+                'admin_tools.template_loaders.Loader',
+            ],
+            'context_processors': [
+                'django.core.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.core.context_processors.debug',
+                'django.core.context_processors.i18n',
+                'django.core.context_processors.media',
+                'django.core.context_processors.static',
+                'django.core.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+                'social.apps.django_app.context_processors.backends',
+                'social.apps.django_app.context_processors.login_redirect',
+                'tenant_extras.context_processors.conf_settings',
+                'bluebottle.utils.context_processors.tenant_properties'
+            ],
+        },
+    },
+]
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',
@@ -128,7 +147,6 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.LockdownMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.transaction.TransactionMiddleware',
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
@@ -211,8 +229,6 @@ SHARED_APPS = (
     'tenant_schemas',
     'bluebottle.clients',  # you must list the app where your tenant model resides in
 
-    'django.contrib.contenttypes',
-
     # Django apps
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -232,6 +248,7 @@ SHARED_APPS = (
     'filetransfers',
     'rest_framework_swagger',
     'lockdown',
+
 )
 
 TENANT_APPS = (
@@ -239,7 +256,7 @@ TENANT_APPS = (
     'modeltranslation',
 
     'social.apps.django_app.default',
-
+    'django.contrib.contenttypes',
     # Allow the Bluebottle common app to override the admin branding
     'bluebottle.common',
     'token_auth',
@@ -256,7 +273,8 @@ TENANT_APPS = (
     'django.contrib.sites',
     'django.contrib.admindocs',
     'django.contrib.auth',
-    'django.contrib.contenttypes',
+
+    'bb_salesforce',
 
     #Widget
     'bluebottle.widget',
@@ -265,7 +283,6 @@ TENANT_APPS = (
 
     'exportdb',
 
-    'bb_salesforce',
 
     # Newly moved BB apps
     'bluebottle.members',
@@ -335,28 +352,12 @@ TENANT_APPS = (
     'django.contrib.humanize',
     'django_tools',
     'taggit',
-    'taggit_autocomplete_modified',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"
-
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.core.context_processors.request',
-    'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.core.context_processors.tz',
-    'django.contrib.messages.context_processors.messages',
-    'social.apps.django_app.context_processors.backends',
-    'social.apps.django_app.context_processors.login_redirect',
-    'tenant_extras.context_processors.conf_settings',
-    'bluebottle.utils.context_processors.tenant_properties'
-)
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
@@ -683,3 +684,4 @@ REQUESTS_MAX_RETRIES = 0
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4
 }
+

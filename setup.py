@@ -16,7 +16,8 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-fluent-contents.git@8439c7ffc1ba8877247aa7d012928c9bb170dc79#egg=fluent_contents-1.0c3',
     'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.1.18#egg=django-bb-salesforce-1.1.18',
     'git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.0#egg=django-tenant-extras-2.0.0',
-    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.16#egg=django-token-auth-0.2.16'
+    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.16#egg=django-token-auth-0.2.16',
+    'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1'
 ]
 
 install_requires = [
@@ -69,7 +70,7 @@ install_requires = [
     'raven==5.16.0',
     'regex==2016.4.25',
     'djangorestframework-jwt==1.8.0',
-    'django-filetransfers==0.1.0',
+    'django-filetransfers==0.1.1',
     'django-admin-tools==0.7.2',
     'django-rest-swagger==0.3.6',
     'django-lockdown==1.2',

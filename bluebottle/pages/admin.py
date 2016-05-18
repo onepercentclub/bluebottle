@@ -45,7 +45,7 @@ class PageAdmin(PlaceholderFieldAdmin):
     def get_urls(self):
         # Include extra API views in this admin page
         base_urls = super(PageAdmin, self).get_urls()
-        info = self.model._meta.app_label, self.model._meta.module_name
+        info = self.model._meta.app_label, self.model._meta.model_name
         urlpatterns = patterns('',
                                url(r'^(?P<pk>\d+)/preview/$',
                                    self.admin_site.admin_view(

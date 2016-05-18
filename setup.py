@@ -41,7 +41,7 @@ install_requires = [
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.7.1',
     'django-dynamic-fixture==1.8.5',
-    'django-fluent-dashboard==0.3.2',
+    'django-fluent-dashboard==0.6.1',
     'djangorestframework==3.3.3',
     'dkimpy==0.5.6',
     'micawber==0.3.3',

@@ -59,6 +59,8 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
     """
     Field to save content_type on wall-posts.
     """
+    def get_queryset(self):
+        return ContentType.objects
 
     def from_native(self, data):
         if data == 'project':

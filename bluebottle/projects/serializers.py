@@ -35,7 +35,7 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class StoryField(serializers.WritableField):
+class StoryField(serializers.CharField):
     def to_native(self, value):
         """ Reading / Loading the story field """
         return value
@@ -143,8 +143,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
     owner = UserPreviewSerializer()
 
     categories = serializers.SlugRelatedField(many=True, read_only=True,
-                                              slug_field='slug',
-                                              queryset=Category.objects)
+                                              slug_field='slug')
 
     class Meta:
         model = Project
@@ -180,7 +179,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     pitch = serializers.CharField(required=False)
     slug = serializers.CharField(read_only=True)
     tags = TagSerializer()
-    amount_asked = serializers.CharField(required=False, allow_none=True)
+    amount_asked = serializers.CharField(required=False)
     amount_donated = serializers.CharField(read_only=True)
     amount_needed = serializers.CharField(read_only=True)
     budget_lines = ProjectBudgetLineSerializer(many=True,

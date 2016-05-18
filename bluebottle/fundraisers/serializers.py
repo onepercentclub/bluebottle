@@ -45,7 +45,9 @@ class BaseFundraiserSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(source='project', slug_field='slug',
                                            queryset=Project.objects)
     image = ImageSerializerExt()
-    amount_donated = serializers.DecimalField(source='amount_donated',
+    amount_donated = serializers.DecimalField(max_digits=16,
+                                              decimal_places=2,
+                                              source='amount_donated',
                                               read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')

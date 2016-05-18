@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 class VoteSerializer(serializers.ModelSerializer):
     voter = UserPreviewSerializer(read_only=True)
-    project = serializers.SlugRelatedField(source='project', slug_field='slug')
+    project = serializers.SlugRelatedField(source='project', slug_field='slug', queryset=Vote.objects)
 
     class Meta:
         model = Vote

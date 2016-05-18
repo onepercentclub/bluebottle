@@ -11,8 +11,8 @@ class TermsSerializer(serializers.ModelSerializer):
 
 
 class TermsAgreementSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(read_only=True, queryset=Member.objects)
-    terms = serializers.PrimaryKeyRelatedField(read_only=True, queryset=Terms.objects)
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    terms = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = TermsAgreement

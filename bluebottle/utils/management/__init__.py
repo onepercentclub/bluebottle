@@ -1,5 +1,5 @@
 from django.dispatch.dispatcher import receiver
-from django.db.models.signals import post_syncdb
+from django.db.models.signals import post_migrate
 from django.conf import settings
 
 from bluebottle.utils.utils import update_group_permissions
@@ -26,7 +26,7 @@ ADDITIONAL_GROUP_PERMS = {
 }
 
 
-@receiver(post_syncdb)
+@receiver(post_migrate)
 def _update_permissions(sender, **kwargs):
     update_group_permissions(sender)
 

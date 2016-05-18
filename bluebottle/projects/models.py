@@ -177,7 +177,7 @@ class Project(BaseProject):
     voting_deadline = models.DateTimeField(_('Voting Deadline'), null=True,
                                            blank=True)
 
-    categories = models.ManyToManyField('categories.Category', null=True, blank=True)
+    categories = models.ManyToManyField('categories.Category', blank=True)
 
     objects = ProjectManager()
 

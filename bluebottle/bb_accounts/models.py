@@ -142,10 +142,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                              blank=True)
     location = models.ForeignKey('geo.Location', help_text=_('Location'),
                                  null=True, blank=True)
-    favourite_themes = models.ManyToManyField(ProjectTheme, blank=True,
-                                              null=True)
-    skills = models.ManyToManyField('tasks.Skill', blank=True,
-                                    null=True)
+    favourite_themes = models.ManyToManyField(ProjectTheme, blank=True)
+    skills = models.ManyToManyField('tasks.Skill', blank=True)
 
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)

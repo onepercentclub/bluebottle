@@ -5,13 +5,13 @@ import dkim
 from mock import patch
 from bunch import bunchify
 
-from django.utils import unittest
+import unittest
 from django.test import TestCase, RequestFactory
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
-from django.db.models import loading
+from django.apps import apps
 from bluebottle.test.utils import BluebottleTestCase
 from django.test.client import Client
 from django.test.utils import override_settings
@@ -102,7 +102,7 @@ class CustomSettingsTestCase(TestCase):
 
     @classmethod
     def syncdb(cls):
-        loading.cache.loaded = False
+        apps.cache.loaded = False
         call_command('syncdb', verbosity=0)
 
 

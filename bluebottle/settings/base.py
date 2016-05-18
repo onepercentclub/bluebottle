@@ -208,7 +208,10 @@ SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 
 SHARED_APPS = (
+    'tenant_schemas',
     'bluebottle.clients',  # you must list the app where your tenant model resides in
+
+    'django.contrib.contenttypes',
 
     # Django apps
     'django.contrib.sessions',
@@ -226,8 +229,9 @@ SHARED_APPS = (
     'geoposition',
     'tenant_extras',
     'localflavor',
-    'filetransfers'
-
+    'filetransfers',
+    'rest_framework_swagger',
+    'lockdown',
 )
 
 TENANT_APPS = (
@@ -334,19 +338,10 @@ TENANT_APPS = (
     'taggit_autocomplete_modified',
 )
 
-INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('rest_framework_swagger', 'lockdown', 'tenant_schemas')
+INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"
-
-SOUTH_DATABASE_ADAPTERS = {
-    'default': 'south.db.postgresql_psycopg2',
-}
-
-SOUTH_MIGRATION_MODULES = {
-    'taggit': 'taggit.south_migrations',
-    'fluent_contents': 'fluent_contents.south_migrations'
-}
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',

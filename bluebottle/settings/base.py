@@ -104,7 +104,6 @@ STATICFILES_FINDERS = (
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
-    'tenant_extras.template_loaders.FilesystemLoader',
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
     'django.template.loaders.eggs.Loader',
@@ -212,9 +211,6 @@ SHARED_APPS = (
     'bluebottle.clients',  # you must list the app where your tenant model resides in
 
     # Django apps
-    'south',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -226,17 +222,15 @@ SHARED_APPS = (
     'sorl.thumbnail',
     'micawber.contrib.mcdjango',  # Embedding videos
     'rest_framework',
-    'filetransfers',
     'loginas',
     'geoposition',
     'tenant_extras',
-    'bb_salesforce',
-    'localflavor'
+    'localflavor',
+    'filetransfers'
 
 )
 
 TENANT_APPS = (
-    'south',
     'polymorphic',
     'modeltranslation',
 
@@ -255,6 +249,7 @@ TENANT_APPS = (
     'bluebottle.auth',
 
     'django.contrib.admin',
+    'django.contrib.sites',
     'django.contrib.admindocs',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -275,7 +270,6 @@ TENANT_APPS = (
     'bluebottle.tasks',
     'bluebottle.hbtemplates',
     'bluebottle.bluebottle_dashboard',
-    'bluebottle.statistics',
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
@@ -321,7 +315,6 @@ TENANT_APPS = (
     'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
-    'bluebottle.votes',
 
     # Basic Bb implementations
     'bluebottle.fundraisers',

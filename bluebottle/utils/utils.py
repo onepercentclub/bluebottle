@@ -19,7 +19,7 @@ def get_languages():
     return properties.LANGUAGES
 
 
-class GetTweetMixin:
+class GetTweetMixin(object):
     def get_fb_title(self, **kwargs):
         return self.get_meta_title()
 
@@ -49,7 +49,7 @@ class GetTweetMixin:
         return tweet
 
 
-class StatusDefinition:
+class StatusDefinition(object):
     """
     Various status definitions for FSM's
     """

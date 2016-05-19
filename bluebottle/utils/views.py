@@ -46,12 +46,12 @@ class LanguageList(generics.ListAPIView):
     queryset = Language.objects.all()
 
     def get_queryset(self):
-        return self.model.objects.order_by('language_name').all()
+        return Language.objects.order_by('language_name').all()
 
 
 class TagSearch(views.APIView):
     """
-    Search tags in use on this system
+    Search tags in use on this systemgit
     """
 
     def get(self, request, format=None, search=''):

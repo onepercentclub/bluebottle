@@ -22,7 +22,7 @@ env:
   - secure: "iMKjQ8xllvNCzPfFdLBZ2Xqv83XF0bgUHrJTH2Q5R9BwtVwtbiWS//9mWMfVX4lumkZmlX6cwVOGDPBTJVEJv4k7GHza01Kp7ax3WHT/ll+K0j8AFMwbvHRJUPihKc5DWVVFir/xfW4qyKss6yNbn+M94ZbiRMcno/3NLNN2dKw="
 install:
 - pip install --upgrade setuptools --use-mirrors
-- pip install -e .[test] --process-dependency-links
+- pip install -e .[test] --process-dependency-links --trusted-host github.com
 - createdb bluebottle_test
 - echo `psql --version`
 before_script:

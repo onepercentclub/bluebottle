@@ -29,21 +29,30 @@ class ManageDonationSerializer(serializers.ModelSerializer):
 class PreviewDonationSerializer(serializers.ModelSerializer):
     project = get_serializer_class('PROJECTS_PROJECT_MODEL', 'preview')
     fundraiser = serializers.PrimaryKeyRelatedField(required=False)
+    payment_method = serializers.SerializerMethodField('get_payment_method')
     user = get_serializer_class('AUTH_USER_MODEL', 'preview')(
         source='public_user')
 
     class Meta:
         model = DONATION_MODEL
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
-                  'anonymous', 'amount', 'reward')
+                  'payment_method', 'anonymous', 'amount', 'reward')
+
+    def get_payment_method(self, obj):
+        return obj.get_payment_method
+
 
 
 class PreviewDonationWithoutAmountSerializer(PreviewDonationSerializer):
+    payment_method = serializers.SerializerMethodField('get_payment_method')
+
     class Meta:
         model = DONATION_MODEL
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
                   'anonymous')
 
+    def get_payment_method(self, obj):
+        return obj.get_payment_method
 
 class DefaultDonationSerializer(PreviewDonationSerializer):
     class Meta:
@@ -66,8 +75,12 @@ class LatestDonationProjectSerializer(BaseProjectPreviewSerializer):
 class LatestDonationSerializer(serializers.ModelSerializer):
     project = LatestDonationProjectSerializer()
     user = get_serializer_class('AUTH_USER_MODEL', 'preview')()
+    payment_method = serializers.SerializerMethodField('get_payment_method')
 
     class Meta:
         model = DONATION_MODEL
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
                   'anonymous', 'amount')
+
+    def get_payment_method(self, obj):
+        return obj.get_payment_method

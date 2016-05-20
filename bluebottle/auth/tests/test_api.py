@@ -18,8 +18,9 @@ class UserTokenTestCase(BluebottleTestCase):
         """
         Test that we get a token from API when using credentials.
         """
-        res = self.client.post(
+        response = self.client.post(
             reverse("token-auth"),
             data={'email': self.user.email, 'password': 'testing'}
         )
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, 'token')

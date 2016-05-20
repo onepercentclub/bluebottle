@@ -68,7 +68,7 @@ install_requires = [
     'django-tenant-schemas==1.5.8',
     'raven==5.16.0',
     'regex==2016.4.25',
-    'djangorestframework-jwt==1.8.0',
+    'djangorestframework-jwt==1.6.0',
     'django-filetransfers==0.1.0',
     'django-admin-tools==0.5.2',
     'django-rest-swagger==0.3.6',

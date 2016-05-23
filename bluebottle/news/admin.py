@@ -1,10 +1,11 @@
+import json
+
 from django.conf import settings
 from django.conf.urls import patterns, url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.utils import simplejson
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
@@ -84,12 +85,12 @@ class NewsItemAdmin(PlaceholderFieldAdmin):
         contents_html = mark_safe(render_content_items(request, items).html)
 
         status = 200
-        json = {
+        resp = {
             'success': True,
             'title': blogpost.title,
             'contents': contents_html,
         }
-        return HttpResponse(simplejson.dumps(json),
+        return HttpResponse(json.dumps(resp),
                             content_type='application/javascript',
                             status=status)
 

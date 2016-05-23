@@ -120,7 +120,7 @@ class ShareFlyer(views.APIView):
         return response.Response({'preview': result})
 
     def post(self, request, *args, **kwargs):
-        serializer = ShareSerializer(bunchify({}), data=request.DATA)
+        serializer = ShareSerializer(bunchify({}), data=request.data)
         if not serializer.is_valid():
             return response.Response(serializer.errors, status=400)
 
@@ -161,7 +161,7 @@ class ShareFlyer(views.APIView):
 
 class ModelTranslationViewMixin(object):
     def get(self, request, *args, **kwargs):
-        language = request.QUERY_PARAMS.get('language', properties.LANGUAGE_CODE)
+        language = request.query_params.get('language', properties.LANGUAGE_CODE)
         translation.activate(language)
         return super(ModelTranslationViewMixin, self).get(request, *args, **kwargs)
 

@@ -121,7 +121,7 @@ class UserCreate(generics.CreateAPIView):
     # if there is already a user with the same email address
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(
-            data=request.DATA, files=request.FILES)
+            data=request.data, files=request.FILES)
 
         if serializer.is_valid():
             self.pre_save(serializer.object)
@@ -136,8 +136,8 @@ class UserCreate(generics.CreateAPIView):
         # reponse should include these details
         errors = serializer.errors
         try:
-            if 'email' in request.DATA:
-                user = USER_MODEL.objects.get(email=request.DATA['email'])
+            if 'email' in request.data:
+                user = USER_MODEL.objects.get(email=request.data['email'])
 
                 # Return whether the conflict was with a user created via
                 # email or social auth
@@ -271,7 +271,7 @@ class PasswordReset(views.APIView):
     def put(self, request, *args, **kwargs):
         password_reset_form = PasswordResetForm()
         serializer = PasswordResetSerializer(
-            password_reset_form=password_reset_form, data=request.DATA)
+            password_reset_form=password_reset_form, data=request.data)
         if serializer.is_valid():
             opts = {
                 # Always use https
@@ -316,7 +316,7 @@ class PasswordSet(views.APIView):
                                                                     token):
             password_set_form = SetPasswordForm(user)
             serializer = PasswordSetSerializer(
-                password_set_form=password_set_form, data=request.DATA)
+                password_set_form=password_set_form, data=request.data)
             if serializer.is_valid():
                 password_set_form.save()  # Sets the password
 

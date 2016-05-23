@@ -5,6 +5,7 @@ from bluebottle.bluebottle_drf2.serializers import ImageSerializer, OEmbedField
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.members.serializers import UserProfileSerializer
 from bluebottle.utils.serializers import MetaField
+from bluebottle.projects.models import Project
 
 
 class ImageSerializerExt(ImageSerializer):
@@ -41,11 +42,13 @@ class BaseFundraiserSerializer(serializers.ModelSerializer):
     """ Serializer to view/create fundraisers """
 
     owner = UserProfileSerializer(read_only=True)
-    project = serializers.SlugRelatedField(source='project', slug_field='slug')
+    project = serializers.SlugRelatedField(source='project', slug_field='slug',
+                                           queryset=Project.objects)
     image = ImageSerializerExt()
-    amount_donated = serializers.DecimalField(source='amount_donated',
-                                              read_only=True, max_digits=2,
-                                              decimal_places=16)
+    amount_donated = serializers.DecimalField(max_digits=16,
+                                              decimal_places=2,
+                                              source='amount_donated',
+                                              read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
 

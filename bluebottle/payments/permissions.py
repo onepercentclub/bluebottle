@@ -18,7 +18,7 @@ class CanAccessPaymentMethod(permissions.BasePermission):
 
         # Find the matching payment method
         all_methods = getattr(properties, 'PAYMENT_METHODS', ())
-        request_method = convert(request.DATA.get('payment_method', ''))
+        request_method = convert(request.data.get('payment_method', ''))
         methods = [method for method in all_methods if method['id'] == request_method]
         allowed = True
 

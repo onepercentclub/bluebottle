@@ -35,7 +35,7 @@ class ReactionSerializer(serializers.ModelSerializer):
     """
     author = UserPreviewSerializer()
     text = ContentTextField()
-    wallpost = serializers.PrimaryKeyRelatedField()
+    wallpost = serializers.PrimaryKeyRelatedField(queryset=Wallpost.objects)
 
     class Meta:
         model = Reaction
@@ -59,6 +59,8 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
     """
     Field to save content_type on wall-posts.
     """
+    def get_queryset(self):
+        return ContentType.objects
 
     def from_native(self, data):
         if data == 'project':
@@ -107,7 +109,8 @@ class WallpostSerializerBase(serializers.ModelSerializer):
 class MediaWallpostPhotoSerializer(serializers.ModelSerializer):
     photo = PhotoSerializer(required=False)
     mediawallpost = serializers.PrimaryKeyRelatedField(required=False,
-                                                       read_only=False)
+                                                       read_only=False,
+                                                       queryset=MediaWallpost.objects)
 
     class Meta:
         model = MediaWallpostPhoto

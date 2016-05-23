@@ -10,7 +10,7 @@ from bluebottle.payments.models import Payment
 
 class ManualPayment(Payment):
     amount = models.DecimalField(_("amount"), max_digits=15, decimal_places=2, editable=False)
-    transaction = models.ForeignKey('accounting.BankTransaction', editable=False)
+    bank_transaction = models.ForeignKey('accounting.BankTransaction', editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)  # track user who entered this record
 
     class Meta:

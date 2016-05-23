@@ -2,10 +2,11 @@ from rest_framework import serializers
 
 from bluebottle.donations.serializers import ManageDonationSerializer
 from bluebottle.orders.models import Order
+from bluebottle.members.models import Member
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    status = serializers.ChoiceField(read_only=True)
+    status = serializers.ChoiceField(choices=Order.STATUS_CHOICES, read_only=True)
     user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:

@@ -9,7 +9,6 @@ from importlib import import_module
 
 from django_tools.middlewares import ThreadLocal
 from rest_framework import serializers
-from rest_framework.serializers import get_component
 from taggit.managers import _TaggableManager
 
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
@@ -21,8 +20,8 @@ from .models import Address, Language
 class ShareSerializer(serializers.Serializer):
     share_name = serializers.CharField(max_length=256, required=True)
     share_email = serializers.EmailField(required=True)
-    share_motivation = serializers.CharField(default="", required=True)
-    share_cc = serializers.BooleanField(default=False, required=True)
+    share_motivation = serializers.CharField(default="")
+    share_cc = serializers.BooleanField(default=False)
 
     project = serializers.CharField(max_length=256, required=True)
 
@@ -280,33 +279,6 @@ class MetaField(serializers.Field):
         except AttributeError:  # not a model/object attribute or relation does not exist
             pass
         return None
-
-
-class HumanReadableChoiceField(serializers.ChoiceField):
-    def field_to_native(self, obj, field_name):
-        """
-        Given and object and a field name, returns the value that should be
-        serialized for that field. Display the choice label.
-        """
-        if obj is None:
-            return self.empty
-
-        if self.source == '*':
-            return self.to_native(obj)
-
-        source = self.source or field_name
-        value = obj
-
-        components = source.split('.')
-        for component in components:
-            # last item, fetch human readable form
-            if component == components[-1]:
-                component = 'get_{0}_display'.format(component)
-            value = get_component(value, component)
-            if value is None:
-                break
-
-        return self.to_native(value.lower())
 
 
 # Below is test-only stuff

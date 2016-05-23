@@ -54,7 +54,7 @@ class IncrementalCSVImportMixin(ExtendibleModelAdminMixin):
 
         return self.import_form
 
-    @transaction.commit_on_success
+    @transaction.atomic
     def import_view(self, request):
         """ Render or process import form. """
 

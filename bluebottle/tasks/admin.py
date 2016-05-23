@@ -30,6 +30,7 @@ class TaskForm(ModelForm):
 
     class Meta:
         model = Task
+        exclude = ()
 
 
 class TaskAdmin(admin.ModelAdmin):
@@ -62,7 +63,7 @@ class TaskAdminInline(admin.TabularInline):
     fields = ('title', 'project', 'status', 'deadline', 'time_needed', 'task_admin_link')
     readonly_fields = ('task_admin_link', )
 
-    def task_admin_link(self, obj):   
+    def task_admin_link(self, obj):
         object = obj
         url = reverse('admin:{0}_{1}_change'.format(
             object._meta.app_label, object._meta.module_name),

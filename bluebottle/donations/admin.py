@@ -77,6 +77,7 @@ class DonationUserFilter(SimpleListFilter):
 class DonationAdminForm(forms.ModelForm):
     class Meta:
         model = Donation
+        exclude = ()
 
     def __init__(self, *args, **kwargs):
         super(DonationAdminForm, self).__init__(*args, **kwargs)

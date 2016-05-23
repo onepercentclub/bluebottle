@@ -45,15 +45,12 @@ if 'test' in sys.argv or 'jenkins' in sys.argv or INCLUDE_TEST_MODELS:
     from fluent_contents.models import PlaceholderField
     from fluent_contents.plugins.oembeditem.models import OEmbedItem
     from bluebottle.contentplugins.models import PictureItem
-    from taggit_autocomplete_modified.managers import \
-        TaggableManagerAutocomplete as TaggableManager
 
     class MetaDataModel(models.Model):
         """
         This is a model purely for MetaData testing in the API.
         """
         title = models.CharField(max_length=50)
-        tags = TaggableManager(blank=True)
         contents = PlaceholderField("blog_contents")
 
         def get_first_image(self, **kwargs):

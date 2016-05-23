@@ -72,7 +72,7 @@ class ManageOrderPaymentList(ListCreateAPIView):
         the OrderPayments on the order
         """
         qs = OrderPayment.objects.all()
-        order_id = self.request.QUERY_PARAMS.get('order', None)
+        order_id = self.request.query_params.get('order', None)
         if order_id:
             qs = qs.filter(order__id=order_id)
         return qs

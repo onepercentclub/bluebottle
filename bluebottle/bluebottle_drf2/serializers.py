@@ -137,19 +137,7 @@ class OEmbedField(serializers.Field):
             return html
 
 
-#
-# Serializers for django_polymorphic models. See Wallpost Serializers for an
-# example on how to use this.
-#
-class PolymorphicSerializerOptions(serializers.SerializerOptions):
-    def __init__(self, meta):
-        super(PolymorphicSerializerOptions, self).__init__(meta)
-        self.child_models = getattr(meta, 'child_models', None)
-
-
 class PolymorphicSerializer(serializers.Serializer):
-    _options_class = PolymorphicSerializerOptions
-
     def __init__(self, instance=None, data=None, files=None, context=None,
                  partial=False, **kwargs):
         super(PolymorphicSerializer, self).__init__(instance, data, files,
@@ -202,8 +190,8 @@ class PrimaryKeyGenericRelatedField(serializers.RelatedField):
         self.to_model = to_model
         queryset = self.to_model.objects.order_by('id').all()
         super(PrimaryKeyGenericRelatedField, self).__init__(*args,
-                                                            source='object_id',
                                                             queryset=queryset,
+                                                            source='object_id',
                                                             **kwargs)
 
     def label_from_instance(self, obj):
@@ -276,7 +264,7 @@ class SlugGenericRelatedField(serializers.RelatedField):
             return to_instance.id
 
 
-class EuroField(serializers.WritableField):
+class EuroField(serializers.CharField):
     # Note: You need to override save and set the currency to 'EUR' in the
     # Serializer where this is used.
     def to_native(self, value):

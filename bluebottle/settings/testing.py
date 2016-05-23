@@ -62,8 +62,6 @@ TENANT_APPS += (
     'bluebottle.payments_mock',
 )
 
-INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('django_nose', 'tenant_schemas',)
-
 from bluebottle.payments_mock.settings import (MOCK_PAYMENT_METHODS,
                                                MOCK_FEES)
 

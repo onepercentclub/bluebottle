@@ -9,7 +9,13 @@ from bluebottle.bluebottle_drf2.serializers import (
     SorlImageField, ImageSerializer)
 
 from bluebottle.clients import properties
+from bluebottle.tasks.models import Skill
+from bluebottle.geo.models import Location
+from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
+from bluebottle.geo.models import Location
+from bluebottle.tasks.models import Skill
+from bluebottle.bb_projects.models import ProjectTheme
 
 BB_USER_MODEL = get_user_model()
 
@@ -88,16 +94,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=False)
     primary_language = serializers.CharField(required=False,
                                              default=properties.LANGUAGE_CODE)
-    location = serializers.PrimaryKeyRelatedField(required=False)
-
+    location = serializers.PrimaryKeyRelatedField(required=False,
+                                                  queryset=Location.objects)
     avatar = SorlImageField('picture', '133x133', crop='center',
                             required=False)
 
     skill_ids = serializers.PrimaryKeyRelatedField(many=True,
                                                    source='skills',
-                                                   required=False)
+                                                   required=False,
+                                                   queryset=Skill.objects)
     favourite_theme_ids = serializers.PrimaryKeyRelatedField(
-        many=True, source='favourite_themes')
+        many=True, source='favourite_themes', queryset=ProjectTheme.objects)
 
     project_count = serializers.Field()
     donation_count = serializers.Field()
@@ -230,9 +237,9 @@ class PasswordSetSerializer(serializers.Serializer):
     two passwords to see if they are the same.
     """
     new_password1 = serializers.CharField(
-        required=True, max_length=128, widget=forms.widgets.PasswordInput)
+        required=True, max_length=128)
     new_password2 = serializers.CharField(
-        required=True, max_length=128, widget=forms.widgets.PasswordInput)
+        required=True, max_length=128)
 
     class Meta:
         fields = ('new_password1', 'new_password2')

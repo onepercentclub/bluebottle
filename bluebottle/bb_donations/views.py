@@ -60,8 +60,8 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
         filter_kwargs = {}
 
-        project_slug = self.request.QUERY_PARAMS.get('project', None)
-        fundraiser_id = self.request.QUERY_PARAMS.get('fundraiser', None)
+        project_slug = self.request.query_params.get('project', None)
+        fundraiser_id = self.request.query_params.get('fundraiser', None)
 
         if fundraiser_id:
             try:
@@ -81,8 +81,8 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
             raise Http404(u"No %(verbose_name)s found matching the query" %
                           {'verbose_name': Project._meta.verbose_name})
 
-        if 'co_financing' in self.request.QUERY_PARAMS and \
-           self.request.QUERY_PARAMS['co_financing'] == 'true':
+        if 'co_financing' in self.request.query_params and \
+           self.request.query_params['co_financing'] == 'true':
             filter_kwargs['order__user__is_co_financer'] = True
         else:
             from django.db.models import Q
@@ -113,7 +113,7 @@ class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
         filter_kwargs = {}
 
-        project_slug = self.request.QUERY_PARAMS.get('project', None)
+        project_slug = self.request.query_params.get('project', None)
         try:
             project = Project.objects.get(slug=project_slug,
                                                 owner=self.request.user)
@@ -134,7 +134,7 @@ class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
 
         filter_kwargs = {}
 
-        fundraiser_pk = self.request.QUERY_PARAMS.get('fundraiser', None)
+        fundraiser_pk = self.request.query_params.get('fundraiser', None)
         try:
             fundraiser = Fundraiser.objects.get(pk=fundraiser_pk,
                                                 owner=self.request.user)
@@ -160,8 +160,8 @@ class ManageDonationList(generics.ListCreateAPIView):
         if user_id:
             filter_kwargs['order__user__pk'] = user_id
 
-        status = self.request.QUERY_PARAMS.get('status', None)
-        statuses = self.request.QUERY_PARAMS.getlist('status[]', None)
+        status = self.request.query_params.get('status', None)
+        statuses = self.request.query_params.getlist('status[]', None)
         if statuses:
             queryset = queryset.filter(order__status__in=statuses)
         elif status:

@@ -51,7 +51,11 @@ class AccessTokenView(APIView):
             )
 
     def _check(self, social_auth, backend):
-        extra_data = social_auth.extra_data
+        try:
+            extra_data = json.loads(social_auth.extra_data)
+        except TypeError:
+            extra_data = social_auth.extra_data
+
         access_token = extra_data['access_token']
 
         response = requests.get(

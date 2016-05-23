@@ -2,5 +2,5 @@ from polymorphic.manager import PolymorphicManager
 
 
 class PaymentManager(PolymorphicManager):
-    def get_query_set(self):
-        return super(PaymentManager, self).get_query_set()
+    def get_queryset(self):
+        return super(PaymentManager, self).get_queryset()

@@ -28,11 +28,11 @@ class NewsItemManager(models.Manager):
     Extra methods attached to ``BlogPost.objects`` .
     """
 
-    def get_query_set(self):
+    def get_queryset(self):
         return NewsItemQuerySet(self.model, using=self._db)
 
     def published(self):
         """
         Return only published entries
         """
-        return self.get_query_set().published()
+        return self.get_queryset().published()

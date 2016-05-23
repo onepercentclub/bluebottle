@@ -94,8 +94,8 @@ class ProjectSerializer(serializers.ModelSerializer):
     owner = UserProfileSerializer()
     image = ImageSerializer(required=False)
     tags = TagSerializer()
-    task_count = serializers.IntegerField(source='task_count')
-    country = ProjectCountrySerializer(source='country')
+    task_count = serializers.IntegerField()
+    country = ProjectCountrySerializer()
     story = StoryField()
     is_funding = serializers.Field()
     budget_lines = BasicProjectBudgetLineSerializer(
@@ -103,8 +103,8 @@ class ProjectSerializer(serializers.ModelSerializer):
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
     location = serializers.PrimaryKeyRelatedField(required=False, queryset=Location.objects)
-    vote_count = serializers.IntegerField(source='vote_count')
-    supporter_count = serializers.IntegerField(source='supporter_count')
+    vote_count = serializers.IntegerField()
+    supporter_count = serializers.IntegerField()
 
     people_requested = serializers.Field()
     people_registered = serializers.Field()
@@ -138,7 +138,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 class ProjectPreviewSerializer(ProjectSerializer):
     image = SorlImageField('image', '400x300', crop='center')
-    theme = ProjectThemeSerializer(source='theme')
+    theme = ProjectThemeSerializer()
 
     owner = UserPreviewSerializer()
 
@@ -157,7 +157,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
 
 
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
-    id = serializers.CharField(source='slug', read_only=True)
+    id = serializers.CharField(read_only=True)
     image = SorlImageField('image', '400x300', crop='center')
 
     class Meta:
@@ -303,7 +303,7 @@ class ProjectSupporterSerializer(serializers.ModelSerializer):
 class ProjectDonationSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer(source='user')
     date_donated = serializers.DateTimeField(source='ready')
-    amount = EuroField(source='amount')
+    amount = EuroField()
 
     class Meta:
         model = Donation

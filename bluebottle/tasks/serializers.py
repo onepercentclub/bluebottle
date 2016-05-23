@@ -44,9 +44,8 @@ class TaskFileSerializer(serializers.ModelSerializer):
 
 
 class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
-    members = BaseTaskMemberSerializer(many=True, source='members',
-                                       read_only=True)
-    files = TaskFileSerializer(many=True, source='files', read_only=True)
+    members = BaseTaskMemberSerializer(many=True, read_only=True)
+    files = TaskFileSerializer(many=True, read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug',
                                            queryset=Project.objects)
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)

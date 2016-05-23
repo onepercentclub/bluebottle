@@ -20,7 +20,7 @@ GROUP_PERMS = {
 
 class SlideManager(models.Manager):
     def published(self):
-        qs = self.get_query_set()
+        qs = self.get_queryset()
         qs = qs.filter(status=Slide.SlideStatus.published)
         qs = qs.filter(publication_date__lte=now)
         qs = qs.filter(Q(publication_end_date__gte=now) | Q(

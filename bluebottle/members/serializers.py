@@ -59,11 +59,6 @@ class CurrentUserSerializer(UserPreviewSerializer):
     # 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
     full_name = serializers.Field(source='get_full_name')
-    task_count = serializers.Field(source='task_count')
-    project_count = serializers.Field(source='project_count')
-    has_projects = serializers.BooleanField(source='has_projects')
-    donation_count = serializers.Field(source='donation_count')
-    fundraiser_count = serializers.Field(source='fundraiser_count')
     country = CountrySerializer(source='address.country')
     location = LocationSerializer()
 
@@ -89,7 +84,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     short_name = serializers.CharField(source='get_short_name', read_only=True)
 
-    address = UserAddressSerializer(source='address', required=False)
+    address = UserAddressSerializer(required=False)
     birthdate = serializers.DateTimeField(required=False)
     email = serializers.EmailField(required=False)
     primary_language = serializers.CharField(required=False,

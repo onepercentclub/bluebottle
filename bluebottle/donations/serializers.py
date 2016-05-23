@@ -1,4 +1,3 @@
-# coding=utf-8
 from bluebottle.donations.models import Donation
 from rest_framework import serializers
 
@@ -16,7 +15,7 @@ class ManageDonationSerializer(serializers.ModelSerializer):
     amount = serializers.DecimalField(
         max_digits=10, decimal_places=2, max_value=1500000
     )
-    status = serializers.CharField(source='status', read_only=True)
+    status = serializers.CharField(read_only=True)
 
     class Meta:
         model = Donation
@@ -52,8 +51,8 @@ class DefaultDonationSerializer(PreviewDonationSerializer):
 
 
 class LatestDonationProjectSerializer(BaseProjectPreviewSerializer):
-    task_count = serializers.IntegerField(source='task_count')
-    owner = UserPreviewSerializer(source='owner')
+    task_count = serializers.IntegerField()
+    owner = UserPreviewSerializer()
 
     class Meta(BaseProjectPreviewSerializer):
         model = BaseProjectPreviewSerializer.Meta.model

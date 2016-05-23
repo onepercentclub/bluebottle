@@ -98,7 +98,7 @@ class PageAdmin(PlaceholderFieldAdmin):
 
     def render_change_form(self, request, context, add=False, change=False,
                            form_url='', obj=None):
-        info = self.model._meta.app_label, self.model._meta.module_name
+        info = self.model._meta.app_label, self.model._meta.model_name
         context.update({
             'preview_canvas_url': reverse('admin:{0}_{1}_preview'.format(*info),
                                           kwargs={'pk': obj.pk if obj else 0}),

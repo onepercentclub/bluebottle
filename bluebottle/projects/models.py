@@ -87,19 +87,19 @@ class ProjectManager(models.Manager):
 
     def _ordering(self, ordering, queryset, status):
         if ordering == 'amount_asked':
-            queryset = queryset.order_by('status', 'amount_asked')
+            queryset = queryset.order_by('status', 'amount_asked', 'id')
         elif ordering == 'deadline':
-            queryset = queryset.order_by('status', 'deadline')
+            queryset = queryset.order_by('status', 'deadline', 'id')
         elif ordering == 'amount_needed':
-            queryset = queryset.order_by('status', 'amount_needed')
+            queryset = queryset.order_by('status', 'amount_needed', 'id')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
             queryset = queryset.extra(
                 select={'has_campaign_started': 'campaign_started is null'})
             queryset = queryset.order_by('status', 'has_campaign_started',
-                                         '-campaign_started', '-created')
+                                         '-campaign_started', '-created', 'id')
         elif ordering == 'popularity':
-            queryset = queryset.order_by('status', '-popularity')
+            queryset = queryset.order_by('status', '-popularity', 'id')
             if status == 5:
                 queryset = queryset.filter(amount_needed__gt=0)
 

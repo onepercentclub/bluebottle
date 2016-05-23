@@ -191,7 +191,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     is_funding = serializers.Field()
 
     documents = ProjectDocumentSerializer(
-        many=True, source='documents', read_only=True)
+        many=True, read_only=True)
 
     def validate_account_number(self, attrs, source):
         value = attrs.get(source)

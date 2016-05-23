@@ -8,7 +8,6 @@ class Language(models.Model):
     """
     A language - ISO 639-1
     """
-
     code = models.CharField(max_length=2, blank=False)
     language_name = models.CharField(max_length=100, blank=False)
     native_name = models.CharField(max_length=100, blank=False)

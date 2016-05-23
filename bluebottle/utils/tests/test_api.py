@@ -82,3 +82,15 @@ class TestShareFlyer(BluebottleTestCase):
 
         self.failUnless(send_mail.called)
         self.failUnless(self.user_1.email in send_mail.call_args[1].get('cc'))
+
+
+class TestLanguageApi(BluebottleTestCase):
+    def setUp(self):
+        super(TestLanguageApi, self).setUp()
+        self.init_projects()
+        self.language_url = reverse("utils_language_list")
+
+    def test_languages(self):
+        """ simple language list """
+        response = self.client.get(self.language_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

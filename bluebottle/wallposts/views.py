@@ -39,8 +39,8 @@ class WallpostList(ListAPIView):
         queryset = super(WallpostList, self).get_queryset()
 
         # Some custom filtering projects slugs.
-        parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
-        parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
+        parent_type = self.request.query_params.get('parent_type', None)
+        parent_id = self.request.query_params.get('parent_id', None)
         if parent_type == 'project':
             content_type = ContentType.objects.get_for_model(Project)
         else:
@@ -72,8 +72,8 @@ class TextWallpostList(ListCreateAPIView):
     def get_queryset(self, queryset=None):
         queryset = super(TextWallpostList, self).get_queryset()
         # Some custom filtering projects slugs.
-        parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
-        parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
+        parent_type = self.request.query_params.get('parent_type', None)
+        parent_id = self.request.query_params.get('parent_id', None)
         if parent_type == 'project' and parent_id:
             try:
                 project = Project.objects.get(slug=parent_id)

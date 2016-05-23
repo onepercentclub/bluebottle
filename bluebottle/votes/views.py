@@ -20,7 +20,7 @@ class VoteList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = super(VoteList, self).get_queryset()
-        project_slug = self.request.QUERY_PARAMS.get('project', None)
+        project_slug = self.request.query_params.get('project', None)
         if project_slug:
             project = Project.objects.get(slug=project_slug)
             queryset = queryset.filter(project=project)

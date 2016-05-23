@@ -23,7 +23,7 @@ class ProjectTinyPreviewList(generics.ListAPIView):
     serializer_class = ProjectTinyPreviewSerializer
 
     def get_queryset(self):
-        query = self.request.QUERY_PARAMS
+        query = self.request.query_params
         qs = Project.objects.search(query=query)
         return qs.filter(status__viewable=True)
 
@@ -35,7 +35,7 @@ class ProjectPreviewList(generics.ListAPIView):
     serializer_class = ProjectPreviewSerializer
 
     def get_queryset(self):
-        query = self.request.QUERY_PARAMS
+        query = self.request.query_params
         qs = Project.objects.search(query=query)
         return qs.filter(status__viewable=True)
 
@@ -57,8 +57,8 @@ class ProjectPhaseList(generics.ListAPIView):
     def get_query(self):
         qs = ProjectPhase.objects
 
-        name = self.request.QUERY_PARAMS.get('name', None)
-        text = self.request.QUERY_PARAMS.get('text')
+        name = self.request.query_params.get('name', None)
+        text = self.request.query_params.get('text')
 
         qs = qs.order_by('sequence')
 
@@ -98,7 +98,7 @@ class ProjectList(generics.ListAPIView):
 
     def get_queryset(self):
         qs = super(ProjectList, self).get_queryset()
-        status = self.request.QUERY_PARAMS.get('status', None)
+        status = self.request.query_params.get('status', None)
         if status:
             qs = qs.filter(Q(status_id=status))
         return qs.filter(status__viewable=True)

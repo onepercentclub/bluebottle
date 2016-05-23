@@ -14,7 +14,7 @@ class RewardList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         qs = super(RewardList, self).get_queryset()
-        project_slug = self.request.QUERY_PARAMS.get('project', None)
+        project_slug = self.request.query_params.get('project', None)
         if project_slug:
             qs = qs.filter(project__slug=project_slug)
         return qs

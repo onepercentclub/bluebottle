@@ -14,9 +14,9 @@ class SuggestionList(generics.ListCreateAPIView):
     def get_queryset(self):
         qs = Suggestion.objects.filter(deadline__gte=date.today())
 
-        destination = self.request.QUERY_PARAMS.get('destination', None)
-        status = self.request.QUERY_PARAMS.get('status', None)
-        project_slug = self.request.QUERY_PARAMS.get('project_slug', None)
+        destination = self.request.query_params.get('destination', None)
+        status = self.request.query_params.get('status', None)
+        project_slug = self.request.query_params.get('project_slug', None)
 
         if project_slug:
             qs = qs.filter(project__slug=project_slug)

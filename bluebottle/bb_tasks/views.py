@@ -23,20 +23,20 @@ class TaskPreviewList(generics.ListAPIView):
     def get_queryset(self):
         qs = super(TaskPreviewList, self).get_queryset()
 
-        project_slug = self.request.QUERY_PARAMS.get('project', None)
+        project_slug = self.request.query_params.get('project', None)
         if project_slug:
             qs = qs.filter(project__slug=project_slug)
 
-        country = self.request.QUERY_PARAMS.get('country', None)
+        country = self.request.query_params.get('country', None)
         if country:
             qs = qs.filter(project__country=country)
 
-        text = self.request.QUERY_PARAMS.get('text', None)
+        text = self.request.query_params.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
                            Q(description__icontains=text))
 
-        ordering = self.request.QUERY_PARAMS.get('ordering', None)
+        ordering = self.request.query_params.get('ordering', None)
 
         if ordering == 'newest':
             qs = qs.order_by('-created')
@@ -59,16 +59,16 @@ class TaskList(generics.ListCreateAPIView):
     def get_queryset(self):
         qs = super(TaskList, self).get_queryset()
 
-        project_slug = self.request.QUERY_PARAMS.get('project', None)
+        project_slug = self.request.query_params.get('project', None)
         if project_slug:
             qs = qs.filter(project__slug=project_slug)
 
-        text = self.request.QUERY_PARAMS.get('text', None)
+        text = self.request.query_params.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
                            Q(description__icontains=text))
 
-        ordering = self.request.QUERY_PARAMS.get('ordering', None)
+        ordering = self.request.query_params.get('ordering', None)
 
         if ordering == 'newest':
             qs = qs.order_by('-created')

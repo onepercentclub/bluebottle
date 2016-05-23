@@ -18,7 +18,7 @@ class IsConnectedWallpostAuthorOrReadOnly(permissions.BasePermission):
             return True
 
         # Look for the Wallpost that the user is trying to set.
-        mediawallpost_id = request.DATA.get('mediawallpost', None)
+        mediawallpost_id = request.data.get('mediawallpost', None)
         if mediawallpost_id:
             try:
                 mediawallpost = MediaWallpost.objects.get(pk=mediawallpost_id)

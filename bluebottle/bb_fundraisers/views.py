@@ -28,7 +28,7 @@ class FundraiserListView(ListCreateAPIView):
 
         filter_kwargs = {}
 
-        project_slug = self.request.QUERY_PARAMS.get('project', None)
+        project_slug = self.request.query_params.get('project', None)
         if project_slug:
             try:
                 project = Project.objects.get(slug=project_slug)
@@ -39,7 +39,7 @@ class FundraiserListView(ListCreateAPIView):
 
             filter_kwargs['project'] = project
 
-        user_id = self.request.QUERY_PARAMS.get('owner', None)
+        user_id = self.request.query_params.get('owner', None)
         if user_id:
             filter_kwargs['owner__pk'] = user_id
 

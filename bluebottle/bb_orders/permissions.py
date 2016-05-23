@@ -53,10 +53,10 @@ class IsOrderCreator(permissions.BasePermission):
             return False
 
     def _get_order_from_request(self, request):
-        if request.DATA:
-            order_id = request.DATA.get('order', None)
+        if request.data:
+            order_id = request.data.get('order', None)
         else:
-            order_id = request.QUERY_PARAMS.get('order', None)
+            order_id = request.query_params.get('order', None)
         if order_id:
             try:
                 project = Order.objects.get(id=order_id)
@@ -73,7 +73,7 @@ class IsOrderCreator(permissions.BasePermission):
 
         if view.queryset.model == Order:
             # Order must belong to the current user or have no user assigned (anonymous)
-            order_user_id = int(request.DATA.get('user', 0))
+            order_user_id = int(request.data.get('user', 0))
             if order_user_id and order_user_id != request.user.pk:
                 return False
             return True
@@ -98,10 +98,10 @@ class OrderIsNew(permissions.BasePermission):
     """
 
     def _get_order_from_request(self, request):
-        if request.DATA:
-            order_id = request.DATA.get('order', None)
+        if request.data:
+            order_id = request.data.get('order', None)
         else:
-            order_id = request.QUERY_PARAMS.get('order', None)
+            order_id = request.query_params.get('order', None)
         if order_id:
             try:
                 project = Order.objects.get(id=order_id)

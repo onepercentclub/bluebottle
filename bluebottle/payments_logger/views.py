@@ -13,8 +13,8 @@ class GenericStatusChangedNotificationView(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
 
         # is it 'order' what I am looking for?
-        if 'order' in request.QUERY_PARAMS:
-            order_id = request.QUERY_PARAMS['order']
+        if 'order' in request.query_params:
+            order_id = request.query_params['order']
             if re.match('^[0-9]+-[0-9]+$', order_id):
 
                 # Try to find the payment for this order.

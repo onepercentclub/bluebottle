@@ -29,7 +29,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     def order_link(self, obj):
         object = obj.order
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
-                                                    object._meta.module_name),
+                                                    object._meta.model_name),
                       args=[object.id])
         return "<a href='{0}'>Order: {1}</a>".format(str(url), object.id)
 
@@ -38,7 +38,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     def payment_link(self, obj):
         object = obj.payment
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
-                                                    object._meta.module_name),
+                                                    object._meta.model_name),
                       args=[object.id])
         return "<a href='{0}'>{1}: {2}</a>".format(str(url),
                                                    object.polymorphic_ctype,
@@ -62,7 +62,7 @@ class OrderPaymentInline(admin.TabularInline):
     def order_payment_link(self, obj):
         object = obj
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
-                                                    object._meta.module_name),
+                                                    object._meta.model_name),
                       args=[object.id])
         return "<a href='{0}'>OrderPayment {1}</a>".format(str(url), obj.id)
 

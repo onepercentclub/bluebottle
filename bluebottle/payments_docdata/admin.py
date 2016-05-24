@@ -35,7 +35,7 @@ class AbstractDocdataPaymentAdmin(PolymorphicChildModelAdmin):
     def order_payment_link(self, obj):
         object = obj.order_payment
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
-                                                    object._meta.module_name),
+                                                    object._meta.model_name),
                       args=[object.id])
         return "<a href='{0}'>Order Payment: {1}</a>".format(str(url),
                                                              object.id)

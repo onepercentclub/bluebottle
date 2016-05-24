@@ -252,7 +252,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def project_owner(self, obj):
         object = obj.owner
         url = reverse('admin:{0}_{1}_change'.format(
-            object._meta.app_label, object._meta.module_name), args=[object.id])
+            object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='{0}'>{1}</a>".format(
             str(url), object.first_name + ' ' + object.last_name)
 

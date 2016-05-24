@@ -62,7 +62,7 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
                                     {'project': self.project1.slug},
                                     token=self.user_token)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['detail'][0], 'You cannot vote twice')
+        self.assertEqual(response.data['detail'], 'You cannot vote twice')
 
     def test_vote_on_second_project(self):
         self.client.post(self.vote_url, {'project': self.project1.slug},

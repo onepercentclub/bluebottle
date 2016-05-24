@@ -26,17 +26,16 @@ class VoteList(generics.ListCreateAPIView):
             queryset = queryset.filter(project=project)
         return queryset
 
-    def pre_save(self, obj):
+    def perform_create(self, serializer):
         """
         Set the voter.
         Check that a user has not voted before
         """
         try:
             self.get_queryset().get(voter=self.request.user,
-                                    project=obj.project)
-            raise exceptions.ParseError(["You cannot vote twice"])
+                                    project=serializer.validated_data['project'])
+            raise exceptions.ParseError("You cannot vote twice")
         except Vote.DoesNotExist:
             pass
 
-        obj.voter = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+        serializer.save(voter=self.request.user, ip_address=get_client_ip(self.request))

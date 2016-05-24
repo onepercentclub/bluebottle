@@ -1,5 +1,6 @@
 from django.http.response import HttpResponseForbidden
 from django.views.generic.detail import DetailView
+from rest_framework.pagination import PageNumberPagination
 
 from bluebottle.organizations.models import Organization, OrganizationMember
 from bluebottle.organizations.permissions import IsOrganizationMember
@@ -14,7 +15,7 @@ import os
 class OrganizationList(generics.ListAPIView):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-    paginate_by = 10
+    pagination_class = PageNumberPagination
 
 
 class OrganizationDetail(generics.RetrieveAPIView):
@@ -25,7 +26,7 @@ class OrganizationDetail(generics.RetrieveAPIView):
 class ManageOrganizationList(generics.ListCreateAPIView):
     queryset = Organization.objects.all()
     serializer_class = ManageOrganizationSerializer
-    paginate_by = 10
+    pagination_class = PageNumberPagination
 
     # Limit the view to only the organizations the current user is member of
     def get_queryset(self):

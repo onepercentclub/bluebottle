@@ -1,5 +1,6 @@
 from rest_framework import generics
 from rest_framework import permissions
+from rest_framework.pagination import PageNumberPagination
 from .models import Slide
 from .serializers import SlideSerializer
 from django.utils.timezone import now
@@ -10,7 +11,7 @@ class SlideList(generics.ListAPIView):
     queryset = Slide.objects.all()
     serializer_class = SlideSerializer
     permissions_classes = (permissions.SAFE_METHODS,)
-    paginate_by = 10
+    pagination_class = PageNumberPagination
     filter_fields = ('language',)
 
     def get_queryset(self):

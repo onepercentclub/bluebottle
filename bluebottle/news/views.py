@@ -1,12 +1,16 @@
 from rest_framework import generics
+from rest_framework.pagination import PageNumberPagination
 from .models import NewsItem
 from .serializers import NewsItemSerializer, NewsItemPreviewSerializer
 
 
+class NewsItemPagination(PageNumberPagination):
+    page_size = 5
+
 class NewsItemPreviewList(generics.ListAPIView):
     queryset = NewsItem.objects.all()
     serializer_class = NewsItemPreviewSerializer
-    paginate_by = 5
+    pagination_class = NewsItemPagination
     filter_fields = ('language',)
 
     def get_queryset(self, *args, **kwargs):
@@ -19,7 +23,7 @@ class NewsItemPreviewList(generics.ListAPIView):
 class NewsItemList(generics.ListAPIView):
     queryset = NewsItem.objects.all()
     serializer_class = NewsItemSerializer
-    paginate_by = 5
+    pagination_class = NewsItemPagination
     filter_fields = ('language',)
 
     def get_queryset(self, *args, **kwargs):

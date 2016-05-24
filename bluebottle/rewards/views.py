@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.pagination import PageNumberPagination
 
 from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
 from .permissions import NoDonationsOrReadOnly
@@ -6,11 +7,15 @@ from .models import Reward
 from .serializers import RewardSerializer
 
 
+class RewardPagination(PageNumberPagination):
+    page_size = 100
+
+
 class RewardList(generics.ListCreateAPIView):
     queryset = Reward.objects.all()
     serializer_class = RewardSerializer
     permission_classes = (IsProjectOwnerOrReadOnly, )
-    paginate_by = 100
+    pagination_class = RewardPagination
 
     def get_queryset(self):
         qs = super(RewardList, self).get_queryset()

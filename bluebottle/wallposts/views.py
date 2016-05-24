@@ -1,7 +1,10 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-import django_filters
+
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions, exceptions
+
+import django_filters
 
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.bluebottle_drf2.views import (
@@ -41,7 +44,7 @@ class SetAuthorMixin(object):
 class WallpostList(ListAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
-    paginate_by = 10
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         queryset = super(WallpostList, self).get_queryset()
@@ -70,12 +73,16 @@ class WallpostList(ListAPIView):
         return queryset
 
 
-class TextWallpostList(SetAuthorMixin, ListCreateAPIView):
+class WallpostPagination(PageNumberPagination):
+    page_size = 5
+
+
+class TextWallpostList(ListCreateAPIView):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
-    paginate_by = 5
-    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly, CanEmailFollowers)
+    pagination_class = WallpostPagination
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly, CanEmailFollowers§)
 
     def get_queryset(self, queryset=None):
         queryset = super(TextWallpostList, self).get_queryset()
@@ -97,7 +104,7 @@ class MediaWallpostList(TextWallpostList):
     queryset = MediaWallpost.objects.all()
     serializer_class = MediaWallpostSerializer
     filter_class = WallpostFilter
-    paginate_by = 5
+    pagination_class = WallpostPagination
 
 
 class WallpostDetail(RetrieveUpdateDeleteAPIView):
@@ -106,10 +113,14 @@ class WallpostDetail(RetrieveUpdateDeleteAPIView):
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
 
 
+class MediaWallpostPhotoPagination(PageNumberPagination):
+    page_size = 4
+
+
 class MediaWallpostPhotoList(SetAuthorMixin, ListCreateAPIView):
     queryset = MediaWallpostPhoto.objects.all()
     serializer_class = MediaWallpostPhotoSerializer
-    paginate_by = 4
+    pagination_class = MediaWallpostPhotoPagination
 
     def create(self, request, *args, **kwargs):  # FIXME
         """
@@ -149,7 +160,7 @@ class ReactionList(SetAuthorMixin, ListCreateAPIView):
     serializer_class = ReactionSerializer
     permission_classes = (TenantConditionalOpenClose,
                           permissions.IsAuthenticatedOrReadOnly)
-    paginate_by = 10
+    pagination_class = PageNumberPagination
     filter_fields = ('wallpost',)
 
 

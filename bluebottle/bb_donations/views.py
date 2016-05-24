@@ -1,6 +1,7 @@
 import logging
 from django.http.response import Http404
 from rest_framework import permissions, generics
+from rest_framework.pagination import PageNumberPagination
 
 from bluebottle.bb_orders.permissions import OrderIsNew, IsOrderCreator
 from bluebottle.clients import properties
@@ -12,6 +13,10 @@ from bluebottle.donations.models import Donation
 from bluebottle.utils.utils import StatusDefinition
 
 logger = logging.getLogger(__name__)
+
+
+class DonationPagination(PageNumberPagination):
+    page_size = 10
 
 
 class ValidDonationsMixin(object):
@@ -52,8 +57,7 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
             return PreviewDonationSerializer
         return PreviewDonationWithoutAmountSerializer
 
-    paginate_by = 20
-    paginate_by_param = 'page_size'
+    pagination_class = DonationPagination
 
     def get_queryset(self):
         queryset = super(ProjectDonationList, self).get_queryset()
@@ -150,7 +154,7 @@ class ManageDonationList(generics.ListCreateAPIView):
     queryset = Donation.objects.all()
     serializer_class = ManageDonationSerializer
     permission_classes = (IsOrderCreator, OrderIsNew)
-    paginate_by = 10
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         queryset = super(ManageDonationList, self).get_queryset()
@@ -183,7 +187,7 @@ class LatestDonationsList(generics.ListAPIView):
     queryset = Donation.objects.all()
     serializer_class = LatestDonationSerializer
     permission_classes = (permissions.IsAdminUser,)
-    paginate_by = 20
+    pagination_class = DonationPagination
 
     def get_queryset(self):
         qs = super(LatestDonationsList, self).get_queryset()

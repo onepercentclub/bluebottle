@@ -62,6 +62,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                             wallpost_data,
                             token=self.other_token)
 
+        import ipdb;ipdb.set_trace()
         self.assertEqual(
             wallpost.status_code, status.HTTP_403_FORBIDDEN,
             'Only the project owner can share a wallpost.')

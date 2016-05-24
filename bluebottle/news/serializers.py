@@ -11,7 +11,7 @@ from .models import NewsItem
 
 
 class NewsItemContentsField(serializers.Field):
-    def to_native(self, obj):
+    def to_representation(self, obj):
         request = self.context.get('request', None)
         contents_html = mark_safe(render_placeholder(request, obj).html)
         return contents_html

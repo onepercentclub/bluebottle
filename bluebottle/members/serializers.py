@@ -149,7 +149,7 @@ class PasswordField(serializers.CharField):
     widget = forms.widgets.PasswordInput
     hidden_password_string = '********'
 
-    def from_native(self, value):
+    def to_internal_value(self, value):
         """ Hash if new value sent, else retrieve current password. """
         from django.contrib.auth.hashers import make_password
 
@@ -158,7 +158,7 @@ class PasswordField(serializers.CharField):
         else:
             return make_password(value)
 
-    def to_native(self, value):
+    def to_representation(self, value):
         """ Hide hashed-password in API display. """
         return self.hidden_password_string
 

@@ -48,11 +48,11 @@ class WallpostTypeField(serializers.Field):
     """ Used to add a type to Wallposts (e.g. media, text etc). """
 
     def __init__(self, type, **kwargs):
-        super(WallpostTypeField, self).__init__(source='*', **kwargs)
-        self.type = type
+        self._type = type
+        super(WallpostTypeField, self).__init__(required=False, **kwargs)
 
-    def to_native(self, value):
-        return self.type
+    def to_representation(self, value):
+        return self._type
 
 
 class WallpostContentTypeField(serializers.SlugRelatedField):
@@ -62,12 +62,12 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
     def get_queryset(self):
         return ContentType.objects
 
-    def from_native(self, data):
+    def to_internal_value(self, data):
         if data == 'project':
             data = ContentType.objects.get_for_model(Project).model
         if data == 'fundraiser':
             data = ContentType.objects.get_for_model(Fundraiser).model
-        return super(WallpostContentTypeField, self).from_native(data)
+        return super(WallpostContentTypeField, self).to_internal_value(data)
 
 
 class WallpostParentIdField(serializers.IntegerField):
@@ -76,7 +76,7 @@ class WallpostParentIdField(serializers.IntegerField):
     """
 
     # Make an exception for project slugs.
-    def from_native(self, value):
+    def to_internal_value(self, value):
         if not value.isnumeric():
             # Assume a project slug here
             try:
@@ -151,8 +151,8 @@ class TextWallpostSerializer(WallpostSerializerBase):
 
 
 class WallpostRelatedField(serializers.RelatedField):
-    def to_native(self, obj):
-        return super(WallpostRelatedField, self).to_native(obj)
+    def to_representation(self, obj):
+        return super(WallpostRelatedField, self).to_representation(obj)
 
 
 class SystemWallpostSerializer(WallpostSerializerBase):

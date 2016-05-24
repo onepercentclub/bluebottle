@@ -36,11 +36,11 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
 
 
 class StoryField(serializers.CharField):
-    def to_native(self, value):
+    def to_representation(self, value):
         """ Reading / Loading the story field """
         return value
 
-    def from_native(self, data):
+    def to_internal_value(self, data):
         """
         Saving the story text
 

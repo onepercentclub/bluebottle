@@ -42,12 +42,11 @@ class BaseFundraiserSerializer(serializers.ModelSerializer):
     """ Serializer to view/create fundraisers """
 
     owner = UserProfileSerializer(read_only=True)
-    project = serializers.SlugRelatedField(source='project', slug_field='slug',
+    project = serializers.SlugRelatedField(slug_field='slug',
                                            queryset=Project.objects)
     image = ImageSerializerExt()
     amount_donated = serializers.DecimalField(max_digits=16,
                                               decimal_places=2,
-                                              source='amount_donated',
                                               read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')

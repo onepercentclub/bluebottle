@@ -38,7 +38,7 @@ class ProjectPhaseLog(BaseProjectPhaseLog):
 
 class ProjectManager(models.Manager):
     def search(self, query):
-        qs = super(ProjectManager, self).get_query_set()
+        qs = super(ProjectManager, self).get_queryset()
 
         # Apply filters
         status = query.getlist(u'status[]', None)

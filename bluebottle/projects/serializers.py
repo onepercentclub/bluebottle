@@ -165,12 +165,12 @@ class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'status', 'image', 'latitude', 'longitude')
 
 
-class ManageProjectSerializer(TaggableSerializerMixin,
-                              serializers.ModelSerializer):
+class ManageProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
     url = serializers.HyperlinkedIdentityField(
-        view_name='project_manage_detail')
+        view_name='project_manage_detail', lookup_field='slug')
+
     editable = serializers.BooleanField(read_only=True)
     viewable = serializers.BooleanField(read_only=True)
     status = serializers.PrimaryKeyRelatedField(required=False, queryset=ProjectPhase.objects)
@@ -178,7 +178,6 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     image = ImageSerializer(required=False)
     pitch = serializers.CharField(required=False)
     slug = serializers.CharField(read_only=True)
-    tags = TagSerializer()
     amount_asked = serializers.CharField(required=False)
     amount_donated = serializers.CharField(read_only=True)
     amount_needed = serializers.CharField(read_only=True)
@@ -218,8 +217,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
             bic_validator(value)
         return attrs
 
-    def validate_status(self, attrs, source):
-        value = attrs.get(source, None)
+    def validate_status(self, value):
         if not value:
             value = ProjectPhase.objects.order_by('sequence').all()[0]
         else:
@@ -246,9 +244,8 @@ class ManageProjectSerializer(TaggableSerializerMixin,
 
             # Get the current status or the first if not found
             try:
-                current_status = Project.objects.get(
-                    slug=self.data['slug']).status
-            except KeyError:
+                current_status = Project.objects.get(slug=self.initial_data['slug']).status
+            except Project.DoesNotExist:
                 current_status = ProjectPhase.objects.order_by(
                     'sequence').all()[0]
 
@@ -268,13 +265,12 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                     raise serializers.ValidationError(
                         _("You can not change the project state."))
 
-        attrs[source] = value
-        return attrs
+        return value
 
     class Meta:
         model = Project
         fields = ('id', 'title', 'description', 'editable', 'viewable',
-                  'status', 'image', 'pitch', 'slug', 'tags', 'created',
+                  'status', 'image', 'pitch', 'slug', 'created',
                   'url', 'country', 'location', 'place', 'theme', 'categories',
                   'organization', 'language', 'account_holder_name',
                   'account_holder_address', 'account_holder_postal_code',

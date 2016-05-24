@@ -1,6 +1,7 @@
 from django.db.models.query_utils import Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.pagination import PageNumberPagination
 
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
@@ -14,10 +15,14 @@ from .permissions import IsMemberOrAuthorOrReadOnly
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 
+class TaskPreviewPagination(PageNumberPagination):
+    page_size = 8
+
+
 class TaskPreviewList(generics.ListAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskPreviewSerializer
-    paginate_by = 8
+    pagination_class = TaskPreviewPagination
     filter_fields = ('status', 'skill',)
 
     def get_queryset(self):
@@ -50,8 +55,7 @@ class TaskPreviewList(generics.ListAPIView):
 
 class TaskList(generics.ListCreateAPIView):
     queryset = Task.objects.all()
-    paginate_by = 8
-    paginate_by_param = 'page_size'
+    pagination_class = TaskPreviewPagination
     serializer_class = BaseTaskSerializer
     permission_classes = (TenantConditionalOpenClose, IsProjectOwnerOrReadOnly,)
     filter_fields = ('status', 'author')
@@ -83,7 +87,7 @@ class TaskList(generics.ListCreateAPIView):
 
 class MyTaskList(generics.ListCreateAPIView):
     queryset = Task.objects.all()
-    paginate_by = 8
+    pagination_class = TaskPreviewPagination
     filter_fields = ('author',)
     permission_classes = (IsProjectOwnerOrReadOnly,)
     serializer_class = MyTasksSerializer
@@ -109,9 +113,13 @@ class MyTaskDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MyTasksSerializer
 
 
+class TaskPagination(PageNumberPagination):
+    page_size = 50
+
+
 class TaskMemberList(generics.ListCreateAPIView):
     serializer_class = BaseTaskMemberSerializer
-    paginate_by = 50
+    pagination_class = TaskPagination
     filter_fields = ('task', 'status',)
     permission_classes = (TenantConditionalOpenClose,
                           IsAuthenticatedOrReadOnly,)
@@ -144,7 +152,7 @@ class TaskMemberDetail(generics.RetrieveUpdateDestroyAPIView):
 class TaskFileList(generics.ListCreateAPIView):
     queryset = TaskFile.objects.all()
     serializer_class = TaskFileSerializer
-    paginate_by = 50
+    pagination_class = TaskPagination
     filter_fields = ('task',)
     permission_classes = (TenantConditionalOpenClose,
                           IsAuthenticatedOrReadOnly,)

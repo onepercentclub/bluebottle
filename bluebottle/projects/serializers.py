@@ -97,7 +97,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     task_count = serializers.IntegerField()
     country = ProjectCountrySerializer()
     story = StoryField()
-    is_funding = serializers.Field()
+    is_funding = serializers.ReadOnlyField()
     budget_lines = BasicProjectBudgetLineSerializer(
         many=True, source='projectbudgetline_set', read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
@@ -106,8 +106,8 @@ class ProjectSerializer(serializers.ModelSerializer):
     vote_count = serializers.IntegerField()
     supporter_count = serializers.IntegerField()
 
-    people_requested = serializers.Field()
-    people_registered = serializers.Field()
+    people_requested = serializers.ReadOnlyField()
+    people_registered = serializers.ReadOnlyField()
 
     meta_data = MetaField(
         title='get_meta_title',
@@ -188,7 +188,7 @@ class ManageProjectSerializer(TaggableSerializerMixin,
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
     story = StoryField(required=False)
-    is_funding = serializers.Field()
+    is_funding = serializers.ReadOnlyField()
 
     documents = ProjectDocumentSerializer(
         many=True, read_only=True)

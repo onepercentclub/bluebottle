@@ -137,12 +137,9 @@ class ManageProjectList(generics.ListCreateAPIView):
         queryset = queryset.order_by('-created')
         return queryset
 
-    def pre_save(self, obj):
-        """
-        Set the project owner and the status of the project.
-        """
-        obj.status = ProjectPhase.objects.order_by('sequence').all()[0]
-        obj.owner = self.request.user
+    def perform_create(self, serializer):
+        instance = serializer.save(owner=self.request.user,
+                                   status=ProjectPhase.objects.order_by('sequence').all()[0])
 
 
 class ManageProjectDetail(generics.RetrieveUpdateAPIView):

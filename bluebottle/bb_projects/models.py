@@ -12,7 +12,6 @@ from django_extensions.db.fields import (ModificationDateTimeField,
 from localflavor.generic.models import BICField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
-from taggit.managers import TaggableManager
 
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.tasks.models import TaskMember
@@ -138,8 +137,6 @@ class BaseProject(models.Model, GetTweetMixin):
     theme = models.ForeignKey(
         'bb_projects.ProjectTheme', null=True, blank=True)
     favorite = models.BooleanField(default=True)
-    tags = TaggableManager(
-        blank=True, verbose_name=_('tags'), help_text=_('Add tags'))
 
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 

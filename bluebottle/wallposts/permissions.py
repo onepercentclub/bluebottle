@@ -1,6 +1,28 @@
 from rest_framework import permissions
 
+from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.tasks.models import Task
+from bluebottle.projects.models import Project
+
+
 from .models import MediaWallpost
+
+
+class CanEmailFollowers(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        # If followers will be emailed then check the request user
+        # has permissions, eg they are the owner / author of the
+        # parent object (project, task, fundraiser).
+        if obj.email_followers:
+            parent_obj = obj.content_object
+
+            if isinstance(parent_obj, Project) or \
+               isinstance(parent_obj, Fundraiser):
+                return parent_obj.owner == self.request.user
+            elif isinstance(parent_obj, Task):
+                return parent_obj.author == self.request.user
+        else:
+          return True
 
 
 # TODO: Add write permission for 1%CREW / Assistants.

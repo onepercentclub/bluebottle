@@ -39,14 +39,14 @@ class ManageOrderList(generics.ListCreateAPIView):
                                anonymous_order_id_session_key, 0)
             return queryset.filter(id=order_id)
 
-    def pre_save(self, obj):
-        # If the user is authenticated then set that user to this order.
+    def perform_create(self, serializer):
         if self.request.user.is_authenticated():
-            obj.user = self.request.user
+            serializer.save(
+                user=self.request.user)
+            )
+        else:
+            serializer.save()
 
-    def post_save(self, obj, created=False):
-        # If the user isn't authenticated then save the order id in session/
-        if created:
             self.request.session[anonymous_order_id_session_key] = obj.id
             self.request.session.save()
 

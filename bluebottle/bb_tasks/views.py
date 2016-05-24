@@ -77,8 +77,8 @@ class TaskList(generics.ListCreateAPIView):
 
         return qs
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
+    def perform_create(self, serializer):
+        self.get_serializer.save(author=self.request.user)
 
 
 class MyTaskList(generics.ListCreateAPIView):
@@ -93,8 +93,8 @@ class MyTaskList(generics.ListCreateAPIView):
             return Task.objects.filter(author=self.request.user)
         return Task.objects.none()
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
+    def perform_create(self, serializer):
+        self.get_serializer.save(author=self.request.user)
 
 
 class TaskDetail(generics.RetrieveUpdateAPIView):
@@ -117,11 +117,8 @@ class TaskMemberList(generics.ListCreateAPIView):
                           IsAuthenticatedOrReadOnly,)
     queryset = TaskMember.objects.all()
 
-    def pre_save(self, obj):
-        # When creating a task member it should always be by the
-        # request.user and have status 'applied'
-        obj.member = self.request.user
-        obj.status = TaskMember.TaskMemberStatuses.applied
+    def perform_create(self, serializer):
+        self.get_serializer.save(author=self.request.user, status=TaskMember.TaskMemberStatuses.applied)
 
 
 class MyTaskMemberList(generics.ListAPIView):
@@ -152,10 +149,8 @@ class TaskFileList(generics.ListCreateAPIView):
     permission_classes = (TenantConditionalOpenClose,
                           IsAuthenticatedOrReadOnly,)
 
-    def pre_save(self, obj):
-        # When creating a task file the author should always be
-        # by the request.user
-        obj.author = self.request.user
+    def perform_create(self, serializer):
+        self.get_serializer.save(author=self.request.user)
 
 
 class TaskFileDetail(generics.RetrieveUpdateAPIView):

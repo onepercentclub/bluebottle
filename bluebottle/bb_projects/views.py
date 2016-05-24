@@ -129,12 +129,10 @@ class ManageProjectList(generics.ListCreateAPIView):
         queryset = queryset.order_by('-created')
         return queryset
 
-    def pre_save(self, obj):
-        """
-        Set the project owner and the status of the project.
-        """
-        obj.status = ProjectPhase.objects.order_by('sequence').all()[0]
-        obj.owner = self.request.user
+    def perform_create(self, serializer):
+        serializer.save(
+            owner=self.request.user, status=ProjectPhase.objects.order_by('sequence').all()[0]
+        )
 
 
 class ManageProjectDetail(generics.RetrieveUpdateAPIView):
@@ -177,9 +175,10 @@ class ManageProjectDocumentList(generics.ListCreateAPIView):
     paginate_by = 20
     filter = ('project', )
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user, ip_address=get_client_ip(self.request)
+        )
 
 
 class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -188,6 +187,7 @@ class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
     paginate_by = 20
     filter = ('project', )
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+    def perform_update(self, serializer):
+        serializer.save(
+            author=self.request.user, ip_address=get_client_ip(self.request)
+        )

@@ -45,8 +45,8 @@ class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
     serializer_class = ManageOrderPaymentSerializer
     permission_classes = (IsOrderCreator,)
 
-    def pre_save(self, obj):
-        obj.amount = obj.order.total
+    def perform_update(self, serializer):
+        serializer.save(amount=serializer.validated_data['order'].total)
 
 
 class ManageOrderPaymentList(ListCreateAPIView):
@@ -54,9 +54,11 @@ class ManageOrderPaymentList(ListCreateAPIView):
     serializer_class = ManageOrderPaymentSerializer
     permission_classes = (IsOrderCreator, CanAccessPaymentMethod)
 
-    def pre_save(self, obj):
+    def perform_create(self, serializer):
         if self.request.user and self.request.user.is_authenticated():
-            obj.user = self.request.user
+            serializer.save(user=self.request.user)
+        else:
+            serializer.save()
 
     def post_save(self, obj, created=False):
         try:

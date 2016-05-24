@@ -8,6 +8,8 @@ class ContactRequestCreate(generics.CreateAPIView):
     queryset = ContactMessage.objects.all()
     serializer_class = ContactMessageSerializer
 
-    def pre_save(self, obj):
+    def perform_create(self, serializer):
         if self.request.user.is_authenticated():
-            obj.author = self.request.user
+            serializer.save(author=self.request.user)
+        else:
+            serializer.save()

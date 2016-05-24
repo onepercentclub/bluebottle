@@ -16,7 +16,7 @@ from .models import (TextWallpost, MediaWallpost, MediaWallpostPhoto,
 from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
                           MediaWallpostPhotoSerializer, ReactionSerializer,
                           WallpostSerializer)
-from .permissions import IsConnectedWallpostAuthorOrReadOnly
+from .permissions import IsConnectedWallpostAuthorOrReadOnly, CanEmailFollowers
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
@@ -28,6 +28,14 @@ class WallpostFilter(django_filters.FilterSet):
     class Meta:
         model = Wallpost
         fields = ['parent_type', 'parent_id']
+
+
+class SetAuthorMixin(object):
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))
+
+    def perform_update(self, serializer):
+        serializer.save(editor=self.request.user, ip_address=get_client_ip(self.request))
 
 
 class WallpostList(ListAPIView):
@@ -62,12 +70,12 @@ class WallpostList(ListAPIView):
         return queryset
 
 
-class TextWallpostList(ListCreateAPIView):
+class TextWallpostList(SetAuthorMixin, ListCreateAPIView):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
     paginate_by = 5
-    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly)
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly, CanEmailFollowers)
 
     def get_queryset(self, queryset=None):
         queryset = super(TextWallpostList, self).get_queryset()
@@ -84,33 +92,6 @@ class TextWallpostList(ListCreateAPIView):
         queryset = queryset.order_by('-created')
         return queryset
 
-    def pre_save(self, obj):
-        can_save = False
-
-        # If followers will be emailed then check the request user
-        # has permissions, eg they are the owner / author of the
-        # parent object (project, task, fundraiser).
-        if obj.email_followers:
-            parent_obj = obj.content_object
-
-            if isinstance(parent_obj, Project) or \
-               isinstance(parent_obj, Fundraiser):
-                can_save = parent_obj.owner == self.request.user
-            elif isinstance(parent_obj, Task):
-                can_save = parent_obj.author == self.request.user
-        else:
-          can_save = True
-
-        if not can_save:
-            raise exceptions.PermissionDenied()
-
-        # Set the author / editor and ip address for the request
-        if not obj.author:
-            obj.author = self.request.user
-        else:
-            obj.editor = self.request.user
-        obj.ip_address = get_client_ip(self.request)
-
 
 class MediaWallpostList(TextWallpostList):
     queryset = MediaWallpost.objects.all()
@@ -125,17 +106,10 @@ class WallpostDetail(RetrieveUpdateDeleteAPIView):
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
 
 
-class MediaWallpostPhotoList(ListCreateAPIView):
+class MediaWallpostPhotoList(SetAuthorMixin, ListCreateAPIView):
     queryset = MediaWallpostPhoto.objects.all()
     serializer_class = MediaWallpostPhotoSerializer
     paginate_by = 4
-
-    def pre_save(self, obj):
-        if not obj.author:
-            obj.author = self.request.user
-        else:
-            obj.editor = self.request.user
-        obj.ip_address = get_client_ip(self.request)
 
     def create(self, request, *args, **kwargs):  # FIXME
         """
@@ -170,7 +144,7 @@ class MediaWallpostPhotoDetail(RetrieveUpdateDeleteAPIView):
                           IsConnectedWallpostAuthorOrReadOnly)
 
 
-class ReactionList(ListCreateAPIView):
+class ReactionList(SetAuthorMixin, ListCreateAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
     permission_classes = (TenantConditionalOpenClose,
@@ -178,14 +152,8 @@ class ReactionList(ListCreateAPIView):
     paginate_by = 10
     filter_fields = ('wallpost',)
 
-    def pre_save(self, obj):
-        set_author_editor_ip(self.request, obj)
 
-
-class ReactionDetail(RetrieveUpdateDeleteAPIView):
+class ReactionDetail(SetAuthorMixin, RetrieveUpdateDeleteAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
-
-    def pre_save(self, obj):
-        set_author_editor_ip(self.request, obj)

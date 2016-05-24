@@ -49,11 +49,8 @@ class FundraiserListView(ListCreateAPIView):
             '-latest_donation')
         return queryset
 
-    def pre_save(self, obj):
-        if not self.request.user.is_authenticated():
-            raise exceptions.PermissionDenied()
-
-        obj.owner = self.request.user
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class FundraiserDetailView(RetrieveUpdateDeleteAPIView):

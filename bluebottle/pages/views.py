@@ -22,8 +22,8 @@ class PageList(generics.ListAPIView):
             qs = qs.filter(language=language)
 
         qs = qs.filter(status=Page.PageStatus.published)
-        qs = qs.filter(publication_date__lte=now)
-        qs = qs.filter(Q(publication_end_date__gte=now) |
+        qs = qs.filter(publication_date__lte=now())
+        qs = qs.filter(Q(publication_end_date__gte=now()) |
                        Q(publication_end_date__isnull=True))
         return qs
 
@@ -35,8 +35,8 @@ class PageDetail(generics.RetrieveAPIView):
     def get_queryset(self):
         qs = super(PageDetail, self).get_queryset()
         qs = qs.filter(status=Page.PageStatus.published)
-        qs = qs.filter(publication_date__lte=now)
-        qs = qs.filter(Q(publication_end_date__gte=now) |
+        qs = qs.filter(publication_date__lte=now())
+        qs = qs.filter(Q(publication_end_date__gte=now()) |
                        Q(publication_end_date__isnull=True))
         return qs
 

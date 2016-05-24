@@ -78,15 +78,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='user-profile-detail')
     picture = ImageSerializer(required=False)
     date_joined = serializers.DateTimeField(read_only=True)
-    username = serializers.CharField(read_only=True)
 
     # TODO: Remove first/last name and only use these
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     short_name = serializers.CharField(source='get_short_name', read_only=True)
 
-    address = UserAddressSerializer(required=False)
-    birthdate = serializers.DateTimeField(required=False)
-    email = serializers.EmailField(required=False)
     primary_language = serializers.CharField(required=False,
                                              default=properties.LANGUAGE_CODE)
     location = serializers.PrimaryKeyRelatedField(required=False,
@@ -101,12 +97,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
     favourite_theme_ids = serializers.PrimaryKeyRelatedField(
         many=True, source='favourite_themes', queryset=ProjectTheme.objects)
 
-    project_count = serializers.Field()
-    donation_count = serializers.Field()
-    fundraiser_count = serializers.Field()
-    task_count = serializers.Field()
-    time_spent = serializers.Field()
-    tasks_performed = serializers.Field()
+    project_count = serializers.ReadOnlyField()
+    donation_count = serializers.ReadOnlyField()
+    fundraiser_count = serializers.ReadOnlyField()
+    task_count = serializers.ReadOnlyField()
+    time_spent = serializers.ReadOnlyField()
+    tasks_performed = serializers.ReadOnlyField()
 
     class Meta:
         model = BB_USER_MODEL

@@ -19,8 +19,8 @@ class MonthlyDonationList(generics.ListCreateAPIView):
         qs = super(MonthlyDonationList, self).get_queryset()
         return qs.filter(user=self.request.user)
 
-    def pre_save(self, obj):
-        obj.user = self.request.user
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class MonthlyDonationDetail(generics.RetrieveUpdateAPIView):

@@ -138,8 +138,9 @@ class ManageProjectList(generics.ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
-        instance = serializer.save(owner=self.request.user,
-                                   status=ProjectPhase.objects.order_by('sequence').all()[0])
+        serializer.save(
+            owner=self.request.user, status=ProjectPhase.objects.order_by('sequence').all()[0]
+        )
 
 
 class ManageProjectDetail(generics.RetrieveUpdateAPIView):
@@ -185,9 +186,10 @@ class ManageProjectDocumentList(generics.ListCreateAPIView):
     pagination_class = ManageProjectDocumentPagination
     filter = ('project', )
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user, ip_address=get_client_ip(self.request)
+        )
 
 
 class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -196,6 +198,7 @@ class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
     pagination_class = ManageProjectDocumentPagination
     filter = ('project', )
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+    def perform_update(self, serializer):
+        serializer.save(
+            author=self.request.user, ip_address=get_client_ip(self.request)
+        )

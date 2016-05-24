@@ -112,9 +112,11 @@ class UserCreate(generics.CreateAPIView):
     def get_name(self):
         return "Users"
 
-    def pre_save(self, obj):
-        if not obj.primary_language:
-            obj.primary_language = properties.LANGUAGE_CODE
+    def perform_create(self, serializer):
+        if not self.validated_data['primary_language']:
+            serializer.save(primary_language=properties.LANGUAGE_CODE)
+        else:
+            serializer.save()
 
     # Overriding the default create so that we can return extra info in the
     # response

@@ -39,9 +39,8 @@ class ManageProjectDocumentList(generics.ListCreateAPIView):
 
     filter = ('project',)
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))
 
 
 class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -51,6 +50,5 @@ class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
 
     filter = ('project',)
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+    def perform_update(self, serializer):
+        serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))

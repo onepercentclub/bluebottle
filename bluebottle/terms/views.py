@@ -38,9 +38,8 @@ class TermsAgreementListView(ListCreateAPIView):
         queryset = super(TermsAgreementListView, self).get_queryset()
         return queryset.filter(user=self.request.user)
 
-    def pre_save(self, obj):
-        obj.terms = Terms.get_current()
-        obj.user = self.request.user
+    def perform_create(self, serializer):
+        serializer.save(terms=Terms.get_current(), user=self.request.user)
 
 
 class TermsAgreementDetailView(RetrieveAPIView):

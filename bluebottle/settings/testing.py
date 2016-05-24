@@ -82,3 +82,6 @@ RECURRING_DONATIONS_ENABLED = True
 
 SEND_WELCOME_MAIL = False
 SEND_MAIL = True
+
+
+TEST_RUNNER = 'bluebottle.test.test_runner.MultiTenantRunner'

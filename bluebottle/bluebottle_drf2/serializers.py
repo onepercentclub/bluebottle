@@ -28,14 +28,14 @@ logger = logging.getLogger(__name__)
 
 
 class RestrictedImageField(serializers.ImageField):
-    def from_native(self, data):
+    def to_internal_value(self, data):
         if data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
             # We restrict images to a fixed set of mimetypes.
             # This prevents users from uploading broken eps files (for example),
             # that bring the application down.
             raise ValidationError(self.error_messages['invalid_image'])
 
-        return super(RestrictedImageField, self).from_native(data)
+        return super(RestrictedImageField, self).to_internal_value(data)
 
 
 class SorlImageField(RestrictedImageField):
@@ -45,7 +45,7 @@ class SorlImageField(RestrictedImageField):
         self.geometry_string = geometry_string
         super(SorlImageField, self).__init__(source, **kwargs)
 
-    def to_native(self, value):
+    def to_representation(self, value):
         if not value:
             return ""
 
@@ -80,9 +80,9 @@ class ContentTextField(serializers.CharField):
     adds <br/> and/or <p></p> in-place of new line characters.
     """
 
-    def to_native(self, value):
+    def to_representation(self, value):
         # Convert model instance text -> text for reading.
-        text = super(ContentTextField, self).to_native(value)
+        text = super(ContentTextField, self).to_representation(value)
         # This is equivalent to the django template filter:
         # '{{ value|urlize|linebreaks }}'. Note: Text from the
         # database is escaped again here (on read) just as a
@@ -91,9 +91,9 @@ class ContentTextField(serializers.CharField):
         # This ensure links open in a new window (BB-136).
         return re.sub(r'<a ', '<a target="_blank" ', text)
 
-    def from_native(self, value):
+    def to_internal_value(self, value):
         # Convert text -> model instance text for writing.
-        text = super(ContentTextField, self).from_native(value)
+        text = super(ContentTextField, self).to_internal_value(value)
         # HTML tags are stripped and any HTML / JS that is left is escaped.
         return strip_tags(text)
 
@@ -113,7 +113,7 @@ class OEmbedField(serializers.Field):
             self.params['maxwidth'] = maxwidth
             self.params.pop('maxheight', None)
 
-    def to_native(self, value):
+    def to_representation(self, value):
         if not value or not standalone_url_re.match(value):
             return ""
         url = value.strip()
@@ -202,15 +202,11 @@ class PrimaryKeyGenericRelatedField(serializers.RelatedField):
         # Called when preparing the ChoiceField widget from the to_model queryset.
         return obj.serializable_value('id')
 
-    def to_native(self, obj):
+    def to_representation(self, obj):
         # Serialize using self.source (i.e. 'object_id').
         return obj.serializable_value(self.source)
 
-    def field_to_native(self, obj, field_name):
-        # Defer the serialization to the to_native() method.
-        return self.to_native(obj)
-
-    def from_native(self, value):
+    def to_internal_value(self, value):
         try:
             to_instance = self.to_model.objects.get(pk=value)
         except self.to_model.DoesNotExist:
@@ -242,7 +238,7 @@ class SlugGenericRelatedField(serializers.RelatedField):
         # Called when preparing the ChoiceField widget from the to_model queryset.
         return to_instance.serializable_value('slug')
 
-    def to_native(self, obj):
+    def to_representation(self, obj):
         # Serialize using self.source (i.e. 'object_id').
         try:
             to_instance = self.to_model.objects.get(
@@ -251,11 +247,7 @@ class SlugGenericRelatedField(serializers.RelatedField):
             return None
         return to_instance.serializable_value('slug')
 
-    def field_to_native(self, obj, field_name):
-        # Defer the serialization to the to_native() method.
-        return self.to_native(obj)
-
-    def from_native(self, value):
+    def to_internal_value(self, value):
         try:
             to_instance = self.to_model.objects.get(slug=value)
         except self.to_model.DoesNotExist:
@@ -267,11 +259,11 @@ class SlugGenericRelatedField(serializers.RelatedField):
 class EuroField(serializers.CharField):
     # Note: You need to override save and set the currency to 'EUR' in the
     # Serializer where this is used.
-    def to_native(self, value):
+    def to_representation(self, value):
         # Convert model instance int -> text for reading.
         return '{0}.{1}'.format(str(value)[:-2], str(value)[-2:])
 
-    def from_native(self, value):
+    def to_internal_value(self, value):
         # Convert text -> model instance int for writing.
         if not value:
             return 0
@@ -279,7 +271,7 @@ class EuroField(serializers.CharField):
 
 
 class FileSerializer(serializers.FileField):
-    def to_native(self, value):
+    def to_representation(self, value):
         if value:
             try:
                 return {'name': os.path.basename(value.name),
@@ -299,7 +291,7 @@ class FileSerializer(serializers.FileField):
 class ImageSerializer(RestrictedImageField):
     crop = 'center'
 
-    def to_native(self, value):
+    def to_representation(self, value):
         if not value:
             return None
 
@@ -335,7 +327,7 @@ class ImageSerializer(RestrictedImageField):
 class PhotoSerializer(RestrictedImageField):
     crop = 'center'
 
-    def to_native(self, value):
+    def to_representation(self, value):
         if not value:
             return None
 

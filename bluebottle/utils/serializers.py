@@ -72,7 +72,7 @@ SCHEME_PATTERN = r'^https?://'
 class URLField(serializers.URLField):
     """ URLField allowing absence of url scheme """
 
-    def from_native(self, value):
+    def to_internal_value(self, value):
         """ Allow exclusion of http(s)://, add it if it's missing """
         if not value:
             return value

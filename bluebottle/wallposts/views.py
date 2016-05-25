@@ -82,7 +82,6 @@ class TextWallpostList(ListCreateAPIView):
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
     pagination_class = WallpostPagination
-
     permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly, CanEmailFollowers)
 
     def get_queryset(self, queryset=None):

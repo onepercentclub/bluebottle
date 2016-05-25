@@ -18,7 +18,7 @@ class PageContentsField(serializers.Field):
 
 class PageSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
-    body = PageContentsField(source='body')
+    body = PageContentsField()
 
     class Meta:
         model = Page

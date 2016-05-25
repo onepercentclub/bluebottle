@@ -56,14 +56,7 @@ class BaseFundraiserSerializer(serializers.ModelSerializer):
                   'created', 'video_html', 'video_url', 'amount',
                   'amount_donated', 'deadline')
 
-    def validate_deadline(self, attrs, source):
-        """
-        Field level validation for deadline field, see
-        http://www.django-rest-framework.org/api-guide/serializers#validation
-        """
-        if not attrs.get('deadline', None) or not attrs.get('project',
-                                                            None) or attrs.get(
-                'deadline') > attrs.get('project').deadline:
-            raise serializers.ValidationError(
-                _("Fundraiser deadline exceeds project deadline."))
-        return attrs
+    def validate(self, data):
+        if not data['deadline'] or data['deadline'] > data['project'].deadline:
+            raise serializers.ValidationError({'deadline': [_("Fundraiser deadline exceeds project deadline.")]})
+        return data

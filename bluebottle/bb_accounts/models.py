@@ -334,6 +334,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         self.generate_username()
+
+        if self.location:
+            self.address.country = self.location.country
+            self.address.save()
+
         super(BlueBottleBaseUser, self).save(force_insert, force_update, using,
                                              update_fields)
         try:

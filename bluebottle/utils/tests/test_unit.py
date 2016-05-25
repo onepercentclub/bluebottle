@@ -184,7 +184,6 @@ class MetaTestCase(BluebottleTestCase):
 
         # set up the client
         self.client = Client()
-        self.url = reverse('meta_test', kwargs={'pk': self.object.id})
 
     def test_content_items_correctly_created(self):
         """ Test that the setUp function creates the correct items """
@@ -194,6 +193,7 @@ class MetaTestCase(BluebottleTestCase):
         self.assertEqual(len(
             items), 4,
             'Error in the setUp function: not all items arecorrectly created.')
+
 
 class UserTestsMixin(object):
     """ Mixin base class for tests requiring users. """

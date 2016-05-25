@@ -98,7 +98,6 @@ class TestProjectList(ProjectEndpointTestCase):
             self.assertIn('description', item)
             self.assertIn('id', item)
             self.assertIn('image', item)
-            self.assertIn('meta_data', item)
             self.assertIn('owner', item)
             self.assertIn('status', item)
 
@@ -141,7 +140,6 @@ class TestProjectDetail(ProjectEndpointTestCase):
         self.assertIn('description', data)
         self.assertIn('id', data)
         self.assertIn('image', data)
-        self.assertIn('meta_data', data)
         self.assertIn('owner', data)
         self.assertIn('status', data)
 

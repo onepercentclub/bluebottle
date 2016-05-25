@@ -305,7 +305,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         serializer_fields = (
             'id', 'members', 'files', 'project', 'skill', 'author', 'status',
             'tags', 'description', 'location', 'deadline', 'time_needed', 'title',
-            'people_needed', 'meta_data'
+            'people_needed'
         )
 
         for field in serializer_fields:

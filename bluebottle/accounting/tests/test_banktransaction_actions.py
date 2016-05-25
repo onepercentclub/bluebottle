@@ -28,7 +28,7 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
     def setUp(self):
         super(BankTransactionActionTests, self).setUp()
         self.init_projects()
-        self.app.extra_environ['HTTP_HOST'] = self.tenant.domain_url
+        self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
         self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
 
     def _add_completed_donation(self, project, amount):
@@ -187,7 +187,7 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
             self.assertEqual(payment.user, self.superuser)
             self.assertEqual(payment.amount, Decimal(75))
             self.assertEqual(payment.status, StatusDefinition.SETTLED)
-            self.assertEqual(payment.transaction, transaction)
+            self.assertEqual(payment.bank_transaction, transaction)
 
             # assert that the transaction is now valid
             transaction = BankTransaction.objects.get(pk=transaction.pk)
@@ -310,7 +310,7 @@ class BankTransactionActionTests(WebTestMixin, BluebottleTestCase):
             self.assertEqual(payment.user, self.superuser)
             self.assertEqual(payment.amount, Decimal(75))
             self.assertEqual(payment.status, StatusDefinition.SETTLED)
-            self.assertEqual(payment.transaction.id, transaction.id)
+            self.assertEqual(payment.bank_transaction.id, transaction.id)
 
             # assert that the transaction is now valid
             transaction = BankTransaction.objects.get(pk=transaction.pk)

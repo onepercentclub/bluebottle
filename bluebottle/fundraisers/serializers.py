@@ -4,6 +4,7 @@ from rest_framework import serializers
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer, OEmbedField
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.members.serializers import UserProfileSerializer
+from bluebottle.projects.models import Project
 
 
 class ImageSerializerExt(ImageSerializer):

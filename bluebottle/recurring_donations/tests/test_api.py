@@ -29,8 +29,7 @@ class MonthlyDonationApiTest(BluebottleTestCase):
             self.another_user.get_jwt_token())
 
         self.monthly_donation_url = reverse('monthly-donation-list')
-        self.monthly_donation_project_url = reverse(
-            'monthly-donation-project-list')
+        self.monthly_donation_project_url = reverse('monthly-donation-project-list')
 
         self.monthly_profile = {'iban': 'NL13TEST0123456789',
                                 'bic': 'TESTNL2A',
@@ -78,7 +77,8 @@ class MonthlyDonationApiTest(BluebottleTestCase):
             'project': self.some_project.slug
         }
         response = self.client.post(self.monthly_donation_project_url,
-                                    monthly_project, token=self.some_user_token)
+                                    monthly_project,
+                                    token=self.some_user_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
 

@@ -5,7 +5,6 @@ from fluent_contents.rendering import render_placeholder
 from rest_framework import serializers
 
 from bluebottle.members.serializers import UserPreviewSerializer
-from bluebottle.utils.serializers import MetaField
 from .models import Page
 
 
@@ -19,10 +18,8 @@ class PageContentsField(serializers.Field):
 
 class PageSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
-    body = PageContentsField(source='body')
-
-    meta_data = MetaField(description='get_meta_description', keywords=None)
+    body = PageContentsField()
 
     class Meta:
         model = Page
-        fields = ('title', 'id', 'body', 'language', 'meta_data', 'full_page')
+        fields = ('title', 'id', 'body', 'language', 'full_page')

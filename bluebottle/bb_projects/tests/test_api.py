@@ -60,10 +60,10 @@ class TestProjectPhaseList(ProjectEndpointTestCase):
 
         available_phases = ProjectPhase.objects.all()
 
-        self.assertEqual(data['count'], len(available_phases),
+        self.assertEqual(len(data), len(available_phases),
                          "Failed to load all the available phases")
 
-        for item in data['results']:
+        for item in data:
             self.assertIn('id', item)
             self.assertIn('name', item)
             self.assertIn('description', item)
@@ -90,15 +90,14 @@ class TestProjectList(ProjectEndpointTestCase):
         data = json.loads(response.content)
 
         # Check that it is returning our 1 viewable factory-model project.
-        self.assertEqual(data['count'], 1)
+        self.assertEqual(len(data), 1)
 
         # Check sanity on the JSON response.
-        for item in data['results']:
+        for item in data:
             self.assertIn('created', item)
             self.assertIn('description', item)
             self.assertIn('id', item)
             self.assertIn('image', item)
-            self.assertIn('meta_data', item)
             self.assertIn('owner', item)
             self.assertIn('status', item)
 
@@ -118,7 +117,7 @@ class TestProjectList(ProjectEndpointTestCase):
 
         data = json.loads(response.content)
         # We created 3 projects, but none are viewable with the updated to phase_3...
-        self.assertEqual(data['count'], 0)
+        self.assertEqual(len(data), 0)
 
 
 class TestProjectDetail(ProjectEndpointTestCase):
@@ -141,7 +140,6 @@ class TestProjectDetail(ProjectEndpointTestCase):
         self.assertIn('description', data)
         self.assertIn('id', data)
         self.assertIn('image', data)
-        self.assertIn('meta_data', data)
         self.assertIn('owner', data)
         self.assertIn('status', data)
 
@@ -253,10 +251,9 @@ class TestProjectThemeDetail(ProjectEndpointTestCase):
         Test the API endpoint for Project theme detail.
         """
         response = self.client.get(
-            reverse('project_theme_detail', kwargs={'pk': self.project_1.pk}))
+            reverse('project_theme_detail', kwargs={'pk': self.project_1.theme.pk}))
 
         self.assertEqual(response.status_code, 200)
-
         data = json.loads(response.content)
 
         self.assertIn('id', data)

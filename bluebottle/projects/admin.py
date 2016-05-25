@@ -181,7 +181,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         (_('Details'), {'fields': ('language', 'theme', 'categories', 'image',
                                    'video_url', 'country',
                                    'latitude', 'longitude',
-                                   'location', 'place', 'tags')}),
+                                   'location', 'place')}),
 
         (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
                                 'amount_donated', 'amount_needed',

@@ -14,7 +14,6 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
 from bluebottle.geo.serializers import CountrySerializer
-from bluebottle.utils.serializers import MetaField
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.geo.models import Location
 from bluebottle.categories.models import Category
@@ -108,15 +107,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     people_requested = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
 
-    meta_data = MetaField(
-        title='get_meta_title',
-        fb_title='get_fb_title',
-        description='pitch',
-        keywords='tags',
-        image_source='image',
-        tweet='get_tweet',
-    )
-
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
 
@@ -124,7 +114,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ('id', 'created', 'title', 'pitch', 'organization',
                   'description', 'owner', 'status', 'image',
-                  'country', 'theme', 'categories', 'meta_data', 'language',
+                  'country', 'theme', 'categories', 'language',
                   'latitude', 'longitude', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'allow_overfunding',
                   'task_count', 'amount_asked', 'amount_donated',

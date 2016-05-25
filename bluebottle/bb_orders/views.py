@@ -74,6 +74,6 @@ class ManageOrderDetail(generics.RetrieveUpdateAPIView):
         service.adapter.check_payment_status()
 
     def get_object(self, queryset=None):
-        object = super(ManageOrderDetail, self).get_object(queryset)
+        object = super(ManageOrderDetail, self).get_object()
         order_requested.send(sender=Order, order=object)
         return object

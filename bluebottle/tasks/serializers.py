@@ -5,7 +5,6 @@ from bluebottle.bluebottle_drf2.serializers import (
     PrimaryKeyGenericRelatedField, FileSerializer)
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
-from bluebottle.utils.serializers import MetaField
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallpostSerializer
 from bluebottle.projects.models import Project
@@ -55,28 +54,19 @@ class BaseTaskSerializer(serializers.ModelSerializer):
                                            max_digits=3,
                                            decimal_places=2)
 
-    meta_data = MetaField(
-        title='get_meta_title',
-        fb_title='get_fb_title',
-        tweet='get_tweet',
-        image_source='project__projectplan__image',
-    )
-
-    def validate_deadline(self, task, field):
-        if task['project'].deadline \
-                and task['deadline'] > task['project'].deadline:
+    def validate(self, data):
+        if not data['deadline'] or data['deadline'] > data['project'].deadline:
             raise serializers.ValidationError(
-                _('The deadline must be before the project deadline')
+                {'deadline': [_("The deadline must be before the project deadline.")]}
             )
-
-        return task
+        return data
 
     class Meta:
         model = Task
         fields = ('id', 'members', 'files', 'project', 'skill',
-                  'author', 'status', 'tags', 'description',
+                  'author', 'status', 'description',
                   'location', 'deadline', 'time_needed', 'title',
-                  'people_needed', 'meta_data')
+                  'people_needed')
 
 
 class MyTaskPreviewSerializer(serializers.ModelSerializer):

@@ -3,6 +3,7 @@ from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.translation import ugettext_lazy as _
 from django.utils.safestring import mark_safe
+from django.utils.functional import lazy
 
 from django_extensions.db.fields import (CreationDateTimeField,
                                          ModificationDateTimeField)
@@ -12,6 +13,7 @@ from fluent_contents.rendering import render_placeholder
 
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.serializers import MLStripper
+from bluebottle.clients import properties
 
 from .managers import NewsItemManager
 
@@ -24,6 +26,10 @@ GROUP_PERMS = {
 }
 
 
+def get_languages():
+    return properties.LANGUAGES
+
+
 class NewsItem(models.Model):
     class PostStatus(DjangoChoices):
         published = ChoiceItem('published', label=_("Published"))
@@ -33,9 +39,10 @@ class NewsItem(models.Model):
     slug = models.SlugField(_("Slug"))
 
     # Contents
-    main_image = ImageField(_("Main photo"), upload_to='blogs', blank=True)
-    language = models.CharField(_("language"), max_length=5,
-                                choices=settings.LANGUAGES)
+    main_image = ImageField(_("Main image"), help_text=_("Shows at the top of your post."),upload_to='blogs', blank=True)
+    language = models.CharField(_("language"),
+                                max_length=5,
+                                choices=lazy(get_languages, tuple)())
     contents = PlaceholderField("blog_contents")
     # This should not be nessecary, but fixes deletion of some news items
     # See https://github.com/edoburu/django-fluent-contents/issues/19

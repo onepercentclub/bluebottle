@@ -11,15 +11,3 @@ urlpatterns = patterns(
         name='utils_tag_list'),
     url(r'^share_flyer/$', ShareFlyer.as_view(), name="share_flyer"),
 )
-
-INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
-
-if INCLUDE_TEST_MODELS:
-    from ..views import MetaDataDetail
-
-    urlpatterns += patterns(
-        '',
-        # metadata testing
-        url(r'^metadata/(?P<pk>\d+)/$', MetaDataDetail.as_view(),
-            name='meta_test'),
-    )

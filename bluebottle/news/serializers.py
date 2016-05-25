@@ -3,9 +3,8 @@ from django.utils.safestring import mark_safe
 
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField
+from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.members.serializers import UserPreviewSerializer
-from bluebottle.utils.serializers import MetaField
 
 from .models import NewsItem
 
@@ -20,18 +19,14 @@ class NewsItemContentsField(serializers.Field):
 class NewsItemSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug')
     body = NewsItemContentsField(source='contents')
-    main_image = SorlImageField('main_image', '300x200', )
+    main_image = SorlImageField('main_image', '800x400')
     author = UserPreviewSerializer()
-
-    meta_data = MetaField(
-        description='get_meta_description',
-        image_source='main_image',
-    )
 
     class Meta:
         model = NewsItem
         fields = ('id', 'title', 'body', 'main_image', 'author',
-                  'publication_date', 'allow_comments', 'language', 'meta_data')
+                  'publication_date', 'allow_comments', 'language',
+                  'main_image')
 
 
 class NewsItemPreviewSerializer(serializers.ModelSerializer):

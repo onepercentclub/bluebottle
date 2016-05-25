@@ -43,6 +43,7 @@ class SorlImageField(RestrictedImageField):
         self.crop = kwargs.pop('crop', 'center')
         self.colorspace = kwargs.pop('colorspace', 'RGB')
         self.geometry_string = geometry_string
+        self.kwargs = kwargs
         super(SorlImageField, self).__init__(source, **kwargs)
 
     def to_representation(self, value):
@@ -59,8 +60,7 @@ class SorlImageField(RestrictedImageField):
         # so we need to deal with exceptions like is done in the template tag.
         try:
             thumbnail = unicode(
-                get_thumbnail(value, self.geometry_string, crop=self.crop,
-                              colorspace=self.colorspace))
+                get_thumbnail(value, self.geometry_string, **self.kwargs))
         except IOError:
             return ""
         except Exception:
@@ -68,7 +68,6 @@ class SorlImageField(RestrictedImageField):
                 raise
             logger.error('Thumbnail failed:', exc_info=sys.exc_info())
             return ""
-        request = self.context.get('request')
         relative_url = settings.MEDIA_URL + thumbnail
         return relative_url
 

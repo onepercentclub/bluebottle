@@ -82,7 +82,7 @@ class TaskList(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        self.get_serializer.save(author=self.request.user)
+        serializer.save(author=self.request.user)
 
 
 class MyTaskList(generics.ListCreateAPIView):
@@ -126,7 +126,7 @@ class TaskMemberList(generics.ListCreateAPIView):
     queryset = TaskMember.objects.all()
 
     def perform_create(self, serializer):
-        self.get_serializer.save(author=self.request.user, status=TaskMember.TaskMemberStatuses.applied)
+        serializer.save(member=self.request.user, status=TaskMember.TaskMemberStatuses.applied)
 
 
 class MyTaskMemberList(generics.ListAPIView):

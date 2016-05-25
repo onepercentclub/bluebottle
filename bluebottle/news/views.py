@@ -1,10 +1,11 @@
 from rest_framework import generics
-from rest_framework.pagination import PageNumberPagination
+
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from .models import NewsItem
 from .serializers import NewsItemSerializer, NewsItemPreviewSerializer
 
 
-class NewsItemPagination(PageNumberPagination):
+class NewsItemPagination(BluebottlePagination):
     page_size = 5
 
 class NewsItemPreviewList(generics.ListAPIView):

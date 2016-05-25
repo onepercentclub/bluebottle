@@ -164,8 +164,6 @@ REST_FRAMEWORK = {
    'DEFAULT_PERMISSION_CLASSES': (
         'tenant_extras.drf_permissions.TenantConditionalOpenClose',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10
 }
 
 JWT_AUTH = {

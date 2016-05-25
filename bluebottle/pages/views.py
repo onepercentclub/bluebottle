@@ -3,8 +3,8 @@ from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 
 from rest_framework import generics
-from rest_framework.pagination import PageNumberPagination
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from .models import Page
 from .serializers import PageSerializer
 
@@ -12,7 +12,7 @@ from .serializers import PageSerializer
 class PageList(generics.ListAPIView):
     queryset = Page.objects.all()
     serializer_class = PageSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
 
     def get_queryset(self):
         qs = super(PageList, self).get_queryset()

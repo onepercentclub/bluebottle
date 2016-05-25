@@ -1,13 +1,13 @@
 from rest_framework import generics
-from rest_framework.pagination import PageNumberPagination
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
 from .permissions import NoDonationsOrReadOnly
 from .models import Reward
 from .serializers import RewardSerializer
 
 
-class RewardPagination(PageNumberPagination):
+class RewardPagination(BluebottlePagination):
     page_size = 100
 
 

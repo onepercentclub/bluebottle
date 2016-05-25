@@ -235,6 +235,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
 
         data = json.loads(response.content)
 
+        import ipdb;ipdb.set_trace()
         self.assertEqual(len(data), 16)
 
         for item in data:

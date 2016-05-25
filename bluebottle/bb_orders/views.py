@@ -3,8 +3,9 @@ from django.http import Http404
 from bluebottle.bb_orders.permissions import IsOrderCreator, OrderIsNew
 from bluebottle.bb_orders.signals import order_requested
 from rest_framework import generics
-from rest_framework.pagination import PageNumberPagination
 
+
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.orders.models import Order
 from bluebottle.orders.serializers import OrderSerializer, ManageOrderSerializer
 from bluebottle.payments.services import PaymentService
@@ -29,7 +30,7 @@ class ManageOrderList(generics.ListCreateAPIView):
     queryset = Order.objects.all()
     serializer_class = ManageOrderSerializer
     filter_fields = ('status',)
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
 
     def get_queryset(self):
         queryset = super(ManageOrderList, self).get_queryset()

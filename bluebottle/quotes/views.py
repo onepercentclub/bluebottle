@@ -1,5 +1,6 @@
 from rest_framework import generics
-from rest_framework.pagination import PageNumberPagination
+
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from .models import Quote
 from .serializers import QuoteSerializer
 from django.utils.timezone import now
@@ -10,7 +11,7 @@ from django.db.models import Q
 class QuoteList(generics.ListAPIView):
     queryset = Quote.objects.all()
     serializer_class = QuoteSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
     filter_fields = ('language',)
 
     def get_queryset(self):

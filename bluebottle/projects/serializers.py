@@ -181,8 +181,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     documents = ProjectDocumentSerializer(
         many=True, read_only=True)
 
-    def validate_account_number(self, attrs, source):
-        value = attrs.get(source)
+    def validate_account_number(self, value):
 
         if value:
             country_code = value[:2]
@@ -197,14 +196,13 @@ class ManageProjectSerializer(serializers.ModelSerializer):
             if country_code in iban_validator.validation_countries.keys() and \
               digits_regex.match(check_digits):
                 iban_validator(value)
-        return attrs
+        return value
 
-    def validate_account_bic(self, attrs, source):
-        value = attrs.get(source)
+    def validate_account_bic(self, value):
         if value:
             bic_validator = BICValidator()
             bic_validator(value)
-        return attrs
+        return value
 
     def validate_status(self, value):
         if not value:
@@ -234,7 +232,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
             # Get the current status or the first if not found
             try:
                 current_status = Project.objects.get(slug=self.initial_data['slug']).status
-            except Project.DoesNotExist:
+            except (Project.DoesNotExist, KeyError):
                 current_status = ProjectPhase.objects.order_by(
                     'sequence').all()[0]
 

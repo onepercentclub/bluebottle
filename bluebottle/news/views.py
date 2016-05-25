@@ -37,6 +37,7 @@ class NewsItemList(generics.ListAPIView):
 class NewsItemDetail(generics.RetrieveAPIView):
     queryset = NewsItem.objects.all()
     serializer_class = NewsItemSerializer
+    lookup_field = 'slug'
 
     def get_queryset(self, *args, **kwargs):
         qs = super(NewsItemDetail, self).get_queryset()

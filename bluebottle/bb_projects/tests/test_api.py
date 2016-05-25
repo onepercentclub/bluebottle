@@ -344,7 +344,6 @@ class TestManageProjectList(ProjectEndpointTestCase):
             'amount_asked': None,
             'amount_donated': 0
         }
-
         response = self.client.post(reverse('project_manage_list'), post_data, token=self.user_token)
         self.assertEqual(response.status_code, 201)
 

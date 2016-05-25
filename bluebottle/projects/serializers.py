@@ -10,7 +10,7 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.bluebottle_drf2.serializers import (
     EuroField, OEmbedField, SorlImageField, ImageSerializer,
-    TaggableSerializerMixin, TagSerializer, PrivateFileSerializer)
+    PrivateFileSerializer)
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
 from bluebottle.geo.serializers import CountrySerializer
@@ -93,7 +93,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     owner = UserProfileSerializer()
     image = ImageSerializer(required=False)
-    tags = TagSerializer()
     task_count = serializers.IntegerField()
     country = ProjectCountrySerializer()
     story = StoryField()
@@ -125,7 +124,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ('id', 'created', 'title', 'pitch', 'organization',
                   'description', 'owner', 'status', 'image',
-                  'country', 'theme', 'categories', 'tags', 'meta_data', 'language',
+                  'country', 'theme', 'categories', 'meta_data', 'language',
                   'latitude', 'longitude', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'allow_overfunding',
                   'task_count', 'amount_asked', 'amount_donated',
@@ -178,7 +177,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     image = ImageSerializer(required=False)
     pitch = serializers.CharField(required=False)
     slug = serializers.CharField(read_only=True)
-    amount_asked = serializers.CharField(required=False)
+    amount_asked = serializers.CharField(required=False, allow_null=True)
     amount_donated = serializers.CharField(read_only=True)
     amount_needed = serializers.CharField(read_only=True)
     budget_lines = ProjectBudgetLineSerializer(many=True,

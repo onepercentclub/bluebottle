@@ -2,8 +2,7 @@ from rest_framework import serializers
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.bluebottle_drf2.serializers import (
-    PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer,
-    TaggableSerializerMixin)
+    PrimaryKeyGenericRelatedField, FileSerializer)
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.utils.serializers import MetaField
@@ -43,7 +42,7 @@ class TaskFileSerializer(serializers.ModelSerializer):
         model = TaskFile
 
 
-class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
+class BaseTaskSerializer(serializers.ModelSerializer):
     members = BaseTaskMemberSerializer(many=True, read_only=True)
     files = TaskFileSerializer(many=True, read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug',
@@ -52,7 +51,6 @@ class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
     author = UserPreviewSerializer()
     status = serializers.ChoiceField(choices=Task.TaskStatuses.choices,
                                      default=Task.TaskStatuses.open)
-    tags = TagSerializer()
     time_needed = serializers.DecimalField(min_value=0.0,
                                            max_digits=3,
                                            decimal_places=2)
@@ -115,7 +113,7 @@ class TaskWallpostSerializer(TextWallpostSerializer):
     """ TextWallpostSerializer with task specific customizations. """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name='task-twallpost-detail')
+        view_name='task-twallpost-detail', lookup_field='pk')
     task = PrimaryKeyGenericRelatedField(Task)
 
     class Meta(TextWallpostSerializer.Meta):

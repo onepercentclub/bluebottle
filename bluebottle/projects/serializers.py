@@ -10,7 +10,7 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.bluebottle_drf2.serializers import (
     EuroField, OEmbedField, SorlImageField, ImageSerializer,
-    TaggableSerializerMixin, TagSerializer, PrivateFileSerializer)
+    PrivateFileSerializer)
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
 from bluebottle.geo.serializers import CountrySerializer
@@ -93,7 +93,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     owner = UserProfileSerializer()
     image = ImageSerializer(required=False)
-    tags = TagSerializer()
     task_count = serializers.IntegerField()
     country = ProjectCountrySerializer()
     story = StoryField()

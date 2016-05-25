@@ -75,7 +75,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
-    url = serializers.HyperlinkedIdentityField(view_name='user-profile-detail')
+    url = serializers.HyperlinkedIdentityField(view_name='user-profile-detail',
+                                               lookup_field='pk')
     picture = ImageSerializer(required=False)
     date_joined = serializers.DateTimeField(read_only=True)
 

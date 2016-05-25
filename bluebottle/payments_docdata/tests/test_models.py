@@ -319,7 +319,7 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
     @patch.object(DocdataPaymentAdapter, '_fetch_status')
     def test_no_payment_method_change(self, mock_fetch_status,
                                       mock_transaction):
-        self.assertEquals(PaymentLogEntry.objects.count(), 2)
+        self.assertEquals(PaymentLogEntry.objects.count(), 1)
 
         # Mock the status check with docdata
         mock_fetch_status.return_value = self.create_status_response(

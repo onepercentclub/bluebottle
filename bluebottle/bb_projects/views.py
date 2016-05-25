@@ -2,11 +2,11 @@ from django.db.models.query_utils import Q
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.pagination import PageNumberPagination
 
 from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectDocument
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import (
     ProjectThemeSerializer, ProjectPhaseSerializer,
     ProjectPhaseLogSerializer, ProjectDocumentSerializer,
@@ -17,7 +17,7 @@ from .models import ProjectTheme, ProjectPhase
 from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
 
-class ProjectPagination(PageNumberPagination):
+class ProjectPagination(BluebottlePagination):
     page_size = 8
 
 
@@ -55,7 +55,7 @@ class ProjectPreviewDetail(generics.RetrieveAPIView):
 class ProjectPhaseList(generics.ListAPIView):
     queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
     filter_fields = ('viewable',)
 
     def get_query(self):
@@ -83,7 +83,7 @@ class ProjectPhaseDetail(generics.RetrieveAPIView):
 class ProjectPhaseLogList(generics.ListAPIView):
     queryset = ProjectPhaseLog.objects.all()
     serializer_class = ProjectPhaseLogSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
 
     def get_queryset(self):
         qs = super(ProjectPhaseLogList, self).get_queryset()
@@ -97,7 +97,7 @@ class ProjectPhaseLogDetail(generics.RetrieveAPIView):
 
 class ProjectList(generics.ListAPIView):
     queryset = Project.objects.all()
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
     serializer_class = ProjectSerializer
 
     def get_queryset(self):
@@ -118,7 +118,7 @@ class ProjectDetail(generics.RetrieveAPIView):
         return qs
 
 
-class ManageProjectPagination(PageNumberPagination):
+class ManageProjectPagination(BluebottlePagination):
     page_size = 100
 
 
@@ -180,7 +180,7 @@ class ProjectThemeDetail(generics.RetrieveAPIView):
     serializer_class = ProjectThemeSerializer
 
 
-class ManageProjectDocumentPagination(PageNumberPagination):
+class ManageProjectDocumentPagination(BluebottlePagination):
     page_size = 20
 
 class ManageProjectDocumentList(generics.ListCreateAPIView):

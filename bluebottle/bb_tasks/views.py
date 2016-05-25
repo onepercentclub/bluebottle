@@ -1,8 +1,8 @@
 from django.db.models.query_utils import Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.pagination import PageNumberPagination
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
@@ -15,7 +15,7 @@ from .permissions import IsMemberOrAuthorOrReadOnly
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 
-class TaskPreviewPagination(PageNumberPagination):
+class TaskPreviewPagination(BluebottlePagination):
     page_size = 8
 
 
@@ -114,7 +114,7 @@ class MyTaskDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MyTasksSerializer
 
 
-class TaskPagination(PageNumberPagination):
+class TaskPagination(BluebottlePagination):
     page_size = 50
 
 

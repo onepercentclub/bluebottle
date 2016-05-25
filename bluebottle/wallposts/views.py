@@ -1,11 +1,11 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions, exceptions
 
 import django_filters
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.bluebottle_drf2.views import (
     ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView)
@@ -44,7 +44,7 @@ class SetAuthorMixin(object):
 class WallpostList(ListAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
 
     def get_queryset(self):
         queryset = super(WallpostList, self).get_queryset()
@@ -73,7 +73,7 @@ class WallpostList(ListAPIView):
         return queryset
 
 
-class WallpostPagination(PageNumberPagination):
+class WallpostPagination(BluebottlePagination):
     page_size = 5
 
 
@@ -113,7 +113,7 @@ class WallpostDetail(RetrieveUpdateDeleteAPIView):
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
 
 
-class MediaWallpostPhotoPagination(PageNumberPagination):
+class MediaWallpostPhotoPagination(BluebottlePagination):
     page_size = 4
 
 
@@ -160,7 +160,7 @@ class ReactionList(SetAuthorMixin, ListCreateAPIView):
     serializer_class = ReactionSerializer
     permission_classes = (TenantConditionalOpenClose,
                           permissions.IsAuthenticatedOrReadOnly)
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
     filter_fields = ('wallpost',)
 
 

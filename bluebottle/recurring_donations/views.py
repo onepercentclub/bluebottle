@@ -1,7 +1,7 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.pagination import PageNumberPagination
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.recurring_donations.models import MonthlyDonor, \
     MonthlyDonorProject
 from bluebottle.recurring_donations.permissions import IsOwner, IsDonor, \
@@ -13,7 +13,7 @@ class MonthlyDonationList(generics.ListCreateAPIView):
     queryset = MonthlyDonor.objects.all()
     permission_classes = (RecurringDonationsEnabled, IsAuthenticated,)
     serializer_class = MonthlyDonationSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
 
     def get_queryset(self):
         qs = super(MonthlyDonationList, self).get_queryset()
@@ -33,7 +33,7 @@ class MonthlyDonationProjectList(generics.CreateAPIView):
     queryset = MonthlyDonorProject.objects.all()
     permission_classes = (RecurringDonationsEnabled, IsDonor,)
     serializer_class = MonthlyDonationProjectSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
 
 
 class MonthlyDonationProjectDetail(generics.RetrieveUpdateDestroyAPIView):

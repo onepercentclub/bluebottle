@@ -163,7 +163,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'tenant_extras.drf_permissions.TenantConditionalOpenClose',
-    )
+    ),
 }
 
 JWT_AUTH = {

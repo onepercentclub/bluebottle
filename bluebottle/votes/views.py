@@ -1,6 +1,6 @@
 from rest_framework import generics, exceptions, filters, permissions
-from rest_framework.pagination import PageNumberPagination
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.projects.models import Project
 from bluebottle.votes.models import Vote
@@ -13,7 +13,7 @@ class VoteList(generics.ListCreateAPIView):
     The list can be filtered adding vote=<id of user> and project=<slug of project>
     """
     queryset = Vote.objects.all()
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
     serializer_class = VoteSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.DjangoFilterBackend,)

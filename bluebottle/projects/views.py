@@ -1,8 +1,8 @@
 from bluebottle.projects.models import ProjectBudgetLine
 
 from rest_framework import generics
-from rest_framework.pagination import PageNumberPagination
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import ProjectBudgetLineSerializer, \
     ProjectDocumentSerializer
 from bluebottle.projects.permissions import IsProjectOwner
@@ -11,7 +11,7 @@ from bluebottle.utils.utils import get_client_ip
 from .models import ProjectDocument
 
 
-class BudgetLinePagination(PageNumberPagination):
+class BudgetLinePagination(BluebottlePagination):
     page_size = 50
 
 
@@ -28,7 +28,7 @@ class ManageProjectBudgetLineDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (IsProjectOwner,)
 
 
-class DocumentPagination(PageNumberPagination):
+class DocumentPagination(BluebottlePagination):
     page_size = 20
 
 

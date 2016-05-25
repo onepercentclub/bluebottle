@@ -2,8 +2,8 @@ from django.http import Http404
 from rest_framework.generics import (ListAPIView, RetrieveAPIView,
                                      ListCreateAPIView)
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.pagination import PageNumberPagination
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.utils.permissions import IsUser
 from bluebottle.terms.models import Terms, TermsAgreement
 from bluebottle.terms.serializers import (TermsSerializer,
@@ -13,7 +13,7 @@ from bluebottle.terms.serializers import (TermsSerializer,
 class TermsListView(ListAPIView):
     queryset = Terms.objects.all()
     serializer_class = TermsSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = BluebottlePagination
 
 
 class TermsDetailView(RetrieveAPIView):

@@ -1,11 +1,11 @@
 from rest_framework import generics
-from rest_framework.pagination import PageNumberPagination
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from .models import Redirect
 from .serializers import RedirectSerializer
 
 
-class RedirectPagination(PageNumberPagination):
+class RedirectPagination(BluebottlePagination):
     page_size = 100
 
 

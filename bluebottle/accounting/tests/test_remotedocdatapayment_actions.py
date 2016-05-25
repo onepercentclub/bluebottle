@@ -30,7 +30,7 @@ class RemoteDocdataPaymentActionTests(WebTestMixin, BluebottleTestCase):
 
     def setUp(self):
         super(RemoteDocdataPaymentActionTests, self).setUp()
-        self.app.extra_environ['HTTP_HOST'] = self.tenant.domain_url
+        self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
         self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
 
     def _initialize_payments(self):
@@ -266,6 +266,7 @@ class RemoteDocdataPaymentActionTests(WebTestMixin, BluebottleTestCase):
         # for payment2|3, chargedback|refund and has payouts
         for rdp in self.rdp_list[1:2]:
             self.assertTrue(rdp.has_problematic_payouts)
+            import ipdb;ipdb.set_trace()
             url = reverse('admin:accounting_remotedocdatapayment_take_cut', args=[rdp.pk])
             confirmation = self.app.get(url, user=self.superuser)
             self.assertEqual(confirmation.status_code, 200)

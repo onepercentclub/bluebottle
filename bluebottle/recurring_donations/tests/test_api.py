@@ -29,15 +29,14 @@ class MonthlyDonationApiTest(BluebottleTestCase):
             self.another_user.get_jwt_token())
 
         self.monthly_donation_url = reverse('monthly-donation-list')
-        self.monthly_donation_project_url = reverse(
-            'monthly-donation-project-list')
+        self.monthly_donation_project_url = reverse('monthly-donation-project-list')
 
         self.monthly_profile = {'iban': 'NL13TEST0123456789',
                                 'bic': 'TESTNL2A',
                                 'name': 'Nijntje het Konijntje',
                                 'city': 'Amsterdam',
                                 'country': self.country.id,
-                                'amount': 50}
+                                'amount': u'50.00'}
 
     def test_create_monthly_donation(self):
         """
@@ -61,7 +60,6 @@ class MonthlyDonationApiTest(BluebottleTestCase):
         self.assertEqual(response.data['amount'],
                          self.monthly_profile['amount'])
         self.assertEqual(response.data['active'], True)
-        import ipdb;ipdb.set_trace()
         some_monthly_donation_id = response.data['id']
 
         # Reload it and check that all is still well.
@@ -79,8 +77,8 @@ class MonthlyDonationApiTest(BluebottleTestCase):
             'project': self.some_project.slug
         }
         response = self.client.post(self.monthly_donation_project_url,
-                                    monthly_project, token=self.some_user_token)
-        import ipdb;ipdb.set_trace()
+                                    monthly_project,
+                                    token=self.some_user_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
 

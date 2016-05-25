@@ -51,7 +51,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
     status = serializers.ChoiceField(choices=Task.TaskStatuses.choices,
                                      default=Task.TaskStatuses.open)
     time_needed = serializers.DecimalField(min_value=0.0,
-                                           max_digits=3,
+                                           max_digits=5,
                                            decimal_places=2)
 
     def validate(self, data):

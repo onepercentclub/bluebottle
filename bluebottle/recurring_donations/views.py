@@ -9,6 +9,7 @@ from bluebottle.recurring_donations.permissions import IsOwner, IsDonor, \
 from bluebottle.recurring_donations.serializers import \
     MonthlyDonationSerializer, MonthlyDonationProjectSerializer
 
+
 class MonthlyDonationList(generics.ListCreateAPIView):
     queryset = MonthlyDonor.objects.all()
     permission_classes = (RecurringDonationsEnabled, IsAuthenticated,)

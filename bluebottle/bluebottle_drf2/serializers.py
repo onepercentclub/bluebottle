@@ -367,5 +367,5 @@ class PrivateFileSerializer(FileSerializer):
 
 
 class ObjectFieldSerializer(serializers.CharField):
-    def from_native(self, value):
-        return json.dumps(value)
+    def to_internal_value(self, data):
+        return json.dumps(data)

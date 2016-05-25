@@ -20,7 +20,6 @@ class PageContentsField(serializers.Field):
 class PageSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     body = PageContentsField(source='body')
-    author = UserPreviewSerializer()
 
     meta_data = MetaField(description='get_meta_description', keywords=None)
 

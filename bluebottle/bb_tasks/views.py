@@ -33,6 +33,7 @@ class TaskPreviewList(generics.ListAPIView):
             qs = qs.filter(project__slug=project_slug)
 
         country = self.request.query_params.get('country', None)
+        country = self.request.query_params.get('country', None)
         if country:
             qs = qs.filter(project__country=country)
 
@@ -98,7 +99,7 @@ class MyTaskList(generics.ListCreateAPIView):
         return Task.objects.none()
 
     def perform_create(self, serializer):
-        self.get_serializer.save(author=self.request.user)
+        serializer.save(author=self.request.user)
 
 
 class TaskDetail(generics.RetrieveUpdateAPIView):
@@ -158,7 +159,7 @@ class TaskFileList(generics.ListCreateAPIView):
                           IsAuthenticatedOrReadOnly,)
 
     def perform_create(self, serializer):
-        self.get_serializer.save(author=self.request.user)
+        serializer.save(author=self.request.user)
 
 
 class TaskFileDetail(generics.RetrieveUpdateAPIView):

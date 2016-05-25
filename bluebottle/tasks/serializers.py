@@ -113,7 +113,7 @@ class TaskWallpostSerializer(TextWallpostSerializer):
     """ TextWallpostSerializer with task specific customizations. """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name='task-twallpost-detail')
+        view_name='task-twallpost-detail', lookup_field='pk')
     task = PrimaryKeyGenericRelatedField(Task)
 
     class Meta(TextWallpostSerializer.Meta):

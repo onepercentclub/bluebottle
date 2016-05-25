@@ -46,6 +46,7 @@ class ProjectPreviewList(generics.ListAPIView):
 class ProjectPreviewDetail(generics.RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectPreviewSerializer
+    lookup_field = 'slug'
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
         return qs
@@ -110,6 +111,7 @@ class ProjectList(generics.ListAPIView):
 class ProjectDetail(generics.RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
+    lookup_field = 'slug'
 
     def get_queryset(self):
         qs = super(ProjectDetail, self).get_queryset()
@@ -147,6 +149,7 @@ class ManageProjectDetail(generics.RetrieveUpdateAPIView):
     queryset = Project.objects.all()
     permission_classes = (IsProjectOwner, IsEditableOrReadOnly)
     serializer_class = ManageProjectSerializer
+    lookup_field = 'slug'
 
     def get_object(self):
         # Call the superclass

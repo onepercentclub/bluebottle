@@ -56,7 +56,7 @@ class TestProjectPhaseList(ProjectEndpointTestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        data = json.loads(response.content)
+        data = response.data['results']
 
         available_phases = ProjectPhase.objects.all()
 
@@ -87,7 +87,7 @@ class TestProjectList(ProjectEndpointTestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        data = json.loads(response.content)
+        data = response.data['results']
 
         # Check that it is returning our 1 viewable factory-model project.
         self.assertEqual(len(data), 1)
@@ -115,7 +115,8 @@ class TestProjectList(ProjectEndpointTestCase):
         # So, now our ``self.project_3`` should be non-viewable...
         response = self.client.get(reverse('project_list'))
 
-        data = json.loads(response.content)
+        data = response.data['results']
+
         # We created 3 projects, but none are viewable with the updated to phase_3...
         self.assertEqual(len(data), 0)
 

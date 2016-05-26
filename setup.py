@@ -16,7 +16,7 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-fluent-contents.git@8439c7ffc1ba8877247aa7d012928c9bb170dc79#egg=fluent_contents-1.0c3',
     'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.2.1#egg=django-bb-salesforce-1.2.1',
     'git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.0#egg=django-tenant-extras-2.0.0',
-    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.16#egg=django-token-auth-0.2.16'
+    'git+https://github.com/onepercentclub/django-token-auth.git@0.2.18#egg=django-token-auth-0.2.18'
 ]
 
 install_requires = [
@@ -80,7 +80,7 @@ install_requires = [
     'django-fluent-contents==1.1.4',
     'django-bb-salesforce==1.2.1',
     'django-tenant-extras==2.0.0',
-    'django-token-auth==0.2.16',
+    'django-token-auth==0.2.18',
 ]
 
 tests_requires = [

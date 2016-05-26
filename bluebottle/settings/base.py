@@ -153,7 +153,6 @@ MIDDLEWARE_CLASSES = (
 )
 
 REST_FRAMEWORK = {
-    # Don't do basic authentication.
     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
     'FILTER_BACKEND': 'rest_framework.filters.DjangoFilterBackend',
     'DEFAULT_AUTHENTICATION_CLASSES': (

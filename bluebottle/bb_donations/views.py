@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class DonationPagination(BluebottlePagination):
-    page_size = 10
+    page_size = 20
 
 
 class ValidDonationsMixin(object):
@@ -33,6 +33,7 @@ class ValidDonationsMixin(object):
 
 class DonationList(ValidDonationsMixin, generics.ListAPIView):
     queryset = Donation.objects.all()
+    pagination_class = DonationPagination
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -51,13 +52,12 @@ class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 
 class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
     queryset = Donation.objects.all()
+    pagination_class = DonationPagination
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
             return PreviewDonationSerializer
         return PreviewDonationWithoutAmountSerializer
-
-    pagination_class = DonationPagination
 
     def get_queryset(self):
         queryset = super(ProjectDonationList, self).get_queryset()
@@ -111,6 +111,7 @@ class ProjectDonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
     queryset = Donation.objects.all()
     serializer_class = DefaultDonationSerializer
+    pagination_class = DonationPagination
 
     def get_queryset(self):
         queryset = super(MyProjectDonationList, self).get_queryset()
@@ -132,6 +133,7 @@ class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
     queryset = Donation.objects.all()
     serializer_class = DefaultDonationSerializer
+    page_size = 20
 
     def get_queryset(self):
         queryset = super(MyFundraiserDonationList, self).get_queryset()
@@ -154,7 +156,7 @@ class ManageDonationList(generics.ListCreateAPIView):
     queryset = Donation.objects.all()
     serializer_class = ManageDonationSerializer
     permission_classes = (IsOrderCreator, OrderIsNew)
-    pagination_class = BluebottlePagination
+    pagination_class = DonationPagination
 
     def get_queryset(self):
         queryset = super(ManageDonationList, self).get_queryset()

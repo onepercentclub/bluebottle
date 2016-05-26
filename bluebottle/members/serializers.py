@@ -58,7 +58,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
     # This is a hack to work around an issue with Ember-Data keeping the id as
     # 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
-    full_name = serializers.Field(source='get_full_name')
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
     country = CountrySerializer(source='address.country')
     location = LocationSerializer()
 
@@ -69,6 +69,8 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
             'country')
+
+
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

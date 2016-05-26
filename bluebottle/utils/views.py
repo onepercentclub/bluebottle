@@ -184,14 +184,3 @@ class DocumentDownloadView(View):
             return serve_file(request, file.file, save_as=file_name)
         return HttpResponseForbidden()
 
-# TODO: this was creating problems with the tests
-# TESTS
-INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
-
-if INCLUDE_TEST_MODELS:
-    from .models import MetaDataModel
-    from .serializers import MetaDataSerializer
-
-    class MetaDataDetail(generics.RetrieveAPIView):
-        queryset = MetaDataModel.objects.all()
-        serializer_class = MetaDataSerializer

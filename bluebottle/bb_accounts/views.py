@@ -182,6 +182,7 @@ class PasswordSet(views.APIView):
             password_set_form = SetPasswordForm(user)
             serializer = PasswordSetSerializer(
                 password_set_form=password_set_form, data=request.data)
+            import ipdb;ipdb.set_trace()
             if serializer.is_valid():
                 password_set_form.save()  # Sets the password
 

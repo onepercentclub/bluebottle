@@ -293,7 +293,8 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
                          response.data)
-        self.assertEqual(response.data['new_password2'][0],
+
+        self.assertEqual(json.loads(response.content)['non_field_errors'][0],
                          "The two password fields didn't match.")
 
         # Test: check that updating the password works when the passwords match.

@@ -77,7 +77,7 @@ class WallpostPagination(BluebottlePagination):
     page_size = 5
 
 
-class TextWallpostList(ListCreateAPIView):
+class TextWallpostList(SetAuthorMixin, ListCreateAPIView):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter

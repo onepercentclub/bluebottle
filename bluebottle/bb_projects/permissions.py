@@ -50,7 +50,8 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
             try:
                 project = Project.objects.get(slug=project_slug)
                 return project
-            except Project.DoesNotExist:
+            except Project.\
+                    DoesNotExist:
                 return None
         else:
             return None

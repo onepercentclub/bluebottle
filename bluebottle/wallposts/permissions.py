@@ -23,8 +23,12 @@ class CanEmailFollowers(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
-        owner = self._get_owner_from_request(request)
-        return request.user.id == owner.id
+        if request.data.get('email_followers', False) or \
+                request.data.get('share_to_facebook', False) or \
+                request.data.get('share_to_twitter', False):
+            owner = self._get_owner_from_request(request)
+            return request.user.id == owner.id
+        return True
 
     def has_object_permission(self, request, view, obj):
         # If followers will be emailed then check the request user

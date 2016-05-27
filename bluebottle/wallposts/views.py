@@ -83,8 +83,7 @@ class TextWallpostList(SetAuthorMixin, ListCreateAPIView):
     filter_class = WallpostFilter
     pagination_class = WallpostPagination
     permission_classes = (TenantConditionalOpenClose,
-                          IsAuthenticatedOrReadOnly,
-                          CanEmailFollowers)
+                          IsAuthenticatedOrReadOnly)
 
     def get_queryset(self, queryset=None):
         queryset = super(TextWallpostList, self).get_queryset()
@@ -113,6 +112,9 @@ class MediaWallpostList(TextWallpostList):
     serializer_class = MediaWallpostSerializer
     filter_class = WallpostFilter
     pagination_class = WallpostPagination
+    permission_classes = (TenantConditionalOpenClose,
+                          IsAuthenticatedOrReadOnly,
+                          CanEmailFollowers)
 
 
 class MediaWallpostDetail(TextWallpostDetail):

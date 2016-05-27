@@ -580,20 +580,24 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                      'parent_type': 'project',
                                      'parent_id': self.some_project.slug},
                                     token=self.owner_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_201_CREATED, response.data)
-        self.assertEqual(
-            response.data['text'], u"<p>{0}</p>".format(wallpost_text))
+        self.assertEqual(response.status_code,
+                         status.HTTP_201_CREATED,
+                         response.data)
+        self.assertEqual(response.data['text'],
+                         u"<p>{0}</p>".format(wallpost_text))
+        self.assertEqual(response.data['type'], u"media")
 
         # Retrieve the created Project Media Wallpost.
-        project_wallpost_detail_url = "{0}{1}".format(
-            self.wallposts_url, str(response.data['id']))
-        response = self.client.get(
-            project_wallpost_detail_url, token=self.owner_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(
-            response.data['text'], u"<p>{0}</p>".format(wallpost_text))
+        project_wallpost_detail_url = "{0}{1}".format(self.media_wallposts_url,
+                                                      str(response.data['id']))
+        response = self.client.get(project_wallpost_detail_url,
+                                   token=self.owner_token)
+
+        self.assertEqual(response.status_code,
+                         status.HTTP_200_OK,
+                         response.data)
+        self.assertEqual(response.data['text'],
+                         u"<p>{0}</p>".format(wallpost_text))
 
         # Update the created Project Media Wallpost by author.
         new_wallpost_text = u'This is my super-duper project!'
@@ -602,10 +606,11 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                     'parent_type': 'project',
                                     'parent_id': self.some_project.slug},
                                    token=self.owner_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(
-            response.data['text'], u'<p>{0}</p>'.format(new_wallpost_text))
+        self.assertEqual(response.status_code,
+                         status.HTTP_200_OK,
+                         response.data)
+        self.assertEqual(response.data['text'],
+                         u'<p>{0}</p>'.format(new_wallpost_text))
 
         # Delete Project Media Wallpost by author
         response = self.client.delete(
@@ -637,35 +642,12 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 
         response = self.client.get(
             project_wallpost_detail_url, token=self.some_user_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(
-            response.data['text'], u"<p>{0}</p>".format(wallpost_text))
-
-        # At this moment every one can at media wall-posts.
-        # TODO: Decide if/how we want to limit this.
-
-        # Write Project Media Wallpost by someone else then Project Owner
-        # should fail
-        # new_wallpost_title = 'This is not my project...'
-        # response = self.client.post(self.media_wallposts_url,
-        # {'title': new_wallpost_title, 'parent_type': 'project',
-        # 'parent_id': self.some_project.slug})
-        # self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN,
-        # response.data)
-
-        # Write Project Media Wallpost by Project Owner to another Project
-        # should fail
-        # self.client.logout()
-        # self.client.login(username=self.some_project.owner.email,
-        # password='testing')
-        # new_wallpost_title = 'This is not my project, although I do have a
-        # project'
-        # response = self.client.post(self.media_wallposts_url,
-        # {'title': new_wallpost_title, 'parent_type': 'project',
-        # 'parent_id': self.another_project.slug})
-        # self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN,
-        # response.data)
+        self.assertEqual(response.status_code,
+                         status.HTTP_200_OK,
+                         response.data)
+        self.assertEqual(response.data['type'], u'media')
+        self.assertEqual(response.data['text'],
+                         u"<p>{0}</p>".format(wallpost_text))
 
         # Update Project Media Wallpost by someone else than Project Owner
         # should fail
@@ -675,8 +657,9 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                      'parent_type': 'project',
                                      'parent_id': self.some_project.slug},
                                     token=self.owner_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(response.status_code,
+                         status.HTTP_201_CREATED,
+                         response.data)
 
         response = self.client.put(project_wallpost_detail_url,
                                    {'text': new_wallpost_text, 'parent_type':
@@ -904,8 +887,8 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 
         # Update TextWallpost by author is allowed
         text2a = u'I like this project!'
-        wallpost_detail_url = "{0}{1}".format(
-            self.wallposts_url, str(response.data['id']))
+        wallpost_detail_url = "{0}{1}".format(self.text_wallposts_url,
+                                              str(response.data['id']))
         response = self.client.put(wallpost_detail_url,
                                    {'text': text2a, 'parent_type': 'project',
                                     'parent_id': self.some_project.slug},

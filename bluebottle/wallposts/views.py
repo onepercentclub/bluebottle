@@ -46,7 +46,7 @@ class WallpostList(ListAPIView):
     serializer_class = WallpostSerializer
     pagination_class = BluebottlePagination
 
-    def get_queryset(self):
+    def get_queryset(self, queryset=queryset):
         queryset = super(WallpostList, self).get_queryset()
 
         # Some custom filtering projects slugs.
@@ -100,6 +100,12 @@ class TextWallpostList(SetAuthorMixin, ListCreateAPIView):
         return queryset
 
 
+class TextWallpostDetail(SetAuthorMixin, RetrieveUpdateDeleteAPIView):
+    queryset = TextWallpost.objects.all()
+    serializer_class = TextWallpostSerializer
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly)
+
+
 class MediaWallpostList(TextWallpostList):
     queryset = MediaWallpost.objects.all()
     serializer_class = MediaWallpostSerializer
@@ -107,11 +113,16 @@ class MediaWallpostList(TextWallpostList):
     pagination_class = WallpostPagination
 
 
+class MediaWallpostDetail(TextWallpostDetail):
+    queryset = MediaWallpost.objects.all()
+    serializer_class = MediaWallpostSerializer
+
+
 class WallpostDetail(RetrieveUpdateDeleteAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
-
+    
 
 class MediaWallpostPhotoPagination(BluebottlePagination):
     page_size = 4

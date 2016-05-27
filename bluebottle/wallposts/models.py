@@ -42,6 +42,10 @@ class Wallpost(PolymorphicModel):
     and have the polymorphic behaviour of sorting on the common fields.
     """
 
+    @property
+    def wallpost_type(self):
+        return 'unknown'
+
     # The user who wrote the wall post. This can be empty to support wallposts
     # without users (e.g. anonymous
     # TextWallposts, system Wallposts for donations etc.)
@@ -89,6 +93,11 @@ class Wallpost(PolymorphicModel):
 
 class MediaWallpost(Wallpost):
     # The content of the wall post.
+
+    @property
+    def wallpost_type(self):
+        return 'media'
+
     title = models.CharField(max_length=60)
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True,
                             default='')
@@ -128,6 +137,10 @@ class MediaWallpostPhoto(models.Model):
 
 class TextWallpost(Wallpost):
     # The content of the wall post.
+    @property
+    def wallpost_type(self):
+        return 'text'
+
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH)
 
     def __unicode__(self):
@@ -136,6 +149,10 @@ class TextWallpost(Wallpost):
 
 class SystemWallpost(Wallpost):
     # The content of the wall post.
+    @property
+    def wallpost_type(self):
+        return 'system'
+
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True)
 
     # Generic foreign key so we can connect any object to it.

@@ -20,6 +20,7 @@ class AdminPermissionsTest(BluebottleTestCase):
 
         # Add 'Staff' group for user
         self.user.groups.add(Group.objects.get(name='Staff'))
+        self.user.save()
 
         # Login user
         self.assertTrue(

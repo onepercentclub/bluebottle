@@ -245,7 +245,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['non_field_errors'][0]['type'], 'email')
         self.assertEqual(response.data['non_field_errors'][0]['email'], 'nijntje27@hetkonijntje.nl')
         self.assertEqual(response.data['non_field_errors'][0]['id'], user_1.pk)
-        self.assertEqual(response.data['email'][0], 'Sign up with this Email address already exists.')
+        self.assertEqual(response.data['email'][0], 'Member with this email address already exists.')
 
     def test_generate_username(self):
         new_user_email = 'nijntje74@hetkonijntje.nl'
@@ -293,7 +293,8 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
                          response.data)
-        self.assertEqual(response.data['new_password2'][0],
+
+        self.assertEqual(response.data['non_field_errors'][0],
                          "The two password fields didn't match.")
 
         # Test: check that updating the password works when the passwords match.

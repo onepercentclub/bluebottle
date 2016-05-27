@@ -24,8 +24,9 @@ class CanEmailFollowers(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         if request.data.get('email_followers', False) or \
-                request.data.get('share_to_facebook', False) or \
-                request.data.get('share_to_twitter', False):
+                request.data.get('share_with_linkedin', False) or \
+                request.data.get('share_with_facebook', False) or \
+                request.data.get('share_with_twitter', False):
             owner = self._get_owner_from_request(request)
             return request.user.id == owner.id
         return True
@@ -34,7 +35,8 @@ class CanEmailFollowers(permissions.BasePermission):
         # If followers will be emailed then check the request user
         # has permissions, eg they are the owner / author of the
         # parent object (project, task, fundraiser).
-        if obj.email_followers or obj.share_to_facebook or obj.share_to_twitter:
+        if obj.email_followers or obj.share_with_facebook or \
+                obj.share_with_twitter or obj.share_with_linkedin:
             parent_obj = obj.content_object
             if isinstance(parent_obj, Project) or isinstance(parent_obj, Fundraiser):
                 return parent_obj.owner == request.user

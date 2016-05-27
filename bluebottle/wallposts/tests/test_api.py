@@ -82,7 +82,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         Tests that only the fundraiser creator can share a wallpost.
         """
         wallpost_data = {'parent_id': str(self.fundraiser.id),
-                         'parent_type': 'task',
+                         'parent_type': 'fundraiser',
                          'text': 'I can share stuff!',
                          'share_with_facebook': True}
 

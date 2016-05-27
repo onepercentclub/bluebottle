@@ -74,12 +74,7 @@ class Command(BaseCommand):
     )
 
     def handle(self, *args, **options):
-        # Setup the log level for root logger.
-        loglevel = self.verbosity_loglevel.get(options['verbosity'])
-
         logger = logging.getLogger('console')
-
-        logger.setLevel(loglevel)
 
         send_email = not options['no_email']
 

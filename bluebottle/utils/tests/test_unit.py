@@ -178,10 +178,6 @@ class MetaTestCase(BluebottleTestCase):
             sort_order=4
         )
 
-        # Add tags...
-        tags = ['Tag 1', 'Tag 2']
-        self.object.tags.add(*tags)
-
         # set up the client
         self.client = Client()
 

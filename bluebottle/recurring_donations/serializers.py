@@ -4,9 +4,12 @@ from rest_framework import serializers
 from bluebottle.donations.models import Donation
 from bluebottle.projects.models import Project
 
+
 class MonthlyDonationProjectSerializer(serializers.ModelSerializer):
-    project = serializers.SlugRelatedField(many=False, slug_field='slug', queryset=Project.objects)
-    donation = serializers.PrimaryKeyRelatedField(source='donor', queryset=Donation.objects)
+    project = serializers.SlugRelatedField(many=False, slug_field='slug',
+                                           queryset=Project.objects)
+    donation = serializers.PrimaryKeyRelatedField(source='donor',
+                                                  queryset=MonthlyDonor.objects)
 
     class Meta():
         model = MonthlyDonorProject

@@ -16,11 +16,11 @@ class CountrySerializer(serializers.ModelSerializer):
 
 class LocationSerializer(serializers.ModelSerializer):
     latitude = serializers.DecimalField(source='position.latitude',
-                                        max_digits=3,
-                                        decimal_places=10)
+                                        max_digits=10,
+                                        decimal_places=3)
     longitude = serializers.DecimalField(source='position.longitude',
-                                        max_digits=3,
-                                        decimal_places=10)
+                                        max_digits=10,
+                                        decimal_places=3)
     image = ImageSerializer(required=False)
 
     class Meta:

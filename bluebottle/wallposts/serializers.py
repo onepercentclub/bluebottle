@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 from bluebottle.bluebottle_drf2.serializers import (
-    OEmbedField, PolymorphicSerializer, ContentTextField, PhotoSerializer)
+    OEmbedField, ContentTextField, PhotoSerializer)
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.projects.models import Project

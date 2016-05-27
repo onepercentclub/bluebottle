@@ -135,7 +135,6 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         response = self.client.get(self.projects_url + str(project['id']))
 
         owner = response.data['owner']
-        self.assertEquals(owner['date_joined'].__class__.__name__, 'datetime')
         self.assertEquals(owner['project_count'], 1)
         self.assertEquals(owner['task_count'], 0)
         self.assertEquals(owner['donation_count'], 0)
@@ -335,9 +334,11 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.manage_projects_url,
                                     {'title': 'This is my smart idea'},
                                     token=self.another_user_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-        self.assertTrue(response.data['title'][0].endswith('Title already exists.'))
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST,
+                         response.data)
+        self.assertEqual(response.data['title'][0],
+                         u'Project with this title already exists.')
 
         # Anonymous user should not be able to find this project through
         # management API.
@@ -462,7 +463,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.status_code,
                           status.HTTP_400_BAD_REQUEST)
         self.assertEquals(json.loads(response.content)['account_bic'][0],
-                          'Ensure this value has at most 11 characters (it has 14).')
+                          u'BIC codes have either 8 or 11 characters.')
 
     def test_skip_iban_validation(self):
         """ The iban validation should be skipped for other account formats """

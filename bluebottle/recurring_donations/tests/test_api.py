@@ -61,7 +61,6 @@ class MonthlyDonationApiTest(BluebottleTestCase):
         self.assertEqual(response.data['amount'],
                          self.monthly_profile['amount'])
         self.assertEqual(response.data['active'], True)
-        import ipdb;ipdb.set_trace()
         some_monthly_donation_id = response.data['id']
 
         # Reload it and check that all is still well.
@@ -80,7 +79,6 @@ class MonthlyDonationApiTest(BluebottleTestCase):
         }
         response = self.client.post(self.monthly_donation_project_url,
                                     monthly_project, token=self.some_user_token)
-        import ipdb;ipdb.set_trace()
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
 

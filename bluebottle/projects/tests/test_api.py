@@ -135,7 +135,6 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         response = self.client.get(self.projects_url + str(project['id']))
 
         owner = response.data['owner']
-        self.assertEquals(owner['date_joined'].__class__.__name__, 'datetime')
         self.assertEquals(owner['project_count'], 1)
         self.assertEquals(owner['task_count'], 0)
         self.assertEquals(owner['donation_count'], 0)
@@ -335,9 +334,11 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.manage_projects_url,
                                     {'title': 'This is my smart idea'},
                                     token=self.another_user_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-        self.assertTrue(response.data['title'][0].endswith('Title already exists.'))
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST,
+                         response.data)
+        self.assertEqual(response.data['title'][0],
+                         u'Project with this title already exists.')
 
         # Anonymous user should not be able to find this project through
         # management API.
@@ -462,7 +463,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.status_code,
                           status.HTTP_400_BAD_REQUEST)
         self.assertEquals(json.loads(response.content)['account_bic'][0],
-                          'Ensure this value has at most 11 characters (it has 14).')
+                          u'BIC codes have either 8 or 11 characters.')
 
     def test_skip_iban_validation(self):
         """ The iban validation should be skipped for other account formats """
@@ -573,7 +574,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         # Create a Project Media Wallpost by Project Owner
         # Note: This test will fail when we require at least a video and/or a
         # text but that's what we want.
-        wallpost_text = 'This is my super project!'
+        wallpost_text = u'This is my super project!'
         response = self.client.post(self.media_wallposts_url,
                                     {'text': wallpost_text,
                                      'parent_type': 'project',
@@ -582,7 +583,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED, response.data)
         self.assertEqual(
-            response.data['text'], "<p>{0}</p>".format(wallpost_text))
+            response.data['text'], u"<p>{0}</p>".format(wallpost_text))
 
         # Retrieve the created Project Media Wallpost.
         project_wallpost_detail_url = "{0}{1}".format(
@@ -592,10 +593,10 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(
-            response.data['text'], "<p>{0}</p>".format(wallpost_text))
+            response.data['text'], u"<p>{0}</p>".format(wallpost_text))
 
         # Update the created Project Media Wallpost by author.
-        new_wallpost_text = 'This is my super-duper project!'
+        new_wallpost_text = u'This is my super-duper project!'
         response = self.client.put(project_wallpost_detail_url,
                                    {'text': new_wallpost_text,
                                     'parent_type': 'project',
@@ -604,7 +605,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(
-            response.data['text'], "<p>{0}</p>".format(new_wallpost_text))
+            response.data['text'], u'<p>{0}</p>'.format(new_wallpost_text))
 
         # Delete Project Media Wallpost by author
         response = self.client.delete(
@@ -639,7 +640,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(
             response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(
-            response.data['text'], "<p>{0}</p>".format(wallpost_text))
+            response.data['text'], u"<p>{0}</p>".format(wallpost_text))
 
         # At this moment every one can at media wall-posts.
         # TODO: Decide if/how we want to limit this.
@@ -888,7 +889,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
             response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIsNotNone(response.data['text'])
 
-        text2 = "I liek this project!"
+        text2 = u'I liek this project!'
 
         # Create TextWallpost as another logged in member should be allowed
         response = self.client.post(self.text_wallposts_url,
@@ -902,27 +903,29 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         self.assertTrue(text2 in response.data['text'])
 
         # Update TextWallpost by author is allowed
-        text2a = 'I like this project!'
+        text2a = u'I like this project!'
         wallpost_detail_url = "{0}{1}".format(
             self.wallposts_url, str(response.data['id']))
         response = self.client.put(wallpost_detail_url,
                                    {'text': text2a, 'parent_type': 'project',
                                     'parent_id': self.some_project.slug},
                                    token=self.another_user_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_200_OK, response.data)
-        self.assertTrue(text2a in response.data['text'])
+        self.assertEqual(response.status_code,
+                         status.HTTP_200_OK,
+                         response.data)
+        self.assertEqual(u'<p>{0}</p>'.format(text2a),  response.data['text'])
 
         # Update TextWallpost by another user (not the author) is not allowed
-        text2b = 'Mess this up!'
+        text2b = u'Mess this up!'
         wallpost_detail_url = "{0}{1}".format(
             self.wallposts_url, str(response.data['id']))
         response = self.client.put(wallpost_detail_url,
                                    {'text': text2b,
                                     'project': self.some_project.slug},
                                    token=self.some_user_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+        self.assertEqual(response.status_code,
+                         status.HTTP_403_FORBIDDEN,
+                         response.data)
 
     def test_projectwallpost_list(self):
         """
@@ -974,10 +977,11 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
             project_wallpost_detail_url, token=self.owner_token)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
-        response = self.client.get(
-            project_wallpost_detail_url, token=self.owner_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_404_NOT_FOUND, response.data)
+        response = self.client.get(project_wallpost_detail_url,
+                                   token=self.owner_token)
+        self.assertEqual(response.status_code,
+                         status.HTTP_404_NOT_FOUND,
+                         response.data)
 
         # Wallpost List count should have decreased after deleting one
         response = self.client.get(self.wallposts_url,

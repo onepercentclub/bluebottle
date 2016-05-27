@@ -136,50 +136,6 @@ class OEmbedField(serializers.Field):
             return html
 
 
-class PolymorphicSerializer(serializers.Serializer):
-    def __init__(self, instance=None, data=None, files=None, context=None,
-                 partial=False, **kwargs):
-        super(PolymorphicSerializer, self).__init__(instance, data, files,
-                                                    context, partial, **kwargs)
-        self._child_models = {}
-        for Model, Serializer in self.opts.child_models:
-            self._child_models[Model] = Serializer()
-
-    def field_to_native(self, obj, field_name):
-        """
-        Override so that we can use the child_model serializers.
-        """
-        obj = getattr(obj, self.source or field_name)
-
-        return [self._child_models[item.__class__].to_native(item) for item in
-                obj.all()]
-
-    def to_native(self, obj):
-        """
-        Override so that we can iterate through the child_model field items.
-        """
-        ret = self._dict_class()
-        ret.fields = {}
-
-        for field_name, field \
-                in self._child_models[obj.__class__].fields.items():
-            field.initialize(parent=self, field_name=field_name)
-            key = self.get_field_key(field_name)
-            value = field.field_to_native(obj, field_name)
-            ret[key] = value
-            ret.fields[key] = field
-        return ret
-
-    def from_native(self, data, files):
-        """
-        Use from_native method from child serializer.
-        Set object on that serializer before doing so.
-        """
-        obj = getattr(self, 'object', None)
-        setattr(self._child_models[obj.__class__], 'object', obj)
-        return self._child_models[obj.__class__].from_native(data, files)
-
-
 class PrimaryKeyGenericRelatedField(serializers.RelatedField):
     """ A field serializer for the object_id field in a GenericForeignKey. """
 
@@ -188,10 +144,7 @@ class PrimaryKeyGenericRelatedField(serializers.RelatedField):
     def __init__(self, to_model, *args, **kwargs):
         self.to_model = to_model
         queryset = self.to_model.objects.order_by('id').all()
-        super(PrimaryKeyGenericRelatedField, self).__init__(*args,
-                                                            queryset=queryset,
-                                                            source='object_id',
-                                                            **kwargs)
+        super(PrimaryKeyGenericRelatedField, self).__init__(queryset=queryset)
 
     def label_from_instance(self, obj):
         return "{0} - {1}".format(smart_str(self.to_model.__unicode__(obj)),

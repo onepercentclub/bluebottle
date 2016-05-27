@@ -1,6 +1,5 @@
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import SetPasswordForm
 from django.utils import translation
 from django import forms
 from django.contrib.auth.models import AnonymousUser
@@ -160,8 +159,6 @@ class PasswordSet(views.APIView):
     Allows a new password to be set in the resource that is a valid password
     reset hash.
     """
-    serializer_class = PasswordSetSerializer
-
     def _get_user(self, uidb36):
         try:
             uid_int = base36_to_int(uidb36)
@@ -173,24 +170,21 @@ class PasswordSet(views.APIView):
 
     def put(self, request, *args, **kwargs):
         # The uidb36 and the token are checked by the URLconf.
-
         user = self._get_user(self.kwargs.get('uidb36'))
         token = self.kwargs.get('token')
 
-        if user is not None and default_token_generator.check_token(user,
-                                                                    token):
-            password_set_form = SetPasswordForm(user)
-            serializer = PasswordSetSerializer(
-                password_set_form=password_set_form, data=request.data)
-            import ipdb;ipdb.set_trace()
-            if serializer.is_valid():
-                password_set_form.save()  # Sets the password
+        if user is not None and default_token_generator.check_token(
+                user, token):
 
-                # return a jwt token so the user can be logged in immediately
-                return response.Response({'token': user.get_jwt_token()},
-                                         status=status.HTTP_200_OK)
-            return response.Response(serializer.errors,
-                                     status=status.HTTP_400_BAD_REQUEST)
+            serializer = PasswordSetSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            user.set_password(serializer.validated_data['new_password1'])
+            user.save()
+
+            # return a jwt token so the user can be logged in immediately
+            return response.Response({'token': user.get_jwt_token()},
+                                     status=status.HTTP_200_OK)
 
         return response.Response(status=status.HTTP_404_NOT_FOUND)
 

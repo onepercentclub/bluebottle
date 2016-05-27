@@ -234,9 +234,6 @@ class PasswordResetSerializer(serializers.Serializer):
 
 class PasswordSetSerializer(serializers.Serializer):
     """
-    A serializer that lets a user change set his/her password without entering
-    the old password. This uses the validation from the Django SetPasswordForm.
-
     We can't use the PasswordField here because it hashes the passwords with
     a salt which means we can't compare the
     two passwords to see if they are the same.
@@ -254,7 +251,3 @@ class PasswordSetSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('new_password1', 'new_password2')
-
-    def __init__(self, password_set_form=None, *args, **kwargs):
-        self.password_set_form = password_set_form
-        super(PasswordSetSerializer, self).__init__(*args, **kwargs)

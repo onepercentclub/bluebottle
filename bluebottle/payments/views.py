@@ -60,12 +60,10 @@ class ManageOrderPaymentList(ListCreateAPIView):
         else:
             serializer.save()
 
-    def post_save(self, obj, created=False):
         try:
-            service = PaymentService(obj)
+            service = PaymentService(serializer.instance)
             service.start_payment()
         except PaymentException as error:
-            print error
             raise ParseError(detail=str(error))
 
     def get_queryset(self):

@@ -309,57 +309,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
                          response.data)
 
 
-class UnauthLocaleMiddlewareTest(BluebottleTestCase):
-    """
-    Integration tests for locale middleware when user unauthenticated.
-    """
-    @override_settings(LANGUAGES=(
-        ('nl', 'Dutch'),
-        ('en', 'English'),
-    ))
-    def test_redirect_to_browser_language(self):
-        # test redirected to supported browser language
-        http_languages = 'de-DE,de;q=0.8,nl;q=0.6,en;q=0.4,en-US;q=0.2'
-        response = self.client.get('/', follow=False,
-                                   HTTP_ACCEPT_LANGUAGE=http_languages)
-        self.assertRedirects(response, '/nl/')
-
-    @override_settings(LANGUAGES=(
-        ('nl', 'Dutch'),
-        ('en', 'English'),
-    ))
-    def test_redirect_to_unsupported_browser_language(self):
-        # test redirected to default language
-        http_languages = 'de-DE,de;q=0.8,es;q=0.6'
-        response = self.client.get('/', follow=False,
-                                   HTTP_ACCEPT_LANGUAGE=http_languages)
-        self.assertRedirects(response, '/en/')
-
-    def test_redirect_for_cookie(self):
-        # test redirect to language set in cookie
-
-        # go directly to supported language
-        response = self.client.get('/nl/', follow=False)
-        self.assertTrue(response.status_code, 200)
-
-        # go to base path => redirected to langauge in cookie
-        response = self.client.get('/', follow=False)
-        self.assertRedirects(response, '/nl/')
-        self.assertEqual(self.client.cookies['django_language'].value, 'nl')
-
-    @override_settings(LANGUAGES=(
-        ('nl', 'Dutch'),
-        ('en', 'English'),
-    ))
-    def test_redirect_for_anonymous_user_unsupported_language(self):
-        response = self.client.get('/es/', follow=False)
-        self.assertRedirects(response, '/en/')
-
-    def test_no_redirect_for_anonymous_user(self):
-        response = self.client.get('/nl/', follow=False)
-        self.assertTrue(response.status_code, 200)
-
-
 class AuthLocaleMiddlewareTest(BluebottleTestCase):
     """
     Integration tests for locale middleware when user is authenticated.
@@ -382,27 +331,6 @@ class AuthLocaleMiddlewareTest(BluebottleTestCase):
         self.user_es.primary_language = 'es'
         self.user_es.save()
         self.user_es_token = "JWT {0}".format(self.user_es.get_jwt_token())
-
-    @override_settings(LANGUAGES=(
-        ('nl', 'Dutch'),
-        ('en', 'English'),
-    ))
-    def test_redirect_to_primary_for_unsupported_language(self):
-        # test redirected to users primary language
-        response = self.client.get('/de/', follow=False,
-                                   token=self.user_nl_token)
-        self.assertRedirects(response, '/nl/')
-
-    @override_settings(LANGUAGES=(
-        ('nl', 'Dutch'),
-        ('en', 'English'),
-    ))
-    def test_redirect_to_default_for_unsupported_language(self):
-        # test redirected to default language if users language
-        # is not supported on platform
-        response = self.client.get('/es/', follow=False,
-                                   token=self.user_es_token)
-        self.assertRedirects(response, '/en/')
 
     def test_no_redirect_for_supported_language(self):
         response = self.client.get('/nl/', follow=False,

@@ -1,4 +1,5 @@
-from rest_framework import generics, exceptions, filters, permissions
+from rest_framework import generics, filters, permissions
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.utils.utils import get_client_ip
@@ -17,7 +18,7 @@ class VoteList(generics.ListCreateAPIView):
     serializer_class = VoteSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = ('voter', 'project')
+    filter_fields = ('voter',)
 
     def get_queryset(self):
         queryset = super(VoteList, self).get_queryset()
@@ -32,11 +33,4 @@ class VoteList(generics.ListCreateAPIView):
         Set the voter.
         Check that a user has not voted before
         """
-        try:
-            self.get_queryset().get(voter=self.request.user,
-                                    project=serializer.validated_data['project'])
-            raise exceptions.ParseError("You cannot vote twice")
-        except Vote.DoesNotExist:
-            pass
-
         serializer.save(voter=self.request.user, ip_address=get_client_ip(self.request))

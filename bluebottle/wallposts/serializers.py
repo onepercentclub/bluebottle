@@ -73,6 +73,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
     parent_id = WallpostParentIdField(source='object_id')
     reactions = ReactionSerializer(many=True, read_only=True, required=False)
 
+
     class Meta:
         fields = ('id', 'type', 'author', 'created', 'reactions',
                   'parent_type', 'parent_id', 'donation',

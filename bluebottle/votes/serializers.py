@@ -11,3 +11,6 @@ class VoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vote
         fields = ('id', 'voter', 'project', 'created')
+
+    def validate_voter(self, value):
+        return self.context['request'].user

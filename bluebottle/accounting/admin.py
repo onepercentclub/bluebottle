@@ -367,8 +367,8 @@ class OrderPaymentAdmin(admin.ModelAdmin):
                    OrderPaymentMatchedListFilter, OrderPaymentIntegrityListFilter)
     ordering = ('-created',)
 
-    def queryset(self, request):
-        return super(OrderPaymentAdmin, self).queryset(request).select_related('payment').annotate(
+    def get_queryset(self, request):
+        return super(OrderPaymentAdmin, self).get_queryset(request).select_related('payment').annotate(
             rdp_amount_collected=Sum('payment__remotedocdatapayment__amount_collected'),
             n_journals=Count('journals')
         )

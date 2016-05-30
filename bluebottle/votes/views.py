@@ -33,4 +33,4 @@ class VoteList(generics.ListCreateAPIView):
         Set the voter.
         Check that a user has not voted before
         """
-        serializer.save(voter=self.request.user, ip_address=get_client_ip(self.request))
+        serializer.save(ip_address=get_client_ip(self.request))

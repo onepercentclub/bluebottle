@@ -16,7 +16,7 @@ class Category(models.Model):
                        upload_to='categories/',
                        help_text=_("Category image"))
 
-    image_logo = ImageField(_("image"), max_length=255, blank=True, null=True,
+    image_logo = ImageField(_("logo"), max_length=255, blank=True, null=True,
                             upload_to='categories/logos/',
                             help_text=_("Category Logo image"))
 
@@ -32,3 +32,6 @@ class Category(models.Model):
 
     def __unicode__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return '/projects/category={}'.format(self.slug)

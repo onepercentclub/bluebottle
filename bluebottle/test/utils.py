@@ -3,6 +3,8 @@ from bunch import bunchify
 from django.db import connection
 from django.test.utils import override_settings
 from django.test import TestCase
+from django.conf import settings
+from importlib import import_module
 
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
@@ -169,6 +171,20 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
 
         cursor = connection.cursor()
         cursor.execute('DROP SCHEMA test CASCADE')
+
+
+class SessionTestMixin(object):
+    def create_session(self):
+        settings.SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+        engine = import_module(settings.SESSION_ENGINE)
+        store = engine.SessionStore()
+        store.save()
+        self.session = store
+        self.client.cookies[settings.SESSION_COOKIE_NAME] = store.session_key
+        self.addCleanup(self._clear_session)
+
+    def _clear_session(self):
+        self.session.flush()
 
 
 class FsmTestMixin(object):

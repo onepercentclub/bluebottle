@@ -1,14 +1,10 @@
 from django.contrib import admin
 
-from bluebottle.utils.model_dispatcher import (get_organization_model,
-                                               get_organizationmember_model)
-
-ORGANIZATION_MODEL = get_organization_model()
-MEMBER_MODEL = get_organizationmember_model()
+from bluebottle.organizations.models import OrganizationMember, Organization
 
 
 class OrganizationMemberInline(admin.StackedInline):
-    model = MEMBER_MODEL
+    model = OrganizationMember
     raw_id_fields = ('user',)
     extra = 0
 
@@ -22,7 +18,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-admin.site.register(ORGANIZATION_MODEL, OrganizationAdmin)
+admin.site.register(Organization, OrganizationAdmin)
 
 
 class OrganizationMemberAdmin(admin.ModelAdmin):
@@ -32,4 +28,4 @@ class OrganizationMemberAdmin(admin.ModelAdmin):
     search_fields = ('user__first_name', 'user__last_name', 'user__username')
 
 
-admin.site.register(MEMBER_MODEL, OrganizationMemberAdmin)
+admin.site.register(OrganizationMember, OrganizationMemberAdmin)

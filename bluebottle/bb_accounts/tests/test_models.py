@@ -6,17 +6,15 @@ from django.db import IntegrityError
 from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.tasks.models import TaskMember
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-from bluebottle.utils.model_dispatcher import get_taskmember_model
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.projects import ProjectPhaseFactory, \
     ProjectFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
-
-TASKS_MEMBER_MODEL = get_taskmember_model()
 
 
 class BlueBottleUserManagerTestCase(BluebottleTestCase):
@@ -178,7 +176,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
         taskmember = TaskMemberFactory.create(
             member=self.user,
-            status=TASKS_MEMBER_MODEL.TaskMemberStatuses.applied,
+            status=TaskMember.TaskMemberStatuses.applied,
             task=task
         )
 
@@ -186,7 +184,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
         uncounted_taskmember = TaskMemberFactory.create(
             member=self.user,
-            status=TASKS_MEMBER_MODEL.TaskMemberStatuses.stopped,
+            status=TaskMember.TaskMemberStatuses.stopped,
             task=task
         )
 
@@ -204,7 +202,9 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
         # Set donation to pending to be included in count
         order.locked()
+        order.save()
         order.pending()
+        order.save()
         self.assertEqual(self.user.donation_count, 1)
 
     def test_calculate_project_count(self):

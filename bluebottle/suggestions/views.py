@@ -7,7 +7,7 @@ from bluebottle.suggestions.serializers import SuggestionSerializer
 
 
 class SuggestionList(generics.ListCreateAPIView):
-    model = Suggestion
+    queryset = Suggestion.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = SuggestionSerializer
 
@@ -28,13 +28,13 @@ class SuggestionList(generics.ListCreateAPIView):
 
 
 class SuggestionDetail(generics.RetrieveUpdateAPIView):
-    model = Suggestion
+    queryset = Suggestion.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = SuggestionSerializer
 
 
 class SuggestionToken(generics.RetrieveUpdateAPIView):
-    model = Suggestion
+    queryset = Suggestion.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = SuggestionSerializer
     lookup_field = 'token'

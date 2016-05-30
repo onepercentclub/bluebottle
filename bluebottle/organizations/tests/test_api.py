@@ -1,12 +1,14 @@
 import json
 
 from django.core.urlresolvers import reverse
+
+from bluebottle.organizations.models import Organization
 from bluebottle.test.utils import BluebottleTestCase
 from rest_framework import status
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
-    OrganizationFactory, OrganizationMemberFactory, ORGANIZATION_MODEL)
+    OrganizationFactory, OrganizationMemberFactory)
 
 
 class OrganizationsEndpointTestCase(BluebottleTestCase):
@@ -36,19 +38,10 @@ class OrganizationsEndpointTestCase(BluebottleTestCase):
         self.member_3 = OrganizationMemberFactory.create(
             user=self.user_2, organization=self.organization_3)
 
-        # self.organization_1.members.add(self.member_1)
-        # self.organization_1.save()
-        # self.organization_2.members.add(self.member_1)
-        # self.organization_2.save()
-        # self.organization_3.members.add(self.member_2)
-        # self.organization_3.save()
-
 
 class OrganizationListTestCase(OrganizationsEndpointTestCase):
     """
     Test case for ``OrganizationsList`` API view.
-
-    Endpoint: /api/bb_organizations/
     """
 
     def test_api_organizations_list_endpoint(self):
@@ -127,7 +120,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(response.status_code, 201)
 
         # Check the data.
-        organization = ORGANIZATION_MODEL.objects.latest('pk')
+        organization = Organization.objects.latest('pk')
         self.assertEqual(organization.name, post_data['name'])
         self.assertEqual(organization.slug, post_data['slug'])
         self.assertEqual(
@@ -212,7 +205,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(response.status_code, 200)
 
         # Check the data.
-        organization = ORGANIZATION_MODEL.objects.get(
+        organization = Organization.objects.get(
             pk=self.organization_1.pk)
         self.assertEqual(organization.name, put_data['name'])
         self.assertEqual(organization.slug, put_data['slug'])

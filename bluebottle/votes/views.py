@@ -11,7 +11,7 @@ class VoteList(generics.ListCreateAPIView):
     Voting cannot happen twice.
     The list can be filtered adding vote=<id of user> and project=<slug of project>
     """
-    model = Vote
+    queryset = Vote.objects.all()
     paginate_by = 10
     serializer_class = VoteSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)

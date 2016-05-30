@@ -1,15 +1,12 @@
 from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.tasks.models import Task
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-
-from bluebottle.utils.model_dispatcher import get_task_model
-
-TASK_MODEL = get_task_model()
 
 
 @override_settings(SEND_WELCOME_MAIL=False)
@@ -22,7 +19,8 @@ class TestDeadlineStatus(BluebottleTestCase):
         order = OrderFactory.create()
         DonationFactory.create(project=project, order=order, amount=amount)
         order.locked()
-        order.succeeded()
+        order.save()
+        order.success()
         order.save()
 
         return order
@@ -64,7 +62,7 @@ class TestDeadlineStatus(BluebottleTestCase):
         """ one remaining open task """
         self.project.amount_asked = 0  # makes it sourcing
         TaskFactory.create(project=self.project,
-                           status=TASK_MODEL.TaskStatuses.realized)
+                           status=Task.TaskStatuses.realized)
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.complete)
@@ -73,7 +71,7 @@ class TestDeadlineStatus(BluebottleTestCase):
         """ on remaining in progress task """
         self.project.amount_asked = 0  # makes it sourcing
         TaskFactory.create(project=self.project,
-                           status=TASK_MODEL.TaskStatuses.open)
+                           status=Task.TaskStatuses.open)
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.incomplete)
@@ -81,7 +79,7 @@ class TestDeadlineStatus(BluebottleTestCase):
     def test_sourcing_tasks_incomplete_in_progress(self):
         self.project.amount_asked = 0  # makes it sourcing
         TaskFactory.create(project=self.project,
-                           status=TASK_MODEL.TaskStatuses.in_progress)
+                           status=Task.TaskStatuses.in_progress)
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.incomplete)
@@ -90,11 +88,11 @@ class TestDeadlineStatus(BluebottleTestCase):
         """ A mix of realized, open, in progress tasks """
         self.project.amount_asked = 0  # makes it sourcing
         TaskFactory.create(project=self.project,
-                           status=TASK_MODEL.TaskStatuses.realized)
+                           status=Task.TaskStatuses.realized)
         TaskFactory.create(project=self.project,
-                           status=TASK_MODEL.TaskStatuses.open)
+                           status=Task.TaskStatuses.open)
         TaskFactory.create(project=self.project,
-                           status=TASK_MODEL.TaskStatuses.in_progress)
+                           status=Task.TaskStatuses.in_progress)
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.incomplete)
@@ -106,7 +104,7 @@ class TestDeadlineStatus(BluebottleTestCase):
         self.project.save()
 
         TaskFactory.create(project=self.project,
-                           status=TASK_MODEL.TaskStatuses.open)
+                           status=Task.TaskStatuses.open)
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.complete)

@@ -1,3 +1,6 @@
+import logging
+import sys
+
 from .secrets import *
 from .base import *
 from bluebottle.payments_docdata.settings import *
@@ -31,6 +34,7 @@ SOUTH_TESTS_MIGRATE = False
 
 ROOT_URLCONF = 'bluebottle.urls'
 
+SKIP_IP_LOOKUP = True
 
 # Graphviz
 GRAPH_MODELS = {

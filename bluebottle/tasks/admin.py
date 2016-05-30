@@ -3,19 +3,12 @@ from django.core.urlresolvers import reverse
 from django.forms import ModelForm
 from django.forms.models import ModelChoiceField
 
-from bluebottle.utils.model_dispatcher import (
-    get_user_model, get_task_model, get_taskmember_model, get_taskfile_model,
-    get_task_skill_model)
-
-BB_USER_MODEL = get_user_model()
-BB_TASK_MODEL = get_task_model()
-BB_TASKMEMBER_MODEL = get_taskmember_model()
-BB_TASKFILE_MODEL = get_taskfile_model()
-BB_SKILL_MODEL = get_task_skill_model()
+from bluebottle.members.models import Member
+from bluebottle.tasks.models import TaskMember, TaskFile, Task
 
 
 class TaskMemberAdminInline(admin.StackedInline):
-    model = BB_TASKMEMBER_MODEL
+    model = TaskMember
     extra = 0
     raw_id_fields = ('member',)
     readonly_fields = ('created',)
@@ -24,7 +17,7 @@ class TaskMemberAdminInline(admin.StackedInline):
 
 
 class TaskFileAdminInline(admin.StackedInline):
-    model = BB_TASKFILE_MODEL
+    model = TaskFile
 
     raw_id_fields = ('author',)
     readonly_fields = ('created',)
@@ -33,10 +26,10 @@ class TaskFileAdminInline(admin.StackedInline):
 
 
 class TaskForm(ModelForm):
-    owner = ModelChoiceField(queryset=BB_USER_MODEL.objects.order_by('email'))
+    owner = ModelChoiceField(queryset=Member.objects.order_by('email'))
 
     class Meta:
-        model = BB_TASK_MODEL
+        model = Task
 
 
 class TaskAdmin(admin.ModelAdmin):
@@ -60,11 +53,11 @@ class TaskAdmin(admin.ModelAdmin):
               'tags', 'deadline')
 
 
-admin.site.register(BB_TASK_MODEL, TaskAdmin)
+admin.site.register(Task, TaskAdmin)
 
 
 class TaskAdminInline(admin.TabularInline):
-    model = BB_TASK_MODEL
+    model = Task
     extra = 0
     fields = ('title', 'project', 'status', 'deadline', 'time_needed', 'task_admin_link')
     readonly_fields = ('task_admin_link', )
@@ -100,4 +93,4 @@ class TaskMemberAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(BB_TASKMEMBER_MODEL, TaskMemberAdmin)
+admin.site.register(TaskMember, TaskMemberAdmin)

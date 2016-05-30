@@ -115,7 +115,9 @@ class RemoteDocdataPaymentActionTests(WebTestMixin, BluebottleTestCase):
             )
             _payments.append(payment)
             order_payment.authorized()
+            order_payment.save()
             order_payment.settled()
+            order_payment.save()
 
         DocdataPayment.objects.filter(id__in=[p.id for p in _payments]).update(status=StatusDefinition.SETTLED)
 
@@ -172,12 +174,15 @@ class RemoteDocdataPaymentActionTests(WebTestMixin, BluebottleTestCase):
         payout3 = self.project3.projectpayout_set.first()
         payout3.payout_rule = BaseProjectPayout.PayoutRules.not_fully_funded
         payout3.in_progress()
+        payout3.save()
         self.assertEqual(payout3.amount_raised, 45)
 
         payout4 = self.project4.projectpayout_set.first()
         payout4.payout_rule = BaseProjectPayout.PayoutRules.not_fully_funded
         payout4.in_progress()
+        payout4.save()
         payout4.settled()
+        payout4.save()
         self.assertEqual(payout4.amount_raised, 60)
 
     def _match_payments(self, n_payments):

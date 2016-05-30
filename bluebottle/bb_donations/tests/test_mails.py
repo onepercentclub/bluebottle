@@ -74,7 +74,9 @@ class TestDonationEmails(BluebottleTestCase):
 
         # Prepare the order
         self.order.locked()
-        self.order.succeeded()
+        self.order.save()
+        self.order.success()
+        self.order.save()
 
         # No fundraiser so 2 mails should be sent: one to the owner, and one to the donor
         self.assertEqual(len(mail.outbox), 2)
@@ -84,7 +86,7 @@ class TestDonationEmails(BluebottleTestCase):
         self.assertEqual(mail.outbox[0].subject,
                          _('You received a new donation'))
         self.assertTrue(
-            "EUR {0}".format(self.donation.amount) in mail.outbox[0].body)
+            "&euro; {0}".format(self.donation.amount) in mail.outbox[0].body)
 
     def test_mail_donor_successful_donation(self):
         """ Test that an email is sent to the donor after a succesful donation """
@@ -93,7 +95,9 @@ class TestDonationEmails(BluebottleTestCase):
 
         # Prepare the order
         self.order.locked()
-        self.order.succeeded()
+        self.order.save()
+        self.order.success()
+        self.order.save()
 
         # No fundraiser so 2 mails should be sent: one to the owner, and one to the donor
         self.assertEqual(len(mail.outbox), 2)
@@ -106,7 +110,7 @@ class TestDonationEmails(BluebottleTestCase):
         body = mail.outbox[1].body
 
         self.assertTrue(
-            "EUR {0}".format(self.donation.amount) in body)
+            "&euro; {0}".format(self.donation.amount) in body)
         self.assertTrue(
             "Thanks {0}".format(self.user.first_name) in body)
 
@@ -117,7 +121,9 @@ class TestDonationEmails(BluebottleTestCase):
 
         # Prepare the order
         self.recurring_order.locked()
-        self.recurring_order.succeeded()
+        self.recurring_order.save()
+        self.recurring_order.success()
+        self.recurring_order.save()
 
         # No mail because its not a one-off donation
         self.assertEqual(len(mail.outbox), 0)
@@ -130,7 +136,9 @@ class TestDonationEmails(BluebottleTestCase):
 
         # Prepare the order
         self.fund_order.locked()
-        self.fund_order.succeeded()
+        self.fund_order.save()
+        self.fund_order.success()
+        self.fund_order.save()
 
         # With fundraiser so 3 mails should be sent: one to the owner, one to the donor and one to fundraiser.
         self.assertEqual(len(mail.outbox), 3)
@@ -138,4 +146,4 @@ class TestDonationEmails(BluebottleTestCase):
         self.assertEqual(mail.outbox[0].subject,
                          _('You received a new donation'))
         self.assertTrue(
-            "EUR {0}".format(self.fund_donation.amount) in mail.outbox[0].body)
+            "&euro; {0}".format(self.fund_donation.amount) in mail.outbox[0].body)

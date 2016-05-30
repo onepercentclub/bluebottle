@@ -100,7 +100,6 @@ COMPRESS_OUTPUT_DIR = 'compressed'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'compressor.finders.CompressorFinder'
 )
 
 # List of callables that know how to import templates from various sources.
@@ -210,7 +209,7 @@ SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 
 SHARED_APPS = (
-    'bluebottle.clients', # you must list the app where your tenant model resides in
+    'bluebottle.clients',  # you must list the app where your tenant model resides in
 
     # Django apps
     'south',
@@ -222,13 +221,10 @@ SHARED_APPS = (
 
     # 3rd party apps
     'django_extensions',
-    'django_extensions.tests',
     'raven.contrib.django.raven_compat',
     'djcelery',
-    'compressor',
     'sorl.thumbnail',
     'micawber.contrib.mcdjango',  # Embedding videos
-    'templatetag_handlebars',
     'rest_framework',
     'filetransfers',
     'loginas',
@@ -297,6 +293,7 @@ TENANT_APPS = (
     'bluebottle.quotes',
     'bluebottle.payments',
     'bluebottle.payments_docdata',
+    'bluebottle.payments_pledge',
     'bluebottle.payments_logger',
     'bluebottle.payments_voucher',
     'bluebottle.payments_manual',
@@ -463,26 +460,6 @@ LOGGING = {
 # Custom User model
 AUTH_USER_MODEL = 'members.Member'
 
-PROJECTS_PROJECT_MODEL = 'projects.Project'
-PROJECTS_PHASELOG_MODEL = 'projects.ProjectPhaseLog'
-PROJECT_DOCUMENT_MODEL = 'projects.ProjectDocument'
-
-FUNDRAISERS_FUNDRAISER_MODEL = 'fundraisers.Fundraiser'
-
-TASKS_TASK_MODEL = 'tasks.Task'
-TASKS_SKILL_MODEL = 'tasks.Skill'
-TASKS_TASKMEMBER_MODEL = 'tasks.TaskMember'
-TASKS_TASKFILE_MODEL = 'tasks.TaskFile'
-
-ORGANIZATIONS_ORGANIZATION_MODEL = 'organizations.Organization'
-ORGANIZATIONS_MEMBER_MODEL = 'organizations.OrganizationMember'
-
-ORDERS_ORDER_MODEL = 'orders.Order'
-DONATIONS_DONATION_MODEL = 'donations.Donation'
-
-PAYOUTS_PROJECTPAYOUT_MODEL = 'payouts.ProjectPayout'
-PAYOUTS_ORGANIZATIONPAYOUT_MODEL = 'payouts.OrganizationPayout'
-
 SOCIAL_AUTH_USER_MODEL = 'members.Member'
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_friends', 'public_profile', 'user_birthday']
 SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [('birthday', 'birthday')]
@@ -499,9 +476,6 @@ PROJECT_CREATE_FLOW = 'combined'
 
 # For building frontend code
 BB_APPS = []
-
-# Required for handlebars_template to work properly
-USE_EMBER_STYLE_ATTRS = True
 
 # Twitter handles, per language
 TWITTER_HANDLES = {
@@ -526,10 +500,10 @@ SEND_WELCOME_MAIL = True
 EMAIL_BACKEND = 'bluebottle.utils.email_backend.TestMailBackend'
 
 SWAGGER_SETTINGS = {
-  'api_version': '1.1',
-  'resource_url_prefix': 'api/',
-  'resource_access_handler': 'bluebottle.auth.handlers.resource_access_handler',
-  'is_authenticated': True
+    'api_version': '1.1',
+    'resource_url_prefix': 'api/',
+    'resource_access_handler': 'bluebottle.auth.handlers.resource_access_handler',
+    'is_authenticated': True
 }
 
 # and provide a default (without it django-rest-framework-jwt will default
@@ -599,7 +573,7 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.UserResource',
             'title': 'Members',
         }),
-        (PROJECTS_PROJECT_MODEL, {
+        ('projects.Project', {
             'fields': (
                 ('id', 'Project ID'),
                 ('owner_id', 'User ID'),
@@ -618,7 +592,7 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.ProjectResource',
             'title': 'Projects',
         }),
-        (TASKS_TASK_MODEL, {
+        ('tasks.Task', {
             'fields': (
                 ('project__id', 'Project ID'),
                 ('id', 'Task ID'),
@@ -636,7 +610,7 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.TaskResource',
             'title': 'Tasks',
         }),
-        (DONATIONS_DONATION_MODEL, {
+        ('donations.Donation', {
             'fields': (
                 ('order__user__id', 'User ID'),
                 ('project__id', 'Project ID'),
@@ -651,7 +625,7 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.DonationResource',
             'title': 'Supporters (Funding)',
         }),
-        (TASKS_TASKMEMBER_MODEL, {
+        ('tasks.TaskMember', {
             'fields': (
                 ('member__id', 'User ID'),
                 ('task__project__id', 'Project ID'),

@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
 
+from bluebottle.members.serializers import UserPreviewSerializer
 from .models import Quote
 
 
 class QuoteSerializer(serializers.ModelSerializer):
-    user = get_serializer_class('AUTH_USER_MODEL', 'preview')()
+    user = UserPreviewSerializer()
 
     class Meta:
         model = Quote

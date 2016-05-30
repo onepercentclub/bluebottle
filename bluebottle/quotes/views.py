@@ -8,7 +8,7 @@ from django.db.models import Q
 # API views
 
 class QuoteList(generics.ListAPIView):
-    model = Quote
+    queryset = Quote.objects.all()
     serializer_class = QuoteSerializer
     paginate_by = 10
     filter_fields = ('language',)

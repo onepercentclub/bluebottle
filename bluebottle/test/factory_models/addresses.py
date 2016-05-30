@@ -5,5 +5,7 @@ from bluebottle.bb_accounts.models import UserAddress
 
 
 class BlueBottleAddressFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = UserAddress
+    class Meta(object):
+        model = UserAddress
+
     user = factory.SubFactory(BlueBottleUserFactory)

@@ -175,7 +175,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
 
-        response = self.client.post(self.task_members_url, {'task': 1},
+        response = self.client.post(self.task_members_url, {'task': response.data['id']},
                                     token=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)

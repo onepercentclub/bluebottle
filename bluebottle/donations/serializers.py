@@ -71,12 +71,8 @@ class LatestDonationProjectSerializer(BaseProjectPreviewSerializer):
 
 class LatestDonationSerializer(serializers.ModelSerializer):
     project = LatestDonationProjectSerializer()
-<<<<<<< HEAD
-    user = get_serializer_class('AUTH_USER_MODEL', 'preview')()
     payment_method = serializers.SerializerMethodField('get_payment_method')
-=======
     user = UserPreviewSerializer
->>>>>>> origin/develop
 
     class Meta:
         model = Donation

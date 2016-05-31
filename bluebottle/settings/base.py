@@ -363,6 +363,7 @@ SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 THUMBNAIL_DEBUG = True
 THUMBNAIL_QUALITY = 85
+THUMBNAIL_DUMMY=True
 
 
 # A sample logging configuration. The only tangible logging

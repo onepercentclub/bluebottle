@@ -358,9 +358,9 @@ class MetricsModule(DashboardModule):
         project_statuses = [6, 8, 9]  # Campaign, Done-Complete, Done-Incomplete
 
         for year in years:
-            task_members = TaskMember.objects.filter(task__deadline__year=year, status__in=allowed_statuses).distinct('member')
-            project_owners = Project.objects.values('owner').filter(created__year=year, status__sequence__in=project_statuses).distinct('owner')
-            doubles = task_members.filter(member__pk__in=project_owners)
+            task_members = TaskMember.objects.filter(task__deadline__year=year, status__in=allowed_statuses).order_by('member').distinct('member')
+            project_owners = Project.objects.values('owner').filter(created__year=year, status__sequence__in=project_statuses).order_by('owner').distinct('owner')
+            doubles = task_members.filter(member__in=project_owners)
             participants[year] = task_members.count() + project_owners.count() - doubles.count()
 
         metrics = Metrics()

@@ -103,15 +103,18 @@ class FundingFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            ('yes', _('Funding')),
-            ('no', _('Not funding')),
+            ('yes', _('Crowdfunding')),
+            ('no', _('Crowdsourcing')),
+            ('both', _('Crowdfunding & crowdsourcing')),
         )
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
             return queryset.filter(amount_asked__gt=0)
+        elif self.value() == 'no':
+            from django.db.models import Q
+            return queryset.filter(Q(amount_asked=None) | Q(amount_asked=0.00))
         return queryset
-
 
 class ProjectBudgetLineInline(admin.TabularInline):
     model = ProjectBudgetLine

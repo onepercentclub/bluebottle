@@ -10,6 +10,7 @@ from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.http import urlquote
 from django.utils.timezone import now
+from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,

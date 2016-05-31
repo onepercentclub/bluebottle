@@ -32,6 +32,80 @@ PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
 PROJECT_DOCUMENT_MODEL = get_project_document_model()
 
 
+def mark_as_plan_new(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='plan-new')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_plan_new.short_description = _("Mark selected projects as status Plan New")
+
+def mark_as_plan_submitted(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='plan-submitted')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_plan_submitted.short_description = _("Mark selected projects as status Plan Submitted")
+
+def mark_as_plan_needs_work(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='plan-needs-work')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_plan_needs_work.short_description = _("Mark selected projects as status Plan Needs Work")
+
+def mark_as_voting(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='voting')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_voting.short_description = _("Mark selected projects as status Voting")
+
+
+def mark_as_voting_done(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='voting-done')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_voting_done.short_description = _("Mark selected projects as status Voting Done")
+
+def mark_as_campaign(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='campaign')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_campaign.short_description = _("Mark selected projects as status Campaign")
+
+def mark_as_done_complete(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='done-complete')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_done_complete.short_description = _("Mark selected projects as status Done Complete")
+
+def mark_as_done_incomplete(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='done-incomplete')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_done_incomplete.short_description = _("Mark selected projects as status Done Incomplete")
+
+def mark_as_closed(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='closed')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_closed.short_description = _("Mark selected projects as status Closed")
+
+
 class ProjectThemeAdmin(admin.ModelAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled',)
 
@@ -171,7 +245,12 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     export_fields = ['title', 'owner', 'created', 'status',
                      'deadline', 'amount_asked', 'amount_donated']
 
-    actions = (export_as_csv_action(fields=export_fields), )
+    actions = [export_as_csv_action(fields=export_fields),
+               mark_as_closed, mark_as_done_incomplete,
+               mark_as_done_complete, mark_as_campaign,
+               mark_as_voting_done, mark_as_voting,
+               mark_as_plan_needs_work, mark_as_plan_submitted,
+               mark_as_plan_new]
 
     def get_actions(self, request):
         """Order the action in reverse (delete at the bottom)."""

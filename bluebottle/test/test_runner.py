@@ -3,8 +3,10 @@ from django.db import connection
 
 from tenant_schemas.utils import get_tenant_model
 
+from bluebottle.test.utils import InitProjectDataMixin
 
-class MultiTenantRunner(DiscoverRunner):
+
+class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
     def setup_databases(self, *args, **kwargs):
         result = super(MultiTenantRunner, self).setup_databases(*args, **kwargs)
 
@@ -19,7 +21,12 @@ class MultiTenantRunner(DiscoverRunner):
         tenant2.save(
             verbosity=self.verbosity)
 
+        # Add basic data for tenant
+        connection.set_tenant(tenant2)
+        self.init_projects()
+
         # Create main tenant
+        connection.set_schema_to_public()
         tenant_domain = 'testserver'
         tenant = get_tenant_model()(
             domain_url=tenant_domain,

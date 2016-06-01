@@ -153,7 +153,7 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
     @classmethod
     def setUpClass(cls):
         super(BluebottleTestCase, cls).setUpClass()
-        cls.tenant = get_tenant_model().objects.get(client_name='test')
+        cls.tenant = get_tenant_model().objects.get(schema_name='test')
         connection.set_tenant(cls.tenant)
 
 

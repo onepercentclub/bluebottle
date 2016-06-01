@@ -19,7 +19,7 @@ class NewsItemContentsField(serializers.Field):
 class NewsItemSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug')
     body = NewsItemContentsField(source='contents')
-    main_image = SorlImageField('main_image', '800x400')
+    main_image = SorlImageField('800x400')
     author = UserPreviewSerializer()
 
     class Meta:

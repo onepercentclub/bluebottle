@@ -235,7 +235,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         # Let's throw a pitch (create a project really)
         response = self.client.post(self.manage_projects_url,
-                                    {'title': 'This is my smart idea'},
+                                    {'title': 'This is my smart idea', 'story': ''},
                                     token=self.some_user_token)
         self.assertEquals(
             response.status_code, status.HTTP_201_CREATED, response)

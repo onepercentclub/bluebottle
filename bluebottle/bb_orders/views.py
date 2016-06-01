@@ -47,7 +47,7 @@ class ManageOrderList(generics.ListCreateAPIView):
         else:
             serializer.save()
 
-            self.request.session[anonymous_order_id_session_key] = obj.id
+            self.request.session[anonymous_order_id_session_key] = serializer.instance.id
             self.request.session.save()
 
 

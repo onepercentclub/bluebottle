@@ -134,6 +134,7 @@ TEMPLATES = [
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',
+    'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.clients.middleware.TenantPropertiesMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',
@@ -684,4 +685,5 @@ REQUESTS_MAX_RETRIES = 0
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4
 }
+
 

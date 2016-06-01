@@ -140,27 +140,33 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.user_1.id)
 
-        full_name = {'first_name': 'Nijntje', 'last_name': 'het Konijntje'}
+        data = {
+            'first_name': 'Nijntje',
+            'last_name': 'het Konijntje',
+            'address': {
+                'line1': 'test line 1'
+            }
+        }
 
         # Profile should not be able to be updated by anonymous users.
-        response = self.client.put(user_profile_url, full_name)
+        response = self.client.put(user_profile_url, data)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED,
                          response.data)
 
         # Profile should not be able to be updated by a different user.
-        response = self.client.put(user_profile_url, full_name,
+        response = self.client.put(user_profile_url, data,
                                    token=self.user_2_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN,
                          response.data)
 
         # Profile should be able to be updated by logged in user.
-        response = self.client.put(user_profile_url, full_name,
+        response = self.client.put(user_profile_url, data,
                                    token=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
-        self.assertEqual(response.data['first_name'],
-                         full_name.get('first_name'))
-        self.assertEqual(response.data['last_name'], full_name.get('last_name'))
+        self.assertEqual(response.data['first_name'], data['first_name'])
+        self.assertEqual(response.data['last_name'], data['last_name'])
+        self.assertEqual(response.data['address']['line1'], data['address']['line1'])
 
         self.client.logout()
 

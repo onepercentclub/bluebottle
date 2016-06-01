@@ -17,7 +17,7 @@ class OrderSerializer(serializers.ModelSerializer):
 class ManageOrderSerializer(serializers.ModelSerializer):
     total = serializers.DecimalField(read_only=True, max_digits=10, decimal_places=2)
     status = serializers.ChoiceField(choices=Order.STATUS_CHOICES, read_only=True)
-    user = serializers.PrimaryKeyRelatedField(queryset=Member.objects, required=False)
+    user = serializers.PrimaryKeyRelatedField(queryset=Member.objects, required=False, allow_null=True)
     donations = ManageDonationSerializer(many=True, read_only=True)
 
     class Meta:

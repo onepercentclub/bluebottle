@@ -57,7 +57,7 @@ class WallpostList(ListAPIView):
         else:
             white_listed_apps = ['projects', 'tasks', 'fundraisers']
             content_type = ContentType.objects.filter(
-                app_label__in=white_listed_apps).get(name=parent_type)
+                app_label__in=white_listed_apps).get(model=parent_type)
         queryset = queryset.filter(content_type=content_type)
 
         if parent_type == 'project' and parent_id:

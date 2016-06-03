@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models.signals import post_save
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
 from bluebottle.donations.models import Donation
@@ -12,23 +12,20 @@ from .mails import mail_pledge_platform_admin
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, weak=False, dispatch_uid='payment_pledge_created')
+@receiver(pre_save, sender=OrderPayment, dispatch_uid='payment_pledge_created')
 def default_status_check(sender, instance, **kwargs):
-    if not isinstance(instance, OrderPayment):
-        return
-
+    """
+    - Get the status from the OrderPayment and send an email when ready.
+    """
     if instance.payment_method != 'pledgeStandard':
         return
 
-    if instance.status in [StatusDefinition.PLEDGED]:
-
+    if instance.previous_status in [StatusDefinition.CREATED] and instance.status in [StatusDefinition.PLEDGED]:
         try:
             donation = Donation.objects.filter(order__id=instance.order.id)[0]
 
-            # NOTE: Only handling a single donation per order
             if donation:
                 mail_pledge_platform_admin(donation)
 
         except IndexError as e:
             logger.critical('No pledge donation found matching Order ID: {0}'.format(instance.order.id))
-            

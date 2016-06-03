@@ -65,7 +65,7 @@ class URLField(serializers.URLField):
     def to_internal_value(self, value):
         """ Allow exclusion of http(s)://, add it if it's missing """
         if not value:
-            return value
+            return None
         m = re.match(SCHEME_PATTERN, value)
         if not m:  # no scheme
             value = "http://%s" % value

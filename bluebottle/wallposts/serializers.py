@@ -104,7 +104,7 @@ class MediaWallpostSerializer(WallpostSerializerBase):
                              maxwidth='560',
                              maxheight='315')
     photos = MediaWallpostPhotoSerializer(many=True, required=False)
-    video_url = serializers.CharField(required=False)
+    video_url = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = MediaWallpost

@@ -126,7 +126,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class ProjectPreviewSerializer(ProjectSerializer):
-    image = SorlImageField('image', '400x300', crop='center')
+    image = SorlImageField('400x300', crop='center')
     theme = ProjectThemeSerializer()
 
     owner = UserPreviewSerializer()
@@ -147,7 +147,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
 
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
-    image = SorlImageField('image', '400x300', crop='center')
+    image = SorlImageField('400x300', crop='center')
 
     class Meta:
         model = Project
@@ -162,10 +162,10 @@ class ManageProjectSerializer(serializers.ModelSerializer):
 
     editable = serializers.BooleanField(read_only=True)
     viewable = serializers.BooleanField(read_only=True)
-    status = serializers.PrimaryKeyRelatedField(required=False, queryset=ProjectPhase.objects)
-    location = serializers.PrimaryKeyRelatedField(required=False, queryset=Location.objects)
-    image = ImageSerializer(required=False)
-    pitch = serializers.CharField(required=False)
+    status = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=ProjectPhase.objects)
+    location = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=Location.objects)
+    image = ImageSerializer(required=False, allow_null=True)
+    pitch = serializers.CharField(required=False, allow_null=True)
     slug = serializers.CharField(read_only=True)
     amount_asked = serializers.CharField(required=False, allow_null=True)
     amount_donated = serializers.CharField(read_only=True)
@@ -175,7 +175,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                                                read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
-    story = StoryField(required=False)
+    story = StoryField(required=False, allow_blank=True)
     is_funding = serializers.ReadOnlyField()
 
     documents = ProjectDocumentSerializer(
@@ -196,12 +196,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
             if country_code in iban_validator.validation_countries.keys() and \
               digits_regex.match(check_digits):
                 iban_validator(value)
-        return value
-
-    def validate_account_bic(self, value):
-        if value:
-            bic_validator = BICValidator()
-            bic_validator(value)
         return value
 
     def validate_status(self, value):

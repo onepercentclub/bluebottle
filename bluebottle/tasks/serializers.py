@@ -87,7 +87,6 @@ class MyTaskMemberSerializer(BaseTaskMemberSerializer):
 
 
 class MyTasksSerializer(BaseTaskSerializer):
-    task = MyTaskPreviewSerializer()
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
 
     class Meta:

@@ -39,7 +39,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
         kwargs['read_only'] = True
         super(UserPreviewSerializer, self).__init__(*args, **kwargs)
 
-    avatar = SorlImageField('picture', '133x133', crop='center')
+    avatar = SorlImageField('133x133', source='picture', crop='center')
 
     # TODO: Remove first/last name and only use these
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
@@ -90,9 +90,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     primary_language = serializers.CharField(required=False,
                                              default=properties.LANGUAGE_CODE)
-    location = serializers.PrimaryKeyRelatedField(required=False,
+    location = serializers.PrimaryKeyRelatedField(required=False, allow_null=True,
                                                   queryset=Location.objects)
-    avatar = SorlImageField('picture', '133x133', crop='center',
+    avatar = SorlImageField('133x133', source='picture', crop='center',
                             required=False)
 
     skill_ids = serializers.PrimaryKeyRelatedField(many=True,
@@ -132,6 +132,18 @@ class ManageProfileSerializer(UserProfileSerializer):
             'email', 'address', 'newsletter', 'campaign_notifications', 'location',
             'birthdate', 'gender', 'first_name', 'last_name', 'username'
         )
+
+    def update(self, instance, validated_data):
+        address = validated_data.pop('address', {})
+        for attr, value in address.items():
+            setattr(instance.address, attr, value)
+
+        instance.address.save()
+
+        return super(ManageProfileSerializer, self).update(instance, validated_data)
+
+
+
 
 
 # Thanks to Neamar Tucote for this code:

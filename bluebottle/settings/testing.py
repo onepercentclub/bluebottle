@@ -1,7 +1,8 @@
 import logging
 import sys
 
-from .secrets import *
+SECRET_KEY = '1, 2, this is just a test!'
+
 from .base import *
 from bluebottle.payments_docdata.settings import *
 

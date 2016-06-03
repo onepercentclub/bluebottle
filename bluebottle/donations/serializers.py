@@ -33,7 +33,7 @@ class PreviewDonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donation
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
-                  'payment_method', 'anonymous', 'amount', 'reward')
+                  'anonymous', 'amount', 'reward')
 
     def get_payment_method(self, obj):
         return obj.get_payment_method

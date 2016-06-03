@@ -17,8 +17,9 @@ class AdapterTestCase(BluebottleTestCase, FsmTestMixin):
         user = BlueBottleUserFactory()
 
         order = OrderFactory.create(user=user)
-        order_payment = OrderPaymentFactory.create(order=order,
-                                       payment_method='pledgeStandard')
+        order_payment = OrderPaymentFactory.create(
+            order=order, user=user, payment_method='pledgeStandard'
+        )
 
         with self.assertRaises(PaymentException):
             self.service = PaymentService(order_payment=order_payment)
@@ -30,8 +31,9 @@ class AdapterTestCase(BluebottleTestCase, FsmTestMixin):
         user = BlueBottleUserFactory(can_pledge=True)
 
         order = OrderFactory.create(user=user)
-        order_payment = OrderPaymentFactory.create(order=order,
-                                                   payment_method='pledgeStandard')
+        order_payment = OrderPaymentFactory.create(
+            order=order, user=user, payment_method='pledgeStandard'
+        )
         service = PaymentService(order_payment=order_payment)
 
         # Check that the status propagated through to order

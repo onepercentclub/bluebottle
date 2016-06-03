@@ -56,6 +56,9 @@ class ManageOrderPaymentList(ListCreateAPIView):
 
     def pre_save(self, obj):
         if self.request.user and self.request.user.is_authenticated():
+            if not obj.order.user:
+                obj.order.user = self.request.user
+                obj.order.save()
             obj.user = self.request.user
 
     def post_save(self, obj, created=False):

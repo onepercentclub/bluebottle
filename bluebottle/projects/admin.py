@@ -220,8 +220,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_filter(self, request):
         filters = ('status', 'is_campaign', ProjectThemeFilter,
-                   'country__subregion__region',
-                   FundingFilter)
+                   'country__subregion__region', 'project_type')
 
         # Only show Location column if there are any
         if Location.objects.count():

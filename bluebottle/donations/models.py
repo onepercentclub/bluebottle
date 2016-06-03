@@ -16,7 +16,9 @@ class Donation(BaseDonation):
 
     def get_payment_method(self):
         order_payment = self.order.get_latest_order_payment()
-        if not order_payment or not order_payment.payment:
+        if not order_payment:
+            return '?'
+        if not hasattr(order_payment, 'payment'):
             return '?'
         return order_payment.payment.method_name
 

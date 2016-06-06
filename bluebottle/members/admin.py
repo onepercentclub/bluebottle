@@ -114,36 +114,24 @@ class MemberVotesInline(admin.TabularInline):
 class MemberAdmin(UserAdmin):
     def get_standard_fieldsets(self):
 
-        standard_fieldsets = (
-            (None, {'fields': ('email', 'password', 'remote_id')}),
-            (_('Personal info'), {'fields': (
+        standard_fieldsets = [
+            [None, {'fields': ['email', 'password', 'remote_id']}],
+            [_('Personal info'), {'fields': [
                 'first_name', 'last_name', 'username', 'gender', 'birthdate',
-                'phone_number')}),
-            (_("Profile"),
-             {'fields': ('user_type', 'is_co_financer', 'picture', 'about_me', 'location')}),
-            (_("Settings"), {'fields': ['primary_language', 'newsletter']}),
-            (_('Skills & interests'), {'fields': ('favourite_themes',)}),
-            (_('Important dates'),
-             {'fields': ('last_login', 'date_joined', 'deleted')}),
-        )
+                'phone_number']}],
+            [_("Profile"),
+             {'fields': ['user_type', 'is_co_financer', 'picture', 'about_me', 'location']}],
+            [_("Settings"), {'fields': ['primary_language', 'newsletter']}],
+            [_('Skills & interests'), {'fields': ['favourite_themes',]}],
+            [_('Important dates'),
+             {'fields': ['last_login', 'date_joined', 'deleted']}],
+        ]
 
         for item in properties.PAYMENT_METHODS:
             if item['name'] == 'Pledge':
-                standard_fieldsets = (
-                    (None, {'fields': ('email', 'password', 'remote_id')}),
-                    (_('Personal info'), {'fields': (
-                        'first_name', 'last_name', 'username', 'gender', 'birthdate',
-                        'phone_number')}),
-                    (_("Profile"),
-                     {'fields': ('user_type', 'is_co_financer', 'can_pledge', 'picture', 'about_me', 'location')}),
-                    (_("Settings"), {'fields': ['primary_language', 'newsletter']}),
-                    (_('Skills & interests'), {'fields': ('favourite_themes',)}),
-                    (_('Important dates'),
-                     {'fields': ('last_login', 'date_joined', 'deleted')}),
-                )
-                break
+                standard_fieldsets[2][1]['fields'].append('can_pledge')
 
-        return standard_fieldsets
+        return tuple(standard_fieldsets)
 
     staff_fieldsets = (
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'groups')}),

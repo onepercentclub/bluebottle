@@ -25,6 +25,80 @@ from .models import (ProjectBudgetLine, Project,
 logger = logging.getLogger(__name__)
 
 
+def mark_as_plan_new(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='plan-new')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_plan_new.short_description = _("Mark selected projects as status Plan New")
+
+def mark_as_plan_submitted(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='plan-submitted')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_plan_submitted.short_description = _("Mark selected projects as status Plan Submitted")
+
+def mark_as_plan_needs_work(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='plan-needs-work')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_plan_needs_work.short_description = _("Mark selected projects as status Plan Needs Work")
+
+def mark_as_voting(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='voting')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_voting.short_description = _("Mark selected projects as status Voting")
+
+
+def mark_as_voting_done(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='voting-done')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_voting_done.short_description = _("Mark selected projects as status Voting Done")
+
+def mark_as_campaign(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='campaign')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_campaign.short_description = _("Mark selected projects as status Campaign")
+
+def mark_as_done_complete(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='done-complete')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_done_complete.short_description = _("Mark selected projects as status Done Complete")
+
+def mark_as_done_incomplete(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='done-incomplete')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_done_incomplete.short_description = _("Mark selected projects as status Done Incomplete")
+
+def mark_as_closed(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='closed')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_closed.short_description = _("Mark selected projects as status Closed")
+
+
 class ProjectThemeAdmin(admin.ModelAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled',)
 
@@ -96,15 +170,18 @@ class FundingFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            ('yes', _('Funding')),
-            ('no', _('Not funding')),
+            ('yes', _('Crowdfunding')),
+            ('no', _('Crowdsourcing')),
+            ('both', _('Crowdfunding & crowdsourcing')),
         )
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
             return queryset.filter(amount_asked__gt=0)
+        elif self.value() == 'no':
+            from django.db.models import Q
+            return queryset.filter(Q(amount_asked=None) | Q(amount_asked=0.00))
         return queryset
-
 
 class ProjectBudgetLineInline(admin.TabularInline):
     model = ProjectBudgetLine
@@ -136,8 +213,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_filter(self, request):
         filters = ('status', 'is_campaign', ProjectThemeFilter,
-                   'country__subregion__region',
-                   FundingFilter)
+                   'country__subregion__region', 'project_type')
 
         # Only show Location column if there are any
         if Location.objects.count():
@@ -164,7 +240,12 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     export_fields = ['title', 'owner', 'created', 'status',
                      'deadline', 'amount_asked', 'amount_donated']
 
-    actions = (export_as_csv_action(fields=export_fields), )
+    actions = [export_as_csv_action(fields=export_fields),
+               mark_as_closed, mark_as_done_incomplete,
+               mark_as_done_complete, mark_as_campaign,
+               mark_as_voting_done, mark_as_voting,
+               mark_as_plan_needs_work, mark_as_plan_submitted,
+               mark_as_plan_new]
 
     def get_actions(self, request):
         """Order the action in reverse (delete at the bottom)."""

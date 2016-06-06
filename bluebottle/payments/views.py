@@ -57,6 +57,10 @@ class ManageOrderPaymentList(ListCreateAPIView):
     def perform_create(self, serializer):
         if self.request.user and self.request.user.is_authenticated():
             serializer.save(user=self.request.user)
+
+            if not self.instance.order.user:
+                self.instance.order.user = self.request.user
+                self.instance.order.save()
         else:
             serializer.save()
 

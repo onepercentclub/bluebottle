@@ -28,7 +28,7 @@ install_requires = [
     'Sphinx==1.4.1',
     'bunch==1.0.1',
     'celery==3.1.23',
-    'django-celery==3.1.17',
+    'django-celery==3.0.17',
     'django-choices==1.4.2',
     'django-extensions==1.6.7',
     'django-exportdb==0.4.6',
@@ -65,7 +65,11 @@ install_requires = [
     'surlex==0.2.0',
     'django_polymorphic==0.9.2',
     'fabric',
+<<<<<<< HEAD
     'django-tenant-schemas==1.6.2',
+=======
+    'django-tenant-schemas==1.5.7',
+>>>>>>> develop
     'raven==5.16.0',
     'regex==2016.4.25',
     'djangorestframework-jwt==1.8.0',

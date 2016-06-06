@@ -114,7 +114,7 @@ class MemberVotesInline(admin.TabularInline):
 class MemberAdmin(UserAdmin):
 
     @property
-    def get_standard_fieldsets(self):
+    def standard_fieldsets(self):
 
         standard_fieldsets = [
             [None, {'fields': ['email', 'password', 'remote_id']}],

@@ -65,11 +65,7 @@ install_requires = [
     'surlex==0.2.0',
     'django_polymorphic==0.9.2',
     'fabric',
-<<<<<<< HEAD
     'django-tenant-schemas==1.6.2',
-=======
-    'django-tenant-schemas==1.5.7',
->>>>>>> develop
     'raven==5.16.0',
     'regex==2016.4.25',
     'djangorestframework-jwt==1.8.0',

@@ -8,8 +8,9 @@ from PIL import ImageFile
 from .payments import *
 from .admin_dashboard import *
 
-PROJECT_ROOT = os.path.abspath(os.path.join(
+BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
+PROJECT_ROOT = BASE_DIR
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG

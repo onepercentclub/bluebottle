@@ -38,7 +38,7 @@ class Address(models.Model):
 
 
 from django.dispatch.dispatcher import receiver
-from django.db.models.signals import post_migrate
+from django.db.models.signals import post_migrate, pre_migrate
 from django.conf import settings
 
 from bluebottle.utils.utils import update_group_permissions
@@ -63,6 +63,8 @@ ADDITIONAL_GROUP_PERMS = {
         )
     }
 }
+
+import bluebottle.utils.monkey_patch_migration
 
 
 @receiver(post_migrate)

@@ -184,14 +184,14 @@ class MemberAdmin(UserAdmin):
         # for superuser
         try:
             if request.user.is_superuser:
-                self.fieldsets = self.standard_fieldsets() + self.superuser_fieldsets
+                self.fieldsets = self.standard_fieldsets + self.superuser_fieldsets
             else:
-                self.fieldsets = self.standard_fieldsets() + self.staff_fieldsets
+                self.fieldsets = self.standard_fieldsets + self.staff_fieldsets
 
             response = UserAdmin.change_view(self, request, *args, **kwargs)
         finally:
             # Reset fieldsets to its original value
-            self.fieldsets = self.standard_fieldsets()
+            self.fieldsets = self.standard_fieldsets
         return response
 
     def __init__(self, *args, **kwargs):

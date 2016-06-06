@@ -730,6 +730,7 @@ class PayoutPledgeTestCase(PayoutBaseTestCase):
         self.assertEquals(payout.payout_rule, 'fully_funded')
         self.assertEquals(payout.amount_payable, Decimal('54.00'))
         self.assertEquals(payout.amount_pledged, Decimal('60.00'))
+        self.assertEquals(payout.organization_fee, Decimal('6.00'))
 
     def test_pledge_paid_not_fully_funded(self):
         """ Test amounts for paid donations. """
@@ -759,3 +760,4 @@ class PayoutPledgeTestCase(PayoutBaseTestCase):
         self.assertEquals(payout.payout_rule, 'not_fully_funded')
         self.assertEquals(payout.amount_payable, Decimal('48.00'))
         self.assertEquals(payout.amount_pledged, Decimal('30.00'))
+        self.assertEquals(payout.organization_fee, Decimal('12.00'))

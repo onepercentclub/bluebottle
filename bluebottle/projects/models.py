@@ -141,7 +141,7 @@ class Project(BaseProject):
                     "You can paste the link to YouTube or Vimeo video here"))
 
     popularity = models.FloatField(null=False, default=0)
-    is_campaign = models.BooleanField(default=False, help_text=_(
+    is_campaign = models.BooleanField(verbose_name='On homepage', default=False, help_text=_(
         "Project is part of a campaign and gets special promotion."))
 
     skip_monthly = models.BooleanField(_("Skip monthly"),

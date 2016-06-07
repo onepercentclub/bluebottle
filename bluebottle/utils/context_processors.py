@@ -5,28 +5,6 @@ from django.db import connection
 from django.conf import settings
 
 from bluebottle.clients import properties
-from tenant_extras.context_processors import tenant_properties as tenant_extra_properties
-
-
-def tenant_properties(request):
-    extra_properties = tenant_extra_properties(request)
-    settings = json.loads(extra_properties['settings'])
-
-    # If tenant has SAML enabled then we also return a list
-    # of read-only user profile properties.
-    try:
-        mappings = properties.TOKEN_AUTH['assertion_mapping']
-        settings['readOnlyFields'] = {
-            'user': mappings.keys()
-        }
-
-        extra_properties['settings'] = json.dumps(settings)
-    except KeyError:
-        pass
-    except AttributeError:
-        pass
-
-    return extra_properties
 
 
 def sentry_dsn(request):

@@ -107,7 +107,14 @@ def get_public_properties(request):
             'siteName': current_tenant.name,
             'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')],
             'languageCode': get_language()
-         }
+        }
+        try:
+            config['readOnlyFields'] = {
+                'user': properties.TOKEN_AUTH.get('assertion_mapping', {}).keys()
+            }
+        except AttributeError:
+            pass
+
     else:
         config = {}
 

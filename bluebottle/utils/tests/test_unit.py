@@ -52,31 +52,6 @@ def mock_attr(self, k):
     else:
         return getattr(settings, k)
 
-class TenantPropertiesTokenAuthTestCase(BluebottleTestCase):
-    def setUp(self):
-        self.rf = RequestFactory()
-
-    @mock.patch(
-        'bluebottle.clients.middleware.TenantProperties.__getattr__',
-        mock_attr
-    )
-    def test_read_only_settings(self):
-        from ..context_processors import tenant_properties
-
-        context = tenant_properties(self.rf)
-        tenant_settings = json.loads(context['settings'])
-
-        self.assertEqual(tenant_settings['readOnlyFields']['user'], ['first_name', 'last_name', 'email'])
-
-    def test_without_token_auth(self):
-        from ..context_processors import tenant_properties
-
-        context = tenant_properties(self.rf)
-        tenant_settings = json.loads(context['settings'])
-
-        with self.assertRaises(KeyError):
-            read_only = tenant_settings['readOnlyFields']
-
 
 class CustomSettingsTestCase(TestCase):
     """

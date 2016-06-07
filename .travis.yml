@@ -27,7 +27,6 @@ install:
 - echo `psql --version`
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
-- echo "SECRET_KEY = 'secret key'" > bluebottle/settings/secrets.py
 script:
 - python manage.py test
 notifications:

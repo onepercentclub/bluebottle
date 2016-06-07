@@ -15,7 +15,7 @@ class TaskWallObserver(WallpostObserver):
         WallpostObserver.__init__(self, instance)
 
     def notify(self):
-        task = self.post
+        task = self.parent
         task_owner = task.author
 
         if self.author != task_owner:

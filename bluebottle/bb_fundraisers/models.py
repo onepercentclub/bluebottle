@@ -25,7 +25,7 @@ class BaseFundraiser(models.Model, GetTweetMixin):
     video_url = models.URLField(max_length=100, blank=True, default='')
 
     amount = models.DecimalField(_("amount"), decimal_places=2, max_digits=10)
-    currency = models.CharField(max_length="10", default='EUR')
+    currency = models.CharField(max_length=10, default='EUR')
     deadline = models.DateTimeField(null=True)
 
     created = CreationDateTimeField(_("created"), help_text=_(

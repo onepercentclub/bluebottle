@@ -1,20 +1,21 @@
-# coding=utf-8
 from bluebottle.donations.models import Donation
 from rest_framework import serializers
 
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.projects.serializers import \
     ProjectPreviewSerializer as BaseProjectPreviewSerializer, ProjectPreviewSerializer
-
+from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.orders.models import Order
+from bluebottle.projects.models import Project
 
 class ManageDonationSerializer(serializers.ModelSerializer):
-    project = serializers.SlugRelatedField(slug_field='slug')
-    fundraiser = serializers.PrimaryKeyRelatedField(required=False)
-    order = serializers.PrimaryKeyRelatedField()
+    project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
+    fundraiser = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=Fundraiser.objects)
+    order = serializers.PrimaryKeyRelatedField(queryset=Order.objects)
     amount = serializers.DecimalField(
         max_digits=10, decimal_places=2, max_value=1500000
     )
-    status = serializers.CharField(source='status', read_only=True)
+    status = serializers.CharField(read_only=True)
 
     class Meta:
         model = Donation
@@ -26,30 +27,31 @@ class ManageDonationSerializer(serializers.ModelSerializer):
 
 class PreviewDonationSerializer(serializers.ModelSerializer):
     project = ProjectPreviewSerializer()
-    fundraiser = serializers.PrimaryKeyRelatedField(required=False)
-    payment_method = serializers.SerializerMethodField('get_payment_method')
+    fundraiser = serializers.PrimaryKeyRelatedField(required=False,
+                                                    queryset=Fundraiser.objects)
+    payment_method = serializers.SerializerMethodField()
     user = UserPreviewSerializer(source='public_user')
 
     class Meta:
         model = Donation
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
-                  'anonymous', 'amount', 'reward')
+                  'anonymous', 'amount', 'reward', 'payment_method')
 
     def get_payment_method(self, obj):
-        return obj.get_payment_method
-
+        return obj.get_payment_method()
 
 
 class PreviewDonationWithoutAmountSerializer(PreviewDonationSerializer):
-    payment_method = serializers.SerializerMethodField('get_payment_method')
+    payment_method = serializers.SerializerMethodField()
 
     class Meta:
         model = Donation
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
-                  'anonymous')
+                  'anonymous', 'payment_method')
 
     def get_payment_method(self, obj):
-        return obj.get_payment_method
+        return obj.get_payment_method()
+
 
 class DefaultDonationSerializer(PreviewDonationSerializer):
     class Meta:
@@ -58,8 +60,8 @@ class DefaultDonationSerializer(PreviewDonationSerializer):
 
 
 class LatestDonationProjectSerializer(BaseProjectPreviewSerializer):
-    task_count = serializers.IntegerField(source='task_count')
-    owner = UserPreviewSerializer(source='owner')
+    task_count = serializers.IntegerField()
+    owner = UserPreviewSerializer()
 
     class Meta(BaseProjectPreviewSerializer):
         model = BaseProjectPreviewSerializer.Meta.model
@@ -71,13 +73,14 @@ class LatestDonationProjectSerializer(BaseProjectPreviewSerializer):
 
 class LatestDonationSerializer(serializers.ModelSerializer):
     project = LatestDonationProjectSerializer()
-    payment_method = serializers.SerializerMethodField('get_payment_method')
+    payment_method = serializers.SerializerMethodField()
     user = UserPreviewSerializer
 
     class Meta:
         model = Donation
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
-                  'anonymous', 'amount')
+                  'anonymous', 'amount', 'payment_method')
 
     def get_payment_method(self, obj):
-        return obj.get_payment_method
+        return obj.get_payment_method()
+

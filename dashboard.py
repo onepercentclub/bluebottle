@@ -86,7 +86,7 @@ class Metrics():
 
     def calculate_supporters(self):
         """ Return the number of unique people who did a successfull donation """
-        return Donation.objects.filter(order__status__in=['success', 'pending']).distinct('order__user').count()
+        return Donation.objects.filter(order__status__in=['success', 'pending']).order_by('order__user').distinct('order__user').count()
 
     def calculate_total_raised(self):
         """ Calculate the total amount raised by projects """
@@ -95,7 +95,7 @@ class Metrics():
     def calculate_initiators(self):
         """ Return number of unique users that started a project, which now has a valid status """
         project_statuses = [6, 8, 9]  # Campaign, Done-Complete, Done-Incomplete
-        return Project.objects.filter(status__sequence__in=project_statuses).distinct('owner').count()
+        return Project.objects.filter(status__sequence__in=project_statuses).order_by('owner').distinct('owner').count()
 
     def calculate_realized_tasks_unconfirmed_taskmembers(self):
         """ Return unique number of realzied tasks where there no task members with status realized """
@@ -358,9 +358,9 @@ class MetricsModule(DashboardModule):
         project_statuses = [6, 8, 9]  # Campaign, Done-Complete, Done-Incomplete
 
         for year in years:
-            task_members = TaskMember.objects.filter(task__deadline__year=year, status__in=allowed_statuses).distinct('member')
-            project_owners = Project.objects.values('owner').filter(created__year=year, status__sequence__in=project_statuses).distinct('owner')
-            doubles = task_members.filter(member__pk__in=project_owners)
+            task_members = TaskMember.objects.filter(task__deadline__year=year, status__in=allowed_statuses).order_by('member').distinct('member')
+            project_owners = Project.objects.values('owner').filter(created__year=year, status__sequence__in=project_statuses).order_by('owner').distinct('owner')
+            doubles = task_members.filter(member__in=project_owners)
             participants[year] = task_members.count() + project_owners.count() - doubles.count()
 
         metrics = Metrics()

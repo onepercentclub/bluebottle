@@ -1,7 +1,8 @@
 import logging
 import sys
 
-from .secrets import *
+SECRET_KEY = '1, 2, this is just a test!'
+
 from .base import *
 from bluebottle.payments_docdata.settings import *
 
@@ -62,8 +63,6 @@ TENANT_APPS += (
     'bluebottle.payments_mock',
 )
 
-INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('django_nose', 'tenant_schemas',)
-
 from bluebottle.payments_mock.settings import (MOCK_PAYMENT_METHODS,
                                                MOCK_FEES)
 
@@ -84,3 +83,6 @@ RECURRING_DONATIONS_ENABLED = True
 
 SEND_WELCOME_MAIL = False
 SEND_MAIL = True
+
+
+TEST_RUNNER = 'bluebottle.test.test_runner.MultiTenantRunner'

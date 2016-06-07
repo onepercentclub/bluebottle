@@ -45,7 +45,7 @@ class BaseOrder(models.Model, FSMTransition):
     status = FSMField(default=StatusDefinition.CREATED, choices=STATUS_CHOICES,
                       protected=True)
 
-    order_type = models.CharField(max_length='100', default='one-off')
+    order_type = models.CharField(max_length=100, default='one-off')
 
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
@@ -57,13 +57,13 @@ class BaseOrder(models.Model, FSMTransition):
     total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
                                 default=0)
 
-    @transition(field=status, 
+    @transition(field=status,
                 source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED],
                 target=StatusDefinition.LOCKED)
     def locked(self):
         pass
 
-    @transition(field=status, 
+    @transition(field=status,
                 source=[StatusDefinition.LOCKED, StatusDefinition.CREATED],
                 target=StatusDefinition.PLEDGED)
     def pledged(self):

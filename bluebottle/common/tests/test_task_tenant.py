@@ -1,6 +1,6 @@
 import mock
 
-from django.utils import unittest
+import unittest
 
 from bluebottle.common.tasks import _send_celery_mail
 from bluebottle.clients import properties

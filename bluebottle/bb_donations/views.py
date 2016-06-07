@@ -2,6 +2,7 @@ import logging
 from django.http.response import Http404
 from rest_framework import permissions, generics
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bb_orders.permissions import OrderIsNew, IsOrderCreator
 from bluebottle.clients import properties
 from bluebottle.donations.serializers import LatestDonationSerializer, PreviewDonationSerializer, \
@@ -12,6 +13,10 @@ from bluebottle.donations.models import Donation
 from bluebottle.utils.utils import StatusDefinition
 
 logger = logging.getLogger(__name__)
+
+
+class DonationPagination(BluebottlePagination):
+    page_size = 20
 
 
 class ValidDonationsMixin(object):
@@ -28,6 +33,7 @@ class ValidDonationsMixin(object):
 
 class DonationList(ValidDonationsMixin, generics.ListAPIView):
     queryset = Donation.objects.all()
+    pagination_class = DonationPagination
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
@@ -46,22 +52,20 @@ class DonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 
 class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
     queryset = Donation.objects.all()
+    pagination_class = DonationPagination
 
     def get_serializer_class(self):
         if getattr(properties, 'SHOW_DONATION_AMOUNTS', True):
             return PreviewDonationSerializer
         return PreviewDonationWithoutAmountSerializer
 
-    paginate_by = 20
-    paginate_by_param = 'page_size'
-
     def get_queryset(self):
         queryset = super(ProjectDonationList, self).get_queryset()
 
         filter_kwargs = {}
 
-        project_slug = self.request.QUERY_PARAMS.get('project', None)
-        fundraiser_id = self.request.QUERY_PARAMS.get('fundraiser', None)
+        project_slug = self.request.query_params.get('project', None)
+        fundraiser_id = self.request.query_params.get('fundraiser', None)
 
         if fundraiser_id:
             try:
@@ -81,8 +85,8 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
             raise Http404(u"No %(verbose_name)s found matching the query" %
                           {'verbose_name': Project._meta.verbose_name})
 
-        if 'co_financing' in self.request.QUERY_PARAMS and \
-           self.request.QUERY_PARAMS['co_financing'] == 'true':
+        if 'co_financing' in self.request.query_params and \
+           self.request.query_params['co_financing'] == 'true':
             filter_kwargs['order__user__is_co_financer'] = True
         else:
             from django.db.models import Q
@@ -107,13 +111,14 @@ class ProjectDonationDetail(ValidDonationsMixin, generics.RetrieveAPIView):
 class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
     queryset = Donation.objects.all()
     serializer_class = DefaultDonationSerializer
+    pagination_class = DonationPagination
 
     def get_queryset(self):
         queryset = super(MyProjectDonationList, self).get_queryset()
 
         filter_kwargs = {}
 
-        project_slug = self.request.QUERY_PARAMS.get('project', None)
+        project_slug = self.request.query_params.get('project', None)
         try:
             project = Project.objects.get(slug=project_slug,
                                                 owner=self.request.user)
@@ -128,13 +133,14 @@ class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 class MyFundraiserDonationList(ValidDonationsMixin, generics.ListAPIView):
     queryset = Donation.objects.all()
     serializer_class = DefaultDonationSerializer
+    page_size = 20
 
     def get_queryset(self):
         queryset = super(MyFundraiserDonationList, self).get_queryset()
 
         filter_kwargs = {}
 
-        fundraiser_pk = self.request.QUERY_PARAMS.get('fundraiser', None)
+        fundraiser_pk = self.request.query_params.get('fundraiser', None)
         try:
             fundraiser = Fundraiser.objects.get(pk=fundraiser_pk,
                                                 owner=self.request.user)
@@ -150,7 +156,7 @@ class ManageDonationList(generics.ListCreateAPIView):
     queryset = Donation.objects.all()
     serializer_class = ManageDonationSerializer
     permission_classes = (IsOrderCreator, OrderIsNew)
-    paginate_by = 10
+    pagination_class = DonationPagination
 
     def get_queryset(self):
         queryset = super(ManageDonationList, self).get_queryset()
@@ -160,8 +166,8 @@ class ManageDonationList(generics.ListCreateAPIView):
         if user_id:
             filter_kwargs['order__user__pk'] = user_id
 
-        status = self.request.QUERY_PARAMS.get('status', None)
-        statuses = self.request.QUERY_PARAMS.getlist('status[]', None)
+        status = self.request.query_params.get('status', None)
+        statuses = self.request.query_params.getlist('status[]', None)
         if statuses:
             queryset = queryset.filter(order__status__in=statuses)
         elif status:
@@ -183,7 +189,7 @@ class LatestDonationsList(generics.ListAPIView):
     queryset = Donation.objects.all()
     serializer_class = LatestDonationSerializer
     permission_classes = (permissions.IsAdminUser,)
-    paginate_by = 20
+    pagination_class = DonationPagination
 
     def get_queryset(self):
         qs = super(LatestDonationsList, self).get_queryset()

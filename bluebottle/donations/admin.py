@@ -77,6 +77,7 @@ class DonationUserFilter(SimpleListFilter):
 class DonationAdminForm(forms.ModelForm):
     class Meta:
         model = Donation
+        exclude = ()
 
     def __init__(self, *args, **kwargs):
         super(DonationAdminForm, self).__init__(*args, **kwargs)
@@ -142,7 +143,7 @@ class DonationAdmin(admin.ModelAdmin):
     def order_link(self, obj):
         object = obj.order
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
-                                                    object._meta.module_name),
+                                                    object._meta.model_name),
                       args=[object.id])
         return "<a href='{0}'>Order: {1}</a>".format(str(url), obj.id)
 
@@ -151,7 +152,7 @@ class DonationAdmin(admin.ModelAdmin):
     def user_link(self, obj):
         user = obj.order.user
         url = reverse('admin:{0}_{1}_change'.format(user._meta.app_label,
-                                                    user._meta.module_name),
+                                                    user._meta.model_name),
                       args=[user.id])
         return "<a href='{0}'>{1}</a>".format(str(url), user)
 
@@ -160,7 +161,7 @@ class DonationAdmin(admin.ModelAdmin):
     def project_link(self, obj):
         project = obj.project
         url = reverse('admin:{0}_{1}_change'.format(project._meta.app_label,
-                                                    project._meta.module_name),
+                                                    project._meta.model_name),
                       args=[project.id])
         return "<a href='{0}'>{1}</a>".format(str(url), project)
 
@@ -170,7 +171,7 @@ class DonationAdmin(admin.ModelAdmin):
         fundraiser = obj.fundraiser
         url = reverse(
             'admin:{0}_{1}_change'.format(fundraiser._meta.app_label,
-                                          fundraiser._meta.module_name),
+                                          fundraiser._meta.model_name),
             args=[fundraiser.id])
         return "<a href='{0}'>{1}</a>".format(str(url), fundraiser)
 
@@ -207,7 +208,7 @@ class DonationInline(admin.TabularInline):
     def donation_link(self, obj):
         object = obj
         url = reverse('admin:{0}_{1}_change'.format(
-            object._meta.app_label, object._meta.module_name), args=[object.id])
+            object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='{0}'>Donation: {1}</a>".format(str(url), obj.id)
 
     donation_link.allow_tags = True

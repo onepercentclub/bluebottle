@@ -262,7 +262,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         (_('Details'), {'fields': ('language', 'theme', 'categories', 'image',
                                    'video_url', 'country',
                                    'latitude', 'longitude',
-                                   'location', 'place', 'tags')}),
+                                   'location', 'place')}),
 
         (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
                                 'amount_donated', 'amount_needed',
@@ -333,7 +333,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def project_owner(self, obj):
         object = obj.owner
         url = reverse('admin:{0}_{1}_change'.format(
-            object._meta.app_label, object._meta.module_name), args=[object.id])
+            object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='{0}'>{1}</a>".format(
             str(url), object.first_name + ' ' + object.last_name)
 

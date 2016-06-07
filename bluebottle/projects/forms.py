@@ -27,6 +27,7 @@ class ProjectDocumentForm(forms.ModelForm):
         widgets = {
             'file': UploadWidget()
         }
+        exclude = ()
 
     def __init__(self, *args, **kwargs):
         super(ProjectDocumentForm, self).__init__(*args, **kwargs)

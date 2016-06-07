@@ -67,8 +67,7 @@ def payment_status_changed(sender, instance, **kwargs):
 
 @receiver(post_save, weak=False, dispatch_uid='default_status')
 def default_status_check(sender, instance, **kwargs):
-    if not (isinstance(instance, Payment)
-            or isinstance(instance, OrderPayment)):
+    if not isinstance(instance, OrderPayment):
         return
 
     # Send status change notification when record first created

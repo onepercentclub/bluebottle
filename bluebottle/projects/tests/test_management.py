@@ -215,14 +215,7 @@ class TestMultiTenant(BluebottleTestCase):
             amount_asked=0)
 
         # Create a second tenant
-        connection.set_schema_to_public()
-        tenant_domain = 'testserver2'
-        self.tenant2 = get_tenant_model()(
-            domain_url=tenant_domain,
-            schema_name='test2',
-            client_name='test2')
-
-        self.tenant2.save(verbosity=0)
+        self.tenant2 = get_tenant_model().objects.get(schema_name='test2')
         connection.set_tenant(self.tenant2)
 
         self.init_projects()

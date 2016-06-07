@@ -52,7 +52,7 @@ class TestCreateUpdateOrder(OrderApiTestCase):
                                     token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], StatusDefinition.CREATED)
-        self.assertEqual(response.data['total'], 0)
+        self.assertEqual(response.data['total'], u'0.00')
         order_id = response.data['id']
 
         # Check that there's one order
@@ -68,7 +68,7 @@ class TestCreateUpdateOrder(OrderApiTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], StatusDefinition.CREATED)
-        self.assertEqual(response.data['total'], 0)
+        self.assertEqual(response.data['total'], u'0.00')
         order_id = response.data['id']
 
         # User should be able to update the order because status is still 'new'

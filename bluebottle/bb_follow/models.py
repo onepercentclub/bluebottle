@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models.signals import post_save
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes import fields
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
@@ -27,7 +27,7 @@ class Follow(models.Model):
     user = models.ForeignKey('members.Member')
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
-    followed_object = generic.GenericForeignKey('content_type', 'object_id')
+    followed_object = fields.GenericForeignKey('content_type', 'object_id')
 
     def __unicode__(self):
         if self.followed_object:

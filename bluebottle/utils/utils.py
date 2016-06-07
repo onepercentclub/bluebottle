@@ -3,6 +3,7 @@ import socket
 from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
 from django.conf import settings
+from django.contrib.auth.management import create_permissions
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 
@@ -19,7 +20,7 @@ def get_languages():
     return properties.LANGUAGES
 
 
-class GetTweetMixin:
+class GetTweetMixin(object):
     def get_fb_title(self, **kwargs):
         return self.get_meta_title()
 
@@ -49,7 +50,7 @@ class GetTweetMixin:
         return tweet
 
 
-class StatusDefinition:
+class StatusDefinition(object):
     """
     Various status definitions for FSM's
     """
@@ -72,7 +73,7 @@ class StatusDefinition:
     UNKNOWN = 'unknown'
 
 
-class FSMTransition:
+class FSMTransition(object):
     """
     Class mixin to add transition_to method for Django FSM
     """
@@ -229,17 +230,16 @@ def get_country_code_by_ip(ip_address=None):
 
 
 def update_group_permissions(sender, group_perms=None):
-    if hasattr(sender, 'GROUP_PERMS'):
-        group_perms = sender.GROUP_PERMS
-
+    create_permissions(sender, verbosity=False)
     try:
-        for group_name in group_perms.keys():
+        group_perms = sender.module.models.GROUP_PERMS
+        for group_name, permissions in group_perms.items():
             group, _ = Group.objects.get_or_create(name=group_name)
-            for perm_codename in group_perms[group_name]['perms']:
+            for perm_codename in permissions['perms']:
                 perm = Permission.objects.get(codename=perm_codename)
                 group.permissions.add(perm)
 
             group.save()
-    except:
+    except Exception, e:
         pass
 

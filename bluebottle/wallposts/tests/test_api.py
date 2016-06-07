@@ -1,22 +1,15 @@
 from bluebottle.test.utils import BluebottleTestCase
 from django.core.urlresolvers import reverse
-from django.utils.translation import ugettext_lazy as _
-import json
 
 from django.core import mail
-from django.test import TestCase
 from rest_framework import status
-from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.tests.test_unit import UserTestsMixin
-from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, \
-    ProjectThemeFactory, ProjectPhaseFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory
 from ..models import Reaction
-from bluebottle.wallposts import mails
 
 
 class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
@@ -50,8 +43,8 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         # The owner can share a wallpost
         wallpost = self.client.post(self.media_wallpost_url,
-                            wallpost_data,
-                            token=self.owner_token)
+                                    wallpost_data,
+                                    token=self.owner_token)
 
         self.assertEqual(
             wallpost.status_code, status.HTTP_201_CREATED,
@@ -59,12 +52,12 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         # Non-owner users can't share a post
         wallpost = self.client.post(self.media_wallpost_url,
-                            wallpost_data,
-                            token=self.other_token)
+                                    wallpost_data,
+                                    token=self.other_token)
 
-        self.assertEqual(
-            wallpost.status_code, status.HTTP_403_FORBIDDEN,
-            'Only the project owner can share a wallpost.')
+        self.assertEqual(wallpost.status_code,
+                         status.HTTP_403_FORBIDDEN,
+                         'Only the project owner can share a wallpost.')
 
     def test_permissions_on_task_wallpost_sharing(self):
         """
@@ -77,30 +70,30 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         # Non-owner users can't share a post
         wallpost = self.client.post(self.media_wallpost_url,
-                            wallpost_data,
-                            token=self.other_token)
+                                    wallpost_data,
+                                    token=self.other_token)
 
-        self.assertEqual(
-            wallpost.status_code, status.HTTP_403_FORBIDDEN,
-            'Only the task owner can share a wallpost.')
+        self.assertEqual(wallpost.status_code,
+                         status.HTTP_403_FORBIDDEN,
+                         'Only the task owner can share a wallpost.')
 
     def test_permissions_on_fundraiser_wallpost_sharing(self):
         """
         Tests that only the fundraiser creator can share a wallpost.
         """
         wallpost_data = {'parent_id': str(self.fundraiser.id),
-                         'parent_type': 'task',
+                         'parent_type': 'fundraiser',
                          'text': 'I can share stuff!',
                          'share_with_facebook': True}
 
         # Non-owner users can't share a post
         wallpost = self.client.post(self.media_wallpost_url,
-                            wallpost_data,
-                            token=self.other_token)
+                                    wallpost_data,
+                                    token=self.other_token)
 
-        self.assertEqual(
-            wallpost.status_code, status.HTTP_403_FORBIDDEN,
-            'Only the fundraiser owner can share a wallpost.')
+        self.assertEqual(wallpost.status_code,
+                         status.HTTP_403_FORBIDDEN,
+                         'Only the fundraiser owner can share a wallpost.')
 
 
 class WallpostReactionApiIntegrationTest(BluebottleTestCase):

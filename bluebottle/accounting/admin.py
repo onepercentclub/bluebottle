@@ -84,19 +84,19 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
 
     def payout_link(self, obj):
         object = obj.payout
-        url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.module_name), args=[object.id])
+        url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='%s'>%s (%s)</a>" % (str(url), object, object.amount)
     payout_link.allow_tags = True
 
     def remote_payout_link(self, obj):
         object = obj.remote_payout
-        url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.module_name), args=[object.id])
+        url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='%s'>%s</a> Payout amount %s" % (str(url), object, object.payout_amount)
     remote_payout_link.allow_tags = True
 
     def remote_payment_link(self, obj):
         object = obj.remote_payment
-        url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.module_name), args=[object.id])
+        url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='%s'>%s</a> Amount collected %s" % (str(url), object, object.amount_collected)
     remote_payout_link.allow_tags = True
 
@@ -287,7 +287,7 @@ class DocdataPaymentAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
         payment = obj.local_payment
         if payment:
             url = reverse('admin:%s_%s_change' % (
-                payment._meta.app_label, payment._meta.module_name), args=[payment.id])
+                payment._meta.app_label, payment._meta.model_name), args=[payment.id])
             return "<a href='%s'>%s</a>" % (str(url), payment)
         return '-'
     payment_link.allow_tags = True
@@ -298,7 +298,7 @@ class DocdataPaymentAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
 
     def payout_link(self, obj):
         object = obj.remote_payout
-        url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.module_name), args=[object.id])
+        url = reverse('admin:%s_%s_change' % (object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='%s'>%s</a>" % (str(url), object)
     payout_link.allow_tags = True
 
@@ -367,8 +367,8 @@ class OrderPaymentAdmin(admin.ModelAdmin):
                    OrderPaymentMatchedListFilter, OrderPaymentIntegrityListFilter)
     ordering = ('-created',)
 
-    def queryset(self, request):
-        return super(OrderPaymentAdmin, self).queryset(request).select_related('payment').annotate(
+    def get_queryset(self, request):
+        return super(OrderPaymentAdmin, self).get_queryset(request).select_related('payment').annotate(
             rdp_amount_collected=Sum('payment__remotedocdatapayment__amount_collected'),
             n_journals=Count('journals')
         )
@@ -378,13 +378,13 @@ class OrderPaymentAdmin(admin.ModelAdmin):
 
     def order_link(self, obj):
         object = obj.order
-        url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
+        url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='{0}'>Order: {1}</a>".format(str(url), object.id)
     order_link.allow_tags = True
 
     def payment_link(self, obj):
         object = obj.payment
-        url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
+        url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='{0}'>{1}: {2}</a>".format(str(url), object.polymorphic_ctype, object.id)
     payment_link.allow_tags = True
 
@@ -395,7 +395,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
                               for journal in obj.journals.all())
         if self.matched(obj):
             object = obj.payment.remotedocdatapayment_set.all()[0]
-            url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.module_name), args=[object.id])
+            url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label, object._meta.model_name), args=[object.id])
             return "<a href='{0}'>Remote Docdata Payment: {1}</a>".format(str(url), object.id)
     remote_payment_link.allow_tags = True
 

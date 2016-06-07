@@ -3,7 +3,7 @@ from django.http import Http404
 from functools import update_wrapper
 from django.utils.translation import ugettext_lazy as _
 
-from django.contrib.admin.util import unquote
+from django.contrib.admin.utils import unquote
 from django.utils.encoding import force_unicode
 
 
@@ -39,6 +39,6 @@ class ExtendibleModelAdminMixin(object):
         return update_wrapper(wrapper, view)
 
     def _view_name(self, name):
-        info = self.model._meta.app_label, self.model._meta.module_name, name
+        info = self.model._meta.app_label, self.model._meta.model_name, name
 
         return '%s_%s_%s' % info

@@ -10,12 +10,13 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.bluebottle_drf2.serializers import (
     EuroField, OEmbedField, SorlImageField, ImageSerializer,
-    TaggableSerializerMixin, TagSerializer, PrivateFileSerializer)
+    PrivateFileSerializer)
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
 from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-
+from bluebottle.geo.models import Location
+from bluebottle.categories.models import Category
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
     class Meta:
@@ -33,12 +34,12 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class StoryField(serializers.WritableField):
-    def to_native(self, value):
+class StoryField(serializers.CharField):
+    def to_representation(self, value):
         """ Reading / Loading the story field """
         return value
 
-    def from_native(self, data):
+    def to_internal_value(self, data):
         """
         Saving the story text
 
@@ -63,7 +64,7 @@ class ProjectCountrySerializer(CountrySerializer):
 
 class ProjectBudgetLineSerializer(serializers.ModelSerializer):
     amount = EuroField()
-    project = serializers.SlugRelatedField(slug_field='slug')
+    project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
 
     class Meta:
         model = ProjectBudgetLine
@@ -80,7 +81,7 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
 
 class ProjectDocumentSerializer(serializers.ModelSerializer):
     file = PrivateFileSerializer()
-    project = serializers.SlugRelatedField(slug_field='slug')
+    project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
 
     class Meta:
         model = ProjectDocument
@@ -91,21 +92,20 @@ class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     owner = UserProfileSerializer()
     image = ImageSerializer(required=False)
-    tags = TagSerializer()
-    task_count = serializers.IntegerField(source='task_count')
-    country = ProjectCountrySerializer(source='country')
+    task_count = serializers.IntegerField()
+    country = ProjectCountrySerializer()
     story = StoryField()
-    is_funding = serializers.Field()
+    is_funding = serializers.ReadOnlyField()
     budget_lines = BasicProjectBudgetLineSerializer(
         many=True, source='projectbudgetline_set', read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
-    location = serializers.PrimaryKeyRelatedField(required=False)
-    vote_count = serializers.IntegerField(source='vote_count')
-    supporter_count = serializers.IntegerField(source='supporter_count')
+    location = serializers.PrimaryKeyRelatedField(required=False, queryset=Location.objects)
+    vote_count = serializers.IntegerField()
+    supporter_count = serializers.IntegerField()
 
-    people_requested = serializers.Field()
-    people_registered = serializers.Field()
+    people_requested = serializers.ReadOnlyField()
+    people_registered = serializers.ReadOnlyField()
 
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
@@ -114,7 +114,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ('id', 'created', 'title', 'pitch', 'organization',
                   'description', 'owner', 'status', 'image',
-                  'country', 'theme', 'categories', 'tags', 'language',
+                  'country', 'theme', 'categories', 'language',
                   'latitude', 'longitude', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'allow_overfunding',
                   'task_count', 'amount_asked', 'amount_donated',
@@ -126,12 +126,13 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class ProjectPreviewSerializer(ProjectSerializer):
-    image = SorlImageField('image', '400x300', crop='center')
-    theme = ProjectThemeSerializer(source='theme')
+    image = SorlImageField('400x300', crop='center')
+    theme = ProjectThemeSerializer()
 
     owner = UserPreviewSerializer()
 
-    categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
+    categories = serializers.SlugRelatedField(many=True, read_only=True,
+                                              slug_field='slug')
 
     class Meta:
         model = Project
@@ -145,29 +146,28 @@ class ProjectPreviewSerializer(ProjectSerializer):
 
 
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
-    id = serializers.CharField(source='slug', read_only=True)
-    image = SorlImageField('image', '400x300', crop='center')
+    id = serializers.CharField(read_only=True)
+    image = SorlImageField('400x300', crop='center')
 
     class Meta:
         model = Project
         fields = ('id', 'title', 'status', 'image', 'latitude', 'longitude')
 
 
-class ManageProjectSerializer(TaggableSerializerMixin,
-                              serializers.ModelSerializer):
+class ManageProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
     url = serializers.HyperlinkedIdentityField(
-        view_name='project_manage_detail')
+        view_name='project_manage_detail', lookup_field='slug')
+
     editable = serializers.BooleanField(read_only=True)
     viewable = serializers.BooleanField(read_only=True)
-    status = serializers.PrimaryKeyRelatedField(required=False)
-    location = serializers.PrimaryKeyRelatedField(required=False)
-    image = ImageSerializer(required=False)
-    pitch = serializers.CharField(required=False)
+    status = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=ProjectPhase.objects)
+    location = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=Location.objects)
+    image = ImageSerializer(required=False, allow_null=True)
+    pitch = serializers.CharField(required=False, allow_null=True)
     slug = serializers.CharField(read_only=True)
-    tags = TagSerializer()
-    amount_asked = serializers.CharField(required=False, allow_none=True)
+    amount_asked = serializers.CharField(required=False, allow_null=True)
     amount_donated = serializers.CharField(read_only=True)
     amount_needed = serializers.CharField(read_only=True)
     budget_lines = ProjectBudgetLineSerializer(many=True,
@@ -175,14 +175,13 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                                                read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
-    story = StoryField(required=False)
-    is_funding = serializers.Field()
+    story = StoryField(required=False, allow_blank=True)
+    is_funding = serializers.ReadOnlyField()
 
     documents = ProjectDocumentSerializer(
-        many=True, source='documents', read_only=True)
+        many=True, read_only=True)
 
-    def validate_account_number(self, attrs, source):
-        value = attrs.get(source)
+    def validate_account_number(self, value):
 
         if value:
             country_code = value[:2]
@@ -197,17 +196,9 @@ class ManageProjectSerializer(TaggableSerializerMixin,
             if country_code in iban_validator.validation_countries.keys() and \
               digits_regex.match(check_digits):
                 iban_validator(value)
-        return attrs
+        return value
 
-    def validate_account_bic(self, attrs, source):
-        value = attrs.get(source)
-        if value:
-            bic_validator = BICValidator()
-            bic_validator(value)
-        return attrs
-
-    def validate_status(self, attrs, source):
-        value = attrs.get(source, None)
+    def validate_status(self, value):
         if not value:
             value = ProjectPhase.objects.order_by('sequence').all()[0]
         else:
@@ -234,9 +225,8 @@ class ManageProjectSerializer(TaggableSerializerMixin,
 
             # Get the current status or the first if not found
             try:
-                current_status = Project.objects.get(
-                    slug=self.data['slug']).status
-            except KeyError:
+                current_status = Project.objects.get(slug=self.initial_data['slug']).status
+            except (Project.DoesNotExist, KeyError):
                 current_status = ProjectPhase.objects.order_by(
                     'sequence').all()[0]
 
@@ -256,13 +246,12 @@ class ManageProjectSerializer(TaggableSerializerMixin,
                     raise serializers.ValidationError(
                         _("You can not change the project state."))
 
-        attrs[source] = value
-        return attrs
+        return value
 
     class Meta:
         model = Project
         fields = ('id', 'title', 'description', 'editable', 'viewable',
-                  'status', 'image', 'pitch', 'slug', 'tags', 'created',
+                  'status', 'image', 'pitch', 'slug', 'created',
                   'url', 'country', 'location', 'place', 'theme', 'categories',
                   'organization', 'language', 'account_holder_name',
                   'account_holder_address', 'account_holder_postal_code',
@@ -291,7 +280,7 @@ class ProjectSupporterSerializer(serializers.ModelSerializer):
 class ProjectDonationSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer(source='user')
     date_donated = serializers.DateTimeField(source='ready')
-    amount = EuroField(source='amount')
+    amount = EuroField()
 
     class Meta:
         model = Donation

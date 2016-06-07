@@ -4,6 +4,7 @@ from rest_framework import serializers
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer, OEmbedField
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.members.serializers import UserProfileSerializer
+from bluebottle.projects.models import Project
 
 
 class ImageSerializerExt(ImageSerializer):
@@ -40,9 +41,11 @@ class BaseFundraiserSerializer(serializers.ModelSerializer):
     """ Serializer to view/create fundraisers """
 
     owner = UserProfileSerializer(read_only=True)
-    project = serializers.SlugRelatedField(source='project', slug_field='slug')
+    project = serializers.SlugRelatedField(slug_field='slug',
+                                           queryset=Project.objects)
     image = ImageSerializerExt()
-    amount_donated = serializers.DecimalField(source='amount_donated',
+    amount_donated = serializers.DecimalField(max_digits=16,
+                                              decimal_places=2,
                                               read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
@@ -53,14 +56,9 @@ class BaseFundraiserSerializer(serializers.ModelSerializer):
                   'created', 'video_html', 'video_url', 'amount',
                   'amount_donated', 'deadline')
 
-    def validate_deadline(self, attrs, source):
-        """
-        Field level validation for deadline field, see
-        http://www.django-rest-framework.org/api-guide/serializers#validation
-        """
-        if not attrs.get('deadline', None) or not attrs.get('project',
-                                                            None) or attrs.get(
-                'deadline') > attrs.get('project').deadline:
+    def validate(self, data):
+        if not data['deadline'] or data['deadline'] > data['project'].deadline:
             raise serializers.ValidationError(
-                _("Fundraiser deadline exceeds project deadline."))
-        return attrs
+                {'deadline': [_("Fundraiser deadline exceeds project deadline.")]}
+            )
+        return data

@@ -12,6 +12,7 @@ from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.http import urlquote
 from django.utils.timezone import now
+from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
@@ -40,7 +41,7 @@ class ProjectPhaseLog(BaseProjectPhaseLog):
 
 class ProjectManager(models.Manager):
     def search(self, query):
-        qs = super(ProjectManager, self).get_query_set()
+        qs = super(ProjectManager, self).get_queryset()
 
         # Apply filters
         status = query.getlist(u'status[]', None)
@@ -179,7 +180,7 @@ class Project(BaseProject):
     voting_deadline = models.DateTimeField(_('Voting Deadline'), null=True,
                                            blank=True)
 
-    categories = models.ManyToManyField('categories.Category', null=True, blank=True)
+    categories = models.ManyToManyField('categories.Category', blank=True)
 
     objects = ProjectManager()
 

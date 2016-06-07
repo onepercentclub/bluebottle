@@ -1,8 +1,11 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-import django_filters
+
 from rest_framework import permissions, exceptions
 
+import django_filters
+
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.bluebottle_drf2.views import (
     ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView)
@@ -16,7 +19,7 @@ from .models import (TextWallpost, MediaWallpost, MediaWallpostPhoto,
 from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
                           MediaWallpostPhotoSerializer, ReactionSerializer,
                           WallpostSerializer)
-from .permissions import IsConnectedWallpostAuthorOrReadOnly
+from .permissions import IsConnectedWallpostAuthorOrReadOnly, CanEmailFollowers
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
@@ -30,23 +33,31 @@ class WallpostFilter(django_filters.FilterSet):
         fields = ['parent_type', 'parent_id']
 
 
+class SetAuthorMixin(object):
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))
+
+    def perform_update(self, serializer):
+        serializer.save(editor=self.request.user, ip_address=get_client_ip(self.request))
+
+
 class WallpostList(ListAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
-    paginate_by = 10
+    pagination_class = BluebottlePagination
 
-    def get_queryset(self):
+    def get_queryset(self, queryset=queryset):
         queryset = super(WallpostList, self).get_queryset()
 
         # Some custom filtering projects slugs.
-        parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
-        parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
+        parent_type = self.request.query_params.get('parent_type', None)
+        parent_id = self.request.query_params.get('parent_id', None)
         if parent_type == 'project':
             content_type = ContentType.objects.get_for_model(Project)
         else:
             white_listed_apps = ['projects', 'tasks', 'fundraisers']
             content_type = ContentType.objects.filter(
-                app_label__in=white_listed_apps).get(name=parent_type)
+                app_label__in=white_listed_apps).get(model=parent_type)
         queryset = queryset.filter(content_type=content_type)
 
         if parent_type == 'project' and parent_id:
@@ -62,18 +73,24 @@ class WallpostList(ListAPIView):
         return queryset
 
 
-class TextWallpostList(ListCreateAPIView):
+class WallpostPagination(BluebottlePagination):
+    page_size = 5
+
+
+class TextWallpostList(SetAuthorMixin, ListCreateAPIView):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
-    paginate_by = 5
-    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly)
+    pagination_class = WallpostPagination
+    permission_classes = (TenantConditionalOpenClose,
+                          IsAuthenticatedOrReadOnly,
+                          CanEmailFollowers)
 
     def get_queryset(self, queryset=None):
         queryset = super(TextWallpostList, self).get_queryset()
         # Some custom filtering projects slugs.
-        parent_type = self.request.QUERY_PARAMS.get('parent_type', None)
-        parent_id = self.request.QUERY_PARAMS.get('parent_id', None)
+        parent_type = self.request.query_params.get('parent_type', None)
+        parent_id = self.request.query_params.get('parent_id', None)
         if parent_type == 'project' and parent_id:
             try:
                 project = Project.objects.get(slug=parent_id)
@@ -84,58 +101,39 @@ class TextWallpostList(ListCreateAPIView):
         queryset = queryset.order_by('-created')
         return queryset
 
-    def pre_save(self, obj):
-        can_save = False
 
-        # If followers will be emailed then check the request user
-        # has permissions, eg they are the owner / author of the
-        # parent object (project, task, fundraiser).
-        if obj.email_followers:
-            parent_obj = obj.content_object
-
-            if isinstance(parent_obj, Project) or \
-               isinstance(parent_obj, Fundraiser):
-                can_save = parent_obj.owner == self.request.user
-            elif isinstance(parent_obj, Task):
-                can_save = parent_obj.author == self.request.user
-        else:
-          can_save = True
-
-        if not can_save:
-            raise exceptions.PermissionDenied()
-
-        # Set the author / editor and ip address for the request
-        if not obj.author:
-            obj.author = self.request.user
-        else:
-            obj.editor = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+class TextWallpostDetail(SetAuthorMixin, RetrieveUpdateDeleteAPIView):
+    queryset = TextWallpost.objects.all()
+    serializer_class = TextWallpostSerializer
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly)
 
 
 class MediaWallpostList(TextWallpostList):
     queryset = MediaWallpost.objects.all()
     serializer_class = MediaWallpostSerializer
     filter_class = WallpostFilter
-    paginate_by = 5
+    pagination_class = WallpostPagination
+
+
+class MediaWallpostDetail(TextWallpostDetail):
+    queryset = MediaWallpost.objects.all()
+    serializer_class = MediaWallpostSerializer
 
 
 class WallpostDetail(RetrieveUpdateDeleteAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
+    
+
+class MediaWallpostPhotoPagination(BluebottlePagination):
+    page_size = 4
 
 
-class MediaWallpostPhotoList(ListCreateAPIView):
+class MediaWallpostPhotoList(SetAuthorMixin, ListCreateAPIView):
     queryset = MediaWallpostPhoto.objects.all()
     serializer_class = MediaWallpostPhotoSerializer
-    paginate_by = 4
-
-    def pre_save(self, obj):
-        if not obj.author:
-            obj.author = self.request.user
-        else:
-            obj.editor = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+    pagination_class = MediaWallpostPhotoPagination
 
     def create(self, request, *args, **kwargs):  # FIXME
         """
@@ -170,22 +168,16 @@ class MediaWallpostPhotoDetail(RetrieveUpdateDeleteAPIView):
                           IsConnectedWallpostAuthorOrReadOnly)
 
 
-class ReactionList(ListCreateAPIView):
+class ReactionList(SetAuthorMixin, ListCreateAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
     permission_classes = (TenantConditionalOpenClose,
                           permissions.IsAuthenticatedOrReadOnly)
-    paginate_by = 10
+    pagination_class = BluebottlePagination
     filter_fields = ('wallpost',)
 
-    def pre_save(self, obj):
-        set_author_editor_ip(self.request, obj)
 
-
-class ReactionDetail(RetrieveUpdateDeleteAPIView):
+class ReactionDetail(SetAuthorMixin, RetrieveUpdateDeleteAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
-
-    def pre_save(self, obj):
-        set_author_editor_ip(self.request, obj)

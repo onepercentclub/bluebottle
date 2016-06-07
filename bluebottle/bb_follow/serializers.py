@@ -6,7 +6,7 @@ from bluebottle.projects.models import Project
 class FollowedObjectRelatedField(serializers.RelatedField):
     """ A custom field for the followed_object field in the Follow model """
 
-    def to_native(self, value):
+    def to_representation(self, value):
         """ Serialize followed objects to a simple representation """
 
         if isinstance(value, Project):

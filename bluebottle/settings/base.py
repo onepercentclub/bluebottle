@@ -110,9 +110,6 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.eggs.Loader',
 )
 
-# TEMPLATE_DIRS = (
-#     (os.path.join(PROJECT_ROOT, 'bluebottle', 'templates')),
-# )
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',
@@ -367,7 +364,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'social.apps.django_app.context_processors.backends',
     'social.apps.django_app.context_processors.login_redirect',
     'tenant_extras.context_processors.conf_settings',
-    'bluebottle.utils.context_processors.tenant_properties'
+    'tenant_extras.context_processors.tenant_properties',
 )
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'

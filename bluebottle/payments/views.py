@@ -22,7 +22,7 @@ class PaymentMethodList(APIView):
     def get(self, request, *args, **kwargs):
         if 'country' in request.GET:
             country = request.GET['country']
-        else :
+        else:
             ip = get_ip(request)
             if getattr(settings, 'SKIP_IP_LOOKUP', False):
                 country = 'all'
@@ -57,6 +57,10 @@ class ManageOrderPaymentList(ListCreateAPIView):
     def perform_create(self, serializer):
         if self.request.user and self.request.user.is_authenticated():
             serializer.save(user=self.request.user)
+
+            if not serializer.instance.order.user:
+                serializer.instance.order.user = self.request.user
+                serializer.instance.order.save()
         else:
             serializer.save()
 

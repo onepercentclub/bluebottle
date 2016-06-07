@@ -43,7 +43,6 @@ class PreviewDonationWithoutAmountSerializer(PreviewDonationSerializer):
         fields = ('id', 'project', 'fundraiser', 'user', 'created',
                   'anonymous')
 
-
 class DefaultDonationSerializer(PreviewDonationSerializer):
     class Meta:
         model = Donation

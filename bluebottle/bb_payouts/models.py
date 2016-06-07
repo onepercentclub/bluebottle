@@ -356,6 +356,7 @@ class BaseProjectPayout(PayoutBase):
             self.payout_rule = self.get_payout_rule()
 
         self.amount_raised = self.get_amount_raised()
+        raised_without_pledges = self.amount_raised - self.get_amount_pledged()
 
         with LocalTenant():
             calculator_name = "calculate_amount_payable_rule_{0}".format(
@@ -368,12 +369,10 @@ class BaseProjectPayout(PayoutBase):
                           " '{1}'".format(self.payout_rule, calculator_name)
                 raise PayoutException(message)
 
-            raised_without_pledges = self.get_amount_raised() - self.get_amount_pledged()
-
             self.amount_payable = Decimal(
                 round(calculator(raised_without_pledges), 2))
 
-        self.organization_fee = self.amount_raised - self.amount_payable
+        self.organization_fee = raised_without_pledges - self.amount_payable
 
         if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
             self.in_progress()

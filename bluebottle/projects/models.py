@@ -6,6 +6,8 @@ from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
 from django.conf import settings
+from django.core.urlresolvers import reverse
+from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.http import urlquote
@@ -140,7 +142,7 @@ class Project(BaseProject):
                     "You can paste the link to YouTube or Vimeo video here"))
 
     popularity = models.FloatField(null=False, default=0)
-    is_campaign = models.BooleanField(default=False, help_text=_(
+    is_campaign = models.BooleanField(verbose_name='On homepage', default=False, help_text=_(
         "Project is part of a campaign and gets special promotion."))
 
     skip_monthly = models.BooleanField(_("Skip monthly"),

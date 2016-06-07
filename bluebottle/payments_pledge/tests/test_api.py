@@ -1,12 +1,8 @@
-from ipware import ip
-from mock import patch
-
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
 from rest_framework import status
 
-from bluebottle.payments_mock.adapters import MockPaymentAdapter
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.utils import BluebottleTestCase, SessionTestMixin
@@ -73,6 +69,26 @@ class TestPledgePayments(BluebottleTestCase, SessionTestMixin):
                                     token=self.user2_token)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+    def test_create_orderpayment_and_login(self):
+        """
+        Anonymous user creates order then logs in as can_pledge user
+        should get 201 CREATED
+        """
+
+        order = OrderFactory.create(total=10)
+        self.order_payment_data['order'] = order.id
+
+        # Set session for anon user
+        s = self.session
+        s['new_order_id'] = order.pk
+        s.save()
+
+        response = self.client.post(reverse('manage-order-payment-list'),
+                                    self.order_payment_data,
+                                    token=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_orderpayment_anon(self):
         """ Anonymous user gets 401 UNAUTHORIZED """

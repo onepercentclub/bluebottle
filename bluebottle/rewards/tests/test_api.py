@@ -70,6 +70,18 @@ class RewardTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['title'], self.reward_data['title'])
 
+    def test_reward_cannot_have_an_amount_below_5(self):
+        """
+        Rewards have a minimum amount
+        """
+
+        response = self.client.post(self.reward_url,
+                                    dict(self.reward_data, amount=1),
+                                    token=self.user_token)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data['amount'], [u'Ensure this value is greater than or equal to 5.0.'])
+
+
     def test_reward_can_not_be_created_by_non_project_owner(self):
         """
         Non-project owner should not be allowed to create

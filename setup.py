@@ -28,7 +28,7 @@ install_requires = [
     'Sphinx==1.4.1',
     'bunch==1.0.1',
     'celery==3.1.23',
-    'django-celery==3.1.17',
+    'django-celery==3.0.17',
     'django-choices==1.4.2',
     'django-extensions==1.6.7',
     'django-exportdb==0.4.6',

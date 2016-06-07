@@ -41,7 +41,6 @@ class PreviewDonationSerializer(serializers.ModelSerializer):
         return obj.get_payment_method()
 
 
-
 class PreviewDonationWithoutAmountSerializer(PreviewDonationSerializer):
     payment_method = serializers.SerializerMethodField()
 
@@ -52,6 +51,7 @@ class PreviewDonationWithoutAmountSerializer(PreviewDonationSerializer):
 
     def get_payment_method(self, obj):
         return obj.get_payment_method()
+
 
 class DefaultDonationSerializer(PreviewDonationSerializer):
     class Meta:
@@ -83,3 +83,4 @@ class LatestDonationSerializer(serializers.ModelSerializer):
 
     def get_payment_method(self, obj):
         return obj.get_payment_method()
+

@@ -4,6 +4,11 @@ from django.conf.urls import patterns
 from django.core.urlresolvers import reverse_lazy
 from django.views.generic import RedirectView
 
+from wagtail.wagtailcore import urls as wagtail_urls
+from wagtail.wagtailadmin import urls as wagtailadmin_urls
+from wagtail.wagtaildocs import urls as wagtaildocs_urls
+from wagtail.wagtailsearch.urls import frontend as wagtailsearch_frontend_urls
+
 from bluebottle.views import HomeView
 
 admin.autodiscover()
@@ -11,6 +16,12 @@ admin.autodiscover()
 
 urlpatterns = patterns(
     '',
+
+    url(r'^admin/cms/', include(wagtailadmin_urls)),
+    url(r'^cms/search/', include(wagtailsearch_frontend_urls)),
+    url(r'^cms/documents/', include(wagtaildocs_urls)),
+    url(r'^cms/', include(wagtail_urls)),
+
 
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$',

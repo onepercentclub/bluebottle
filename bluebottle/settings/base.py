@@ -73,6 +73,8 @@ PRIVATE_MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'private', 'media')
 # Examples: "http://example.com/media/", "http://media.example.com/"
 MEDIA_URL = '/media/'
 
+ADMIN_MEDIA_PREFIX = '/admin-media/'
+
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
@@ -284,8 +286,7 @@ TENANT_APPS = (
 
     'exportdb',
 
-
-    # Newly moved BB apps
+    'bluebottle.cms',
     'bluebottle.members',
     'bluebottle.projects',
     'bluebottle.organizations',
@@ -295,8 +296,6 @@ TENANT_APPS = (
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
-
-    # Plain Bluebottle apps
     'bluebottle.wallposts',
     'bluebottle.utils',
     'bluebottle.categories',
@@ -323,11 +322,6 @@ TENANT_APPS = (
     'bluebottle.journals',
     'bluebottle.csvimport',
     'bluebottle.rewards',
-
-    # Custom dashboard
-    'fluent_dashboard',
-
-    # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
     'bluebottle.bb_organizations',
     'bluebottle.bb_projects',
@@ -337,11 +331,13 @@ TENANT_APPS = (
     'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
-
-    # Basic Bb implementations
     'bluebottle.fundraisers',
     'bluebottle.donations',
     'bluebottle.orders',
+
+
+    # Custom dashboard
+    'fluent_dashboard',
 
     # CMS page contents
     'fluent_contents',
@@ -353,6 +349,19 @@ TENANT_APPS = (
     'django.contrib.humanize',
     'django_tools',
     'taggit',
+
+    'wagtail.wagtailcore',
+    'wagtail.wagtailadmin',
+    'wagtail.wagtaildocs',
+    'wagtail.wagtailsnippets',
+    'wagtail.wagtailusers',
+    'wagtail.wagtailimages',
+    'wagtail.wagtailembeds',
+    'wagtail.wagtailsearch',
+    'wagtail.wagtailredirects',
+    'wagtail.wagtailforms',
+
+
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -687,4 +696,5 @@ SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4
 }
 
+WAGTAIL_SITE_NAME = 'Motacilla alba'
 

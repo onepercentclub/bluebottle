@@ -127,7 +127,7 @@ TEMPLATES = [
                 'social.apps.django_app.context_processors.backends',
                 'social.apps.django_app.context_processors.login_redirect',
                 'tenant_extras.context_processors.conf_settings',
-                'bluebottle.utils.context_processors.tenant_properties'
+                'tenant_extras.utils.context_processors.tenant_properties',
             ],
         },
     },

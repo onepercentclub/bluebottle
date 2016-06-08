@@ -50,6 +50,7 @@ class SorlImageField(RestrictedImageField):
         if not value:
             return ""
 
+        import ipdb; ipdb.set_trace()
         if not value.name:
             return ""
 

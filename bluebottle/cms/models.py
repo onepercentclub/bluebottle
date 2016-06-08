@@ -21,6 +21,7 @@ class Page(WagtailPage):
         ('image', ImageChooserBlock(icon="image")),
     ], null=True)
 
+    api_fields = ['title', 'meta_image', 'body', 'type']
 
 Page.content_panels = [
     FieldPanel('title'),

@@ -22,7 +22,6 @@ urlpatterns = patterns(
     url(r'^cms/documents/', include(wagtaildocs_urls)),
     url(r'^cms/', include(wagtail_urls)),
 
-
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$',
         'bluebottle.auth.views.admin_password_reset',

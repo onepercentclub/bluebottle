@@ -5,6 +5,8 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 
+from wagtail.contrib.wagtailapi import urls as wagtailapi_urls
+
 from bluebottle.auth.views import GetAuthToken
 
 
@@ -12,6 +14,11 @@ urlpatterns = patterns('',
                        # The api urls are in the / url namespace so that
                        # they're not redirected to /en/.
                        url(r'^docs/', include('rest_framework_swagger.urls')),
+
+                       url(r'^api/wag/', include(wagtailapi_urls)),
+
+                       url(r'^api/cms/',
+                           include('bluebottle.cms.urls.api')),
 
                        url(r'^api/config',
                            include('bluebottle.clients.urls.api')),

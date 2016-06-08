@@ -29,6 +29,7 @@ class ImageBlockSerializer(BaseBlockSerializer):
         image_filename = img.file.name[len('original_images/'):]
         return  url + image_filename
 
+
 class StreamSerializer(serializers.ModelSerializer):
 
     def to_representation(self, obj):

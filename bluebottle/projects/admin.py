@@ -6,7 +6,6 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
-from django.db.models import Count
 
 from sorl.thumbnail.admin import AdminImageMixin
 
@@ -16,20 +15,14 @@ from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter
 from bluebottle.geo.models import Location
-from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_project_phaselog_model,
-                                               get_project_document_model)
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
 
 from .forms import ProjectDocumentForm
-from .models import (ProjectBudgetLine, Project)
+from .models import (ProjectBudgetLine, Project,
+                     ProjectDocument, ProjectPhaseLog)
 
 logger = logging.getLogger(__name__)
-
-PROJECT_MODEL = get_project_model()
-PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
-PROJECT_DOCUMENT_MODEL = get_project_document_model()
 
 
 def mark_as_plan_new(modeladmin, request, queryset):
@@ -131,7 +124,7 @@ class ProjectThemeFilter(admin.SimpleListFilter):
 
 
 class ProjectDocumentInline(admin.StackedInline):
-    model = PROJECT_DOCUMENT_MODEL
+    model = ProjectDocument
     form = ProjectDocumentForm
     extra = 0
     raw_id_fields = ('author',)
@@ -159,7 +152,7 @@ class RewardInlineAdmin(admin.TabularInline):
 
 
 class ProjectPhaseLogInline(admin.TabularInline):
-    model = PROJECT_PHASELOG_MODEL
+    model = ProjectPhaseLog
     can_delete = False
     ordering = ('-start',)
     extra = 0

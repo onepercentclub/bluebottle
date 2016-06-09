@@ -1,4 +1,4 @@
-from polymorphic import PolymorphicManager
+from polymorphic.manager import PolymorphicManager
 
 
 class PaymentManager(PolymorphicManager):

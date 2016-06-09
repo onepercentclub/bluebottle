@@ -1,9 +1,6 @@
-from bluebottle.utils.model_dispatcher import get_donation_model
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.admin import SimpleListFilter
-
-DONATION_MODEL = get_donation_model()
 
 
 class CustomBooleanFilter(SimpleListFilter):

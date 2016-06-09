@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
-# Generated with bb_schemamigration
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
@@ -25,7 +20,7 @@ class Migration(SchemaMigration):
              self.gf('django.db.models.fields.CharField')(max_length=20)),
             ('payout', self.gf('django.db.models.fields.related.ForeignKey')(
                 related_name='project_payout_logs',
-                to=orm[MODEL_MAP['project_payout']['model']])),
+                to=orm['payouts.ProjectPayout'])),
         ))
         db.send_create_signal(u'bb_payouts', ['ProjectPayoutLog'])
 
@@ -43,7 +38,7 @@ class Migration(SchemaMigration):
              self.gf('django.db.models.fields.CharField')(max_length=20)),
             ('payout', self.gf('django.db.models.fields.related.ForeignKey')(
                 related_name='organization_payout_logs',
-                to=orm[MODEL_MAP['organization_payout']['model']])),
+                to=orm['payouts.OrganizationPayout'])),
         ))
         db.send_create_signal(u'bb_payouts', ['OrganizationPayoutLog'])
 
@@ -97,8 +92,7 @@ class Migration(SchemaMigration):
                             'blank': 'True'}),
             'payout': ('django.db.models.fields.related.ForeignKey', [],
                        {'related_name': "'organization_payout_logs'",
-                        'to': "orm['{0}']".format(
-                            MODEL_MAP['organization_payout']['model'])})
+                        'to': "orm['payouts.OrganizationPayout']"})
         },
         u'bb_payouts.projectpayoutlog': {
             'Meta': {'ordering': "['-created']",
@@ -115,8 +109,7 @@ class Migration(SchemaMigration):
                             'blank': 'True'}),
             'payout': ('django.db.models.fields.related.ForeignKey', [],
                        {'related_name': "'project_payout_logs'",
-                        'to': "orm['{0}']".format(
-                            MODEL_MAP['project_payout']['model'])})
+                        'to': "orm['payouts.ProjectPayout']"})
         },
         u'bb_projects.projectphase': {
             'Meta': {'ordering': "['sequence']", 'object_name': 'ProjectPhase'},
@@ -216,10 +209,10 @@ class Migration(SchemaMigration):
             'region': ('django.db.models.fields.related.ForeignKey', [],
                        {'to': u"orm['geo.Region']"})
         },
-        MODEL_MAP['organization_payout']['model_lower']: {
+        u'payouts.organizationpayout': {
             'Meta': {'ordering': "['start_date']",
                      'unique_together': "(('start_date', 'end_date'),)",
-                     'object_name': MODEL_MAP['organization_payout']['class']},
+                     'object_name': 'OrganizationPayout'},
             'completed': ('django.db.models.fields.DateField', [],
                           {'null': 'True', 'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [],
@@ -272,9 +265,9 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
-        MODEL_MAP['project_payout']['model_lower']: {
+        u'payouts.ProjectPayout': {
             'Meta': {'ordering': "['-created']",
-                     'object_name': MODEL_MAP['project_payout']['class']},
+                     'object_name': 'ProjectPayout'},
             'amount_payable': ('bluebottle.bb_projects.fields.MoneyField', [],
                                {'max_digits': '12', 'decimal_places': '2'}),
             'amount_raised': ('bluebottle.bb_projects.fields.MoneyField', [],
@@ -306,7 +299,7 @@ class Migration(SchemaMigration):
                 'django.db.models.fields.CharField', [], {'max_length': '20'}),
             'planned': ('django.db.models.fields.DateField', [], {}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {
-                'to': "orm['{0}']".format(MODEL_MAP['project']['model'])}),
+                'to': "orm['projects.Project']"}),
             'receiver_account_bic': ('django.db.models.fields.CharField', [],
                                      {'max_length': '100', 'blank': 'True'}),
             'receiver_account_city': (
@@ -354,9 +347,9 @@ class Migration(SchemaMigration):
                     {'related_name': "u'taggit_taggeditem_items'",
                      'to': u"orm['taggit.Tag']"})
         },
-        MODEL_MAP['project']['model_lower']: {
+        u'projects.Project': {
             'Meta': {'ordering': "['title']",
-                     'object_name': MODEL_MAP['project']['class']},
+                     'object_name': 'Project'},
             'amount_asked': ('bluebottle.bb_projects.fields.MoneyField', [],
                              {'default': '0', 'null': 'True',
                               'max_digits': '12', 'decimal_places': '2',
@@ -389,11 +382,10 @@ class Migration(SchemaMigration):
                           'blank': 'True'}),
             'organization': ('django.db.models.fields.related.ForeignKey', [],
                              {'blank': 'True', 'related_name': "'organization'",
-                              'null': 'True', 'to': "orm['{0}']".format(
-                                 MODEL_MAP['organization']['model'])}),
+                              'null': 'True', 'to': "orm['organizations.Organization']"}),
             'owner': ('django.db.models.fields.related.ForeignKey', [],
                       {'related_name': "'owner'",
-                       'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                       'to': "orm['members.Member']"}),
             'pitch': (
                 'django.db.models.fields.TextField', [], {'blank': 'True'}),
             'slug': ('django.db.models.fields.SlugField', [],
@@ -408,8 +400,8 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.CharField', [],
@@ -490,9 +482,9 @@ class Migration(SchemaMigration):
             'why': ('django.db.models.fields.TextField', [],
                     {'max_length': '265', 'blank': 'True'})
         },
-        MODEL_MAP['organization']['model_lower']: {
+        u'organizations.Organization': {
             'Meta': {'ordering': "['name']",
-                     'object_name': MODEL_MAP['organization']['class']},
+                     'object_name': 'Organization'},
             'account_bank_address': ('django.db.models.fields.CharField', [],
                                      {'max_length': '255', 'blank': 'True'}),
             'account_bank_city': ('django.db.models.fields.CharField', [],

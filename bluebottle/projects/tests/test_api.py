@@ -337,9 +337,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                                     token=self.another_user_token)
         self.assertEqual(
             response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-        self.assertEquals(
-            response.data['title'][0],
-            'Project with this Title already exists.')
+        self.assertTrue(response.data['title'][0].endswith('Title already exists.'))
 
         # Anonymous user should not be able to find this project through
         # management API.
@@ -1224,7 +1222,8 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         donation.save()
 
         order.locked()
-        order.succeeded()
+        order.save()
+        order.success()
         order.save()
 
         project.deadline = timezone.now() - timedelta(days=10)

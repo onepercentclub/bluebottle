@@ -5,5 +5,5 @@ from .serializers import CategorySerializer
 
 
 class CategoryList(generics.ListAPIView):
-    model = Category
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer

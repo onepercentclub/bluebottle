@@ -1,43 +1,37 @@
 # -*- coding: utf-8 -*-
-# Generated with bb_schemamigration
-import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
     def forwards(self, orm):
         # Deleting field 'Order.closed'
-        db.delete_column(MODEL_MAP['order']['table'], 'closed')
+        db.delete_column('orders.Order', 'closed')
 
         # Adding field 'Order.confirmed'
-        db.add_column(MODEL_MAP['order']['table'], 'confirmed',
+        db.add_column('orders_order', 'confirmed',
                       self.gf('django.db.models.fields.DateTimeField')(
                           null=True, blank=True),
                       keep_default=False)
 
         # Adding field 'Order.completed'
-        db.add_column(MODEL_MAP['order']['table'], 'completed',
+        db.add_column('orders_order', 'completed',
                       self.gf('django.db.models.fields.DateTimeField')(
                           null=True, blank=True),
                       keep_default=False)
 
     def backwards(self, orm):
         # Adding field 'Order.closed'
-        db.add_column(MODEL_MAP['order']['table'], 'closed',
+        db.add_column('orders_order', 'closed',
                       self.gf('django.db.models.fields.DateTimeField')(
                           null=True, blank=True),
                       keep_default=False)
 
         # Deleting field 'Order.confirmed'
-        db.delete_column(MODEL_MAP['order']['table'], 'confirmed')
+        db.delete_column('orders_order', 'confirmed')
 
         # Deleting field 'Order.completed'
-        db.delete_column(MODEL_MAP['order']['table'], 'completed')
+        db.delete_column('orders_order', 'completed')
 
     models = {
         u'auth.group': {
@@ -132,8 +126,8 @@ class Migration(SchemaMigration):
             'region': ('django.db.models.fields.related.ForeignKey', [],
                        {'to': u"orm['geo.Region']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about': ('django.db.models.fields.TextField', [],
                       {'max_length': '265', 'blank': 'True'}),
             'available_time': ('django.db.models.fields.CharField', [],
@@ -207,8 +201,7 @@ class Migration(SchemaMigration):
             'share_time_knowledge': (
             'django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'skills': ('django.db.models.fields.related.ManyToManyField', [],
-                       {'symmetrical': 'False', 'to': "orm['{0}']".format(
-                           MODEL_MAP['task_skill']['model']), 'null': 'True',
+                       {'symmetrical': 'False', 'to': "orm['tasks.Skill']", 'null': 'True',
                         'blank': 'True'}),
             'skypename': ('django.db.models.fields.CharField', [],
                           {'max_length': '32', 'blank': 'True'}),
@@ -244,8 +237,8 @@ class Migration(SchemaMigration):
             'status': ('django.db.models.fields.CharField', [],
                        {'default': "'Active'", 'max_length': "'30'"})
         },
-        MODEL_MAP['order']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['order']['class']},
+        u'orders.order': {
+            'Meta': {'object_name': 'Order'},
             'completed': ('django.db.models.fields.DateTimeField', [],
                           {'null': 'True', 'blank': 'True'}),
             'confirmed': ('django.db.models.fields.DateTimeField', [],
@@ -254,7 +247,7 @@ class Migration(SchemaMigration):
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             u'id': (
             'django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'status': ('django_fsm.db.fields.fsmfield.FSMField', [],
+            'status': ('django_fsm.FSMField', [],
                        {'default': "'created'", 'max_length': '50'}),
             'total': ('django.db.models.fields.DecimalField', [],
                       {'default': '0', 'max_digits': '16',
@@ -262,7 +255,7 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [],
-                     {'to': "orm['{0}']".format(MODEL_MAP['user']['model']),
+                     {'to': "orm['members.Member']",
                       'null': 'True', 'blank': 'True'})
         },
         u'taggit.tag': {
@@ -287,9 +280,9 @@ class Migration(SchemaMigration):
                     {'related_name': "u'taggit_taggeditem_items'",
                      'to': u"orm['taggit.Tag']"})
         },
-        MODEL_MAP['task_skill']['model_lower']: {
+        u'tasks.skill': {
             'Meta': {'ordering': "('id',)",
-                     'object_name': MODEL_MAP['task_skill']['class']},
+                     'object_name': 'Skill'},
             'description': (
             'django.db.models.fields.TextField', [], {'blank': 'True'}),
             u'id': (
@@ -301,4 +294,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = [MODEL_MAP['order']['app']]
+    complete_apps = ['orders']

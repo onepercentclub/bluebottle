@@ -9,15 +9,19 @@ from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django import forms
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.models import Placeholder
 from fluent_contents.rendering import render_content_items
+from sorl.thumbnail.admin import AdminImageMixin
+
+from bluebottle.clients import properties
 
 from .models import NewsItem
 
 
-class NewsItemAdmin(PlaceholderFieldAdmin):
+class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
     list_display = ('title', 'status_column', 'modification_date')
     list_filter = ('status',)
     date_hierarchy = 'publication_date'

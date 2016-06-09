@@ -52,31 +52,6 @@ def mock_attr(self, k):
     else:
         return getattr(settings, k)
 
-class TenantPropertiesTokenAuthTestCase(BluebottleTestCase):
-    def setUp(self):
-        self.rf = RequestFactory()
-
-    @mock.patch(
-        'bluebottle.clients.middleware.TenantProperties.__getattr__',
-        mock_attr
-    )
-    def test_read_only_settings(self):
-        from ..context_processors import tenant_properties
-
-        context = tenant_properties(self.rf)
-        tenant_settings = json.loads(context['settings'])
-
-        self.assertEqual(tenant_settings['readOnlyFields']['user'], ['first_name', 'last_name', 'email'])
-
-    def test_without_token_auth(self):
-        from ..context_processors import tenant_properties
-
-        context = tenant_properties(self.rf)
-        tenant_settings = json.loads(context['settings'])
-
-        with self.assertRaises(KeyError):
-            read_only = tenant_settings['readOnlyFields']
-
 
 class CustomSettingsTestCase(TestCase):
     """
@@ -184,7 +159,6 @@ class MetaTestCase(BluebottleTestCase):
 
         # set up the client
         self.client = Client()
-        self.url = reverse('meta_test', kwargs={'pk': self.object.id})
 
     def test_content_items_correctly_created(self):
         """ Test that the setUp function creates the correct items """
@@ -194,60 +168,6 @@ class MetaTestCase(BluebottleTestCase):
         self.assertEqual(len(
             items), 4,
             'Error in the setUp function: not all items arecorrectly created.')
-
-    def test_return_metadata(self):
-        """
-        Verify that the MetaField functions work and can correctly retrieve
-        the desired meta data.
-        """
-
-        # get the metadata through the API
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-
-        item = json.loads(response.content)
-        meta_data = item.get('meta_data')
-
-        # verify that indeed the title is the same and attribute lookups are ok
-        self.assertEqual(item['title'], meta_data['title'])
-        # fb title falls back to default title
-        self.assertEqual(item['title'], meta_data['fb_title'])
-
-        # verify that callables work
-        img1 = 'images/kitten_snow.jpg'
-        # FIXME!
-        # self.assertIn(img1, meta_data['image'])
-
-    def test_image_source(self):
-        """ Image source can return an image to be serialized, or an url """
-
-        # get the metadata through the API
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-
-        item = json.loads(response.content)
-        meta_data = item.get('meta_data2')
-
-        # this image has to be processed by sorl.thumbnail
-        # the filename differs (hash or something similar), and 'cache'
-        # should be in the url
-
-        # FIXME!
-        # self.assertNotEqual(meta_data['image'], self.picture.image.url)
-        # self.assertIn('cache', meta_data['image'])
-
-    def test_url_tag_in_tweet(self):
-        """
-        Test that {URL} is present by default in tweets, to be replaced by
-        Ember
-        """
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-
-        item = json.loads(response.content)
-        meta_data = item.get('meta_data')
-
-        self.assertIn('{URL}', meta_data['tweet'])
 
 
 class UserTestsMixin(object):

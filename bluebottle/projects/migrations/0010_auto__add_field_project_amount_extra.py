@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
-# Generated with bb_schemamigration
 from south.db import db
 from south.v2 import SchemaMigration
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding field 'Project.amount_extra'
-        db.add_column(MODEL_MAP['project']['table'], 'amount_extra',
+        db.add_column('projects_project', 'amount_extra',
                       self.gf('bluebottle.bb_projects.fields.MoneyField')(
                           default=0, null=True, max_digits=12, decimal_places=2,
                           blank=True),
@@ -18,7 +14,7 @@ class Migration(SchemaMigration):
 
     def backwards(self, orm):
         # Deleting field 'Project.amount_extra'
-        db.delete_column(MODEL_MAP['project']['table'], 'amount_extra')
+        db.delete_column('projects_project', 'amount_extra')
 
     models = {
         u'auth.group': {
@@ -146,8 +142,8 @@ class Migration(SchemaMigration):
             'region': ('django.db.models.fields.related.ForeignKey', [],
                        {'to': u"orm['geo.Region']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about_me': ('django.db.models.fields.TextField', [],
                          {'max_length': '265', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [],
@@ -218,9 +214,9 @@ class Migration(SchemaMigration):
             'username': ('django.db.models.fields.SlugField', [],
                          {'unique': 'True', 'max_length': '50'})
         },
-        MODEL_MAP['organization']['model_lower']: {
+        u'organizations.Organization': {
             'Meta': {'ordering': "['name']",
-                     'object_name': MODEL_MAP['organization']['class']},
+                     'object_name': 'Organization'},
             'account_bank_address': ('django.db.models.fields.CharField', [],
                                      {'max_length': '255', 'blank': 'True'}),
             'account_bank_city': ('django.db.models.fields.CharField', [],
@@ -312,9 +308,9 @@ class Migration(SchemaMigration):
             'slug': ('django.db.models.fields.SlugField', [],
                      {'unique': 'True', 'max_length': '100'})
         },
-        MODEL_MAP['project']['model_lower']: {
+        u'projects.project': {
             'Meta': {'ordering': "['title']",
-                     'object_name': MODEL_MAP['project']['class']},
+                     'object_name': 'Project'},
             'allow_overfunding': (
                 'django.db.models.fields.BooleanField', [],
                 {'default': 'True'}),
@@ -378,11 +374,10 @@ class Migration(SchemaMigration):
             'organization': ('django.db.models.fields.related.ForeignKey', [],
                              {'blank': 'True', 'related_name': "'organization'",
                               'null': 'True',
-                              'to': "orm['{0}']".format(
-                                  MODEL_MAP['organization']['model'])}),
+                              'to': "orm['organization.Organization']"}),
             'owner': ('django.db.models.fields.related.ForeignKey', [],
                       {'related_name': "'owner'",
-                       'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                       'to': "orm['members.Member']"}),
             'partner_organization': (
                 'django.db.models.fields.related.ForeignKey', [],
                 {'to': u"orm['projects.PartnerOrganization']", 'null': 'True',
@@ -426,17 +421,17 @@ class Migration(SchemaMigration):
                 'django.db.models.fields.AutoField', [],
                 {'primary_key': 'True'}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {
-                'to': "orm['{0}']".format(MODEL_MAP['project']['model'])}),
+                'to': "orm['projects.Project']"}),
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
-        MODEL_MAP['project_phaselog']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['project_phaselog']['class']},
+        u'projects.projectphaselog': {
+            'Meta': {'object_name': 'ProjectPhaseLog'},
             u'id': (
                 'django.db.models.fields.AutoField', [],
                 {'primary_key': 'True'}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {
-                'to': "orm['{0}']".format(MODEL_MAP['project']['model'])}),
+                'to': "orm['projects.Project']"}),
             'start': ('django.db.models.fields.DateTimeField', [],
                       {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'status': ('django.db.models.fields.related.ForeignKey', [],
@@ -457,4 +452,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = [MODEL_MAP['project']['app']]
+    complete_apps = ['projects']

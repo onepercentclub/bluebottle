@@ -1,12 +1,9 @@
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
-from bluebottle.utils.model_dispatcher import get_fundraiser_model
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer, OEmbedField
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
-from bluebottle.utils.serializers import MetaField
-
-FUNDRAISER_MODEL = get_fundraiser_model()
+from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.members.serializers import UserProfileSerializer
 
 
 class ImageSerializerExt(ImageSerializer):
@@ -42,7 +39,7 @@ class ImageSerializerExt(ImageSerializer):
 class BaseFundraiserSerializer(serializers.ModelSerializer):
     """ Serializer to view/create fundraisers """
 
-    owner = get_serializer_class('AUTH_USER_MODEL', 'default')(read_only=True)
+    owner = UserProfileSerializer(read_only=True)
     project = serializers.SlugRelatedField(source='project', slug_field='slug')
     image = ImageSerializerExt()
     amount_donated = serializers.DecimalField(source='amount_donated',
@@ -50,17 +47,11 @@ class BaseFundraiserSerializer(serializers.ModelSerializer):
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
 
-    meta_data = MetaField(
-        title='get_meta_title',  # TODO: specific title format
-        image_source='image',
-        tweet='get_tweet',
-    )
-
     class Meta:
-        model = FUNDRAISER_MODEL
+        model = Fundraiser
         fields = ('id', 'owner', 'project', 'title', 'description', 'image',
                   'created', 'video_html', 'video_url', 'amount',
-                  'amount_donated', 'deadline', 'meta_data')
+                  'amount_donated', 'deadline')
 
     def validate_deadline(self, attrs, source):
         """

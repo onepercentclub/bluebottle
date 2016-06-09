@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 
 
 class MonthlyDonationList(generics.ListCreateAPIView):
-    model = MonthlyDonor
+    queryset = MonthlyDonor.objects.all()
     permission_classes = (RecurringDonationsEnabled, IsAuthenticated,)
     serializer_class = MonthlyDonationSerializer
     paginate_by = 10
@@ -23,19 +23,19 @@ class MonthlyDonationList(generics.ListCreateAPIView):
 
 
 class MonthlyDonationDetail(generics.RetrieveUpdateAPIView):
-    model = MonthlyDonor
+    queryset = MonthlyDonor.objects.all()
     permission_classes = (RecurringDonationsEnabled, IsOwner,)
     serializer_class = MonthlyDonationSerializer
 
 
 class MonthlyDonationProjectList(generics.CreateAPIView):
-    model = MonthlyDonorProject
+    queryset = MonthlyDonorProject.objects.all()
     permission_classes = (RecurringDonationsEnabled, IsDonor,)
     serializer_class = MonthlyDonationProjectSerializer
     paginate_by = 10
 
 
 class MonthlyDonationProjectDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = MonthlyDonorProject
+    queryset = MonthlyDonorProject.objects.all()
     permission_classes = (RecurringDonationsEnabled, IsDonor,)
     serializer_class = MonthlyDonationProjectSerializer

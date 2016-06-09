@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
-# Generated with bb_schemamigration
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
-from bluebottle.utils.model_dispatcher import get_model_mapping
-
-MODEL_MAP = get_model_mapping()
 
 
 class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding model 'Task'
-        db.create_table(MODEL_MAP['task']['table'], (
+        db.create_table('tasks_task', (
             (u'id',
              self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('title',
@@ -25,10 +20,10 @@ class Migration(SchemaMigration):
              self.gf('django.db.models.fields.PositiveIntegerField')(
                  default=1)),
             ('project', self.gf('django.db.models.fields.related.ForeignKey')(
-                to=orm[MODEL_MAP['project']['model']])),
+                to=orm['projects.Project'])),
             ('author', self.gf('django.db.models.fields.related.ForeignKey')(
                 related_name=u'tasks_task_related',
-                to=orm[MODEL_MAP['user']['model']])),
+                to=orm['members.Member'])),
             ('status',
              self.gf('django.db.models.fields.CharField')(default='open',
                                                           max_length=20)),
@@ -39,16 +34,16 @@ class Migration(SchemaMigration):
             ('time_needed',
              self.gf('django.db.models.fields.CharField')(max_length=200)),
             ('skill', self.gf('django.db.models.fields.related.ForeignKey')(
-                to=orm[MODEL_MAP['task_skill']['model']], null=True)),
+                to=orm['tasks.Skill'], null=True)),
             ('created', self.gf('django.db.models.fields.DateTimeField')(
                 default=datetime.datetime.now, blank=True)),
             ('updated', self.gf('django.db.models.fields.DateTimeField')(
                 default=datetime.datetime.now, blank=True)),
         ))
-        db.send_create_signal(MODEL_MAP['task_file']['app'], ['Task'])
+        db.send_create_signal('tasks', ['Task'])
 
         # Adding model 'Skill'
-        db.create_table(MODEL_MAP['task_skill']['table'], (
+        db.create_table('tasks_skill', (
             (u'id',
              self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('name', self.gf('django.db.models.fields.CharField')(unique=True,
@@ -59,17 +54,17 @@ class Migration(SchemaMigration):
             ('description',
              self.gf('django.db.models.fields.TextField')(blank=True)),
         ))
-        db.send_create_signal(MODEL_MAP['task_file']['app'], ['Skill'])
+        db.send_create_signal('tasks', ['Skill'])
 
         # Adding model 'TaskMember'
-        db.create_table(MODEL_MAP['task_member']['table'], (
+        db.create_table('tasks_taskmember', (
             (u'id',
              self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('member', self.gf('django.db.models.fields.related.ForeignKey')(
                 related_name=u'tasks_taskmember_related',
-                to=orm[MODEL_MAP['user']['model']])),
+                to=orm['members.Member'])),
             ('task', self.gf('django.db.models.fields.related.ForeignKey')(
-                related_name='members', to=orm[MODEL_MAP['task']['model']])),
+                related_name='members', to=orm['tasks.Task'])),
             ('status',
              self.gf('django.db.models.fields.CharField')(default='applied',
                                                           max_length=20)),
@@ -85,15 +80,15 @@ class Migration(SchemaMigration):
             ('updated', self.gf('django.db.models.fields.DateTimeField')(
                 default=datetime.datetime.now, blank=True)),
         ))
-        db.send_create_signal(MODEL_MAP['task_file']['app'], ['TaskMember'])
+        db.send_create_signal('tasks', ['TaskMember'])
 
         # Adding model 'TaskFile'
-        db.create_table(MODEL_MAP['task_file']['table'], (
+        db.create_table('tasks_taskfile', (
             (u'id',
              self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('author', self.gf('django.db.models.fields.related.ForeignKey')(
                 related_name=u'tasks_taskfile_related',
-                to=orm[MODEL_MAP['user']['model']])),
+                to=orm['members.Member'])),
             ('title',
              self.gf('django.db.models.fields.CharField')(max_length=255)),
             ('file', self.gf('django.db.models.fields.files.FileField')(
@@ -103,22 +98,22 @@ class Migration(SchemaMigration):
             ('updated', self.gf('django.db.models.fields.DateTimeField')(
                 default=datetime.datetime.now, blank=True)),
             ('task', self.gf('django.db.models.fields.related.ForeignKey')(
-                related_name='files', to=orm[MODEL_MAP['task']['model']])),
+                related_name='files', to=orm['tasks.Task'])),
         ))
-        db.send_create_signal(MODEL_MAP['task_file']['app'], ['TaskFile'])
+        db.send_create_signal('tasks', ['TaskFile'])
 
     def backwards(self, orm):
         # Deleting model 'Task'
-        db.delete_table(MODEL_MAP['task']['table'])
+        db.delete_table('tasks_task')
 
         # Deleting model 'Skill'
-        db.delete_table(MODEL_MAP['task_skill']['table'])
+        db.delete_table('tasks_skill')
 
         # Deleting model 'TaskMember'
-        db.delete_table(MODEL_MAP['task_member']['table'])
+        db.delete_table('tasks_taskmember')
 
         # Deleting model 'TaskFile'
-        db.delete_table(MODEL_MAP['task_file']['table'])
+        db.delete_table('tasks_taskfile')
 
     models = {
         u'auth.group': {
@@ -246,8 +241,8 @@ class Migration(SchemaMigration):
             'region': ('django.db.models.fields.related.ForeignKey', [],
                        {'to': u"orm['geo.Region']"})
         },
-        MODEL_MAP['user']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['user']['class']},
+        u'members.member': {
+            'Meta': {'object_name': 'Member'},
             'about_me': ('django.db.models.fields.TextField', [],
                          {'max_length': '265', 'blank': 'True'}),
             'birthdate': ('django.db.models.fields.DateField', [],
@@ -318,9 +313,9 @@ class Migration(SchemaMigration):
             'username': ('django.db.models.fields.SlugField', [],
                          {'unique': 'True', 'max_length': '50'})
         },
-        MODEL_MAP['organization']['model_lower']: {
+        u'organizations.organization': {
             'Meta': {'ordering': "['name']",
-                     'object_name': MODEL_MAP['organization']['class']},
+                     'object_name': 'Organization'},
             'account_bank_address': ('django.db.models.fields.CharField', [],
                                      {'max_length': '255', 'blank': 'True'}),
             'account_bank_city': ('django.db.models.fields.CharField', [],
@@ -412,9 +407,9 @@ class Migration(SchemaMigration):
             'slug': ('django.db.models.fields.SlugField', [],
                      {'unique': 'True', 'max_length': '100'})
         },
-        MODEL_MAP['project']['model_lower']: {
+        u'projects.project': {
             'Meta': {'ordering': "['title']",
-                     'object_name': MODEL_MAP['project']['class']},
+                     'object_name': 'Project'},
             'allow_overfunding': (
                 'django.db.models.fields.BooleanField', [],
                 {'default': 'True'}),
@@ -473,11 +468,10 @@ class Migration(SchemaMigration):
                            'decimal_places': '18', 'blank': 'True'}),
             'organization': ('django.db.models.fields.related.ForeignKey', [],
                              {'blank': 'True', 'related_name': "'organization'",
-                              'null': 'True', 'to': "orm['{0}']".format(
-                                 MODEL_MAP['organization']['model'])}),
+                              'null': 'True', 'to': "orm['organizations.Organization']"}),
             'owner': ('django.db.models.fields.related.ForeignKey', [],
                       {'related_name': "'owner'",
-                       'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                       'to': "orm['members.Member']"}),
             'partner_organization': (
                 'django.db.models.fields.related.ForeignKey', [],
                 {'to': u"orm['projects.PartnerOrganization']", 'null': 'True',
@@ -508,9 +502,9 @@ class Migration(SchemaMigration):
                           {'default': "''", 'max_length': '100', 'null': 'True',
                            'blank': 'True'})
         },
-        MODEL_MAP['task_skill']['model_lower']: {
+        u'tasks.skill': {
             'Meta': {'ordering': "('id',)",
-                     'object_name': MODEL_MAP['task_skill']['class']},
+                     'object_name': 'Skill'},
             'description': (
                 'django.db.models.fields.TextField', [], {'blank': 'True'}),
             u'id': (
@@ -521,12 +515,12 @@ class Migration(SchemaMigration):
             'name_nl': ('django.db.models.fields.CharField', [],
                         {'unique': 'True', 'max_length': '100'})
         },
-        MODEL_MAP['task']['model_lower']: {
+        u'tasks.task': {
             'Meta': {'ordering': "['-created']",
-                     'object_name': MODEL_MAP['task']['class']},
+                     'object_name': 'Task'},
             'author': ('django.db.models.fields.related.ForeignKey', [],
                        {'related_name': "u'tasks_task_related'",
-                        'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                        'to': "orm['members.Member']"}),
             'created': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'date_status_change': ('django.db.models.fields.DateTimeField', [],
@@ -543,9 +537,9 @@ class Migration(SchemaMigration):
                 'django.db.models.fields.PositiveIntegerField', [],
                 {'default': '1'}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {
-                'to': "orm['{0}']".format(MODEL_MAP['project']['model'])}),
+                'to': "orm['projects.Project']"}),
             'skill': ('django.db.models.fields.related.ForeignKey', [], {
-                'to': "orm['{0}']".format(MODEL_MAP['task_skill']['model']),
+                'to': "orm['tasks.Skill']",
                 'null': 'True'}),
             'status': ('django.db.models.fields.CharField', [],
                        {'default': "'open'", 'max_length': '20'}),
@@ -556,11 +550,11 @@ class Migration(SchemaMigration):
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
-        MODEL_MAP['task_file']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['task_file']['class']},
+        u'tasks.taskfile': {
+            'Meta': {'object_name': 'TaskFile'},
             'author': ('django.db.models.fields.related.ForeignKey', [],
                        {'related_name': "u'tasks_taskfile_related'",
-                        'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                        'to': "orm['members.Member']"}),
             'created': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'}),
             'file': ('django.db.models.fields.files.FileField', [],
@@ -570,14 +564,14 @@ class Migration(SchemaMigration):
                 {'primary_key': 'True'}),
             'task': ('django.db.models.fields.related.ForeignKey', [],
                      {'related_name': "'files'",
-                      'to': "orm['{0}']".format(MODEL_MAP['task']['model'])}),
+                      'to': "orm['tasks.Task']"}),
             'title': (
                 'django.db.models.fields.CharField', [], {'max_length': '255'}),
             'updated': ('django.db.models.fields.DateTimeField', [],
                         {'default': 'datetime.datetime.now', 'blank': 'True'})
         },
-        MODEL_MAP['task_member']['model_lower']: {
-            'Meta': {'object_name': MODEL_MAP['task_member']['class']},
+        u'tasks.taskmember': {
+            'Meta': {'object_name': 'TaskMember'},
             'comment': (
                 'django.db.models.fields.TextField', [], {'blank': 'True'}),
             'created': ('django.db.models.fields.DateTimeField', [],
@@ -587,14 +581,14 @@ class Migration(SchemaMigration):
                 {'primary_key': 'True'}),
             'member': ('django.db.models.fields.related.ForeignKey', [],
                        {'related_name': "u'tasks_taskmember_related'",
-                        'to': "orm['{0}']".format(MODEL_MAP['user']['model'])}),
+                        'to': "orm['members.Member']"}),
             'motivation': (
                 'django.db.models.fields.TextField', [], {'blank': 'True'}),
             'status': ('django.db.models.fields.CharField', [],
                        {'default': "'applied'", 'max_length': '20'}),
             'task': ('django.db.models.fields.related.ForeignKey', [],
                      {'related_name': "'members'",
-                      'to': "orm['{0}']".format(MODEL_MAP['task']['model'])}),
+                      'to': "orm['tasks.Task']"}),
             'time_spent': (
                 'django.db.models.fields.PositiveSmallIntegerField', [],
                 {'default': '0'}),
@@ -616,4 +610,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = [MODEL_MAP['task_file']['app']]
+    complete_apps = ['tasks']

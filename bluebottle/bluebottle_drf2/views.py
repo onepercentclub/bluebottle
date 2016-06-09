@@ -15,6 +15,8 @@ class SoftDeleteModelMixin(object):
         self.object.save()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
 
+    def get_queryset(self, queryset=None):
+        return super(SoftDeleteModelMixin, self).get_queryset()
 
 class NonDeletedModelMixin(object):
     """

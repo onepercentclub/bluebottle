@@ -8,7 +8,6 @@ from django.utils import translation
 
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.utils.model_dispatcher import get_user_model
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
 from bluebottle.bb_donations.models import BaseDonation
@@ -18,8 +17,6 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients import properties
 from bluebottle.votes.models import Vote
 
-USER_MODEL = get_user_model()
-
 
 class Follow(models.Model):
     """
@@ -27,7 +24,7 @@ class Follow(models.Model):
     user and another Django model.
     """
 
-    user = models.ForeignKey(USER_MODEL)
+    user = models.ForeignKey('members.Member')
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     followed_object = generic.GenericForeignKey('content_type', 'object_id')

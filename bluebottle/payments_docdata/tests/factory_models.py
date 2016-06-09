@@ -4,12 +4,15 @@ from ..models import DocdataPayment, DocdataTransaction, \
 
 
 class DocdataPaymentFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = DocdataPayment
+    class Meta(object):
+        model = DocdataPayment
 
 
 class DocdataDirectdebitPaymentFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = DocdataDirectdebitPayment
+    class Meta(object):
+        model = DocdataDirectdebitPayment
 
 
 class DocdataTransactionFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = DocdataTransaction
+    class Meta(object):
+        model = DocdataTransaction

@@ -46,7 +46,7 @@ class TestDonationList(BlueBottleUserFactory):
                                                 fundraiser=self.fundraiser,
                                                 order=order1)
         order1.locked()
-        order1.succeeded()
+        order1.success()
 
         # Create the second without fundraiser
         order2 = OrderFactory.create(user=self.user2)
@@ -54,7 +54,7 @@ class TestDonationList(BlueBottleUserFactory):
                                                 project=self.project,
                                                 fundraiser=None, order=order2)
         order2.locked()
-        order2.succeeded()
+        order2.success()
 
         self.fundraiser_donation_list_url = reverse('fund-ticker-list')
 

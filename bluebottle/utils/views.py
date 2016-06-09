@@ -12,6 +12,7 @@ from django.utils import translation
 
 from sorl.thumbnail.shortcuts import get_thumbnail
 
+from bluebottle.projects.models import Project
 from tenant_extras.utils import TenantLanguage
 
 from filetransfers.api import serve_file
@@ -22,13 +23,12 @@ from bunch import bunchify
 from taggit.models import Tag
 
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.utils.model_dispatcher import get_project_model
 from bluebottle.clients import properties
 
 from .serializers import ShareSerializer
 from .serializers import LanguageSerializer
 
-PROJECT_MODEL = get_project_model()
+from .models import Language
 
 
 class TagList(views.APIView):
@@ -43,15 +43,15 @@ class TagList(views.APIView):
 
 class LanguageList(generics.ListAPIView):
     serializer_class = LanguageSerializer
-    model = serializer_class.Meta.model
+    queryset = Language.objects.all()
 
     def get_queryset(self):
-        return self.model.objects.order_by('language_name').all()
+        return Language.objects.order_by('language_name').all()
 
 
 class TagSearch(views.APIView):
     """
-    Search tags in use on this system
+    Search tags in use on this systemgit
     """
 
     def get(self, request, format=None, search=''):
@@ -65,8 +65,8 @@ class ShareFlyer(views.APIView):
 
     def project_args(self, projectid):
         try:
-            project = PROJECT_MODEL.objects.get(slug=projectid)
-        except PROJECT_MODEL.DoesNotExist:
+            project = Project.objects.get(slug=projectid)
+        except Project.DoesNotExist:
             return None
 
         if project.image:
@@ -184,14 +184,3 @@ class DocumentDownloadView(View):
             return serve_file(request, file.file, save_as=file_name)
         return HttpResponseForbidden()
 
-# TODO: this was creating problems with the tests
-# TESTS
-INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
-
-if INCLUDE_TEST_MODELS:
-    from .models import MetaDataModel
-    from .serializers import MetaDataSerializer
-
-    class MetaDataDetail(generics.RetrieveAPIView):
-        model = MetaDataModel
-        serializer_class = MetaDataSerializer

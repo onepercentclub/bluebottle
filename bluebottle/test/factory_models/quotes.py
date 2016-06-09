@@ -6,7 +6,8 @@ from .accounts import BlueBottleUserFactory
 
 
 class QuoteFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Quote
+    class Meta(object):
+        model = Quote
 
     author = factory.SubFactory(BlueBottleUserFactory)
     user = factory.SubFactory(BlueBottleUserFactory)

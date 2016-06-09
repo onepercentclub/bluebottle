@@ -1,6 +1,6 @@
 from django.db import models
 
-from polymorphic import PolymorphicManager
+from polymorphic.manager import PolymorphicManager
 
 from bluebottle.utils.managers import GenericForeignKeyManagerMixin
 

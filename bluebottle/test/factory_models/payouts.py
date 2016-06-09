@@ -7,7 +7,8 @@ from bluebottle.payouts.models import ProjectPayout
 
 
 class ProjectPayoutFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = ProjectPayout
+    class Meta(object):
+        model = ProjectPayout
 
     completed = None
     status = StatusDefinition.NEW

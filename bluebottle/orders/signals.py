@@ -1,37 +1,51 @@
 from django.dispatch.dispatcher import receiver
+from django.db.models.signals import post_save
+
 from django_fsm.signals import post_transition
+
 from bluebottle.bb_donations.donationmail import (
     new_oneoff_donation, successful_donation_fundraiser_mail)
-from bluebottle.utils.model_dispatcher import get_order_model
+from bluebottle.orders.models import Order
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.wallposts.models import SystemWallpost
 
-ORDER_MODEL = get_order_model()
 
-
-@receiver(post_transition, sender=ORDER_MODEL)
-def _order_status_changed(sender, instance, **kwargs):
+@receiver(post_save, sender=Order)
+def _order_status_post_save(sender, instance, **kwargs):
     """
     - Update amount on project when order is in an ending status.
-    - Get the status from the Order and Send an Email.
     """
 
     if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.PENDING,
-                           StatusDefinition.FAILED]:
-        # Is order transitioning into the success or pending state - this should
-        # only happen once.
-
-        first_time_success = (
-            kwargs['source'] not in [StatusDefinition.SUCCESS,
-                                     StatusDefinition.PENDING]
-            and kwargs['target'] in [StatusDefinition.SUCCESS,
-                                     StatusDefinition.PENDING])
+                           StatusDefinition.PLEDGED, StatusDefinition.FAILED]:
 
         # Process each donation in the order
         for donation in instance.donations.all():
             # Update amounts for the associated project
             donation.project.update_amounts()
 
+
+@receiver(post_transition, sender=Order)
+def _order_status_post_transition(sender, instance, **kwargs):
+    """
+    - Get the status from the Order and Send an Email.
+    """
+
+    if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.PENDING,
+                           StatusDefinition.PLEDGED, StatusDefinition.FAILED]:
+        # Is order transitioning into the success or pending state - this should
+        # only happen once.
+
+        first_time_success = (
+            kwargs['source'] not in [StatusDefinition.PLEDGED,
+                                     StatusDefinition.SUCCESS,
+                                     StatusDefinition.PENDING]
+            and kwargs['target'] in [StatusDefinition.PLEDGED,
+                                     StatusDefinition.SUCCESS,
+                                     StatusDefinition.PENDING])
+
+        # Process each donation in the order
+        for donation in instance.donations.all():
             # Send mail / create wallposts if status transitions in to
             # success/pending for the first time and only if it's a
             # one-off donation.

@@ -7,7 +7,7 @@ from django_extensions.db.fields import (ModificationDateTimeField,
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
 
-from polymorphic import PolymorphicModel
+from polymorphic.models import PolymorphicModel
 
 from .managers import ReactionManager, WallpostManager
 

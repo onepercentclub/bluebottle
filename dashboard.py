@@ -143,8 +143,8 @@ class MetricsModule(DashboardModule):
     template = 'admin_tools/dashboard/metrics_module.html'
 
     def __init__(self, **kwargs):
-        member_url = '/admin/members/bookinguser/'
-        project_url = '/admin/projects/bookingproject/'
+        member_url = '/admin/members/member/'
+        project_url = '/admin/projects/project/'
         task_url = '/admin/tasks/task/'
         task_member_url = '/admin/tasks/taskmember/'
         suggestion_url = '/admin/suggestions/suggestion/'
@@ -339,8 +339,8 @@ class MetricsModule(DashboardModule):
     template = 'admin_tools/dashboard/metrics_module.html'
 
     def __init__(self, **kwargs):
-        member_url = '/admin/members/bookinguser/'
-        project_url = '/admin/projects/bookingproject/'
+        member_url = '/admin/members/member/'
+        project_url = '/admin/projects/project/'
         task_url = '/admin/tasks/task/'
         task_member_url = '/admin/tasks/taskmember/'
         suggestion_url = '/admin/suggestions/suggestion/'

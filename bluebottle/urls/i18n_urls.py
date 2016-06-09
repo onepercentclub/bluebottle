@@ -6,7 +6,6 @@ from django.views.generic import RedirectView
 
 from wagtail.wagtailcore import urls as wagtail_urls
 from wagtail.wagtailadmin import urls as wagtailadmin_urls
-from wagtail.wagtailimages import urls as wagtailimages_urls
 from wagtail.wagtaildocs import urls as wagtaildocs_urls
 
 from wagtail.wagtailsearch.urls import frontend as wagtailsearch_frontend_urls
@@ -21,7 +20,6 @@ urlpatterns = patterns(
 
     url(r'^admin/cms/', include(wagtailadmin_urls)),
     url(r'^cms/search/', include(wagtailsearch_frontend_urls)),
-    url(r'^cms/images/', include(wagtailimages_urls)),
     url(r'^cms/documents/', include(wagtaildocs_urls)),
     url(r'^cms/', include(wagtail_urls)),
 

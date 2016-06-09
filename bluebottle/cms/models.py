@@ -13,6 +13,24 @@ class StepBlock(blocks.StructBlock):
     text = blocks.TextBlock(required=False)
 
 
+class ArticleSection(blocks.StructBlock):
+    title = blocks.TextBlock(required=False)
+    image = ImageChooserBlock()
+    text = blocks.TextBlock(required=False)
+
+
+class ButtonBlock(blocks.StructBlock):
+    title = blocks.TextBlock(required=True)
+    url = blocks.TextBlock(required=True)
+
+
+class BlockItemSection(blocks.StructBlock):
+    title = blocks.TextBlock(required=False)
+    intro = blocks.TextBlock(required=False)
+    blocks = blocks.ListBlock(StepBlock(), template='pages/blocks/projects.html', icon="image")
+    button = ButtonBlock(required=False)
+
+
 class Page(WagtailPage):
     meta_image = models.ForeignKey(
         'wagtailimages.Image',
@@ -22,6 +40,8 @@ class Page(WagtailPage):
         related_name='+'
     )
     body = StreamField([
+        ('article', ArticleSection()),
+        ('block_items', BlockItemSection()),
         ('heading', blocks.CharBlock(classname="full title",icon="title")),
         ('paragraph', blocks.RichTextBlock()),
         ('image', ImageChooserBlock(icon="image")),

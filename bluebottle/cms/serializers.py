@@ -6,6 +6,12 @@ from wagtail.wagtailimages.utils import generate_signature
 
 from .models import Page
 
+def get_image_url(image, filter_spec='fill-800x300'):
+    signature = generate_signature(image.id, filter_spec)
+    url = reverse('wagtailimages_serve', args=(signature, image.id, filter_spec))
+    image_filename = image.file.name[len('original_images/'):]
+    return  url + image_filename
+
 
 class BaseBlockSerializer(serializers.Serializer):
 
@@ -33,16 +39,59 @@ class ImageBlockSerializer(BaseBlockSerializer):
         url = reverse('wagtailimages_serve', args=(signature, img.id, filter_spec))
 
         image_filename = img.file.name[len('original_images/'):]
-        return  url + image_filename
+        return  url
+
+
+class ArticleSerializer(BaseBlockSerializer):
+
+    def get_content(self, instance):
+        return None
+
+    def get_elements(self, instance):
+        return {
+            'title': instance.value['title'],
+            'text': instance.value['text'],
+            'image': get_image_url(instance.value['image'], 'fill-800x400')
+        }
 
 
 class StepBlockSerializer(BaseBlockSerializer):
 
     def get_content(self, instance):
-        return ''
+        return None
 
     def get_elements(self, instance):
-        return instance.block.get_prep_value(instance.value)
+        return {
+            'title': instance.value['title'],
+            'text': instance.value['text'],
+            'image': get_image_url(instance.value['image'], 'fill-300x300')
+        }
+
+
+class BlockItemSectionSerializer(BaseBlockSerializer):
+
+    def get_blocks(self, blocks):
+        serialized = []
+        for block in blocks:
+            serialized += [
+                {
+                    'title': block['title'],
+                    'text': block['text'],
+                    'image': get_image_url(block['image'], 'fill-300x300')
+                }
+            ]
+        return serialized
+
+    def get_content(self, instance):
+        return None
+
+    def get_elements(self, instance):
+        return {
+            'title': instance.value['title'],
+            'intro': instance.value['intro'],
+            'blocks': self.get_blocks(instance.value['blocks']),
+            'button': instance.value['button'],
+        }
 
 
 class StreamSerializer(serializers.ModelSerializer):
@@ -55,6 +104,10 @@ class StreamSerializer(serializers.ModelSerializer):
            return ImageBlockSerializer(obj, context=self.context).to_representation(obj)
         if obj.block_type == 'step_blocks':
            return StepBlockSerializer(obj, context=self.context).to_representation(obj)
+        if obj.block_type == 'article':
+           return ArticleSerializer(obj, context=self.context).to_representation(obj)
+        if obj.block_type == 'block_items':
+           return BlockItemSectionSerializer(obj, context=self.context).to_representation(obj)
         return BaseBlockSerializer(obj, context=self.context).to_representation(obj)
 
     class Meta:

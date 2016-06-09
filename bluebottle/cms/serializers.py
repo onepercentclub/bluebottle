@@ -1,3 +1,4 @@
+import json
 from rest_framework import serializers
 from django.core.urlresolvers import reverse
 from wagtail.wagtailcore.blocks.field_block import RichTextBlock
@@ -11,9 +12,14 @@ class BaseBlockSerializer(serializers.Serializer):
     def get_content(self, instance):
         return instance.block.get_prep_value(instance.value)
 
+    def get_elements(self, instance):
+        return []
+
     def to_representation(self, instance):
         return {
+            'id': instance.__hash__(),
             'content': self.get_content(instance),
+            'items': self.get_elements(instance),
             'block_type': instance.block_type
         }
 
@@ -30,6 +36,15 @@ class ImageBlockSerializer(BaseBlockSerializer):
         return  url + image_filename
 
 
+class StepBlockSerializer(BaseBlockSerializer):
+
+    def get_content(self, instance):
+        return ''
+
+    def get_elements(self, instance):
+        return instance.block.get_prep_value(instance.value)
+
+
 class StreamSerializer(serializers.ModelSerializer):
 
     def to_representation(self, obj):
@@ -38,6 +53,8 @@ class StreamSerializer(serializers.ModelSerializer):
         """
         if obj.block_type == 'image':
            return ImageBlockSerializer(obj, context=self.context).to_representation(obj)
+        if obj.block_type == 'step_blocks':
+           return StepBlockSerializer(obj, context=self.context).to_representation(obj)
         return BaseBlockSerializer(obj, context=self.context).to_representation(obj)
 
     class Meta:

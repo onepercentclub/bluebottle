@@ -7,6 +7,12 @@ from wagtail.wagtailcore.models import Page as WagtailPage
 from wagtail.wagtailimages.blocks import ImageChooserBlock
 
 
+class StepBlock(blocks.StructBlock):
+    image = ImageChooserBlock()
+    title = blocks.TextBlock(required=False)
+    text = blocks.TextBlock(required=False)
+
+
 class Page(WagtailPage):
     meta_image = models.ForeignKey(
         'wagtailimages.Image',
@@ -19,6 +25,7 @@ class Page(WagtailPage):
         ('heading', blocks.CharBlock(classname="full title",icon="title")),
         ('paragraph', blocks.RichTextBlock()),
         ('image', ImageChooserBlock(icon="image")),
+        ('step_blocks', blocks.ListBlock(StepBlock(), template='pages/blocks/projects.html', icon="image")),
     ], null=True)
 
     api_fields = ['title', 'meta_image', 'body', 'type']

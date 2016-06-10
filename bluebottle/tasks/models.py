@@ -127,13 +127,15 @@ class TaskMember(BaseTaskMember):
             task.set_in_progress()
         return members_accepted
 
-    def get_member_email(self):
+    @property
+    def member_email(self):
         if self.member.email:
             return self.member.email
         return _("No email address for this user")
 
-    get_member_email.admin_order_field = 'member__email'
-    get_member_email.short_description = "Member Email"
+    @property
+    def time_applied_for(self):
+        return self.task.time_needed
 
 
 class TaskFile(BaseTaskFile):

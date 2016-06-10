@@ -284,6 +284,13 @@ class BaseProject(models.Model, GetTweetMixin):
         if save:
             self.save()
 
+    @property
+    def region(self):
+        try:
+            return self.country.subregion.region
+        except AttributeError:
+            return None
+
     @cached_property
     def funding(self):
         """

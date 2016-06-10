@@ -2,6 +2,7 @@ from collections import OrderedDict
 import logging
 
 from django import forms
+from django.db.models import Count, Sum
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
@@ -237,8 +238,13 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     readonly_fields = ('vote_count', 'amount_donated',
                        'amount_needed', 'popularity')
 
-    export_fields = ['title', 'owner', 'created', 'status',
-                     'deadline', 'amount_asked', 'amount_donated']
+    export_fields = [
+        'title', 'owner', 'created', 'status',
+        'theme', 'region', 'location',
+        'deadline', 'date_submitted', 'campaign_started', 'campaign_ended', 'campaign_funded',
+        'task_count', 'supporters', 'time_spent',
+        'amount_asked', 'amount_donated',
+    ]
 
     actions = [export_as_csv_action(fields=export_fields),
                mark_as_closed, mark_as_done_incomplete,
@@ -291,15 +297,15 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         percentage = "%.2f" % (100 * obj.amount_donated / obj.amount_asked)
         return "{0} %".format(percentage)
 
-    def queryset(self, request):
+    def get_queryset(self, request):
         # Optimization: Select related fields that are used in admin specific
         # display fields.
-        queryset = super(ProjectAdmin, self).queryset(request)
+        queryset = super(ProjectAdmin, self).get_queryset(request)
         queryset = queryset.select_related(
-            'projectpitch', 'projectplan', 'projectcampaign', 'owner',
-            'organization'
-        ).extra(
-            {'admin_vote_count': 'SELECT COUNT(*) from votes_vote where "votes_vote"."project_id" = "projects_project"."id"'}
+            'owner', 'organization'
+        ).annotate(
+            admin_vote_count=Count('vote', distinct=True),
+            time_spent=Sum('task__members__time_spent')
         )
 
         return queryset

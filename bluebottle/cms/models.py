@@ -42,10 +42,11 @@ class Page(WagtailPage):
     body = StreamField([
         ('article', ArticleSection()),
         ('block_items', BlockItemSection()),
-        ('heading', blocks.CharBlock(classname="full title",icon="title")),
-        ('paragraph', blocks.RichTextBlock()),
-        ('image', ImageChooserBlock(icon="image")),
-        ('step_blocks', blocks.ListBlock(StepBlock(), template='pages/blocks/projects.html', icon="image")),
+        # For now only show main 'section' building blocks
+        # ('heading', blocks.CharBlock(classname="full title",icon="title")),
+        # ('paragraph', blocks.RichTextBlock()),
+        # ('image', ImageChooserBlock(icon="image")),
+        # ('step_blocks', blocks.ListBlock(StepBlock(), template='pages/blocks/projects.html', icon="image")),
     ], null=True)
 
     api_fields = ['title', 'meta_image', 'body', 'type']

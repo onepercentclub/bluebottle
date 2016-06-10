@@ -7,6 +7,8 @@ from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.projects.models import Project
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.tasks.models import TaskMember
+from bluebottle.utils.utils import StatusDefinition
+
 
 GROUP_PERMS = {
     'Staff': {
@@ -33,6 +35,10 @@ class Member(BlueBottleBaseUser):
         return self.get_tasks_qs().aggregate(Sum('time_spent'))[
             'time_spent__sum']
 
+    @property
+    def is_volunteer(self):
+        return self.time_spent > 0
+
     @cached_property
     def sourcing(self):
         return self.get_tasks_qs().distinct('task__project').count()
@@ -50,6 +56,22 @@ class Member(BlueBottleBaseUser):
         ).count()
 
     @property
+    def is_initiator(self):
+        return self.project_count > 0
+
+    @property
     def has_projects(self):
         """ Return the number of projects a user started / is owner of """
         return Project.objects.filter(owner=self).count() > 0
+
+    @property
+    def amount_donated(self):
+        return self.order_set.filter(
+            status=StatusDefinition.SUCCESS
+        ).aggregate(
+            amount_donated=models.Sum('total')
+        )['amount_donated']
+
+    @property
+    def is_supporter(self):
+        return self.amount_donated > 0

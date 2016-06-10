@@ -7,6 +7,8 @@ from django.forms.models import ModelChoiceField
 from bluebottle.members.models import Member
 from bluebottle.tasks.models import TaskMember, TaskFile, Task
 
+from bluebottle.utils.admin import export_as_csv_action
+
 # Bulk actions for Task
 def mark_as_open(modeladmin, request, queryset):
     queryset.update(status='open')
@@ -88,8 +90,11 @@ class TaskAdmin(admin.ModelAdmin):
         'title', 'description',
         'author__first_name', 'author__last_name'
     )
+    export_fields = ('title', 'project', 'status', 'deadline', 'skill', 'people_needed', 'time_needed', 'author')
+
     actions = [mark_as_open, mark_as_in_progress, mark_as_closed,
-               mark_as_realized]
+               mark_as_realized, export_as_csv_action(fields=export_fields)]
+
     fields = ('title', 'description', 'skill', 'time_needed', 'status',
               'date_status_change', 'people_needed', 'project', 'author',
               'deadline')
@@ -119,7 +124,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
 
     raw_id_fields = ('member', 'task')
     list_filter = ('status',)
-    list_display = ('get_member_email', 'task', 'status', 'updated')
+    list_display = ('member_email', 'task', 'status', 'updated')
 
     readonly_fields = ('updated',)
 
@@ -133,9 +138,17 @@ class TaskMemberAdmin(admin.ModelAdmin):
         'time_spent', 'externals',
         'task',
     )
+    export_fields = ('member_email', 'task', 'status', 'updated', 'time_spent', 'time_applied_for')
 
     actions = [mark_as_applied, mark_as_accepted, mark_as_rejected,
-               mark_as_stopped, mark_as_tm_realized]
+               mark_as_stopped, mark_as_tm_realized, export_as_csv_action(fields=export_fields)]
+
+    def member_email(self, obj):
+        return obj.member_email
+
+    member_email.admin_order_field = 'member__email'
+    member_email.short_description = "Member Email"
+
 
 
 admin.site.register(TaskMember, TaskMemberAdmin)

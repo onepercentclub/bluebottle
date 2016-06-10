@@ -158,8 +158,8 @@ class MemberAdmin(UserAdmin):
     readonly_fields = (
         'date_joined', 'last_login', 'updated', 'deleted', 'login_as_user')
 
-    export_fields = getattr(settings, 'USER_EXPORT_FIELDS',
-                            ['username', 'email'])
+    export_fields = ('username', 'email', 'first_name', 'last_name', 'date_joined', 'is_active',
+                     'is_initiator', 'is_supporter', 'amount_donated', 'is_volunteer', 'time_spent')
 
     actions = (export_as_csv_action(fields=export_fields),)
 

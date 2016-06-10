@@ -75,7 +75,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                 field_names = [field for field in fields]
                 labels = field_names
 
-        response = HttpResponse(mimetype='text/csv')
+        response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=%s.csv' % (
                 unicode(opts).replace('.', '_')
             )

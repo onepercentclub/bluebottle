@@ -22,7 +22,7 @@ def get_payment_method(donation):
         #       'pledgeStandard'...
         payment_method = order_payments[0].payment_method
         if 'pledge' in payment_method:
-            payment_method = 'Invoiced'
+            payment_method = _('Invoiced')
     except IndexError:
         payment_method = ''
 

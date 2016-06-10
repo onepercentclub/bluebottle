@@ -422,8 +422,6 @@ class BaseProjectPayout(PayoutBase):
         """
         Real time amount of pledged ('pledged') donations.
         """
-        if self.protected:
-            return self.amount_raised
         return self.project.amount_pledged
 
     def get_amount_pending(self):

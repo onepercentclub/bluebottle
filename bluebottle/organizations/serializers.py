@@ -14,7 +14,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 class ManageOrganizationSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(required=False, allow_null=True)
-    name = serializers.CharField(required=True, allow_blank=True)
+    name = serializers.CharField(required=True)
     website = URLField(required=False, allow_blank=True)
     email = serializers.EmailField(required=False, allow_blank=True)
 

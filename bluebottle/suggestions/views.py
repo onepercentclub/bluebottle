@@ -1,6 +1,6 @@
 from datetime import date
 from rest_framework import generics, status, response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.suggestions.serializers import SuggestionSerializer
@@ -8,7 +8,7 @@ from bluebottle.suggestions.serializers import SuggestionSerializer
 
 class SuggestionList(generics.ListCreateAPIView):
     queryset = Suggestion.objects.all()
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     serializer_class = SuggestionSerializer
 
     def get_queryset(self):
@@ -29,13 +29,13 @@ class SuggestionList(generics.ListCreateAPIView):
 
 class SuggestionDetail(generics.RetrieveUpdateAPIView):
     queryset = Suggestion.objects.all()
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     serializer_class = SuggestionSerializer
 
 
 class SuggestionToken(generics.RetrieveUpdateAPIView):
     queryset = Suggestion.objects.all()
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     serializer_class = SuggestionSerializer
     lookup_field = 'token'
 

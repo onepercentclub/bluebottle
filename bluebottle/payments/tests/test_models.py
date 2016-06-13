@@ -122,6 +122,28 @@ class PaymentTestCase(BluebottleTestCase):
         )
 
 
+class OrderPaymentTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(OrderPaymentTestCase, self).setUp()
+        self.init_projects()
+
+        self.order = OrderFactory.create()
+        self.donation = DonationFactory(amount=60, order=self.order)
+        self.order_payment = OrderPaymentFactory.create(order=self.order)
+
+    def test_order_payment_amount(self):
+        """
+        Check that order payment amount is updated post-save when
+        the order amount has changed.
+        """
+        self.donation.amount = 20
+        self.donation.save()
+        self.order.save()
+
+        self.order_payment.save()
+        self.assertEqual(self.order_payment.amount, 20)
+
+
 class PaymentFeeTestCase(BluebottleTestCase):
     def setUp(self):
         super(PaymentFeeTestCase, self).setUp()

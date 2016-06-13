@@ -97,10 +97,16 @@ class TestMailBackend(EmailBackend):
 
 def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
                    from_email=None, **kwargs):
+
     if hasattr(to, 'primary_language') and to.primary_language:
         language = to.primary_language
     else:
         language = properties.LANGUAGE_CODE
+
+    # This is an exception to handle a Bookingcares.com language which
+    # contains more languages than the rest of the platform
+    if kwargs.get('language', None):
+        language = kwargs.get('language')
 
     with TenantLanguage(language):
         c = ClientContext(kwargs)

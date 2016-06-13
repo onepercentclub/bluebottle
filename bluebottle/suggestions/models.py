@@ -46,6 +46,7 @@ class Suggestion(models.Model):
 
     project = models.ForeignKey(Project, related_name="suggestions",
                                 null=True, blank=True)
+    language = models.CharField(_('suggestion language'), max_length=10)
 
     def confirm(self):
         if self.status == "unconfirmed":
@@ -63,3 +64,5 @@ class Suggestion(models.Model):
     def __unicode__(self):
         return u'Suggestion "{0}" from {1}'.format(self.title,
                                                    self.org_contactname)
+
+import signals

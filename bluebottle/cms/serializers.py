@@ -50,21 +50,31 @@ class ArticleSerializer(BaseBlockSerializer):
     def get_elements(self, instance):
         return {
             'title': instance.value['title'],
-            'text': instance.value['text'],
+            'text': instance.value['text'].source,
             'image': get_image_url(instance.value['image'], 'fill-800x400')
         }
 
 
 class StepBlockSerializer(BaseBlockSerializer):
 
+    def get_blocks(self, blocks):
+        serialized = []
+        for block in blocks:
+            serialized += [
+                {
+                    'title': block['title'],
+                    'text': block['text'],
+                    'image': get_image_url(block['image'], 'fill-300x300')
+                }
+            ]
+        return serialized
+
     def get_content(self, instance):
         return None
 
     def get_elements(self, instance):
         return {
-            'title': instance.value['title'],
-            'text': instance.value['text'],
-            'image': get_image_url(instance.value['image'], 'fill-300x300')
+            'blocks': self.get_blocks(instance.value),
         }
 
 

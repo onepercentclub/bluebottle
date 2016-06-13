@@ -282,7 +282,6 @@ TENANT_APPS = (
 
     'rest_framework.authtoken',
 
-    'exportdb',
 
 
     # Newly moved BB apps
@@ -350,6 +349,7 @@ TENANT_APPS = (
     'fluent_contents.plugins.rawhtml',
     'django_wysiwyg',
     'tinymce',
+    'exportdb',
     'django.contrib.humanize',
     'django_tools',
     'taggit',

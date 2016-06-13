@@ -150,5 +150,11 @@ class TaskMemberAdmin(admin.ModelAdmin):
     member_email.short_description = "Member Email"
 
 
+    def lookup_allowed(self, key, value):
+        if key in ('task__deadline__year',):
+            return True
+
+        return super(TaskMemberAdmin, self).lookup_allowed(key, value)
+
 
 admin.site.register(TaskMember, TaskMemberAdmin)

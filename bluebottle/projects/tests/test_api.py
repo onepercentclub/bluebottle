@@ -277,7 +277,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         project_data = {
             'title': 'My idea is way smarter!',
             'pitch': 'Lorem ipsum, bla bla ',
-            'description': 'Some more text'
+            'description': 'Some more text',
+            'amount_asked': 1000
         }
         response = self.client.put(project_url, project_data,
                                    token=self.another_user_token)

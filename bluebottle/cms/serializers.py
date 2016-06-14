@@ -1,4 +1,7 @@
 import json
+
+from bluebottle.projects.models import Project
+from bluebottle.projects.serializers import ProjectPreviewSerializer
 from rest_framework import serializers
 from django.core.urlresolvers import reverse
 from wagtail.wagtailcore.blocks.field_block import RichTextBlock
@@ -104,6 +107,18 @@ class BlockItemSectionSerializer(BaseBlockSerializer):
         }
 
 
+class ProjectSectionSerializer(BaseBlockSerializer):
+
+    def get_content(self, instance):
+        return None
+
+    def get_elements(self, instance):
+        return {
+            'title': instance.value['title'],
+            'projects': ProjectPreviewSerializer(many=True).to_representation(instance.value['projects']),
+        }
+
+
 class StreamSerializer(serializers.ModelSerializer):
 
     def to_representation(self, obj):
@@ -118,6 +133,8 @@ class StreamSerializer(serializers.ModelSerializer):
            return ArticleSerializer(obj, context=self.context).to_representation(obj)
         if obj.block_type == 'block_items':
            return BlockItemSectionSerializer(obj, context=self.context).to_representation(obj)
+        if obj.block_type == 'projects':
+           return ProjectSectionSerializer(obj, context=self.context).to_representation(obj)
         return BaseBlockSerializer(obj, context=self.context).to_representation(obj)
 
     class Meta:

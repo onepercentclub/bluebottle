@@ -1,6 +1,6 @@
 from django.db import models
 import django.db.models.options as options
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
@@ -59,6 +59,9 @@ class BaseTaskMember(models.Model):
 
     class Meta:
         abstract = True
+        verbose_name = _(u'task member')
+        verbose_name_plural = _(u'task members')
+
 
 
 class BaseTaskFile(models.Model):
@@ -72,6 +75,9 @@ class BaseTaskFile(models.Model):
 
     class Meta:
         abstract = True
+        verbose_name = _(u'task file')
+        verbose_name_plural = _(u'task files')
+
 
 
 class BaseTask(models.Model, GetTweetMixin):

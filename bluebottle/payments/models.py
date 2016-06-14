@@ -210,15 +210,6 @@ class OrderPayment(models.Model, FSMTransition):
         # Currently the status in Payment and OrderPayment is one to one.
         return payment_status
 
-    def full_clean(self, exclude=None, validate_unique=False):
-        self.amount = self.order.total
-        if self.id:
-            # If the payment method has changed we should recalculate the fee.
-            try:
-                self.transaction_fee = self.payment.get_fee()
-            except ObjectDoesNotExist:
-                pass
-
     def set_authorization_action(self, action, save=True):
         self.authorization_action = OrderPaymentAction(**action)
         self.authorization_action.save()
@@ -256,7 +247,14 @@ class OrderPayment(models.Model, FSMTransition):
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
-        self.full_clean()
+        self.amount = self.order.total
+        if self.id:
+            # If the payment method has changed we should recalculate the fee.
+            try:
+                self.transaction_fee = self.payment.get_fee()
+            except ObjectDoesNotExist:
+                pass
+
         super(OrderPayment, self).save(
             force_insert, force_update, using, update_fields)
 

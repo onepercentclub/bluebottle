@@ -10,7 +10,6 @@ class OrderPaymentFactory(factory.DjangoModelFactory):
         model = OrderPayment
 
     payment_method = 'mock'
-    amount = 100
     order = factory.SubFactory(OrderFactory)
 
 

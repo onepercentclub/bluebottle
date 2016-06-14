@@ -105,8 +105,8 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
 
     # This is an exception to handle a Bookingcares.com language which
     # contains more languages than the rest of the platform
-    if kwargs.get('language', None):
-        language = kwargs.get('language')
+    if 'language' in kwargs:
+        language = kwargs['language']
 
     with TenantLanguage(language):
         c = ClientContext(kwargs)

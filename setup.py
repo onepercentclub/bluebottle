@@ -80,6 +80,7 @@ install_requires = [
     'django-fluent-contents==1.1.4',
     'django-bb-salesforce==1.2.0',
     'django-tenant-extras==2.0.6',
+    'django-tenant-extras==2.0.5',
     'django-token-auth==0.3.0',
 ]
 

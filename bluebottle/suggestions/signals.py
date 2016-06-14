@@ -6,6 +6,8 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.utils.email_backend import send_mail
 
+from bluebottle.clients import properties
+
 class User(dict):
     pass
 
@@ -19,7 +21,14 @@ def send_suggestion_confirmation_email(sender, instance,
 
         subject = _('Thank you for submitting your project request.')
 
-        tokenurl = tenant_url() + '/#!/confirm-suggestion'
+        url = getattr(properties, 'OPEN_EXTERNAL_URL', None)
+
+        if not url:
+            return
+
+        # TODO, add language? Insert instance.language
+        tokenurl = '{0}/confirm-suggestion/{1}'.format(url,
+                                                       instance.token)
 
         user = User()
         user['email'] = instance.org_email

@@ -67,9 +67,9 @@ class Suggestion(models.Model):
                                                    self.org_contactname)
 
     def save(self, *args, **kwargs):
-        if not self.pk:
+        if not self.pk and not self.token:
             token = str(uuid.uuid4())
             self.token = token
-            super(Suggestion, self).save(*args, **kwargs)
+        super(Suggestion, self).save(*args, **kwargs)
 
 import signals

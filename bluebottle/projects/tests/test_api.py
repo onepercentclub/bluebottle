@@ -222,6 +222,9 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         self.manage_projects_url = reverse('project_manage_list')
         self.manage_budget_lines_url = reverse('project-budgetline-list')
+        self.manage_project_document_url = reverse('manage-project-document-list')
+
+        self.some_photo = './bluebottle/projects/test_images/upload.png'
 
     def test_project_create(self):
         """
@@ -350,6 +353,20 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.get(project_url, token=self.some_user_token)
         self.assertEquals(
             response.status_code, status.HTTP_403_FORBIDDEN, response)
+
+    def test_project_document_upload(self):
+        project = ProjectFactory.create(title="testproject",
+                                        slug="testproject",
+                                        owner=self.some_user,
+                                        status=ProjectPhase.objects.get(
+                                            slug='plan-new'))
+
+        photo_file = open(self.some_photo, mode='rb')
+        response = self.client.post(self.manage_project_document_url,
+                                    {'file': photo_file, 'project': project.slug},
+                                    token=self.some_user_token, format='multipart')
+
+        self.assertEqual(response.status_code, 201)
 
     def test_create_project_contains_empty_bank_details(self):
         """ Create project with bank details. Ensure they are returned """

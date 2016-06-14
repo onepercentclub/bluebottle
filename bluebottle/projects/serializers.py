@@ -162,14 +162,17 @@ class ManageProjectSerializer(serializers.ModelSerializer):
 
     editable = serializers.BooleanField(read_only=True)
     viewable = serializers.BooleanField(read_only=True)
-    status = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=ProjectPhase.objects)
-    location = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=Location.objects)
+    status = serializers.PrimaryKeyRelatedField(required=False, allow_null=True,
+                                                queryset=ProjectPhase.objects)
+    location = serializers.PrimaryKeyRelatedField(required=False, allow_null=True,
+                                                  queryset=Location.objects)
     image = ImageSerializer(required=False, allow_null=True)
     pitch = serializers.CharField(required=False, allow_null=True)
     slug = serializers.CharField(read_only=True)
-    amount_asked = serializers.CharField(required=False, allow_null=True)
-    amount_donated = serializers.CharField(read_only=True)
-    amount_needed = serializers.CharField(read_only=True)
+    amount_asked = serializers.DecimalField(max_digits=20, decimal_places=2, required=False,
+                                            allow_null=True)
+    amount_donated = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    amount_needed = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     budget_lines = ProjectBudgetLineSerializer(many=True,
                                                source='projectbudgetline_set',
                                                read_only=True)
@@ -194,7 +197,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
             # Expecting something like: NL18xxxxxxxxxx
             iban_validator = IBANValidator()
             if country_code in iban_validator.validation_countries.keys() and \
-              digits_regex.match(check_digits):
+               digits_regex.match(check_digits):
                 iban_validator(value)
         return value
 

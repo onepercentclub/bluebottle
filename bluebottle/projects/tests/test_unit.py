@@ -1,10 +1,13 @@
 from datetime import timedelta, time
+
+from django.db.models import Count
 from django.utils import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.projects.models import Project, ProjectPhaseLog
+from bluebottle.projects.admin import mark_as_plan_new
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.test.utils import BluebottleTestCase
@@ -270,3 +273,26 @@ class TestProjectPopularity(BluebottleTestCase):
         Project.update_popularity()
 
         self.assertEqual(Project.objects.get(id=self.project.id).popularity, 11)
+
+
+class TestProjectBulkActions(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectBulkActions, self).setUp()
+        self.init_projects()
+
+        self.projects = [ProjectFactory.create(title='test {}'.format(i)) for i in range(10)]
+
+    def test_mark_as_plan_new(self):
+        mark_as_plan_new(None, None, Project.objects)
+
+        for project in Project.objects.all():
+            self.assertEqual(project.status.slug, 'plan-new')
+
+    def test_mark_annotated(self):
+        queryset = Project.objects.annotate(
+            admin_vote_count=Count('vote', distinct=True)
+        )
+        mark_as_plan_new(None, None, queryset)
+
+        for project in Project.objects.all():
+            self.assertEqual(project.status.slug, 'plan-new')

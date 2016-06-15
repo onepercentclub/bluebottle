@@ -75,7 +75,7 @@ install_requires = [
     'surlex==0.2.0',
     'transifex-client==0.11',
     'unicodecsv==0.14.1',
-    'wagtail==1.5',
+    'wagtail==1.5.2',
     'wheel==0.29.0',
 
     # Github requirements
@@ -96,7 +96,7 @@ tests_requires = [
     'mock==2.0.0',
     'nose==1.3.7',
     'pylint==1.5.5',
-    'pyquery==1.2.13'
+    'pyquery==1.2.13',
     'tdaemon==0.1.1',
     'WebTest==2.0.21',
 ]

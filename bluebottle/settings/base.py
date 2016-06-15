@@ -335,7 +335,6 @@ TENANT_APPS = (
     'bluebottle.donations',
     'bluebottle.orders',
 
-
     # Custom dashboard
     'fluent_dashboard',
 

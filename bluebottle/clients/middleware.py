@@ -1,8 +1,10 @@
 import logging
+from urlparse import urljoin
 from threading import local
 
 from django.db import connection
 from django.conf import settings
+from django.shortcuts import redirect
 from django.utils._os import safe_join
 
 from tenant_schemas.postgresql_backend.base import FakeTenant
@@ -69,3 +71,17 @@ class TenantPropertiesMiddleware(object):
 
         if tenant:
             properties.set_tenant(tenant)
+
+
+class MediaMiddleware(object):
+    def process_response(self, request, response):
+        if (
+            response.status_code == 404 and
+            request.path.startswith(settings.MEDIA_URL) and
+            connection.tenant.client_name not in request.path
+        ):
+            return redirect(
+                request.path.replace(settings.MEDIA_URL, urljoin(settings.MEDIA_URL, connection.tenant.client_name + '/'))
+            )
+
+        return response

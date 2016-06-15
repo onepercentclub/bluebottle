@@ -1,0 +1,12 @@
+{% extends "wagtailadmin/widgets/chooser.html" %}
+{% load thumbnail %}
+
+{% block chooser_class %}project-chooser{% endblock %}
+
+{% block chosen_state_view %}
+    {% thumbnail project.image "165x165" as im %}
+        <img src="{{im.url}}">
+    {% endthumbnail %}
+
+    <h3 class="title">{{project.title}}</h3>
+{% endblock %}

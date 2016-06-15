@@ -9,7 +9,7 @@ from wagtail.wagtailimages.blocks import ImageChooserBlock
 from wagtail.wagtailsnippets.edit_handlers import SnippetChooserPanel
 from django import forms
 
-from bluebottle.projects.models import Project
+from bluebottle.cms.blocks import ProjectChooserBlock
 
 
 class StepBlock(blocks.StructBlock):
@@ -38,30 +38,6 @@ class BlockItemSection(blocks.StructBlock):
 
 from django import forms
 from django.contrib.admin.widgets import ForeignKeyRawIdWidget
-
-
-class ProjectChooserBlock(blocks.ChooserBlock):
-
-    target_model = Project
-    widget = forms.Select()
-
-    def get_queryset(self):
-        return Project.objects.filter(status__viewable=True, title__contains='water').all()
-
-    def get_related_field(self):
-        return type("", (), dict(name='id'))
-
-    @cached_property
-    def field(self):
-        return forms.ModelChoiceField(
-            queryset=self.get_queryset(), widget=self.widget, required=self.required,
-            help_text=self.help_text)
-
-    def value_for_form(self, value):
-        if isinstance(value, self.target_model):
-            return value.pk
-        else:
-            return value
 
 
 class ProjectShowSection(blocks.StructBlock):

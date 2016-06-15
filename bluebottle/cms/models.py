@@ -1,3 +1,4 @@
+from django import forms
 from django.db import models
 from django.utils.functional import cached_property
 
@@ -6,8 +7,6 @@ from wagtail.wagtailcore import blocks
 from wagtail.wagtailcore.fields import StreamField
 from wagtail.wagtailcore.models import Page as WagtailPage
 from wagtail.wagtailimages.blocks import ImageChooserBlock
-from wagtail.wagtailsnippets.edit_handlers import SnippetChooserPanel
-from django import forms
 
 from bluebottle.projects.models import Project
 
@@ -34,10 +33,6 @@ class BlockItemSection(blocks.StructBlock):
     intro = blocks.TextBlock(required=False)
     blocks = blocks.ListBlock(StepBlock(), template='pages/blocks/projects.html', icon="image")
     button = ButtonBlock(required=False)
-
-
-from django import forms
-from django.contrib.admin.widgets import ForeignKeyRawIdWidget
 
 
 class ProjectChooserBlock(blocks.ChooserBlock):
@@ -70,13 +65,6 @@ class ProjectShowSection(blocks.StructBlock):
 
 
 class Page(WagtailPage):
-    meta_image = models.ForeignKey(
-        'wagtailimages.Image',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='+'
-    )
     body = StreamField([
         ('article', ArticleSection()),
         ('block_items', BlockItemSection()),
@@ -92,6 +80,5 @@ class Page(WagtailPage):
 
 Page.content_panels = [
     FieldPanel('title'),
-    FieldPanel('meta_image'),
     StreamFieldPanel('body'),
 ]

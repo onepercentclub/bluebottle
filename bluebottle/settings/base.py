@@ -131,6 +131,7 @@ TEMPLATES = [
                 'tenant_extras.context_processors.conf_settings',
                 'bluebottle.utils.context_processors.tenant_properties'
             ],
+            'builtins': ['overextends.templatetags.overextends_tags'],
         },
     },
 ]
@@ -236,6 +237,7 @@ SHARED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'overextends',
 
     # 3rd party apps
     'django_extensions',
@@ -276,7 +278,6 @@ TENANT_APPS = (
     'django.contrib.sites',
     'django.contrib.admindocs',
     'django.contrib.auth',
-
     'bb_salesforce',
 
     #Widget
@@ -360,6 +361,7 @@ TENANT_APPS = (
     'wagtail.wagtailredirects',
     'wagtail.wagtailforms',
     'wagtail.contrib.wagtailapi',
+    'wagtail.contrib.modeladmin',
 
 )
 

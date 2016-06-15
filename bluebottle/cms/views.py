@@ -24,7 +24,7 @@ class PageDraftDetail(generics.RetrieveAPIView):
     permission_classes = (permissions.IsAdminUser, )
 
     def get_queryset(self):
-        return Page.objects.filter(live=True).all()
+        return Page.objects.all()
 
     def get_object(self):
         obj = super(PageDraftDetail, self).get_object()

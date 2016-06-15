@@ -20,7 +20,7 @@ urlpatterns = patterns(
     '',
 
     # Overwrite cms preview page
-    url(r'^admin/cms/pages/(?P<page_id>[0-9]+)/view_draft/$',
+    url(r'^admin/cms/pages/(?P<page_id>[0-9]*)/view_draft/$',
         PreviewDraftPage.as_view(), name='preview-draft-cms-redirect'),
 
     url(r'^admin/cms/', include(wagtailadmin_urls)),

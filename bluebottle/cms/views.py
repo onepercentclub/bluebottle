@@ -31,13 +31,14 @@ class PageDraftDetail(generics.RetrieveAPIView):
         return obj.get_latest_revision_as_page()
 
 
-class PreviewPage(RedirectView):
-
-    def get_redirect_url(self):
-        import ipdb; ipdb.set_trace()
-
-
 class PreviewDraftPage(RedirectView):
 
     def get_redirect_url(self, page_id, **kwargs):
+        # For convenience in local development
+        if ':8000' in self.request.get_host():
+            return 'http://{0}/en/content-draft/{1}/'.format(
+                self.request.get_host().replace(':8000', ':4200'),
+                page_id
+            )
+
         return '/content-draft/' + page_id

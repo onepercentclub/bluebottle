@@ -30,6 +30,7 @@ class PageDraftDetail(generics.RetrieveAPIView):
         obj = super(PageDraftDetail, self).get_object()
         return obj.get_latest_revision_as_page()
 
+
 class PreviewPage(RedirectView):
 
     def get_redirect_url(self):

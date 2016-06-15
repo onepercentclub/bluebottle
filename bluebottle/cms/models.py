@@ -36,6 +36,10 @@ class BlockItemSection(blocks.StructBlock):
     button = ButtonBlock(required=False)
 
 
+from django import forms
+from django.contrib.admin.widgets import ForeignKeyRawIdWidget
+
+
 class ProjectChooserBlock(blocks.ChooserBlock):
 
     target_model = Project
@@ -44,6 +48,8 @@ class ProjectChooserBlock(blocks.ChooserBlock):
     def get_queryset(self):
         return Project.objects.filter(status__viewable=True, title__contains='water').all()
 
+    def get_related_field(self):
+        return type("", (), dict(name='id'))
 
     @cached_property
     def field(self):

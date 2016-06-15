@@ -10,6 +10,7 @@ from wagtail.contrib.wagtailapi import urls as wagtailapi_urls
 from bluebottle.auth.views import GetAuthToken
 from wagtail.wagtailimages import urls as wagtailimages_urls
 
+from bluebottle.cms.views import PreviewPage
 
 urlpatterns = patterns('',
                        # The api urls are in the / url namespace so that

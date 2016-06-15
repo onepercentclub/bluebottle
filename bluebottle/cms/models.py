@@ -51,6 +51,12 @@ class ProjectChooserBlock(blocks.ChooserBlock):
             queryset=self.get_queryset(), widget=self.widget, required=self.required,
             help_text=self.help_text)
 
+    def value_for_form(self, value):
+        if isinstance(value, self.target_model):
+            return value.pk
+        else:
+            return value
+
 
 class ProjectShowSection(blocks.StructBlock):
     title = blocks.TextBlock(required=False)

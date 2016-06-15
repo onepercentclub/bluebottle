@@ -75,7 +75,7 @@ install_requires = [
     'surlex==0.2.0',
     'transifex-client==0.11',
     'unicodecsv==0.14.1',
-    'wagtail==1.5',
+    'wagtail==1.5.2',
     'wheel==0.29.0',
 
     # Github requirements

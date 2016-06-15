@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url
 
-from ..views import PageDetail, PageList
+from ..views import PageDetail, PageList, PageDraftDetail
 
 urlpatterns = patterns(
     '',
@@ -12,4 +12,8 @@ urlpatterns = patterns(
     url(r'^(?P<pk>\d+)$',
         PageDetail.as_view(),
         name='cms_page_detail'),
+
+    url(r'^preview/(?P<pk>\d+)$',
+        PageDraftDetail.as_view(),
+        name='cms_page_draft_detail'),
 )

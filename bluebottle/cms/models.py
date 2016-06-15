@@ -8,7 +8,7 @@ from wagtail.wagtailcore.fields import StreamField
 from wagtail.wagtailcore.models import Page as WagtailPage
 from wagtail.wagtailimages.blocks import ImageChooserBlock
 
-from bluebottle.projects.models import Project
+from bluebottle.cms.blocks import ProjectChooserBlock
 
 
 class StepBlock(blocks.StructBlock):
@@ -33,30 +33,6 @@ class BlockItemSection(blocks.StructBlock):
     intro = blocks.TextBlock(required=False)
     blocks = blocks.ListBlock(StepBlock(), template='pages/blocks/projects.html', icon="image")
     button = ButtonBlock(required=False)
-
-
-class ProjectChooserBlock(blocks.ChooserBlock):
-
-    target_model = Project
-    widget = forms.Select()
-
-    def get_queryset(self):
-        return Project.objects.filter(status__viewable=True, title__contains='water').all()
-
-    def get_related_field(self):
-        return type("", (), dict(name='id'))
-
-    @cached_property
-    def field(self):
-        return forms.ModelChoiceField(
-            queryset=self.get_queryset(), widget=self.widget, required=self.required,
-            help_text=self.help_text)
-
-    def value_for_form(self, value):
-        if isinstance(value, self.target_model):
-            return value.pk
-        else:
-            return value
 
 
 class ProjectShowSection(blocks.StructBlock):

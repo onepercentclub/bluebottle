@@ -1,3 +1,8 @@
+from django.conf.urls import include, url
+from django.core import urlresolvers
+
+from wagtail.wagtailcore import hooks
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from bluebottle.donations.models import Donation
 from wagtail.contrib.modeladmin.helpers import ButtonHelper
 
@@ -9,14 +14,32 @@ from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.admin.utils import quote
 
-from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.projects.models import Project
 from bluebottle.votes.models import Vote
 from wagtail.contrib.modeladmin.options import (
     ModelAdmin, modeladmin_register, ModelAdminGroup)
 
 from bluebottle.geo.models import Location
-from .models import Project
+from bluebottle.cms import admin_urls
+
+
+@hooks.register('register_admin_urls')
+def register_admin_urls():
+    return [
+        url(r'^cms/', include(admin_urls, namespace='cms', app_name='cms')),
+    ]
+
+
+@hooks.register('insert_editor_js')
+def editor_js():
+    return """
+        <script src="{}"></script>
+        <script>
+            window.chooserUrls.projectChooser = '{}';
+        </script>
+    """.format(
+        static('cms/js/project-chooser.js'), urlresolvers.reverse('cms:project_chooser')
+    )
 
 
 class ProjectThemeFilter(admin.SimpleListFilter):

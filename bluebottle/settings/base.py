@@ -141,6 +141,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.clients.middleware.TenantPropertiesMiddleware',
+    'bluebottle.clients.middleware.MediaMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',

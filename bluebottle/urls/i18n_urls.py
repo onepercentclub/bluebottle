@@ -10,7 +10,7 @@ from wagtail.wagtaildocs import urls as wagtaildocs_urls
 
 from wagtail.wagtailsearch.urls import frontend as wagtailsearch_frontend_urls
 
-from bluebottle.cms.views import PreviewPage, PreviewDraftPage
+from bluebottle.cms.views import PreviewDraftPage
 from bluebottle.views import HomeView
 
 admin.autodiscover()
@@ -20,8 +20,7 @@ urlpatterns = patterns(
     '',
 
     # Overwrite cms preview page
-    # url(r'^admin/cms/pages/preview/$', PreviewPage.as_view(), name='preview-cms-page'),
-    url(r'^admin/cms/pages/(?P<page_id>[0-9]+)/view_draft/$',
+    url(r'^admin/cms/pages/(?P<page_id>[0-9]*)/view_draft/$',
         PreviewDraftPage.as_view(), name='preview-draft-cms-redirect'),
 
     url(r'^admin/cms/', include(wagtailadmin_urls)),

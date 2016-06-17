@@ -42,6 +42,7 @@ install_requires = [
     'django-lockdown==1.2',
     'django-loginas==0.1.9',
     'django-modeltranslation==0.11',
+    'django-overextends==0.4.1',
     'django-rest-swagger==0.3.6',
     'django-taggit==0.18.3',
     'django-tenant-schemas==1.6.2',

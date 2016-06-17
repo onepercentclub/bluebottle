@@ -3,7 +3,7 @@ from wagtail.wagtailcore.fields import StreamField
 from wagtail.wagtailcore.models import Page as WagtailPage
 from bluebottle.cms.blocks import (
     ProjectListBlock, ItemsBlock, ArticleBlock, StepBlock, OneSectionBlock,
-    VideoBlock
+    VideoBlock, SectionListBlock
 )
 
 from wagtail.wagtailimages.blocks import ImageChooserBlock
@@ -19,7 +19,7 @@ class Page(WagtailPage):
         ('heading', blocks.CharBlock(classname="full title", icon="title")),
         ('paragraph', blocks.RichTextBlock()),
         ('image', ImageChooserBlock(icon="image")),
-        ('step_blocks', blocks.ListBlock(StepBlock(), template='pages/blocks/projects.html', icon="image")),
+        ('step_blocks', SectionListBlock(StepBlock(), template='pages/blocks/projects.html', icon="image")),
         ('one_section', OneSectionBlock()),
         ('video', VideoBlock(icon='media')),
     ], null=True)

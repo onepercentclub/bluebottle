@@ -7,16 +7,24 @@ from wagtail.wagtailimages.blocks import ImageChooserBlock
 from bluebottle.cms.widgets import AdminProjectChooser
 
 
+class SectionListBlock(blocks.ListBlock):
+    is_section = True
+
+
 class StepBlock(blocks.StructBlock):
     image = ImageChooserBlock()
     title = blocks.TextBlock(required=False)
     text = blocks.TextBlock(required=False)
+
+    is_section = True
 
 
 class ArticleBlock(blocks.StructBlock):
     title = blocks.TextBlock(required=False)
     image = ImageChooserBlock()
     text = blocks.RichTextBlock(required=False)
+
+    is_section = True
 
 
 class ButtonBlock(blocks.StructBlock):
@@ -27,12 +35,16 @@ class ButtonBlock(blocks.StructBlock):
 class OneSectionBlock(StepBlock):
     action = ButtonBlock(required=False)
 
+    is_section = True
+
 
 class VideoBlock(blocks.StructBlock):
     title = blocks.TextBlock(required=False)
     url = blocks.URLBlock(required=False)
     background_image = ImageChooserBlock()
     button_text = blocks.TextBlock(required=False)
+
+    is_section = True
 
 
 class ProjectChooserBlock(ChooserBlock):
@@ -53,7 +65,11 @@ class ItemsBlock(blocks.StructBlock):
     blocks = blocks.ListBlock(StepBlock(), template='pages/blocks/projects.html', icon="image")
     button = ButtonBlock(required=False)
 
+    is_section = True
+
 
 class ProjectListBlock(blocks.StructBlock):
     title = blocks.TextBlock(required=False)
     projects = blocks.ListBlock(ProjectChooserBlock())
+
+    is_section = True

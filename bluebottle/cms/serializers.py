@@ -107,6 +107,23 @@ class BlockItemSectionSerializer(BaseBlockSerializer):
         }
 
 
+class VideoBlockSerializer(BaseBlockSerializer):
+
+    def get_content(self, instance):
+        return None
+
+    def get_elements(self, instance):
+        return dict(instance.value, background_image=get_image_url(instance.value['background_image']))
+
+
+class OneSectionSerializer(BaseBlockSerializer):
+    def get_content(self, instance):
+        return None
+
+    def get_elements(self, instance):
+        return dict(instance.value, image=get_image_url(instance.value['image'], filter_spec='fill-360x360'))
+
+
 class ProjectSectionSerializer(BaseBlockSerializer):
 
     def get_content(self, instance):
@@ -126,15 +143,21 @@ class StreamSerializer(serializers.ModelSerializer):
         Wallpost Polymorphic serialization
         """
         if obj.block_type == 'image':
-           return ImageBlockSerializer(obj, context=self.context).to_representation(obj)
+            return ImageBlockSerializer(obj, context=self.context).to_representation(obj)
         if obj.block_type == 'step_blocks':
-           return StepBlockSerializer(obj, context=self.context).to_representation(obj)
+            return StepBlockSerializer(obj, context=self.context).to_representation(obj)
         if obj.block_type == 'article':
-           return ArticleSerializer(obj, context=self.context).to_representation(obj)
+            return ArticleSerializer(obj, context=self.context).to_representation(obj)
         if obj.block_type == 'block_items':
-           return BlockItemSectionSerializer(obj, context=self.context).to_representation(obj)
+            return BlockItemSectionSerializer(obj, context=self.context).to_representation(obj)
         if obj.block_type == 'projects':
-           return ProjectSectionSerializer(obj, context=self.context).to_representation(obj)
+            return ProjectSectionSerializer(obj, context=self.context).to_representation(obj)
+        if obj.block_type == 'video':
+            return VideoBlockSerializer(obj, context=self.context).to_representation(obj)
+        if obj.block_type == 'one_section':
+            return OneSectionSerializer(obj, context=self.context).to_representation(obj)
+
+
         return BaseBlockSerializer(obj, context=self.context).to_representation(obj)
 
     class Meta:

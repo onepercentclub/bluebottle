@@ -187,7 +187,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
     admin_has_iban.boolean = True
 
     def payout(self, obj):
-        return "Select"
+        return "View/Edit"
 
     def has_add_permission(self, request):
         return False
@@ -367,7 +367,7 @@ class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
         objs = queryset.all()
         if not request.user.is_staff:
             raise PermissionDenied
-        response = HttpResponse(mimetype='text/xml')
+        response = HttpResponse()
         date = timezone.datetime.strftime(timezone.now(), '%Y%m%d%H%I%S')
         response['Content-Disposition'] = 'attachment; ' \
                                           'filename=payments_sepa%s.xml' % date

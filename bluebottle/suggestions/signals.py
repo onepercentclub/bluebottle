@@ -26,7 +26,6 @@ def send_suggestion_confirmation_email(sender, instance,
         if not url:
             return
 
-        # TODO, add language? Insert instance.language
         tokenurl = '{0}/confirm-suggestion/{1}/{2}'.format(url,
                                                        instance.token,
                                                        instance.language)

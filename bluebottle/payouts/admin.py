@@ -56,14 +56,17 @@ class BasePayoutAdmin(admin.ModelAdmin):
     def change_status_to_retry(self, request, queryset):
         for payout in queryset.all():
             payout.retry()
+            payout.save()
 
     def change_status_to_in_progress(self, request, queryset):
         for payout in queryset.all():
             payout.in_progress()
+            payout.save()
 
     def change_status_to_settled(self, request, queryset):
         for payout in queryset.all():
             payout.settled()
+            payout.save()
 
     def recalculate_amounts(self, request, queryset):
         # Only recalculate for 'new' payouts
@@ -72,6 +75,7 @@ class BasePayoutAdmin(admin.ModelAdmin):
 
         for payout in qs_new:
             payout.calculate_amounts()
+            payout.save()
 
         new_payouts = qs_new.count()
         skipped_payouts = queryset.exclude(**filter_args).count()

@@ -156,6 +156,7 @@ class ProjectPayout(BaseProjectPayout):
 
         for payout in qs.all():
             payout.in_progress()
+            payout.save()
             creditor = SepaAccount(
                 name=payout.receiver_account_name,
                 iban=payout.receiver_account_iban,

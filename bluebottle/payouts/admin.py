@@ -164,7 +164,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
     # Link to project
     admin_project = link_to(
         lambda obj: obj.project,
-        'admin:payouts_projectpayout_change',
+        'admin:projects_project_change',
         view_args=lambda obj: (obj.project.id,),
         short_description=_('project'),
         truncate=50

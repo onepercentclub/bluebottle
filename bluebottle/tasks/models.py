@@ -1,5 +1,6 @@
 from django.utils.translation import ugettext as _
 from django.utils.timezone import now
+from django.db.models.signals import pre_save
 
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, \
     BaseSkill
@@ -141,6 +142,10 @@ class TaskMember(BaseTaskMember):
 class TaskFile(BaseTaskFile):
     pass
 
+@receiver(pre_save, weak=False, sender=TaskMember, dispatch_uid='set-hours-spent-taskmember')
+def set_hours_spent_taskmember(sender, instance, **kwargs):
+    if instance.status != instance._initial_status and instance.status == TaskMember.TaskMemberStatuses.realized:
+        instance.time_spent = instance.task.time_needed
 
 from bluebottle.bb_tasks.taskwallmails import *
 from bluebottle.bb_tasks.taskmail import *

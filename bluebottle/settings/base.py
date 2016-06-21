@@ -146,6 +146,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.LockdownMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -250,6 +251,7 @@ SHARED_APPS = (
     'filetransfers',
     'rest_framework_swagger',
     'lockdown',
+    'corsheaders'
 
 )
 

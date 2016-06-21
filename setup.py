@@ -81,6 +81,7 @@ install_requires = [
     'django-bb-salesforce==1.2.0',
     'django-tenant-extras==2.0.8',
     'django-token-auth==0.3.0',
+    'django-cors-headers==1.1.0'
 ]
 
 tests_requires = [

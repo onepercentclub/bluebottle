@@ -55,14 +55,17 @@ class BasePayoutAdmin(admin.ModelAdmin):
     def change_status_to_retry(self, request, queryset):
         for payout in queryset.all():
             payout.retry()
+            payout.save()
 
     def change_status_to_in_progress(self, request, queryset):
         for payout in queryset.all():
             payout.in_progress()
+            payout.save()
 
     def change_status_to_settled(self, request, queryset):
         for payout in queryset.all():
             payout.settled()
+            payout.save()
 
     def recalculate_amounts(self, request, queryset):
         # Only recalculate for 'new' payouts
@@ -71,6 +74,7 @@ class BasePayoutAdmin(admin.ModelAdmin):
 
         for payout in qs_new:
             payout.calculate_amounts()
+            payout.save()
 
         new_payouts = qs_new.count()
         skipped_payouts = queryset.exclude(**filter_args).count()
@@ -106,7 +110,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
         (None, {
             'fields': (
                 'admin_project', 'admin_organization',
-                'status', 'invoice_reference'
+                'status', 'invoice_reference', 'protected'
             )
         }),
         (_('Dates'), {
@@ -187,7 +191,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
     admin_has_iban.boolean = True
 
     def payout(self, obj):
-        return "Select"
+        return "View/Edit"
 
     def has_add_permission(self, request):
         return False
@@ -367,7 +371,7 @@ class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
         objs = queryset.all()
         if not request.user.is_staff:
             raise PermissionDenied
-        response = HttpResponse(mimetype='text/xml')
+        response = HttpResponse()
         date = timezone.datetime.strftime(timezone.now(), '%Y%m%d%H%I%S')
         response['Content-Disposition'] = 'attachment; ' \
                                           'filename=payments_sepa%s.xml' % date

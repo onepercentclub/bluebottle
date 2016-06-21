@@ -110,7 +110,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
         (None, {
             'fields': (
                 'admin_project', 'admin_organization',
-                'status', 'invoice_reference'
+                'status', 'invoice_reference', 'protected'
             )
         }),
         (_('Dates'), {

@@ -214,19 +214,16 @@ class MetricsTest(BluebottleTestCase):
 
     def test_taskmember_hours(self):
         """ Test taskmember hours spent calculation, status must be realized """
-        task = TaskFactory()
+        task = TaskFactory(time_needed=8)
 
         task_member = TaskMemberFactory(task=task, status='applied')
-        task_member2 = TaskMemberFactory(task=task, status='realized',
-                                         time_spent=8)
+        task_member2 = TaskMemberFactory(task=task, status='realized')
         task_member3 = TaskMemberFactory(task=task, status='accepted')
         task_member4 = TaskMemberFactory(task=task, status='rejected')
         task_member5 = TaskMemberFactory(task=task, status='stopped')
 
-        task_member6 = TaskMemberFactory(task=task, status='realized',
-                                         time_spent=8)
-        task_member7 = TaskMemberFactory(task=task, status='realized',
-                                         time_spent=8)
+        task_member6 = TaskMemberFactory(task=task, status='realized')
+        task_member7 = TaskMemberFactory(task=task, status='realized')
 
         # Count tm2, tm6, tm7, 3x8 hours
         _, hours = self.metrics.calculate_taskmember_metrics()

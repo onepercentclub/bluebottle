@@ -221,6 +221,7 @@ class OrganizationPayout(BaseOrganizationPayout):
 
         for payout in qs.all():
             payout.in_progress()
+            payout.save()
             creditor = SepaAccount(
                 name=settings.BANK_ACCOUNT_ORGANISATION['name'],
                 iban=settings.BANK_ACCOUNT_ORGANISATION['iban'],

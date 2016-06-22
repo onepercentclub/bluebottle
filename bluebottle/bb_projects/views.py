@@ -21,9 +21,13 @@ class ProjectPagination(BluebottlePagination):
     page_size = 8
 
 
+class TinyProjectPagination(BluebottlePagination):
+    page_size = 10000
+
+
 class ProjectTinyPreviewList(generics.ListAPIView):
     queryset = Project.objects.all()
-    pagination_class = ProjectPagination
+    pagination_class = TinyProjectPagination
     serializer_class = ProjectTinyPreviewSerializer
 
     def get_queryset(self):

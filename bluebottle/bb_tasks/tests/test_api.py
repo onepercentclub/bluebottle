@@ -274,7 +274,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['id'], self.task1.id)
 
-        response = self.client.get(api_url, {'after': '01-01-2011'},
+        response = self.client.get(api_url, {'after': '2011-01-01'},
                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)

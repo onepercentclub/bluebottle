@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
@@ -226,11 +226,13 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
+            deadline=datetime(2010, 05, 05, tzinfo=timezone.UTC())
         )
         self.task2 = TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
+            deadline=datetime(2011, 05, 05, tzinfo=timezone.UTC())
         )
 
         self.assertEqual(2, Project.objects.count())
@@ -239,6 +241,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         api_url = self.task_url + 'previews/'
 
         # test that only one task preview is returned
+
         response = self.client.get(api_url, token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
@@ -263,6 +266,19 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['id'], self.task1.id)
+
+        response = self.client.get(api_url, {'before': '2011-01-01'},
+                                   token=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
+                         response.data)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['id'], self.task1.id)
+
+        response = self.client.get(api_url, {'after': '01-01-2011'},
+                                   token=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
+                         response.data)
+        self.assertEqual(response.data['count'], 0)
 
     def test_delete_task_member(self):
         task = TaskFactory.create()

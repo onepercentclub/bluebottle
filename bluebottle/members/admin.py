@@ -125,7 +125,7 @@ class MemberAdmin(UserAdmin):
             [_("Profile"),
              {'fields': ['user_type', 'is_co_financer', 'picture', 'about_me', 'location']}],
             [_("Settings"), {'fields': ['primary_language', 'newsletter']}],
-            [_('Skills & interests'), {'fields': ['favourite_themes',]}],
+            [_('Skills & interests'), {'fields': ['favourite_themes', 'skills']}],
             [_('Important dates'),
              {'fields': ['last_login', 'date_joined', 'deleted']}],
         ]
@@ -167,7 +167,7 @@ class MemberAdmin(UserAdmin):
     add_form = MemberCreationForm
 
     list_filter = (
-        'user_type', 'is_active', 'is_staff', 'is_superuser', 'newsletter')
+        'user_type', 'is_active', 'is_staff', 'is_superuser', 'newsletter', 'favourite_themes', 'skills')
 
     list_display = (
         'email', 'first_name', 'last_name', 'is_staff', 'date_joined',

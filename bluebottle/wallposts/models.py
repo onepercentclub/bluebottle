@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes import fields
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from django.utils.text import Truncator
@@ -42,6 +42,10 @@ class Wallpost(PolymorphicModel):
     and have the polymorphic behaviour of sorting on the common fields.
     """
 
+    @property
+    def wallpost_type(self):
+        return 'unknown'
+
     # The user who wrote the wall post. This can be empty to support wallposts
     # without users (e.g. anonymous
     # TextWallposts, system Wallposts for donations etc.)
@@ -57,7 +61,7 @@ class Wallpost(PolymorphicModel):
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
-    ip_address = models.IPAddressField(_('IP address'), blank=True, null=True,
+    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
                                        default=None)
 
     # Generic foreign key so we can connect it to any object.
@@ -65,7 +69,7 @@ class Wallpost(PolymorphicModel):
         ContentType, verbose_name=_('content type'),
         related_name="content_type_set_for_%(class)s")
     object_id = models.PositiveIntegerField(_('object ID'))
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
 
     share_with_facebook = models.BooleanField(default=False)
     share_with_twitter = models.BooleanField(default=False)
@@ -89,6 +93,11 @@ class Wallpost(PolymorphicModel):
 
 class MediaWallpost(Wallpost):
     # The content of the wall post.
+
+    @property
+    def wallpost_type(self):
+        return 'media'
+
     title = models.CharField(max_length=60)
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True,
                             default='')
@@ -114,7 +123,7 @@ class MediaWallpostPhoto(models.Model):
                                       null=True, blank=True)
     photo = models.ImageField(upload_to='mediawallpostphotos')
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
-    ip_address = models.IPAddressField(_('IP address'), blank=True, null=True,
+    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
                                        default=None)
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
                                verbose_name=_('author'),
@@ -128,6 +137,10 @@ class MediaWallpostPhoto(models.Model):
 
 class TextWallpost(Wallpost):
     # The content of the wall post.
+    @property
+    def wallpost_type(self):
+        return 'text'
+
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH)
 
     def __unicode__(self):
@@ -136,13 +149,17 @@ class TextWallpost(Wallpost):
 
 class SystemWallpost(Wallpost):
     # The content of the wall post.
+    @property
+    def wallpost_type(self):
+        return 'system'
+
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True)
 
     # Generic foreign key so we can connect any object to it.
     related_type = models.ForeignKey(ContentType,
                                      verbose_name=_('related type'))
     related_id = models.PositiveIntegerField(_('related ID'))
-    related_object = generic.GenericForeignKey('related_type', 'related_id')
+    related_object = fields.GenericForeignKey('related_type', 'related_id')
 
     def __unicode__(self):
         return Truncator(self.text).words(10)
@@ -173,7 +190,7 @@ class Reaction(models.Model):
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
-    ip_address = models.IPAddressField(_('IP address'), blank=True, null=True,
+    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
                                        default=None)
 
     # Manager

@@ -202,7 +202,8 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
     def retry(self):
         self.protected = True
         self.planned = self.__class__.get_next_planned_date()
-        
+
+
 
 class PayoutLogBase(models.Model):
     """

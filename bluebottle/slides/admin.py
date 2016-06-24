@@ -1,3 +1,5 @@
+import json
+
 from fluent_contents.models import Placeholder
 from fluent_contents.rendering import render_content_items
 
@@ -7,7 +9,6 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponse
 from django.shortcuts import render
-from django.utils import simplejson
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
@@ -51,7 +52,7 @@ class SlideAdmin(admin.ModelAdmin):
     def get_urls(self):
         # Include extra API views in this admin page
         base_urls = super(SlideAdmin, self).get_urls()
-        info = self.model._meta.app_label, self.model._meta.module_name
+        info = self.model._meta.app_label, self.model._meta.model_name
         urlpatterns = patterns('',
                                url(r'^(?P<pk>\d+)/preview-canvas/$',
                                    self.admin_site.admin_view(
@@ -91,12 +92,12 @@ class SlideAdmin(admin.ModelAdmin):
         contents_html = mark_safe(render_content_items(request, items).html)
 
         status = 200
-        json = {
+        resp = {
             'success': True,
             'title': blogpost.title,
             'contents': contents_html,
         }
-        return HttpResponse(simplejson.dumps(json),
+        return HttpResponse(json.dumps(resp),
                             content_type='application/javascript',
                             status=status)
 
@@ -176,7 +177,7 @@ class SlideAdmin(admin.ModelAdmin):
 
     def render_change_form(self, request, context, add=False, change=False,
                            form_url='', obj=None):
-        info = self.model._meta.app_label, self.model._meta.module_name
+        info = self.model._meta.app_label, self.model._meta.model_name
         context.update({
             'preview_canvas_url': reverse(
                 'admin:{0}_{1}_preview_canvas'.format(*info),

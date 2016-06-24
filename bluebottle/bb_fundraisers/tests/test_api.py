@@ -1,4 +1,7 @@
 import json
+import tempfile
+from django.core.files import File
+
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -22,12 +25,14 @@ class FundraiserAPITestCase(BluebottleTestCase):
         self.some__other_token = "JWT {0}".format(
             self.some_other_user.get_jwt_token())
 
-        self.some_project = ProjectFactory.create(owner=self.some_user,
-                                                  deadline=timezone.now() + timezone.timedelta(
-                                                      days=15))
-        self.some_other_project = ProjectFactory.create(owner=self.some_user,
-                                                        deadline=timezone.now() + timezone.timedelta(
-                                                            days=15))
+        self.some_project = ProjectFactory.create(
+            owner=self.some_user,
+            deadline=timezone.now() + timezone.timedelta(days=15))
+        self.some_other_project = ProjectFactory.create(
+            owner=self.some_user,
+            deadline=timezone.now() + timezone.timedelta(days=15))
+
+        self.image = File(open('./bluebottle/bb_fundraisers/test_images/upload.png'))
 
     def test_fundraiser_deadline_exceeds_project_deadline(self):
         future_date = self.some_project.deadline + timezone.timedelta(days=5)
@@ -37,30 +42,34 @@ class FundraiserAPITestCase(BluebottleTestCase):
             'project': self.some_project.slug,
             'title': 'Testing fundraisers',
             'description': 'Lorem Ipsum',
+            'image': self.image,
             'amount': '1000',
             'deadline': str(future_date)
         }
 
-        response = self.client.post(reverse('fundraiser-list'), fundraiser_data,
-                                    token=self.some_token)
+        response = self.client.post(reverse('fundraiser-list'),
+                                    fundraiser_data,
+                                    token=self.some_token,
+                                    format='multipart')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(json.loads(response.content).get('deadline', None)[0],
                          _('Fundraiser deadline exceeds project deadline.'))
 
     def test_fundraiser_deadline_not_exceeds_project_deadline(self):
-        future_date = self.some_other_project.deadline - timezone.timedelta(
-            days=5)
+        future_date = self.some_other_project.deadline - timezone.timedelta(days=5)
 
         fundraiser_data = {
             'owner': self.some_other_user.pk,
             'project': self.some_other_project.slug,
             'title': 'Testing fundraisers',
             'description': 'Lorem Ipsum',
+            'image': self.image,
             'amount': '1000',
             'deadline': str(future_date)
         }
 
-        response = self.client.post(reverse('fundraiser-list'), fundraiser_data,
-                                    token=self.some_token)
-        self.assertEqual(response.status_code, 400)
-        self.assertTrue(not json.loads(response.content).get('deadline', None))
+        response = self.client.post(reverse('fundraiser-list'),
+                                    fundraiser_data,
+                                    token=self.some_token,
+                                    format='multipart')
+        self.assertEqual(response.status_code, 201)

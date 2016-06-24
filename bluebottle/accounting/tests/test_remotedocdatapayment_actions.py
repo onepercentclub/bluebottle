@@ -30,7 +30,7 @@ class RemoteDocdataPaymentActionTests(WebTestMixin, BluebottleTestCase):
 
     def setUp(self):
         super(RemoteDocdataPaymentActionTests, self).setUp()
-        self.app.extra_environ['HTTP_HOST'] = self.tenant.domain_url
+        self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
         self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
 
     def _initialize_payments(self):

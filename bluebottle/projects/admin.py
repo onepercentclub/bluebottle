@@ -25,77 +25,61 @@ from .models import (ProjectBudgetLine, Project,
 logger = logging.getLogger(__name__)
 
 
-def mark_as_plan_new(modeladmin, request, queryset):
+def mark_as(slug, queryset):
     try:
-        status = ProjectPhase.objects.get(slug='plan-new')
+        status = ProjectPhase.objects.get(slug=slug)
     except ProjectPhase.DoesNotExist:
         return
-    queryset.update(status=status)
+
+    Project.objects.filter(
+        pk__in=queryset.values_list('pk', flat=True)
+    ).update(
+        status=status
+    )
+
+
+def mark_as_plan_new(modeladmin, request, queryset):
+    mark_as('plan-new', queryset)
 mark_as_plan_new.short_description = _("Mark selected projects as status Plan New")
 
+
 def mark_as_plan_submitted(modeladmin, request, queryset):
-    try:
-        status = ProjectPhase.objects.get(slug='plan-submitted')
-    except ProjectPhase.DoesNotExist:
-        return
-    queryset.update(status=status)
+    mark_as('plan-submitted', queryset)
 mark_as_plan_submitted.short_description = _("Mark selected projects as status Plan Submitted")
 
+
 def mark_as_plan_needs_work(modeladmin, request, queryset):
-    try:
-        status = ProjectPhase.objects.get(slug='plan-needs-work')
-    except ProjectPhase.DoesNotExist:
-        return
-    queryset.update(status=status)
+    mark_as('plan-needs-work', queryset)
 mark_as_plan_needs_work.short_description = _("Mark selected projects as status Plan Needs Work")
 
+
 def mark_as_voting(modeladmin, request, queryset):
-    try:
-        status = ProjectPhase.objects.get(slug='voting')
-    except ProjectPhase.DoesNotExist:
-        return
-    queryset.update(status=status)
+    mark_as('voting', queryset)
 mark_as_voting.short_description = _("Mark selected projects as status Voting")
 
 
 def mark_as_voting_done(modeladmin, request, queryset):
-    try:
-        status = ProjectPhase.objects.get(slug='voting-done')
-    except ProjectPhase.DoesNotExist:
-        return
-    queryset.update(status=status)
+    mark_as('voting-done', queryset)
 mark_as_voting_done.short_description = _("Mark selected projects as status Voting Done")
 
+
 def mark_as_campaign(modeladmin, request, queryset):
-    try:
-        status = ProjectPhase.objects.get(slug='campaign')
-    except ProjectPhase.DoesNotExist:
-        return
-    queryset.update(status=status)
+    mark_as('campaign', queryset)
 mark_as_campaign.short_description = _("Mark selected projects as status Campaign")
 
+
 def mark_as_done_complete(modeladmin, request, queryset):
-    try:
-        status = ProjectPhase.objects.get(slug='done-complete')
-    except ProjectPhase.DoesNotExist:
-        return
-    queryset.update(status=status)
+    mark_as('done-complete', queryset)
 mark_as_done_complete.short_description = _("Mark selected projects as status Done Complete")
 
+
 def mark_as_done_incomplete(modeladmin, request, queryset):
-    try:
-        status = ProjectPhase.objects.get(slug='done-incomplete')
-    except ProjectPhase.DoesNotExist:
-        return
-    queryset.update(status=status)
+    mark_as('done-incomplete', queryset)
 mark_as_done_incomplete.short_description = _("Mark selected projects as status Done Incomplete")
 
+
 def mark_as_closed(modeladmin, request, queryset):
-    try:
-        status = ProjectPhase.objects.get(slug='closed')
-    except ProjectPhase.DoesNotExist:
-        return
-    queryset.update(status=status)
+    mark_as('closed', queryset)
 mark_as_closed.short_description = _("Mark selected projects as status Closed")
 
 
@@ -262,7 +246,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         (_('Details'), {'fields': ('language', 'theme', 'categories', 'image',
                                    'video_url', 'country',
                                    'latitude', 'longitude',
-                                   'location', 'place', 'tags')}),
+                                   'location', 'place')}),
 
         (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
                                 'amount_donated', 'amount_needed',
@@ -333,7 +317,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def project_owner(self, obj):
         object = obj.owner
         url = reverse('admin:{0}_{1}_change'.format(
-            object._meta.app_label, object._meta.module_name), args=[object.id])
+            object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='{0}'>{1}</a>".format(
             str(url), object.first_name + ' ' + object.last_name)
 

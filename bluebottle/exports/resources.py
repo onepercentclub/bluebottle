@@ -41,7 +41,7 @@ class ProjectResource(DateRangeResource):
 
 
 class TaskResource(DateRangeResource):
-    select_related = ('project', 'author', 'location')
+    select_related = ('project', 'author')
 
     def export(self, **kwargs):
         task_signal = dict(

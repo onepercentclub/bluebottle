@@ -8,8 +8,9 @@ from PIL import ImageFile
 from .payments import *
 from .admin_dashboard import *
 
-PROJECT_ROOT = os.path.abspath(os.path.join(
+BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
+PROJECT_ROOT = BASE_DIR
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -103,16 +104,39 @@ STATICFILES_FINDERS = (
 )
 
 # List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'tenant_extras.template_loaders.FilesystemLoader',
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-    'django.template.loaders.eggs.Loader',
-)
 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'OPTIONS': {
+            'loaders': [
+                'tenant_extras.template_loaders.FilesystemLoader',
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+                'django.template.loaders.eggs.Loader',
+                'admin_tools.template_loaders.Loader',
+            ],
+            'context_processors': [
+                'django.core.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.core.context_processors.debug',
+                'django.core.context_processors.i18n',
+                'django.core.context_processors.media',
+                'django.core.context_processors.static',
+                'django.core.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+                'social.apps.django_app.context_processors.backends',
+                'social.apps.django_app.context_processors.login_redirect',
+                'tenant_extras.context_processors.conf_settings',
+                'tenant_extras.context_processors.tenant_properties'
+            ],
+        },
+    },
+]
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',
+    'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.clients.middleware.TenantPropertiesMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',
@@ -122,18 +146,17 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.LockdownMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.transaction.TransactionMiddleware',
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
 REST_FRAMEWORK = {
-    # Don't do basic authentication.
     'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
     'FILTER_BACKEND': 'rest_framework.filters.DjangoFilterBackend',
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -141,7 +164,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ),
-   'DEFAULT_PERMISSION_CLASSES': (
+    'DEFAULT_PERMISSION_CLASSES': (
         'tenant_extras.drf_permissions.TenantConditionalOpenClose',
     ),
 }
@@ -206,12 +229,10 @@ SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 
 SHARED_APPS = (
+    'tenant_schemas',
     'bluebottle.clients',  # you must list the app where your tenant model resides in
 
     # Django apps
-    'south',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -223,22 +244,23 @@ SHARED_APPS = (
     'sorl.thumbnail',
     'micawber.contrib.mcdjango',  # Embedding videos
     'rest_framework',
-    'filetransfers',
     'loginas',
     'geoposition',
     'tenant_extras',
-    'bb_salesforce',
-    'localflavor'
+    'localflavor',
+    'filetransfers',
+    'rest_framework_swagger',
+    'lockdown',
+    'corsheaders'
 
 )
 
 TENANT_APPS = (
-    'south',
     'polymorphic',
     'modeltranslation',
 
     'social.apps.django_app.default',
-
+    'django.contrib.contenttypes',
     # Allow the Bluebottle common app to override the admin branding
     'bluebottle.common',
     'token_auth',
@@ -252,18 +274,18 @@ TENANT_APPS = (
     'bluebottle.auth',
 
     'django.contrib.admin',
+    'django.contrib.sites',
     'django.contrib.admindocs',
     'django.contrib.auth',
-    'django.contrib.contenttypes',
+
+    'bb_salesforce',
 
     #Widget
     'bluebottle.widget',
 
     'rest_framework.authtoken',
 
-    'exportdb',
 
-    'bb_salesforce',
 
     # Newly moved BB apps
     'bluebottle.members',
@@ -272,7 +294,6 @@ TENANT_APPS = (
     'bluebottle.tasks',
     'bluebottle.hbtemplates',
     'bluebottle.bluebottle_dashboard',
-    'bluebottle.statistics',
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
@@ -318,7 +339,6 @@ TENANT_APPS = (
     'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
-    'bluebottle.votes',
 
     # Basic Bb implementations
     'bluebottle.fundraisers',
@@ -332,46 +352,23 @@ TENANT_APPS = (
     'fluent_contents.plugins.rawhtml',
     'django_wysiwyg',
     'tinymce',
+    'exportdb',
     'django.contrib.humanize',
     'django_tools',
     'taggit',
-    'taggit_autocomplete_modified',
 )
 
-INSTALLED_APPS = TENANT_APPS + SHARED_APPS + ('rest_framework_swagger', 'lockdown', 'tenant_schemas')
+INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"
-
-SOUTH_DATABASE_ADAPTERS = {
-    'default': 'south.db.postgresql_psycopg2',
-}
-
-SOUTH_MIGRATION_MODULES = {
-    'taggit': 'taggit.south_migrations',
-    'fluent_contents': 'fluent_contents.south_migrations'
-}
-
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.core.context_processors.request',
-    'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.core.context_processors.tz',
-    'django.contrib.messages.context_processors.messages',
-    'social.apps.django_app.context_processors.backends',
-    'social.apps.django_app.context_processors.login_redirect',
-    'tenant_extras.context_processors.conf_settings',
-    'tenant_extras.context_processors.tenant_properties',
-)
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 
 THUMBNAIL_DEBUG = True
 THUMBNAIL_QUALITY = 85
+THUMBNAIL_DUMMY=True
 
 
 # A sample logging configuration. The only tangible logging
@@ -692,3 +689,5 @@ REQUESTS_MAX_RETRIES = 0
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4
 }
+
+

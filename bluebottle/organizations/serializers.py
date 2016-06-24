@@ -13,10 +13,10 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 
 class ManageOrganizationSerializer(serializers.ModelSerializer):
-    slug = serializers.SlugField(required=False)
+    slug = serializers.SlugField(required=False, allow_null=True)
     name = serializers.CharField(required=True)
-    website = URLField(required=False)
-    email = serializers.EmailField(required=False)
+    website = URLField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
 
     class Meta:
         model = Organization

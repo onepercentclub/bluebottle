@@ -152,25 +152,9 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # create a tenant
-        tenant_domain = 'testserver'
-        cls.tenant = get_tenant_model()(
-            domain_url=tenant_domain,
-            schema_name='test',
-            client_name='test')
-
-        cls.tenant.save(
-            verbosity=0)  # todo: is there any way to get the verbosity from the test command here?
+        super(BluebottleTestCase, cls).setUpClass()
+        cls.tenant = get_tenant_model().objects.get(schema_name='test')
         connection.set_tenant(cls.tenant)
-
-    @classmethod
-    def tearDownClass(cls):
-        # delete tenant
-        connection.set_schema_to_public()
-        cls.tenant.delete()
-
-        cursor = connection.cursor()
-        cursor.execute('DROP SCHEMA test CASCADE')
 
 
 class SessionTestMixin(object):

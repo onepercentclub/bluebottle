@@ -83,6 +83,7 @@ class MemberChangeForm(forms.ModelForm):
 
     class Meta:
         model = BB_USER_MODEL
+        exclude = ()
 
     def __init__(self, *args, **kwargs):
         super(MemberChangeForm, self).__init__(*args, **kwargs)

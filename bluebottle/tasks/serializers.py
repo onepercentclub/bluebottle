@@ -2,18 +2,19 @@ from rest_framework import serializers
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.bluebottle_drf2.serializers import (
-    PrimaryKeyGenericRelatedField, TagSerializer, FileSerializer,
-    TaggableSerializerMixin)
+    PrimaryKeyGenericRelatedField, FileSerializer)
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.wallposts.serializers import TextWallpostSerializer
+from bluebottle.projects.models import Project
+from bluebottle.members.models import Member
 
 
 class TaskPreviewSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
     project = ProjectPreviewSerializer()
-    skill = serializers.PrimaryKeyRelatedField()
+    skill = serializers.PrimaryKeyRelatedField(queryset=Skill)
 
     class Meta:
         model = Task
@@ -40,38 +41,37 @@ class TaskFileSerializer(serializers.ModelSerializer):
         model = TaskFile
 
 
-class BaseTaskSerializer(TaggableSerializerMixin, serializers.ModelSerializer):
-    members = BaseTaskMemberSerializer(many=True, source='members',
-                                       read_only=True)
-    files = TaskFileSerializer(many=True, source='files', read_only=True)
-    project = serializers.SlugRelatedField(slug_field='slug')
-    skill = serializers.PrimaryKeyRelatedField()
+class BaseTaskSerializer(serializers.ModelSerializer):
+    members = BaseTaskMemberSerializer(many=True, read_only=True)
+    files = TaskFileSerializer(many=True, read_only=True)
+    project = serializers.SlugRelatedField(slug_field='slug',
+                                           queryset=Project.objects)
+    skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
     author = UserPreviewSerializer()
     status = serializers.ChoiceField(choices=Task.TaskStatuses.choices,
                                      default=Task.TaskStatuses.open)
-    tags = TagSerializer()
-    time_needed = serializers.DecimalField(min_value=0.0)
+    time_needed = serializers.DecimalField(min_value=0.0,
+                                           max_digits=5,
+                                           decimal_places=2)
 
-    def validate_deadline(self, task, field):
-        if task['project'].deadline \
-                and task['deadline'] > task['project'].deadline:
+    def validate(self, data):
+        if not data['deadline'] or data['deadline'] > data['project'].deadline:
             raise serializers.ValidationError(
-                _('The deadline must be before the project deadline')
+                {'deadline': [_("The deadline must be before the project deadline.")]}
             )
-
-        return task
+        return data
 
     class Meta:
         model = Task
         fields = ('id', 'members', 'files', 'project', 'skill',
-                  'author', 'status', 'tags', 'description',
+                  'author', 'status', 'description',
                   'location', 'deadline', 'time_needed', 'title',
                   'people_needed')
 
 
 class MyTaskPreviewSerializer(serializers.ModelSerializer):
     project = ProjectPreviewSerializer()
-    skill = serializers.PrimaryKeyRelatedField()
+    skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
 
     class Meta:
         model = Task
@@ -80,15 +80,14 @@ class MyTaskPreviewSerializer(serializers.ModelSerializer):
 
 class MyTaskMemberSerializer(BaseTaskMemberSerializer):
     task = MyTaskPreviewSerializer()
-    member = serializers.PrimaryKeyRelatedField()
+    member = serializers.PrimaryKeyRelatedField(queryset=Member.objects)
 
     class Meta(BaseTaskMemberSerializer.Meta):
         fields = BaseTaskMemberSerializer.Meta.fields + ('time_spent',)
 
 
 class MyTasksSerializer(BaseTaskSerializer):
-    task = MyTaskPreviewSerializer()
-    skill = serializers.PrimaryKeyRelatedField()
+    skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
 
     class Meta:
         model = Task
@@ -103,7 +102,7 @@ class TaskWallpostSerializer(TextWallpostSerializer):
     """ TextWallpostSerializer with task specific customizations. """
 
     url = serializers.HyperlinkedIdentityField(
-        view_name='task-twallpost-detail')
+        view_name='task-twallpost-detail', lookup_field='pk')
     task = PrimaryKeyGenericRelatedField(Task)
 
     class Meta(TextWallpostSerializer.Meta):

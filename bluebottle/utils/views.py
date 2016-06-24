@@ -120,20 +120,19 @@ class ShareFlyer(views.APIView):
         return response.Response({'preview': result})
 
     def post(self, request, *args, **kwargs):
-        serializer = ShareSerializer(bunchify({}), data=request.DATA)
-        if not serializer.is_valid():
-            return response.Response(serializer.errors, status=400)
+        serializer = ShareSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        args = self.project_args(serializer.data.get('project'))
+        args = self.project_args(serializer.validated_data.get('project'))
         if args is None:
             return HttpResponseNotFound()
 
         sender_name = self.request.user.get_full_name() or self.request.user.username
         sender_email = self.request.user.email
-        share_name = serializer.object.get('share_name', None)
-        share_email = serializer.object.get('share_email', None)
-        share_motivation = serializer.object.get('share_motivation', None)
-        share_cc = serializer.object.get('share_cc')
+        share_name = serializer.validated_data.get('share_name', None)
+        share_email = serializer.validated_data.get('share_email', None)
+        share_motivation = serializer.validated_data.get('share_motivation', None)
+        share_cc = serializer.validated_data.get('share_cc')
 
         with TenantLanguage(self.request.user.primary_language):
             subject = _('%(name)s wants to share a project with you!') % dict(
@@ -161,7 +160,7 @@ class ShareFlyer(views.APIView):
 
 class ModelTranslationViewMixin(object):
     def get(self, request, *args, **kwargs):
-        language = request.QUERY_PARAMS.get('language', properties.LANGUAGE_CODE)
+        language = request.query_params.get('language', properties.LANGUAGE_CODE)
         translation.activate(language)
         return super(ModelTranslationViewMixin, self).get(request, *args, **kwargs)
 

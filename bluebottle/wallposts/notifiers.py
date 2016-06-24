@@ -4,7 +4,7 @@ from bluebottle.clients.utils import tenant_url
 class WallpostObserver(object):
     def __init__(self, instance):
         # the object wall the post is left (project, task...)
-        self.post = instance.content_object
+        self.parent = instance.content_object
 
         # author of the post
         self.author = instance.author

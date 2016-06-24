@@ -100,7 +100,6 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         """
         post_data = {
             'name': '1% Club',
-            'slug': '1-club',
             'address_line1': "'s Gravenhekje 1a",
             'address_line2': '1011 TG',
             'city': 'Amsterdam',
@@ -122,7 +121,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         # Check the data.
         organization = Organization.objects.latest('pk')
         self.assertEqual(organization.name, post_data['name'])
-        self.assertEqual(organization.slug, post_data['slug'])
+        self.assertEqual(organization.slug, '1-club')
         self.assertEqual(
             organization.address_line1, post_data['address_line1'])
         self.assertEqual(
@@ -174,7 +173,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         """
         response = self.client.get(reverse('manage_organization_detail',
                                            kwargs={
-                                           'pk': self.organization_1.pk}),
+                                               'pk': self.organization_1.pk}),
                                    token=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)
@@ -185,7 +184,6 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         """
         put_data = {
             'name': 'New name',
-            'slug': 'new-slug',
             'address_line1': 'new address',
             'address_line2': 'new address (2)',
             'city': 'Utrecht',
@@ -208,7 +206,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         organization = Organization.objects.get(
             pk=self.organization_1.pk)
         self.assertEqual(organization.name, put_data['name'])
-        self.assertEqual(organization.slug, put_data['slug'])
+        self.assertEqual(organization.slug, self.organization_1.slug)
         self.assertEqual(organization.address_line1, put_data['address_line1'])
         self.assertEqual(organization.address_line2, put_data['address_line2'])
         self.assertEqual(organization.city, put_data['city'])

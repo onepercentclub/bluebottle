@@ -17,5 +17,5 @@ class HomePageDetail(generics.GenericAPIView):
         request.LANGUAGE_CODE = translation.get_language()
 
         homepage = HomePage().get(language)
-        serialized = HomePageSerializer().to_native(homepage)
+        serialized = HomePageSerializer().to_representation(homepage)
         return response.Response(serialized)

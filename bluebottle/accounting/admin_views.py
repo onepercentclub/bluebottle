@@ -172,7 +172,7 @@ class CreateManualDonationView(AdminOptsMixin, BaseManualEntryView):
             )
             payment = ManualPayment.objects.create(
                 amount=donation.amount,
-                transaction=self.transaction,
+                bank_transaction=self.transaction,
                 user=self.request.user,
                 order_payment=order_payment
             )
@@ -320,7 +320,7 @@ class RDPTakeCutView(AdminOptsMixin, DetailView):
         affected = {}
 
         donations = self.object.local_payment.order_payment.order.donations.select_related(
-            'project', 'project__projectpayout'
+            'project'
         )
 
         for donation in donations:
@@ -347,6 +347,7 @@ class RDPTakeCutView(AdminOptsMixin, DetailView):
                             description_line1='Taking cut from organization fees',
                             description_line2='from failed payment %d' % self.object.local_payment.pk,
                         )
+                        new_payout.save()
 
             affected[donation] = {
                 'new_status': new_status,

@@ -44,6 +44,7 @@ class ProjectPayoutForm(forms.ModelForm):
 
     class Meta:
         model = ProjectPayout
+        exclude = ()
 
 
 class BasePayoutAdmin(admin.ModelAdmin):
@@ -343,8 +344,8 @@ admin.site.register(OrganizationPayout, OrganizationPayoutAdmin)
 
 class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
     list_display = ['payout', 'status', 'admin_project', 'amount_pending',
-                    'amount_raised', 'amount_pledged', 'amount_payable', 
-                    'rule', 'percent', 'admin_has_iban', 'created_date', 
+                    'amount_raised', 'amount_pledged', 'amount_payable',
+                    'rule', 'percent', 'admin_has_iban', 'created_date',
                     'submitted_date', 'completed_date']
 
     export_fields = ['project', 'status', 'payout_rule', 'amount_raised',

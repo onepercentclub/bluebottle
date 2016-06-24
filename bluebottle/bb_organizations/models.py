@@ -74,7 +74,7 @@ class BaseOrganization(models.Model):
     def __unicode__(self):
         return self.name
 
-    def full_clean(self, exclude=None, validate_unique=False):
+    def save(self, *args, **kwargs):
         if not self.slug:
             original_slug = slugify(self.name)
             slug = original_slug
@@ -83,3 +83,5 @@ class BaseOrganization(models.Model):
                 slug = '{0}-{1}'.format(original_slug, next_slug)
                 next_slug += 1
             self.slug = slug
+
+        super(BaseOrganization, self).save(*args, **kwargs)

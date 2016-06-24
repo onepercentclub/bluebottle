@@ -13,7 +13,7 @@ class GenericForeignKeyManagerMixin(object):
         QuerySet for all objects for a particular model (either an instance or a class).
         """
         ct = ContentType.objects.get_for_model(model)
-        qs = self.get_query_set().filter(content_type=ct)
+        qs = self.get_queryset().filter(content_type=ct)
         if isinstance(model, models.Model):
             qs = qs.filter(object_id=force_unicode(model._get_pk_val()))
         return qs
@@ -22,4 +22,4 @@ class GenericForeignKeyManagerMixin(object):
         """
         QuerySet for all models for particular content_type.
         """
-        return self.get_query_set().filter(content_type=content_type)
+        return self.get_queryset().filter(content_type=content_type)

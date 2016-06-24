@@ -9,10 +9,10 @@ class IsTaskAuthorOrReadOnly(permissions.BasePermission):
     """
 
     def _get_task_from_request(self, request):
-        if request.DATA:
-            task_id = request.DATA.get('task', None)
+        if request.data:
+            task_id = request.data.get('task', None)
         else:
-            task_id = request.QUERY_PARAMS.get('task', None)
+            task_id = request.query_params.get('task', None)
         if task_id:
             try:
                 task = Task.objects.get(pk=task_id)

@@ -22,7 +22,7 @@ class PaymentMethodList(APIView):
     def get(self, request, *args, **kwargs):
         if 'country' in request.GET:
             country = request.GET['country']
-        else :
+        else:
             ip = get_ip(request)
             if getattr(settings, 'SKIP_IP_LOOKUP', False):
                 country = 'all'
@@ -45,8 +45,8 @@ class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
     serializer_class = ManageOrderPaymentSerializer
     permission_classes = (IsOrderCreator,)
 
-    def pre_save(self, obj):
-        obj.amount = obj.order.total
+    def perform_update(self, serializer):
+        serializer.save(amount=serializer.validated_data['order'].total)
 
 
 class ManageOrderPaymentList(ListCreateAPIView):
@@ -54,19 +54,20 @@ class ManageOrderPaymentList(ListCreateAPIView):
     serializer_class = ManageOrderPaymentSerializer
     permission_classes = (IsOrderCreator, CanAccessPaymentMethod)
 
-    def pre_save(self, obj):
+    def perform_create(self, serializer):
         if self.request.user and self.request.user.is_authenticated():
-            if not obj.order.user:
-                obj.order.user = self.request.user
-                obj.order.save()
-            obj.user = self.request.user
+            serializer.save(user=self.request.user)
 
-    def post_save(self, obj, created=False):
+            if not serializer.instance.order.user:
+                serializer.instance.order.user = self.request.user
+                serializer.instance.order.save()
+        else:
+            serializer.save()
+
         try:
-            service = PaymentService(obj)
+            service = PaymentService(serializer.instance)
             service.start_payment()
         except PaymentException as error:
-            print error
             raise ParseError(detail=str(error))
 
     def get_queryset(self):
@@ -75,7 +76,7 @@ class ManageOrderPaymentList(ListCreateAPIView):
         the OrderPayments on the order
         """
         qs = OrderPayment.objects.all()
-        order_id = self.request.QUERY_PARAMS.get('order', None)
+        order_id = self.request.query_params.get('order', None)
         if order_id:
             qs = qs.filter(order__id=order_id)
         return qs

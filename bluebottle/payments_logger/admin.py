@@ -31,7 +31,7 @@ class PaymentLogEntryAdmin(admin.ModelAdmin):
     def link_to_order_payment(self, obj):
         payment = obj.payment.order_payment
         url = reverse('admin:{0}_{1}_change'.format(payment._meta.app_label,
-                                                    payment._meta.module_name),
+                                                    payment._meta.model_name),
                       args=[payment.id])
         return "<a href='{0}'>Order Payment</a>".format(str(url))
 
@@ -53,7 +53,7 @@ class PaymentLogEntryAdmin(admin.ModelAdmin):
         # creates a link to the payment
         payment = obj.payment
         url = reverse('admin:{0}_{1}_change'.format(payment._meta.app_label,
-                                                    payment._meta.module_name),
+                                                    payment._meta.model_name),
                       args=[payment.id])
         return "<a href='{0}'>{1}: {2}</a>".format(str(url),
                                                    payment.polymorphic_ctype,

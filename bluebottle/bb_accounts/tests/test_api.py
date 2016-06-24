@@ -140,27 +140,33 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.user_1.id)
 
-        full_name = {'first_name': 'Nijntje', 'last_name': 'het Konijntje'}
+        data = {
+            'first_name': 'Nijntje',
+            'last_name': 'het Konijntje',
+            'address': {
+                'line1': 'test line 1'
+            }
+        }
 
         # Profile should not be able to be updated by anonymous users.
-        response = self.client.put(user_profile_url, full_name)
+        response = self.client.put(user_profile_url, data)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED,
                          response.data)
 
         # Profile should not be able to be updated by a different user.
-        response = self.client.put(user_profile_url, full_name,
+        response = self.client.put(user_profile_url, data,
                                    token=self.user_2_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN,
                          response.data)
 
         # Profile should be able to be updated by logged in user.
-        response = self.client.put(user_profile_url, full_name,
+        response = self.client.put(user_profile_url, data,
                                    token=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
-        self.assertEqual(response.data['first_name'],
-                         full_name.get('first_name'))
-        self.assertEqual(response.data['last_name'], full_name.get('last_name'))
+        self.assertEqual(response.data['first_name'], data['first_name'])
+        self.assertEqual(response.data['last_name'], data['last_name'])
+        self.assertEqual(response.data['address']['line1'], data['address']['line1'])
 
         self.client.logout()
 
@@ -245,7 +251,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['non_field_errors'][0]['type'], 'email')
         self.assertEqual(response.data['non_field_errors'][0]['email'], 'nijntje27@hetkonijntje.nl')
         self.assertEqual(response.data['non_field_errors'][0]['id'], user_1.pk)
-        self.assertEqual(response.data['email'][0], 'Sign up with this Email address already exists.')
+        self.assertEqual(response.data['email'][0], 'Member with this email address already exists.')
 
     def test_generate_username(self):
         new_user_email = 'nijntje74@hetkonijntje.nl'
@@ -293,7 +299,8 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
                          response.data)
-        self.assertEqual(response.data['new_password2'][0],
+
+        self.assertEqual(response.data['non_field_errors'][0],
                          "The two password fields didn't match.")
 
         # Test: check that updating the password works when the passwords match.
@@ -306,57 +313,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND,
                          response.data)
-
-
-class UnauthLocaleMiddlewareTest(BluebottleTestCase):
-    """
-    Integration tests for locale middleware when user unauthenticated.
-    """
-    @override_settings(LANGUAGES=(
-        ('nl', 'Dutch'),
-        ('en', 'English'),
-    ))
-    def test_redirect_to_browser_language(self):
-        # test redirected to supported browser language
-        http_languages = 'de-DE,de;q=0.8,nl;q=0.6,en;q=0.4,en-US;q=0.2'
-        response = self.client.get('/', follow=False,
-                                   HTTP_ACCEPT_LANGUAGE=http_languages)
-        self.assertRedirects(response, '/nl/')
-
-    @override_settings(LANGUAGES=(
-        ('nl', 'Dutch'),
-        ('en', 'English'),
-    ))
-    def test_redirect_to_unsupported_browser_language(self):
-        # test redirected to default language
-        http_languages = 'de-DE,de;q=0.8,es;q=0.6'
-        response = self.client.get('/', follow=False,
-                                   HTTP_ACCEPT_LANGUAGE=http_languages)
-        self.assertRedirects(response, '/en/')
-
-    def test_redirect_for_cookie(self):
-        # test redirect to language set in cookie
-
-        # go directly to supported language
-        response = self.client.get('/nl/', follow=False)
-        self.assertTrue(response.status_code, 200)
-
-        # go to base path => redirected to langauge in cookie
-        response = self.client.get('/', follow=False)
-        self.assertRedirects(response, '/nl/')
-        self.assertEqual(self.client.cookies['django_language'].value, 'nl')
-
-    @override_settings(LANGUAGES=(
-        ('nl', 'Dutch'),
-        ('en', 'English'),
-    ))
-    def test_redirect_for_anonymous_user_unsupported_language(self):
-        response = self.client.get('/es/', follow=False)
-        self.assertRedirects(response, '/en/')
-
-    def test_no_redirect_for_anonymous_user(self):
-        response = self.client.get('/nl/', follow=False)
-        self.assertTrue(response.status_code, 200)
 
 
 class AuthLocaleMiddlewareTest(BluebottleTestCase):
@@ -381,27 +337,6 @@ class AuthLocaleMiddlewareTest(BluebottleTestCase):
         self.user_es.primary_language = 'es'
         self.user_es.save()
         self.user_es_token = "JWT {0}".format(self.user_es.get_jwt_token())
-
-    @override_settings(LANGUAGES=(
-        ('nl', 'Dutch'),
-        ('en', 'English'),
-    ))
-    def test_redirect_to_primary_for_unsupported_language(self):
-        # test redirected to users primary language
-        response = self.client.get('/de/', follow=False,
-                                   token=self.user_nl_token)
-        self.assertRedirects(response, '/nl/')
-
-    @override_settings(LANGUAGES=(
-        ('nl', 'Dutch'),
-        ('en', 'English'),
-    ))
-    def test_redirect_to_default_for_unsupported_language(self):
-        # test redirected to default language if users language
-        # is not supported on platform
-        response = self.client.get('/es/', follow=False,
-                                   token=self.user_es_token)
-        self.assertRedirects(response, '/en/')
 
     def test_no_redirect_for_supported_language(self):
         response = self.client.get('/nl/', follow=False,

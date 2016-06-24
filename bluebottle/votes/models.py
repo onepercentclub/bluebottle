@@ -11,7 +11,7 @@ class Vote(models.Model):
     """
     created = CreationDateTimeField(_('created'))
     project = models.ForeignKey('projects.Project')
-    ip_address = models.IPAddressField()
+    ip_address = models.GenericIPAddressField()
 
     voter = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('voter'))
 

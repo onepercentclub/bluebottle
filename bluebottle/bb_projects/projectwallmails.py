@@ -18,7 +18,7 @@ class ProjectWallObserver(WallpostObserver):
         WallpostObserver.__init__(self, instance)
 
     def notify(self):
-        project = self.post
+        project = self.parent
         project_owner = project.owner
 
         # Implement 1a: send email to Object owner, if Wallpost author is not

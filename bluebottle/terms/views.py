@@ -3,6 +3,7 @@ from rest_framework.generics import (ListAPIView, RetrieveAPIView,
                                      ListCreateAPIView)
 from rest_framework.permissions import IsAuthenticated
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.utils.permissions import IsUser
 from bluebottle.terms.models import Terms, TermsAgreement
 from bluebottle.terms.serializers import (TermsSerializer,
@@ -12,7 +13,7 @@ from bluebottle.terms.serializers import (TermsSerializer,
 class TermsListView(ListAPIView):
     queryset = Terms.objects.all()
     serializer_class = TermsSerializer
-    paginate_by = 1
+    pagination_class = BluebottlePagination
 
 
 class TermsDetailView(RetrieveAPIView):
@@ -37,9 +38,8 @@ class TermsAgreementListView(ListCreateAPIView):
         queryset = super(TermsAgreementListView, self).get_queryset()
         return queryset.filter(user=self.request.user)
 
-    def pre_save(self, obj):
-        obj.terms = Terms.get_current()
-        obj.user = self.request.user
+    def perform_create(self, serializer):
+        serializer.save(terms=Terms.get_current(), user=self.request.user)
 
 
 class TermsAgreementDetailView(RetrieveAPIView):

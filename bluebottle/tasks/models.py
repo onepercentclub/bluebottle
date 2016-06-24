@@ -137,6 +137,10 @@ class TaskMember(BaseTaskMember):
     def time_applied_for(self):
         return self.task.time_needed
 
+    @property
+    def project(self):
+        return self.task.project
+
 
 class TaskFile(BaseTaskFile):
     pass

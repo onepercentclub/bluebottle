@@ -3,7 +3,6 @@ import datetime
 from decimal import Decimal
 from dateutil.relativedelta import relativedelta
 
-from django.conf import settings
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import post_save
@@ -13,20 +12,17 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
-from django_fsm.db.fields import FSMField, transition
+from django_fsm import FSMField, transition
 
 from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.models import OrderPayment
+from bluebottle.projects.models import Project
 from bluebottle.utils.utils import StatusDefinition
 
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
-from bluebottle.utils.model_dispatcher import get_project_model, get_donation_model, get_project_payout_model
 from bluebottle.utils.utils import FSMTransition
-
-PROJECT_MODEL = get_project_model()
-DONATION_MODEL = get_donation_model()
 
 
 class InvoiceReferenceMixin(models.Model):
@@ -183,7 +179,7 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
             next_date = timezone.datetime(now.year, now.month, 1) + relativedelta(months=1)
         return next_date
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.NEW,
                         StatusDefinition.IN_PROGRESS,
                         StatusDefinition.RETRY],
@@ -191,7 +187,7 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
     def in_progress(self):
         self.submitted = timezone.now()
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.IN_PROGRESS,
                         StatusDefinition.RETRY],
                 target=StatusDefinition.SETTLED)
@@ -199,13 +195,14 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
         self.completed = completed
         self.protected = True
 
-    @transition(field=status, save=True,
+    @transition(field=status,
                 source=[StatusDefinition.SETTLED,
                         StatusDefinition.IN_PROGRESS],
                 target=StatusDefinition.RETRY)
     def retry(self):
         self.protected = True
         self.planned = self.__class__.get_next_planned_date()
+
 
 
 class PayoutLogBase(models.Model):
@@ -264,7 +261,7 @@ class BaseProjectPayout(PayoutBase):
         not_fully_funded = ChoiceItem('not_fully_funded',
                                       label=_("Not fully funded"))
 
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    project = models.ForeignKey('projects.Project')
 
     payout_rule = models.CharField(_("Payout rule"), max_length=20, help_text=_(
         "The payout rule for this project."))
@@ -308,6 +305,10 @@ class BaseProjectPayout(PayoutBase):
         return self.get_amount_safe()
 
     @property
+    def amount_pledged(self):
+        return self.get_amount_pledged()
+
+    @property
     def amount_failed(self):
         return self.get_amount_failed()
 
@@ -316,7 +317,9 @@ class BaseProjectPayout(PayoutBase):
         if not self.amount_payable:
             return "-"
 
-        return "{}%".format(round(((self.amount_raised - self.amount_payable) / self.amount_raised) * 100,1))
+        raised_without_pledges = self.amount_raised - self.amount_pledged
+
+        return "{}%".format(round(((raised_without_pledges - self.amount_payable) / raised_without_pledges) * 100,1))
 
     def get_payout_rule(self):
         """
@@ -331,7 +334,7 @@ class BaseProjectPayout(PayoutBase):
         """
         Calculate the amount payable for 5% rule
         """
-        return self.amount_raised * Decimal(0.95)
+        return total * Decimal(0.95)
 
     def calculate_amounts(self, save=True):
         """
@@ -353,6 +356,7 @@ class BaseProjectPayout(PayoutBase):
             self.payout_rule = self.get_payout_rule()
 
         self.amount_raised = self.get_amount_raised()
+        raised_without_pledges = self.amount_raised - self.get_amount_pledged()
 
         with LocalTenant():
             calculator_name = "calculate_amount_payable_rule_{0}".format(
@@ -366,13 +370,15 @@ class BaseProjectPayout(PayoutBase):
                 raise PayoutException(message)
 
             self.amount_payable = Decimal(
-                round(calculator(self.get_amount_raised()), 2))
+                round(calculator(raised_without_pledges), 2))
 
-        self.organization_fee = self.amount_raised - self.amount_payable
+        self.organization_fee = raised_without_pledges - self.amount_payable
 
         if self.payout_rule is 'beneath_threshold' and not self.amount_pending:
             self.in_progress()
+            self.save()
             self.settled()
+            self.save()
 
         if save:
             self.save()
@@ -412,6 +418,12 @@ class BaseProjectPayout(PayoutBase):
             return self.amount_raised
         return self.project.amount_safe
 
+    def get_amount_pledged(self):
+        """
+        Real time amount of pledged ('pledged') donations.
+        """
+        return self.project.amount_pledged
+
     def get_amount_pending(self):
         """
         Real time amount of pending donations.
@@ -432,8 +444,9 @@ class BaseProjectPayout(PayoutBase):
 
         amount_safe = self.get_amount_safe()
         amount_pending = self.get_amount_pending()
+        amount_pledged = self.get_amount_pledged()
 
-        amount_failed = self.amount_raised - amount_safe - amount_pending
+        amount_failed = self.amount_raised - amount_safe - amount_pending - amount_pledged
 
         if amount_failed <= decimal.Decimal('0.00'):
             # Should never be less than 0
@@ -448,7 +461,7 @@ class BaseProjectPayout(PayoutBase):
 
 
 class ProjectPayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(settings.PAYOUTS_PROJECTPAYOUT_MODEL,
+    payout = models.ForeignKey('payouts.ProjectPayout',
                                related_name='payout_logs')
 
 
@@ -502,30 +515,6 @@ class BaseOrganizationPayout(PayoutBase):
         get_latest_by = 'end_date'
         ordering = ['start_date']
         abstract = True
-
-    def _get_organization_fee(self):
-        """
-        Calculate and return the organization fee for Payouts within this
-        OrganizationPayout's period, including VAT.
-
-        Note: this should *only* be called internally.
-        """
-        PROJECT_PAYOUT_MODEL = get_project_payout_model()
-        # Get Payouts
-        payouts = PROJECT_PAYOUT_MODEL.objects.filter(
-            completed__gte=self.start_date,
-            completed__lte=self.end_date
-        )
-
-        # Aggregate value
-        aggregate = payouts.aggregate(models.Sum('organization_fee'))
-
-        # Return aggregated value or 0.00
-        fee = aggregate.get(
-            'organization_fee__sum', decimal.Decimal('0.00')
-        ) or decimal.Decimal('0.00')
-
-        return fee
 
     def _get_psp_fee(self):
         """
@@ -694,7 +683,7 @@ class BaseOrganizationPayout(PayoutBase):
 
 
 class OrganizationPayoutLog(PayoutLogBase):
-    payout = models.ForeignKey(settings.PAYOUTS_ORGANIZATIONPAYOUT_MODEL,
+    payout = models.ForeignKey('payouts.OrganizationPayout',
                                related_name='payout_logs')
 
 # Connect signals after defining models
@@ -704,4 +693,4 @@ class OrganizationPayoutLog(PayoutLogBase):
 from .signals import create_payout_finished_project
 
 post_save.connect(create_payout_finished_project, weak=False,
-                  sender=PROJECT_MODEL)
+                  sender=Project)

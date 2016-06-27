@@ -3,15 +3,14 @@ from django.utils.safestring import mark_safe
 
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
-from bluebottle.utils.serializers import MetaField
+from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
+from bluebottle.members.serializers import UserPreviewSerializer
 
 from .models import NewsItem
 
 
 class NewsItemContentsField(serializers.Field):
-    def to_native(self, obj):
+    def to_representation(self, obj):
         request = self.context.get('request', None)
         contents_html = mark_safe(render_placeholder(request, obj).html)
         return contents_html
@@ -20,18 +19,14 @@ class NewsItemContentsField(serializers.Field):
 class NewsItemSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug')
     body = NewsItemContentsField(source='contents')
-    main_image = SorlImageField('main_image', '300x200', )
-    author = get_serializer_class('AUTH_USER_MODEL', 'preview')()
-
-    meta_data = MetaField(
-        description='get_meta_description',
-        image_source='main_image',
-    )
+    main_image = SorlImageField('800x400')
+    author = UserPreviewSerializer()
 
     class Meta:
         model = NewsItem
         fields = ('id', 'title', 'body', 'main_image', 'author',
-                  'publication_date', 'allow_comments', 'language', 'meta_data')
+                  'publication_date', 'allow_comments', 'language',
+                  'main_image')
 
 
 class NewsItemPreviewSerializer(serializers.ModelSerializer):

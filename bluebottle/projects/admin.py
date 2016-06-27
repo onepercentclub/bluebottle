@@ -6,7 +6,6 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
-from django.db.models import Count
 
 from sorl.thumbnail.admin import AdminImageMixin
 
@@ -16,20 +15,72 @@ from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter
 from bluebottle.geo.models import Location
-from bluebottle.utils.model_dispatcher import (get_project_model,
-                                               get_project_phaselog_model,
-                                               get_project_document_model)
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
 
 from .forms import ProjectDocumentForm
-from .models import (PartnerOrganization, ProjectBudgetLine, Project)
+from .models import (ProjectBudgetLine, Project,
+                     ProjectDocument, ProjectPhaseLog)
 
 logger = logging.getLogger(__name__)
 
-PROJECT_MODEL = get_project_model()
-PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
-PROJECT_DOCUMENT_MODEL = get_project_document_model()
+
+def mark_as(slug, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug=slug)
+    except ProjectPhase.DoesNotExist:
+        return
+
+    Project.objects.filter(
+        pk__in=queryset.values_list('pk', flat=True)
+    ).update(
+        status=status
+    )
+
+
+def mark_as_plan_new(modeladmin, request, queryset):
+    mark_as('plan-new', queryset)
+mark_as_plan_new.short_description = _("Mark selected projects as status Plan New")
+
+
+def mark_as_plan_submitted(modeladmin, request, queryset):
+    mark_as('plan-submitted', queryset)
+mark_as_plan_submitted.short_description = _("Mark selected projects as status Plan Submitted")
+
+
+def mark_as_plan_needs_work(modeladmin, request, queryset):
+    mark_as('plan-needs-work', queryset)
+mark_as_plan_needs_work.short_description = _("Mark selected projects as status Plan Needs Work")
+
+
+def mark_as_voting(modeladmin, request, queryset):
+    mark_as('voting', queryset)
+mark_as_voting.short_description = _("Mark selected projects as status Voting")
+
+
+def mark_as_voting_done(modeladmin, request, queryset):
+    mark_as('voting-done', queryset)
+mark_as_voting_done.short_description = _("Mark selected projects as status Voting Done")
+
+
+def mark_as_campaign(modeladmin, request, queryset):
+    mark_as('campaign', queryset)
+mark_as_campaign.short_description = _("Mark selected projects as status Campaign")
+
+
+def mark_as_done_complete(modeladmin, request, queryset):
+    mark_as('done-complete', queryset)
+mark_as_done_complete.short_description = _("Mark selected projects as status Done Complete")
+
+
+def mark_as_done_incomplete(modeladmin, request, queryset):
+    mark_as('done-incomplete', queryset)
+mark_as_done_incomplete.short_description = _("Mark selected projects as status Done Incomplete")
+
+
+def mark_as_closed(modeladmin, request, queryset):
+    mark_as('closed', queryset)
+mark_as_closed.short_description = _("Mark selected projects as status Closed")
 
 
 class ProjectThemeAdmin(admin.ModelAdmin):
@@ -57,7 +108,7 @@ class ProjectThemeFilter(admin.SimpleListFilter):
 
 
 class ProjectDocumentInline(admin.StackedInline):
-    model = PROJECT_DOCUMENT_MODEL
+    model = ProjectDocument
     form = ProjectDocumentForm
     extra = 0
     raw_id_fields = ('author',)
@@ -85,7 +136,7 @@ class RewardInlineAdmin(admin.TabularInline):
 
 
 class ProjectPhaseLogInline(admin.TabularInline):
-    model = PROJECT_PHASELOG_MODEL
+    model = ProjectPhaseLog
     can_delete = False
     ordering = ('-start',)
     extra = 0
@@ -103,22 +154,18 @@ class FundingFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            ('yes', _('Funding')),
-            ('no', _('Not funding')),
+            ('yes', _('Crowdfunding')),
+            ('no', _('Crowdsourcing')),
+            ('both', _('Crowdfunding & crowdsourcing')),
         )
 
     def queryset(self, request, queryset):
         if self.value() == 'yes':
             return queryset.filter(amount_asked__gt=0)
+        elif self.value() == 'no':
+            from django.db.models import Q
+            return queryset.filter(Q(amount_asked=None) | Q(amount_asked=0.00))
         return queryset
-
-
-class PartnerOrganizationAdmin(AdminImageMixin, admin.ModelAdmin):
-    prepopulated_fields = {"slug": ("name",)}
-
-
-admin.site.register(PartnerOrganization, PartnerOrganizationAdmin)
-
 
 class ProjectBudgetLineInline(admin.TabularInline):
     model = ProjectBudgetLine
@@ -150,8 +197,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_filter(self, request):
         filters = ('status', 'is_campaign', ProjectThemeFilter,
-                   'country__subregion__region', 'partner_organization',
-                   FundingFilter)
+                   'country__subregion__region', 'project_type')
 
         # Only show Location column if there are any
         if Location.objects.count():
@@ -178,7 +224,12 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     export_fields = ['title', 'owner', 'created', 'status',
                      'deadline', 'amount_asked', 'amount_donated']
 
-    actions = (export_as_csv_action(fields=export_fields), )
+    actions = [export_as_csv_action(fields=export_fields),
+               mark_as_closed, mark_as_done_incomplete,
+               mark_as_done_complete, mark_as_campaign,
+               mark_as_voting_done, mark_as_voting,
+               mark_as_plan_needs_work, mark_as_plan_submitted,
+               mark_as_plan_new]
 
     def get_actions(self, request):
         """Order the action in reverse (delete at the bottom)."""
@@ -186,16 +237,16 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return OrderedDict(reversed(actions.items()))
 
     fieldsets = (
-        (_('Main'), {'fields': ('owner', 'organization', 'partner_organization',
+        (_('Main'), {'fields': ('owner', 'organization',
                                 'status', 'title', 'slug', 'project_type',
                                 'is_campaign')}),
 
         (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
 
-        (_('Details'), {'fields': ('language', 'theme', 'image',
+        (_('Details'), {'fields': ('language', 'theme', 'categories', 'image',
                                    'video_url', 'country',
                                    'latitude', 'longitude',
-                                   'location', 'place', 'tags')}),
+                                   'location', 'place')}),
 
         (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
                                 'amount_donated', 'amount_needed',
@@ -266,7 +317,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def project_owner(self, obj):
         object = obj.owner
         url = reverse('admin:{0}_{1}_change'.format(
-            object._meta.app_label, object._meta.module_name), args=[object.id])
+            object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='{0}'>{1}</a>".format(
             str(url), object.first_name + ' ' + object.last_name)
 

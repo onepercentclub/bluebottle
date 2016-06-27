@@ -64,7 +64,7 @@ class SuggestionAdmin(admin.ModelAdmin):
         if obj.project:
             url = reverse(
                 'admin:{0}_{1}_change'.format(obj.project._meta.app_label,
-                                              obj.project._meta.module_name),
+                                              obj.project._meta.model_name),
                 args=[obj.project.id])
             return u"<a href='{0}' target='_blank'>{1}</a>".format(
                 url,

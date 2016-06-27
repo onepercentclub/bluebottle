@@ -24,10 +24,10 @@ class IsOwner(permissions.BasePermission):
 
 class IsDonor(permissions.BasePermission):
     def _get_donor_from_request(self, request):
-        if request.DATA:
-            order_id = request.DATA.get('donation', None)
+        if request.data:
+            order_id = request.data.get('donation', None)
         else:
-            order_id = request.QUERY_PARAMS.get('donation', None)
+            order_id = request.query_params.get('donation', None)
         if order_id:
             try:
                 project = MonthlyDonor.objects.get(id=order_id)

@@ -9,6 +9,7 @@ class TermsForm(forms.ModelForm):
 
     class Meta:
         model = Terms
+        exclude = ()
 
 
 class TermsAdmin(admin.ModelAdmin):

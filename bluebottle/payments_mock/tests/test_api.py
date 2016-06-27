@@ -122,7 +122,7 @@ class PaymentErrorTests(BluebottleTestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['payment_method'][0],
-                         u'This field is required.')
+                         u'This field may not be blank.')
 
     def test_illegal_first_name(self):
         data = {'order': self.donation1.order.id,

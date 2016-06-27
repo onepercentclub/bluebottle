@@ -3,6 +3,8 @@ from bunch import bunchify
 from django.db import connection
 from django.test.utils import override_settings
 from django.test import TestCase
+from django.conf import settings
+from importlib import import_module
 
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
@@ -150,25 +152,23 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
 
     @classmethod
     def setUpClass(cls):
-        # create a tenant
-        tenant_domain = 'testserver'
-        cls.tenant = get_tenant_model()(
-            domain_url=tenant_domain,
-            schema_name='test',
-            client_name='test')
-
-        cls.tenant.save(
-            verbosity=0)  # todo: is there any way to get the verbosity from the test command here?
+        super(BluebottleTestCase, cls).setUpClass()
+        cls.tenant = get_tenant_model().objects.get(schema_name='test')
         connection.set_tenant(cls.tenant)
 
-    @classmethod
-    def tearDownClass(cls):
-        # delete tenant
-        connection.set_schema_to_public()
-        cls.tenant.delete()
 
-        cursor = connection.cursor()
-        cursor.execute('DROP SCHEMA test CASCADE')
+class SessionTestMixin(object):
+    def create_session(self):
+        settings.SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+        engine = import_module(settings.SESSION_ENGINE)
+        store = engine.SessionStore()
+        store.save()
+        self.session = store
+        self.client.cookies[settings.SESSION_COOKIE_NAME] = store.session_key
+        self.addCleanup(self._clear_session)
+
+    def _clear_session(self):
+        self.session.flush()
 
 
 class FsmTestMixin(object):

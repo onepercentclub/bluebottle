@@ -1,12 +1,16 @@
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
+from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.votes.models import Vote
+from bluebottle.projects.models import Project
 from rest_framework import serializers
 
 
 class VoteSerializer(serializers.ModelSerializer):
-    voter = get_serializer_class('AUTH_USER_MODEL', 'preview')(read_only=True)
-    project = serializers.SlugRelatedField(source='project', slug_field='slug')
+    voter = UserPreviewSerializer(required=False, default=None)
+    project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
 
     class Meta:
         model = Vote
         fields = ('id', 'voter', 'project', 'created')
+
+    def validate_voter(self, value):
+        return self.context['request'].user

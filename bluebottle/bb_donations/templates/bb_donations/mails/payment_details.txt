@@ -1,0 +1,9 @@
+{% block content %}
+    {{donation.user.full_name}} 
+    {{donation.user.address.line1}}
+    {{donation.user.address.postal_code}} {{donation.user.address.city}}
+
+    Date: {{donation.created}}
+    Method: {{payment_method}}
+    Order: {{donation.order.id}}
+{% endblock content %}

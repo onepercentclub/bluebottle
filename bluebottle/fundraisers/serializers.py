@@ -1,12 +1,10 @@
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
-from bluebottle.utils.model_dispatcher import get_fundraiser_model
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer, OEmbedField
-from bluebottle.utils.serializer_dispatcher import get_serializer_class
-from bluebottle.utils.serializers import MetaField
-
-FUNDRAISER_MODEL = get_fundraiser_model()
+from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.members.serializers import UserProfileSerializer
+from bluebottle.projects.models import Project
 
 
 class ImageSerializerExt(ImageSerializer):
@@ -42,34 +40,25 @@ class ImageSerializerExt(ImageSerializer):
 class BaseFundraiserSerializer(serializers.ModelSerializer):
     """ Serializer to view/create fundraisers """
 
-    owner = get_serializer_class('AUTH_USER_MODEL', 'default')(read_only=True)
-    project = serializers.SlugRelatedField(source='project', slug_field='slug')
+    owner = UserProfileSerializer(read_only=True)
+    project = serializers.SlugRelatedField(slug_field='slug',
+                                           queryset=Project.objects)
     image = ImageSerializerExt()
-    amount_donated = serializers.DecimalField(source='amount_donated',
+    amount_donated = serializers.DecimalField(max_digits=16,
+                                              decimal_places=2,
                                               read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
 
-    meta_data = MetaField(
-        title='get_meta_title',  # TODO: specific title format
-        image_source='image',
-        tweet='get_tweet',
-    )
-
     class Meta:
-        model = FUNDRAISER_MODEL
+        model = Fundraiser
         fields = ('id', 'owner', 'project', 'title', 'description', 'image',
                   'created', 'video_html', 'video_url', 'amount',
-                  'amount_donated', 'deadline', 'meta_data')
+                  'amount_donated', 'deadline')
 
-    def validate_deadline(self, attrs, source):
-        """
-        Field level validation for deadline field, see
-        http://www.django-rest-framework.org/api-guide/serializers#validation
-        """
-        if not attrs.get('deadline', None) or not attrs.get('project',
-                                                            None) or attrs.get(
-                'deadline') > attrs.get('project').deadline:
+    def validate(self, data):
+        if not data['deadline'] or data['deadline'] > data['project'].deadline:
             raise serializers.ValidationError(
-                _("Fundraiser deadline exceeds project deadline."))
-        return attrs
+                {'deadline': [_("Fundraiser deadline exceeds project deadline.")]}
+            )
+        return data

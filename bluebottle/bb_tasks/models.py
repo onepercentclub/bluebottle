@@ -1,18 +1,13 @@
-from bluebottle.utils.model_dispatcher import get_taskmember_model
-from django.conf import settings
 from django.db import models
 import django.db.models.options as options
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
+
 from bluebottle.utils.utils import GetTweetMixin
-
-
-
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 
 class BaseSkill(models.Model):
@@ -36,9 +31,9 @@ class BaseTaskMember(models.Model):
         stopped = ChoiceItem('stopped', label=_('Stopped'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
-    member = models.ForeignKey(settings.AUTH_USER_MODEL,
+    member = models.ForeignKey('members.Member',
                                related_name='%(app_label)s_%(class)s_related')
-    task = models.ForeignKey(settings.TASKS_TASK_MODEL, related_name="members")
+    task = models.ForeignKey('tasks.Task', related_name="members")
     status = models.CharField(_('status'), max_length=20,
                               choices=TaskMemberStatuses.choices,
                               default=TaskMemberStatuses.applied)
@@ -64,47 +59,28 @@ class BaseTaskMember(models.Model):
 
     class Meta:
         abstract = True
+        verbose_name = _(u'task member')
+        verbose_name_plural = _(u'task members')
+
 
     def __init__(self, *args, **kwargs):
         super(BaseTaskMember, self).__init__(*args, **kwargs)
 
-    def save(self, *args, **kwargs):
-        super(BaseTaskMember, self).save(*args, **kwargs)
-        self.check_number_of_members_needed(self.task)
-
-    def check_number_of_members_needed(self, task):
-        members = get_taskmember_model().objects.filter(task=task,
-                                                        status='accepted')
-        total_externals = 0
-        for member in members:
-            total_externals += member.externals
-
-        members_accepted = members.count() + total_externals
-
-        if task.status == 'open' and task.people_needed <= members_accepted:
-            task.set_in_progress()
-        return members_accepted
-
-    def get_member_email(self):
-        if self.member.email:
-            return self.member.email
-        return _("No email address for this user")
-
-    get_member_email.admin_order_field = 'member__email'
-    get_member_email.short_description = "Member Email"
-
 
 class BaseTaskFile(models.Model):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
+    author = models.ForeignKey('members.Member',
                                related_name='%(app_label)s_%(class)s_related')
     title = models.CharField(max_length=255)
     file = models.FileField(_('file'), upload_to='task_files/')
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('Updated'))
-    task = models.ForeignKey(settings.TASKS_TASK_MODEL, related_name="files")
+    task = models.ForeignKey('tasks.Task', related_name="files")
 
     class Meta:
         abstract = True
+        verbose_name = _(u'task file')
+        verbose_name_plural = _(u'task files')
+
 
 
 class BaseTask(models.Model, GetTweetMixin):
@@ -123,10 +99,10 @@ class BaseTask(models.Model, GetTweetMixin):
                                 blank=True)
     people_needed = models.PositiveIntegerField(_('people needed'), default=1)
 
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    project = models.ForeignKey('projects.Project')
     # See Django docs on issues with related name and an (abstract) base class:
     # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
+    author = models.ForeignKey('members.Member',
                                related_name='%(app_label)s_%(class)s_related')
     status = models.CharField(
         _('status'), max_length=20, choices=TaskStatuses.choices,
@@ -144,7 +120,7 @@ class BaseTask(models.Model, GetTweetMixin):
         _('time_needed'),
         help_text=_('Estimated number of hours needed to perform this task.'))
 
-    skill = models.ForeignKey(settings.TASKS_SKILL_MODEL,
+    skill = models.ForeignKey('tasks.Skill',
                               verbose_name=_('Skill needed'), null=True)
 
     # internal usage
@@ -153,7 +129,6 @@ class BaseTask(models.Model, GetTweetMixin):
     updated = ModificationDateTimeField(_('updated'))
 
     class Meta:
-        default_serializer = 'bluebottle.tasks.serializers.BaseTaskSerializer'
         abstract = True
         ordering = ['-created']
         verbose_name = _(u'task')

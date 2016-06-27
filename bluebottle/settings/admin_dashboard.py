@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 # Custom dashboard configuration
 # ADMIN_TOOLS_INDEX_DASHBOARD = 'fluent_dashboard.dashboard.FluentIndexDashboard'
@@ -31,8 +31,10 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.bb_projects.*',
             'bluebottle.fundraisers.*',
             'bluebottle.organizations.*',
+            'bluebottle.categories.*',
             'bluebottle.bb_organizations.*',
             'bluebottle.votes.*',
+            'bluebottle.geo.models.Location',
             'bluebottle.rewards.*',
         ),
         'module': 'fluent_dashboard.modules.AppIconList',

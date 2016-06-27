@@ -8,12 +8,12 @@ from django.utils.translation import ugettext_lazy as _
 from django.views.generic import FormView, CreateView, DetailView
 from django.views.generic.detail import SingleObjectMixin
 
+from bluebottle.donations.models import Donation
 from bluebottle.journals.models import ProjectPayoutJournal, OrganizationPayoutJournal
+from bluebottle.orders.models import Order
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_manual.models import ManualPayment
-from bluebottle.utils.model_dispatcher import (
-    get_order_model, get_donation_model, get_project_payout_model, get_model_mapping
-)
+from bluebottle.payouts.models import ProjectPayout
 from bluebottle.utils.utils import StatusDefinition
 from .models import BankTransaction, RemoteDocdataPayment
 from .admin_forms import journalform_factory, donationform_factory, RetryPayoutForm
@@ -139,7 +139,7 @@ class CreateOrganizationPayoutJournalView(JournalCreateMixin, BaseManualEntryVie
 
 
 class CreateManualDonationView(AdminOptsMixin, BaseManualEntryView):
-    model = get_donation_model()
+    model = Donation
     form_class = donationform_factory(fields=('amount', 'project', 'fundraiser'))
     template_name = 'admin/accounting/banktransaction/manual_donation.html'
 
@@ -154,7 +154,7 @@ class CreateManualDonationView(AdminOptsMixin, BaseManualEntryView):
 
     def form_valid(self, form):
         with db_transaction.atomic():
-            order = get_order_model().objects.create(
+            order = Order.objects.create(
                 user=self.request.user,
                 order_type='manual',
                 total=form.cleaned_data['amount']
@@ -172,7 +172,7 @@ class CreateManualDonationView(AdminOptsMixin, BaseManualEntryView):
             )
             payment = ManualPayment.objects.create(
                 amount=donation.amount,
-                transaction=self.transaction,
+                bank_transaction=self.transaction,
                 user=self.request.user,
                 order_payment=order_payment
             )
@@ -184,7 +184,6 @@ class CreateManualDonationView(AdminOptsMixin, BaseManualEntryView):
             payment.save()
 
             # update/create the required payout
-            ProjectPayout = get_project_payout_model()
             project = donation.project
             project.update_amounts()
             payouts = ProjectPayout.objects.filter(project=project)
@@ -249,7 +248,7 @@ class CreateManualDonationView(AdminOptsMixin, BaseManualEntryView):
 
 class RetryPayoutView(TransactionMixin, AdminOptsMixin, FormView):
     template_name = 'admin/accounting/banktransaction/retry_payout.html'
-    model = get_project_payout_model()
+    model = ProjectPayout
     form_class = RetryPayoutForm
 
     def get_form_kwargs(self):
@@ -274,9 +273,7 @@ class RetryPayoutView(TransactionMixin, AdminOptsMixin, FormView):
         return redirect(self.get_success_url(journal.payout))
 
     def get_success_url(self, payout):
-        model_mapping = get_model_mapping()
-        admin_url_name = model_mapping['project_payout']['model_lower'].replace('.', '_')
-        return reverse('admin:%s_change' % admin_url_name, args=[payout.pk])
+        return reverse('admin:payouts_projectpayout_change', args=[payout.pk])
 
 
 class RDPTakeCutView(AdminOptsMixin, DetailView):
@@ -304,7 +301,6 @@ class RDPTakeCutView(AdminOptsMixin, DetailView):
         if not payout_ids:
             messages.warn(_('There were no payouts for this payment - aborting.'))
 
-        ProjectPayout = get_project_payout_model()
         payouts_to_ignore = list(ProjectPayout.objects.filter(id__in=payout_ids).exclude(
             status=StatusDefinition.NEW,
             protected=False
@@ -321,11 +317,10 @@ class RDPTakeCutView(AdminOptsMixin, DetailView):
         """
         Retrieve the donations and payouts that will be affected by taking a cut.
         """
-        ProjectPayout = get_project_payout_model()
         affected = {}
 
         donations = self.object.local_payment.order_payment.order.donations.select_related(
-            'project', 'project__projectpayout'
+            'project'
         )
 
         for donation in donations:
@@ -352,6 +347,7 @@ class RDPTakeCutView(AdminOptsMixin, DetailView):
                             description_line1='Taking cut from organization fees',
                             description_line2='from failed payment %d' % self.object.local_payment.pk,
                         )
+                        new_payout.save()
 
             affected[donation] = {
                 'new_status': new_status,
@@ -365,6 +361,5 @@ class RDPTakeCutView(AdminOptsMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(RDPTakeCutView, self).get_context_data(**kwargs)
         context['affected'] = self.get_affected_records()
-        model_mapping = get_model_mapping()
-        context['admin_payout'] = u'admin:%s_change' % model_mapping['project_payout']['model_lower'].replace('.', '_')
+        context['admin_payout'] = u'admin:payouts_projectpayout_change'
         return context

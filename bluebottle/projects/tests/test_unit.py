@@ -1,22 +1,23 @@
 from datetime import timedelta, time
+
+from django.db.models import Count
 from django.utils import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.utils.model_dispatcher import get_project_model
-from bluebottle.projects.models import PartnerOrganization
-
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.utils.utils import StatusDefinition
+from bluebottle.projects.models import Project, ProjectPhaseLog
+from bluebottle.projects.admin import mark_as_plan_new
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.votes import VoteFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
 from bluebottle.suggestions.models import Suggestion
-
-PROJECT_MODEL = get_project_model()
 
 
 class TestProjectStatusUpdate(BluebottleTestCase):
@@ -63,7 +64,8 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         donation.save()
 
         order.locked()
-        order.succeeded()
+        order.save()
+        order.success()
         order.save()
 
         self.expired_project.save()
@@ -81,7 +83,8 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         donation.save()
 
         order.locked()
-        order.succeeded()
+        order.save()
+        order.success()
         order.save()
 
         self.expired_project.save()
@@ -99,10 +102,34 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         donation.save()
 
         order.locked()
-        order.succeeded()
+        order.save()
+        order.success()
         order.save()
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.complete)
+
+
+class TestProjectPhaseLog(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectPhaseLog, self).setUp()
+        self.init_projects()
+
+    def test_create_phase_log(self):
+        phase1 = ProjectPhaseFactory.create()
+        phase2 = ProjectPhaseFactory.create()
+
+        project = ProjectFactory.create(status=phase1)
+
+        phase_logs = ProjectPhaseLog.objects.all()
+        self.assertEquals(len(phase_logs), 1)
+        self.assertEquals(phase_logs[0].status, project.status)
+
+        project.status = phase2
+        project.save()
+
+        phase_logs = ProjectPhaseLog.objects.all().order_by("-start")
+        self.assertEquals(len(phase_logs), 2)
+        self.assertEquals(phase_logs[0].status, project.status)
 
 
 class SupporterCountTest(BluebottleTestCase):
@@ -227,8 +254,45 @@ class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
         self.assertEquals(suggestion.status, 'in_progress')
 
 
-class PartnerOrganizationTests(BluebottleTestCase):
-    def test_convert_to_lowercase_slug(self):
-        po = PartnerOrganization.objects.create(name="YADA", slug="YADA",
-                                                description="blabla")
-        self.assertEquals(po.slug, 'yada')
+class TestProjectPopularity(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectPopularity, self).setUp()
+        self.init_projects()
+
+        self.project = ProjectFactory.create()
+
+        VoteFactory.create(project=self.project)
+        task = TaskFactory.create(project=self.project)
+        TaskMemberFactory.create(task=task)
+
+        order = OrderFactory.create(status=StatusDefinition.SUCCESS)
+
+        DonationFactory(order=order, project=self.project)
+
+    def test_update_popularity(self):
+        Project.update_popularity()
+
+        self.assertEqual(Project.objects.get(id=self.project.id).popularity, 11)
+
+
+class TestProjectBulkActions(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectBulkActions, self).setUp()
+        self.init_projects()
+
+        self.projects = [ProjectFactory.create(title='test {}'.format(i)) for i in range(10)]
+
+    def test_mark_as_plan_new(self):
+        mark_as_plan_new(None, None, Project.objects)
+
+        for project in Project.objects.all():
+            self.assertEqual(project.status.slug, 'plan-new')
+
+    def test_mark_annotated(self):
+        queryset = Project.objects.annotate(
+            admin_vote_count=Count('vote', distinct=True)
+        )
+        mark_as_plan_new(None, None, queryset)
+
+        for project in Project.objects.all():
+            self.assertEqual(project.status.slug, 'plan-new')

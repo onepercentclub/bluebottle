@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db import models
 from django.db.models import options
 from django.db.models.aggregates import Sum
@@ -10,16 +9,12 @@ from django_extensions.db.fields import (ModificationDateTimeField,
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.utils import GetTweetMixin, StatusDefinition
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',
-                                                 'preview_serializer',
-                                                 'manage_serializer')
-
 
 class BaseFundraiser(models.Model, GetTweetMixin):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+    owner = models.ForeignKey('members.Member',
                               verbose_name=_("initiator"),
                               help_text=_("Project owner"))
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL,
+    project = models.ForeignKey('projects.Project',
                                 verbose_name=_("project"))
 
     title = models.CharField(_("title"), max_length=255)
@@ -30,7 +25,7 @@ class BaseFundraiser(models.Model, GetTweetMixin):
     video_url = models.URLField(max_length=100, blank=True, default='')
 
     amount = models.DecimalField(_("amount"), decimal_places=2, max_digits=10)
-    currency = models.CharField(max_length="10", default='EUR')
+    currency = models.CharField(max_length=10, default='EUR')
     deadline = models.DateTimeField(null=True)
 
     created = CreationDateTimeField(_("created"), help_text=_(
@@ -55,6 +50,3 @@ class BaseFundraiser(models.Model, GetTweetMixin):
 
     class Meta():
         abstract = True
-        default_serializer = 'bluebottle.fundraisers.serializers.BaseFundraiserSerializer'
-        preview_serializer = 'bluebottle.fundraisers.serializers.BaseFundraiserSerializer'
-        manage_serializer = 'bluebottle.fundraisers.serializers.BaseFundraiserSerializer'

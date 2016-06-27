@@ -1,21 +1,17 @@
 from datetime import timedelta
+
+from bluebottle.projects.models import Project
+from bluebottle.tasks.models import Task
 from bluebottle.test.utils import BluebottleTestCase
 from django.utils import timezone
 
 from rest_framework import status
-
-from bluebottle.utils.model_dispatcher import get_task_model, get_project_model
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, \
     ProjectPhaseFactory
 from bluebottle.test.factory_models.tasks import SkillFactory, TaskFactory, \
     TaskMemberFactory
-
-import json
-
-BB_TASK_MODEL = get_task_model()
-BB_PROJECT_MODEL = get_project_model()
 
 
 class TaskApiIntegrationTests(BluebottleTestCase):
@@ -179,7 +175,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
 
-        response = self.client.post(self.task_members_url, {'task': 1},
+        response = self.client.post(self.task_members_url, {'task': response.data['id']},
                                     token=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
@@ -190,17 +186,17 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         Ensure we can filter task list by status
         """
         self.task1 = TaskFactory.create(
-            status=BB_TASK_MODEL.TaskStatuses.in_progress,
+            status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
         )
         self.task2 = TaskFactory.create(
-            status=BB_TASK_MODEL.TaskStatuses.open,
+            status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
         )
 
-        self.assertEqual(2, BB_TASK_MODEL.objects.count())
+        self.assertEqual(2, Task.objects.count())
 
         # Test as a different user
         response = self.client.get(self.task_url, {'status': 'open'},
@@ -227,18 +223,18 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         # create tasks for projects
         self.task1 = TaskFactory.create(
-            status=BB_TASK_MODEL.TaskStatuses.in_progress,
+            status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
         )
         self.task2 = TaskFactory.create(
-            status=BB_TASK_MODEL.TaskStatuses.open,
+            status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
         )
 
-        self.assertEqual(2, BB_PROJECT_MODEL.objects.count())
-        self.assertEqual(2, BB_TASK_MODEL.objects.count())
+        self.assertEqual(2, Project.objects.count())
+        self.assertEqual(2, Task.objects.count())
 
         api_url = self.task_url + 'previews/'
 
@@ -307,9 +303,10 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         # Fields as defined in the serializer
         serializer_fields = (
-        'id', 'members', 'files', 'project', 'skill', 'author', 'status', \
-        'tags', 'description', 'location', 'deadline', 'time_needed', 'title', \
-        'people_needed', 'meta_data')
+            'id', 'members', 'files', 'project', 'skill', 'author', 'status',
+            'description', 'location', 'deadline', 'time_needed', 'title',
+            'people_needed'
+        )
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)

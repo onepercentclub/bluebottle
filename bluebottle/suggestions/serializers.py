@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from bluebottle.suggestions.models import Suggestion
-
+from bluebottle.projects.models import Project
 
 class DateField(serializers.CharField):
-    def from_native(self, value):
+    def to_internal_value(self, value):
         try:
             return value.split('T')[0]
         except IndexError:
@@ -19,7 +19,8 @@ def generate_token():
 
 class SuggestionSerializer(serializers.ModelSerializer):
     deadline = DateField()
-    project = serializers.SlugRelatedField(slug_field='slug', required=False)
+    project = serializers.SlugRelatedField(slug_field='slug', required=False,
+                                           queryset=Project.objects)
     token = serializers.CharField(required=False, default=generate_token)
 
     class Meta:

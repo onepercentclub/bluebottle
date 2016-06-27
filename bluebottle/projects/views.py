@@ -2,55 +2,53 @@ from bluebottle.projects.models import ProjectBudgetLine
 
 from rest_framework import generics
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import ProjectBudgetLineSerializer, \
     ProjectDocumentSerializer
 from bluebottle.projects.permissions import IsProjectOwner
 from bluebottle.utils.utils import get_client_ip
 
-from .models import Project, ProjectDocument
+from .models import ProjectDocument
+
+
+class BudgetLinePagination(BluebottlePagination):
+    page_size = 50
 
 
 class ManageProjectBudgetLineList(generics.ListCreateAPIView):
-    model = ProjectBudgetLine
+    queryset = ProjectBudgetLine.objects.all()
     serializer_class = ProjectBudgetLineSerializer
-    paginate_by = 50
+    pagination_class = BudgetLinePagination
     permission_classes = (IsProjectOwner,)
 
 
 class ManageProjectBudgetLineDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = ProjectBudgetLine
+    queryset = ProjectBudgetLine.objects.all()
     serializer_class = ProjectBudgetLineSerializer
     permission_classes = (IsProjectOwner,)
 
 
+class DocumentPagination(BluebottlePagination):
+    page_size = 20
+
+
 class ManageProjectDocumentList(generics.ListCreateAPIView):
-    model = ProjectDocument
+    queryset = ProjectDocument.objects.all()
     serializer_class = ProjectDocumentSerializer
-    paginate_by = 20
+    pagination_class = DocumentPagination
+
     filter = ('project',)
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))
 
 
 class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = ProjectDocument
+    queryset = ProjectDocument.objects.all()
     serializer_class = ProjectDocumentSerializer
-    paginate_by = 20
+    pagination_class = DocumentPagination
+
     filter = ('project',)
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
-
-
-class MacroMicroListView(generics.ListAPIView):
-    model = Project
-    queryset = Project.objects.filter(partner_organization__slug='macro_micro')
-
-    def render_to_response(self, context, **response_kwargs):
-        return super(MacroMicroListView, self).render_to_response(
-            context,
-            mimetype='application/xml',
-            **response_kwargs)
+    def perform_update(self, serializer):
+        serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))

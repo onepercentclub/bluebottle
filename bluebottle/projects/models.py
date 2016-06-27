@@ -6,15 +6,20 @@ from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
 from django.conf import settings
+from django.core.urlresolvers import reverse
+from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.http import urlquote
 from django.utils.timezone import now
+from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
+from bluebottle.categories.models import Category
+from bluebottle.tasks.models import Task
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument)
@@ -27,9 +32,7 @@ from .mails import (mail_project_funded_internal, mail_project_complete,
 from .signals import project_funded
 
 GROUP_PERMS = {'Staff': {'perms': ('add_project', 'change_project',
-                                   'delete_project', 'add_partnerorganization',
-                                   'change_partnerorganization',
-                                   'delete_partnerorganization')}}
+                                   'delete_project')}}
 
 
 class ProjectPhaseLog(BaseProjectPhaseLog):
@@ -38,7 +41,7 @@ class ProjectPhaseLog(BaseProjectPhaseLog):
 
 class ProjectManager(models.Manager):
     def search(self, query):
-        qs = super(ProjectManager, self).get_query_set()
+        qs = super(ProjectManager, self).get_queryset()
 
         # Apply filters
         status = query.getlist(u'status[]', None)
@@ -53,6 +56,14 @@ class ProjectManager(models.Manager):
         if country:
             qs = qs.filter(country=country)
 
+        location = query.get('location', None)
+        if location:
+            qs = qs.filter(location=location)
+
+        category = query.get('category', None)
+        if category:
+            qs = qs.filter(categories__slug=category)
+
         theme = query.get('theme', None)
         if theme:
             qs = qs.filter(theme_id=theme)
@@ -62,7 +73,7 @@ class ProjectManager(models.Manager):
             qs = qs.filter(amount_needed__gt=0)
 
         project_type = query.get('project_type', None)
-        if project_type == 'volenteering':
+        if project_type == 'volunteering':
             qs = qs.annotate(Count('task')).filter(task__count__gt=0)
         elif project_type == 'funding':
             qs = qs.filter(amount_asked__gt=0)
@@ -79,21 +90,22 @@ class ProjectManager(models.Manager):
 
     def _ordering(self, ordering, queryset, status):
         if ordering == 'amount_asked':
-            queryset = queryset.order_by('status', 'amount_asked')
+            queryset = queryset.order_by('status', 'amount_asked', 'id')
         elif ordering == 'deadline':
-            queryset = queryset.order_by('status', 'deadline')
+            queryset = queryset.order_by('status', 'deadline', 'id')
         elif ordering == 'amount_needed':
-            queryset = queryset.order_by('status', 'amount_needed')
+            queryset = queryset.order_by('status', 'amount_needed', 'id')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
             queryset = queryset.extra(
                 select={'has_campaign_started': 'campaign_started is null'})
             queryset = queryset.order_by('status', 'has_campaign_started',
-                                         '-campaign_started', '-created')
+                                         '-campaign_started', '-created', 'id')
         elif ordering == 'popularity':
-            queryset = queryset.order_by('status', '-popularity')
+            queryset = queryset.order_by('status', '-popularity', 'id')
             if status == 5:
                 queryset = queryset.filter(amount_needed__gt=0)
+
         elif ordering:
             queryset = queryset.order_by('status', ordering)
 
@@ -101,13 +113,19 @@ class ProjectManager(models.Manager):
 
 
 class ProjectDocument(BaseProjectDocument):
-    pass
+    @property
+    def document_url(self):
+        content_type = ContentType.objects.get_for_model(ProjectDocument).id
+        # pk may be unset if not saved yet, in which case no url can be
+        # generated.
+        if self.pk is not None:
+            return reverse('document_download_detail',
+                           kwargs={'content_type': content_type,
+                                   'pk': self.pk or 1})
+        return None
 
 
 class Project(BaseProject):
-    partner_organization = models.ForeignKey('projects.PartnerOrganization',
-                                             null=True, blank=True)
-
     latitude = models.DecimalField(
         _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
     longitude = models.DecimalField(
@@ -124,7 +142,7 @@ class Project(BaseProject):
                     "You can paste the link to YouTube or Vimeo video here"))
 
     popularity = models.FloatField(null=False, default=0)
-    is_campaign = models.BooleanField(default=False, help_text=_(
+    is_campaign = models.BooleanField(verbose_name='On homepage', default=False, help_text=_(
         "Project is part of a campaign and gets special promotion."))
 
     skip_monthly = models.BooleanField(_("Skip monthly"),
@@ -162,6 +180,8 @@ class Project(BaseProject):
     voting_deadline = models.DateTimeField(_('Voting Deadline'), null=True,
                                            blank=True)
 
+    categories = models.ManyToManyField('categories.Category', blank=True)
+
     objects = ProjectManager()
 
     def __unicode__(self):
@@ -169,203 +189,63 @@ class Project(BaseProject):
             return self.title
         return self.slug
 
-    def update_popularity(self, save=True):
+    @classmethod
+    def update_popularity(self):
+        """
+        Update popularity score for all projects
+
+        Popularity is calculated by the number of new donations, task members and votes
+        in the last 30 days.
+
+        Donations and task members have a weight 5 times that fo a vote.
+        """
         from bluebottle.donations.models import Donation
+        from bluebottle.tasks.models import TaskMember
+        from bluebottle.votes.models import Vote
+
+        weight = 5
 
         last_month = timezone.now() - timezone.timedelta(days=30)
         donations = Donation.objects.filter(
-            order__status__in=[StatusDefinition.PENDING,
-                               StatusDefinition.SUCCESS])
-        donations = donations.filter(created__gte=last_month)
-        donations = donations.exclude(order__order_type='recurring')
+            order__status__in=[
+                StatusDefinition.PLEDGED,
+                StatusDefinition.PENDING,
+                StatusDefinition.SUCCESS
+            ],
+            created__gte=last_month
+        ).exclude(order__order_type='recurring')
 
-        # For all projects.
-        total_recent_donors = len(donations)
-        total_recent_donations = donations.aggregate(sum=Sum('amount'))['sum']
-
-        # For this project
-        donations = donations.filter(project=self)
-        recent_donors = len(donations)
-        recent_donations = donations.aggregate(sum=Sum('amount'))['sum']
-
-        if recent_donors and recent_donations:
-            self.popularity = 50 * (
-                float(recent_donors) / float(total_recent_donors)) + 50 * (
-                float(recent_donations) / float(total_recent_donations))
-        else:
-            self.popularity = 0
-        if save:
-            self.save()
-
-    def update_status_after_donation(self, save=True):
-        if not self.campaign_funded and not self.campaign_ended and \
-                self.status not in ProjectPhase.objects.filter(
-                    Q(slug="done-complete") |
-                    Q(slug="done-incomplete")) and self.amount_needed <= 0:
-            self.campaign_funded = timezone.now()
-            if save:
-                self.save()
-
-    def update_amounts(self, save=True):
-        """ Update amount based on paid and pending donations. """
-
-        self.amount_donated = self.get_money_total(
-            [StatusDefinition.PENDING, StatusDefinition.SUCCESS])
-        self.amount_needed = self.amount_asked - self.amount_donated
-
-        if self.amount_needed < 0:
-            # Should never be less than zero
-            self.amount_needed = 0
-
-        self.update_popularity(False)
-        self.update_status_after_donation(False)
-
-        if save:
-            self.save()
-
-    def get_money_total(self, status_in=None):
-        """
-        Calculate the total (realtime) amount of money for donations,
-        optionally filtered by status.
-        """
-
-        if self.amount_asked == 0:
-            # No money asked, return 0
-            return 0
-
-        donations = self.donation_set.all()
-
-        if status_in:
-            donations = donations.filter(order__status__in=status_in)
-
-        total = donations.aggregate(sum=Sum('amount'))
-
-        if not total['sum']:
-            # No donations, manually set amount
-            return 0
-
-        return total['sum']
-
-    @property
-    def is_realised(self):
-        return self.status in ProjectPhase.objects.filter(
-            slug__in=['done-complete', 'done-incomplete', 'realised']).all()
-
-    @property
-    def is_funding(self):
-        return self.amount_asked > 0
-
-    def supporter_count(self, with_guests=True):
-        # TODO: Replace this with a proper Supporters API
-        # something like /projects/<slug>/donations
-        donations = self.donation_set
-        donations = donations.filter(
-            order__status__in=[StatusDefinition.PENDING,
-                               StatusDefinition.SUCCESS])
-        count = \
-            donations.all().aggregate(
-                total=Count('order__user', distinct=True))[
-                'total']
-
-        if with_guests:
-            donations = self.donation_set
-            donations = donations.filter(
-                order__status__in=[StatusDefinition.PENDING,
-                                   StatusDefinition.SUCCESS])
-            donations = donations.filter(order__user__isnull=True)
-            count += len(donations.all())
-        return count
-
-    @property
-    def vote_count(self):
-        return self.vote_set.count()
-
-    @property
-    def task_count(self):
-        from bluebottle.utils.model_dispatcher import get_task_model
-
-        TASK_MODEL = get_task_model()
-        return len(
-            self.task_set.filter(status=TASK_MODEL.TaskStatuses.open).all())
-
-    @property
-    def get_open_tasks(self):
-        from bluebottle.utils.model_dispatcher import get_task_model
-
-        TASK_MODEL = get_task_model()
-        return self.task_set.filter(status=TASK_MODEL.TaskStatuses.open).all()
-
-    @property
-    def date_funded(self):
-        return self.campaign_funded
-
-    @property
-    def amount_pending(self):
-        return self.get_money_total([StatusDefinition.PENDING])
-
-    @property
-    def amount_safe(self):
-        return self.get_money_total([StatusDefinition.SUCCESS])
-
-    @property
-    def donated_percentage(self):
-        if not self.amount_asked:
-            return 0
-        elif self.amount_donated > self.amount_asked:
-            return 100
-        return int(100 * self.amount_donated / self.amount_asked)
-
-    def get_absolute_url(self):
-        """ Get the URL for the current project. """
-        return '/projects/{}'.format(self.slug)
-
-    def get_meta_title(self, **kwargs):
-        return u"%(name_project)s | %(theme)s | %(country)s" % {
-            'name_project': self.title,
-            'theme': self.theme.name if self.theme else '',
-            'country': self.country.name if self.country else '',
-        }
-
-    def get_fb_title(self, **kwargs):
-        title = _(u"{name_project} in {country}").format(
-            name_project=self.title,
-            country=self.country.name if self.country else '',
-        )
-        return title
-
-    def get_tweet(self, **kwargs):
-        """ Build the tweet text for the meta data """
-        request = kwargs.get('request')
-        if request:
-            lang_code = request.LANGUAGE_CODE
-        else:
-            lang_code = 'en'
-        twitter_handle = settings.TWITTER_HANDLES.get(lang_code,
-                                                      settings.DEFAULT_TWITTER_HANDLE)
-
-        title = urlquote(self.get_fb_title())
-
-        # {URL} is replaced in Ember to fill in the page url, avoiding the
-        # need to provide front-end urls in our Django code.
-        tweet = _(u"{title} {{URL}}").format(
-            title=title, twitter_handle=twitter_handle
+        task_members = TaskMember.objects.filter(
+            created__gte=last_month
         )
 
-        return tweet
+        votes = Vote.objects.filter(
+            created__gte=last_month
+        )
 
-    class Meta(BaseProject.Meta):
-        ordering = ['title']
-        default_serializer = 'bluebottle.projects.serializers.ProjectSerializer'
-        preview_serializer = 'bluebottle.projects.serializers.ProjectPreviewSerializer'
-        manage_serializer = 'bluebottle.projects.serializers.ManageProjectSerializer'
+        # Loop over all projects that where changed, or where a donation was recently done
+        for project in self.objects.filter(
+                Q(updated__gte=last_month) |
+                Q(donation__created__gte=last_month,
+                  donation__order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING]) |
+                Q(task__members__created__gte=last_month) |
+                Q(vote__created__gte=last_month)).distinct():
+
+            project.popularity = (
+                weight * len(donations.filter(project=project)) +
+                weight * len(task_members.filter(task__project=project)) +
+                len(votes.filter(project=project))
+            )
+            project.save()
 
     def save(self, *args, **kwargs):
         if not self.slug:
             original_slug = slugify(self.title)
             counter = 2
-            qs = Project.objects
+            qs = self.__class__.objects
+
             while qs.filter(slug=original_slug).exists():
-                original_slug = '%s-%d' % (original_slug, counter)
+                original_slug = '{0}-{1}'.format(original_slug, counter)
                 counter += 1
             self.slug = original_slug
 
@@ -423,7 +303,174 @@ class Project(BaseProject):
                 and not self.campaign_ended:
             self.campaign_ended = timezone.now()
 
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
         super(Project, self).save(*args, **kwargs)
+
+        # Only log project phase if the status has changed
+        if self is not None and previous_status != self.status:
+            ProjectPhaseLog.objects.create(
+                project=self, status=self.status)
+
+    def update_status_after_donation(self, save=True):
+        if not self.campaign_funded and not self.campaign_ended and \
+                self.status not in ProjectPhase.objects.filter(
+                    Q(slug="done-complete") |
+                    Q(slug="done-incomplete")) and self.amount_needed <= 0:
+            self.campaign_funded = timezone.now()
+            if save:
+                self.save()
+
+    def update_amounts(self, save=True):
+        """ Update amount based on paid and pending donations. """
+
+        self.amount_donated = self.get_money_total(
+            [StatusDefinition.PENDING, StatusDefinition.SUCCESS,
+             StatusDefinition.PLEDGED])
+        self.amount_needed = self.amount_asked - self.amount_donated
+
+        if self.amount_needed < 0:
+            # Should never be less than zero
+            self.amount_needed = 0
+
+        self.update_status_after_donation(False)
+
+        if save:
+            self.save()
+
+    def get_money_total(self, status_in=None):
+        """
+        Calculate the total (realtime) amount of money for donations,
+        optionally filtered by status.
+        """
+
+        if self.amount_asked == 0:
+            # No money asked, return 0
+            return 0
+
+        donations = self.donation_set.all()
+
+        if status_in:
+            donations = donations.filter(order__status__in=status_in)
+
+        total = donations.aggregate(sum=Sum('amount'))
+
+        if not total['sum']:
+            # No donations, manually set amount
+            return 0
+
+        return total['sum']
+
+    @property
+    def is_realised(self):
+        return self.status in ProjectPhase.objects.filter(
+            slug__in=['done-complete', 'done-incomplete', 'realised']).all()
+
+    @property
+    def is_funding(self):
+        return self.amount_asked > 0
+
+    def supporter_count(self, with_guests=True):
+        # TODO: Replace this with a proper Supporters API
+        # something like /projects/<slug>/donations
+        donations = self.donation_set
+        donations = donations.filter(
+            order__status__in=[StatusDefinition.PLEDGED,
+                               StatusDefinition.PENDING,
+                               StatusDefinition.SUCCESS])
+        count = \
+            donations.all().aggregate(
+                total=Count('order__user', distinct=True))[
+                'total']
+
+        if with_guests:
+            donations = self.donation_set
+            donations = donations.filter(
+                order__status__in=[StatusDefinition.PLEDGED,
+                                   StatusDefinition.PENDING,
+                                   StatusDefinition.SUCCESS])
+            donations = donations.filter(order__user__isnull=True)
+            count += len(donations.all())
+        return count
+
+    @property
+    def vote_count(self):
+        return self.vote_set.count()
+
+    @property
+    def task_count(self):
+        return len(
+            self.task_set.filter(status=Task.TaskStatuses.open).all())
+
+    @property
+    def get_open_tasks(self):
+        return self.task_set.filter(status=Task.TaskStatuses.open).all()
+
+    @property
+    def date_funded(self):
+        return self.campaign_funded
+
+    @property
+    def amount_pending(self):
+        return self.get_money_total([StatusDefinition.PENDING])
+
+    @property
+    def amount_safe(self):
+        return self.get_money_total([StatusDefinition.SUCCESS])
+
+    @property
+    def amount_pledged(self):
+        return self.get_money_total([StatusDefinition.PLEDGED])
+
+    @property
+    def donated_percentage(self):
+        if not self.amount_asked:
+            return 0
+        elif self.amount_donated > self.amount_asked:
+            return 100
+        return int(100 * self.amount_donated / self.amount_asked)
+
+    def get_absolute_url(self):
+        """ Get the URL for the current project. """
+        return '/projects/{}'.format(self.slug)
+
+    def get_meta_title(self, **kwargs):
+        return u"%(name_project)s | %(theme)s | %(country)s" % {
+            'name_project': self.title,
+            'theme': self.theme.name if self.theme else '',
+            'country': self.country.name if self.country else '',
+        }
+
+    def get_fb_title(self, **kwargs):
+        title = _(u"{name_project} in {country}").format(
+            name_project=self.title,
+            country=self.country.name if self.country else '',
+        )
+        return title
+
+    def get_tweet(self, **kwargs):
+        """ Build the tweet text for the meta data """
+        request = kwargs.get('request')
+        if request:
+            lang_code = request.LANGUAGE_CODE
+        else:
+            lang_code = 'en'
+        twitter_handle = settings.TWITTER_HANDLES.get(lang_code,
+                                                      settings.DEFAULT_TWITTER_HANDLE)
+
+        title = urlquote(self.get_fb_title())
+
+        # {URL} is replaced in Ember to fill in the page url, avoiding the
+        # need to provide front-end urls in our Django code.
+        tweet = _(u"{title} {{URL}}").format(
+            title=title, twitter_handle=twitter_handle
+        )
+
+        return tweet
+
+    class Meta(BaseProject.Meta):
+        ordering = ['title']
 
     def status_changed(self, old_status, new_status):
 
@@ -455,10 +502,6 @@ class Project(BaseProject):
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
-        from bluebottle.utils.model_dispatcher import get_task_model
-
-        TASK_MODEL = get_task_model()
-
         if self.is_funding:
             if self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
@@ -468,8 +511,8 @@ class Project(BaseProject):
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
         else:
             if self.task_set.filter(
-                    status__in=[TASK_MODEL.TaskStatuses.in_progress,
-                                TASK_MODEL.TaskStatuses.open]).count() > 0:
+                    status__in=[Task.TaskStatuses.in_progress,
+                                Task.TaskStatuses.open]).count() > 0:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
@@ -490,7 +533,7 @@ class ProjectBudgetLine(models.Model):
     This is the budget for the amount asked from this
     website.
     """
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
+    project = models.ForeignKey('projects.Project')
     description = models.CharField(_('description'), max_length=255, default='')
     currency = models.CharField(max_length=3, default='EUR')
     amount = models.PositiveIntegerField(_('amount (in cents)'))
@@ -504,40 +547,6 @@ class ProjectBudgetLine(models.Model):
 
     def __unicode__(self):
         return u'{0} - {1}'.format(self.description, self.amount / 100.0)
-
-
-class PartnerOrganization(models.Model):
-    """
-        Some projects are run in cooperation with a partner
-        organization like EarthCharter & MacroMicro
-    """
-    name = models.CharField(_("name"), max_length=255, unique=True)
-    slug = models.SlugField(_("slug"), max_length=100, unique=True)
-    description = models.TextField(_("description"))
-    image = ImageField(_("image"), max_length=255, blank=True, null=True,
-                       upload_to='partner_images/',
-                       help_text=_("Main partner picture"))
-
-    @property
-    def projects(self):
-        return self.project_set.order_by('-favorite', '-popularity').filter(
-            status__slug__in=['campaign', 'done-complete', 'done-incomplete',
-                              'voting', 'voting-done'])
-
-    class Meta:
-        db_table = 'projects_partnerorganization'
-        verbose_name = _("partner organization")
-        verbose_name_plural = _("partner organizations")
-
-    def __unicode__(self):
-        if self.name:
-            return self.name
-        return self.slug
-
-    def save(self, *args, **kwargs):
-        if not self.slug.islower():
-            self.slug = self.slug.lower()
-        super(PartnerOrganization, self).save(*args, **kwargs)
 
 
 @receiver(project_funded, weak=False, sender=Project,

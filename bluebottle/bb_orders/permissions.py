@@ -1,9 +1,7 @@
-from bluebottle.utils.model_dispatcher import get_order_model
 from rest_framework import permissions
 
+from bluebottle.orders.models import Order
 from bluebottle.utils.utils import StatusDefinition
-
-ORDER_MODEL = get_order_model()
 
 
 class LoggedInUser(permissions.BasePermission):
@@ -55,15 +53,15 @@ class IsOrderCreator(permissions.BasePermission):
             return False
 
     def _get_order_from_request(self, request):
-        if request.DATA:
-            order_id = request.DATA.get('order', None)
+        if request.data:
+            order_id = request.data.get('order', None)
         else:
-            order_id = request.QUERY_PARAMS.get('order', None)
+            order_id = request.query_params.get('order', None)
         if order_id:
             try:
-                project = ORDER_MODEL.objects.get(id=order_id)
+                project = Order.objects.get(id=order_id)
                 return project
-            except ORDER_MODEL.DoesNotExist:
+            except Order.DoesNotExist:
                 return None
         else:
             return None
@@ -73,9 +71,9 @@ class IsOrderCreator(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS or request.method == 'DELETE':
             return True
 
-        if view.model == ORDER_MODEL:
+        if view.queryset.model == Order:
             # Order must belong to the current user or have no user assigned (anonymous)
-            order_user_id = int(request.DATA.get('user', 0))
+            order_user_id = int(request.data.get('user', 0))
             if order_user_id and order_user_id != request.user.pk:
                 return False
             return True
@@ -100,15 +98,15 @@ class OrderIsNew(permissions.BasePermission):
     """
 
     def _get_order_from_request(self, request):
-        if request.DATA:
-            order_id = request.DATA.get('order', None)
+        if request.data:
+            order_id = request.data.get('order', None)
         else:
-            order_id = request.QUERY_PARAMS.get('order', None)
+            order_id = request.query_params.get('order', None)
         if order_id:
             try:
-                project = ORDER_MODEL.objects.get(id=order_id)
+                project = Order.objects.get(id=order_id)
                 return project
-            except ORDER_MODEL.DoesNotExist:
+            except Order.DoesNotExist:
                 return None
         else:
             return None
@@ -119,7 +117,7 @@ class OrderIsNew(permissions.BasePermission):
             return True
 
         # This is for creating new objects that have a relation (fk) to Order.
-        if not view.model == ORDER_MODEL:
+        if not view.queryset.model == Order:
             order = self._get_order_from_request(request)
             if order:
                 return order.status == StatusDefinition.CREATED
@@ -134,6 +132,6 @@ class OrderIsNew(permissions.BasePermission):
             return True
 
         # Check if the object is an Order or if it some object that has a foreign key to Order.
-        if isinstance(obj, ORDER_MODEL):
+        if isinstance(obj, Order):
             return obj.status == StatusDefinition.CREATED
         return obj.order.status == StatusDefinition.CREATED

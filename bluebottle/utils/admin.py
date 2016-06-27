@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.translation import ugettext as _
 from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
 from .models import Language
@@ -6,6 +7,7 @@ import csv
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
+from bluebottle.bb_projects.models import ProjectPhase
 
 
 class LanguageAdmin(admin.ModelAdmin):
@@ -42,8 +44,17 @@ def prep_field(request, obj, field, manyToManySep=';'):
     return unicode(output).encode('utf-8') if output else ""
 
 
+def mark_as_plan_new(modeladmin, request, queryset):
+    try:
+        status = ProjectPhase.objects.get(slug='plan-new')
+    except ProjectPhase.DoesNotExist:
+        return
+    queryset.update(status=status)
+mark_as_plan_new.short_description = _("Mark selected projects as status Plan New")
+
+
 def export_as_csv_action(description="Export as CSV", fields=None, exclude=None, header=True,
-                      manyToManySep=';'):
+                         manyToManySep=';'):
     """ This function returns an export csv action. """
     def export_as_csv(modeladmin, request, queryset):
         """ Generic csv export admin action.
@@ -64,7 +75,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                 field_names = [field for field in fields]
                 labels = field_names
 
-        response = HttpResponse(mimetype='text/csv')
+        response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=%s.csv' % (
                 unicode(opts).replace('.', '_')
             )

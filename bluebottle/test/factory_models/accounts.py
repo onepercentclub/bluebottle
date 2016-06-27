@@ -6,7 +6,8 @@ BB_USER_MODEL = get_user_model()
 
 
 class BlueBottleUserFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = BB_USER_MODEL
+    class Meta(object):
+        model = BB_USER_MODEL
 
     username = factory.Sequence(lambda n: u'user_{0}'.format(n))
     email = factory.Sequence(lambda o: u'user_{0}@onepercentclub.com'.format(o))

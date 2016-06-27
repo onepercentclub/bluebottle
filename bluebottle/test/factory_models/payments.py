@@ -6,14 +6,15 @@ from .orders import OrderFactory
 
 
 class OrderPaymentFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = OrderPayment
+    class Meta(object):
+        model = OrderPayment
 
     payment_method = 'mock'
-    amount = 100
     order = factory.SubFactory(OrderFactory)
 
 
 class PaymentFactory(factory.DjangoModelFactory):
-    FACTORY_FOR = Payment
+    class Meta(object):
+        model = Payment
 
     order_payment = factory.SubFactory(OrderPaymentFactory)

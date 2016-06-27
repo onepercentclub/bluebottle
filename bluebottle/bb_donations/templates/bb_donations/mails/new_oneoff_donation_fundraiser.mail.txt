@@ -1,17 +1,13 @@
-{% extends "base.mail.txt" %}
+{% extends "base.mail.html" %}
 {% load i18n %}
 
 {% block content %}
-{% blocktrans with amount=amount donor_name=donor_name site=site link=link receiver=receiver %}
+    <p class="donation-intro">
+        {% blocktrans with donor_name=donation.user.first_name first_name=receiver.first_name slug=donation.project.slug%}
 
-Hello {{ first_name }},
-
-You received a EUR {{ amount }} donation from {{ donor_name }}.
-
-Quickly thank your supporter by posting a personal message on your fundraiser page.
-{% endblocktrans %}
-{% endblock %}
-
-{% block action %}
-{% trans 'Say thanks' context 'email' %}: {{ site }}{{ link }}
-{% endblock %}
+        Hello {{ first_name }}, you received a donation from {{ donor_name }}. Quickly thank your supporter by posting a personal message on your fundraiser page: {{ site }}{{ link }}.
+        {% endblocktrans %}
+    </p>
+    
+    {% include 'bb_donations/mails/donation.html' %}
+{% endblock content %} 

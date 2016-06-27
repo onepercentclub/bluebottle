@@ -4,17 +4,13 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
+from bluebottle.donations.models import Donation
+from bluebottle.orders.models import Order
 from bluebottle.payouts.admin_utils import link_to
 from bluebottle.rewards.models import Reward
 from bluebottle.utils.admin import (
     export_as_csv_action, TotalAmountAdminChangeList)
-from bluebottle.utils.model_dispatcher import (
-    get_donation_model, get_model_mapping, get_order_model)
 from bluebottle.utils.utils import StatusDefinition
-
-DONATION_MODEL = get_donation_model()
-ORDER_MODEL = get_order_model()
-MODEL_MAP = get_model_mapping()
 
 
 class DonationStatusFilter(SimpleListFilter):
@@ -26,7 +22,7 @@ class DonationStatusFilter(SimpleListFilter):
     def lookups(self, request, model_admin):
         choises = (('all', _('All')),
                    ('pending_or_success', _('Pending/Success')))
-        return choises + ORDER_MODEL.STATUS_CHOICES
+        return choises + Order.STATUS_CHOICES
 
     def choices(self, cl):
         for lookup, title in self.lookup_choices:
@@ -80,7 +76,8 @@ class DonationUserFilter(SimpleListFilter):
 
 class DonationAdminForm(forms.ModelForm):
     class Meta:
-        model = DONATION_MODEL
+        model = Donation
+        exclude = ()
 
     def __init__(self, *args, **kwargs):
         super(DonationAdminForm, self).__init__(*args, **kwargs)
@@ -134,6 +131,8 @@ class DonationAdmin(admin.ModelAdmin):
 
     def related_payment_method(self, obj):
         order_payment = obj.order.get_latest_order_payment()
+        if order_payment and order_payment.status == StatusDefinition.PLEDGED:
+            return 'pledge'
         if not order_payment or not order_payment.payment:
             return '?'
         return order_payment.payment.method_name
@@ -144,7 +143,7 @@ class DonationAdmin(admin.ModelAdmin):
     def order_link(self, obj):
         object = obj.order
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
-                                                    object._meta.module_name),
+                                                    object._meta.model_name),
                       args=[object.id])
         return "<a href='{0}'>Order: {1}</a>".format(str(url), obj.id)
 
@@ -153,7 +152,7 @@ class DonationAdmin(admin.ModelAdmin):
     def user_link(self, obj):
         user = obj.order.user
         url = reverse('admin:{0}_{1}_change'.format(user._meta.app_label,
-                                                    user._meta.module_name),
+                                                    user._meta.model_name),
                       args=[user.id])
         return "<a href='{0}'>{1}</a>".format(str(url), user)
 
@@ -162,7 +161,7 @@ class DonationAdmin(admin.ModelAdmin):
     def project_link(self, obj):
         project = obj.project
         url = reverse('admin:{0}_{1}_change'.format(project._meta.app_label,
-                                                    project._meta.module_name),
+                                                    project._meta.model_name),
                       args=[project.id])
         return "<a href='{0}'>{1}</a>".format(str(url), project)
 
@@ -172,7 +171,7 @@ class DonationAdmin(admin.ModelAdmin):
         fundraiser = obj.fundraiser
         url = reverse(
             'admin:{0}_{1}_change'.format(fundraiser._meta.app_label,
-                                          fundraiser._meta.module_name),
+                                          fundraiser._meta.model_name),
             args=[fundraiser.id])
         return "<a href='{0}'>{1}</a>".format(str(url), fundraiser)
 
@@ -184,19 +183,18 @@ class DonationAdmin(admin.ModelAdmin):
     # Link to project
     admin_project = link_to(
         lambda obj: obj.project,
-        'admin:{0}_{1}_change'.format(MODEL_MAP['project']['app'],
-                                      MODEL_MAP['project']['class'].lower()),
+        'admin:projects_project_change',
         view_args=lambda obj: (obj.project.id,),
         short_description='project',
         truncate=50
     )
 
 
-admin.site.register(DONATION_MODEL, DonationAdmin)
+admin.site.register(Donation, DonationAdmin)
 
 
 class DonationInline(admin.TabularInline):
-    model = DONATION_MODEL
+    model = Donation
     extra = 0
     can_delete = False
 
@@ -210,7 +208,7 @@ class DonationInline(admin.TabularInline):
     def donation_link(self, obj):
         object = obj
         url = reverse('admin:{0}_{1}_change'.format(
-            object._meta.app_label, object._meta.module_name), args=[object.id])
+            object._meta.app_label, object._meta.model_name), args=[object.id])
         return "<a href='{0}'>Donation: {1}</a>".format(str(url), obj.id)
 
     donation_link.allow_tags = True

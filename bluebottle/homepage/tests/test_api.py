@@ -180,12 +180,12 @@ class HomepageEndpointTestCase(BluebottleTestCase):
                 self.donation = DonationFactory.create(amount=1000,
                                                        order=self.order)
 
-        StatisticFactory.create(type='donated_total', title='Donated')
-        StatisticFactory.create(type='projects_online', title='Projects online')
-        StatisticFactory.create(type='projects_realized', title='Projects realised')
-        StatisticFactory.create(type='tasks_realized', title='Tasks realised')
-        StatisticFactory.create(type='people_involved', title='Peeps')
-        StatisticFactory.create(type='manual', title='Rating', value='9.3')
+        StatisticFactory.create(type='donated_total', title='Donated', language='en')
+        StatisticFactory.create(type='projects_online', title='Projects online', language='en')
+        StatisticFactory.create(type='projects_realized', title='Projects realised', language='en')
+        StatisticFactory.create(type='tasks_realized', title='Tasks realised', language='en')
+        StatisticFactory.create(type='people_involved', title='Peeps', language='en')
+        StatisticFactory.create(type='manual', title='Rating', value='9.3', language='en')
 
     def tearDown(self):
         self.stats.clear_cached()
@@ -197,15 +197,15 @@ class HomepageEndpointTestCase(BluebottleTestCase):
 
         impact = response.data['statistics']
         self.assertEqual(impact[0]['title'], 'Donated')
-        self.assertEqual(impact[0]['value'], 10000)
+        self.assertEqual(impact[0]['value'], u'10000')
         self.assertEqual(impact[1]['title'], 'Projects online')
-        self.assertEqual(impact[1]['value'], 5)
+        self.assertEqual(impact[1]['value'], u'5')
         self.assertEqual(impact[2]['title'], 'Projects realised')
-        self.assertEqual(impact[2]['value'], 5)
+        self.assertEqual(impact[2]['value'], u'5')
         self.assertEqual(impact[3]['title'], 'Tasks realised')
-        self.assertEqual(impact[3]['value'], 1)
+        self.assertEqual(impact[3]['value'], u'1')
         self.assertEqual(impact[4]['title'], 'Peeps')
-        self.assertEqual(impact[4]['value'], 36)
+        self.assertEqual(impact[4]['value'], u'36')
 
         self.assertEqual(impact[5]['title'], 'Rating')
         self.assertEqual(impact[5]['value'], '9.3')

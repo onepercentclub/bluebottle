@@ -1,3 +1,4 @@
+import uuid
 from datetime import date, timedelta
 from django.db import models
 from djchoices import DjangoChoices, ChoiceItem
@@ -5,10 +6,8 @@ from django.utils.translation import ugettext as _
 from django.utils.translation import pgettext
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
-from bluebottle.utils.model_dispatcher import get_project_model
 from bluebottle.bb_projects.models import ProjectTheme
-
-PROJECT_MODEL = get_project_model()
+from bluebottle.projects.models import Project
 
 
 class Suggestion(models.Model):
@@ -44,10 +43,11 @@ class Suggestion(models.Model):
     status = models.CharField(_("status"), choices=Statuses.choices,
                               max_length=64,
                               default="unconfirmed")
-    token = models.CharField(max_length=100)
+    token = models.CharField(max_length=100, blank=True, null=True)
 
-    project = models.ForeignKey(PROJECT_MODEL, related_name="suggestions",
+    project = models.ForeignKey(Project, related_name="suggestions",
                                 null=True, blank=True)
+    language = models.CharField(_('suggestion language'), max_length=10, default='en')
 
     def confirm(self):
         if self.status == "unconfirmed":
@@ -65,3 +65,11 @@ class Suggestion(models.Model):
     def __unicode__(self):
         return u'Suggestion "{0}" from {1}'.format(self.title,
                                                    self.org_contactname)
+
+    def save(self, *args, **kwargs):
+        if not self.pk and not self.token:
+            token = str(uuid.uuid4())
+            self.token = token
+        super(Suggestion, self).save(*args, **kwargs)
+
+import signals

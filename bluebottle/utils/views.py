@@ -8,9 +8,11 @@ from django.views.generic.base import View
 from django.template.loader import render_to_string
 from django.template import Context
 from django.utils.translation import ugettext as _
+from django.utils import translation
 
 from sorl.thumbnail.shortcuts import get_thumbnail
 
+from bluebottle.projects.models import Project
 from tenant_extras.utils import TenantLanguage
 
 from filetransfers.api import serve_file
@@ -21,12 +23,12 @@ from bunch import bunchify
 from taggit.models import Tag
 
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.utils.model_dispatcher import get_project_model
+from bluebottle.clients import properties
 
 from .serializers import ShareSerializer
 from .serializers import LanguageSerializer
 
-PROJECT_MODEL = get_project_model()
+from .models import Language
 
 
 class TagList(views.APIView):
@@ -41,15 +43,15 @@ class TagList(views.APIView):
 
 class LanguageList(generics.ListAPIView):
     serializer_class = LanguageSerializer
-    model = serializer_class.Meta.model
+    queryset = Language.objects.all()
 
     def get_queryset(self):
-        return self.model.objects.order_by('language_name').all()
+        return Language.objects.order_by('language_name').all()
 
 
 class TagSearch(views.APIView):
     """
-    Search tags in use on this system
+    Search tags in use on this systemgit
     """
 
     def get(self, request, format=None, search=''):
@@ -63,8 +65,8 @@ class ShareFlyer(views.APIView):
 
     def project_args(self, projectid):
         try:
-            project = PROJECT_MODEL.objects.get(slug=projectid)
-        except PROJECT_MODEL.DoesNotExist:
+            project = Project.objects.get(slug=projectid)
+        except Project.DoesNotExist:
             return None
 
         if project.image:
@@ -118,20 +120,19 @@ class ShareFlyer(views.APIView):
         return response.Response({'preview': result})
 
     def post(self, request, *args, **kwargs):
-        serializer = ShareSerializer(bunchify({}), data=request.DATA)
-        if not serializer.is_valid():
-            return response.Response(serializer.errors, status=400)
+        serializer = ShareSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        args = self.project_args(serializer.data.get('project'))
+        args = self.project_args(serializer.validated_data.get('project'))
         if args is None:
             return HttpResponseNotFound()
 
         sender_name = self.request.user.get_full_name() or self.request.user.username
         sender_email = self.request.user.email
-        share_name = serializer.object.get('share_name', None)
-        share_email = serializer.object.get('share_email', None)
-        share_motivation = serializer.object.get('share_motivation', None)
-        share_cc = serializer.object.get('share_cc')
+        share_name = serializer.validated_data.get('share_name', None)
+        share_email = serializer.validated_data.get('share_email', None)
+        share_motivation = serializer.validated_data.get('share_motivation', None)
+        share_cc = serializer.validated_data.get('share_cc')
 
         with TenantLanguage(self.request.user.primary_language):
             subject = _('%(name)s wants to share a project with you!') % dict(
@@ -157,6 +158,13 @@ class ShareFlyer(views.APIView):
         return response.Response({}, status=201)
 
 
+class ModelTranslationViewMixin(object):
+    def get(self, request, *args, **kwargs):
+        language = request.query_params.get('language', properties.LANGUAGE_CODE)
+        translation.activate(language)
+        return super(ModelTranslationViewMixin, self).get(request, *args, **kwargs)
+
+
 # Non API views
 # Download private documents based on content_type (id) and pk
 # Only 'author' of a document is allowed
@@ -175,14 +183,3 @@ class DocumentDownloadView(View):
             return serve_file(request, file.file, save_as=file_name)
         return HttpResponseForbidden()
 
-# TODO: this was creating problems with the tests
-# TESTS
-INCLUDE_TEST_MODELS = getattr(settings, 'INCLUDE_TEST_MODELS', False)
-
-if INCLUDE_TEST_MODELS:
-    from .models import MetaDataModel
-    from .serializers import MetaDataSerializer
-
-    class MetaDataDetail(generics.RetrieveAPIView):
-        model = MetaDataModel
-        serializer_class = MetaDataSerializer

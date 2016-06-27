@@ -94,3 +94,6 @@ GeoIP.dat
 
 #autoenv
 /.env
+
+#locale
+locale/en/

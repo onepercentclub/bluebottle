@@ -1,9 +1,9 @@
 from collections import namedtuple
-from django_fsm.db.fields import TransitionNotAllowed
+from django_fsm import TransitionNotAllowed
 from mock import patch
 
 from bluebottle import clients
-from bluebottle.payments.services import PaymentService
+from bluebottle.payments.services import PaymentService, get_payment_methods
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import (PaymentFactory,
@@ -12,9 +12,9 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
 
 
-class BlueBottlePaymentTestCase(BluebottleTestCase):
+class PaymentTestCase(BluebottleTestCase):
     def setUp(self):
-        super(BlueBottlePaymentTestCase, self).setUp()
+        super(PaymentTestCase, self).setUp()
         self.init_projects()
 
         self.order = OrderFactory.create()
@@ -28,18 +28,22 @@ class BlueBottlePaymentTestCase(BluebottleTestCase):
                          'Order Payment should start with created status')
 
         self.order_payment.started()
+        self.order_payment.save()
+
         self.assertEqual(self.order.status, StatusDefinition.LOCKED,
                          'Starting an Order Payment should change Order to locked')
         self.assertEqual(self.order_payment.status, StatusDefinition.STARTED,
                          'Starting an Order Payment should change status to started')
 
         self.order_payment.authorized()
+        self.order_payment.save()
         self.assertEqual(self.order.status, StatusDefinition.PENDING,
                          'Authorizing an Order Payment should change Order to pending')
         self.assertEqual(self.order_payment.status, StatusDefinition.AUTHORIZED,
                          'Authorizing an Order Payment should status to authorized')
 
         self.order_payment.settled()
+        self.order_payment.save()
         self.assertEqual(self.order.status, StatusDefinition.SUCCESS,
                          'Settling an Order Payment should change Order to success')
         self.assertEqual(self.order_payment.status, StatusDefinition.SETTLED,
@@ -47,15 +51,19 @@ class BlueBottlePaymentTestCase(BluebottleTestCase):
 
     def test_invalid_order_payment_flow(self):
         self.order_payment.started()
+        self.order_payment.save()
         self.order_payment.authorized()
+        self.order_payment.save()
 
         # Try to transition back to started
         with self.assertRaises(TransitionNotAllowed):
             self.order_payment.started()
+            self.order_payment.save()
 
         # Try to transition to cancelled
         with self.assertRaises(TransitionNotAllowed):
             self.order_payment.cancelled()
+            self.order_payment.save()
 
         self.assertEqual(self.order.status, StatusDefinition.PENDING,
                          'A failed Order Payment transition should not change Order status')
@@ -114,9 +122,31 @@ class BlueBottlePaymentTestCase(BluebottleTestCase):
         )
 
 
-class BlueBottlePaymentFeeTestCase(BluebottleTestCase):
+class OrderPaymentTestCase(BluebottleTestCase):
     def setUp(self):
-        super(BlueBottlePaymentFeeTestCase, self).setUp()
+        super(OrderPaymentTestCase, self).setUp()
+        self.init_projects()
+
+        self.order = OrderFactory.create()
+        self.donation = DonationFactory(amount=60, order=self.order)
+        self.order_payment = OrderPaymentFactory.create(order=self.order)
+
+    def test_order_payment_amount(self):
+        """
+        Check that order payment amount is updated post-save when
+        the order amount has changed.
+        """
+        self.donation.amount = 20
+        self.donation.save()
+        self.order.save()
+
+        self.order_payment.save()
+        self.assertEqual(self.order_payment.amount, 20)
+
+
+class PaymentFeeTestCase(BluebottleTestCase):
+    def setUp(self):
+        super(PaymentFeeTestCase, self).setUp()
         self.init_projects()
 
         self.order = OrderFactory.create()

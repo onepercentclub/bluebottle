@@ -25,6 +25,8 @@ urlpatterns = patterns('',
                            include('bluebottle.bb_projects.urls.api')),
                        url(r'^api/fundraisers/',
                            include('bluebottle.bb_fundraisers.urls.api')),
+                       url(r'^api/categories/',
+                           include('bluebottle.categories.urls.api')),
                        url(r'^api/bb_tasks/',
                            include('bluebottle.bb_tasks.urls.api')),
                        url(r'^api/geo/', include('bluebottle.geo.urls.api')),
@@ -57,9 +59,6 @@ urlpatterns = patterns('',
                        url(r'^api/monthly_donations/',
                            include('bluebottle.recurring_donations.urls.api')),
 
-                       url(r'^api/partners/',
-                           include('bluebottle.partners.urls.api')),
-
                        url(r'^api/rewards/',
                            include('bluebottle.rewards.urls.api')),
 
@@ -76,10 +75,6 @@ urlpatterns = patterns('',
                        url(r'^payments_docdata/',
                            include('bluebottle.payments_docdata.urls.core')),
 
-                       # Urls for partner sites
-                       url(r'^pp/',
-                          include('bluebottle.partners.urls.partners')),
-
                        url(r'^api/organizations/',
                            include('bluebottle.organizations.urls.api')),
                        url(r'^api/suggestions/',
@@ -92,15 +87,12 @@ urlpatterns = patterns('',
                        url(r'^documents/',
                            include('bluebottle.organizations.urls.documents')),
 
-                       # handlebar templates
-                       url(r'^templates/',
-                           include('bluebottle.hbtemplates.urls')),
-
                        url(r'^embed/', include('bluebottle.widget.urls.core')),
 
                        # JSON Web Token based authentication for Django REST framework
                        url(r'^api/token-auth/',
-                           'rest_framework_jwt.views.obtain_jwt_token'),
+                           'rest_framework_jwt.views.obtain_jwt_token',
+                           name='token-auth'),
 
                        # Social token authorization
                        url(r'^api/social/',

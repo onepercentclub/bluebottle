@@ -4,11 +4,8 @@ from django.core.urlresolvers import reverse
 from polymorphic.admin import PolymorphicChildModelAdmin
 
 from bluebottle.payments.models import Payment
-from bluebottle.utils.model_dispatcher import get_donation_model
 
 from .models import Voucher, VoucherPayment
-
-DONATION_MODEL = get_donation_model()
 
 
 class VoucherPaymentAdmin(PolymorphicChildModelAdmin):
@@ -21,7 +18,7 @@ class VoucherPaymentAdmin(PolymorphicChildModelAdmin):
     def order_payment_link(self, obj):
         object = obj.order_payment
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
-                                                    object._meta.module_name),
+                                                    object._meta.model_name),
                       args=[object.id])
         return "<a href='{0}'>Order Payment: {1}</a>".format(str(url),
                                                              object.id)
@@ -31,7 +28,7 @@ class VoucherPaymentAdmin(PolymorphicChildModelAdmin):
     def voucher_link(self, obj):
         object = obj.voucher
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
-                                                    object._meta.module_name),
+                                                    object._meta.model_name),
                       args=[object.id])
         return "<a href='{0}'>Voucher: {1}</a>".format(str(url), object.code)
 
@@ -53,7 +50,7 @@ class VoucherAdmin(admin.ModelAdmin):
     def view_order(self, obj):
 
         url = reverse('admin:%s_%s_change' % (obj.order._meta.app_label,
-                                              obj.order._meta.module_name),
+                                              obj.order._meta.model_name),
                       args=[obj.order.id])
         return "<a href='%s'>View Buy Order</a>" % (str(url))
 
@@ -61,7 +58,7 @@ class VoucherAdmin(admin.ModelAdmin):
 
     def payment_link(self, obj):
         url = reverse('admin:%s_%s_change' % (obj.payment._meta.app_label,
-                                              obj.payment._meta.module_name),
+                                              obj.payment._meta.model_name),
                       args=[obj.payment.id])
         return "<a href='%s'>Cash Voucher Payment</a>" % (str(url))
 

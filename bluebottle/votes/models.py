@@ -10,8 +10,8 @@ class Vote(models.Model):
     Mixin for generating an invoice reference.
     """
     created = CreationDateTimeField(_('created'))
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
-    ip_address = models.IPAddressField()
+    project = models.ForeignKey('projects.Project')
+    ip_address = models.GenericIPAddressField()
 
     voter = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('voter'))
 

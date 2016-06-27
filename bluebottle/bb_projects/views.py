@@ -2,68 +2,71 @@ from django.db.models.query_utils import Q
 
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
+
+from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectDocument
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import (
     ProjectThemeSerializer, ProjectPhaseSerializer,
     ProjectPhaseLogSerializer, ProjectDocumentSerializer,
-    ProjectTinyPreviewSerializer)
-from bluebottle.utils.model_dispatcher import (
-    get_project_model, get_project_phaselog_model, get_project_document_model)
-from bluebottle.utils.serializers import (
-    DefaultSerializerMixin, ManageSerializerMixin, PreviewSerializerMixin)
+    ProjectTinyPreviewSerializer, ProjectSerializer, ProjectPreviewSerializer, ManageProjectSerializer)
 from bluebottle.utils.utils import get_client_ip
 
 from .models import ProjectTheme, ProjectPhase
 from .permissions import IsProjectOwner, IsEditableOrReadOnly
 
-PROJECT_MODEL = get_project_model()
-PROJECT_PHASELOG_MODEL = get_project_phaselog_model()
-PROJECT_DOCUMENT_MODEL = get_project_document_model()
+
+class ProjectPagination(BluebottlePagination):
+    page_size = 8
+
+
+class TinyProjectPagination(BluebottlePagination):
+    page_size = 10000
 
 
 class ProjectTinyPreviewList(generics.ListAPIView):
-    model = PROJECT_MODEL
-    paginate_by = 8
-    paginate_by_param = 'page_size'
+    queryset = Project.objects.all()
+    pagination_class = TinyProjectPagination
     serializer_class = ProjectTinyPreviewSerializer
 
     def get_queryset(self):
-        query = self.request.QUERY_PARAMS
-        qs = PROJECT_MODEL.objects.search(query=query)
+        query = self.request.query_params
+        qs = Project.objects.search(query=query)
         return qs.filter(status__viewable=True)
 
 
-class ProjectPreviewList(PreviewSerializerMixin, generics.ListAPIView):
-    model = PROJECT_MODEL
-    paginate_by = 8
-    paginate_by_param = 'page_size'
+class ProjectPreviewList(generics.ListAPIView):
+    queryset = Project.objects.all()
+    pagination_class = ProjectPagination
+    serializer_class = ProjectPreviewSerializer
 
     def get_queryset(self):
-        query = self.request.QUERY_PARAMS
-        qs = PROJECT_MODEL.objects.search(query=query)
+        query = self.request.query_params
+        qs = Project.objects.search(query=query)
         return qs.filter(status__viewable=True)
 
 
-class ProjectPreviewDetail(PreviewSerializerMixin, generics.RetrieveAPIView):
-    model = PROJECT_MODEL
-
+class ProjectPreviewDetail(generics.RetrieveAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectPreviewSerializer
+    lookup_field = 'slug'
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
         return qs
 
 
 class ProjectPhaseList(generics.ListAPIView):
-    model = ProjectPhase
+    queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseSerializer
-    paginate_by = 10
+    pagination_class = BluebottlePagination
     filter_fields = ('viewable',)
 
     def get_query(self):
         qs = ProjectPhase.objects
 
-        name = self.request.QUERY_PARAMS.get('name', None)
-        text = self.request.QUERY_PARAMS.get('text')
+        name = self.request.query_params.get('name', None)
+        text = self.request.query_params.get('text')
 
         qs = qs.order_by('sequence')
 
@@ -77,14 +80,14 @@ class ProjectPhaseList(generics.ListAPIView):
 
 
 class ProjectPhaseDetail(generics.RetrieveAPIView):
-    model = ProjectPhase
+    queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseSerializer
 
 
 class ProjectPhaseLogList(generics.ListAPIView):
-    model = PROJECT_PHASELOG_MODEL
+    queryset = ProjectPhaseLog.objects.all()
     serializer_class = ProjectPhaseLogSerializer
-    paginate_by = 10
+    pagination_class = BluebottlePagination
 
     def get_queryset(self):
         qs = super(ProjectPhaseLogList, self).get_queryset()
@@ -92,34 +95,43 @@ class ProjectPhaseLogList(generics.ListAPIView):
 
 
 class ProjectPhaseLogDetail(generics.RetrieveAPIView):
-    model = PROJECT_PHASELOG_MODEL
+    queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseLogSerializer
 
 
-class ProjectList(DefaultSerializerMixin, generics.ListAPIView):
-    model = PROJECT_MODEL
-    paginate_by = 10
+class ProjectList(generics.ListAPIView):
+    queryset = Project.objects.all()
+    pagination_class = BluebottlePagination
+    serializer_class = ProjectSerializer
 
     def get_queryset(self):
         qs = super(ProjectList, self).get_queryset()
-        status = self.request.QUERY_PARAMS.get('status', None)
+        status = self.request.query_params.get('status', None)
         if status:
             qs = qs.filter(Q(status_id=status))
         return qs.filter(status__viewable=True)
 
 
-class ProjectDetail(DefaultSerializerMixin, generics.RetrieveAPIView):
-    model = PROJECT_MODEL
+class ProjectDetail(generics.RetrieveAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    lookup_field = 'slug'
 
     def get_queryset(self):
         qs = super(ProjectDetail, self).get_queryset()
         return qs
 
 
-class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
-    model = PROJECT_MODEL
+class ManageProjectPagination(BluebottlePagination):
+    page_size = 100
+
+
+class ManageProjectList(generics.ListCreateAPIView):
+    queryset = Project.objects.all()
     permission_classes = (TenantConditionalOpenClose, IsAuthenticated, )
-    paginate_by = 100
+
+    pagination_class = ManageProjectPagination
+    serializer_class = ManageProjectSerializer
 
     def get_queryset(self):
         """
@@ -131,18 +143,17 @@ class ManageProjectList(ManageSerializerMixin, generics.ListCreateAPIView):
         queryset = queryset.order_by('-created')
         return queryset
 
-    def pre_save(self, obj):
-        """
-        Set the project owner and the status of the project.
-        """
-        obj.status = ProjectPhase.objects.order_by('sequence').all()[0]
-        obj.owner = self.request.user
+    def perform_create(self, serializer):
+        serializer.save(
+            owner=self.request.user, status=ProjectPhase.objects.order_by('sequence').all()[0]
+        )
 
 
-class ManageProjectDetail(ManageSerializerMixin,
-                          generics.RetrieveUpdateAPIView):
-    model = PROJECT_MODEL
+class ManageProjectDetail(generics.RetrieveUpdateAPIView):
+    queryset = Project.objects.all()
     permission_classes = (IsProjectOwner, IsEditableOrReadOnly)
+    serializer_class = ManageProjectSerializer
+    lookup_field = 'slug'
 
     def get_object(self):
         # Call the superclass
@@ -155,7 +166,7 @@ class ManageProjectDetail(ManageSerializerMixin,
 
 
 class ProjectThemeList(generics.ListAPIView):
-    model = ProjectTheme
+    queryset = ProjectTheme.objects.all()
     serializer_class = ProjectThemeSerializer
     queryset = ProjectTheme.objects.all().filter(disabled=False)
 
@@ -163,33 +174,38 @@ class ProjectThemeList(generics.ListAPIView):
 class ProjectUsedThemeList(ProjectThemeList):
     def get_queryset(self):
         qs = super(ProjectUsedThemeList, self).get_queryset()
-        theme_ids = PROJECT_MODEL.objects.filter(
+        theme_ids = Project.objects.filter(
             status__viewable=True).values_list('theme', flat=True).distinct()
         return qs.filter(id__in=theme_ids)
 
 
 class ProjectThemeDetail(generics.RetrieveAPIView):
-    model = ProjectTheme
+    queryset = ProjectTheme.objects.all()
     serializer_class = ProjectThemeSerializer
 
 
+class ManageProjectDocumentPagination(BluebottlePagination):
+    page_size = 20
+
 class ManageProjectDocumentList(generics.ListCreateAPIView):
-    model = PROJECT_DOCUMENT_MODEL
+    queryset = Project.objects.all()
     serializer_class = ProjectDocumentSerializer
-    paginate_by = 20
+    pagination_class = ManageProjectDocumentPagination
     filter = ('project', )
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user, ip_address=get_client_ip(self.request)
+        )
 
 
 class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = PROJECT_DOCUMENT_MODEL
+    queryset = ProjectDocument.objects.all()
     serializer_class = ProjectDocumentSerializer
-    paginate_by = 20
+    pagination_class = ManageProjectDocumentPagination
     filter = ('project', )
 
-    def pre_save(self, obj):
-        obj.author = self.request.user
-        obj.ip_address = get_client_ip(self.request)
+    def perform_update(self, serializer):
+        serializer.save(
+            author=self.request.user, ip_address=get_client_ip(self.request)
+        )

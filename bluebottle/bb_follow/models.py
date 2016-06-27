@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models.signals import post_save
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes import fields
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
@@ -8,7 +8,6 @@ from django.utils import translation
 
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.utils.model_dispatcher import get_user_model
 from bluebottle.bb_projects.models import BaseProject
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
 from bluebottle.bb_donations.models import BaseDonation
@@ -18,8 +17,6 @@ from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients import properties
 from bluebottle.votes.models import Vote
 
-USER_MODEL = get_user_model()
-
 
 class Follow(models.Model):
     """
@@ -27,10 +24,10 @@ class Follow(models.Model):
     user and another Django model.
     """
 
-    user = models.ForeignKey(USER_MODEL)
+    user = models.ForeignKey('members.Member')
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
-    followed_object = generic.GenericForeignKey('content_type', 'object_id')
+    followed_object = fields.GenericForeignKey('content_type', 'object_id')
 
     def __unicode__(self):
         if self.followed_object:

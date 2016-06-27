@@ -6,8 +6,8 @@ class IsUser(permissions.BasePermission):
         return obj.user == request.user
 
     def has_permission(self, request, view):
-        if request.DATA:
-            user_id = request.DATA.get('user', None)
+        if request.data:
+            user_id = request.data.get('user', None)
         else:
-            user_id = request.QUERY_PARAMS.get('user', None)
+            user_id = request.query_params.get('user', None)
         return user_id == request.user.id

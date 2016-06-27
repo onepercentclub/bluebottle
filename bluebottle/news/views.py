@@ -1,12 +1,17 @@
 from rest_framework import generics
+
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from .models import NewsItem
 from .serializers import NewsItemSerializer, NewsItemPreviewSerializer
 
 
+class NewsItemPagination(BluebottlePagination):
+    page_size = 5
+
 class NewsItemPreviewList(generics.ListAPIView):
-    model = NewsItem
+    queryset = NewsItem.objects.all()
     serializer_class = NewsItemPreviewSerializer
-    paginate_by = 5
+    pagination_class = NewsItemPagination
     filter_fields = ('language',)
 
     def get_queryset(self, *args, **kwargs):
@@ -17,9 +22,9 @@ class NewsItemPreviewList(generics.ListAPIView):
 
 
 class NewsItemList(generics.ListAPIView):
-    model = NewsItem
+    queryset = NewsItem.objects.all()
     serializer_class = NewsItemSerializer
-    paginate_by = 5
+    pagination_class = NewsItemPagination
     filter_fields = ('language',)
 
     def get_queryset(self, *args, **kwargs):
@@ -30,8 +35,9 @@ class NewsItemList(generics.ListAPIView):
 
 
 class NewsItemDetail(generics.RetrieveAPIView):
-    model = NewsItem
+    queryset = NewsItem.objects.all()
     serializer_class = NewsItemSerializer
+    lookup_field = 'slug'
 
     def get_queryset(self, *args, **kwargs):
         qs = super(NewsItemDetail, self).get_queryset()

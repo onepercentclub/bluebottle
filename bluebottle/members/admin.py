@@ -12,6 +12,7 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
+from bluebottle.clients import properties
 
 from .models import Member
 
@@ -82,6 +83,7 @@ class MemberChangeForm(forms.ModelForm):
 
     class Meta:
         model = BB_USER_MODEL
+        exclude = ()
 
     def __init__(self, *args, **kwargs):
         super(MemberChangeForm, self).__init__(*args, **kwargs)
@@ -111,18 +113,28 @@ class MemberVotesInline(admin.TabularInline):
 
 
 class MemberAdmin(UserAdmin):
-    standard_fieldsets = (
-        (None, {'fields': ('email', 'password', 'remote_id')}),
-        (_('Personal info'), {'fields': (
-            'first_name', 'last_name', 'username', 'gender', 'birthdate',
-            'phone_number')}),
-        (_("Profile"),
-         {'fields': ('user_type', 'is_co_financer', 'picture', 'about_me', 'location')}),
-        (_("Settings"), {'fields': ['primary_language', 'newsletter']}),
-        (_('Skills & interests'), {'fields': ('favourite_themes',)}),
-        (_('Important dates'),
-         {'fields': ('last_login', 'date_joined', 'deleted')}),
-    )
+
+    @property
+    def standard_fieldsets(self):
+
+        standard_fieldsets = [
+            [None, {'fields': ['email', 'password', 'remote_id']}],
+            [_('Personal info'), {'fields': [
+                'first_name', 'last_name', 'username', 'gender', 'birthdate',
+                'phone_number']}],
+            [_("Profile"),
+             {'fields': ['user_type', 'is_co_financer', 'picture', 'about_me', 'location']}],
+            [_("Settings"), {'fields': ['primary_language', 'newsletter']}],
+            [_('Skills & interests'), {'fields': ['favourite_themes',]}],
+            [_('Important dates'),
+             {'fields': ['last_login', 'date_joined', 'deleted']}],
+        ]
+
+        for item in properties.PAYMENT_METHODS:
+            if item['name'] == 'Pledge':
+                standard_fieldsets[2][1]['fields'].append('can_pledge')
+
+        return tuple(standard_fieldsets)
 
     staff_fieldsets = (
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'groups')}),
@@ -176,6 +188,7 @@ class MemberAdmin(UserAdmin):
                 self.fieldsets = self.standard_fieldsets + self.superuser_fieldsets
             else:
                 self.fieldsets = self.standard_fieldsets + self.staff_fieldsets
+
             response = UserAdmin.change_view(self, request, *args, **kwargs)
         finally:
             # Reset fieldsets to its original value

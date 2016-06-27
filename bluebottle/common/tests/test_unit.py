@@ -122,22 +122,30 @@ class MetricsTest(BluebottleTestCase):
         order1 = OrderFactory.create(user=user1)
         donation1 = DonationFactory(order=order1, amount=20)
         order1.locked()
+        order1.save()
         order1.failed()
+        order1.save()
 
         order2 = OrderFactory.create(user=user2)
         donation2 = DonationFactory(order=order2, amount=25)
         order2.locked()
-        order2.succeeded()
+        order2.save()
+        order2.success()
+        order2.save()
 
         order3 = OrderFactory.create(user=user2)
         donation3 = DonationFactory(order=order3, amount=30)
         order3.locked()
-        order3.succeeded()
+        order3.save()
+        order3.success()
+        order3.save()
 
         order4 = OrderFactory.create(user=user3)
         donation4 = DonationFactory(order=order4, amount=35)
         order4.locked()
-        order4.succeeded()
+        order4.save()
+        order4.success()
+        order4.save()
 
         # User two should be counted once, and user 3 should be counted
         self.assertEqual(self.metrics.calculate_supporters(), 2)
@@ -154,22 +162,30 @@ class MetricsTest(BluebottleTestCase):
         order1 = OrderFactory.create(user=user1)
         donation1 = DonationFactory(order=order1, amount=10, project=project1)
         order1.locked()
+        order1.save()
         order1.failed()
+        order1.save()
 
         order2 = OrderFactory.create(user=user2)
         donation2 = DonationFactory(order=order2, amount=10, project=project1)
         order2.locked()
-        order2.succeeded()
+        order1.save()
+        order2.success()
+        order2.save()
 
         order3 = OrderFactory.create(user=user2)
         donation3 = DonationFactory(order=order3, amount=10, project=project2)
         order3.locked()
-        order3.succeeded()
+        order3.save()
+        order3.success()
+        order3.save()
 
         order4 = OrderFactory.create(user=user3)
         donation4 = DonationFactory(order=order4, amount=10, project=project1)
         order4.locked()
-        order4.succeeded()
+        order4.save()
+        order4.success()
+        order4.save()
 
         # order2, order3, order4 should be counted
         self.assertEqual(self.metrics.calculate_total_raised(), 30)
@@ -198,19 +214,16 @@ class MetricsTest(BluebottleTestCase):
 
     def test_taskmember_hours(self):
         """ Test taskmember hours spent calculation, status must be realized """
-        task = TaskFactory()
+        task = TaskFactory(time_needed=8)
 
         task_member = TaskMemberFactory(task=task, status='applied')
-        task_member2 = TaskMemberFactory(task=task, status='realized',
-                                         time_spent=8)
+        task_member2 = TaskMemberFactory(task=task, status='realized')
         task_member3 = TaskMemberFactory(task=task, status='accepted')
         task_member4 = TaskMemberFactory(task=task, status='rejected')
         task_member5 = TaskMemberFactory(task=task, status='stopped')
 
-        task_member6 = TaskMemberFactory(task=task, status='realized',
-                                         time_spent=8)
-        task_member7 = TaskMemberFactory(task=task, status='realized',
-                                         time_spent=8)
+        task_member6 = TaskMemberFactory(task=task, status='realized')
+        task_member7 = TaskMemberFactory(task=task, status='realized')
 
         # Count tm2, tm6, tm7, 3x8 hours
         _, hours = self.metrics.calculate_taskmember_metrics()

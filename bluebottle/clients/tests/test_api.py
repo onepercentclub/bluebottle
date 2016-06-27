@@ -34,3 +34,9 @@ class ClientSettingsTestCase(BluebottleTestCase):
         self.assertIn('topSecret', response.data)
 
         setattr(properties, 'CLOSED_SITE', False)
+
+    @override_settings(TOKEN_AUTH={'assertion_mapping': {'first_name': 'urn:first_name'}})
+    def test_settings_read_only(self):
+        # Check that exposed property is in settings api, and other settings are not shown
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.data['readOnlyFields'], {'user': ['first_name']})

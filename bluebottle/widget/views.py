@@ -1,5 +1,4 @@
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.utils.model_dispatcher import get_project_model
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.views.generic import View
@@ -7,7 +6,7 @@ from django.utils import timezone
 from django.utils import translation
 import json
 
-PROJECT_MODEL = get_project_model()
+from bluebottle.projects.models import Project
 
 
 class WidgetView(View):
@@ -42,15 +41,11 @@ class WidgetView(View):
 
         if project_slug:
             try:
-                projects = PROJECT_MODEL.objects.filter(slug=project_slug)
-            except PROJECT_MODEL.DoesNotExist:
+                projects = Project.objects.filter(slug=project_slug)
+            except Project.DoesNotExist:
                 pass
-        elif partner:
-            projects = PROJECT_MODEL.objects.filter(
-                partner_organization__slug=partner,
-                status__in=allowed_phases).order_by('?')[:3]
         else:
-            projects = PROJECT_MODEL.objects.filter(deadline__gt=now).order_by(
+            projects = Project.objects.filter(deadline__gt=now).order_by(
                 '?')[:3]
 
         if 'localhost' in request.get_host():

@@ -2,7 +2,6 @@ import logging
 
 from django.core.exceptions import ValidationError
 
-from bluebottle.utils.model_dispatcher import get_project_payout_model
 from bluebottle.utils.utils import StatusDefinition
 
 logger = logging.getLogger()
@@ -13,21 +12,19 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
     Create or update Payout for finished projects.
     Project finish when deadline is hit or when it's changed manually in admin.
     """
+    from bluebottle.payouts.models import ProjectPayout
     from localflavor.generic.validators import IBANValidator
-
-    PROJECT_PAYOUT_MODEL = get_project_payout_model()
 
     project = instance
 
     if project.status.slug in ['done-complete', 'done-incomplete'] \
             and project.amount_asked:
 
-        PROJECT_PAYOUT_MODEL = get_project_payout_model()
-        next_date = PROJECT_PAYOUT_MODEL.get_next_planned_date()
+        next_date = ProjectPayout.get_next_planned_date()
 
         try:
             # Update existing Payout
-            payout = PROJECT_PAYOUT_MODEL.objects.get(project=project, protected=False)
+            payout = ProjectPayout.objects.get(project=project)
 
             if payout.status == StatusDefinition.NEW:
                 # Update planned payout date for new Payouts
@@ -35,11 +32,11 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                 payout.planned = next_date
                 payout.save()
 
-        except PROJECT_PAYOUT_MODEL.DoesNotExist:
+        except ProjectPayout.DoesNotExist:
 
             if project.campaign_started:
                 # Create new Payout
-                payout = PROJECT_PAYOUT_MODEL(
+                payout = ProjectPayout(
                     planned=next_date,
                     project=project
                 )
@@ -63,6 +60,6 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                 payout.receiver_account_number = project.account_number
                 payout.receiver_account_name = project.account_holder_name
                 payout.receiver_account_city = project.account_holder_city
-                payout.receiver_account_country = project.account_bank_country
+                payout.receiver_account_country = project.account_bank_country.name
 
                 payout.save()

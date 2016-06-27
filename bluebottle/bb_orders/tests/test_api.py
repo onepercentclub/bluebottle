@@ -10,14 +10,11 @@ from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.utils.model_dispatcher import get_order_model
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments_mock.adapters import MockPaymentAdapter
 from mock import patch
 
 from bluebottle.utils.utils import StatusDefinition
-
-ORDER_MODEL = get_order_model()
 
 
 class OrderApiTestCase(BluebottleTestCase):
@@ -55,7 +52,7 @@ class TestCreateUpdateOrder(OrderApiTestCase):
                                     token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], StatusDefinition.CREATED)
-        self.assertEqual(response.data['total'], 0)
+        self.assertEqual(response.data['total'], u'0.00')
         order_id = response.data['id']
 
         # Check that there's one order
@@ -68,9 +65,10 @@ class TestCreateUpdateOrder(OrderApiTestCase):
         # Create an order
         response = self.client.post(self.manage_order_list_url, {},
                                     token=self.user1_token)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['status'], StatusDefinition.CREATED)
-        self.assertEqual(response.data['total'], 0)
+        self.assertEqual(response.data['total'], u'0.00')
         order_id = response.data['id']
 
         # User should be able to update the order because status is still 'new'
@@ -81,6 +79,7 @@ class TestCreateUpdateOrder(OrderApiTestCase):
         # Change order status to 'locked'
         order = Order.objects.get(pk=order_id)
         order.locked()
+        order.save()
 
         # User should not be able to update the order now that it has status 'locked'
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)

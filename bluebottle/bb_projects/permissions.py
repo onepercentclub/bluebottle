@@ -1,8 +1,6 @@
 from rest_framework import permissions
 
-from bluebottle.utils.model_dispatcher import get_project_model
-
-PROJECT_MODEL = get_project_model()
+from bluebottle.projects.models import Project
 
 
 class IsProjectOwner(permissions.BasePermission):
@@ -10,7 +8,7 @@ class IsProjectOwner(permissions.BasePermission):
     Permissions class used to allow access only to project owner.
     """
     def has_object_permission(self, request, view, obj):
-        if isinstance(obj, PROJECT_MODEL):
+        if isinstance(obj, Project):
             return obj.owner == request.user
         return obj.project.owner == request.user
 
@@ -21,7 +19,7 @@ class IsOwner(permissions.BasePermission):
     """
     def has_object_permission(self, request, view, obj):
         # Test for project model object-level permissions.
-        return isinstance(obj, PROJECT_MODEL) and obj.owner == request.user
+        return isinstance(obj, Project) and obj.owner == request.user
 
 
 class IsEditableOrReadOnly(permissions.BasePermission):
@@ -44,15 +42,16 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
     data changes permissions to the project owner only.
     """
     def _get_project_from_request(self, request):
-        if request.DATA:
-            project_slug = request.DATA.get('project', None)
+        if request.data:
+            project_slug = request.data.get('project', None)
         else:
-            project_slug = request.QUERY_PARAMS.get('project', None)
+            project_slug = request.query_params.get('project', None)
         if project_slug:
             try:
-                project = PROJECT_MODEL.objects.get(slug=project_slug)
+                project = Project.objects.get(slug=project_slug)
                 return project
-            except PROJECT_MODEL.DoesNotExist:
+            except Project.\
+                    DoesNotExist:
                 return None
         else:
             return None
@@ -61,9 +60,9 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
         project_pk = view.kwargs.get('pk', None)
         if project_pk:
             try:
-                project = PROJECT_MODEL.objects.get(pk=project_pk)
+                project = Project.objects.get(pk=project_pk)
                 return project
-            except PROJECT_MODEL.DoesNotExist:
+            except Project.DoesNotExist:
                 return None
         else:
             return None
@@ -92,7 +91,7 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
             return True
 
         # Test for project model object-level permissions.
-        if isinstance(obj, PROJECT_MODEL):
+        if isinstance(obj, Project):
             return obj.owner == request.user
         else:
             return obj.project.owner == request.user

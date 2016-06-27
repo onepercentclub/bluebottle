@@ -93,7 +93,7 @@ class MonthlyBatchAdmin(admin.ModelAdmin):
     inlines = (MonthlyProjectInline,)
 
     def monthly_orders(self, obj):
-        url = '/admin/recurring_donations/monthlyorder?processed__exact={0}&batch={1}'
+        url = '/admin/recurring_donations/monthlyorder/?processed__exact={0}&batch={1}'
         return "<a href='{3}'>{0} processed</a><br/><a href='{4}'>{1} unprocessed ({2} errored)</a>".format(
             obj.orders.filter(processed=True).count(),
             obj.orders.filter(processed=False).count(),

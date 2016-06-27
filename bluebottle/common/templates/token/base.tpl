@@ -1,7 +1,5 @@
 {% load i18n %}
-{% load compress %}
 {% load static %}
-{% load frontend_static %}
 
 <!DOCTYPE HTML>
 <html lang="{{ LANGUAGE_CODE }}">
@@ -27,11 +25,6 @@
         <meta name="keywords" content="{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}" />
         <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
     {% endblock %}
-
-    {# Stylesheets #}
-	{% block screen_css %}
-        <link rel="stylesheet" href="{% frontend_static 'css/main.css' %}" media="screen" />
-	{% endblock %}
 </head>
 <body id="body">
     {% block content %}

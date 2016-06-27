@@ -1,8 +1,5 @@
 {% load i18n %}
-{% load bb_ember %}
-{% load compress %}
 {% load static %}
-{% load frontend_static %}
 
 <!DOCTYPE HTML>
 <html lang="{{ LANGUAGE_CODE }}">
@@ -13,6 +10,7 @@
     <meta name="viewport" content="width=device-width" />
 
     <title>{% trans "Bluebottle" %}</title>
+    <link rel="stylesheet" href="/css/main.css" media="screen" />
 
     {% block defaults_js %}
         <script type="text/javascript">
@@ -28,11 +26,6 @@
         <meta name="keywords" content="{% blocktrans %}crowdfunding, crowdsourcing, platform, developing countries, time, skills, money, doneren, international cooperation, charity{% endblocktrans %}" />
         <link rel="shortcut icon" href="{% static 'favicon.ico' %}">
     {% endblock %}
-
-    {# Stylesheets #}
-	{% block screen_css %}
-        <link rel="stylesheet" href="{% frontend_static 'css/main.css' %}" media="screen" />
-	{% endblock %}
 </head>
 <body id="body">
     {% block content %}

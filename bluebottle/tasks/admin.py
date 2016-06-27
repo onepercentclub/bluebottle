@@ -138,7 +138,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
         'time_spent', 'externals',
         'task',
     )
-    export_fields = ('member_email', 'task', 'status', 'updated', 'time_spent', 'time_applied_for')
+    export_fields = ('member_email', 'task', 'project', 'status', 'updated', 'time_spent', 'time_applied_for')
 
     actions = [mark_as_applied, mark_as_accepted, mark_as_rejected,
                mark_as_stopped, mark_as_tm_realized, export_as_csv_action(fields=export_fields)]

@@ -107,6 +107,9 @@ class ProjectSerializer(serializers.ModelSerializer):
     people_requested = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
 
+    categories = serializers.SlugRelatedField(slug_field='slug', many=True,
+                                              queryset=Category.objects)
+
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
 

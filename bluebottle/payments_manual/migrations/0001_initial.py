@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('payment_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='payments.Payment')),
                 ('amount', models.DecimalField(decimal_places=2, editable=False, max_digits=15, verbose_name='amount')),
-                ('bank_transaction', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to='accounting.BankTransaction')),
+                ('transaction', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to='accounting.BankTransaction')),
                 ('user', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={

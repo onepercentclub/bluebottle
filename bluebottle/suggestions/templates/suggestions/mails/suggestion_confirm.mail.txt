@@ -1,0 +1,15 @@
+{% load i18n %}
+    
+{% blocktrans %}
+    Hi, <br/>
+    <br/>
+
+    Thank you for submitting your project request. You're almost done. Before we can process your submission, we need you to confirm your email address by clicking on the link below.    
+
+    {{tokenurl}}
+
+    <br/>
+    Thanks,<br/>
+
+    The platform team
+{% endblocktrans %}

@@ -685,3 +685,37 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
                                    {'project': self.fundraiser.pk},
                                    token=self.user2_token)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TestLatestDonationListApi(DonationApiTestCase):
+    """
+    Test that the fundraiser donations list only works for the fundraiser owner
+    """
+
+    def setUp(self):
+        super(TestLatestDonationListApi, self).setUp()
+        self.user2.is_staff = True
+        self.user2.save()
+
+        self.project = ProjectFactory.create(amount_asked=5000,
+                                             owner=self.user1)
+
+        self.project.set_status('campaign')
+
+        # User 2 makes a donation
+        order = OrderFactory.create(user=self.user2)
+        DonationFactory.create(amount=1000, project=self.project,
+                               order=order)
+
+        order.locked()
+        order.save()
+        order.success()
+        order.save()
+
+    def test_donation_list(self):
+        response = self.client.get('/api/donations/latest-donations/',
+                                   token=self.user2_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+

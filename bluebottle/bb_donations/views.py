@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class DonationPagination(BluebottlePagination):
     page_size = 20
+    page_size_query_param = 'page_size'
 
 
 class ValidDonationsMixin(object):

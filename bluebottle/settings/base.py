@@ -110,6 +110,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'OPTIONS': {
             'loaders': [
+                'tenant_extras.template_loaders.FilesystemLoader',
                 'django.template.loaders.filesystem.Loader',
                 'django.template.loaders.app_directories.Loader',
                 'django.template.loaders.eggs.Loader',
@@ -145,6 +146,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.LockdownMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -249,6 +251,7 @@ SHARED_APPS = (
     'filetransfers',
     'rest_framework_swagger',
     'lockdown',
+    'corsheaders'
 
 )
 
@@ -551,6 +554,7 @@ EXPORTDB_EXPORT_CONF = {
         (AUTH_USER_MODEL, {
             'fields': (
                 ('id', 'User ID'),
+                ('remote_id', 'Remote ID'),
                 ('get_full_name', 'Name'),
                 ('email', 'Email'),
                 ('location__name', 'Location'),
@@ -567,7 +571,8 @@ EXPORTDB_EXPORT_CONF = {
         ('projects.Project', {
             'fields': (
                 ('id', 'Project ID'),
-                ('owner_id', 'User ID'),
+                ('owner__id', 'User ID'),
+                ('owner__remote_id', 'Remote ID'),
                 ('status__name', 'Status'),
                 ('title', 'Title'),
                 ('owner__email', 'Email'),
@@ -588,6 +593,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('project__id', 'Project ID'),
                 ('id', 'Task ID'),
                 ('author__id', 'User ID'),
+                ('author__remote_id', 'Remote ID'),
                 ('get_status_display', 'Status'),
                 ('title', 'Title'),
                 ('author__email', 'Email'),
@@ -604,6 +610,7 @@ EXPORTDB_EXPORT_CONF = {
         ('donations.Donation', {
             'fields': (
                 ('order__user__id', 'User ID'),
+                ('order__user__remote_id', 'Remote ID'),
                 ('project__id', 'Project ID'),
                 ('fundraiser__id', 'Fundraiser ID'),
                 ('user__get_full_name', 'Name'),
@@ -619,6 +626,7 @@ EXPORTDB_EXPORT_CONF = {
         ('tasks.TaskMember', {
             'fields': (
                 ('member__id', 'User ID'),
+                ('member__remote_id', 'Remote ID'),
                 ('task__project__id', 'Project ID'),
                 ('task__id', 'Task ID'),
                 ('member__get_full_name', 'Name'),

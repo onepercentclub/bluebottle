@@ -50,20 +50,6 @@ class SuggestionsTokenTest(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_token_validate_unauthorized(self):
-        """ validate a suggesting by its token (authorized) """
-        token = str(uuid.uuid4())
-        suggestion = SuggestionFactory.create(token=token, status='unconfirmed')
-
-        response = self.client.put(
-            reverse('suggestion_token_validate', kwargs={'token': token}))
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-        suggestion = Suggestion.objects.get(pk=suggestion.pk)
-
-        self.assertEquals(suggestion.status, 'unconfirmed')
-
     def test_token_validate_authorized(self):
         """ validate a suggesting by its token (authorized) """
         token = str(uuid.uuid4())
@@ -254,7 +240,8 @@ class AdoptTestCase(BluebottleTestCase):
                                  org_website='http://example.com',
                                  org_phone='123123123',
                                  org_contactname='John Doe',
-                                 pitch='Eat more cheese'
+                                 pitch='Eat more cheese',
+                                 language='en'
                                  )
         response = self.client.get(self.suggestion_list_url,
                                    {'destination': "Amsterdam",

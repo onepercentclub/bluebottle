@@ -1,5 +1,7 @@
+import django_filters
+
 from django.db.models.query_utils import Q
-from rest_framework import generics
+from rest_framework import generics, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
@@ -19,29 +21,31 @@ class TaskPreviewPagination(BluebottlePagination):
     page_size = 8
 
 
+class TaskPreviewFilter(filters.FilterSet):
+    after = django_filters.DateTimeFilter(name='deadline', lookup_type='gte')
+    before = django_filters.DateTimeFilter(name='deadline', lookup_type='lte')
+    country = django_filters.NumberFilter(name='project__country')
+    project = django_filters.CharFilter(name='project__slug')
+    text = django_filters.MethodFilter(action='text_filter')
+
+    def text_filter(self, queryset, filter):
+        return queryset.filter(
+            Q(title__icontains=filter) | Q(description__icontains=filter)
+        )
+
+    class Meta:
+        model = Task
+        fields = ['status', 'skill', ]
+
+
 class TaskPreviewList(generics.ListAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskPreviewSerializer
     pagination_class = TaskPreviewPagination
-    filter_fields = ('status', 'skill',)
+    filter_class = TaskPreviewFilter
 
     def get_queryset(self):
         qs = super(TaskPreviewList, self).get_queryset()
-
-        project_slug = self.request.query_params.get('project', None)
-        if project_slug:
-            qs = qs.filter(project__slug=project_slug)
-
-        country = self.request.query_params.get('country', None)
-        country = self.request.query_params.get('country', None)
-        if country:
-            qs = qs.filter(project__country=country)
-
-        text = self.request.query_params.get('text', None)
-        if text:
-            qs = qs.filter(Q(title__icontains=text) |
-                           Q(description__icontains=text))
-
         ordering = self.request.query_params.get('ordering', None)
 
         if ordering == 'newest':

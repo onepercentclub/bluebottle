@@ -1,5 +1,4 @@
 {% load i18n %}
-{% load bb_ember %}
 {% load compress %}
 {% load static %}
 {% load frontend_static %}

@@ -10,6 +10,7 @@
     <meta name="viewport" content="width=device-width" />
 
     <title>{% trans "Bluebottle" %}</title>
+    <link rel="stylesheet" href="/css/main.css" media="screen" />
 
     {% block defaults_js %}
         <script type="text/javascript">

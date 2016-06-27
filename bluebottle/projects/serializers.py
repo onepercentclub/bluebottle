@@ -51,7 +51,7 @@ class StoryField(serializers.CharField):
         data = data.replace("&lt;", "<").replace("&gt;", ">")
         soup = BeautifulSoup(data, "html.parser")
         [s.extract() for s in soup(['script', 'iframe'])]
-        return str(soup)
+        return unicode(soup)
 
 
 class ProjectCountrySerializer(CountrySerializer):

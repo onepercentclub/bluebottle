@@ -34,4 +34,4 @@ class Category(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return '/projects/category={}'.format(self.slug)
+        return 'https://{}/projects/?category={}'.format(properties.tenant.domain_url, self.slug)

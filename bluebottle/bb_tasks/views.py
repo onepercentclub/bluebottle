@@ -16,6 +16,7 @@ from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 
 class TaskPreviewPagination(BluebottlePagination):
+    page_size_query_param = 'page_size'
     page_size = 8
 
 

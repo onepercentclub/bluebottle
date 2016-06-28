@@ -115,7 +115,7 @@ def _post_to_facebook(instance, tenant=None):
         base_url = 'https://{domain}'.format(
             domain=tenant.domain_url)
 
-        link = urljoin(base_url, instance.content_object.get_absolute_url())
+        link = instance.content_object.get_absolute_url()
 
         image = None
         # This code is executed via Celery, we assume the MediaWallpostPhoto

@@ -107,9 +107,18 @@ class DonationAdmin(admin.ModelAdmin):
     search_fields = ('order__user__first_name', 'order__user__last_name',
                      'order__user__email', 'project__title')
 
-    export_fields = ['project', 'order__user', 'amount', 'created', 'updated',
-                     'completed', 'order__status',
-                     'order__order_type']
+    export_fields = [
+        ('project', 'project'),
+        ('order__user', 'user'),
+        ('order__user__remote_id', 'remote id'),
+        ('amount', 'amount'),
+        ('created', 'created'),
+        ('updated', 'updated'),
+        ('completed', 'completed'),
+        ('order__status', 'status'),
+        ('order__order_type', 'type')
+    ]
+
     actions = (export_as_csv_action(fields=export_fields),)
 
     def get_changelist(self, request, **kwargs):

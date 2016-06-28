@@ -99,5 +99,5 @@ class TotalAmountAdminChangeList(ChangeList):
         total_column = self.model_admin.total_column or 'amount'
         self.model_admin.change_list_template = 'utils/admin/change_list.html'
         super(TotalAmountAdminChangeList, self).get_results(*args, **kwargs)
-        q = self.result_list.aggregate(total=Sum(total_column))
+        q = self.queryset.aggregate(total=Sum(total_column))
         self.total = q['total']

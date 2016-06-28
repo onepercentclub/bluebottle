@@ -90,7 +90,17 @@ class TaskAdmin(admin.ModelAdmin):
         'title', 'description',
         'author__first_name', 'author__last_name'
     )
-    export_fields = ('title', 'project', 'status', 'deadline', 'skill', 'people_needed', 'time_needed', 'author')
+    export_fields = (
+        ('title', 'title'),
+        ('project', 'project'),
+        ('status', 'status'),
+        ('deadline', 'deadline'),
+        ('skill', 'skill'),
+        ('people_needed', 'people needed'),
+        ('time_needed', 'time needed'),
+        ('author', 'author'),
+        ('author__remote_id', 'remote id')
+    )
 
     actions = [mark_as_open, mark_as_in_progress, mark_as_closed,
                mark_as_realized, export_as_csv_action(fields=export_fields)]
@@ -138,13 +148,21 @@ class TaskMemberAdmin(admin.ModelAdmin):
         'time_spent', 'externals',
         'task',
     )
-    export_fields = ('member_email', 'task', 'project', 'status', 'updated', 'time_spent', 'time_applied_for')
+    export_fields = (
+        ('member__email', 'member_email'),
+        ('task', 'task'),
+        ('task__project', 'project'),
+        ('status', 'status'),
+        ('updated', 'updated'),
+        ('time_spent', 'time spent'),
+        ('task__time_needed', 'time applied for')
+    )
 
     actions = [mark_as_applied, mark_as_accepted, mark_as_rejected,
                mark_as_stopped, mark_as_tm_realized, export_as_csv_action(fields=export_fields)]
 
     def member_email(self, obj):
-        return obj.member_email
+        return obj.member.email
 
     member_email.admin_order_field = 'member__email'
     member_email.short_description = "Member Email"

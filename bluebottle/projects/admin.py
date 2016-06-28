@@ -223,11 +223,24 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                        'amount_needed', 'popularity')
 
     export_fields = [
-        'title', 'owner', 'created', 'status',
-        'theme', 'region', 'location',
-        'deadline', 'date_submitted', 'campaign_started', 'campaign_ended', 'campaign_funded',
-        'task_count', 'supporters', 'time_spent',
-        'amount_asked', 'amount_donated',
+        ('title', 'title'),
+        ('owner', 'owner'),
+        ('owner__remote_id', 'remote id'),
+        ('created', 'created'),
+        ('status', 'status'),
+        ('theme', 'theme'),
+        ('region', 'region'),
+        ('location', 'location'),
+        ('deadline', 'deadline'),
+        ('date_submitted', 'date submitted'),
+        ('campaign_started', 'campaign started'),
+        ('campaign_ended', 'campaign ended'),
+        ('campaign_funded', 'campaign funded'),
+        ('task_count', 'task count'),
+        ('supporters', 'supporters'),
+        ('time_spent', 'time spent'),
+        ('amount_asked', 'amount asked'),
+        ('amount_donated', 'amount donated'),
     ]
 
     actions = [export_as_csv_action(fields=export_fields),

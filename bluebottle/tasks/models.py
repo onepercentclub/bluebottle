@@ -129,12 +129,6 @@ class TaskMember(BaseTaskMember):
         return members_accepted
 
     @property
-    def member_email(self):
-        if self.member.email:
-            return self.member.email
-        return _("No email address for this user")
-
-    @property
     def time_applied_for(self):
         return self.task.time_needed
 

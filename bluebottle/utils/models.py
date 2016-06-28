@@ -65,7 +65,7 @@ ADDITIONAL_GROUP_PERMS = {
 }
 
 import bluebottle.utils.monkey_patch_migration
-
+import bluebottle.utils.monkey_patch_corsheaders
 
 @receiver(post_migrate)
 def _update_permissions(sender, **kwargs):

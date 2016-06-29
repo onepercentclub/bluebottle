@@ -1,9 +1,8 @@
-from django.http import Http404, HttpResponseRedirect, HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
-from django.views.generic import TemplateView, View
+from django.views.generic import View
 from django.views.generic.base import RedirectView
 
-from bluebottle.orders.models import Order
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.services import PaymentService
 from bluebottle.utils.utils import get_current_host
@@ -13,7 +12,7 @@ class PaymentResponseView(RedirectView):
 
     permanent = False
     query_string = True
-    pattern_name = 'article-detail'
+    pattern_name = 'interswitch-payment-response'
 
     def get_redirect_url(self, *args, **kwargs):
         order_payment = get_object_or_404(OrderPayment, id=kwargs['order_payment_id'])

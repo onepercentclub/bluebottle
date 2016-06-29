@@ -227,7 +227,7 @@ class UserVerification(generics.CreateAPIView):
         verification_response = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
             data={
-                'secret': '6LeR2SMTAAAAANz2hdFNj1jrYpgsTFQIzBKNCdUI',
+                'secret': properties.RECAPTCHA_SECRET,
                 'response': serializer.validated_data['token']
             }
         )

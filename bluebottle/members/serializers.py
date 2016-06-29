@@ -70,7 +70,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'country')
+            'country', 'verified')
 
 
 
@@ -264,3 +264,7 @@ class PasswordSetSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('new_password1', 'new_password2')
+
+
+class UserVerificationSerializer(serializers.Serializer):
+    token = serializers.CharField()

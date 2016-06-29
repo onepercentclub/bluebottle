@@ -1,9 +1,8 @@
-from django.conf.urls import patterns, url, include
-from rest_framework.routers import DefaultRouter
+from django.conf.urls import patterns, url
 
 from ..views import (
     ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
-    PasswordReset, PasswordSet, DisableAccount)
+    PasswordReset, PasswordSet, DisableAccount, UserVerification)
 
 # Public User API:
 #
@@ -33,4 +32,6 @@ urlpatterns = patterns(
         name='manage-profile'),
     url(r'^profiles/(?P<pk>\d+)$', UserProfileDetail.as_view(),
         name='user-profile-detail'),
+    url(r'^verification/$', UserVerification.as_view(),
+        name='user-verification'),
 )

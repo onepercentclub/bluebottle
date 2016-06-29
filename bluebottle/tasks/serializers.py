@@ -111,7 +111,7 @@ class TaskPreviewSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
     project = ProjectPreviewSerializer()
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill)
-    #members = BaseTaskMemberSerializer(many=True, read_only=True)
+    members = BaseTaskMemberSerializer(many=True, read_only=True)
 
     class Meta:
         model = Task

@@ -19,6 +19,7 @@ from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
 from bluebottle.categories.models import Category
+from bluebottle.clients import properties
 from bluebottle.tasks.models import Task
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
@@ -433,7 +434,7 @@ class Project(BaseProject):
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """
-        return '/projects/{}'.format(self.slug)
+        return 'https://{}/projects/{}'.format(properties.tenant.domain_url, self.slug)
 
     def get_meta_title(self, **kwargs):
         return u"%(name_project)s | %(theme)s | %(country)s" % {

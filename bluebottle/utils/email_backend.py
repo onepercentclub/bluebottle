@@ -96,7 +96,7 @@ class TestMailBackend(EmailBackend):
 
 
 def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
-                   from_email=None, **kwargs):
+                   from_email=None, reply_to=None, **kwargs):
 
     if hasattr(to, 'primary_language') and to.primary_language:
         language = to.primary_language
@@ -120,6 +120,8 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
             args['cc'] = cc
         if bcc:
             args['bcc'] = bcc
+        if reply_to:
+            args['reply_to'] = [reply_to]
 
         # even if it's None
         args['from_email'] = from_email

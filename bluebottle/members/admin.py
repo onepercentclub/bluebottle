@@ -158,8 +158,19 @@ class MemberAdmin(UserAdmin):
     readonly_fields = (
         'date_joined', 'last_login', 'updated', 'deleted', 'login_as_user')
 
-    export_fields = ('username', 'email', 'first_name', 'last_name', 'date_joined', 'is_active',
-                     'is_initiator', 'is_supporter', 'amount_donated', 'is_volunteer', 'time_spent')
+    export_fields = (
+        ('username', 'username'),
+        ('email', 'email'),
+        ('remote_id', 'remote_id'),
+        ('first_name','first_name'),
+        ('last_name','last name'),
+        ('date_joined','date joined'),
+        ('is_initiator','is initiator'),
+        ('is_supporter','is supporter'),
+        ('amount_donated','amount donated'),
+        ('is_volunteer','is volunteer'),
+        ('time_spent','time spent'),
+    )
 
     actions = (export_as_csv_action(fields=export_fields),)
 

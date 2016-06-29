@@ -5,6 +5,8 @@ from django.db.models.signals import pre_save
 from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, \
     BaseSkill
 from bluebottle.bb_metrics.utils import bb_track
+from bluebottle.clients import properties
+
 
 GROUP_PERMS = {
     'Staff': {
@@ -18,7 +20,7 @@ GROUP_PERMS = {
 class Task(BaseTask):
     def get_absolute_url(self):
         """ Get the URL for the current task. """
-        return '/tasks/{}'.format(self.id)
+        return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
 
     # This could also belong to bb_tasks.models but we need the actual, non-abstract
     # model for the signal handling anyway. Eventually, tasks/bb_tasks will have to be
@@ -127,12 +129,6 @@ class TaskMember(BaseTaskMember):
         if task.status == 'open' and task.people_needed <= members_accepted:
             task.set_in_progress()
         return members_accepted
-
-    @property
-    def member_email(self):
-        if self.member.email:
-            return self.member.email
-        return _("No email address for this user")
 
     @property
     def time_applied_for(self):

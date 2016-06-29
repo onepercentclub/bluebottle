@@ -142,12 +142,12 @@ class ShareFlyer(views.APIView):
             template_name='utils/mails/share_flyer.mail',
             subject=subject,
             to=namedtuple("Receiver", "email")(email=share_email),
-            from_email=sender_email,
             share_name=share_name,
             share_email=share_email,
             share_motivation=share_motivation,
             sender_name=sender_name,
             sender_email=sender_email,
+            reply_to=sender_email,
             cc=[sender_email] if share_cc else []
         ))
         if share_cc:

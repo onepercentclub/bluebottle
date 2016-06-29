@@ -11,15 +11,6 @@ from bluebottle.projects.models import Project
 from bluebottle.members.models import Member
 
 
-class TaskPreviewSerializer(serializers.ModelSerializer):
-    author = UserPreviewSerializer()
-    project = ProjectPreviewSerializer()
-    skill = serializers.PrimaryKeyRelatedField(queryset=Skill)
-
-    class Meta:
-        model = Task
-
-
 class BaseTaskMemberSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer()
     status = serializers.ChoiceField(
@@ -114,3 +105,15 @@ class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
         fields = ('id', 'name')
+
+
+class TaskPreviewSerializer(serializers.ModelSerializer):
+    author = UserPreviewSerializer()
+    project = ProjectPreviewSerializer()
+    skill = serializers.PrimaryKeyRelatedField(queryset=Skill)
+    #members = BaseTaskMemberSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Task
+
+

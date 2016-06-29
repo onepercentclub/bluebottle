@@ -84,7 +84,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
     picture = ImageSerializer(required=False)
     date_joined = serializers.DateTimeField(read_only=True)
 
-    # TODO: Remove first/last name and only use these
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     short_name = serializers.CharField(source='get_short_name', read_only=True)
 

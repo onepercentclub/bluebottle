@@ -77,7 +77,9 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
                     raise PermissionDenied
 
         except (AttributeError, KeyError):
-            super(ManageProfileDetail, self).perform_update(serializer)
+            pass
+
+        super(ManageProfileDetail, self).perform_update(serializer)
 
 
 class CurrentUser(generics.RetrieveAPIView):

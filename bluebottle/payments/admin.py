@@ -7,6 +7,7 @@ from polymorphic.admin import (PolymorphicParentModelAdmin,
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments_docdata.admin import (DocdataPaymentAdmin,
                                                DocdataDirectdebitPaymentAdmin)
+from bluebottle.payments_interswitch.admin import InterswitchPaymentAdmin
 from bluebottle.payments_logger.admin import PaymentLogEntryInline
 from bluebottle.payments_docdata.admin import (
     DocdataPaymentAdmin, DocdataPaymentAdmin,
@@ -86,7 +87,7 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
         return tuple(
             (admin.model, admin) for admin in (
                 DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin,
-                VoucherPaymentAdmin
+                VoucherPaymentAdmin, InterswitchPaymentAdmin
             )
         )
 

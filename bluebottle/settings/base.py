@@ -314,6 +314,7 @@ TENANT_APPS = (
     'bluebottle.quotes',
     'bluebottle.payments',
     'bluebottle.payments_docdata',
+    'bluebottle.payments_interswitch',
     'bluebottle.payments_pledge',
     'bluebottle.payments_logger',
     'bluebottle.payments_voucher',

@@ -1,15 +1,10 @@
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model
-from django.utils import translation
-from django import forms
 from django.contrib.auth.models import AnonymousUser
-from django.conf import settings
 from django.template import loader
 from django.contrib.auth.tokens import default_token_generator
 from django.http import Http404
 from django.utils.http import base36_to_int, int_to_base36
-from django.utils.translation import ugettext_lazy as _
-from importlib import import_module
 
 from rest_framework import status, views, response, generics
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
@@ -17,7 +12,7 @@ from tenant_extras.utils import TenantLanguage
 
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.bluebottle_drf2.permissions import IsCurrentUser
-from bluebottle.clients.utils import tenant_url, tenant_name
+from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
@@ -82,7 +77,9 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
                     raise PermissionDenied
 
         except (AttributeError, KeyError):
-            super(ManageProfileDetail, self).perform_update(serializer)
+            pass
+
+        super(ManageProfileDetail, self).perform_update(serializer)
 
 
 class CurrentUser(generics.RetrieveAPIView):

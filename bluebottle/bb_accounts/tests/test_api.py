@@ -127,7 +127,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                                    token=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          'Non-read-only profile fields are editable.')
-
+        self.assertEqual(response.data['email'], 'user_allowed@onepercentclub.com')
         self.client.logout()
 
     def test_user_profile_retrieve_and_update(self):

@@ -129,7 +129,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class ProjectPreviewSerializer(ProjectSerializer):
-    image = SorlImageField('400x300', crop='center')
+    image = ImageSerializer(required=False)
     theme = ProjectThemeSerializer()
 
     owner = UserPreviewSerializer()

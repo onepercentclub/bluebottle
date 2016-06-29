@@ -7,8 +7,9 @@ from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.bb_projects.permissions import IsProjectOwnerOrReadOnly
 from bluebottle.tasks.serializers import (BaseTaskSerializer,
-    BaseTaskMemberSerializer, TaskFileSerializer, TaskPreviewSerializer,
-    MyTaskMemberSerializer, SkillSerializer, MyTasksSerializer)
+                                          BaseTaskMemberSerializer, TaskFileSerializer,
+                                          TaskPreviewSerializer, MyTaskMemberSerializer,
+                                          SkillSerializer, MyTasksSerializer)
 
 from .permissions import IsMemberOrAuthorOrReadOnly
 
@@ -16,6 +17,7 @@ from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 
 class TaskPreviewPagination(BluebottlePagination):
+    page_size_query_param = 'page_size'
     page_size = 8
 
 
@@ -178,5 +180,5 @@ class UsedSkillList(SkillList):
     def get_queryset(self):
         qs = super(UsedSkillList, self).get_queryset()
         skill_ids = Task.objects.values_list('skill',
-                                                      flat=True).distinct()
+                                             flat=True).distinct()
         return qs.filter(id__in=skill_ids)

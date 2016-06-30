@@ -29,6 +29,10 @@ class InterswitchPayment(Payment):
         verbose_name = "Interswitch Payment"
         verbose_name_plural = "Interswitch Payments"
 
+    def get_method_name(self):
+        """ Return the payment method name."""
+        return 'interswitch'
+
     def get_fee(self):
         """
         a fee of 1.5% of the value of the transaction subject to a cap

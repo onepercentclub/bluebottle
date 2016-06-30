@@ -1,6 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
+from django.utils import translation
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.suggestions.models import Suggestion
@@ -19,7 +20,12 @@ def send_suggestion_confirmation_email(sender, instance,
     """ Send a confirmation email when a new Suggestion is created """
     if created:
 
+        cur_lang = translation.get_language()
+        translation.activate(instance.language)
+
         subject = _('Thank you for submitting your project request.')
+        
+        translation.activate(cur_lang)
 
         url = getattr(properties, 'OPEN_EXTERNAL_URL', None)
 

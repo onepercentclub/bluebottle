@@ -8,6 +8,7 @@ from bluebottle.suggestions.models import Suggestion
 from bluebottle.utils.email_backend import send_mail
 
 from bluebottle.clients import properties
+from tenant_extras.utils import TenantLanguage
 
 class User(dict):
     pass
@@ -20,12 +21,8 @@ def send_suggestion_confirmation_email(sender, instance,
     """ Send a confirmation email when a new Suggestion is created """
     if created:
 
-        cur_lang = translation.get_language()
-        translation.activate(instance.language)
-
-        subject = _('Thank you for submitting your project request.')
-        
-        translation.activate(cur_lang)
+        with TenantLanguage(instance.language):
+            subject = _('Thank you for submitting your project request.')
 
         url = getattr(properties, 'OPEN_EXTERNAL_URL', None)
 

@@ -50,9 +50,3 @@
     color: #fff;
     text-align: right;
 }
-
-#header ul#navigation-menu li.first a {
-    margin: 0;
-    text-indent: 0;
-    background: none;
-}

@@ -8,7 +8,6 @@ class AdminMenu(FluentMenu):
         Initialize the menu items.
         """
         super(AdminMenu, self).init_with_context(context)
-        # Pop 'Dashboard', 'Bookamrks' and 'Return to site' items from admin menu.
-        self.children.pop(0)
-        self.children.pop(0)
+        # Pop 'Bookmarks' and 'Return to site' items from admin menu.
+        self.children.pop(1)
         self.children.pop(len(self.children)-1)

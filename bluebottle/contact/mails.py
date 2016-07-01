@@ -6,6 +6,7 @@ from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
 
 from bluebottle.clients.utils import tenant_url, tenant_site
+from bluebottle.clients import properties
 
 
 def send_contact_email(message, contact_email):

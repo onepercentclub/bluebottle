@@ -25,7 +25,6 @@ class ProjectTheme(models.Model):
     # The name is marked as unique so that users can't create duplicate
     # theme names.
     name = models.CharField(_('name'), max_length=100, unique=True)
-    name_nl = models.CharField(_('name NL'), max_length=100, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     description = models.TextField(_('description'), blank=True)
     disabled = models.BooleanField(_('disabled'), default=False)

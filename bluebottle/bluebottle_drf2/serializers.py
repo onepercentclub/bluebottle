@@ -39,11 +39,10 @@ class RestrictedImageField(serializers.ImageField):
 
 
 class SorlImageField(RestrictedImageField):
-    def __init__(self, geometry_string, **kwargs):
+    def __init__(self, geometry_string, crop='center', colorspace='RGB', **kwargs):
         self.geometry_string = geometry_string
-        self.kwargs = kwargs
-        self.crop = kwargs.pop('crop', 'center')
-        self.colorspace = kwargs.pop('colorspace', 'RGB')
+        self.crop = crop
+        self.colorspace = colorspace
         super(SorlImageField, self).__init__(**kwargs)
 
     def to_representation(self, value):

@@ -29,7 +29,7 @@ class Task(models.Model):
         realized = ChoiceItem('realized', label=_('Realised'))
 
     class TaskTypes(DjangoChoices):
-        on_going = ChoiceItem('on_going', label=_('On going'))
+        ongoing = ChoiceItem('ongoing', label=_('Ongoing'))
         event = ChoiceItem('event', label=_('Event'))
 
     title = models.CharField(_('title'), max_length=100)
@@ -48,7 +48,7 @@ class Task(models.Model):
                               default=TaskStatuses.open)
     type = models.CharField(_('type'), max_length=20,
                             choices=TaskTypes.choices,
-                            default=TaskTypes.on_going)
+                            default=TaskTypes.ongoing)
 
     date_status_change = models.DateTimeField(_('date status change'),
                                               blank=True, null=True)

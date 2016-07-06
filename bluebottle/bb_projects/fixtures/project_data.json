@@ -166,8 +166,7 @@
         "fields": {
             "slug": "education",
             "description": "",
-            "name": "Education",
-            "name_nl": "Onderwijs"
+            "name": "Education"
         }
     },
     {

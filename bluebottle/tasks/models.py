@@ -1,9 +1,12 @@
-from django.utils.translation import ugettext as _
-from django.utils.timezone import now
+from django.db import models
 from django.db.models.signals import pre_save
+from django.utils.timezone import now
+from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, \
-    BaseSkill
+from django_extensions.db.fields import (
+    ModificationDateTimeField, CreationDateTimeField)
+from djchoices.choices import DjangoChoices, ChoiceItem
+
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
 
@@ -17,7 +20,74 @@ GROUP_PERMS = {
     }
 }
 
-class Task(BaseTask):
+class Task(models.Model):
+
+    class TaskStatuses(DjangoChoices):
+        open = ChoiceItem('open', label=_('Open'))
+        in_progress = ChoiceItem('in progress', label=_('In progress'))
+        closed = ChoiceItem('closed', label=_('Closed'))
+        realized = ChoiceItem('realized', label=_('Realised'))
+
+    class TaskTypes(DjangoChoices):
+        ongoing = ChoiceItem('ongoing', label=_('Ongoing'))
+        event = ChoiceItem('event', label=_('Event'))
+
+    title = models.CharField(_('title'), max_length=100)
+    description = models.TextField(_('description'))
+    location = models.CharField(_('location'), max_length=200, null=True,
+                                blank=True)
+    people_needed = models.PositiveIntegerField(_('people needed'), default=1)
+
+    project = models.ForeignKey('projects.Project')
+    # See Django docs on issues with related name and an (abstract) base class:
+    # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
+    author = models.ForeignKey('members.Member',
+                               related_name='%(app_label)s_%(class)s_related')
+    status = models.CharField(_('status'), max_length=20,
+                              choices=TaskStatuses.choices,
+                              default=TaskStatuses.open)
+    type = models.CharField(_('type'), max_length=20,
+                            choices=TaskTypes.choices,
+                            default=TaskTypes.ongoing)
+
+    date_status_change = models.DateTimeField(_('date status change'),
+                                              blank=True, null=True)
+
+    deadline = models.DateTimeField(_('date'), help_text=_('Deadline or event date'))
+
+    objects = models.Manager()
+
+    # required resources
+    time_needed = models.FloatField(
+        _('time_needed'),
+        help_text=_('Estimated number of hours needed to perform this task.'))
+
+    skill = models.ForeignKey('tasks.Skill',
+                              verbose_name=_('Skill needed'), null=True)
+
+    # internal usage
+    created = CreationDateTimeField(
+        _('created'), help_text=_('When this task was created?'))
+    updated = ModificationDateTimeField(_('updated'))
+
+    class Meta:
+        ordering = ['-created']
+
+    def __init__(self, *args, **kwargs):
+        super(Task, self).__init__(*args, **kwargs)
+        self._original_status = self.status
+
+    def __unicode__(self):
+        return self.title
+
+    def set_in_progress(self):
+        self.status = self.TaskStatuses.in_progress
+        self.save()
+
+    @property
+    def people_applied(self):
+        return self.members.count()
+
     def get_absolute_url(self):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
@@ -85,33 +155,57 @@ class Task(BaseTask):
             self.author = self.project.owner
         super(Task, self).save(*args, **kwargs)
 
-from django.db.models.signals import post_init, post_save
-from django.dispatch import receiver
+
+class Skill(models.Model):
+    name = models.CharField(_('english name'), max_length=100, unique=True)
+    description = models.TextField(_('description'), blank=True)
+    disabled = models.BooleanField(_('disabled'), default=False)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        ordering = ('id',)
 
 
-# post_init to store state on model
-@receiver(post_init, sender=Task,
-          dispatch_uid="bluebottle.tasks.Task.post_init")
-def task_post_init(sender, instance, **kwargs):
-    instance._init_status = instance.status
+class TaskMember(models.Model):
+    class TaskMemberStatuses(DjangoChoices):
+        applied = ChoiceItem('applied', label=_('Applied'))
+        accepted = ChoiceItem('accepted', label=_('Accepted'))
+        rejected = ChoiceItem('rejected', label=_('Rejected'))
+        stopped = ChoiceItem('stopped', label=_('Stopped'))
+        realized = ChoiceItem('realized', label=_('Realised'))
 
+    member = models.ForeignKey('members.Member',
+                               related_name='%(app_label)s_%(class)s_related')
+    task = models.ForeignKey('tasks.Task', related_name="members")
+    status = models.CharField(_('status'), max_length=20,
+                              choices=TaskMemberStatuses.choices,
+                              default=TaskMemberStatuses.applied)
+    motivation = models.TextField(
+        _('Motivation'), help_text=_('Motivation by applicant.'), blank=True)
+    comment = models.TextField(_('Comment'),
+                               help_text=_('Comment by task owner.'),
+                               blank=True)
+    time_spent = models.PositiveSmallIntegerField(
+        _('time spent'), default=0,
+        help_text=_('Time spent executing this task.'))
 
-# post save to check if changed?
-@receiver(post_save, sender=Task,
-          dispatch_uid="bluebottle.tasks.Task.post_save")
-def task_post_save(sender, instance, **kwargs):
-    try:
-        if instance._init_status != instance.status:
-            instance.status_changed(instance._init_status, instance.status)
-    except AttributeError:
-        pass
+    externals = models.PositiveSmallIntegerField(
+        _('Externals'), default=0,
+        help_text=_('External people helping for this task'))
 
+    created = CreationDateTimeField(_('created'))
+    updated = ModificationDateTimeField(_('updated'))
 
-class Skill(BaseSkill):
-    pass
+    _initial_status = None
 
+    # objects = models.Manager()
 
-class TaskMember(BaseTaskMember):
+    class Meta:
+        verbose_name = _(u'task member')
+        verbose_name_plural = _(u'task members')
+
     def save(self, *args, **kwargs):
         super(TaskMember, self).save(*args, **kwargs)
         self.check_number_of_members_needed(self.task)
@@ -139,13 +233,20 @@ class TaskMember(BaseTaskMember):
         return self.task.project
 
 
-class TaskFile(BaseTaskFile):
-    pass
+class TaskFile(models.Model):
+    author = models.ForeignKey('members.Member',
+                               related_name='%(app_label)s_%(class)s_related')
+    title = models.CharField(max_length=255)
+    file = models.FileField(_('file'), upload_to='task_files/')
+    created = CreationDateTimeField(_('created'))
+    updated = ModificationDateTimeField(_('Updated'))
+    task = models.ForeignKey('tasks.Task', related_name="files")
 
-@receiver(pre_save, weak=False, sender=TaskMember, dispatch_uid='set-hours-spent-taskmember')
-def set_hours_spent_taskmember(sender, instance, **kwargs):
-    if instance.status != instance._initial_status and instance.status == TaskMember.TaskMemberStatuses.realized:
-        instance.time_spent = instance.task.time_needed
+    class Meta:
+        verbose_name = _(u'task file')
+        verbose_name_plural = _(u'task files')
 
-from bluebottle.bb_tasks.taskwallmails import *
-from bluebottle.bb_tasks.taskmail import *
+
+from .taskmail import *
+from .taskwallmails import *
+from .signals import *

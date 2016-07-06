@@ -7,7 +7,7 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 # import taskmail in order to properly register mail handlers. Without it tests mail fail
-from bluebottle.bb_tasks import taskmail
+from bluebottle.tasks import taskmail
 
 
 @override_settings(SEND_WELCOME_MAIL=False)

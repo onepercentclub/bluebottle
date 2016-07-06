@@ -121,11 +121,6 @@ js_info_dict = {
     'packages': ('apps.bb_accounts', 'apps.bb_projects'),
 }
 
-urlpatterns += patterns(
-    '',
-    (r'^js$', 'django.views.i18n.javascript_catalog'),
-)
-
 # Serve django-staticfiles (only works in DEBUG)
 # https://docs.djangoproject.com/en/dev/howto/static-files/#serving-static-files-in-development
 urlpatterns += staticfiles_urlpatterns()
@@ -157,14 +152,6 @@ urlpatterns += patterns('',
 urlpatterns += patterns('loginas.views',
                         url(r"^login/user/(?P<user_id>.+)/$", "user_login",
                             name="loginas-user-login"),
-                        )
-
-js_info_dict = {
-    'packages': ('apps.accounts', 'bluebottle.projects'),
-}
-
-urlpatterns += patterns('',
-                        (r'^js$', 'django.views.i18n.javascript_catalog'),
                         )
 
 # Serve django-staticfiles (only works in DEBUG)

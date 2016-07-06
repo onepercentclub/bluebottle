@@ -7,8 +7,6 @@ from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from bluebottle.bb_tasks.models import BaseTaskMember, BaseTaskFile, \
-    BaseSkill
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
 
@@ -149,27 +147,6 @@ class Task(models.Model):
             self.author = self.project.owner
         super(Task, self).save(*args, **kwargs)
 
-from django.db.models.signals import post_init, post_save
-from django.dispatch import receiver
-
-
-# post_init to store state on model
-@receiver(post_init, sender=Task,
-          dispatch_uid="bluebottle.tasks.Task.post_init")
-def task_post_init(sender, instance, **kwargs):
-    instance._init_status = instance.status
-
-
-# post save to check if changed?
-@receiver(post_save, sender=Task,
-          dispatch_uid="bluebottle.tasks.Task.post_save")
-def task_post_save(sender, instance, **kwargs):
-    try:
-        if instance._init_status != instance.status:
-            instance.status_changed(instance._init_status, instance.status)
-    except AttributeError:
-        pass
-
 
 class Skill(models.Model):
     name = models.CharField(_('english name'), max_length=100, unique=True)
@@ -262,10 +239,6 @@ class TaskFile(models.Model):
         verbose_name_plural = _(u'task files')
 
 
-@receiver(pre_save, weak=False, sender=TaskMember, dispatch_uid='set-hours-spent-taskmember')
-def set_hours_spent_taskmember(sender, instance, **kwargs):
-    if instance.status != instance._initial_status and instance.status == TaskMember.TaskMemberStatuses.realized:
-        instance.time_spent = instance.task.time_needed
-
-from bluebottle.tasks.taskmail import *
-from bluebottle.tasks.taskwallmails import *
+from .taskmail import *
+from .taskwallmails import *
+from .signals import *

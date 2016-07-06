@@ -1,12 +1,14 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext as _
+from django.utils import translation
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.utils.email_backend import send_mail
 
 from bluebottle.clients import properties
+from tenant_extras.utils import TenantLanguage
 
 class User(dict):
     pass
@@ -19,7 +21,8 @@ def send_suggestion_confirmation_email(sender, instance,
     """ Send a confirmation email when a new Suggestion is created """
     if created:
 
-        subject = _('Thank you for submitting your project request.')
+        with TenantLanguage(instance.language):
+            subject = _('Thank you for submitting your project request.')
 
         url = getattr(properties, 'OPEN_EXTERNAL_URL', None)
 

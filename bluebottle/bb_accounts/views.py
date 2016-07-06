@@ -1,3 +1,6 @@
+import json
+import requests
+
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
@@ -7,6 +10,8 @@ from django.http import Http404
 from django.utils.http import base36_to_int, int_to_base36
 
 from rest_framework import status, views, response, generics
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 from tenant_extras.utils import TenantLanguage
 
@@ -16,7 +21,9 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
-    PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer)
+    PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
+    UserVerificationSerializer
+)
 
 USER_MODEL = get_user_model()
 
@@ -210,3 +217,25 @@ class DisableAccount(views.APIView):
         user.is_active = False
         user.save()
         return response.Response(status=status.HTTP_200_OK)
+
+
+class UserVerification(generics.CreateAPIView):
+    permission_classes = (IsAuthenticated,)
+    queryset = USER_MODEL.objects.all()
+    serializer_class = UserVerificationSerializer
+
+    def perform_create(self, serializer):
+        verification_response = requests.post(
+            'https://www.google.com/recaptcha/api/siteverify',
+            data={
+                'secret': properties.RECAPTCHA_SECRET,
+                'response': serializer.validated_data['token']
+            }
+        )
+        data = json.loads(verification_response.content)
+
+        if data.get('success'):
+            self.request.user.verified = True
+            self.request.user.save()
+        else:
+            raise PermissionDenied('Could not verify token')

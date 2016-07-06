@@ -8,8 +8,8 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 class BaseSkill(models.Model):
     name = models.CharField(_('english name'), max_length=100, unique=True)
-    name_nl = models.CharField(_('dutch name'), max_length=100, unique=True)
     description = models.TextField(_('description'), blank=True)
+    disabled = models.BooleanField(_('disabled'), default=False)
 
     def __unicode__(self):
         return self.name

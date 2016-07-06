@@ -18,7 +18,6 @@ class ProjectThemeFactory(factory.DjangoModelFactory):
         django_get_or_create = ('name',)
 
     name = factory.Sequence(lambda n: 'Theme_{0}'.format(n))
-    name_nl = name
     slug = name
     description = 'ProjectTheme factory model'
 

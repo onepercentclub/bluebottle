@@ -39,11 +39,10 @@ class RestrictedImageField(serializers.ImageField):
 
 
 class SorlImageField(RestrictedImageField):
-    def __init__(self, geometry_string, **kwargs):
-        self.crop = kwargs.pop('crop', 'center')
-        self.colorspace = kwargs.pop('colorspace', 'RGB')
+    def __init__(self, geometry_string, crop='center', colorspace='RGB', **kwargs):
         self.geometry_string = geometry_string
-        self.kwargs = kwargs
+        self.crop = crop
+        self.colorspace = colorspace
         super(SorlImageField, self).__init__(**kwargs)
 
     def to_representation(self, value):
@@ -59,8 +58,7 @@ class SorlImageField(RestrictedImageField):
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         try:
-            thumbnail = unicode(
-                get_thumbnail(value, self.geometry_string, **self.kwargs))
+            thumbnail = unicode(get_thumbnail(value, self.geometry_string, crop=self.crop, colorspace=self.colorspace))
         except IOError:
             return ""
         except Exception:

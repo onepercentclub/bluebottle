@@ -20,6 +20,7 @@ GROUP_PERMS = {
 
 
 class Member(BlueBottleBaseUser):
+    verified = models.BooleanField(default=False, blank=True)
     remote_id = models.CharField(_('remote_id'),
                                  max_length=75,
                                  blank=True,

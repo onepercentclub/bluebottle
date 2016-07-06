@@ -384,6 +384,8 @@ class UserVerificationTest(BluebottleTestCase):
                 token=self.user_token
             )
             self.assertEqual(response.status_code, 201)
+            self.user.refresh_from_db()
+            self.assertTrue(self.user.verified)
 
     def test_verify_unauthenticated(self):
         with httmock.HTTMock(captcha_mock):

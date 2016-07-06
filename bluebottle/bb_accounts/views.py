@@ -11,6 +11,7 @@ from django.utils.http import base36_to_int, int_to_base36
 
 from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 from tenant_extras.utils import TenantLanguage
 
@@ -236,7 +237,5 @@ class UserVerification(generics.CreateAPIView):
         if data.get('success'):
             self.request.user.verified = True
             self.request.user.save()
-
-            return response.Response()
         else:
-            return response.Response(status=403)
+            raise PermissionDenied('Could not verify token')

@@ -1,5 +1,7 @@
 import json
+import urlparse
 import re
+import httmock
 
 from django.core import mail
 from django.test.utils import override_settings
@@ -352,19 +354,61 @@ class AuthLocaleMiddlewareTest(BluebottleTestCase):
         self.assertTrue(response.status_code, 200)
 
 
-class UserProfileUpdateTests(BluebottleTestCase):
+@httmock.urlmatch(netloc='www.google.com', path='/recaptcha/api/siteverify')
+def captcha_mock(url, request):
+    data = urlparse.parse_qs(request.body)
+    if data.get('response')[0] == 'test-token':
+        return json.dumps({'success': True})
+    else:
+        return {'content': json.dumps({'success': False}), 'status_code': 401}
+
+
+@override_settings(RECAPTCHA_SECRET='test-secret')
+class UserVerificationTest(BluebottleTestCase):
     """
-    Integration tests for the User API with dependencies on different bluebottle apps.
+    Test user verification view
     """
 
     def setUp(self):
-        super(UserProfileUpdateTests, self).setUp()
+        super(UserVerificationTest, self).setUp()
+        self.user = BlueBottleUserFactory.create()
 
-        self.user_1 = BlueBottleUserFactory.create()
-        self.user_2 = BlueBottleUserFactory.create()
-        self.current_user_api_url = '/api/users/current'
-        self.user_create_api_url = '/api/users/'
-        self.user_profile_api_url = '/api/users/profiles/'
-        self.user_activation_api_url = '/api/users/activate/'
-        self.user_password_reset_api_url = '/api/users/passwordreset'
-        self.user_password_set_api_url = '/api/users/passwordset/'
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.verify_user_url = '/api/users/verification/'
+
+    def test_verify(self):
+        with httmock.HTTMock(captcha_mock):
+            response = self.client.post(
+                self.verify_user_url,
+                {'token': 'test-token'},
+                token=self.user_token
+            )
+            self.assertEqual(response.status_code, 201)
+
+    def test_verify_unauthenticated(self):
+        with httmock.HTTMock(captcha_mock):
+            response = self.client.post(
+                self.verify_user_url,
+                {'token': 'test-token'},
+            )
+
+            self.assertEqual(response.status_code, 401)
+
+    def test_verify_no_token(self):
+        with httmock.HTTMock(captcha_mock):
+            response = self.client.post(
+                self.verify_user_url,
+                token=self.user_token
+            )
+
+            self.assertEqual(response.status_code, 400)
+
+    def test_verify_incorrect_token(self):
+        with httmock.HTTMock(captcha_mock):
+            response = self.client.post(
+                self.verify_user_url,
+                {'token': 'incorrect-token'},
+                token=self.user_token
+            )
+
+            self.assertEqual(response.status_code, 403)

@@ -121,8 +121,7 @@
         "fields": {
             "slug": "agriculture",
             "description": "",
-            "name": "Agriculture",
-            "name_nl": "Natuur & Milieu"
+            "name": "Agriculture"
         }
     },
     {
@@ -131,8 +130,7 @@
         "fields": {
             "slug": "animal-welfare",
             "description": "",
-            "name": "Animal welfare",
-            "name_nl": "Dierenwelzijn"
+            "name": "Animal welfare"
         }
     },
     {
@@ -141,8 +139,7 @@
         "fields": {
             "slug": "arts-culture",
             "description": "",
-            "name": "Arts & Culture",
-            "name_nl": "Kunst & Cultuur"
+            "name": "Arts & Culture"
         }
     },
     {
@@ -151,8 +148,7 @@
         "fields": {
             "slug": "climate",
             "description": "",
-            "name": "Climate",
-            "name_nl": "Klimaat"
+            "name": "Climate"
         }
     },
     {
@@ -161,8 +157,7 @@
         "fields": {
             "slug": "community-building",
             "description": "",
-            "name": "Community building",
-            "name_nl": "Leefbaarheid"
+            "name": "Community building"
         }
     },
     {
@@ -181,8 +176,7 @@
         "fields": {
             "slug": "emergency-relief",
             "description": "",
-            "name": "Emergency relief",
-            "name_nl": "Noodhulp"
+            "name": "Emergency relief"
         }
     },
     {
@@ -191,8 +185,7 @@
         "fields": {
             "slug": "food",
             "description": "",
-            "name": "Food",
-            "name_nl": "Voedsel"
+            "name": "Food"
         }
     },
     {
@@ -201,8 +194,7 @@
         "fields": {
             "slug": "health",
             "description": "",
-            "name": "Health",
-            "name_nl": "Gezondheid & Zorg"
+            "name": "Health"
         }
     },
     {
@@ -211,8 +203,7 @@
         "fields": {
             "slug": "human-rights",
             "description": "",
-            "name": "Human rights",
-            "name_nl": "Mensenrechten"
+            "name": "Human rights"
         }
     },
     {
@@ -221,8 +212,7 @@
         "fields": {
             "slug": "ict",
             "description": "",
-            "name": "ICT",
-            "name_nl": "ICT"
+            "name": "ICT"
         }
     },
     {
@@ -231,8 +221,7 @@
         "fields": {
             "slug": "media-journalism",
             "description": "",
-            "name": "Media & Journalism",
-            "name_nl": "Media & Journalistiek"
+            "name": "Media & Journalism"
         }
     },
     {
@@ -241,8 +230,7 @@
         "fields": {
             "slug": "social-entrepreneurship",
             "description": "",
-            "name": "Social entrepreneurship",
-            "name_nl": "Sociaal Ondernemerschap"
+            "name": "Social entrepreneurship"
         }
     },
     {
@@ -251,8 +239,7 @@
         "fields": {
             "slug": "sport",
             "description": "",
-            "name": "Sport",
-            "name_nl": "Sport & Recreatie"
+            "name": "Sport"
         }
     },
     {
@@ -261,8 +248,7 @@
         "fields": {
             "slug": "tourism",
             "description": "",
-            "name": "Tourism",
-            "name_nl": "Toerisme"
+            "name": "Tourism"
         }
     },
     {
@@ -271,8 +257,7 @@
         "fields": {
             "slug": "water",
             "description": "",
-            "name": "Water",
-            "name_nl": "Water"
+            "name": "Water"
         }
     },
     {
@@ -281,8 +266,7 @@
         "fields": {
             "slug": "mobility",
             "description": "",
-            "name": "Mobility",
-            "name_nl": "Mobiliteit"
+            "name": "Mobility"
         }
     }
 ]

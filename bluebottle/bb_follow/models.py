@@ -1,3 +1,4 @@
+from bluebottle.tasks.models import Task
 from django.db import models
 from django.db.models.signals import post_save
 from django.contrib.contenttypes import fields
@@ -9,7 +10,7 @@ from django.utils import translation
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_projects.models import BaseProject
-from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember
+from bluebottle.bb_tasks.models import BaseTaskMember
 from bluebottle.bb_donations.models import BaseDonation
 from bluebottle.bb_fundraisers.models import BaseFundraiser
 from bluebottle.clients.utils import tenant_url
@@ -118,7 +119,7 @@ def create_follow(sender, instance, created, **kwargs):
                     follow.save()
 
     # A user creates a task for a project
-    elif isinstance(instance, BaseTask):
+    elif isinstance(instance, Task):
         # Create a Follow to the specific Task if a task author is not the
         # owner of the task
         user = instance.author
@@ -211,7 +212,7 @@ def email_followers(sender, instance, created, **kwargs):
                 follow_object = _('project')
                 link = '/go/projects/{0}'.format(instance.content_object.slug)
 
-            if isinstance(instance.content_object, BaseTask):
+            if isinstance(instance.content_object, Task):
                 # Send update to all task members and to people who posted to
                 # the wall --> Follower
                 followers = Follow.objects.filter(

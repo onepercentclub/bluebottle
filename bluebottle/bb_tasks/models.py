@@ -1,13 +1,9 @@
 from django.db import models
-import django.db.models.options as options
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
-from taggit.managers import TaggableManager
-
-from bluebottle.utils.utils import GetTweetMixin
 
 
 class BaseSkill(models.Model):
@@ -63,7 +59,6 @@ class BaseTaskMember(models.Model):
         verbose_name_plural = _(u'task members')
 
 
-
 class BaseTaskFile(models.Model):
     author = models.ForeignKey('members.Member',
                                related_name='%(app_label)s_%(class)s_related')
@@ -77,71 +72,3 @@ class BaseTaskFile(models.Model):
         abstract = True
         verbose_name = _(u'task file')
         verbose_name_plural = _(u'task files')
-
-
-
-class BaseTask(models.Model, GetTweetMixin):
-    """ The base Task model """
-
-    # We should probably turn this into another class model like the projectphase
-    class TaskStatuses(DjangoChoices):
-        open = ChoiceItem('open', label=_('Open'))
-        in_progress = ChoiceItem('in progress', label=_('In progress'))
-        closed = ChoiceItem('closed', label=_('Closed'))
-        realized = ChoiceItem('realized', label=_('Realised'))
-
-    title = models.CharField(_('title'), max_length=100)
-    description = models.TextField(_('description'))
-    location = models.CharField(_('location'), max_length=200, null=True,
-                                blank=True)
-    people_needed = models.PositiveIntegerField(_('people needed'), default=1)
-
-    project = models.ForeignKey('projects.Project')
-    # See Django docs on issues with related name and an (abstract) base class:
-    # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
-    author = models.ForeignKey('members.Member',
-                               related_name='%(app_label)s_%(class)s_related')
-    status = models.CharField(
-        _('status'), max_length=20, choices=TaskStatuses.choices,
-        default=TaskStatuses.open)
-    date_status_change = models.DateTimeField(_('date status change'),
-                                              blank=True, null=True)
-
-    deadline = models.DateTimeField()
-    tags = TaggableManager(blank=True, verbose_name=_('tags'))
-
-    objects = models.Manager()
-
-    # required resources
-    time_needed = models.FloatField(
-        _('time_needed'),
-        help_text=_('Estimated number of hours needed to perform this task.'))
-
-    skill = models.ForeignKey('tasks.Skill',
-                              verbose_name=_('Skill needed'), null=True)
-
-    # internal usage
-    created = CreationDateTimeField(
-        _('created'), help_text=_('When this task was created?'))
-    updated = ModificationDateTimeField(_('updated'))
-
-    class Meta:
-        abstract = True
-        ordering = ['-created']
-        verbose_name = _(u'task')
-        verbose_name_plural = _(u'tasks')
-
-    def __init__(self, *args, **kwargs):
-        super(BaseTask, self).__init__(*args, **kwargs)
-        self._original_status = self.status
-
-    def __unicode__(self):
-        return self.title
-
-    def set_in_progress(self):
-        self.status = self.TaskStatuses.in_progress
-        self.save()
-
-    @property
-    def people_applied(self):
-        return self.members.count()

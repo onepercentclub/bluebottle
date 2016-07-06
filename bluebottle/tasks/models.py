@@ -1,8 +1,13 @@
-from django.utils.translation import ugettext as _
-from django.utils.timezone import now
+from django.db import models
 from django.db.models.signals import pre_save
+from django.utils.timezone import now
+from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.bb_tasks.models import BaseTask, BaseTaskMember, BaseTaskFile, \
+from django_extensions.db.fields import (
+    ModificationDateTimeField, CreationDateTimeField)
+from djchoices.choices import DjangoChoices, ChoiceItem
+
+from bluebottle.bb_tasks.models import BaseTaskMember, BaseTaskFile, \
     BaseSkill
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
@@ -17,7 +22,66 @@ GROUP_PERMS = {
     }
 }
 
-class Task(BaseTask):
+class Task(models.Model):
+
+    class TaskStatuses(DjangoChoices):
+        open = ChoiceItem('open', label=_('Open'))
+        in_progress = ChoiceItem('in progress', label=_('In progress'))
+        closed = ChoiceItem('closed', label=_('Closed'))
+        realized = ChoiceItem('realized', label=_('Realised'))
+
+    title = models.CharField(_('title'), max_length=100)
+    description = models.TextField(_('description'))
+    location = models.CharField(_('location'), max_length=200, null=True,
+                                blank=True)
+    people_needed = models.PositiveIntegerField(_('people needed'), default=1)
+
+    project = models.ForeignKey('projects.Project')
+    # See Django docs on issues with related name and an (abstract) base class:
+    # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
+    author = models.ForeignKey('members.Member',
+                               related_name='%(app_label)s_%(class)s_related')
+    status = models.CharField(
+        _('status'), max_length=20, choices=TaskStatuses.choices,
+        default=TaskStatuses.open)
+    date_status_change = models.DateTimeField(_('date status change'),
+                                              blank=True, null=True)
+
+    deadline = models.DateTimeField(_('date'), help_text=_('Deadline or event date'))
+
+    objects = models.Manager()
+
+    # required resources
+    time_needed = models.FloatField(
+        _('time_needed'),
+        help_text=_('Estimated number of hours needed to perform this task.'))
+
+    skill = models.ForeignKey('tasks.Skill',
+                              verbose_name=_('Skill needed'), null=True)
+
+    # internal usage
+    created = CreationDateTimeField(
+        _('created'), help_text=_('When this task was created?'))
+    updated = ModificationDateTimeField(_('updated'))
+
+    class Meta:
+        ordering = ['-created']
+
+    def __init__(self, *args, **kwargs):
+        super(Task, self).__init__(*args, **kwargs)
+        self._original_status = self.status
+
+    def __unicode__(self):
+        return self.title
+
+    def set_in_progress(self):
+        self.status = self.TaskStatuses.in_progress
+        self.save()
+
+    @property
+    def people_applied(self):
+        return self.members.count()
+
     def get_absolute_url(self):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
@@ -147,5 +211,5 @@ def set_hours_spent_taskmember(sender, instance, **kwargs):
     if instance.status != instance._initial_status and instance.status == TaskMember.TaskMemberStatuses.realized:
         instance.time_spent = instance.task.time_needed
 
-from bluebottle.bb_tasks.taskwallmails import *
-from bluebottle.bb_tasks.taskmail import *
+from bluebottle.tasks.taskmail import *
+from bluebottle.tasks.taskwallmails import *

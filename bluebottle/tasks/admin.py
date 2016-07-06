@@ -67,14 +67,6 @@ class TaskFileAdminInline(admin.StackedInline):
     extra = 0
 
 
-class TaskForm(ModelForm):
-    owner = ModelChoiceField(queryset=Member.objects.order_by('email'))
-
-    class Meta:
-        model = Task
-        exclude = ()
-
-
 class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 

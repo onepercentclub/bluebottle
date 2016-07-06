@@ -175,7 +175,44 @@ class Skill(BaseSkill):
     pass
 
 
-class TaskMember(BaseTaskMember):
+class TaskMember(models.Model):
+    class TaskMemberStatuses(DjangoChoices):
+        applied = ChoiceItem('applied', label=_('Applied'))
+        accepted = ChoiceItem('accepted', label=_('Accepted'))
+        rejected = ChoiceItem('rejected', label=_('Rejected'))
+        stopped = ChoiceItem('stopped', label=_('Stopped'))
+        realized = ChoiceItem('realized', label=_('Realised'))
+
+    member = models.ForeignKey('members.Member',
+                               related_name='%(app_label)s_%(class)s_related')
+    task = models.ForeignKey('tasks.Task', related_name="members")
+    status = models.CharField(_('status'), max_length=20,
+                              choices=TaskMemberStatuses.choices,
+                              default=TaskMemberStatuses.applied)
+    motivation = models.TextField(
+        _('Motivation'), help_text=_('Motivation by applicant.'), blank=True)
+    comment = models.TextField(_('Comment'),
+                               help_text=_('Comment by task owner.'),
+                               blank=True)
+    time_spent = models.PositiveSmallIntegerField(
+        _('time spent'), default=0,
+        help_text=_('Time spent executing this task.'))
+
+    externals = models.PositiveSmallIntegerField(
+        _('Externals'), default=0,
+        help_text=_('External people helping for this task'))
+
+    created = CreationDateTimeField(_('created'))
+    updated = ModificationDateTimeField(_('updated'))
+
+    _initial_status = None
+
+    # objects = models.Manager()
+
+    class Meta:
+        verbose_name = _(u'task member')
+        verbose_name_plural = _(u'task members')
+
     def save(self, *args, **kwargs):
         super(TaskMember, self).save(*args, **kwargs)
         self.check_number_of_members_needed(self.task)
@@ -203,8 +240,19 @@ class TaskMember(BaseTaskMember):
         return self.task.project
 
 
-class TaskFile(BaseTaskFile):
-    pass
+class TaskFile(models.Model):
+    author = models.ForeignKey('members.Member',
+                               related_name='%(app_label)s_%(class)s_related')
+    title = models.CharField(max_length=255)
+    file = models.FileField(_('file'), upload_to='task_files/')
+    created = CreationDateTimeField(_('created'))
+    updated = ModificationDateTimeField(_('Updated'))
+    task = models.ForeignKey('tasks.Task', related_name="files")
+
+    class Meta:
+        verbose_name = _(u'task file')
+        verbose_name_plural = _(u'task files')
+
 
 @receiver(pre_save, weak=False, sender=TaskMember, dispatch_uid='set-hours-spent-taskmember')
 def set_hours_spent_taskmember(sender, instance, **kwargs):

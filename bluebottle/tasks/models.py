@@ -28,6 +28,10 @@ class Task(models.Model):
         closed = ChoiceItem('closed', label=_('Closed'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
+    class TaskTypes(DjangoChoices):
+        on_going = ChoiceItem('on_going', label=_('On going'))
+        event = ChoiceItem('event', label=_('Event'))
+
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
     location = models.CharField(_('location'), max_length=200, null=True,
@@ -39,9 +43,13 @@ class Task(models.Model):
     # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
     author = models.ForeignKey('members.Member',
                                related_name='%(app_label)s_%(class)s_related')
-    status = models.CharField(
-        _('status'), max_length=20, choices=TaskStatuses.choices,
-        default=TaskStatuses.open)
+    status = models.CharField(_('status'), max_length=20,
+                              choices=TaskStatuses.choices,
+                              default=TaskStatuses.open)
+    type = models.CharField(_('type'), max_length=20,
+                            choices=TaskTypes.choices,
+                            default=TaskTypes.on_going)
+
     date_status_change = models.DateTimeField(_('date status change'),
                                               blank=True, null=True)
 

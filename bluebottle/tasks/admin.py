@@ -6,6 +6,7 @@ from django.forms.models import ModelChoiceField
 
 from bluebottle.members.models import Member
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
+from bluebottle.clients import properties
 
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -177,16 +178,23 @@ class TaskMemberAdmin(admin.ModelAdmin):
 
 admin.site.register(TaskMember, TaskMemberAdmin)
 
+from django.utils import translation
+
 
 class SkillAdmin(admin.ModelAdmin):
     list_display = ('translated_name', 'disabled')
     readonly_fields = ('translated_name', )
     fields = readonly_fields + ('disabled', 'description', )
 
-
     def translated_name(self, obj):
         return _(obj.name)
 
-    translated_name.verbose_name = _('Name')
+    translated_name.short_description = _('Name')
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request):
+        return False
 
 admin.site.register(Skill, SkillAdmin)

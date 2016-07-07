@@ -327,6 +327,124 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         for field in serializer_fields:
             self.assertTrue(field in response.data)
 
+
+class TestTaskSearchCase(BluebottleTestCase):
+    """Tests for the task search functionality."""
+
+    def setUp(self):
+        """Setup reusable data."""
+        self.init_projects()
+
+        self.now = timezone.now()
+        self.tomorrow = self.now + timezone.timedelta(days=1)
+        self.week = self.now + timezone.timedelta(days=7)
+        self.month = self.now + timezone.timedelta(days=30)
+
+        self.some_user = BlueBottleUserFactory.create()
+        self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
+
+        self.task_url = '/api/bb_tasks/'
+
+        self.event_task_1 = TaskFactory.create(status='open',
+                                               type='event',
+                                               deadline=self.tomorrow,
+                                               people_needed=1)
+
+        self.event_task_2 = TaskFactory.create(status='open',
+                                               type='event',
+                                               deadline=self.month,
+                                               people_needed=1)
+
+        self.ongoing_task_1 = TaskFactory.create(status='open',
+                                                 type='ongoing',
+                                                 deadline=self.week,
+                                                 people_needed=1)
+
+        self.ongoing_task_2 = TaskFactory.create(status='open',
+                                                 type='ongoing',
+                                                 deadline=self.tomorrow,
+                                                 people_needed=1)
+
+        self.ongoing_task_3 = TaskFactory.create(status='open',
+                                                 type='ongoing',
+                                                 deadline=self.month,
+                                                 people_needed=1)
+
+    def test_search_for_specific_date_no_event_task(self):
+        """
+        Search for tasks taking place on a specific date when
+        there is no event-type task on the search date.
+        """
+
+        search_date = {
+            'start_date': str(self.now + timezone.timedelta(days=3))
+        }
+
+        response = self.client.get(self.task_url, search_date,
+                                   token=self.some_token)
+
+        # The result should include ongoing_task_1, ongoing_task_3 but
+        # no event_tasks
+        self.assertEquals(response.data['count'], 2)
+
+        ids = [self.ongoing_task_1.id, self.ongoing_task_3.id]
+
+        self.assertTrue(response.data['results'][0]['id'] in ids)
+        self.assertTrue(response.data['results'][1]['id'] in ids)
+
+    def test_search_for_specific_date_with_event_task(self):
+        """
+        Search for tasks taking place on a specific date
+        when there is an event-type task.
+        """
+        event_task_3 = TaskFactory.create(status='open',
+                                          type='event',
+                                          deadline=self.now +
+                                          timezone.timedelta(days=3),
+                                          people_needed=1)
+
+        search_date = {
+            'start_date': str(self.now + timezone.timedelta(days=3))
+        }
+
+        response = self.client.get(self.task_url, search_date,
+                                   token=self.some_token)
+
+        # The result should include ongoing_task_1, ongoing_task_3 and
+        # event_task_3 because its on the deadline date
+        ids = [self.ongoing_task_1.id, self.ongoing_task_3.id, event_task_3.id]
+        self.assertEquals(response.data['count'], 3)
+        self.assertTrue(response.data['results'][0]['id'] in ids)
+        self.assertTrue(response.data['results'][1]['id'] in ids)
+        self.assertTrue(response.data['results'][2]['id'] in ids)
+
+    def test_search_for_date_range(self):
+        """
+        Search tasks for a date range. Return ongoing and event tasks
+        with deadline in range
+        """
+
+        search_date = {
+            'start_date': str(self.tomorrow + timezone.timedelta(days=3)),
+            'end_date': str(self.month + timezone.timedelta(days=15))
+        }
+
+        response = self.client.get(self.task_url, search_date,
+                                   token=self.some_token)
+
+        # Search should return event_task_2, ongoing_task_1, and ongoing_task_3
+        ids = [self.event_task_2.id, self.ongoing_task_1.id,
+               self.ongoing_task_3.id]
+        self.assertEqual(response.data['count'], 3)
+        self.assertTrue(response.data['results'][0]['id'] in ids)
+        self.assertTrue(response.data['results'][1]['id'] in ids)
+        self.assertTrue(response.data['results'][2]['id'] in ids)
+
+
+
+
+
+
 # TODO: Test edit task
 # TODO: Test change TaskMember edit status
 # TODO: Test File uploads

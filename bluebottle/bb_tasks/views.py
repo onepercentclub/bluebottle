@@ -54,8 +54,12 @@ class TaskPreviewList(generics.ListAPIView):
             qs = qs.order_by('-created')
         elif ordering == 'deadline':
             qs = qs.order_by('deadline')
+            # Filter on task.type (ongoing/event)
+
 
         qs = qs.exclude(status=Task.TaskStatuses.closed)
+
+
 
         return qs.filter(project__status__viewable=True)
 
@@ -78,6 +82,23 @@ class TaskList(generics.ListCreateAPIView):
         if text:
             qs = qs.filter(Q(title__icontains=text) |
                            Q(description__icontains=text))
+
+        # Searching for tasks can mean 2 things:
+        # 1) Search for tasks a specifc day
+        # 2) Search for tasks that take place over a period of time
+        start_date = self.request.query_params.get('start_date', None)
+        end_date = self.request.query_params.get('end_date', None)
+
+        # User searches for tasks on a specific day.
+        if start_date and not end_date:
+            qs = qs.filter(Q(type='event', deadline=start_date) |
+                           Q(type='ongoing', deadline__gte=start_date))
+
+        # User searches for tasks in a specific range
+        if start_date and end_date:
+            qs = qs.filter(Q(type='event', deadline__range=[start_date, end_date]) |
+                           Q(type='ongoing', deadline__gte=start_date)
+                           )
 
         ordering = self.request.query_params.get('ordering', None)
 

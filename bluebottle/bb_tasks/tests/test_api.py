@@ -423,6 +423,17 @@ class TestTaskSearchCase(BluebottleTestCase):
         Search tasks for a date range. Return ongoing and event tasks
         with deadline in range
         """
+        ongoing_task_4 = TaskFactory.create(status='open',
+                                            type='ongoing',
+                                            deadline=self.now +
+                                            timezone.timedelta(days=365),
+                                            people_needed=1)
+
+        event_task_5 = TaskFactory.create(status='open',
+                                          type='event',
+                                          deadline=self.now +
+                                          timezone.timedelta(days=365),
+                                          people_needed=1)
 
         search_date = {
             'start_date': str(self.tomorrow + timezone.timedelta(days=3)),
@@ -434,11 +445,12 @@ class TestTaskSearchCase(BluebottleTestCase):
 
         # Search should return event_task_2, ongoing_task_1, and ongoing_task_3
         ids = [self.event_task_2.id, self.ongoing_task_1.id,
-               self.ongoing_task_3.id]
-        self.assertEqual(response.data['count'], 3)
+               self.ongoing_task_3.id, ongoing_task_4.id]
+        self.assertEqual(response.data['count'], 4)
         self.assertTrue(response.data['results'][0]['id'] in ids)
         self.assertTrue(response.data['results'][1]['id'] in ids)
         self.assertTrue(response.data['results'][2]['id'] in ids)
+        self.assertTrue(response.data['results'][3]['id'] in ids)
 
 
 

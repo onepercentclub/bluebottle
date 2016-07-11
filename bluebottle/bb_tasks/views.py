@@ -96,7 +96,9 @@ class TaskList(generics.ListCreateAPIView):
 
         # User searches for tasks in a specific range
         if start_date and end_date:
-            qs = qs.filter(deadline__range=[start_date, end_date])
+            qs = qs.filter(Q(type='event', deadline__range=[start_date, end_date]) |
+                           Q(type='ongoing', deadline__gte=start_date)
+                           )
 
         ordering = self.request.query_params.get('ordering', None)
 

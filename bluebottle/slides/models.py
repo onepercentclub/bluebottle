@@ -1,13 +1,17 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.utils.functional import lazy
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import CreationDateTimeField, \
     ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
+
+from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
+
 
 GROUP_PERMS = {
     'Staff': {
@@ -16,6 +20,10 @@ GROUP_PERMS = {
         )
     }
 }
+
+
+def get_languages():
+    return properties.LANGUAGES
 
 
 class SlideManager(models.Manager):
@@ -39,7 +47,7 @@ class Slide(models.Model):
 
     slug = models.SlugField(_("Slug"))
     language = models.CharField(_("language"), max_length=5,
-                                choices=settings.LANGUAGES)
+                                choices=lazy(get_languages, tuple)())
     tab_text = models.CharField(_("Tab text"), max_length=100, help_text=_(
         "This is shown on tabs beneath the banner."))
 

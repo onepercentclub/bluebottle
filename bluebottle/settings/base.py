@@ -690,6 +690,7 @@ EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
 # Salesforce connection settings
 SALESFORCE_QUERY_TIMEOUT = 15
 REQUESTS_MAX_RETRIES = 0
+SF_LAZY_CONNECT = True
 
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4

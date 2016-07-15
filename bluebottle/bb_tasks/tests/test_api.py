@@ -37,6 +37,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.skill4 = SkillFactory.create()
 
         self.task_url = '/api/bb_tasks/'
+        self.task_preview_url = '/api/bb_tasks/previews/'
         self.task_members_url = '/api/bb_tasks/members/'
 
     def test_create_task(self):
@@ -238,7 +239,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertEqual(2, Project.objects.count())
         self.assertEqual(2, Task.objects.count())
 
-        api_url = self.task_url + 'previews/'
+        api_url = self.task_preview_url
 
         # test that only one task preview is returned
 
@@ -377,7 +378,7 @@ class TestTaskSearchCase(BluebottleTestCase):
         """
 
         search_date = {
-            'start_date': str(self.now + timezone.timedelta(days=3))
+            'start': str(self.now + timezone.timedelta(days=3))
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -404,7 +405,7 @@ class TestTaskSearchCase(BluebottleTestCase):
                                           people_needed=1)
 
         search_date = {
-            'start_date': str(self.now + timezone.timedelta(days=3))
+            'start': str(self.now + timezone.timedelta(days=3))
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -436,8 +437,8 @@ class TestTaskSearchCase(BluebottleTestCase):
                                           people_needed=1)
 
         search_date = {
-            'start_date': str(self.tomorrow + timezone.timedelta(days=3)),
-            'end_date': str(self.month + timezone.timedelta(days=15))
+            'start': str(self.tomorrow + timezone.timedelta(days=3)),
+            'end': str(self.month + timezone.timedelta(days=15))
         }
 
         response = self.client.get(self.task_url, search_date,

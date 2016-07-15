@@ -49,18 +49,39 @@ class TaskPreviewList(generics.ListAPIView):
 
     def get_queryset(self):
         qs = super(TaskPreviewList, self).get_queryset()
+
+        project_slug = self.request.query_params.get('project', None)
+        if project_slug:
+            qs = qs.filter(project__slug=project_slug)
+
+        text = self.request.query_params.get('text', None)
+        if text:
+            qs = qs.filter(Q(title__icontains=text) |
+                           Q(description__icontains=text))
+
+        # Searching for tasks can mean 2 things:
+        # 1) Search for tasks a specifc day
+        # 2) Search for tasks that take place over a period of time
+        start_date = self.request.query_params.get('start', None)
+        end_date = self.request.query_params.get('end', None)
+
+        # User searches for tasks on a specific day.
+        if start_date and not end_date:
+            qs = qs.filter(Q(type='event', deadline=start_date) |
+                           Q(type='ongoing', deadline__gte=start_date))
+
+        # User searches for tasks in a specific range
+        if start_date and end_date:
+            qs = qs.filter(Q(type='event', deadline__range=[start_date, end_date]) |
+                           Q(type='ongoing', deadline__gte=start_date)
+                           )
+
         ordering = self.request.query_params.get('ordering', None)
 
         if ordering == 'newest':
             qs = qs.order_by('-created')
         elif ordering == 'deadline':
             qs = qs.order_by('deadline')
-            # Filter on task.type (ongoing/event)
-
-
-        qs = qs.exclude(status=Task.TaskStatuses.closed)
-
-
 
         return qs.filter(project__status__viewable=True)
 
@@ -87,8 +108,8 @@ class TaskList(generics.ListCreateAPIView):
         # Searching for tasks can mean 2 things:
         # 1) Search for tasks a specifc day
         # 2) Search for tasks that take place over a period of time
-        start_date = self.request.query_params.get('start_date', None)
-        end_date = self.request.query_params.get('end_date', None)
+        start_date = self.request.query_params.get('start', None)
+        end_date = self.request.query_params.get('end', None)
 
         # User searches for tasks on a specific day.
         if start_date and not end_date:

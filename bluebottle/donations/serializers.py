@@ -31,6 +31,7 @@ class PreviewDonationSerializer(serializers.ModelSerializer):
                                                     queryset=Fundraiser.objects)
     payment_method = serializers.SerializerMethodField()
     user = UserPreviewSerializer(source='public_user')
+    amount = MoneySerializer()
 
     class Meta:
         model = Donation
@@ -75,6 +76,7 @@ class LatestDonationSerializer(serializers.ModelSerializer):
     project = LatestDonationProjectSerializer()
     payment_method = serializers.SerializerMethodField()
     user = UserPreviewSerializer()
+    amount = MoneySerializer()
 
     class Meta:
         model = Donation

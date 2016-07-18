@@ -12,7 +12,7 @@ from bluebottle.clients import properties
 
 
 DEFAULT_CURRENCY = getattr(properties, 'DEFAULT_CURRENCY', 'EUR')
-CURRENCY_CHOICES = getattr(properties, 'CURRENCY_CHOICES', ('EUR',))
+CURRENCY_CHOICES = getattr(properties, 'CURRENCY_CHOICES', [('EUR', 'Euro')])
 
 
 class MoneyField(DjangoMoneyField):

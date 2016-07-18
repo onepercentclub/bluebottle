@@ -5,9 +5,9 @@ from django.db.models.signals import post_save
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import CreationDateTimeField
 
-from bluebottle.bb_projects.fields import MoneyField
-
 from decimal import Decimal
+
+from bluebottle.utils.fields import MoneyField
 
 
 class BaseJournal(models.Model):

@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.db import models
-from django.db.models import options
 from django.db.models.aggregates import Sum
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
@@ -10,6 +9,7 @@ from django_extensions.db.fields import (ModificationDateTimeField,
 from django_fsm import FSMField, transition
 
 from bluebottle.donations.models import Donation
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 
@@ -54,8 +54,7 @@ class BaseOrder(models.Model, FSMTransition):
     completed = models.DateTimeField(_("Completed"), blank=True, editable=False,
                                      null=True)
 
-    total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
-                                default=0)
+    total = MoneyField(_("Amount"), )
 
     @transition(field=status,
                 source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED],

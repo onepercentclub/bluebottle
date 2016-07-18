@@ -1,11 +1,27 @@
 from HTMLParser import HTMLParser
 import re
+from moneyed import Money
 
 from rest_framework import serializers
 
 from .validators import validate_postal_code
 from .models import Address, Language
 
+
+class MoneySerializer(serializers.DecimalField):
+
+    def __init__(self,  max_digits=12, decimal_places=2, **kwargs):
+        super(MoneySerializer, self).__init__(
+            max_digits=max_digits,
+            decimal_places=decimal_places,
+            **kwargs
+        )
+
+    def to_representation(self, instance):
+        return instance.amount
+
+    def to_internal_value(self, data):
+        return Money(data, 'EUR')
 
 class ShareSerializer(serializers.Serializer):
     share_name = serializers.CharField(max_length=256, required=True)

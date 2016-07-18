@@ -18,8 +18,7 @@ CURRENCY_CHOICES = getattr(properties, 'CURRENCY_CHOICES', [('EUR', 'Euro')])
 class MoneyField(DjangoMoneyField):
 
     def __init__(self, verbose_name=None, name=None,
-                 max_digits=12, decimal_places=2,
-                 default=None,
+                 max_digits=12, decimal_places=2, default=None,
                  default_currency=DEFAULT_CURRENCY,
                  currency_choices=CURRENCY_CHOICES, **kwargs):
         super(MoneyField, self).__init__(
@@ -27,6 +26,7 @@ class MoneyField(DjangoMoneyField):
             max_digits=max_digits, decimal_places=decimal_places, default=default,
             default_currency=default_currency,
             currency_choices=currency_choices, **kwargs)
+
 
 # Validation references:
 # http://www.mobilefish.com/services/elfproef/elfproef.php

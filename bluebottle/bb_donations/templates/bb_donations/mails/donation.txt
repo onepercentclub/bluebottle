@@ -1,8 +1,8 @@
 {% load i18n %}
 
 {% block content %}
-    {% trans "Donation" %} {% if donation.reward %} - {{donation.reward.title}} {% endif %}
-    EUR {{ donation.amount }}
-    {{donation.project.title}}
-    {{ site }}/projects/{{donation.project.slug}}
+    {% trans "Donation" %} {% if donation.reward %} - {{ donation.reward.title }} {% endif %}
+    {{ donation.amount.currency }} {{ donation.amount.amount }}
+    {{ donation.project.title }}
+    {{ site }}/projects/{{ donation.project.slug }}
 {% endblock content %} 

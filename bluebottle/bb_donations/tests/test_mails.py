@@ -86,7 +86,7 @@ class TestDonationEmails(BluebottleTestCase):
         self.assertEqual(mail.outbox[0].subject,
                          _('You received a new donation'))
         self.assertTrue(
-            "&euro; {0}".format(self.donation.amount) in mail.outbox[0].body)
+            "{0}".format(self.donation.amount.amount) in mail.outbox[0].body)
 
     def test_mail_donor_successful_donation(self):
         """ Test that an email is sent to the donor after a succesful donation """
@@ -110,7 +110,7 @@ class TestDonationEmails(BluebottleTestCase):
         body = mail.outbox[1].body
 
         self.assertTrue(
-            "&euro; {0}".format(self.donation.amount) in body)
+            "{0}".format(self.donation.amount.amount) in body)
         self.assertTrue(
             "Thanks {0}".format(self.user.first_name) in body)
 
@@ -146,4 +146,4 @@ class TestDonationEmails(BluebottleTestCase):
         self.assertEqual(mail.outbox[0].subject,
                          _('You received a new donation'))
         self.assertTrue(
-            "&euro; {0}".format(self.fund_donation.amount) in mail.outbox[0].body)
+            "{0}".format(self.fund_donation.amount.amount) in mail.outbox[0].body)

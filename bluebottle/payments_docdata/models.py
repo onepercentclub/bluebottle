@@ -94,7 +94,7 @@ class AbstractDocdataPayment(Payment):
 
         if '%' in str(pm_fee):
             part = Decimal(pm_fee.replace('%', '')) / 100
-            return self.order_payment.amount * part
+            return self.order_payment.amount.amount * part
         else:
             return pm_fee + transaction_fee
 

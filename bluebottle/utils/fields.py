@@ -1,3 +1,4 @@
+from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
@@ -5,8 +6,27 @@ from django.conf import settings
 from django.utils.translation import ugettext as _
 
 import sorl.thumbnail
-from django import forms
+from djmoney.models.fields import MoneyField as DjangoMoneyField
 
+from bluebottle.clients import properties
+
+
+DEFAULT_CURRENCY = getattr(properties, 'DEFAULT_CURRENCY', 'EUR')
+CURRENCY_CHOICES = getattr(properties, 'CURRENCY_CHOICES', ('EUR',))
+
+
+class MoneyField(DjangoMoneyField):
+
+    def __init__(self, verbose_name=None, name=None,
+                 max_digits=12, decimal_places=2,
+                 default=None,
+                 default_currency=DEFAULT_CURRENCY,
+                 currency_choices=CURRENCY_CHOICES, **kwargs):
+        super(MoneyField, self).__init__(
+            verbose_name=verbose_name, name=name,
+            max_digits=max_digits, decimal_places=decimal_places, default=default,
+            default_currency=default_currency,
+            currency_choices=currency_choices, **kwargs)
 
 # Validation references:
 # http://www.mobilefish.com/services/elfproef/elfproef.php

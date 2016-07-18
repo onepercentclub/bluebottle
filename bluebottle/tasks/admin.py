@@ -150,6 +150,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
     )
     export_fields = (
         ('member__email', 'member_email'),
+        ('member__remote_id', 'remote id'),
         ('task', 'task'),
         ('task__project', 'project'),
         ('status', 'status'),

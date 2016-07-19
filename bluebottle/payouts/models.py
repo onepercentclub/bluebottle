@@ -119,7 +119,7 @@ class ProjectPayout(BaseProjectPayout):
         if self.project.created >= start_2014:
             # New rules per 2014
 
-            if self.project.amount_donated <= threshold:
+            if self.project.amount_donated.amount <= threshold:
                 # Funding less then minimal payment amount.
                 return self.PayoutRules.beneath_threshold
             elif self.project.amount_donated >= self.project.amount_asked:

@@ -65,7 +65,7 @@ class ProjectCountrySerializer(CountrySerializer):
 
 
 class ProjectBudgetLineSerializer(serializers.ModelSerializer):
-    amount = EuroField()
+    amount = MoneySerializer()
     project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
 
     class Meta:

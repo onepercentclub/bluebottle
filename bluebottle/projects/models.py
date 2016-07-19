@@ -24,7 +24,7 @@ from bluebottle.tasks.models import Task
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument)
-from bluebottle.utils.fields import ImageField
+from bluebottle.utils.fields import ImageField, MoneyField
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 
@@ -506,7 +506,7 @@ class Project(BaseProject):
         if self.is_funding:
             if self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
-            elif self.amount_donated <= 20 or not self.campaign_started:
+            elif self.amount_donated.amount <= 20 or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
@@ -537,7 +537,7 @@ class ProjectBudgetLine(models.Model):
     project = models.ForeignKey('projects.Project')
     description = models.CharField(_('description'), max_length=255, default='')
     currency = models.CharField(max_length=3, default='EUR')
-    amount = models.PositiveIntegerField(_('amount (in cents)'))
+    amount = MoneyField()
 
     created = CreationDateTimeField()
     updated = ModificationDateTimeField()
@@ -547,7 +547,7 @@ class ProjectBudgetLine(models.Model):
         verbose_name_plural = _('budget lines')
 
     def __unicode__(self):
-        return u'{0} - {1}'.format(self.description, self.amount / 100.0)
+        return u'{0} - {1}'.format(self.description, self.amount)
 
 
 @receiver(project_funded, weak=False, sender=Project,

@@ -182,7 +182,7 @@ def create_journal_for_sender(sender, instance, created, data_migration=None):
             amount_instance = amount_instance.amount
         diff = amount_instance - journal_amount
         if diff == Decimal():
-            return  # dont save, or should a new journal be made when amount is not changed?
+            return  # dont save, or should a new journal be made when amount is not changed?Hry
         journal_date = instance.updated
         journal_amount = Money(diff, journal.amount.currency)
     else:

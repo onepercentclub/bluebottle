@@ -21,6 +21,8 @@ class MoneySerializer(serializers.DecimalField):
         return instance.amount
 
     def to_internal_value(self, data):
+        if not data:
+            return data
         return Money(data, 'EUR')
 
 class ShareSerializer(serializers.Serializer):

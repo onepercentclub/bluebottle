@@ -17,6 +17,8 @@ from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.geo.models import Location
 from bluebottle.categories.models import Category
+from bluebottle.utils.serializers import MoneySerializer
+
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
     class Meta:
@@ -106,6 +108,10 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     people_requested = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
+    amount_asked = MoneySerializer()
+    amount_donated = MoneySerializer()
+    amount_needed = MoneySerializer()
+    amount_extra = MoneySerializer()
 
     categories = serializers.SlugRelatedField(slug_field='slug', many=True,
                                               queryset=Category.objects)
@@ -172,10 +178,11 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     image = ImageSerializer(required=False, allow_null=True)
     pitch = serializers.CharField(required=False, allow_null=True)
     slug = serializers.CharField(read_only=True)
-    amount_asked = serializers.DecimalField(max_digits=20, decimal_places=2, required=False,
-                                            allow_null=True)
-    amount_donated = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
-    amount_needed = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+
+    amount_asked = MoneySerializer(required=False, allow_null=True)
+    amount_donated = MoneySerializer(read_only=True)
+    amount_needed = MoneySerializer(read_only=True)
+
     budget_lines = ProjectBudgetLineSerializer(many=True,
                                                source='projectbudgetline_set',
                                                read_only=True)
@@ -286,7 +293,7 @@ class ProjectSupporterSerializer(serializers.ModelSerializer):
 class ProjectDonationSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer(source='user')
     date_donated = serializers.DateTimeField(source='ready')
-    amount = EuroField()
+    amount = MoneySerializer()
 
     class Meta:
         model = Donation

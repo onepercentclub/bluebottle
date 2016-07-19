@@ -15,10 +15,10 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from django_fsm import FSMField, transition
 
 from bluebottle.bb_payouts.exceptions import PayoutException
-from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.models import OrderPayment
 from bluebottle.projects.models import Project
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
 
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware

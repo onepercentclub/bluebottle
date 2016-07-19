@@ -318,7 +318,7 @@ class Project(BaseProject):
         if not self.campaign_funded and not self.campaign_ended and \
                 self.status not in ProjectPhase.objects.filter(
                     Q(slug="done-complete") |
-                    Q(slug="done-incomplete")) and self.amount_needed <= 0:
+                    Q(slug="done-incomplete")) and self.amount_needed.amount <= 0:
             self.campaign_funded = timezone.now()
             if save:
                 self.save()
@@ -331,7 +331,7 @@ class Project(BaseProject):
              StatusDefinition.PLEDGED])
         self.amount_needed = self.amount_asked - self.amount_donated
 
-        if self.amount_needed < 0:
+        if self.amount_needed.amount < 0:
             # Should never be less than zero
             self.amount_needed = 0
 
@@ -346,7 +346,7 @@ class Project(BaseProject):
         optionally filtered by status.
         """
 
-        if self.amount_asked == 0:
+        if self.amount_asked.amount == 0:
             # No money asked, return 0
             return 0
 
@@ -370,7 +370,7 @@ class Project(BaseProject):
 
     @property
     def is_funding(self):
-        return self.amount_asked > 0
+        return self.amount_asked.amount > 0
 
     def supporter_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API
@@ -426,7 +426,7 @@ class Project(BaseProject):
 
     @property
     def donated_percentage(self):
-        if not self.amount_asked:
+        if not self.amount_asked.amount:
             return 0
         elif self.amount_donated > self.amount_asked:
             return 100

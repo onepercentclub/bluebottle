@@ -281,7 +281,7 @@ class Project(BaseProject):
                                           datetime.time(23, 59, 59))
             )
 
-        if self.amount_asked:
+        if self.amount_asked.amount:
             self.update_amounts(False)
 
         # FIXME: CLean up this code, make it readable
@@ -290,10 +290,10 @@ class Project(BaseProject):
                 and self.status.slug not in ["done-complete",
                                              "done-incomplete",
                                              "closed"]:
-            if self.amount_asked > 0 and self.amount_donated <= 20 \
+            if self.amount_asked.amount > 0 and self.amount_donated.amount <= 20 \
                     or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
-            elif self.amount_asked > 0 \
+            elif self.amount_asked.amount > 0 \
                     and self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
             else:
@@ -326,14 +326,14 @@ class Project(BaseProject):
     def update_amounts(self, save=True):
         """ Update amount based on paid and pending donations. """
 
-        self.amount_donated = self.get_money_total(
+        self.amount_donated.amount = self.get_money_total(
             [StatusDefinition.PENDING, StatusDefinition.SUCCESS,
              StatusDefinition.PLEDGED])
         self.amount_needed = self.amount_asked - self.amount_donated
 
         if self.amount_needed.amount < 0:
             # Should never be less than zero
-            self.amount_needed = 0
+            self.amount_needed.amount = 0
 
         self.update_status_after_donation(False)
 
@@ -428,9 +428,9 @@ class Project(BaseProject):
     def donated_percentage(self):
         if not self.amount_asked.amount:
             return 0
-        elif self.amount_donated > self.amount_asked:
+        elif self.amount_donated.amount > self.amount_asked.amount:
             return 100
-        return int(100 * self.amount_donated / self.amount_asked)
+        return int(100 * self.amount_donated.amount / self.amount_asked.amount)
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """

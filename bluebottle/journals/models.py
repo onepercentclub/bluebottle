@@ -1,11 +1,12 @@
+from decimal import Decimal
+from moneyed import Money
+
 from django.db import models
 from django.db.models.aggregates import Sum
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import CreationDateTimeField
-
-from decimal import Decimal
 
 from bluebottle.utils.fields import MoneyField
 
@@ -177,11 +178,13 @@ def create_journal_for_sender(sender, instance, created, data_migration=None):
         journal = journals.first()  # even when there are more, the get_journal_total will return the correct value
         journal_amount = journal.get_journal_total()
 
+        if hasattr(amount_instance, 'amount'):
+            amount_instance = amount_instance.amount
         diff = amount_instance - journal_amount
         if diff == Decimal():
             return  # dont save, or should a new journal be made when amount is not changed?
         journal_date = instance.updated
-        journal_amount = diff
+        journal_amount = Money(diff, journal.amount.currency)
     else:
         journal_date = instance.created
         journal_amount = amount_instance

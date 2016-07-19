@@ -51,6 +51,8 @@ class JournalModelTests(BluebottleTestCase):
         """
         journal_amount = journal.get_journal_total()
         related_model_value = journal.get_related_model_amount()
+        if hasattr(related_model_value, 'amount'):
+            related_model_value = related_model_value.amount
         self.assertEqual(related_model_value, journal_amount)
 
         if value:

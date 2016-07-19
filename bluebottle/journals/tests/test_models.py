@@ -163,7 +163,7 @@ class JournalModelTests(BluebottleTestCase):
         self.assertEqual(new_journal.amount.amount, Decimal('-5'))
 
         # mastercheck to see if payout and related Journals addup
-        self._check_if_journal_total_equals_value(new_journal.amount, Decimal('145'))
+        self._check_if_journal_total_equals_value(new_journal.amount.amount, Decimal('145'))
 
         # Change the payout without changing the amount, no journal should be created.
         payout_from_db = self._get_only_one_from_db(ProjectPayout)

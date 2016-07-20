@@ -351,7 +351,11 @@ class Project(BaseProject):
             Money(data['amount__sum'], data['amount_currency']) for data in
             donations.values('amount_currency').annotate(Sum('amount')).order_by()
         ]
-        return totals
+
+        if len(totals) > 1:
+            FieldError('Cannot yet handle multiple currencies on one project!')
+
+        return totals[0]
 
     @property
     def is_realised(self):
@@ -404,13 +408,9 @@ class Project(BaseProject):
 
     @property
     def amount_donated(self):
-        totals = self.get_money_total([StatusDefinition.PENDING,
-                                       StatusDefinition.SUCCESS,
-                                       StatusDefinition.PLEDGED])
-        if len(totals) > 1:
-            FieldError('Cannot yet handle multiple currencies on one project!')
-        return totals[0]
-
+        return self.get_money_total([StatusDefinition.PENDING,
+                                     StatusDefinition.SUCCESS,
+                                     StatusDefinition.PLEDGED])
 
     @property
     def amount_needed(self):

@@ -409,7 +409,7 @@ class Project(BaseProject):
                                        StatusDefinition.PLEDGED])
         if len(totals) > 1:
             FieldError('Cannot yet handle multiple currencies on one project!')
-        return totals
+        return totals[0]
 
 
     @property

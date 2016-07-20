@@ -108,6 +108,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     people_requested = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
+
     amount_asked = MoneySerializer()
     amount_donated = MoneySerializer()
     amount_needed = MoneySerializer()

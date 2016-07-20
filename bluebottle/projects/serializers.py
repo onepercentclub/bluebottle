@@ -17,7 +17,7 @@ from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.geo.models import Location
 from bluebottle.categories.models import Category
-from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.serializers import MoneySerializer, MoneyTotalSerializer
 
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):

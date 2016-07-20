@@ -161,8 +161,8 @@ class BaseProject(models.Model, GetTweetMixin):
     # For convenience and performance we also store money donated and needed
     # here.
     amount_asked = MoneyField(default=0, null=True)
-    amount_donated = MoneyField(default=0, null=True)
-    amount_needed = MoneyField(default=0, null=True)
+    # amount_donated = MoneyField(default=0, null=True)
+    # amount_needed = MoneyField(default=0, null=True)
     amount_extra = MoneyField(default=0, null=True,
                               help_text=_("Amount pledged by organisation (matching fund)."))
 

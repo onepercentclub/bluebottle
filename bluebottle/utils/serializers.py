@@ -25,6 +25,15 @@ class MoneySerializer(serializers.DecimalField):
             return data
         return Money(data, 'EUR')
 
+
+class MoneyTotalSerializer(serializers.ListField):
+    """
+    Serialize money totals with multiple currencies, e.g.
+    [(450, 'EUR'), (23050, 'XEF')]
+    """
+    child = MoneySerializer()
+
+
 class ShareSerializer(serializers.Serializer):
     share_name = serializers.CharField(max_length=256, required=True)
     share_email = serializers.EmailField(required=True)

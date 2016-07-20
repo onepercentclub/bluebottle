@@ -1,5 +1,6 @@
 import datetime
 import pytz
+from django.core.exceptions import FieldError
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
@@ -16,6 +17,7 @@ from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
+from moneyed.classes import Money
 
 from bluebottle.tasks.models import Task
 from bluebottle.utils.utils import StatusDefinition
@@ -326,20 +328,7 @@ class Project(BaseProject):
 
     def update_amounts(self, save=True):
         """ Update amount based on paid and pending donations. """
-
-        self.amount_donated.amount = self.get_money_total(
-            [StatusDefinition.PENDING, StatusDefinition.SUCCESS,
-             StatusDefinition.PLEDGED])
-        self.amount_needed = self.amount_asked - self.amount_donated
-
-        if self.amount_needed.amount < 0:
-            # Should never be less than zero
-            self.amount_needed.amount = 0
-
-        self.update_status_after_donation(False)
-
-        if save:
-            self.save()
+        DeprecationWarning('Amount donated is calculated dynamically')
 
     def get_money_total(self, status_in=None):
         """
@@ -349,20 +338,20 @@ class Project(BaseProject):
 
         if self.amount_asked.amount == 0:
             # No money asked, return 0
-            return 0
+            return [Money(0, 'EUR')]
 
         donations = self.donation_set.all()
 
         if status_in:
             donations = donations.filter(order__status__in=status_in)
 
-        total = donations.aggregate(sum=Sum('amount'))
+        # total = donations.aggregate(sum=Sum('amount'))
 
-        if not total['sum']:
-            # No donations, manually set amount
-            return 0
-
-        return total['sum']
+        totals = [
+            Money(data['amount__sum'], data['amount_currency']) for data in
+            donations.values('amount_currency').annotate(Sum('amount')).order_by()
+        ]
+        return totals
 
     @property
     def is_realised(self):
@@ -412,6 +401,23 @@ class Project(BaseProject):
     @property
     def date_funded(self):
         return self.campaign_funded
+
+    @property
+    def amount_donated(self):
+        totals = self.get_money_total([StatusDefinition.PENDING,
+                                       StatusDefinition.SUCCESS,
+                                       StatusDefinition.PLEDGED])
+        if len(totals) > 1:
+            FieldError('Cannot yet handle multiple currencies on one project!')
+        return totals
+
+
+    @property
+    def amount_needed(self):
+        needed = self.amount_asked - self.amount_donated
+        if needed.amount < 0:
+            needed.amount = 0
+        return needed
 
     @property
     def amount_pending(self):

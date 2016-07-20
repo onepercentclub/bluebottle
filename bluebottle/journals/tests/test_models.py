@@ -137,7 +137,7 @@ class JournalModelTests(BluebottleTestCase):
         journal_from_db = self._get_only_one_from_db(ProjectPayoutJournal)
 
         self.assertEqual(journal_from_db.payout, payout_from_db)
-        self.assertEqual(journal_from_db.amount.amount, Decimal('100'))
+        self.assertEqual(journal_from_db.amount, Money(100, 'EUR'))
 
         # #### Create a Journal, check if it results in an updated Payout ##### #
         journal = ProjectPayoutJournal.objects.create(payout=self.payout,
@@ -153,7 +153,7 @@ class JournalModelTests(BluebottleTestCase):
 
         # the payout should be updated with the amount added via the journal
         payout_from_db = self._get_only_one_from_db(ProjectPayout)
-        self.assertEqual(payout_from_db.amount_payable, Decimal('150'))  # change to new amount
+        self.assertEqual(payout_from_db.amount_payable, Money(150, 'EUR'))  # change to new amount
 
         self._check_if_journal_total_equals_value(new_journal_from_db, payout_from_db.amount_payable)
 
@@ -162,7 +162,7 @@ class JournalModelTests(BluebottleTestCase):
         payout_from_db.save()
         self.assertEqual(ProjectPayoutJournal.objects.all().count(), 3)
         new_journal = ProjectPayoutJournal.objects.all()[2]  # the latest is the newest
-        self.assertEqual(new_journal.amount.amount, Decimal('-5'))
+        self.assertEqual(new_journal.amount, Money(-5, 'EUR'))
 
         # mastercheck to see if payout and related Journals addup
         self._check_if_journal_total_equals_value(new_journal, Decimal('145'))

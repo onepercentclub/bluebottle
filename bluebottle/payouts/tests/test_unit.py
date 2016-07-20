@@ -198,7 +198,7 @@ class PayoutTestCase(PayoutBaseTestCase):
 
         self.assertEquals(payout.payout_rule, ProjectPayout.PayoutRules.five)
         self.assertEquals(payout.organization_fee, Money('3', 'EUR'))
-        self.assertEquals(payout.amount_payable.amount, Money('57', 'EUR'))
+        self.assertEquals(payout.amount_payable, Money('57', 'EUR'))
 
     def test_amounts_new(self):
         """ Test amounts for new donations. """

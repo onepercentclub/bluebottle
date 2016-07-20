@@ -284,10 +284,7 @@ class Project(BaseProject):
                                           datetime.time(23, 59, 59))
             )
 
-        if self.amount_asked.amount:
-            self.update_amounts(False)
-
-        # FIXME: CLean up this code, make it readable
+        # FIXME: Clean up this code, make it readable
         # Project is not ended, complete, funded or stopped and its deadline has expired.
         if not self.campaign_ended and self.deadline < timezone.now() \
                 and self.status.slug not in ["done-complete",

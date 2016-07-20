@@ -154,10 +154,8 @@ def prepare_monthly_donations():
                                          'recurring_payment orders')
     donation_count = 0
 
-    popular_projects_all = Project.objects.exclude(skip_monthly=True,
-                                                         amount_needed=0).filter(
-        status=ProjectPhase.objects.get(slug="campaign")).order_by(
-        '-popularity')
+    popular_projects_all = Project.objects.exclude(skip_monthly=True, amount_needed=0)\
+        .filter(status=ProjectPhase.objects.get(slug="campaign")).order_by('-popularity')
     top_three_projects = list(popular_projects_all[:3])
     top_projects = list(popular_projects_all[3:])
 

@@ -60,8 +60,10 @@ class BaseJournal(models.Model):
         related_model_name = self.related_model_field_name  # 'donation'
         filter_ = {related_model_name: self.related_model}  # {'donation': self.donation}
 
-        return self.related_model.journal_set.all().filter(**filter_).aggregate(
-            Sum('amount'))['amount__sum'] or 0
+
+
+
+        return self.related_model.journal_set.all().filter(**filter_).aggregate(Sum('amount'))['amount__sum'] or 0
 
     def save(self, *args, **kwargs):
         # could be prefilled via the admin by the (staff) user that does a change

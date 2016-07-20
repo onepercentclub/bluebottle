@@ -29,8 +29,8 @@ class Task(models.Model):
         realized = ChoiceItem('realized', label=_('Realised'))
 
     class TaskTypes(DjangoChoices):
-        ongoing = ChoiceItem('ongoing', label=_('Ongoing'))
-        event = ChoiceItem('event', label=_('Event'))
+        ongoing = ChoiceItem('ongoing', label=_('Ongoing (with deadline)'))
+        event = ChoiceItem('event', label=_('Event (on set date)'))
 
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))

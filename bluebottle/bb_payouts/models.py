@@ -443,7 +443,7 @@ class BaseProjectPayout(PayoutBase):
         """
 
         if self.protected:
-            return 0
+            return Money(0.00, self.currency)
 
         amount_safe = self.get_amount_safe()
         amount_pending = self.get_amount_pending()
@@ -451,9 +451,9 @@ class BaseProjectPayout(PayoutBase):
 
         amount_failed = self.amount_raised - amount_safe - amount_pending - amount_pledged
 
-        if amount_failed <= decimal.Decimal('0.00'):
+        if amount_failed <= Money(0.00, self.currency):
             # Should never be less than 0
-            return decimal.Decimal('0.00')
+            return Money(0.00, self.currency)
 
         return amount_failed
 

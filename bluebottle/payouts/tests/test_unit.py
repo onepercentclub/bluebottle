@@ -197,8 +197,8 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout.calculate_amounts()
 
         self.assertEquals(payout.payout_rule, ProjectPayout.PayoutRules.five)
-        self.assertEquals(payout.organization_fee, Money('3'))
-        self.assertEquals(payout.amount_payable.amount, Money('57'))
+        self.assertEquals(payout.organization_fee, Money('3', 'EUR'))
+        self.assertEquals(payout.amount_payable.amount, Money('57', 'EUR'))
 
     def test_amounts_new(self):
         """ Test amounts for new donations. """
@@ -216,7 +216,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.assertEquals(payout.amount_payable, Money(0.00, 'EUR'))
 
         self.assertEquals(payout.get_amount_pending(), Money(0.00, 'EUR'))
-        self.assertEquals(payout.get_amount_safe().amount, Money(0.00, 'EUR'))
+        self.assertEquals(payout.get_amount_safe(), Money(0.00, 'EUR'))
         self.assertEquals(payout.get_amount_failed(), Money(0.00, 'EUR'))
 
     def test_amounts_pending(self):
@@ -646,7 +646,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         self._reload_project()
-        self.assertEqual(self.project.amount_donated, Money(60))
+        self.assertEqual(self.project.amount_donated, Money(60, 'EUR'))
 
         payout1 = ProjectPayoutFactory.create(
             project=self.project,
@@ -655,7 +655,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         )
         payout1 = payout1.__class__.objects.get(pk=payout1.pk)
         payout1.calculate_amounts()
-        self.assertEqual(payout1.amount_raised, Money(60))
+        self.assertEqual(payout1.amount_raised, Money(60, 'EUR'))
 
         payout2 = ProjectPayoutFactory.create(
             completed=None,
@@ -665,10 +665,10 @@ class PayoutTestCase(PayoutBaseTestCase):
             amount_payable=Decimal(10),
             organization_fee=0
         )
-        self.assertEqual(payout2.get_amount_raised(), Money(10))
-        self.assertEqual(payout2.get_amount_safe(), Money(10))
-        self.assertEqual(payout2.get_amount_pending(), 0)
-        self.assertEqual(payout2.get_amount_failed(), 0)
+        self.assertEqual(payout2.get_amount_raised(), Money(10, 'EUR'))
+        self.assertEqual(payout2.get_amount_safe(), Money(10, 'EUR'))
+        self.assertEqual(payout2.get_amount_pending(), Money(0, 'EUR'))
+        self.assertEqual(payout2.get_amount_failed(), Money(0, 'EUR'))
 
         with self.assertRaises(AssertionError):
             payout2.calculate_amounts()

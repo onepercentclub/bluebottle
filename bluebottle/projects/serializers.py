@@ -4,12 +4,12 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from bs4 import BeautifulSoup
-from localflavor.generic.validators import IBANValidator, BICValidator
+from localflavor.generic.validators import IBANValidator
 
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.bluebottle_drf2.serializers import (
-    EuroField, OEmbedField, SorlImageField, ImageSerializer,
+    OEmbedField, SorlImageField, ImageSerializer,
     PrivateFileSerializer)
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
@@ -17,7 +17,7 @@ from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.geo.models import Location
 from bluebottle.categories.models import Category
-from bluebottle.utils.serializers import MoneySerializer, MoneyTotalSerializer
+from bluebottle.utils.serializers import MoneySerializer
 
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
@@ -74,7 +74,7 @@ class ProjectBudgetLineSerializer(serializers.ModelSerializer):
 
 
 class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
-    amount = EuroField()
+    amount = MoneySerializer()
 
     class Meta:
         model = ProjectBudgetLine

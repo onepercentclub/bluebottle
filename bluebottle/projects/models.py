@@ -338,19 +338,23 @@ class Project(BaseProject):
 
         if self.amount_asked.amount == 0:
             # No money asked, return 0
-            return [Money(0, 'EUR')]
+            totals = [Money(0, 'EUR')]
+        else:
 
-        donations = self.donation_set.all()
+            donations = self.donation_set.all()
 
-        if status_in:
-            donations = donations.filter(order__status__in=status_in)
+            if status_in:
+                donations = donations.filter(order__status__in=status_in)
 
-        # total = donations.aggregate(sum=Sum('amount'))
+            # total = donations.aggregate(sum=Sum('amount'))
 
-        totals = [
-            Money(data['amount__sum'], data['amount_currency']) for data in
-            donations.values('amount_currency').annotate(Sum('amount')).order_by()
-        ]
+            totals = [
+                Money(data['amount__sum'], data['amount_currency']) for data in
+                donations.values('amount_currency').annotate(Sum('amount')).order_by()
+            ]
+
+        if len(totals) == 0:
+            totals = [Money(0, 'EUR')]
 
         if len(totals) > 1:
             FieldError('Cannot yet handle multiple currencies on one project!')

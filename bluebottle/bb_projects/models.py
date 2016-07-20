@@ -317,14 +317,4 @@ class BaseProject(models.Model, GetTweetMixin):
         return self.funding + self.sourcing
 
 
-class BaseProjectPhaseLog(models.Model):
-    project = models.ForeignKey('projects.Project')
-    status = models.ForeignKey("bb_projects.ProjectPhase")
-    start = CreationDateTimeField(
-        _('created'), help_text=_('When this project entered in this status.'))
-
-    class Meta():
-        abstract = True
-
-
 from projectwallmails import *

@@ -7,7 +7,6 @@ from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.http import urlquote
@@ -18,13 +17,11 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
-from bluebottle.categories.models import Category
-from bluebottle.clients import properties
 from bluebottle.tasks.models import Task
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
-    BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument)
-from bluebottle.utils.fields import ImageField, MoneyField
+    BaseProject, ProjectPhase, BaseProjectDocument)
+from bluebottle.utils.fields import MoneyField
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 
@@ -36,8 +33,12 @@ GROUP_PERMS = {'Staff': {'perms': ('add_project', 'change_project',
                                    'delete_project')}}
 
 
-class ProjectPhaseLog(BaseProjectPhaseLog):
-    pass
+class ProjectPhaseLog(models.Model):
+    project = models.ForeignKey('projects.Project')
+    status = models.ForeignKey('bb_projects.ProjectPhase')
+    start = CreationDateTimeField(
+        _('created'), help_text=_('When this project entered in this status.')
+    )
 
 
 class ProjectManager(models.Manager):

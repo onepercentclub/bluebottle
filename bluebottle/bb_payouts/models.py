@@ -456,8 +456,13 @@ class BaseProjectPayout(PayoutBase):
 
     def __unicode__(self):
         date = self.created.strftime('%d-%m-%Y')
-        return self.invoice_reference + " : " + date + " : " + self.receiver_account_number + " : EUR " + str(
-            self.amount_payable)
+        return "{0} : {1} : {2} : {3} {4}".format(
+            self.invoice_reference,
+            date,
+            self.receiver_account_number,
+            self.amount_payable.currency,
+            self.amount_payable.amount
+        )
 
 
 class ProjectPayoutLog(PayoutLogBase):

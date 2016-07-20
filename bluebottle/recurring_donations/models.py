@@ -6,6 +6,8 @@ from django_extensions.db.fields import CreationDateTimeField, \
 from localflavor.generic.models import IBANField, BICField
 from django.utils.translation import ugettext as _
 
+from bluebottle.utils.fields import MoneyField
+
 
 class MonthlyDonor(models.Model):
     """
@@ -17,7 +19,7 @@ class MonthlyDonor(models.Model):
     updated = ModificationDateTimeField(_("Updated"))
 
     active = models.BooleanField(default=True)
-    amount = models.DecimalField(_("amount"), max_digits=6, decimal_places=2)
+    amount = MoneyField(_("amount"))
 
     iban = IBANField()
     bic = BICField(blank=True, default='')
@@ -82,9 +84,7 @@ class MonthlyOrder(models.Model):
 
     batch = models.ForeignKey(MonthlyBatch, related_name='orders')
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
-    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
-                                 default=0)
-    currency = models.CharField(max_length=3, default='EUR')
+    amount = MoneyField(_("Amount"), default=0)
     name = models.CharField(max_length=35)
     city = models.CharField(max_length=35)
     iban = IBANField(blank=True, default='')
@@ -104,5 +104,4 @@ class MonthlyDonation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     order = models.ForeignKey(MonthlyOrder, related_name='donations')
     project = models.ForeignKey('projects.Project')
-    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
-                                 default=0)
+    amount = MoneyField(_("Amount"), default=0)

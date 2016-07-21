@@ -6,10 +6,10 @@ from django.dispatch import receiver
 
 
 @receiver(post_save, weak=False, sender=ProjectPayout)
-def create_donation_journal_after_donation_is_changed(sender, instance, created, **kwargs):
+def create_donation_journal_after_project_payout_is_changed(sender, instance, created, **kwargs):
     create_journal_for_sender(sender=sender, instance=instance, created=created)
 
 
 @receiver(post_save, weak=False, sender=OrganizationPayout)
-def create_donation_journal_after_donation_is_changed(sender, instance, created, **kwargs):
+def create_donation_journal_after_organization_payout_is_changed(sender, instance, created, **kwargs):
     create_journal_for_sender(sender=sender, instance=instance, created=created)

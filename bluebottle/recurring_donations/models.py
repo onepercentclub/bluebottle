@@ -97,7 +97,7 @@ class MonthlyOrder(models.Model):
     error = models.CharField(max_length=1000, blank=True, null=True, default='')
 
     def __unicode__(self):
-        return "{0}: {1}".format(self.user, self.amount)
+        return "{0}: {1} {2}".format(self.user, self.amount.currency, self.amount.amount)
 
 
 class MonthlyDonation(models.Model):

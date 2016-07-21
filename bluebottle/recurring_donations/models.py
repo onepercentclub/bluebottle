@@ -5,6 +5,7 @@ from django_extensions.db.fields import CreationDateTimeField, \
 
 from localflavor.generic.models import IBANField, BICField
 from django.utils.translation import ugettext as _
+from moneyed.classes import Money
 
 from bluebottle.utils.fields import MoneyField
 
@@ -30,7 +31,7 @@ class MonthlyDonor(models.Model):
     @property
     def is_valid(self):
         # Check if we're above the DocData minimum for direct debit.
-        if self.amount < 1.13:
+        if self.amount < Money(1.13, 'EUR'):
             return False
 
         # Check if the IBAN / BIC is stored correctly.

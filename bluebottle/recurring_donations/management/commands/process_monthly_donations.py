@@ -249,7 +249,7 @@ def prepare_monthly_donations():
 
         # Safety check to ensure the modifications to the donations in the recurring result in an Order total that
         # matches the RecurringDirectDebitPayment.
-        if donor.amount != Decimal(recurring_order.amount):
+        if donor.amount != recurring_order.amount:
             error_message = "Monthly donation amount: {0} does not equal recurring Order amount: {1} for '{2}'. Not processing this recurring donation.".format(
                 donor.amount, recurring_order.amount, donor)
             logger.error(error_message)

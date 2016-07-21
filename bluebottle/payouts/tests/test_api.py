@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
@@ -22,6 +23,8 @@ class TestPayoutApi(BluebottleTestCase):
 
         self.user2 = BlueBottleUserFactory.create()
         self.user2_token = "JWT {0}".format(self.user2.get_jwt_token())
+        financial = Group.objects.get(name='Financial')
+        financial.user_set.add(self.user2)
 
         self.payout = ProjectPayoutFactory.create()
         self.payout_url = reverse('payout_list')

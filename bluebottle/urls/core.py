@@ -75,6 +75,9 @@ urlpatterns = patterns('',
                        url(r'^payments_docdata/',
                            include('bluebottle.payments_docdata.urls.core')),
 
+                       url(r'^api/payouts/',
+                           include('bluebottle.payouts.urls')),
+
                        url(r'^api/organizations/',
                            include('bluebottle.organizations.urls.api')),
                        url(r'^api/suggestions/',

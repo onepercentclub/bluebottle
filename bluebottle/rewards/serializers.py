@@ -8,7 +8,7 @@ from .models import Reward
 class RewardSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field="slug", queryset=Project.objects)
     count = serializers.IntegerField(read_only=True)
-    amount = MoneySerializer(min_value=5.0)
+    amount = MoneySerializer()
 
     class Meta:
         model = Reward

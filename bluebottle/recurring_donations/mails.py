@@ -26,7 +26,7 @@ def mail_monthly_donation_processed_notification(monthly_order):
         receiver_first_name=receiver.first_name.capitalize(),
         link='/go/projects',
         date=format_date(locale='nl_NL'),
-        amount=format_currency(monthly_order.amount.amount, monthly_order.amount.currency, locale='nl_NL')
+        amount=format_currency(monthly_order.amount.amount, 'EUR', locale='nl_NL')
     )
 
 

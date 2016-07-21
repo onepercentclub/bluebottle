@@ -98,17 +98,17 @@ class JournalModelTests(BluebottleTestCase):
         donation_from_db = self._get_only_one_from_db(Donation)
         self.assertEqual(donation_from_db.amount, Money(150, 'EUR'))  # change to new amount
 
-        self._check_if_journal_total_equals_value(new_journal_from_db.amount, donation_from_db.amount)
+        self._check_if_journal_total_equals_value(new_journal_from_db, donation_from_db.amount)
 
         # Change the Donation, and check if a new Journal is created
         donation_from_db.amount = Money(145, 'EUR')
         donation_from_db.save()
         self.assertEqual(DonationJournal.objects.all().count(), 3)
         new_journal = DonationJournal.objects.all().last()  # the latest is the newest
-        self.assertEqual(new_journal.amount, Decimal('-5'))
+        self.assertEqual(new_journal.amount, Money(-5, 'EUR'))
 
         # mastercheck to see if Donation and related Journals addup
-        self._check_if_journal_total_equals_value(new_journal.amount, Money(145, 'EUR'))
+        self._check_if_journal_total_equals_value(new_journal, Money(145, 'EUR'))
 
         # Change the donation without changing the amount, no journal should be created.
         donation_from_db = self._get_only_one_from_db(Donation)
@@ -163,7 +163,7 @@ class JournalModelTests(BluebottleTestCase):
         self.assertEqual(new_journal.amount, Money(-5, 'EUR'))
 
         # mastercheck to see if payout and related Journals addup
-        self._check_if_journal_total_equals_value(new_journal.amount, Money(145, 'EUR'))
+        self._check_if_journal_total_equals_value(new_journal, Money(145, 'EUR'))
 
         # Change the payout without changing the amount, no journal should be created.
         payout_from_db = self._get_only_one_from_db(ProjectPayout)

@@ -60,10 +60,18 @@ class BaseJournal(models.Model):
         related_model_name = self.related_model_field_name  # 'donation'
         filter_ = {related_model_name: self.related_model}  # {'donation': self.donation}
 
+        totals = [
+            Money(data['amount__sum'], data['amount_currency']) for data in
+            self.related_model.journal_set.all().filter(**filter_).values('amount_currency').annotate(Sum('amount')).order_by()
+        ]
 
+        if len(totals) == 0:
+            totals = [Money(0, 'EUR')]
 
+        if len(totals) > 1:
+            DeprecationWarning('Cannot yet handle multiple currencies on one journal!')
 
-        return self.related_model.journal_set.all().filter(**filter_).aggregate(Sum('amount'))['amount__sum'] or 0
+        return totals[0]
 
     def save(self, *args, **kwargs):
         # could be prefilled via the admin by the (staff) user that does a change
@@ -179,14 +187,11 @@ def create_journal_for_sender(sender, instance, created, data_migration=None):
         # and add the correction when needed
         journal = journals.first()  # even when there are more, the get_journal_total will return the correct value
         journal_amount = journal.get_journal_total()
-
-        if hasattr(amount_instance, 'amount'):
-            amount_instance = amount_instance.amount
         diff = amount_instance - journal_amount
-        if diff == Decimal():
+        if diff.amount == 0.0:
             return  # dont save, or should a new journal be made when amount is not changed?Hry
         journal_date = instance.updated
-        journal_amount = Money(diff, journal.amount.currency)
+        journal_amount = diff
     else:
         journal_date = instance.created
         journal_amount = amount_instance

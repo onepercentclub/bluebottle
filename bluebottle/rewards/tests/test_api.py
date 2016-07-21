@@ -79,7 +79,7 @@ class RewardTestCase(BluebottleTestCase):
                                     dict(self.reward_data, amount=1),
                                     token=self.user_token)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['amount'], [u'Ensure this value is greater than or equal to 5.0.'])
+        self.assertEqual(response.data['amount'], [u'Ensure this value is greater than or equal to 5.00 \u20ac.'])
 
 
     def test_reward_can_not_be_created_by_non_project_owner(self):

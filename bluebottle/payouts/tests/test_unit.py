@@ -71,6 +71,7 @@ class PayoutBaseTestCase(BluebottleTestCase):
         # from the db again.
         self.project = Project.objects.get(pk=self.project.id)
 
+
 @override_settings(
     MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
                                   'properties'))
@@ -378,8 +379,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.assertEquals(payout.amount_safe, Money(60.00, 'EUR'))
         self.assertEquals(payout.amount_failed, Money(0.00, 'EUR'))
 
-
-    @override_settings(PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .5})
+    @override_settings(PROJECT_PAYOUT_FEES={'beneath_threshold': 1, 'fully_funded': .1, 'not_fully_funded': .5})
     def test_changed_fees_amounts_paid_fully_funded(self):
         """ Test amounts for paid donations. """
 
@@ -413,7 +413,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.assertEquals(payout.amount_safe, Money(60.00, 'EUR'))
         self.assertEquals(payout.amount_failed, Money(0.00, 'EUR'))
 
-    @override_settings(PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .5})
+    @override_settings(PROJECT_PAYOUT_FEES={'beneath_threshold': 1, 'fully_funded': .1, 'not_fully_funded': .5})
     def test_changed_fees_amounts_paid_not_fully_funded(self):
         """ Test amounts for paid donations. """
 
@@ -674,7 +674,7 @@ class PayoutTestCase(PayoutBaseTestCase):
             payout2.calculate_amounts()
 
 
-@override_settings(PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .2})
+@override_settings(PROJECT_PAYOUT_FEES={'beneath_threshold': 1, 'fully_funded': .1, 'not_fully_funded': .2})
 class PayoutPledgeTestCase(PayoutBaseTestCase):
     """ Test case for Pledge Payouts. """
 

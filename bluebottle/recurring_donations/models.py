@@ -75,8 +75,7 @@ class MonthlyProject(models.Model):
 
     batch = models.ForeignKey(MonthlyBatch)
     project = models.ForeignKey('projects.Project')
-    amount = models.DecimalField(_("amount"), default=0, max_digits=6,
-                                 decimal_places=2)
+    amount = MoneyField(_("amount"), default=0)
 
 
 class MonthlyOrder(models.Model):

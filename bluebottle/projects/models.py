@@ -284,6 +284,9 @@ class Project(BaseProject):
                                           datetime.time(23, 59, 59))
             )
 
+        if self.amount_asked:
+            self.update_amounts(False)
+
         # FIXME: Clean up this code, make it readable
         # Project is not ended, complete, funded or stopped and its deadline has expired.
         if not self.campaign_ended and self.deadline < timezone.now() \
@@ -324,8 +327,22 @@ class Project(BaseProject):
                 self.save()
 
     def update_amounts(self, save=True):
-        """ Update amount based on paid and pending donations. """
-        DeprecationWarning('Amount donated is calculated dynamically')
+        """
+        Update amount based on paid and pending donations.
+        """
+        total = self.get_money_total([StatusDefinition.PENDING,
+                                       StatusDefinition.SUCCESS,
+                                       StatusDefinition.PLEDGED])
+        if isinstance(total, list):
+            DeprecationWarning('Cannot yet handle multiple currencies on one project!')
+        self.amount_donated = total
+        self.amount_needed = self.amount_asked - self.amount_donated
+        if self.amount_needed.amount < 0:
+            # Should never be less than zero
+            self.amount_needed = Money(0, self.amount_asked.currency)
+        self.update_status_after_donation(False)
+        if save:
+            self.save()
 
     def get_money_total(self, status_in=None):
         """
@@ -408,17 +425,10 @@ class Project(BaseProject):
         return self.campaign_funded
 
     @property
-    def amount_donated(self):
+    def donation_totals(self):
         return self.get_money_total([StatusDefinition.PENDING,
                                      StatusDefinition.SUCCESS,
                                      StatusDefinition.PLEDGED])
-
-    @property
-    def amount_needed(self):
-        needed = self.amount_asked - self.amount_donated
-        if needed.amount < 0:
-            needed.amount = 0
-        return needed
 
     @property
     def amount_pending(self):

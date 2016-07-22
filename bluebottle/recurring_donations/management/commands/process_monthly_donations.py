@@ -4,24 +4,25 @@ import sys
 import logging
 
 from collections import namedtuple
+from moneyed import Money
 from optparse import make_option
 
-from django.utils.timezone import now
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 from django.db import connection
+from django.utils import timezone
+from django.utils.timezone import now
 
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.clients.models import Client
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
+from bluebottle.payments.services import PaymentService
 from bluebottle.projects.models import Project
 from bluebottle.recurring_donations.models import MonthlyProject
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.payments.services import PaymentService
-from bluebottle.clients.utils import LocalTenant
 
 from ...models import MonthlyDonor, MonthlyDonation, MonthlyOrder, MonthlyBatch
 from ...mails import mail_monthly_donation_processed_notification
@@ -104,15 +105,13 @@ def create_recurring_order(user, projects, batch, donor):
     """
     Creates a recurring Order with donations to the supplied projects.
     """
-    project_amount = Decimal(
-        math.floor(donor.amount * 100 / len(projects))) / 100
+    project_amount = Money((math.floor(donor.amount.amount * 100 / len(projects)) / 100), 'EUR')
     order = MonthlyOrder.objects.create(user=user, batch=batch,
                                         amount=donor.amount, name=donor.name,
                                         city=donor.city, iban=donor.iban,
                                         bic=donor.bic,
                                         country=donor.country.alpha2_code)
     order.save()
-
     rest_amount = donor.amount - project_amount * len(projects)
 
     project_count = len(projects)
@@ -175,14 +174,14 @@ def prepare_monthly_donations():
                     u"Project not in Campaign phase. Skipping '{0}'".format(
                         donor_project.project.title))
                 donor_project.delete()
-            elif donor_project.project.amount_needed <= 0:
+            elif donor_project.project.amount_needed <= Money(0, 'EUR'):
                 logger.info(u"Project already funded. Skipping '{0}'".format(
                     donor_project.project.title))
                 donor_project.delete()
             else:
                 monthly_project, created = MonthlyProject.objects.get_or_create(
                     batch=batch, project=donor_project.project)
-                if donor_project.project.amount_needed - monthly_project.amount <= 0:
+                if donor_project.project.amount_needed - monthly_project.amount <= Money(0, 'EUR'):
                     logger.info(
                         u"Project already funded. Skipping '{0}'".format(
                             donor_project.project.title))
@@ -192,7 +191,7 @@ def prepare_monthly_donations():
         for project in top_three_projects:
             monthly_project, created = MonthlyProject.objects.get_or_create(
                 batch=batch, project=project)
-            if project.amount_needed - monthly_project.amount <= 0:
+            if project.amount_needed - monthly_project.amount <= Money(0, 'EUR'):
                 # Remove project if it's doesn't need more many and add another from top_projects
                 logger.info(u"Top3 project fully funded. Skipping '{0}'".format(
                     project.title))
@@ -250,7 +249,7 @@ def prepare_monthly_donations():
 
         # Safety check to ensure the modifications to the donations in the recurring result in an Order total that
         # matches the RecurringDirectDebitPayment.
-        if donor.amount != Decimal(recurring_order.amount):
+        if donor.amount != recurring_order.amount:
             error_message = "Monthly donation amount: {0} does not equal recurring Order amount: {1} for '{2}'. Not processing this recurring donation.".format(
                 donor.amount, recurring_order.amount, donor)
             logger.error(error_message)

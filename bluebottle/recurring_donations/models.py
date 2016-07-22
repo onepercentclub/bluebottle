@@ -5,6 +5,7 @@ from django_extensions.db.fields import CreationDateTimeField, \
 
 from localflavor.generic.models import IBANField, BICField
 from django.utils.translation import ugettext as _
+from moneyed.classes import Money
 
 from bluebottle.utils.fields import MoneyField
 
@@ -30,7 +31,7 @@ class MonthlyDonor(models.Model):
     @property
     def is_valid(self):
         # Check if we're above the DocData minimum for direct debit.
-        if self.amount < 1.13:
+        if self.amount < Money(1.13, 'EUR'):
             return False
 
         # Check if the IBAN / BIC is stored correctly.
@@ -74,8 +75,7 @@ class MonthlyProject(models.Model):
 
     batch = models.ForeignKey(MonthlyBatch)
     project = models.ForeignKey('projects.Project')
-    amount = models.DecimalField(_("amount"), default=0, max_digits=6,
-                                 decimal_places=2)
+    amount = MoneyField(_("amount"), default=0)
 
 
 class MonthlyOrder(models.Model):
@@ -97,7 +97,7 @@ class MonthlyOrder(models.Model):
     error = models.CharField(max_length=1000, blank=True, null=True, default='')
 
     def __unicode__(self):
-        return "{0}: {1}".format(self.user, self.amount)
+        return "{0}: {1} {2}".format(self.user, self.amount.currency, self.amount.amount)
 
 
 class MonthlyDonation(models.Model):

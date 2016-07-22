@@ -185,6 +185,7 @@ class CreateManualDonationView(AdminOptsMixin, BaseManualEntryView):
 
             # update/create the required payout
             project = donation.project
+            project.update_amounts()
             payouts = ProjectPayout.objects.filter(project=project)
 
             # check the payouts and only update 'new' payouts, else create a new payout

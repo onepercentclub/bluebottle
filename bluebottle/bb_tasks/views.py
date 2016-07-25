@@ -1,5 +1,7 @@
+import django_filters
+
 from django.db.models.query_utils import Q
-from rest_framework import generics
+from rest_framework import generics, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
@@ -21,11 +23,29 @@ class TaskPreviewPagination(BluebottlePagination):
     page_size = 8
 
 
+class TaskPreviewFilter(filters.FilterSet):
+    after = django_filters.DateTimeFilter(name='deadline', lookup_type='gte')
+    before = django_filters.DateTimeFilter(name='deadline', lookup_type='lte')
+    country = django_filters.NumberFilter(name='project__country')
+    location = django_filters.NumberFilter(name='project__location')
+    project = django_filters.CharFilter(name='project__slug')
+    text = django_filters.MethodFilter(action='text_filter')
+
+    def text_filter(self, queryset, filter):
+        return queryset.filter(
+            Q(title__icontains=filter) | Q(description__icontains=filter)
+        )
+
+    class Meta:
+        model = Task
+        fields = ['status', 'skill', ]
+
+
 class TaskPreviewList(generics.ListAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskPreviewSerializer
     pagination_class = TaskPreviewPagination
-    filter_fields = ('status', 'skill',)
+    filter_class = TaskPreviewFilter
 
     def get_queryset(self):
         qs = super(TaskPreviewList, self).get_queryset()
@@ -34,15 +54,27 @@ class TaskPreviewList(generics.ListAPIView):
         if project_slug:
             qs = qs.filter(project__slug=project_slug)
 
-        country = self.request.query_params.get('country', None)
-        country = self.request.query_params.get('country', None)
-        if country:
-            qs = qs.filter(project__country=country)
-
         text = self.request.query_params.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
                            Q(description__icontains=text))
+
+        # Searching for tasks can mean 2 things:
+        # 1) Search for tasks a specifc day
+        # 2) Search for tasks that take place over a period of time
+        start_date = self.request.query_params.get('start', None)
+        end_date = self.request.query_params.get('end', None)
+
+        # User searches for tasks on a specific day.
+        if start_date and not end_date:
+            qs = qs.filter(Q(type='event', deadline=start_date) |
+                           Q(type='ongoing', deadline__gte=start_date))
+
+        # User searches for tasks in a specific range
+        if start_date and end_date:
+            qs = qs.filter(Q(type='event', deadline__range=[start_date, end_date]) |
+                           Q(type='ongoing', deadline__gte=start_date)
+                           )
 
         ordering = self.request.query_params.get('ordering', None)
 
@@ -50,8 +82,6 @@ class TaskPreviewList(generics.ListAPIView):
             qs = qs.order_by('-created')
         elif ordering == 'deadline':
             qs = qs.order_by('deadline')
-
-        qs = qs.exclude(status=Task.TaskStatuses.closed)
 
         return qs.filter(project__status__viewable=True)
 
@@ -74,6 +104,23 @@ class TaskList(generics.ListCreateAPIView):
         if text:
             qs = qs.filter(Q(title__icontains=text) |
                            Q(description__icontains=text))
+
+        # Searching for tasks can mean 2 things:
+        # 1) Search for tasks a specifc day
+        # 2) Search for tasks that take place over a period of time
+        start_date = self.request.query_params.get('start', None)
+        end_date = self.request.query_params.get('end', None)
+
+        # User searches for tasks on a specific day.
+        if start_date and not end_date:
+            qs = qs.filter(Q(type='event', deadline=start_date) |
+                           Q(type='ongoing', deadline__gte=start_date))
+
+        # User searches for tasks in a specific range
+        if start_date and end_date:
+            qs = qs.filter(Q(type='event', deadline__range=[start_date, end_date]) |
+                           Q(type='ongoing', deadline__gte=start_date)
+                           )
 
         ordering = self.request.query_params.get('ordering', None)
 

@@ -15,7 +15,6 @@ class SkillFactory(factory.DjangoModelFactory):
         model = Skill
 
     name = factory.Sequence(lambda n: 'Skill_{0}'.format(n))
-    name_nl = factory.LazyAttribute(lambda o: o.name)
 
 
 class TaskFactory(factory.DjangoModelFactory):

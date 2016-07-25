@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
@@ -37,6 +37,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.skill4 = SkillFactory.create()
 
         self.task_url = '/api/bb_tasks/'
+        self.task_preview_url = '/api/bb_tasks/previews/'
         self.task_members_url = '/api/bb_tasks/members/'
 
     def test_create_task(self):
@@ -226,19 +227,22 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
+            deadline=datetime(2010, 05, 05, tzinfo=timezone.UTC())
         )
         self.task2 = TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
+            deadline=datetime(2011, 05, 05, tzinfo=timezone.UTC())
         )
 
         self.assertEqual(2, Project.objects.count())
         self.assertEqual(2, Task.objects.count())
 
-        api_url = self.task_url + 'previews/'
+        api_url = self.task_preview_url
 
         # test that only one task preview is returned
+
         response = self.client.get(api_url, token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
@@ -263,6 +267,19 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['id'], self.task1.id)
+
+        response = self.client.get(api_url, {'before': '2011-01-01'},
+                                   token=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
+                         response.data)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['id'], self.task1.id)
+
+        response = self.client.get(api_url, {'after': '2011-01-01'},
+                                   token=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
+                         response.data)
+        self.assertEqual(response.data['count'], 0)
 
     def test_delete_task_member(self):
         task = TaskFactory.create()
@@ -310,6 +327,136 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)
+
+
+class TestTaskSearchCase(BluebottleTestCase):
+    """Tests for the task search functionality."""
+
+    def setUp(self):
+        """Setup reusable data."""
+        self.init_projects()
+
+        self.now = timezone.now()
+        self.tomorrow = self.now + timezone.timedelta(days=1)
+        self.week = self.now + timezone.timedelta(days=7)
+        self.month = self.now + timezone.timedelta(days=30)
+
+        self.some_user = BlueBottleUserFactory.create()
+        self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
+
+        self.task_url = '/api/bb_tasks/'
+
+        self.event_task_1 = TaskFactory.create(status='open',
+                                               type='event',
+                                               deadline=self.tomorrow,
+                                               people_needed=1)
+
+        self.event_task_2 = TaskFactory.create(status='open',
+                                               type='event',
+                                               deadline=self.month,
+                                               people_needed=1)
+
+        self.ongoing_task_1 = TaskFactory.create(status='open',
+                                                 type='ongoing',
+                                                 deadline=self.week,
+                                                 people_needed=1)
+
+        self.ongoing_task_2 = TaskFactory.create(status='open',
+                                                 type='ongoing',
+                                                 deadline=self.tomorrow,
+                                                 people_needed=1)
+
+        self.ongoing_task_3 = TaskFactory.create(status='open',
+                                                 type='ongoing',
+                                                 deadline=self.month,
+                                                 people_needed=1)
+
+    def test_search_for_specific_date_no_event_task(self):
+        """
+        Search for tasks taking place on a specific date when
+        there is no event-type task on the search date.
+        """
+
+        search_date = {
+            'start': str(self.now + timezone.timedelta(days=3))
+        }
+
+        response = self.client.get(self.task_url, search_date,
+                                   token=self.some_token)
+
+        # The result should include ongoing_task_1, ongoing_task_3 but
+        # no event_tasks
+        self.assertEquals(response.data['count'], 2)
+
+        ids = [self.ongoing_task_1.id, self.ongoing_task_3.id]
+
+        self.assertTrue(response.data['results'][0]['id'] in ids)
+        self.assertTrue(response.data['results'][1]['id'] in ids)
+
+    def test_search_for_specific_date_with_event_task(self):
+        """
+        Search for tasks taking place on a specific date
+        when there is an event-type task.
+        """
+        event_task_3 = TaskFactory.create(status='open',
+                                          type='event',
+                                          deadline=self.now +
+                                          timezone.timedelta(days=3),
+                                          people_needed=1)
+
+        search_date = {
+            'start': str(self.now + timezone.timedelta(days=3))
+        }
+
+        response = self.client.get(self.task_url, search_date,
+                                   token=self.some_token)
+
+        # The result should include ongoing_task_1, ongoing_task_3 and
+        # event_task_3 because its on the deadline date
+        ids = [self.ongoing_task_1.id, self.ongoing_task_3.id, event_task_3.id]
+        self.assertEquals(response.data['count'], 3)
+        self.assertTrue(response.data['results'][0]['id'] in ids)
+        self.assertTrue(response.data['results'][1]['id'] in ids)
+        self.assertTrue(response.data['results'][2]['id'] in ids)
+
+    def test_search_for_date_range(self):
+        """
+        Search tasks for a date range. Return ongoing and event tasks
+        with deadline in range
+        """
+        ongoing_task_4 = TaskFactory.create(status='open',
+                                            type='ongoing',
+                                            deadline=self.now +
+                                            timezone.timedelta(days=365),
+                                            people_needed=1)
+
+        event_task_5 = TaskFactory.create(status='open',
+                                          type='event',
+                                          deadline=self.now +
+                                          timezone.timedelta(days=365),
+                                          people_needed=1)
+
+        search_date = {
+            'start': str(self.tomorrow + timezone.timedelta(days=3)),
+            'end': str(self.month + timezone.timedelta(days=15))
+        }
+
+        response = self.client.get(self.task_url, search_date,
+                                   token=self.some_token)
+
+        # Search should return event_task_2, ongoing_task_1, and ongoing_task_3
+        ids = [self.event_task_2.id, self.ongoing_task_1.id,
+               self.ongoing_task_3.id, ongoing_task_4.id]
+        self.assertEqual(response.data['count'], 4)
+        self.assertTrue(response.data['results'][0]['id'] in ids)
+        self.assertTrue(response.data['results'][1]['id'] in ids)
+        self.assertTrue(response.data['results'][2]['id'] in ids)
+        self.assertTrue(response.data['results'][3]['id'] in ids)
+
+
+
+
+
 
 # TODO: Test edit task
 # TODO: Test change TaskMember edit status

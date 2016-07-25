@@ -5,7 +5,8 @@ from django.forms import ModelForm
 from django.forms.models import ModelChoiceField
 
 from bluebottle.members.models import Member
-from bluebottle.tasks.models import TaskMember, TaskFile, Task
+from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
+from bluebottle.clients import properties
 
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -67,14 +68,6 @@ class TaskFileAdminInline(admin.StackedInline):
     extra = 0
 
 
-class TaskForm(ModelForm):
-    owner = ModelChoiceField(queryset=Member.objects.order_by('email'))
-
-    class Meta:
-        model = Task
-        exclude = ()
-
-
 class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
@@ -107,7 +100,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     fields = ('title', 'description', 'skill', 'time_needed', 'status',
               'date_status_change', 'people_needed', 'project', 'author',
-              'deadline')
+              'type', 'deadline')
 
 
 admin.site.register(Task, TaskAdmin)
@@ -177,3 +170,24 @@ class TaskMemberAdmin(admin.ModelAdmin):
 
 
 admin.site.register(TaskMember, TaskMemberAdmin)
+
+from django.utils import translation
+
+
+class SkillAdmin(admin.ModelAdmin):
+    list_display = ('translated_name', 'disabled')
+    readonly_fields = ('translated_name', )
+    fields = readonly_fields + ('disabled', 'description', )
+
+    def translated_name(self, obj):
+        return _(obj.name)
+
+    translated_name.short_description = _('Name')
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request):
+        return False
+
+admin.site.register(Skill, SkillAdmin)

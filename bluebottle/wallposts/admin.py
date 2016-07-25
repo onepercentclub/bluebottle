@@ -1,6 +1,7 @@
 import urlparse
 
 from django.contrib import admin
+from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.template.loader import render_to_string
 
@@ -20,7 +21,7 @@ class MediaWallpostPhotoInline(admin.TabularInline):
     extra = 0
     raw_id_fields = ('author', 'editor')
 
-    readonly_fields = ('image_tag',)
+    readonly_fields = ('image_tag', )
 
     fields = ('image_tag', 'photo')
 
@@ -40,7 +41,10 @@ class MediaWallpostPhotoInline(admin.TabularInline):
 
 class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = Wallpost
-    readonly_fields = ('ip_address', 'deleted', 'view_online', 'gallery')
+    readonly_fields = ('ip_address', 'deleted', 'view_online', 'gallery', 'donation',
+                       'share_with_facebook', 'share_with_twitter',
+                       'share_with_linkedin', 'email_followers')
+    fields = readonly_fields + ('text', 'author', 'editor')
     raw_id_fields = ('author', 'editor')
     list_display = ('created', 'view_online', 'get_text', 'thumbnail', 'author')
 
@@ -137,23 +141,42 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
 
 
 class SystemWallpostAdmin(PolymorphicChildModelAdmin):
-    base_model = Wallpost
-    readonly_fields = ('ip_address', 'deleted')
+    base_model = SystemWallpost
+    readonly_fields = ('ip_address', 'content_type', 'related_type', 'donation_link', 'project_link')
+    fields = readonly_fields + ('author', 'text')
     list_display = ('created', 'author', 'content_type', 'related_type', 'text')
     raw_id_fields = ('author', 'editor')
     ordering = ('-created',)
+
+    def project_link(self, obj):
+        if obj.donation:
+            link = reverse('admin:projects_project_change', args=(obj.donation.project.id,))
+            return "<a href='{0}'>{1}</a>".format(link, obj.donation.project.title)
+    project_link.allow_tags = True
+
+    def donation_link(self, obj):
+        if obj.donation:
+            link = reverse('admin:donations_donation_change', args=(obj.donation.id,))
+            return "<a href='{0}'>{1}</a>".format(link, obj.donation)
+
+    donation_link.allow_tags = True
 
 
 class WallpostParentAdmin(PolymorphicParentModelAdmin):
     """ The parent model admin """
     base_model = Wallpost
-    list_display = ('created', 'author', 'content_type')
+    list_display = ('created', 'author', 'content_type', 'type')
+    fields = ('title', 'text', 'author', 'ip_address')
     ordering = ('-created',)
     child_models = (
         (MediaWallpost, MediaWallpostAdmin),
         (TextWallpost, TextWallpostAdmin),
         (SystemWallpost, SystemWallpostAdmin),
     )
+
+    def type(self, obj):
+        return obj.get_real_instance_class().__name__
+
 
 # Only the parent needs to be registered:
 admin.site.register(Wallpost, WallpostParentAdmin)

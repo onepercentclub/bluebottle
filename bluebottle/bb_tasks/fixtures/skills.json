@@ -4,8 +4,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "- No specific skill needed -",
-      "name_nl": "- Geen specifieke vaardigheid nodig -"
+      "name": "- No specific skill needed -"
     }
   },
   {
@@ -13,8 +12,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Agriculture",
-      "name_nl": "Landbouw"
+      "name": "Agriculture"
     }
   },
   {
@@ -22,8 +20,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Architecture / Engineering",
-      "name_nl": "Architectuur / Bouwkunde"
+      "name": "Architecture / Engineering"
     }
   },
   {
@@ -31,8 +28,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Brainstorming",
-      "name_nl": "Brainstorming"
+      "name": "Brainstorming"
     }
   },
   {
@@ -40,8 +36,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Business",
-      "name_nl": "Business"
+      "name": "Business"
     }
   },
   {
@@ -49,8 +44,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Community Engagement",
-      "name_nl": "Community Engagement"
+      "name": "Community Engagement"
     }
   },
   {
@@ -58,8 +52,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Computer / ICT",
-      "name_nl": "Computer / ICT"
+      "name": "Computer / ICT"
     }
   },
   {
@@ -67,8 +60,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Copy writing / Blogging",
-      "name_nl": "Copy writing / Blogging"
+      "name": "Copy writing / Blogging"
     }
   },
   {
@@ -76,8 +68,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Design",
-      "name_nl": "Design"
+      "name": "Design"
     }
   },
   {
@@ -85,8 +76,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Education / Training",
-      "name_nl": "Scholing / Training"
+      "name": "Education / Training"
     }
   },
   {
@@ -94,8 +84,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Finance",
-      "name_nl": "Financi\u00ebn"
+      "name": "Finance"
     }
   },
   {
@@ -103,8 +92,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Fundraising",
-      "name_nl": "Inzamelingsactie"
+      "name": "Fundraising"
     }
   },
   {
@@ -112,8 +100,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Giving feedback",
-      "name_nl": "Feedback"
+      "name": "Giving feedback"
     }
   },
   {
@@ -121,8 +108,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Health care",
-      "name_nl": "Gezondheidszorg"
+      "name": "Health care"
     }
   },
   {
@@ -130,8 +116,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "HRM",
-      "name_nl": "HRM"
+      "name": "HRM"
     }
   },
   {
@@ -139,8 +124,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Law / politics",
-      "name_nl": "Rechten / Politiek"
+      "name": "Law / politics"
     }
   },
   {
@@ -148,8 +132,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Logistics",
-      "name_nl": "Logistiek"
+      "name": "Logistics"
     }
   },
   {
@@ -157,8 +140,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Marketing / PR",
-      "name_nl": "Marketing / PR"
+      "name": "Marketing / PR"
     }
   },
   {
@@ -166,8 +148,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Photo / Video",
-      "name_nl": "Foto / Video"
+      "name": "Photo / Video"
     }
   },
   {
@@ -175,8 +156,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Presentations",
-      "name_nl": "Presentatie"
+      "name": "Presentations"
     }
   },
   {
@@ -184,8 +164,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Project Management",
-      "name_nl": "Project Management"
+      "name": "Project Management"
     }
   },
   {
@@ -193,8 +172,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Research",
-      "name_nl": "Onderzoek"
+      "name": "Research"
     }
   },
   {
@@ -202,8 +180,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Social media",
-      "name_nl": "Social media"
+      "name": "Social media"
     }
   },
   {
@@ -211,8 +188,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Sports",
-      "name_nl": "Sport"
+      "name": "Sports"
     }
   },
   {
@@ -220,8 +196,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Sustainability",
-      "name_nl": "Duurzaamheid"
+      "name": "Sustainability"
     }
   },
   {
@@ -229,8 +204,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Tourism",
-      "name_nl": "Toerisme"
+      "name": "Tourism"
     }
   },
   {
@@ -238,8 +212,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Translations",
-      "name_nl": "Vertalingen"
+      "name": "Translations"
     }
   },
   {
@@ -247,8 +220,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Web Development",
-      "name_nl": "Web Development"
+      "name": "Web Development"
     }
   },
   {
@@ -256,8 +228,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Writing proposals",
-      "name_nl": "Plan schrijven"
+      "name": "Writing proposals"
     }
   },
   {
@@ -265,8 +236,7 @@
     "model": "tasks.skill",
     "fields": {
       "description": "",
-      "name": "Coaching",
-      "name_nl": "Coaching"
+      "name": "Coaching"
     }
   }
 ]

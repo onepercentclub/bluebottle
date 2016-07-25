@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 # ADMIN_TOOLS_INDEX_DASHBOARD = 'fluent_dashboard.dashboard.FluentIndexDashboard'
 ADMIN_TOOLS_INDEX_DASHBOARD = 'dashboard.CustomIndexDashboard'
 ADMIN_TOOLS_APP_INDEX_DASHBOARD = 'fluent_dashboard.dashboard.FluentAppIndexDashboard'
-ADMIN_TOOLS_MENU = 'fluent_dashboard.menu.FluentMenu'
+ADMIN_TOOLS_MENU = 'bluebottle.clients.admin_menu.AdminMenu'
 
 
 # Further customize the dashboard
@@ -76,12 +76,6 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.payments_docdata.*',
             'bluebottle.payments_logger.*',
             'bluebottle.payouts.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Accounting'), {
-        'models': (
             'bluebottle.accounting.*',
             'bluebottle.journals.*',
         ),

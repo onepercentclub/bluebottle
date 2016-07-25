@@ -1,12 +1,19 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.utils.functional import lazy
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (CreationDateTimeField,
                                          ModificationDateTimeField)
 from djchoices import DjangoChoices, ChoiceItem
+
+from bluebottle.clients import properties
+
+
+def get_languages():
+    return properties.LANGUAGES
 
 
 class QuoteManager(models.Manager):
@@ -30,7 +37,7 @@ class Quote(models.Model):
 
     # Contents
     language = models.CharField(_("language"), max_length=5,
-                                choices=settings.LANGUAGES)
+                                choices=lazy(get_languages, tuple)())
     quote = models.TextField()
 
     # Publication

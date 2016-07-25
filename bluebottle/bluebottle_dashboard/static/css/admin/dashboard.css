@@ -51,3 +51,6 @@
     text-align: right;
 }
 
+#header ul#navigation-menu li a {
+    text-transform: none;
+}

@@ -442,6 +442,15 @@ class MoneySerializerTestCase(BluebottleTestCase):
             Money(10, 'EUR')
         )
 
+    def test_float_to_money(self):
+        data = 10.0
+
+        self.assertEqual(
+            self.serializer.to_internal_value(data),
+            Money(10.0, 'EUR')
+        )
+
+
     def test_object_to_money(self):
         data = {'amount': 10, 'currency': 'USD'}
 

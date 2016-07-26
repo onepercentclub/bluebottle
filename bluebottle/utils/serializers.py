@@ -24,9 +24,9 @@ class MoneySerializer(serializers.DecimalField):
         if not data:
             return data
 
-        if isinstance(data, int):
-            return Money(data, 'EUR')
-        else:
+        try:
+            return Money(float(data), 'EUR')
+        except TypeError:
             return Money(data['amount'], data['currency'])
 
 

@@ -66,12 +66,11 @@ class TaskPreviewList(generics.ListAPIView):
         end_date = self.request.query_params.get('end', None)
 
         # User searches for tasks on a specific day.
-        if start_date and not end_date:
+        if start_date and not end_date or start_date is end_date:
             qs = qs.filter(Q(type='event', deadline=start_date) |
                            Q(type='ongoing', deadline__gte=start_date))
-
-        # User searches for tasks in a specific range
-        if start_date and end_date:
+        else:
+            # User searches for tasks in a specific range
             qs = qs.filter(Q(type='event', deadline__range=[start_date, end_date]) |
                            Q(type='ongoing', deadline__gte=start_date)
                            )
@@ -112,12 +111,11 @@ class TaskList(generics.ListCreateAPIView):
         end_date = self.request.query_params.get('end', None)
 
         # User searches for tasks on a specific day.
-        if start_date and not end_date:
+        if start_date and not end_date or start_date is end_date:
             qs = qs.filter(Q(type='event', deadline=start_date) |
                            Q(type='ongoing', deadline__gte=start_date))
-
-        # User searches for tasks in a specific range
-        if start_date and end_date:
+        else:
+            # User searches for tasks in a specific range
             qs = qs.filter(Q(type='event', deadline__range=[start_date, end_date]) |
                            Q(type='ongoing', deadline__gte=start_date)
                            )

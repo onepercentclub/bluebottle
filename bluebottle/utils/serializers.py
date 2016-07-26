@@ -23,7 +23,11 @@ class MoneySerializer(serializers.DecimalField):
     def to_internal_value(self, data):
         if not data:
             return data
-        return Money(data, 'EUR')
+
+        if isinstance(data, int):
+            return Money(data, 'EUR')
+        else:
+            return Money(data['amount'], data['currency'])
 
 
 class MoneyTotalSerializer(serializers.ListField):

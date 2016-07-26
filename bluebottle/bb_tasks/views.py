@@ -1,5 +1,6 @@
+from django.utils.timezone import utc
 from dateutil import parser
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 import django_filters
 from django.db.models.query_utils import Q
@@ -71,7 +72,7 @@ class TaskPreviewList(generics.ListAPIView):
 
         # User searches for tasks on a specific day.
         if start_date and not end_date or (start_date and start_date is end_date):
-            extra_day_start_date = parser.parse(start_date) + timedelta(days=1)
+            extra_day_start_date = utc.localize(parser.parse(start_date) + timedelta(days=1))
 
             qs = qs.filter(Q(type='event',
                              deadline__range=[start_date,
@@ -124,7 +125,7 @@ class TaskList(generics.ListCreateAPIView):
 
         # User searches for tasks on a specific day.
         if start_date and not end_date or (start_date and start_date is end_date):
-            extra_day_start_date = parser.parse(start_date) + timedelta(days=1)
+            extra_day_start_date = utc.localize(parser.parse(start_date) + timedelta(days=1))
 
             qs = qs.filter(Q(type='event',
                              deadline__range=[start_date,

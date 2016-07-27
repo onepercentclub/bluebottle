@@ -117,7 +117,7 @@ class TaskList(generics.ListCreateAPIView, FilterQSParams):
     def get_queryset(self):
         qs = super(TaskList, self).get_queryset()
 
-        self.get_qs(qs)
+        qs = self.get_qs(qs)
 
         # Searching for tasks can mean 2 things:
         # 1) Search for tasks a specifc day

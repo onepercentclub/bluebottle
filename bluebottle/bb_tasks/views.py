@@ -45,15 +45,9 @@ class TaskPreviewFilter(filters.FilterSet):
         fields = ['status', 'skill', ]
 
 
-class TaskPreviewList(generics.ListAPIView):
-    queryset = Task.objects.all()
-    serializer_class = TaskPreviewSerializer
-    pagination_class = TaskPreviewPagination
-    filter_class = TaskPreviewFilter
+class FilterQSParams(object):
 
-    def get_queryset(self):
-        qs = super(TaskPreviewList, self).get_queryset()
-
+    def get_qs(self, qs):
         project_slug = self.request.query_params.get('project', None)
         if project_slug:
             qs = qs.filter(project__slug=project_slug)
@@ -62,6 +56,22 @@ class TaskPreviewList(generics.ListAPIView):
         if text:
             qs = qs.filter(Q(title__icontains=text) |
                            Q(description__icontains=text))
+
+        status = self.request.query_params.get('status', None)
+        if status:
+            qs = qs.filter(status=status)
+        return qs
+
+class TaskPreviewList(generics.ListAPIView, FilterQSParams):
+    queryset = Task.objects.all()
+    serializer_class = TaskPreviewSerializer
+    pagination_class = TaskPreviewPagination
+    filter_class = TaskPreviewFilter
+
+    def get_queryset(self):
+        qs = super(TaskPreviewList, self).get_queryset()
+
+        qs = self.get_qs(qs)
 
         # Searching for tasks can mean 2 things:
         # 1) Search for tasks a specifc day
@@ -97,7 +107,7 @@ class TaskPreviewList(generics.ListAPIView):
         return qs.filter(project__status__viewable=True)
 
 
-class TaskList(generics.ListCreateAPIView):
+class TaskList(generics.ListCreateAPIView, FilterQSParams):
     queryset = Task.objects.all()
     pagination_class = TaskPreviewPagination
     serializer_class = BaseTaskSerializer
@@ -107,14 +117,7 @@ class TaskList(generics.ListCreateAPIView):
     def get_queryset(self):
         qs = super(TaskList, self).get_queryset()
 
-        project_slug = self.request.query_params.get('project', None)
-        if project_slug:
-            qs = qs.filter(project__slug=project_slug)
-
-        text = self.request.query_params.get('text', None)
-        if text:
-            qs = qs.filter(Q(title__icontains=text) |
-                           Q(description__icontains=text))
+        self.get_qs(qs)
 
         # Searching for tasks can mean 2 things:
         # 1) Search for tasks a specifc day

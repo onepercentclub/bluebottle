@@ -37,6 +37,8 @@ class TaskApiTestcase(BluebottleTestCase):
             self.yet_another_user.get_jwt_token())
 
         self.previews_url = '/api/bb_projects/previews/'
+        self.task_preview_url = '/api/bb_tasks/previews/'
+        self.tasks_url = '/api/bb_tasks/'
 
     def test_task_count(self):
         """ Test various task_count values """
@@ -102,3 +104,70 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.get(self.previews_url,
                                    HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.data['results'][0]['task_count'], 2)
+
+    def test_status_task_preview_response(self):
+        """ Test retrieval of task previews with correct status."""
+        self.status_response(self.task_preview_url)
+
+    def test_status_task_response(self):
+        """ Test retrieval of tasks with correct status."""
+        self.status_response(self.tasks_url)
+
+    def status_response(self, url):
+        self.task1.delete()
+
+        task1 = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.some_project.owner,
+            project=self.some_project,
+            people_needed=2
+        )
+
+        task2 = TaskFactory.create(
+            status=Task.TaskStatuses.closed,
+            author=self.some_project.owner,
+            project=self.some_project,
+            people_needed=2
+        )
+
+        task3 = TaskFactory.create(
+            status=Task.TaskStatuses.realized,
+            author=self.some_project.owner,
+            project=self.some_project,
+            people_needed=2
+        )
+
+        task4 = TaskFactory.create(
+            status=Task.TaskStatuses.in_progress,
+            author=self.some_project.owner,
+            project=self.some_project,
+            people_needed=2
+        )
+
+        response = self.client.get(url,
+                                   {'status': 'open'},
+                                   HTTP_AUTHORIZATION=self.some_token)
+
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['id'], task1.id)
+
+        response = self.client.get(url,
+                                   {'status': 'closed'},
+                                   HTTP_AUTHORIZATION=self.some_token)
+
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['id'], task2.id)
+
+        response = self.client.get(url,
+                                   {'status': 'realized'},
+                                   HTTP_AUTHORIZATION=self.some_token)
+
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['id'], task3.id)
+
+        response = self.client.get(url,
+                                   {'status': 'in progress'},
+                                   HTTP_AUTHORIZATION=self.some_token)
+
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['id'], task4.id)

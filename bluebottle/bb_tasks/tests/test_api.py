@@ -453,6 +453,62 @@ class TestTaskSearchCase(BluebottleTestCase):
         self.assertTrue(response.data['results'][2]['id'] in ids)
         self.assertTrue(response.data['results'][3]['id'] in ids)
 
+    def test_deadline_dates(self):
+        """
+        Test the setting of the deadline of a Task on save to the end of a day.
+        """
+        task = TaskFactory.create(status='open',
+                                  type='event',
+                                  deadline=self.now +
+                                  timezone.timedelta(days=3, hours=4),
+                                  people_needed=1)
+        task.save()
+        self.assertEqual(str(task.deadline.time()), '23:59:59.999999')
+
+    def test_search_event_correct_timezone_awareness(self):
+        """
+        Test that the search for an event yields the correct
+        tasks, given a task with a tricky timezone.
+        """
+
+        task = TaskFactory.create(status='open',
+                                  type='event',
+                                  deadline=self.now +
+                                  timezone.timedelta(days=3, hours=4),
+                                  people_needed=1)
+
+        task.save()
+
+        task2 = TaskFactory.create(status='open',
+                                   type='event',
+                                   deadline=self.now +
+                                   timezone.timedelta(days=1, hours=23, minutes=59),
+                                   people_needed=1)
+        task2.save()
+
+        task3 = TaskFactory.create(status='open',
+                                   type='event',
+                                   deadline=self.now +
+                                   timezone.timedelta(days=4, hours=0, minutes=0),
+                                   people_needed=1)
+        task3.save()
+
+        search_date = {
+            'start': str(task.deadline.date()),
+            'end': str(task.deadline.date())
+        }
+
+        response = self.client.get(self.task_url, search_date,
+                                   token=self.some_token)
+
+        # Search should return task, ongoing_task_1, and ongoing_task_3
+        # Task2 and Task3 should NOT be returned
+        ids = [task.id, self.ongoing_task_1.id,
+               self.ongoing_task_3.id]
+        self.assertEqual(response.data['count'], 3)
+        self.assertTrue(response.data['results'][0]['id'] in ids)
+        self.assertTrue(response.data['results'][1]['id'] in ids)
+        self.assertTrue(response.data['results'][2]['id'] in ids)
 
 
 

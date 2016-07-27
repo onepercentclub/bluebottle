@@ -102,6 +102,8 @@ class TaskWallpostSerializer(TextWallpostSerializer):
 
 
 class SkillSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='localized_name')
+
     class Meta:
         model = Skill
         fields = ('id', 'name')

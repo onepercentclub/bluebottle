@@ -237,7 +237,7 @@ class TaskFileDetail(generics.RetrieveUpdateAPIView):
 
 
 class SkillList(generics.ListAPIView):
-    queryset = Skill.objects.all()
+    queryset = Skill.objects.filter(disabled=False)
     serializer_class = SkillSerializer
 
 

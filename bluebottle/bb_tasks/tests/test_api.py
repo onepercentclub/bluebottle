@@ -456,6 +456,28 @@ class TestTaskSearchCase(BluebottleTestCase):
 
 
 
+class SkillListApiTests(BluebottleTestCase):
+    """ Tests for tasks. """
+
+    def setUp(self):
+        super(SkillListApiTests, self).setUp()
+
+        self.skill1 = SkillFactory.create()
+        self.skill2 = SkillFactory.create()
+        self.skill3 = SkillFactory.create()
+        self.skill4 = SkillFactory.create(disabled=True)
+
+        self.skills_url = '/api/bb_tasks/skills/'
+
+    def test_get_list(self):
+        """
+        Test that the list of tasks contains all the not disabled tasks.
+        """
+        response = self.client.get(self.skills_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
+                         response.data)
+        self.assertEquals(len(response.data), 3)
+
 
 
 # TODO: Test edit task

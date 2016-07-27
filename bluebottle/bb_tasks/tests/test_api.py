@@ -336,10 +336,10 @@ class TestTaskSearchCase(BluebottleTestCase):
         """Setup reusable data."""
         self.init_projects()
 
-        self.now = timezone.now()
-        self.tomorrow = self.now + timezone.timedelta(days=1)
-        self.week = self.now + timezone.timedelta(days=7)
-        self.month = self.now + timezone.timedelta(days=30)
+        self.now = datetime.now()
+        self.tomorrow = self.now + timedelta(days=1)
+        self.week = self.now + timedelta(days=7)
+        self.month = self.now + timedelta(days=30)
 
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
@@ -378,7 +378,7 @@ class TestTaskSearchCase(BluebottleTestCase):
         """
 
         search_date = {
-            'start': str(self.now + timezone.timedelta(days=3))
+            'start': str((self.now + timedelta(days=3)).date())
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -401,11 +401,11 @@ class TestTaskSearchCase(BluebottleTestCase):
         event_task_3 = TaskFactory.create(status='open',
                                           type='event',
                                           deadline=self.now +
-                                          timezone.timedelta(days=3),
+                                          timedelta(days=3),
                                           people_needed=1)
 
         search_date = {
-            'start': str(self.now + timezone.timedelta(days=3))
+            'start': str((self.now + timedelta(days=3)).date())
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -427,18 +427,18 @@ class TestTaskSearchCase(BluebottleTestCase):
         ongoing_task_4 = TaskFactory.create(status='open',
                                             type='ongoing',
                                             deadline=self.now +
-                                            timezone.timedelta(days=365),
+                                            timedelta(days=365),
                                             people_needed=1)
 
         event_task_5 = TaskFactory.create(status='open',
                                           type='event',
                                           deadline=self.now +
-                                          timezone.timedelta(days=365),
+                                          timedelta(days=365),
                                           people_needed=1)
 
         search_date = {
-            'start': str(self.tomorrow + timezone.timedelta(days=3)),
-            'end': str(self.month + timezone.timedelta(days=15))
+            'start': str((self.tomorrow + timedelta(days=3)).date()),
+            'end': str((self.month + timedelta(days=15)).date())
         }
 
         response = self.client.get(self.task_url, search_date,

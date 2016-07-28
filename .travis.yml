@@ -16,10 +16,10 @@ python:
 env:
   global:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
-  # hipchat api key
-  - secure: "Sg0+/6mi9rIqXB24xLF0b5ZzC6V4TrZG3dNKpdI61PRTbAOlRfznwT00RZz6sQoL0s6LxLG52P3ipitqfMsPrb70CzYCK8+wgyTSvVYcbJLOTFycdwWIBghYqElXT0u8vfcu6RLGJD+8j8WsIFZ6P2pcZ0mHXyTcKEXNljov4Fw="
-  # hipchat room id
-  - secure: "iMKjQ8xllvNCzPfFdLBZ2Xqv83XF0bgUHrJTH2Q5R9BwtVwtbiWS//9mWMfVX4lumkZmlX6cwVOGDPBTJVEJv4k7GHza01Kp7ax3WHT/ll+K0j8AFMwbvHRJUPihKc5DWVVFir/xfW4qyKss6yNbn+M94ZbiRMcno/3NLNN2dKw="
+  # hipchat APIKEY
+  - secure: "V1p+c1G+0Ux087FiMd9kvK4Fuuyb7qKoBcfjmmrTF32Q10Jx3vb/qRS9sAWK2xub61IGWRg7ysTmLGs/OENXls6dUpYOwn+mKYjabn1sIEBHud2ZqNrxtlW+HGJN5cgkq+Knm0DDUc21n6Brn2EAYTILbGUUwQVZBVQ7bBS6Va8="
+  # hipchat GROUPNAME
+  - secure: "gFWdFu8FCwFikHki+mhRWfM45tXRpQLRrGsXuN0mJ0IcMj65uzyQMMQtVkFX6OQcZRQuT6ky74z1+8chK9RcyPsnT1x4hMBqxEISzcnTVzXQhs8RQfxAVzY5W66Ql47VQo8XGLa9PfU0xjCGGLi1m57is6X9hR9I4WHuo0G8Ztc="
 install:
 - pip install --upgrade setuptools --use-mirrors
 - pip install -e .[test] --process-dependency-links --trusted-host github.com

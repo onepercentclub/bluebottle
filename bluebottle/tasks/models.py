@@ -168,8 +168,12 @@ class Skill(models.Model):
     description = models.TextField(_('description'), blank=True)
     disabled = models.BooleanField(_('disabled'), default=False)
 
+    @property
+    def localized_name(self):
+        return _(self.name)
+
     def __unicode__(self):
-        return self.name
+        return str(self.localized_name)
 
     class Meta:
         ordering = ('id',)

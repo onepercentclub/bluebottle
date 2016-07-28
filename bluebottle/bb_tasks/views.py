@@ -1,5 +1,8 @@
-import django_filters
+import pytz
+from dateutil import parser
+from datetime import datetime
 
+import django_filters
 from django.db.models.query_utils import Q
 from rest_framework import generics, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -16,6 +19,31 @@ from bluebottle.tasks.serializers import (BaseTaskSerializer,
 from .permissions import IsMemberOrAuthorOrReadOnly
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
+
+
+def day_start(date_str):
+    date_combined = datetime.combine(parser.parse(date_str), datetime.min.time())
+    return pytz.utc.localize(date_combined)
+
+
+def day_end(date_str):
+    date_combined = datetime.combine(parser.parse(date_str), datetime.max.time())
+    return pytz.utc.localize(date_combined)
+
+
+def get_dates_query(query, start_date, end_date):
+    # User searches for tasks on a specific day.
+    if start_date or end_date:
+        start = day_start(start_date)
+        if start_date and not end_date or (start_date and start_date is end_date):
+            end = day_end(start_date)
+        else:
+            end = day_end(end_date)
+
+        query = query.filter(Q(type='event', deadline__range=[start, end]) |
+                             Q(type='ongoing', deadline__gte=start))
+
+    return query
 
 
 class TaskPreviewPagination(BluebottlePagination):
@@ -65,16 +93,7 @@ class TaskPreviewList(generics.ListAPIView):
         start_date = self.request.query_params.get('start', None)
         end_date = self.request.query_params.get('end', None)
 
-        # User searches for tasks on a specific day.
-        if start_date and not end_date:
-            qs = qs.filter(Q(type='event', deadline=start_date) |
-                           Q(type='ongoing', deadline__gte=start_date))
-
-        # User searches for tasks in a specific range
-        if start_date and end_date:
-            qs = qs.filter(Q(type='event', deadline__range=[start_date, end_date]) |
-                           Q(type='ongoing', deadline__gte=start_date)
-                           )
+        qs = get_dates_query(qs, start_date, end_date)
 
         ordering = self.request.query_params.get('ordering', None)
 
@@ -111,16 +130,7 @@ class TaskList(generics.ListCreateAPIView):
         start_date = self.request.query_params.get('start', None)
         end_date = self.request.query_params.get('end', None)
 
-        # User searches for tasks on a specific day.
-        if start_date and not end_date:
-            qs = qs.filter(Q(type='event', deadline=start_date) |
-                           Q(type='ongoing', deadline__gte=start_date))
-
-        # User searches for tasks in a specific range
-        if start_date and end_date:
-            qs = qs.filter(Q(type='event', deadline__range=[start_date, end_date]) |
-                           Q(type='ongoing', deadline__gte=start_date)
-                           )
+        qs = get_dates_query(qs, start_date, end_date)
 
         ordering = self.request.query_params.get('ordering', None)
 
@@ -219,7 +229,7 @@ class TaskFileDetail(generics.RetrieveUpdateAPIView):
 
 
 class SkillList(generics.ListAPIView):
-    queryset = Skill.objects.all()
+    queryset = Skill.objects.filter(disabled=False)
     serializer_class = SkillSerializer
 
 

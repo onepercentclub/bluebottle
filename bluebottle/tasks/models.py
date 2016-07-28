@@ -1,5 +1,7 @@
+import pytz
+from datetime import datetime
+
 from django.db import models
-from django.db.models.signals import pre_save
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
@@ -20,6 +22,7 @@ GROUP_PERMS = {
     }
 }
 
+
 class Task(models.Model):
 
     class TaskStatuses(DjangoChoices):
@@ -29,8 +32,8 @@ class Task(models.Model):
         realized = ChoiceItem('realized', label=_('Realised'))
 
     class TaskTypes(DjangoChoices):
-        ongoing = ChoiceItem('ongoing', label=_('Ongoing'))
-        event = ChoiceItem('event', label=_('Event'))
+        ongoing = ChoiceItem('ongoing', label=_('Ongoing (with deadline)'))
+        event = ChoiceItem('event', label=_('Event (on set date)'))
 
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
@@ -153,6 +156,10 @@ class Task(models.Model):
     def save(self, *args, **kwargs):
         if not self.author_id:
             self.author = self.project.owner
+
+        # Ensure deadline time is set to the end of the day
+        self.deadline = pytz.utc.localize(datetime.combine(self.deadline, datetime.max.time()))
+
         super(Task, self).save(*args, **kwargs)
 
 
@@ -213,7 +220,7 @@ class TaskMember(models.Model):
     # TODO: refactor this to use a signal and move code to task model
     def check_number_of_members_needed(self, task):
         members = TaskMember.objects.filter(task=task,
-                                                        status='accepted')
+                                            status='accepted')
         total_externals = 0
         for member in members:
             total_externals += member.externals

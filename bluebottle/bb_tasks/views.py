@@ -1,5 +1,6 @@
+import pytz
 from dateutil import parser
-from datetime import timedelta, datetime
+from datetime import datetime
 
 import django_filters
 from django.db.models.query_utils import Q
@@ -20,6 +21,29 @@ from .permissions import IsMemberOrAuthorOrReadOnly
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 
+def day_start(date_str):
+    date_combined = datetime.combine(parser.parse(date_str), datetime.min.time())
+    return pytz.utc.localize(date_combined)
+
+
+def day_end(date_str):
+    date_combined = datetime.combine(parser.parse(date_str), datetime.max.time())
+    return pytz.utc.localize(date_combined)
+
+
+def get_dates_query(query, start_date, end_date):
+    # User searches for tasks on a specific day.
+    if start_date or end_date:
+        start = day_start(start_date)
+        if start_date and not end_date or (start_date and start_date is end_date):
+            end = day_end(start_date)
+        else:
+            end = day_end(end_date)
+
+        query = query.filter(Q(type='event', deadline__range=[start, end]) |
+                             Q(type='ongoing', deadline__gte=start))
+
+    return query
 
 
 class TaskPreviewPagination(BluebottlePagination):
@@ -69,23 +93,7 @@ class TaskPreviewList(generics.ListAPIView):
         start_date = self.request.query_params.get('start', None)
         end_date = self.request.query_params.get('end', None)
 
-        # User searches for tasks on a specific day.
-        if start_date and not end_date or (start_date and start_date is end_date):
-            extra_day_start_date = parser.parse(start_date) + timedelta(days=1)
-
-            qs = qs.filter(Q(type='event',
-                             deadline__range=[start_date,
-                                              extra_day_start_date]) |
-                           Q(type='ongoing', deadline__gte=start_date))
-        elif start_date and end_date:
-            # User searches for tasks in a specific range
-            extra_day_end_date = parser.parse(end_date) + timedelta(days=1)
-
-            qs = qs.filter(Q(type='event',
-                             deadline__range=[start_date,
-                                              extra_day_end_date]) |
-                           Q(type='ongoing', deadline__gte=start_date)
-                           )
+        qs = get_dates_query(qs, start_date, end_date)
 
         ordering = self.request.query_params.get('ordering', None)
 
@@ -122,23 +130,7 @@ class TaskList(generics.ListCreateAPIView):
         start_date = self.request.query_params.get('start', None)
         end_date = self.request.query_params.get('end', None)
 
-        # User searches for tasks on a specific day.
-        if start_date and not end_date or (start_date and start_date is end_date):
-            extra_day_start_date = parser.parse(start_date) + timedelta(days=1)
-
-            qs = qs.filter(Q(type='event',
-                             deadline__range=[start_date,
-                                              extra_day_start_date]) |
-                           Q(type='ongoing', deadline__gte=start_date))
-        elif start_date and end_date:
-            # User searches for tasks in a specific range
-            extra_day_end_date = parser.parse(end_date) + timedelta(days=1)
-
-            qs = qs.filter(Q(type='event',
-                             deadline__range=[start_date,
-                                              extra_day_end_date]) |
-                           Q(type='ongoing', deadline__gte=start_date)
-                           )
+        qs = get_dates_query(qs, start_date, end_date)
 
         ordering = self.request.query_params.get('ordering', None)
 

@@ -74,6 +74,9 @@ class Task(models.Model):
     updated = ModificationDateTimeField(_('updated'))
 
     class Meta:
+        verbose_name = _(u'task')
+        verbose_name_plural = _(u'tasks')
+
         ordering = ['-created']
 
     def __init__(self, *args, **kwargs):

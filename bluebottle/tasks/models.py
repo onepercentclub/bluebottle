@@ -176,7 +176,7 @@ class Skill(models.Model):
         return _(self.name)
 
     def __unicode__(self):
-        return str(self.localized_name)
+        return unicode(self.localized_name)
 
     class Meta:
         ordering = ('id',)

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PARAMS="auth_token=$APIKEY&room_id=$GROUPNAME&from=Travis&message_format=html&color=green"
-URL="stream.onepercentclub.com/v1/rooms/message"
+URL="https://stream.onepercentclub.com/v1/rooms/message"
 
 if [[ $TRAVIS_BRANCH == 'develop' ]]; then
     ENV='development'

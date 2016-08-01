@@ -1,7 +1,6 @@
 #!/bin/bash
 
-PARAMS="auth_token=$APIKEY&room_id=$GROUPNAME&from=Travis&message_format=html&color=green"
-URL="https://api.hipchat.com/v1/rooms/message"
+URL="https://api.hipchat.com/v2/$GROUPNAME/notification?auth_token=$APIKEY"
 
 if [[ $TRAVIS_BRANCH == 'develop' ]]; then
     ENV='development'
@@ -16,6 +15,6 @@ if [[ $TRAVIS_BRANCH =~ ^release//* ]]; then
 fi
 
 if [[ ($ENV && $TRAVIS_PULL_REQUEST == 'false') ]]; then
-    curl -d "$PARAMS&message=$TRAVIS_COMMIT_MSG" $URL
-    curl -d "$PARAMS&message=hodor deploy backend $TRAVIS_COMMIT to $ENV" $URL
+    curl -d "{\"color\": \"green\", \"message\": \"$TRAVIS_COMMIT_MSG\" }" $URL
+    curl -d "{\"color\": \"green\", \"message\": \"hodor deploy backend $TRAVIS_COMMIT to $ENV\" }" $URL
 fi

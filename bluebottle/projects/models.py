@@ -527,17 +527,6 @@ class Project(BaseProject):
 
         bb_track("Project Deadline Reached", data)
 
-    def voting_deadline_reached(self):
-        self.status = ProjectPhase.objects.get(slug="voting-done")
-        self.save()
-
-        data = {
-            "Project": self.title,
-            "Author": self.owner.username
-        }
-
-        bb_track("Project Voting Deadline Reached", data)
-
 
 class ProjectBudgetLine(models.Model):
     """

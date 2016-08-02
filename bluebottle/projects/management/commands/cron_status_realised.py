@@ -37,7 +37,6 @@ class Command(BaseCommand):
             try:
                 ProjectPhase.objects.get(slug='done-complete')
                 ProjectPhase.objects.get(slug='done-incomplete')
-                ProjectPhase.objects.get(slug='voting-done')
             except ProjectPhase.DoesNotExist:
                 raise CommandError(
                     "A ProjectPhase with name 'Done-Complete' or 'Done-Incomplete' \
@@ -45,7 +44,6 @@ class Command(BaseCommand):
 
             try:
                 campaign_phase = ProjectPhase.objects.get(slug='campaign')
-                voting_phase = ProjectPhase.objects.get(slug='voting')
             except ProjectPhase.DoesNotExist:
                 raise CommandError(
                     "A ProjectPhase with name 'Campaign' does not exist")
@@ -76,16 +74,6 @@ class Command(BaseCommand):
             for project in Project.objects.filter(status=campaign_phase,
                                                   deadline__lte=now()):
                 project.deadline_reached()
-
-            """
-            Projects which are still in voting phase but have expired need to be
-            set to 'voting done'.
-            """
-            self.stdout.write("Checking Project deadlines...")
-            for project in Project.objects.filter(status=voting_phase,
-                                                  voting_deadline__lte=now()):
-                project.voting_deadline_reached()
-
 
             """
             Iterate over tasks and save them one by one so the receivers get a

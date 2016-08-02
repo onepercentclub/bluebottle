@@ -30,6 +30,8 @@ class TestDeadlineStatus(BluebottleTestCase):
 
         self.init_projects()
         self.status_running = ProjectPhase.objects.get(slug='campaign')
+        self.status_voting = ProjectPhase.objects.get(slug='voting')
+        self.status_voting_done = ProjectPhase.objects.get(slug='voting-done')
         self.complete = ProjectPhase.objects.get(slug='done-complete')
         self.incomplete = ProjectPhase.objects.get(slug='done-incomplete')
         self.project = ProjectFactory.create(status=self.status_running)
@@ -108,3 +110,9 @@ class TestDeadlineStatus(BluebottleTestCase):
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.complete)
+
+    def test_voting(self):
+        """ a voting project"""
+        self.project.voting_deadline_reached()
+
+        self.assertEquals(self.project.status, self.status_voting_done)

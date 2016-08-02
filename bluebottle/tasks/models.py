@@ -74,6 +74,9 @@ class Task(models.Model):
     updated = ModificationDateTimeField(_('updated'))
 
     class Meta:
+        verbose_name = _(u'task')
+        verbose_name_plural = _(u'tasks')
+
         ordering = ['-created']
 
     def __init__(self, *args, **kwargs):
@@ -173,7 +176,7 @@ class Skill(models.Model):
         return _(self.name)
 
     def __unicode__(self):
-        return str(self.localized_name)
+        return unicode(self.localized_name)
 
     class Meta:
         ordering = ('id',)

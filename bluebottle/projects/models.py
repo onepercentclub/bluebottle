@@ -331,8 +331,8 @@ class Project(BaseProject):
         Update amount based on paid and pending donations.
         """
         total = self.get_money_total([StatusDefinition.PENDING,
-                                       StatusDefinition.SUCCESS,
-                                       StatusDefinition.PLEDGED])
+                                      StatusDefinition.SUCCESS,
+                                      StatusDefinition.PLEDGED])
         if isinstance(total, list):
             DeprecationWarning('Cannot yet handle multiple currencies on one project!')
         self.amount_donated = total
@@ -374,6 +374,11 @@ class Project(BaseProject):
             FieldError('Cannot yet handle multiple currencies on one project!')
 
         return totals[0]
+
+    @property
+    def donations(self):
+        success = [StatusDefinition.PENDING,StatusDefinition.SUCCESS]
+        return self.donation_set.filter(order__status__in=success)
 
     @property
     def is_realised(self):

@@ -114,6 +114,10 @@ class BaseOrder(models.Model, FSMTransition):
             return self.order_payments.order_by('-created').all()[0]
         return None
 
+    @property
+    def order_payment(self):
+        return self.get_latest_order_payment()
+
     class Meta:
         abstract = True
 

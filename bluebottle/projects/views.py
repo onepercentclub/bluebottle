@@ -1,14 +1,16 @@
-from bluebottle.projects.models import ProjectBudgetLine
-
 from rest_framework import generics
+from rest_framework.permissions import IsAdminUser
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.projects.serializers import ProjectBudgetLineSerializer, \
-    ProjectDocumentSerializer
+from bluebottle.projects.serializers import (
+    ProjectBudgetLineSerializer,
+    ProjectDocumentSerializer,
+    ProjectPayoutSerializer
+)
 from bluebottle.projects.permissions import IsProjectOwner
 from bluebottle.utils.utils import get_client_ip
 
-from .models import ProjectDocument
+from .models import ProjectDocument, ProjectBudgetLine, Project
 
 
 class BudgetLinePagination(BluebottlePagination):
@@ -52,3 +54,16 @@ class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))
+
+
+class ProjectPayoutList(generics.ListAPIView):
+    pagination_class = BluebottlePagination
+    queryset = Project.objects.filter(campaign_ended__isnull=False).all()
+    serializer_class = ProjectPayoutSerializer
+    # permission_classes = (IsAdminUser,)
+
+
+class ProjectPayoutDetail(generics.RetrieveUpdateAPIView):
+    queryset = Project.objects.filter(campaign_ended__isnull=False).all()
+    serializer_class = ProjectPayoutSerializer
+    permission_classes = (IsAdminUser,)

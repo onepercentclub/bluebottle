@@ -322,7 +322,7 @@ class BaseProjectPayout(PayoutBase):
 
         raised_without_pledges = self.amount_raised - self.amount_pledged
 
-        return "{}%".format(round(((raised_without_pledges - self.amount_payable) / raised_without_pledges) * 100,1))
+        return "{}%".format(round(((raised_without_pledges.amount - self.amount_payable.amount) / raised_without_pledges.amount) * 100,1))
 
     def get_payout_rule(self):
         """
@@ -372,8 +372,7 @@ class BaseProjectPayout(PayoutBase):
                           " '{1}'".format(self.payout_rule, calculator_name)
                 raise PayoutException(message)
 
-            self.amount_payable = Decimal(
-                round(calculator(raised_without_pledges), 2))
+            self.amount_payable = round(calculator(raised_without_pledges), 2)
 
         self.organization_fee = raised_without_pledges - self.amount_payable
 

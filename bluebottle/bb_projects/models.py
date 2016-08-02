@@ -1,5 +1,3 @@
-from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Count, Sum, options
 from django.template.defaultfilters import slugify

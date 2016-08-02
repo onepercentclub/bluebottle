@@ -6,8 +6,20 @@ from .models import ProjectPayout
 
 class PayoutSerializer(serializers.ModelSerializer):
 
-    amount_payable = MoneySerializer()
+    amount = MoneySerializer(source='amount_payable')
+
+    receiver_account_name = serializers.CharField(source='account_holder_name')
+    receiver_account_number = serializers.CharField(source='account_number')
+    receiver_account_bic = serializers.CharField(source='account_bic')
+    receiver_account_city = serializers.CharField(source='account_holder_city')
+    receiver_account_country = serializers.CharField(source='account_holder_country.name')
 
     class Meta:
         model = ProjectPayout
-        fields = ('id', 'amount_payable', 'project')
+        fields = ('id', 'amount', 'project',
+                  'receiver_account_name',
+                  'receiver_account_number',
+                  'receiver_account_bic',
+                  'receiver_account_city',
+                  'receiver_account_country'
+                  )

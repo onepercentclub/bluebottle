@@ -295,7 +295,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return obj.vote_set.count()
 
     def donated_percentage(self, obj):
-        if not obj.amount_asked.amount:
+        if not obj.amount_asked or not obj.amount_asked.amount:
             return "-"
         percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
         return "{0} %".format(percentage)

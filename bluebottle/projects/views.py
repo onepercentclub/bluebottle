@@ -58,7 +58,7 @@ class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class ProjectPayoutList(generics.ListAPIView):
     pagination_class = BluebottlePagination
-    queryset = Project.objects.filter(campaign_ended__isnull=False).all()
+    queryset = Project.objects.filter(status__slug__in=['done-complete', 'done-incomplete']).order_by('-created').all()
     serializer_class = ProjectPayoutSerializer
     # permission_classes = (IsAdminUser,)
 

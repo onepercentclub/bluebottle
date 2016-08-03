@@ -295,6 +295,7 @@ class ProjectDonationSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer(source='user')
     date_donated = serializers.DateTimeField(source='ready')
     amount = MoneySerializer()
+    siblings = serializers.IntegerField()
 
     class Meta:
         model = Donation
@@ -306,13 +307,16 @@ class PayoutDonationSerializer(serializers.ModelSerializer):
     amount = MoneySerializer()
     status = serializers.CharField(source='order.status')
     confirmed = serializers.CharField(source='order.confirmed')
-    completed = serializers.CharField(source='order.order_type')
-    type = serializers.CharField(source='order.completed')
+    completed = serializers.CharField(source='order.completed')
+    type = serializers.CharField(source='order.order_type')
     payment_method = serializers.CharField(source='order.order_payment.payment_method')
 
     class Meta:
         model = Donation
-        fields = ('id', 'type', 'amount', 'status', 'confirmed', 'completed', 'payment_method')
+        fields = ('id', 'type',
+                  'amount', 'status',
+                  'confirmed', 'completed',
+                  'payment_method')
 
 
 class ProjectPayoutSerializer(serializers.ModelSerializer):

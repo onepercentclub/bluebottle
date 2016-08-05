@@ -16,6 +16,7 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.2.2#egg=django-bb-salesforce-1.2.2',
     'git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.8#egg=django-tenant-extras-2.0.8',
     'git+https://github.com/onepercentclub/django-token-auth.git@0.3.0#egg=django-token-auth-0.3.0',
+    'git+https://github.com/mariocesar/sorl-thumbnail.git@v12.3#egg=sorl-thumbnail-12.3-github',
     'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1'
 ]
 
@@ -46,7 +47,7 @@ install_requires = [
     'dkimpy==0.5.6',
     'micawber==0.3.3',
     'requests==2.5.1',
-    'sorl-thumbnail==12.3',
+    'sorl-thumbnail==12.3-github',
     'transifex-client==0.11',
     'django-tools==0.30.0',
     'django-loginas==0.1.9',

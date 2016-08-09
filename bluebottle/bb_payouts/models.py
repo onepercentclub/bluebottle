@@ -322,7 +322,10 @@ class BaseProjectPayout(PayoutBase):
 
         raised_without_pledges = self.amount_raised - self.amount_pledged
 
-        return "{}%".format(round(((raised_without_pledges - self.amount_payable) / raised_without_pledges) * 100,1))
+        return "{}%".format(
+            round(((raised_without_pledges - self.amount_payable).amount /
+                   raised_without_pledges.amount) * 100, 1)
+        )
 
     def get_payout_rule(self):
         """

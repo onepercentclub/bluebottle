@@ -18,7 +18,7 @@ class MoneySerializer(serializers.DecimalField):
         )
 
     def to_representation(self, instance):
-        return instance.amount
+        return {'amount': instance.amount, 'currency': str(instance.currency)}
 
     def to_internal_value(self, data):
         if not data:

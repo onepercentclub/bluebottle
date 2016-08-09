@@ -360,8 +360,6 @@ class Project(BaseProject):
             if status_in:
                 donations = donations.filter(order__status__in=status_in)
 
-            # total = donations.aggregate(sum=Sum('amount'))
-
             totals = [
                 Money(data['amount__sum'], data['amount_currency']) for data in
                 donations.values('amount_currency').annotate(Sum('amount')).order_by()
@@ -370,15 +368,22 @@ class Project(BaseProject):
         if len(totals) == 0:
             totals = [Money(0, 'EUR')]
 
-        if len(totals) > 1:
-            FieldError('Cannot yet handle multiple currencies on one project!')
-
-        return totals[0]
+        return totals
 
     @property
     def donations(self):
         success = [StatusDefinition.PENDING,StatusDefinition.SUCCESS]
         return self.donation_set.filter(order__status__in=success)
+
+    @property
+    def totals_donated(self):
+        confirmed = [StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+        donations = self.donation_set.filter(order__status__in=confirmed)
+        totals = [
+            Money(data['amount__sum'], data['amount_currency']) for data in
+            donations.values('amount_currency').annotate(Sum('amount')).order_by()
+        ]
+        return totals
 
     @property
     def is_realised(self):

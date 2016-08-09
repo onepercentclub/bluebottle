@@ -60,10 +60,11 @@ class ProjectPayoutList(generics.ListAPIView):
     pagination_class = BluebottlePagination
     queryset = Project.objects.filter(status__slug__in=['done-complete', 'done-incomplete']).order_by('-created').all()
     serializer_class = ProjectPayoutSerializer
-    # permission_classes = (IsAdminUser,)
+    permission_classes = (IsAdminUser,)
 
 
 class ProjectPayoutDetail(generics.RetrieveUpdateAPIView):
     queryset = Project.objects.filter(campaign_ended__isnull=False).all()
     serializer_class = ProjectPayoutSerializer
-    permission_classes = (IsAdminUser,)
+    # permission_classes = (IsAdminUser,)
+

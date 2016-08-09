@@ -345,7 +345,8 @@ admin.site.register(OrganizationPayout, OrganizationPayoutAdmin)
 class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
     list_display = ['payout', 'status', 'admin_project', 'amount_pending',
                     'amount_raised', 'amount_pledged', 'amount_payable',
-                    'percent', 'admin_has_iban', 'created_date',
+                    # 'percent',
+                    'admin_has_iban', 'created_date',
                     'submitted_date', 'completed_date']
 
     export_fields = [

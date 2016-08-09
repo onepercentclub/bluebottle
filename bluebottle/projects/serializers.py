@@ -17,7 +17,7 @@ from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.geo.models import Location
 from bluebottle.categories.models import Category
-from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.serializers import MoneySerializer, MoneyTotalSerializer
 
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
@@ -319,10 +319,11 @@ class PayoutDonationSerializer(serializers.ModelSerializer):
                   'payment_method')
 
 
+
 class ProjectPayoutSerializer(serializers.ModelSerializer):
 
     amount_asked = MoneySerializer()
-    amount_donated = MoneySerializer()
+    amount_donated = MoneyTotalSerializer(source='totals_donated')
 
     receiver_account_name = serializers.CharField(source='account_holder_name')
     receiver_account_number = serializers.CharField(source='account_number')

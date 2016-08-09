@@ -5,7 +5,7 @@ from bluebottle.bluebottle_drf2.serializers import ImageSerializer, OEmbedField
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.members.serializers import UserProfileSerializer
 from bluebottle.projects.models import Project
-from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.serializers import MoneySerializer, ProjectCurrencyValidator
 
 
 class BaseFundraiserSerializer(serializers.ModelSerializer):
@@ -22,6 +22,8 @@ class BaseFundraiserSerializer(serializers.ModelSerializer):
 
     amount = MoneySerializer()
     amount_donated = MoneySerializer(read_only=True)
+
+    validators = [ProjectCurrencyValidator()]
 
     class Meta:
         model = Fundraiser

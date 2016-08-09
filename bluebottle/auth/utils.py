@@ -18,6 +18,10 @@ def user_from_request(strategy, backend, *args, **kwargs):
         return {'user': strategy.request.user}
 
 
+def fallback_email(strategy, backend, *args, **kwargs):
+    if 'email' not in kwargs:
+        return {'email': kwargs['uid']}
+
 def save_profile_picture(strategy, user, response, details, backend,
                          is_new=False, *args, **kwargs):
     if is_new and backend.name == 'facebook':

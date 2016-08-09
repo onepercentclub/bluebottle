@@ -241,7 +241,8 @@ class TestCreateDonation(DonationApiTestCase):
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)
         response = self.client.get(order_url, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['total'], 50.00)
+        self.assertEqual(response.data['total']['amount'], 50.00)
+        self.assertEqual(response.data['total']['currency'], 'EUR')
 
     def test_create_fundraiser_donation(self, check_status_psp):
         """
@@ -268,7 +269,7 @@ class TestCreateDonation(DonationApiTestCase):
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)
         response = self.client.get(order_url, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['total'], 35.00)
+        self.assertEqual(response.data['total']['amount'], 35.00)
 
     def test_crud_multiple_donations(self, check_status_psp):
         """
@@ -295,7 +296,8 @@ class TestCreateDonation(DonationApiTestCase):
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)
         response = self.client.get(order_url, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['total'], 35.00)
+        self.assertEqual(response.data['total']['amount'], 35.00)
+        self.assertEqual(response.data['total']['currency'], 'EUR')
 
         # Check that this user can change the amount
         donation_url = "{0}{1}".format(self.manage_donation_list_url,
@@ -309,7 +311,8 @@ class TestCreateDonation(DonationApiTestCase):
         order_url = "{0}{1}".format(self.manage_order_list_url, order_id)
         response = self.client.get(order_url, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['total'], 50.00)
+        self.assertEqual(response.data['total']['amount'], 50.00)
+        self.assertEqual(response.data['total']['currency'], 'EUR')
 
         # Add another donation
         donation2 = {
@@ -327,7 +330,8 @@ class TestCreateDonation(DonationApiTestCase):
         response = self.client.get(order_url, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['donations']), 2)
-        self.assertEqual(response.data['total'], 97.00)
+        self.assertEqual(response.data['total']['amount'], 97.00)
+        self.assertEqual(response.data['total']['currency'], 'EUR')
 
         # remove the first donation
         response = self.client.delete(donation_url, token=self.user1_token)
@@ -338,7 +342,8 @@ class TestCreateDonation(DonationApiTestCase):
         response = self.client.get(order_url, token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['donations']), 1)
-        self.assertEqual(response.data['total'], 47.00)
+        self.assertEqual(response.data['total']['amount'], 47.00)
+        self.assertEqual(response.data['total']['currency'], 'EUR')
 
         # Set order to status 'locked'
         order = Order.objects.get(id=order_id)
@@ -450,7 +455,8 @@ class TestProjectDonationList(DonationApiTestCase):
         self.assertEqual(response.data['count'], 1)
 
         donation = response.data['results'][0]
-        self.assertEqual(donation['amount'], 1000.00)
+        self.assertEqual(donation['amount']['amount'], 1000.00)
+        self.assertEqual(donation['amount']['currency'], 'EUR')
         self.assertEqual(donation['project']['title'], self.project3.title)
 
     def test_successful_project_donation_list(self, check_status_psp):
@@ -518,7 +524,7 @@ class TestProjectDonationList(DonationApiTestCase):
 
         self.assertEqual(response.data['count'], 1,
                          'Only donations by co-financers should be returned')
-        self.assertEqual(response.data['results'][0]['amount'], 1500.00)
+        self.assertEqual(response.data['results'][0]['amount']['amount'], 1500.00)
 
     def test_project_donation_list_co_financing_is_false(self, check_status_psp):
         # Co_financing order and donation
@@ -538,8 +544,8 @@ class TestProjectDonationList(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 2,
                          'Only donations and anonymous donations should be returned')
-        self.assertEqual(response.data['results'][0]['amount'], 1500.00)
-        self.assertEqual(response.data['results'][1]['amount'], 1000.00)
+        self.assertEqual(response.data['results'][0]['amount']['amount'], 1500.00)
+        self.assertEqual(response.data['results'][1]['amount']['amount'], 1000.00)
 
     def test_project_donation_list_co_financing_is_unspecified(self, check_status_psp):
         # Co_financing order and donation
@@ -559,8 +565,8 @@ class TestProjectDonationList(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 2,
                          'Donations and anonymous donations should be returned')
-        self.assertEqual(response.data['results'][0]['amount'], 1500.00)
-        self.assertEqual(response.data['results'][1]['amount'], 1000.00)
+        self.assertEqual(response.data['results'][0]['amount']['amount'], 1500.00)
+        self.assertEqual(response.data['results'][1]['amount']['amount'], 1000.00)
 
 
 
@@ -600,7 +606,7 @@ class TestMyProjectDonationList(DonationApiTestCase):
         self.assertEqual(len(response.data['results']), 1)
 
         donation = response.data['results'][0]
-        self.assertEqual(donation['amount'], 1000.00)
+        self.assertEqual(donation['amount']['amount'], 1000.00)
         self.assertEqual(donation['project']['title'], self.project3.title)
 
     def test_successful_my_project_donation_list(self, check_status_psp):
@@ -662,7 +668,7 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
 
         donation = response.data[0]
 
-        self.assertEqual(donation['amount'], 1000.00)
+        self.assertEqual(donation['amount']['amount'], 1000.00)
         self.assertEqual(donation['project']['title'], self.project4.title)
         self.assertEqual(donation['fundraiser'], self.fundraiser.pk)
 

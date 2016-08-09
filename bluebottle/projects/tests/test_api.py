@@ -534,6 +534,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                                    token=self.some_user_token)
         self.assertEquals(response.status_code, status.HTTP_200_OK, response)
         self.assertEquals(response.data['amount']['amount'], 350.00)
+        self.assertEquals(response.data['amount']['currency'], 'EUR')
 
         # Now remove that line
         response = self.client.delete(

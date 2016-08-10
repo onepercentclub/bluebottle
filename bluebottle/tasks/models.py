@@ -106,7 +106,10 @@ class Task(models.Model):
             owner """
         # send "The deadline of your task" - mail
 
-        self.status = 'realized'
+        if (self.status == 'in progress'):
+            self.status = 'realized'
+        else:
+            self.status = 'closed'
         self.save()
 
         data = {

@@ -1,24 +1,21 @@
-import json
 from mock import patch
 
-from bluebottle.donations.models import Donation
-from bluebottle.orders.models import Order
-from bluebottle.test.utils import BluebottleTestCase, SessionTestMixin
-from django.conf import settings
-
-from bluebottle.bb_orders.views import ManageOrderDetail
 from django.core.urlresolvers import reverse
-from bluebottle.clients import properties
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.fundraisers import FundraiserFactory
-from bluebottle.test.factory_models.rewards import RewardFactory
-
-from bluebottle.utils.utils import StatusDefinition
 
 from rest_framework import status
+
+from bluebottle.bb_orders.views import ManageOrderDetail
+from bluebottle.clients import properties
+from bluebottle.donations.models import Donation
+from bluebottle.orders.models import Order
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.fundraisers import FundraiserFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.rewards import RewardFactory
+from bluebottle.test.utils import BluebottleTestCase, SessionTestMixin
+from bluebottle.utils.utils import StatusDefinition
 
 
 class DonationApiTestCase(BluebottleTestCase, SessionTestMixin):
@@ -499,7 +496,7 @@ class TestProjectDonationList(DonationApiTestCase):
                                    order=order)
 
         response = self.client.get(self.project_donation_list_url,
-                                   {'project': self.project3.slug,},
+                                   {'project': self.project3.slug},
                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -533,7 +530,7 @@ class TestProjectDonationList(DonationApiTestCase):
                                order=order)
 
         # Anonymous order and donation
-        anonymous_order = OrderFactory.create(status=StatusDefinition.SUCCESS)
+        OrderFactory.create(status=StatusDefinition.SUCCESS)
         DonationFactory.create(amount=1500, project=self.project3,
                                order=order, anonymous=True)
 
@@ -567,7 +564,6 @@ class TestProjectDonationList(DonationApiTestCase):
                          'Donations and anonymous donations should be returned')
         self.assertEqual(response.data['results'][0]['amount']['amount'], 1500.00)
         self.assertEqual(response.data['results'][1]['amount']['amount'], 1000.00)
-
 
 
 @patch.object(ManageOrderDetail, 'check_status_psp')
@@ -723,5 +719,3 @@ class TestLatestDonationListApi(DonationApiTestCase):
                                    token=self.user2_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-

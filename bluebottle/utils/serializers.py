@@ -1,3 +1,4 @@
+import json
 from HTMLParser import HTMLParser
 import re
 from moneyed import Money
@@ -26,6 +27,8 @@ class MoneySerializer(serializers.DecimalField):
     def to_internal_value(self, data):
         if not data:
             return data
+        if 'currency' in data:
+            return Money(data['amount'], data['currency'])
         return Money(data, 'EUR')
 
 

@@ -405,6 +405,15 @@ class Project(BaseProject):
             self.task_set.filter(status=Task.TaskStatuses.open).all())
 
     @property
+    def realized_task_count(self):
+        return len(
+            self.task_set.filter(status=Task.TaskStatuses.realized).all())
+
+    @property
+    def from_suggestion(self):
+        return len(self.suggestions.all()) > 0
+
+    @property
     def get_open_tasks(self):
         return self.task_set.filter(status=Task.TaskStatuses.open).all()
 

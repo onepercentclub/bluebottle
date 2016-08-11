@@ -578,13 +578,24 @@ EXPORTDB_EXPORT_CONF = {
                 ('title', 'Title'),
                 ('owner__email', 'Email'),
                 ('location__name', 'Location'),
+                ('region', 'Region'),
+                ('theme', 'Theme'),
+                ('category', 'Category'),
                 ('supporters', 'Supporters'),
                 ('funding', 'Funding'),
                 ('sourcing', 'Sourcing'),
                 ('amount_asked', 'Amount asked'),
+                ('task_count', 'Task Count'),
+                ('realized_task_count', 'Realized Task Count'),
+                ('from_suggestion', 'Submitted Suggestion'),
+                ('vote_count', 'Vote Counts'),
                 ('created', 'Date created'),
                 ('deadline', 'Deadline'),
                 ('updated', 'Last update'),
+                ('date_submitted', 'Date Submitted'),
+                ('campaign_started', 'Campaign Started'),
+                ('campaign_ended', 'Campaign Ended'),
+                ('campaign_funded', 'Campaign Funded'),
             ),
             'resource_class': 'bluebottle.exports.resources.ProjectResource',
             'title': 'Projects',
@@ -597,11 +608,15 @@ EXPORTDB_EXPORT_CONF = {
                 ('author__remote_id', 'Remote ID'),
                 ('get_status_display', 'Status'),
                 ('title', 'Title'),
+                ('project__title', 'Project Title'),
                 ('author__email', 'Email'),
                 ('location', 'Task location'),
+                ('type', 'Type'),
+                ('skill', 'Skill Needed'),
                 ('people_needed', 'People needed'),
                 ('time_needed', 'Time needed'),
                 ('people_applied', 'People applied'),
+                ('time_spent', 'Time Spent'),
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),
@@ -635,6 +650,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('member__location__name', 'Location'),
                 ('get_status_display', 'Status'),
                 ('task__time_needed', 'Time pledged'),
+                ('time_spent', 'Time Spent'),
                 ('externals', 'Partners'),
                 ('created', 'Date'),
             ),
@@ -691,6 +707,7 @@ EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
 # Salesforce connection settings
 SALESFORCE_QUERY_TIMEOUT = 15
 REQUESTS_MAX_RETRIES = 0
+SF_LAZY_CONNECT = True
 
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4

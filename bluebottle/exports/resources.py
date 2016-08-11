@@ -28,7 +28,7 @@ class UserResource(DateRangeResource):
 
 
 class ProjectResource(DateRangeResource):
-    select_related = ('status', 'owner', 'location',)
+    select_related = ('status', 'owner', 'location', 'theme')
 
     def export(self, **kwargs):
         with temp_disconnect_signal(

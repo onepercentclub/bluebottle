@@ -336,10 +336,10 @@ class TestTaskSearchCase(BluebottleTestCase):
         """Setup reusable data."""
         self.init_projects()
 
-        self.now = timezone.now()
-        self.tomorrow = self.now + timezone.timedelta(days=1)
-        self.week = self.now + timezone.timedelta(days=7)
-        self.month = self.now + timezone.timedelta(days=30)
+        self.now = datetime.now()
+        self.tomorrow = self.now + timedelta(days=1)
+        self.week = self.now + timedelta(days=7)
+        self.month = self.now + timedelta(days=30)
 
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
@@ -378,7 +378,7 @@ class TestTaskSearchCase(BluebottleTestCase):
         """
 
         search_date = {
-            'start': str(self.now + timezone.timedelta(days=3))
+            'start': str((self.now + timedelta(days=3)).date())
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -401,11 +401,11 @@ class TestTaskSearchCase(BluebottleTestCase):
         event_task_3 = TaskFactory.create(status='open',
                                           type='event',
                                           deadline=self.now +
-                                          timezone.timedelta(days=3),
+                                          timedelta(days=3),
                                           people_needed=1)
 
         search_date = {
-            'start': str(self.now + timezone.timedelta(days=3))
+            'start': str((self.now + timedelta(days=3)).date())
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -427,18 +427,18 @@ class TestTaskSearchCase(BluebottleTestCase):
         ongoing_task_4 = TaskFactory.create(status='open',
                                             type='ongoing',
                                             deadline=self.now +
-                                            timezone.timedelta(days=365),
+                                            timedelta(days=365),
                                             people_needed=1)
 
         event_task_5 = TaskFactory.create(status='open',
                                           type='event',
                                           deadline=self.now +
-                                          timezone.timedelta(days=365),
+                                          timedelta(days=365),
                                           people_needed=1)
 
         search_date = {
-            'start': str(self.tomorrow + timezone.timedelta(days=3)),
-            'end': str(self.month + timezone.timedelta(days=15))
+            'start': str((self.tomorrow + timedelta(days=3)).date()),
+            'end': str((self.month + timedelta(days=15)).date())
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -453,8 +453,86 @@ class TestTaskSearchCase(BluebottleTestCase):
         self.assertTrue(response.data['results'][2]['id'] in ids)
         self.assertTrue(response.data['results'][3]['id'] in ids)
 
+    def test_deadline_dates(self):
+        """
+        Test the setting of the deadline of a Task on save to the end of a day.
+        """
+        task = TaskFactory.create(status='open',
+                                  type='event',
+                                  deadline=self.now +
+                                  timezone.timedelta(days=3, hours=4),
+                                  people_needed=1)
+        task.save()
+        self.assertEqual(str(task.deadline.time()), '23:59:59.999999')
+
+    def test_search_event_correct_timezone_awareness(self):
+        """
+        Test that the search for an event yields the correct
+        tasks, given a task with a tricky timezone.
+        """
+
+        task = TaskFactory.create(status='open',
+                                  type='event',
+                                  deadline=self.now +
+                                  timezone.timedelta(days=3, hours=4),
+                                  people_needed=1)
+
+        task.save()
+
+        task2 = TaskFactory.create(status='open',
+                                   type='event',
+                                   deadline=self.now +
+                                   timezone.timedelta(days=1, hours=23, minutes=59),
+                                   people_needed=1)
+        task2.save()
+
+        task3 = TaskFactory.create(status='open',
+                                   type='event',
+                                   deadline=self.now +
+                                   timezone.timedelta(days=4, hours=0, minutes=0),
+                                   people_needed=1)
+        task3.save()
+
+        search_date = {
+            'start': str(task.deadline.date()),
+            'end': str(task.deadline.date())
+        }
+
+        response = self.client.get(self.task_url, search_date,
+                                   token=self.some_token)
+
+        # Search should return task, ongoing_task_1, and ongoing_task_3
+        # Task2 and Task3 should NOT be returned
+        ids = [task.id, self.ongoing_task_1.id,
+               self.ongoing_task_3.id]
+        self.assertEqual(response.data['count'], 3)
+        self.assertTrue(response.data['results'][0]['id'] in ids)
+        self.assertTrue(response.data['results'][1]['id'] in ids)
+        self.assertTrue(response.data['results'][2]['id'] in ids)
 
 
+
+class SkillListApiTests(BluebottleTestCase):
+    """ Tests for tasks. """
+
+    def setUp(self):
+        super(SkillListApiTests, self).setUp()
+
+        self.skill1 = SkillFactory.create()
+        self.skill2 = SkillFactory.create()
+        self.skill3 = SkillFactory.create()
+        self.skill4 = SkillFactory.create(disabled=True)
+
+        self.skills_url = '/api/bb_tasks/skills/'
+
+    def test_get_list(self):
+        """
+        Test that the list of tasks contains all the not disabled tasks.
+        """
+        response = self.client.get(self.skills_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
+                         response.data)
+        self.assertEquals(len(response.data), 3)
 
 
 

@@ -3,12 +3,12 @@ import random
 import string
 import uuid
 
+from django.contrib.auth.models import (
+    AbstractBaseUser, PermissionsMixin, BaseUserManager
+)
 from django.conf import settings
-from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin,
-                                        BaseUserManager)
 from django.core.mail.message import EmailMessage
 from django.db import models
-from django.db.models import options as options
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
@@ -18,16 +18,15 @@ from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bb_accounts.utils import valid_email
+from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
+from bluebottle.geo.models import Country
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.clients import properties
-from bluebottle.geo.models import Country
-from bluebottle.utils.models import Address
-
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.models import Address
 
 
 # TODO: Make this generic for all user file uploads.
@@ -84,7 +83,6 @@ class BlueBottleUserManager(BaseUserManager):
         u.is_superuser = True
         u.save(using=self._db)
         return u
-
 
 
 def get_language_choices():

@@ -5,7 +5,6 @@ from requests import request, HTTPError
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
-from bluebottle.bb_accounts.utils import valid_email, send_welcome_mail
 from bluebottle.clients import properties
 
 USER_MODEL = get_user_model()
@@ -16,6 +15,11 @@ def user_from_request(strategy, backend, *args, **kwargs):
 
     if user.is_authenticated():
         return {'user': strategy.request.user}
+
+
+def fallback_email(strategy, backend, *args, **kwargs):
+    if 'email' not in kwargs:
+        return {'email': kwargs['uid']}
 
 
 def save_profile_picture(strategy, user, response, details, backend,

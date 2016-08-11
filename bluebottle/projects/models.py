@@ -402,7 +402,7 @@ class Project(BaseProject):
     @property
     def task_count(self):
         return len(
-            self.task_set.filter().all())
+            self.task_set.filter(status=Task.TaskStatuses.open).all())
 
     @property
     def realized_task_count(self):

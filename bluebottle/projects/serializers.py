@@ -1,5 +1,6 @@
 import re
 
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -291,3 +292,30 @@ class ProjectDonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donation
         fields = ('member', 'date_donated', 'amount',)
+
+
+class ProjectWallpostPhotoSerializer(serializers.ModelSerializer):
+    photo = ImageSerializer()
+    created = serializers.DateTimeField(source='mediawallpost.created')
+
+    class Meta:
+        model = MediaWallpostPhoto
+        fields = ('photo', 'created')
+
+
+class ProjectWallpostVideoSerializer(serializers.ModelSerializer):
+    video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
+    video_url = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = MediaWallpost
+        fields = ('video_url', 'video_html', 'created')
+
+
+class ProjectMediaSerializer(serializers.ModelSerializer):
+    pictures = ProjectWallpostPhotoSerializer(source='wallpost_photos', many=True)
+    videos = ProjectWallpostVideoSerializer(source='wallpost_videos', many=True)
+
+    class Meta:
+        model = Project
+        fields = ('title', 'pictures', 'videos')

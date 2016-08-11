@@ -27,6 +27,7 @@ from bluebottle.bb_projects.models import (
 from bluebottle.utils.fields import ImageField
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost
 
 from .mails import (mail_project_funded_internal, mail_project_complete,
                     mail_project_incomplete)
@@ -431,6 +432,18 @@ class Project(BaseProject):
         elif self.amount_donated > self.amount_asked:
             return 100
         return int(100 * self.amount_donated / self.amount_asked)
+
+    @property
+    def wallpost_photos(self):
+        project_type = ContentType.objects.get_for_model(self)
+        return MediaWallpostPhoto.objects.order_by('-mediawallpost__created').\
+            filter(mediawallpost__object_id=self.id, mediawallpost__content_type=project_type)
+
+    @property
+    def wallpost_videos(self):
+        project_type = ContentType.objects.get_for_model(self)
+        return MediaWallpost.objects.order_by('-created').\
+            filter(object_id=self.id, content_type=project_type, video_url__gt="")
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """

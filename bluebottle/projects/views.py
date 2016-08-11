@@ -1,10 +1,12 @@
-from bluebottle.projects.models import ProjectBudgetLine
+from bluebottle.members.models import Member
+
+from bluebottle.projects.models import ProjectBudgetLine, Project
 
 from rest_framework import generics
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import ProjectBudgetLineSerializer, \
-    ProjectDocumentSerializer
+    ProjectDocumentSerializer, ProjectMediaSerializer
 from bluebottle.projects.permissions import IsProjectOwner
 from bluebottle.utils.utils import get_client_ip
 
@@ -52,3 +54,11 @@ class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))
+
+
+class ProjectMediaDetail(generics.RetrieveAPIView):
+    queryset = Project.objects.all()
+    pagination_class = BluebottlePagination
+    serializer_class = ProjectMediaSerializer
+
+    lookup_field = 'slug'

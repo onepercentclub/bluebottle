@@ -19,8 +19,6 @@ def resource_access_handler(request, resource):
     else:
         view = resource.callback
 
-
-
     # no visibility if no permission
     for perm in view.cls.permission_classes:
         if not perm().has_permission(request, view):
@@ -28,6 +26,6 @@ def resource_access_handler(request, resource):
 
     # if documentable then allow, else deny
     if getattr(view.cls, 'documentable', None):
-      return True
+        return True
     else:
-      return False
+        return False

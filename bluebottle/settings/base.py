@@ -587,6 +587,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('amount_asked', 'Amount asked'),
                 ('task_count', 'Task Count'),
                 ('realized_task_count', 'Realized Task Count'),
+                ('time_spent', 'Time Spent'),
                 ('from_suggestion', 'Submitted Suggestion'),
                 ('vote_count', 'Vote Counts'),
                 ('created', 'Date created'),

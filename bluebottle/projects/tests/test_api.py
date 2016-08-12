@@ -1247,6 +1247,9 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
 
 
 class ProjectMediaApi(ProjectEndpointTestCase):
+    """
+    Test that project media return media (pictures & videos) from wallposts.
+    """
 
     def setUp(self):
         self.init_projects()
@@ -1277,6 +1280,9 @@ class ProjectMediaApi(ProjectEndpointTestCase):
 
 
 class ProjectSupportersApi(ProjectEndpointTestCase):
+    """
+    Check that project supports api return lists with donors, wallposters and task members.
+    """
 
     def setUp(self):
         self.init_projects()

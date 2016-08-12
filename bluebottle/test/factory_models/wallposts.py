@@ -1,8 +1,11 @@
 import factory
 
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+from bluebottle.wallposts.models import TextWallpost, Reaction, MediaWallpost, MediaWallpostPhoto
+
 from .accounts import BlueBottleUserFactory
 from .projects import ProjectFactory
-from bluebottle.wallposts.models import TextWallpost, Reaction
 
 
 class TextWallpostFactory(factory.DjangoModelFactory):
@@ -34,3 +37,24 @@ class TextWallpostFactory(factory.DjangoModelFactory):
 class ReactionFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Reaction
+
+
+class MediaWallpostFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = MediaWallpost
+
+    content_object = factory.SubFactory(ProjectFactory)
+    author = factory.SubFactory(BlueBottleUserFactory)
+    editor = factory.SubFactory(BlueBottleUserFactory)
+    ip_address = "127.0.0.1"
+    text = factory.Sequence(lambda n: 'Media Wall Post {0}'.format(n))
+
+
+class MediaWallpostPhotoFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = MediaWallpostPhoto
+
+    mediawallpost = factory.SubFactory(MediaWallpostFactory)
+    photo = SimpleUploadedFile(name='test_image.jpg',
+                               content=open('./bluebottle/test/files/bb1.jpg', 'rb').read(),
+                               content_type='image/jpeg')

@@ -4,19 +4,21 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from bs4 import BeautifulSoup
-from localflavor.generic.validators import IBANValidator, BICValidator
+from localflavor.generic.validators import IBANValidator
 
-from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
-from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
+from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.bluebottle_drf2.serializers import (
     EuroField, OEmbedField, SorlImageField, ImageSerializer,
-    PrivateFileSerializer)
-from bluebottle.donations.models import Donation
-from bluebottle.geo.models import Country
-from bluebottle.geo.serializers import CountrySerializer
-from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.geo.models import Location
+    PrivateFileSerializer
+)
 from bluebottle.categories.models import Category
+from bluebottle.donations.models import Donation
+from bluebottle.geo.models import Country, Location
+from bluebottle.geo.serializers import CountrySerializer
+from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
+from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost
+
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
     class Meta:
@@ -244,14 +246,10 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                 2) the current is new or needs work and the proposed
                    is submitted
                 """
-                if (not (proposed_status == current_status)
-                        and not (proposed_status
-                                 and (current_status == new_status
-                                      or current_status == needs_work_status)
-                                 and proposed_status == submit_status)):
-                    raise serializers.ValidationError(
-                        _("You can not change the project state."))
-
+                if proposed_status == current_status:
+                    return value
+                if proposed_status != submit_status or current_status not in [new_status, needs_work_status]:
+                    raise serializers.ValidationError(_("You can not change the project state."))
         return value
 
     class Meta:
@@ -291,3 +289,30 @@ class ProjectDonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donation
         fields = ('member', 'date_donated', 'amount',)
+
+
+class ProjectWallpostPhotoSerializer(serializers.ModelSerializer):
+    photo = ImageSerializer()
+    created = serializers.DateTimeField(source='mediawallpost.created')
+
+    class Meta:
+        model = MediaWallpostPhoto
+        fields = ('photo', 'created')
+
+
+class ProjectWallpostVideoSerializer(serializers.ModelSerializer):
+    video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
+    video_url = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = MediaWallpost
+        fields = ('video_url', 'video_html', 'created')
+
+
+class ProjectMediaSerializer(serializers.ModelSerializer):
+    pictures = ProjectWallpostPhotoSerializer(source='wallpost_photos', many=True)
+    videos = ProjectWallpostVideoSerializer(source='wallpost_videos', many=True)
+
+    class Meta:
+        model = Project
+        fields = ('title', 'pictures', 'videos')

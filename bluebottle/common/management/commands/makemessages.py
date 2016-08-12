@@ -17,10 +17,13 @@ class Command(BaseCommand):
         with tempfile.NamedTemporaryFile(dir='bluebottle', suffix='.py') as temp:
             for app, file in self.fixtures:
                 with open('bluebottle/{}/fixtures/{}'.format(app, file)) as fixture_file:
-                    for string in [
-                            fixture['fields']['name'].encode('utf-8')
-                            for fixture
-                            in json.load(fixture_file)]:
+                    strings = [
+                        fixture['fields']['name'].encode('utf-8')
+                        for fixture
+                        in json.load(fixture_file)
+                    ]
+
+                    for string in strings:
                         temp.write('pgettext("{}-fixtures", "{}")\n'.format(app, string))
 
             temp.flush()

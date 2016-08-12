@@ -512,7 +512,6 @@ class Project(BaseProject):
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
-        import ipdb;ipdb.set_trace()
         if self.is_funding:
             if self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")

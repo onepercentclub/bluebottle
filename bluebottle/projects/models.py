@@ -23,9 +23,9 @@ from bluebottle.bb_projects.models import (
 )
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
-from bluebottle.tasks.models import Task
+from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, Wallpost
 
 from .mails import (
     mail_project_funded_internal, mail_project_complete,
@@ -381,10 +381,7 @@ class Project(BaseProject):
             order__status__in=[StatusDefinition.PLEDGED,
                                StatusDefinition.PENDING,
                                StatusDefinition.SUCCESS])
-        count = \
-            donations.all().aggregate(
-                total=Count('order__user', distinct=True))[
-                'total']
+        count = donations.all().aggregate(total=Count('order__user', distinct=True))['total']
 
         if with_guests:
             donations = self.donation_set
@@ -444,6 +441,25 @@ class Project(BaseProject):
         project_type = ContentType.objects.get_for_model(self)
         return MediaWallpost.objects.order_by('-created').\
             filter(object_id=self.id, content_type=project_type, video_url__gt="")
+
+    @property
+    def donors(self):
+        donors = self.donation_set.filter(
+            order__status__in=[StatusDefinition.PLEDGED,
+                               StatusDefinition.PENDING,
+                               StatusDefinition.SUCCESS],
+            anonymous=False
+        ).filter(order__user__isnull=False).order_by('order__user', '-created').distinct('order__user')
+        return donors
+
+    @property
+    def task_members(self):
+        members = TaskMember.objects.filter(task__project=self, status__in=['accepted', 'realized'])
+        return members.order_by('member', '-created').distinct('member')
+
+    @property
+    def posters(self):
+        return Wallpost.objects.filter(object_id=self.id).order_by('author', '-created').distinct('author')
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """

@@ -15,11 +15,11 @@ from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.factory_models.wallposts import (
-    MediaWallpostFactory, MediaWallpostPhotoFactory
-)
+    MediaWallpostFactory, MediaWallpostPhotoFactory,
+    TextWallpostFactory)
 from bluebottle.test.utils import BluebottleTestCase
 
 from ..models import Project
@@ -1247,6 +1247,9 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
 
 
 class ProjectMediaApi(ProjectEndpointTestCase):
+    """
+    Test that project media return media (pictures & videos) from wallposts.
+    """
 
     def setUp(self):
         self.init_projects()
@@ -1274,3 +1277,55 @@ class ProjectMediaApi(ProjectEndpointTestCase):
 
         self.assertEqual(len(response.data['pictures']), 8)
         self.assertEqual(len(response.data['videos']), 2)
+
+
+class ProjectSupportersApi(ProjectEndpointTestCase):
+    """
+    Check that project supports api return lists with donors, wallposters and task members.
+    """
+
+    def setUp(self):
+        self.init_projects()
+        self.project = ProjectFactory.create()
+        self.user1 = BlueBottleUserFactory.create()
+        self.user2 = BlueBottleUserFactory.create()
+        self.user3 = BlueBottleUserFactory.create()
+        self.user4 = BlueBottleUserFactory.create()
+
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='success', user=self.user1))
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='success', user=self.user1))
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='success', user=self.user1))
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='pending', user=self.user2))
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='success', user=self.user3))
+        DonationFactory.create(project=self.project, anonymous=True,
+                               order=OrderFactory(status='success', user=self.user4))
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='success', user=None))
+
+        TextWallpostFactory.create(content_object=self.project, author=self.user1)
+        TextWallpostFactory.create(content_object=self.project, author=self.user1)
+        TextWallpostFactory.create(content_object=self.project, author=self.user2)
+        TextWallpostFactory.create(content_object=self.project, author=self.user3)
+
+        task = TaskFactory(project=self.project)
+
+        TaskMemberFactory.create(member=self.user1, task=task, status='accepted')
+        TaskMemberFactory.create(member=self.user2, task=task, status='applied')
+        TaskMemberFactory.create(member=self.user3, task=task, status='realized')
+
+        self.project_supporters_url = reverse('project-supporters-detail',
+                                              kwargs={'slug': self.project.slug})
+
+    def test_project_media_pictures(self):
+
+        response = self.client.get(self.project_supporters_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        self.assertEqual(len(response.data['donors']), 3)
+        self.assertEqual(len(response.data['posters']), 3)
+        self.assertEqual(len(response.data['task_members']), 2)

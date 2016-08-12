@@ -1,5 +1,6 @@
 import re
 
+from bluebottle.tasks.models import TaskMember
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -17,7 +18,7 @@ from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
-from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
@@ -268,19 +269,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'project_type')
 
 
-class ProjectSupporterSerializer(serializers.ModelSerializer):
-    """
-    For displaying donations on project and member pages.
-    """
-    member = UserPreviewSerializer(source='user')
-    project = ProjectPreviewSerializer()
-    date_donated = serializers.DateTimeField(source='ready')
-
-    class Meta:
-        model = Donation
-        fields = ('date_donated', 'project', 'member',)
-
-
 class ProjectDonationSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer(source='user')
     date_donated = serializers.DateTimeField(source='ready')
@@ -316,3 +304,43 @@ class ProjectMediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('title', 'pictures', 'videos')
+
+
+class ProjectDonorSerializer(serializers.ModelSerializer):
+    """
+    """
+    user = UserPreviewSerializer()
+
+    class Meta:
+        model = Donation
+        fields = ('id', 'user', 'created', 'amount')
+
+
+class ProjectTaskMemberSerializer(serializers.ModelSerializer):
+    """
+    """
+    user = UserPreviewSerializer(source='member')
+
+    class Meta:
+        model = TaskMember
+        fields = ('id', 'user', 'created', 'motivation')
+
+
+class ProjectPosterSerializer(serializers.ModelSerializer):
+    """
+    """
+    user = UserPreviewSerializer(source='author')
+
+    class Meta:
+        model = TextWallpost
+        fields = ('id', 'user', 'created', 'text')
+
+
+class ProjectSupporterListSerializer(serializers.ModelSerializer):
+    donors = ProjectDonorSerializer(many=True)
+    task_members = ProjectTaskMemberSerializer(many=True)
+    posters = ProjectPosterSerializer(many=True)
+
+    class Meta:
+        model = Project
+        fields = ('title', 'donors', 'task_members', 'posters')

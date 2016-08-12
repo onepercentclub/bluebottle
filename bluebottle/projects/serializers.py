@@ -248,8 +248,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                 """
                 if proposed_status == current_status:
                     return value
-                if (proposed_status == submit_status and
-                        current_status not in [new_status, needs_work_status]):
+                if proposed_status != submit_status or current_status not in [new_status, needs_work_status]:
                     raise serializers.ValidationError(_("You can not change the project state."))
         return value
 

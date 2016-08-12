@@ -340,6 +340,10 @@ class ProjectPosterSerializer(serializers.ModelSerializer):
 
 
 class ProjectSupporterListSerializer(serializers.ModelSerializer):
+    """
+    Lists with different project supporter types
+    """
+
     donors = ProjectDonorSerializer(many=True)
     task_members = ProjectTaskMemberSerializer(many=True)
     posters = ProjectPosterSerializer(many=True)

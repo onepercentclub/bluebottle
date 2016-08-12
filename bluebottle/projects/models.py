@@ -447,7 +447,8 @@ class Project(BaseProject):
         donors = self.donation_set.filter(
             order__status__in=[StatusDefinition.PLEDGED,
                                StatusDefinition.PENDING,
-                               StatusDefinition.SUCCESS]
+                               StatusDefinition.SUCCESS],
+            anonymous=False
         ).filter(order__user__isnull=False).order_by('order__user', '-created').distinct('order__user')
         return donors
 

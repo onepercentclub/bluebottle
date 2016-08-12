@@ -123,7 +123,7 @@ class BaseTaskList(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         if serializer.validated_data['project'].status.slug in (
-                'closed', 'done-complete', 'done-incomplete'):
+                'closed', 'done-complete', 'done-incomplete', 'voting-done'):
             raise serializers.ValidationError('It is not allowed to add tasks to closed projects')
 
         serializer.save(author=self.request.user)

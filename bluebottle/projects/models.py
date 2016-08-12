@@ -289,7 +289,8 @@ class Project(BaseProject):
         if not self.campaign_ended and self.deadline < timezone.now() \
                 and self.status.slug not in ["done-complete",
                                              "done-incomplete",
-                                             "closed"]:
+                                             "closed",
+                                             "voting-done"]:
             if self.amount_asked > 0 and self.amount_donated <= 20 \
                     or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")

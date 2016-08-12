@@ -304,8 +304,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         project_data['status'] = self.phase_campaign.id
         response = self.client.put(project_url, project_data,
                                    token=self.another_user_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEquals(response.data['status'][0],
                           'You can not change the project state.',
                           'status change should not be possible')

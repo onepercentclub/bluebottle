@@ -2,25 +2,25 @@ from datetime import timedelta
 import json
 from random import randint
 
-from bluebottle.test.factory_models.wallposts import (
-    MediaWallpostFactory, MediaWallpostPhotoFactory
-)
 from django.test import RequestFactory
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 
 from rest_framework import status
 
-from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.votes import VoteFactory
+from bluebottle.test.factory_models.wallposts import (
+    MediaWallpostFactory, MediaWallpostPhotoFactory
+)
+from bluebottle.test.utils import BluebottleTestCase
 
 from ..models import Project
 
@@ -918,7 +918,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code,
                          status.HTTP_200_OK,
                          response.data)
-        self.assertEqual(u'<p>{0}</p>'.format(text2a),  response.data['text'])
+        self.assertEqual(u'<p>{0}</p>'.format(text2a), response.data['text'])
 
         # Update TextWallpost by another user (not the author) is not allowed
         text2b = u'Mess this up!'
@@ -949,16 +949,15 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-
         # And a bunch of Project Media Wallposts
         self.owner_token = "JWT {0}".format(
             self.some_project.owner.get_jwt_token())
         for char in 'wxyz':
             text = char * 15
             response = self.client.post(self.media_wallposts_url,
-                                       {'text': text, 'parent_type': 'project',
-                                        'parent_id': self.some_project.slug},
-                                       token=self.owner_token)
+                                        {'text': text, 'parent_type': 'project',
+                                         'parent_id': self.some_project.slug},
+                                        token=self.owner_token)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Retrieve a list of the 26 Project Wallposts
@@ -1011,9 +1010,9 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         for char in 'ABCD':
             text = char * 15
             response = self.client.post(self.media_wallposts_url,
-                                       {'text': text, 'parent_type': 'project',
-                                        'parent_id': self.another_project.slug},
-                                       token=self.another_token)
+                                        {'text': text, 'parent_type': 'project',
+                                         'parent_id': self.another_project.slug},
+                                        token=self.another_token)
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -1045,9 +1044,8 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         """
         Changing project status to submitted sets the date_submitted field
         """
-        project = Project.objects.get(
-            id=Project.objects.last().id - randint(0,
-                                                   Project.objects.count() - 1))
+        random_id = Project.objects.last().id - randint(0, Project.objects.count() - 1)
+        project = Project.objects.get(id=random_id)
         self.assertTrue(project.date_submitted is None)
 
         # Change status of project to Needs work
@@ -1063,8 +1061,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         """
         project = ProjectFactory.create(title="testproject",
                                         slug="testproject",
-                                        status=ProjectPhase.objects.get(
-                                            slug='plan-new'))
+                                        status=ProjectPhase.objects.get(slug='plan-new'))
         self.assertTrue(project.date_submitted is None)
         self.assertTrue(project.campaign_started is None)
 
@@ -1255,7 +1252,7 @@ class ProjectMediaApi(ProjectEndpointTestCase):
         self.init_projects()
         self.project = ProjectFactory.create()
         mwp1 = MediaWallpostFactory.create(content_object=self.project,
-                                          video_url='https://youtu.be/Bal2U5jxZDQ')
+                                           video_url='https://youtu.be/Bal2U5jxZDQ')
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
@@ -1263,7 +1260,7 @@ class ProjectMediaApi(ProjectEndpointTestCase):
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
 
         mwp2 = MediaWallpostFactory.create(content_object=self.project,
-                                          video_url='https://youtu.be/Bal2U5jxZDQ')
+                                           video_url='https://youtu.be/Bal2U5jxZDQ')
         MediaWallpostPhotoFactory.create(mediawallpost=mwp2)
         MediaWallpostPhotoFactory.create(mediawallpost=mwp2)
         MediaWallpostPhotoFactory.create(mediawallpost=mwp2)

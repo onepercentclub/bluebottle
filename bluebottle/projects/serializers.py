@@ -1,23 +1,24 @@
 import re
 
-from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from bs4 import BeautifulSoup
-from localflavor.generic.validators import IBANValidator, BICValidator
+from localflavor.generic.validators import IBANValidator
 
-from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
-from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
+from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.bluebottle_drf2.serializers import (
     EuroField, OEmbedField, SorlImageField, ImageSerializer,
-    PrivateFileSerializer)
-from bluebottle.donations.models import Donation
-from bluebottle.geo.models import Country
-from bluebottle.geo.serializers import CountrySerializer
-from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.geo.models import Location
+    PrivateFileSerializer
+)
 from bluebottle.categories.models import Category
+from bluebottle.donations.models import Donation
+from bluebottle.geo.models import Country, Location
+from bluebottle.geo.serializers import CountrySerializer
+from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
+from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost
+
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
     class Meta:
@@ -245,14 +246,11 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                 2) the current is new or needs work and the proposed
                    is submitted
                 """
-                if (not (proposed_status == current_status)
-                        and not (proposed_status
-                                 and (current_status == new_status
-                                      or current_status == needs_work_status)
-                                 and proposed_status == submit_status)):
-                    raise serializers.ValidationError(
-                        _("You can not change the project state."))
-
+                if proposed_status == current_status:
+                    return value
+                if (proposed_status == submit_status and
+                        current_status not in [new_status, needs_work_status]):
+                    raise serializers.ValidationError(_("You can not change the project state."))
         return value
 
     class Meta:

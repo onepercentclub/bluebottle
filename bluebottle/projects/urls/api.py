@@ -8,9 +8,9 @@ from django.conf.urls import patterns, url
 urlpatterns = patterns(
     '',
 
-    url(r'^(?P<slug>[\w-]+)/media/$',
+    url(r'^media/(?P<slug>[\w-]+)/$',
         ProjectMediaDetail.as_view(),
-        name='project-media-list'),
+        name='project-media-detail'),
 
     url(r'^budgetlines/$',
         ManageProjectBudgetLineList.as_view(),

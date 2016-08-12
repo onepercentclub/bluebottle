@@ -1,8 +1,10 @@
+from datetime import timedelta
 import json
-
 from random import randint
-from datetime import datetime, timedelta
 
+from bluebottle.test.factory_models.wallposts import (
+    MediaWallpostFactory, MediaWallpostPhotoFactory
+)
 from django.test import RequestFactory
 from django.core.urlresolvers import reverse
 from django.utils import timezone
@@ -14,7 +16,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
@@ -47,6 +49,7 @@ class ProjectEndpointTestCase(BluebottleTestCase):
 
         self.campaign_phase = ProjectPhase.objects.get(slug='campaign')
         self.plan_phase = ProjectPhase.objects.get(slug='done-complete')
+        self.projects = []
 
         for char in 'abcdefghijklmnopqrstuvwxyz':
             # Put half of the projects in the campaign phase.
@@ -64,6 +67,8 @@ class ProjectEndpointTestCase(BluebottleTestCase):
                 task = TaskFactory.create(project=project)
                 project.save()
                 task.save()
+
+            self.projects.append(project)
 
         self.projects_preview_url = reverse('project_preview_list')
         self.projects_url = reverse('project_list')
@@ -223,7 +228,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.manage_projects_url = reverse('project_manage_list')
         self.manage_budget_lines_url = reverse('project-budgetline-list')
         self.manage_project_document_url = reverse('manage-project-document-list')
-
         self.some_photo = './bluebottle/projects/test_images/upload.png'
 
     def test_project_create(self):
@@ -1243,3 +1247,33 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         self.assertTrue(loaded_project.campaign_funded is None)
         self.assertEquals(loaded_project.status,
                           ProjectPhase.objects.get(slug="done-incomplete"))
+
+
+class ProjectMediaApi(ProjectEndpointTestCase):
+
+    def setUp(self):
+        self.init_projects()
+        self.project = ProjectFactory.create()
+        mwp1 = MediaWallpostFactory.create(content_object=self.project,
+                                          video_url='https://youtu.be/Bal2U5jxZDQ')
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
+
+        mwp2 = MediaWallpostFactory.create(content_object=self.project,
+                                          video_url='https://youtu.be/Bal2U5jxZDQ')
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp2)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp2)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp2)
+
+        self.project_media_url = reverse('project-media-detail',
+                                         kwargs={'slug': self.project.slug})
+
+    def test_project_media_pictures(self):
+        response = self.client.get(self.project_media_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        self.assertEqual(len(response.data['pictures']), 8)
+        self.assertEqual(len(response.data['videos']), 2)

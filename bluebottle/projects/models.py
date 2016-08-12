@@ -453,7 +453,8 @@ class Project(BaseProject):
 
     @property
     def task_members(self):
-        return TaskMember.objects.filter(task__project=self).order_by('member', '-created').distinct('member')
+        members = TaskMember.objects.filter(task__project=self, status__in=['accepted', 'realized'])
+        return members.order_by('member', '-created').distinct('member')
 
     @property
     def posters(self):

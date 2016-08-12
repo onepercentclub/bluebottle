@@ -308,6 +308,7 @@ class ProjectMediaSerializer(serializers.ModelSerializer):
 
 class ProjectDonorSerializer(serializers.ModelSerializer):
     """
+    Members that made a donation
     """
     user = UserPreviewSerializer()
 
@@ -318,6 +319,7 @@ class ProjectDonorSerializer(serializers.ModelSerializer):
 
 class ProjectTaskMemberSerializer(serializers.ModelSerializer):
     """
+    Members that joined a task
     """
     user = UserPreviewSerializer(source='member')
 
@@ -328,6 +330,7 @@ class ProjectTaskMemberSerializer(serializers.ModelSerializer):
 
 class ProjectPosterSerializer(serializers.ModelSerializer):
     """
+    Members that wrote a wallpost
     """
     user = UserPreviewSerializer(source='author')
 

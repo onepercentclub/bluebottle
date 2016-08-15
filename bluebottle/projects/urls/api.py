@@ -1,4 +1,4 @@
-from bluebottle.projects.views import ProjectMediaDetail, ProjectSupportersDetail
+from bluebottle.projects.views import ProjectMediaDetail, ProjectSupportDetail
 from ..views import (
     ManageProjectBudgetLineDetail, ManageProjectBudgetLineList,
     ManageProjectDocumentList, ManageProjectDocumentDetail)
@@ -11,8 +11,8 @@ urlpatterns = patterns(
     url(r'^media/(?P<slug>[\w-]+)/$',
         ProjectMediaDetail.as_view(),
         name='project-media-detail'),
-    url(r'^supporters/(?P<slug>[\w-]+)/$',
-        ProjectSupportersDetail.as_view(),
+    url(r'^support/(?P<slug>[\w-]+)/$',
+        ProjectSupportDetail.as_view(),
         name='project-supporters-detail'),
 
     url(r'^budgetlines/$',

@@ -25,7 +25,7 @@ from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, Wallpost
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 
 from .mails import (
     mail_project_funded_internal, mail_project_complete,
@@ -443,23 +443,26 @@ class Project(BaseProject):
             filter(object_id=self.id, content_type=project_type, video_url__gt="")
 
     @property
-    def donors(self):
-        donors = self.donation_set.filter(
-            order__status__in=[StatusDefinition.PLEDGED,
-                               StatusDefinition.PENDING,
-                               StatusDefinition.SUCCESS],
-            anonymous=False
-        ).filter(order__user__isnull=False).order_by('order__user', '-created').distinct('order__user')
-        return donors
+    def donors(self, limit=20):
+        return self.donation_set.\
+            filter(order__status__in=[StatusDefinition.PLEDGED,
+                                      StatusDefinition.PENDING,
+                                      StatusDefinition.SUCCESS],
+                   anonymous=False).\
+            filter(order__user__isnull=False).\
+            order_by('order__user', '-created').distinct('order__user')[:limit]
 
     @property
-    def task_members(self):
-        members = TaskMember.objects.filter(task__project=self, status__in=['accepted', 'realized'])
-        return members.order_by('member', '-created').distinct('member')
+    def task_members(self, limit=20):
+        return TaskMember.objects.\
+            filter(task__project=self, status__in=['accepted', 'realized']).\
+            order_by('member', '-created').distinct('member')[:limit]
 
     @property
-    def posters(self):
-        return Wallpost.objects.filter(object_id=self.id).order_by('author', '-created').distinct('author')
+    def posters(self, limit=20):
+        return TextWallpost.objects.\
+            filter(object_id=self.id).\
+            order_by('author', '-created').distinct('author')[:limit]
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """

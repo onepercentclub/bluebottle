@@ -315,7 +315,7 @@ class ProjectDonorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Donation
-        fields = ('id', 'user', 'created', 'amount')
+        fields = ('id', 'user', 'created')
 
 
 class ProjectTaskMemberSerializer(serializers.ModelSerializer):

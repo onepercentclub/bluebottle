@@ -55,7 +55,7 @@ class PaymentMethodHandlerTestCase(BluebottleTestCase):
 
 class PaymentMethodTestCase(BluebottleTestCase):
     def test_load_all_payment_methods(self):
-        methods = get_payment_methods(country="all")
+        methods = get_payment_methods(country=None)
         self.assertEqual(len(methods), 3)
 
     def test_load_netherlands_payment_methods(self):

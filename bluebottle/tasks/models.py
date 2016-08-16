@@ -27,8 +27,8 @@ class Task(models.Model):
 
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
-        in_progress = ChoiceItem('in progress', label=_('In progress'))
-        closed = ChoiceItem('closed', label=_('Closed'))
+        in_progress = ChoiceItem('in progress', label=_('Running'))
+        closed = ChoiceItem('closed', label=_('Done'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
     class TaskTypes(DjangoChoices):
@@ -190,7 +190,7 @@ class TaskMember(models.Model):
         applied = ChoiceItem('applied', label=_('Applied'))
         accepted = ChoiceItem('accepted', label=_('Accepted'))
         rejected = ChoiceItem('rejected', label=_('Rejected'))
-        stopped = ChoiceItem('stopped', label=_('Stopped'))
+        stopped = ChoiceItem('stopped', label=_('Withdrew'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
     member = models.ForeignKey('members.Member',

@@ -43,7 +43,7 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "name": "Voting Running",
+            "name": "Voting - Running",
             "slug": "voting",
             "sequence": 4,
             "editable": false,

@@ -31,5 +31,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        update_status_names
+        migrations.RunPython(update_status_names)
     ]

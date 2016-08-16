@@ -18,10 +18,13 @@ def update_status_names(apps, schema_editor):
     }
 
     for slug, new_name in updates.items():
-        phase = ProjectPhase.objects.get(slug=slug)
-        phase.name = new_name
+        try:
+            phase = ProjectPhase.objects.get(slug=slug)
+            phase.name = new_name
 
-        phase.save()
+            phase.save()
+        except ProjectPhase.DoesNotExist:
+            pass
 
 
 class Migration(migrations.Migration):

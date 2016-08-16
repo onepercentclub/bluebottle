@@ -285,7 +285,7 @@ class ProjectWallpostPhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MediaWallpostPhoto
-        fields = ('photo', 'created')
+        fields = ('id', 'photo', 'created')
 
 
 class ProjectWallpostVideoSerializer(serializers.ModelSerializer):
@@ -294,16 +294,17 @@ class ProjectWallpostVideoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MediaWallpost
-        fields = ('video_url', 'video_html', 'created')
+        fields = ('id', 'video_url', 'video_html', 'created')
 
 
 class ProjectMediaSerializer(serializers.ModelSerializer):
     pictures = ProjectWallpostPhotoSerializer(source='wallpost_photos', many=True)
     videos = ProjectWallpostVideoSerializer(source='wallpost_videos', many=True)
+    id = serializers.CharField(source='slug')
 
     class Meta:
         model = Project
-        fields = ('title', 'pictures', 'videos')
+        fields = ('id', 'title', 'pictures', 'videos')
 
 
 class ProjectDonorSerializer(serializers.ModelSerializer):
@@ -314,7 +315,7 @@ class ProjectDonorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Donation
-        fields = ('id', 'user', 'created', 'amount')
+        fields = ('id', 'user', 'created')
 
 
 class ProjectTaskMemberSerializer(serializers.ModelSerializer):
@@ -339,7 +340,7 @@ class ProjectPosterSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'created', 'text')
 
 
-class ProjectSupporterListSerializer(serializers.ModelSerializer):
+class ProjectSupportSerializer(serializers.ModelSerializer):
     """
     Lists with different project supporter types
     """
@@ -347,7 +348,8 @@ class ProjectSupporterListSerializer(serializers.ModelSerializer):
     donors = ProjectDonorSerializer(many=True)
     task_members = ProjectTaskMemberSerializer(many=True)
     posters = ProjectPosterSerializer(many=True)
+    id = serializers.CharField(source='slug')
 
     class Meta:
         model = Project
-        fields = ('title', 'donors', 'task_members', 'posters')
+        fields = ('id', 'title', 'donors', 'task_members', 'posters')

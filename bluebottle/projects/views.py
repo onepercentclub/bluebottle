@@ -6,7 +6,7 @@ from bluebottle.projects.permissions import IsProjectOwner
 from bluebottle.projects.serializers import (
     ProjectBudgetLineSerializer, ProjectDocumentSerializer,
     ProjectMediaSerializer,
-    ProjectSupporterListSerializer)
+    ProjectSupportSerializer)
 from bluebottle.utils.utils import get_client_ip
 
 from .models import ProjectDocument
@@ -63,9 +63,9 @@ class ProjectMediaDetail(generics.RetrieveAPIView):
     lookup_field = 'slug'
 
 
-class ProjectSupportersDetail(generics.RetrieveAPIView):
+class ProjectSupportDetail(generics.RetrieveAPIView):
     queryset = Project.objects.all()
     pagination_class = BluebottlePagination
-    serializer_class = ProjectSupporterListSerializer
+    serializer_class = ProjectSupportSerializer
 
     lookup_field = 'slug'

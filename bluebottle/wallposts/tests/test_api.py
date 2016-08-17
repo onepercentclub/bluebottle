@@ -1,3 +1,5 @@
+from django.utils.timezone import now
+
 from bluebottle.test.utils import BluebottleTestCase
 from django.core.urlresolvers import reverse
 
@@ -360,6 +362,27 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(m.to, [self.user_a.email])
         self.assertEqual(m.activated_language, self.user_a.primary_language)
 
+    def test_delete_wallpost_by_b_on_project_by_a(self):
+        """
+        Project by A + Wallpost by B => Mail to (project owner) A
+        """
+        # Object by A
+        # |
+        # +-- Wallpost by B (+)
+
+        post = TextWallpostFactory.create(
+            content_object=self.project_1, author=self.user_b)
+
+        # Mailbox should contain an email to project owner.
+        self.assertEqual(len(mail.outbox), 1)
+
+        post.deleted = now()
+        post.save()
+
+        # No new mails should be send
+        self.assertEqual(len(mail.outbox), 1)
+
+
     def test_new_reaction_by_a_on_wallpost_a_on_project_by_a(self):
         """
         Project by A + Wallpost by A + Reaction by A => No mails.
@@ -502,6 +525,42 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         self.assertListEqual(
             [m2.activated_language, m1.activated_language],
             [self.user_a.primary_language, self.user_b.primary_language])
+
+    def test_delete_reaction_by_c_on_wallpost_b_on_project_by_a(self):
+        """
+        Project by A + Wallpost by B + Reaction by C => Mail to (project owner) A + Mail to (reaction author) B
+        """
+        # Object by A
+        # |
+        # +-- Wallpost by B
+        #     |
+        #     +-- Reaction by A
+        #     |
+        #     +-- Reaction by B
+        #     |
+        #     +-- Reaction by C (+)
+
+        w = TextWallpostFactory.create(
+            content_object=self.project_1, author=self.user_b)
+        Reaction.objects.create(
+            text='Hello world', wallpost=w, author=self.user_a)
+        reaction = Reaction.objects.create(
+            text='Hello world', wallpost=w, author=self.user_b)
+
+        # Empty outbox.
+        mail.outbox = []
+        Reaction.objects.create(
+            text='Hello world', wallpost=w, author=self.user_c)
+
+        # Mailbox should contain an email to project owner.
+        self.assertEqual(len(mail.outbox), 2)
+
+        reaction.deleted = now()
+        reaction.save()
+
+        # No new mails should be sent
+        self.assertEqual(len(mail.outbox), 2)
+
 
     def test_new_wallpost_by_b_on_task_by_a(self):
         """

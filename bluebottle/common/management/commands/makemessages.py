@@ -24,7 +24,7 @@ class Command(BaseCommand):
                     ]
 
                     for string in strings:
-                        temp.write('pgettext("{}-fixtures", "{}")\n'.format(app, string))
+                        temp.write('gettext("{}")\n'.format(string))
 
             temp.flush()
 

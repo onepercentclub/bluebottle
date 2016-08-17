@@ -18,8 +18,8 @@ def user_from_request(strategy, backend, *args, **kwargs):
 
 
 def fallback_email(strategy, backend, *args, **kwargs):
-    if 'email' not in kwargs:
-        return {'email': kwargs['uid']}
+    if 'email' not in kwargs['details']:
+        kwargs['details']['email'] = kwargs['uid']
 
 
 def save_profile_picture(strategy, user, response, details, backend,

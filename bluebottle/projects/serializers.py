@@ -34,7 +34,7 @@ class ProjectPhaseSerializer(serializers.ModelSerializer):
 class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTheme
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'description')
 
 
 class StoryField(serializers.CharField):

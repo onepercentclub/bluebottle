@@ -30,9 +30,9 @@ class ProjectEndpointTestCase(BluebottleTestCase):
         self.phase_2 = ProjectPhase.objects.get(slug='plan-submitted')
         self.phase_3 = ProjectPhase.objects.get(slug='campaign')
 
-        self.theme_1 = ProjectTheme.objects.get(name='Education')
-        self.theme_2 = ProjectTheme.objects.get(name='Climate')
-        self.theme_3 = ProjectTheme.objects.get(name='Health')
+        self.theme_1 = ProjectTheme.objects.get(name='Education', description='Test Description 1')
+        self.theme_2 = ProjectTheme.objects.get(name='Climate', description='Test Description 2')
+        self.theme_3 = ProjectTheme.objects.get(name='Health', description='Test Description 3')
 
         self.project_1 = ProjectFactory.create(owner=self.user, status=self.phase_1, theme=self.theme_1)
         self.project_2 = ProjectFactory.create(owner=self.user, status=self.phase_2, theme=self.theme_2)
@@ -217,6 +217,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
         for item in data:
             self.assertIn('id', item)
             self.assertIn('name', item)
+            self.assertIn('description', item)
 
     def test_api_project_theme_list_endpoint_disabled(self):
         """
@@ -239,6 +240,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
         for item in data:
             self.assertIn('id', item)
             self.assertIn('name', item)
+            self.assertIn('description', item)
             self.assertNotEquals(item['id'], disabled.id)
 
 class TestProjectThemeDetail(ProjectEndpointTestCase):
@@ -259,6 +261,7 @@ class TestProjectThemeDetail(ProjectEndpointTestCase):
 
         self.assertIn('id', data)
         self.assertIn('name', data)
+        self.assertIn('description', data)
 
 
 class TestManageProjectList(ProjectEndpointTestCase):

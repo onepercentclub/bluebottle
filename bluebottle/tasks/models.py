@@ -28,8 +28,8 @@ class Task(models.Model):
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
         in_progress = ChoiceItem('in progress', label=_('Running'))
-        closed = ChoiceItem('closed', label=_('Done'))
         realized = ChoiceItem('realized', label=_('Realised'))
+        closed = ChoiceItem('closed', label=_('Closed'))
 
     class TaskTypes(DjangoChoices):
         ongoing = ChoiceItem('ongoing', label=_('Ongoing (with deadline)'))

@@ -3,7 +3,8 @@
     {{donation.user.address.line1}}
     {{donation.user.address.postal_code}} {{donation.user.address.city}}
 
-    Date: {{donation.created}}
-    Method: {{payment_method}}
-    Order: {{donation.order.id}}
+    {% trans "Date" %}: {{donation.created}}
+    {% trans "Method" %}: {{payment_method}}
+    {% trans "Order" %}: {{donation.order.id}}
+
 {% endblock content %}

@@ -1,6 +1,4 @@
 import re
-
-from bluebottle.tasks.models import TaskMember
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -18,6 +16,7 @@ from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
+from bluebottle.tasks.models import TaskMember
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 
 
@@ -326,7 +325,7 @@ class ProjectTaskMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TaskMember
-        fields = ('id', 'user', 'created', 'motivation')
+        fields = ('id', 'user', 'created', 'motivation', 'task')
 
 
 class ProjectPosterSerializer(serializers.ModelSerializer):

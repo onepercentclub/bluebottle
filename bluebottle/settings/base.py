@@ -580,7 +580,6 @@ EXPORTDB_EXPORT_CONF = {
                 ('location__name', 'Location'),
                 ('region', 'Region'),
                 ('theme', 'Theme'),
-                ('category', 'Category'),
                 ('supporters', 'Supporters'),
                 ('funding', 'Funding'),
                 ('sourcing', 'Sourcing'),

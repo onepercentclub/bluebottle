@@ -1,3 +1,5 @@
+{% load i18n %}
+
 {% block content %}
     {{donation.user.full_name}} 
     {{donation.user.address.line1}}

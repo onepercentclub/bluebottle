@@ -289,7 +289,8 @@ class Project(BaseProject):
         if not self.campaign_ended and self.deadline < timezone.now() \
                 and self.status.slug not in ["done-complete",
                                              "done-incomplete",
-                                             "closed"]:
+                                             "closed",
+                                             "voting-done"]:
             if self.amount_asked > 0 and self.amount_donated <= 20 \
                     or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
@@ -483,7 +484,6 @@ class Project(BaseProject):
         ordering = ['title']
 
     def status_changed(self, old_status, new_status):
-
         status_complete = ProjectPhase.objects.get(slug="done-complete")
         status_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
 
@@ -569,10 +569,7 @@ def email_project_team_project_funded(sender, instance, first_time_funded,
 @receiver(post_init, sender=Project,
           dispatch_uid="bluebottle.projects.Project.post_init")
 def project_post_init(sender, instance, **kwargs):
-    try:
-        instance._init_status = instance.status
-    except ProjectPhase.DoesNotExist:
-        instance._init_status = None
+    instance._init_status = instance.status_id
 
 
 @receiver(post_save, sender=Project,
@@ -582,7 +579,7 @@ def project_post_save(sender, instance, **kwargs):
         init_status, current_status = None, None
 
         try:
-            init_status = instance._init_status
+            init_status = ProjectPhase.objects.get(id=instance._init_status)
         except ProjectPhase.DoesNotExist:
             pass
 

@@ -4,7 +4,8 @@ from datetime import datetime
 
 import django_filters
 from django.db.models.query_utils import Q
-from rest_framework import generics, filters
+
+from rest_framework import generics, filters, serializers
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
@@ -115,11 +116,21 @@ class TaskPreviewList(generics.ListAPIView, FilterQSParams):
         return qs.filter(project__status__viewable=True)
 
 
-class TaskList(generics.ListCreateAPIView, FilterQSParams):
+class BaseTaskList(generics.ListCreateAPIView):
     queryset = Task.objects.all()
     pagination_class = TaskPreviewPagination
-    serializer_class = BaseTaskSerializer
     permission_classes = (TenantConditionalOpenClose, IsProjectOwnerOrReadOnly,)
+
+    def perform_create(self, serializer):
+        if serializer.validated_data['project'].status.slug in (
+                'closed', 'done-complete', 'done-incomplete', 'voting-done'):
+            raise serializers.ValidationError('It is not allowed to add tasks to closed projects')
+
+        serializer.save(author=self.request.user)
+
+
+class TaskList(BaseTaskList, FilterQSParams):
+    serializer_class = BaseTaskSerializer
     filter_fields = ('status', 'author')
 
     def get_queryset(self):
@@ -144,24 +155,15 @@ class TaskList(generics.ListCreateAPIView, FilterQSParams):
 
         return qs
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
 
-
-class MyTaskList(generics.ListCreateAPIView):
-    queryset = Task.objects.all()
-    pagination_class = TaskPreviewPagination
+class MyTaskList(BaseTaskList):
     filter_fields = ('author',)
-    permission_classes = (IsProjectOwnerOrReadOnly,)
     serializer_class = MyTasksSerializer
 
     def get_queryset(self):
         if self.request.user.is_authenticated():
             return Task.objects.filter(author=self.request.user)
         return Task.objects.none()
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
 
 
 class TaskDetail(generics.RetrieveUpdateAPIView):

@@ -86,6 +86,7 @@ class TaskAdmin(admin.ModelAdmin):
     export_fields = (
         ('title', 'title'),
         ('project', 'project'),
+        ('type', 'type'),
         ('status', 'status'),
         ('deadline', 'deadline'),
         ('skill', 'skill'),

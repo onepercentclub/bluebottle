@@ -28,7 +28,10 @@ class VoteAdmin(ImprovedModelForm, admin.ModelAdmin):
     list_display = ('email', 'first_name', 'last_name', 'project',
                     'created', 'ip_address')
 
-    list_filter = (ProjectFilter,)
+    list_filter = ('created', ProjectFilter,)
+
+    def get_queryset(self, request):
+        return super(VoteAdmin, self).get_queryset(request).select_related('voter', 'project')
 
     def email(self, obj):
         return obj.voter.email

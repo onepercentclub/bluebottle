@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from collections import namedtuple
 import re
 
@@ -116,6 +118,7 @@ def get_public_properties(request):
             'recurringDonationsEnabled': getattr(properties, 'RECURRING_DONATIONS_ENABLED', False),
             'siteName': current_tenant.name,
             'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')],
+            'currencies': getattr(properties, 'CURRENCIES'),
             'languageCode': get_language()
         }
         try:

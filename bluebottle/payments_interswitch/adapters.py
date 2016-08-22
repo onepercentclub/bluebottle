@@ -3,6 +3,8 @@ import hashlib
 
 import urllib2
 import simplejson
+from bluebottle.payments.exception import PaymentException
+from moneyed import NGN
 
 from bluebottle.clients import properties
 from bluebottle.payments.adapters import BasePaymentAdapter
@@ -37,8 +39,10 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         payment.product_id = properties.INTERSWITCH_PRODUCT_ID
         payment.pay_item_id = properties.INTERSWITCH_ITEM_ID
         # Amount on the payment should be in kobo/cents
-        payment.amount = int(self.order_payment.amount * 100)
-        # payment.currency Defaults to Naira
+        payment.amount = int(self.order_payment.amount.amount * 100)
+        if self.order_payment.amount.currency != NGN:
+            raise PaymentException("Can only do Interswitch payments in Nigerian Naira (NGN).")
+
         payment.site_redirect_url = '{0}/payments_interswitch/payment_response/{1}'.format(
                 get_current_host(),
                 self.order_payment.id)

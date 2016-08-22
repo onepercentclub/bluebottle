@@ -65,3 +65,18 @@ class PaymentMethodTestCase(BluebottleTestCase):
     def test_load_non_netherlands_payment_methods(self):
         methods = get_payment_methods(country="Belgium")
         self.assertEqual(len(methods), 2)
+
+    def test_load_euro_payment_methods(self):
+        methods = get_payment_methods(currency="EUR")
+        self.assertEqual(len(methods), 2)
+
+        for method in methods:
+            self.assertTrue('EUR' in method['currencies'])
+
+    def test_load_non_dutch_euro_payment_methods(self):
+        methods = get_payment_methods(currency="EUR", country='Belgium')
+        self.assertEqual(len(methods), 1)
+
+        for method in methods:
+            self.assertTrue('EUR' in method['currencies'])
+

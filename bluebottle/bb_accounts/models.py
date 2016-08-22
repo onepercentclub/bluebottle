@@ -86,7 +86,6 @@ class BlueBottleUserManager(BaseUserManager):
         return u
 
 
-
 def get_language_choices():
     """ Lazyly get the language choices."""
     return properties.LANGUAGES

@@ -100,6 +100,7 @@ def get_public_properties(request):
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
+            'currencies': getattr(properties, 'CURRENCIES', []),
             'logoUrl': "/images/logo.svg",
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),

@@ -1,12 +1,9 @@
 from collections import namedtuple
-import json
 import re
 
 from django.db import connection
 from django.conf import settings
 from django.utils.translation import get_language
-from forex_python.converter import CurrencyCodes
-from moneyed.classes import CURRENCIES
 
 from bluebottle.clients import properties
 from tenant_extras.utils import get_tenant_properties

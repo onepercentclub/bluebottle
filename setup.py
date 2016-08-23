@@ -15,7 +15,7 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
     'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.2.2#egg=django-bb-salesforce-1.2.2',
     'git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.8#egg=django-tenant-extras-2.0.8',
-    'git+https://github.com/onepercentclub/django-token-auth.git@0.3.0#egg=django-token-auth-0.3.0',
+    'git+https://github.com/onepercentclub/django-token-auth.git@0.3.1#egg=django-token-auth-0.3.1',
     'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1'
 ]
 
@@ -75,14 +75,14 @@ install_requires = [
     'django-lockdown==1.2',
     'mixpanel==4.3.0',
     'wheel==0.29.0',
+    'django-cors-headers==1.1.0'
 
     # Github requirements
     'django-taggit-autocomplete-modified==0.1.1b1',
     'django-fluent-contents==1.1.4',
     'django-bb-salesforce==1.2.2',
     'django-tenant-extras==2.0.8',
-    'django-token-auth==0.3.0',
-    'django-cors-headers==1.1.0'
+    'django-token-auth==0.3.1'
 ]
 
 tests_requires = [

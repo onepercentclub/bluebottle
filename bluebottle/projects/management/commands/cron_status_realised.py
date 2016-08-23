@@ -80,7 +80,7 @@ class Command(BaseCommand):
             signal
             """
             self.stdout.write("Checking Task deadlines...\n\n")
-            for task in Task.objects.filter(status='in progress',
+            for task in Task.objects.filter(status__in=['in progress', 'open'],
                                             deadline__lt=now()).all():
                 task.deadline_reached()
 

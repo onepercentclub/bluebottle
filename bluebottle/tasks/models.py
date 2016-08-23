@@ -27,9 +27,9 @@ class Task(models.Model):
 
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
-        in_progress = ChoiceItem('in progress', label=_('In progress'))
-        closed = ChoiceItem('closed', label=_('Closed'))
+        in_progress = ChoiceItem('in progress', label=_('Running'))
         realized = ChoiceItem('realized', label=_('Realised'))
+        closed = ChoiceItem('closed', label=_('Closed'))
 
     class TaskTypes(DjangoChoices):
         ongoing = ChoiceItem('ongoing', label=_('Ongoing (with deadline)'))
@@ -106,7 +106,10 @@ class Task(models.Model):
             owner """
         # send "The deadline of your task" - mail
 
-        self.status = 'realized'
+        if (self.status == 'in progress'):
+            self.status = 'realized'
+        else:
+            self.status = 'closed'
         self.save()
 
         data = {
@@ -187,7 +190,7 @@ class TaskMember(models.Model):
         applied = ChoiceItem('applied', label=_('Applied'))
         accepted = ChoiceItem('accepted', label=_('Accepted'))
         rejected = ChoiceItem('rejected', label=_('Rejected'))
-        stopped = ChoiceItem('stopped', label=_('Stopped'))
+        stopped = ChoiceItem('stopped', label=_('Withdrew'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
     member = models.ForeignKey('members.Member',

@@ -5,6 +5,8 @@ import re
 from django.db import connection
 from django.conf import settings
 from django.utils.translation import get_language
+from forex_python.converter import CurrencyCodes
+from moneyed.classes import CURRENCIES
 
 from bluebottle.clients import properties
 from tenant_extras.utils import get_tenant_properties
@@ -100,6 +102,7 @@ def get_public_properties(request):
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
+            'currencies': properties.CURRENCIES_ENABLED,
             'logoUrl': "/images/logo.svg",
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),

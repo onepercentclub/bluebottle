@@ -242,7 +242,6 @@ SHARED_APPS = (
     'django_extensions',
     'raven.contrib.django.raven_compat',
     'djcelery',
-    'sorl.thumbnail',
     'micawber.contrib.mcdjango',  # Embedding videos
     'rest_framework',
     'loginas',
@@ -271,6 +270,9 @@ TENANT_APPS = (
     'admin_tools.menu',
     'admin_tools.dashboard',
 
+    # Thumbnails
+    'sorl.thumbnail',
+
     # FB Auth
     'bluebottle.auth',
 
@@ -285,8 +287,6 @@ TENANT_APPS = (
     'bluebottle.widget',
 
     'rest_framework.authtoken',
-
-
 
     # Newly moved BB apps
     'bluebottle.members',

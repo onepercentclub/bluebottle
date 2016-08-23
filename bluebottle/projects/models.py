@@ -1,35 +1,36 @@
 import datetime
 import pytz
+
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
-from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.contrib.contenttypes.models import ContentType
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.http import urlquote
 from django.utils.timezone import now
-from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
-from bluebottle.categories.models import Category
-from bluebottle.clients import properties
-from bluebottle.tasks.models import Task
-from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
-    BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument)
-from bluebottle.utils.fields import ImageField
+    BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument
+)
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
+from bluebottle.tasks.models import Task, TaskMember
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 
-from .mails import (mail_project_funded_internal, mail_project_complete,
-                    mail_project_incomplete)
+from .mails import (
+    mail_project_funded_internal, mail_project_complete,
+    mail_project_incomplete
+)
 from .signals import project_funded
 
 GROUP_PERMS = {'Staff': {'perms': ('add_project', 'change_project',
@@ -381,10 +382,7 @@ class Project(BaseProject):
             order__status__in=[StatusDefinition.PLEDGED,
                                StatusDefinition.PENDING,
                                StatusDefinition.SUCCESS])
-        count = \
-            donations.all().aggregate(
-                total=Count('order__user', distinct=True))[
-                'total']
+        count = donations.all().aggregate(total=Count('order__user', distinct=True))['total']
 
         if with_guests:
             donations = self.donation_set
@@ -441,6 +439,40 @@ class Project(BaseProject):
         elif self.amount_donated > self.amount_asked:
             return 100
         return int(100 * self.amount_donated / self.amount_asked)
+
+    @property
+    def wallpost_photos(self):
+        project_type = ContentType.objects.get_for_model(self)
+        return MediaWallpostPhoto.objects.order_by('-mediawallpost__created').\
+            filter(mediawallpost__object_id=self.id, mediawallpost__content_type=project_type)
+
+    @property
+    def wallpost_videos(self):
+        project_type = ContentType.objects.get_for_model(self)
+        return MediaWallpost.objects.order_by('-created').\
+            filter(object_id=self.id, content_type=project_type, video_url__gt="")
+
+    @property
+    def donors(self, limit=20):
+        return self.donation_set.\
+            filter(order__status__in=[StatusDefinition.PLEDGED,
+                                      StatusDefinition.PENDING,
+                                      StatusDefinition.SUCCESS],
+                   anonymous=False).\
+            filter(order__user__isnull=False).\
+            order_by('order__user', '-created').distinct('order__user')[:limit]
+
+    @property
+    def task_members(self, limit=20):
+        return TaskMember.objects.\
+            filter(task__project=self, status__in=['accepted', 'realized']).\
+            order_by('member', '-created').distinct('member')[:limit]
+
+    @property
+    def posters(self, limit=20):
+        return TextWallpost.objects.\
+            filter(object_id=self.id).\
+            order_by('author', '-created').distinct('author')[:limit]
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """

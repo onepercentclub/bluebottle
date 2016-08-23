@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 
-from bluebottle.projects.models import Project
+from bluebottle.projects.models import Project, ProjectPhase
 from bluebottle.tasks.models import Task
 from bluebottle.test.utils import BluebottleTestCase
 from django.utils import timezone
@@ -157,6 +157,30 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
                          response.data)
         self.assertTrue('deadline' in response.data)
+
+    def test_create_task_closed_project(self):
+        self.some_project.status = ProjectPhase.objects.get(slug='closed')
+        self.some_project.save()
+
+        future_date = timezone.now() + timezone.timedelta(days=30)
+
+        # Now let's create a task.
+        some_task_data = {
+            'project': self.some_project.slug,
+            'title': 'A nice task!',
+            'description': 'Well, this is nice',
+            'time_needed': 5,
+            'skill': '{0}'.format(self.skill1.id),
+            'location': 'Overthere',
+            'deadline': str(future_date)
+        }
+
+        response = self.client.post(self.task_url, some_task_data,
+                                    token=self.some_token)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
+                         response.data)
+        self.assertTrue('closed projects' in response.data[0])
 
     def test_apply_for_task(self):
         future_date = timezone.now() + timezone.timedelta(days=60)

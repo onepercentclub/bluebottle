@@ -1,11 +1,9 @@
-import json
-import mock
+from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from django.core.urlresolvers import reverse
 
 
 class UserTokenTestCase(BluebottleTestCase):

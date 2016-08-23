@@ -4,6 +4,7 @@ import logging
 
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.auth.middleware import AuthenticationMiddleware
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render_to_response
@@ -14,7 +15,7 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
 from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
-                                _default_url_exceptions, _default_form)
+                                 _default_url_exceptions, _default_form)
 
 from lockdown import settings as lockdown_settings
 
@@ -27,7 +28,6 @@ def isAdminRequest(request):
 
 
 class UserJwtTokenMiddleware:
-
     """
     Custom middleware to set the User on the request when using
     Jwt Token authentication.
@@ -53,7 +53,6 @@ class UserJwtTokenMiddleware:
 
 
 class SlidingJwtTokenMiddleware:
-
     """
     Custom middleware to set a sliding window for the jwt auth token expiration.
     """
@@ -136,7 +135,6 @@ class SlidingJwtTokenMiddleware:
 
 
 class AdminOnlySessionMiddleware(SessionMiddleware):
-
     """
     Only do the session stuff for admin urls.
     The frontend relies on auth tokens.
@@ -157,7 +155,6 @@ class AdminOnlySessionMiddleware(SessionMiddleware):
 
 
 class AdminOnlyAuthenticationMiddleware(AuthenticationMiddleware):
-
     """
     Only do the session authentication stuff for admin urls.
     The frontend relies on auth tokens so we clear the user.
@@ -170,7 +167,6 @@ class AdminOnlyAuthenticationMiddleware(AuthenticationMiddleware):
 
 
 class AdminOnlyCsrf(object):
-
     """
     Disable csrf for non-Admin requests, eg API
     """
@@ -185,8 +181,9 @@ class LockdownMiddleware(BaseLockdownMiddleware):
     LockdownMiddleware taken from the Django Lockdown package with the addition
     of password coming from request header: X-Lockdown
     """
+
     def process_request(self, request):
-        if not request.META.has_key('HTTP_X_LOCKDOWN'):
+        if 'HTTP_X_LOCKDOWN' not in request.META:
             return None
 
         try:
@@ -266,8 +263,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         if not hasattr(form, 'show_form') or form.show_form():
             page_data['form'] = form
 
-        response =  render_to_response('lockdown/form.html', page_data,
-                                  context_instance=RequestContext(request))
+        response = render_to_response('lockdown/form.html', page_data,
+                                      context_instance=RequestContext(request))
         response.status_code = 401
         return response
-

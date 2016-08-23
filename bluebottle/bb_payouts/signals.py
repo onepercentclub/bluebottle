@@ -22,17 +22,17 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
 
         next_date = ProjectPayout.get_next_planned_date()
 
-        try:
-            # Update existing Payout
-            payout = ProjectPayout.objects.get(project=project)
+        payouts = ProjectPayout.objects.filter(project=project)
+        if payouts.count():
+            # Get the latest payout
+            payout = payouts.order_by('-created').all()[0]
 
             if payout.status == StatusDefinition.NEW:
                 # Update planned payout date for new Payouts
                 payout.calculate_amounts()
                 payout.planned = next_date
                 payout.save()
-
-        except ProjectPayout.DoesNotExist:
+        else:
 
             if project.campaign_started:
                 # Create new Payout

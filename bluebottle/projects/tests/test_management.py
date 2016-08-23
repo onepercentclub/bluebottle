@@ -195,7 +195,7 @@ class TestStatusMC(BluebottleTestCase):
         task2 = Task.objects.get(title='task2')
 
         self.assertEqual(task1.status, 'realized')
-        self.assertEqual(task2.status, 'open')
+        self.assertEqual(task2.status, 'closed')
 
 
 @override_settings(SEND_WELCOME_MAIL=False)

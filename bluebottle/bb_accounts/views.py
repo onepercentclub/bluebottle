@@ -1,7 +1,6 @@
 import json
 import requests
 
-from django.core.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.template import loader
@@ -131,9 +130,7 @@ class PasswordReset(views.APIView):
         serializer = PasswordResetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = USER_MODEL.objects.get(
-             email__iexact=serializer.validated_data['email']
-        )
+        user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'])
         context = {
             'email': user.email,
             'site': tenant_url(),
@@ -200,7 +197,7 @@ class PasswordSet(views.APIView):
                                                                     token):
             return response.Response(status=status.HTTP_200_OK)
         return response.Response({'message': 'Token expired'},
-                                  status=status.HTTP_400_BAD_REQUEST)
+                                 status=status.HTTP_400_BAD_REQUEST)
 
 
 class DisableAccount(views.APIView):

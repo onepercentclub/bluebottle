@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.db.models.signals import post_init
+from django.db.models import Sum
 
 from exportdb.exporter import ExportModelResource
 
@@ -28,7 +29,12 @@ class UserResource(DateRangeResource):
 
 
 class ProjectResource(DateRangeResource):
-    select_related = ('status', 'owner', 'location',)
+    select_related = ('status', 'owner', 'location', 'theme')
+
+    def get_queryset(self):
+        return super(ProjectResource, self).get_queryset().annotate(
+            time_spent=Sum('task__members__time_spent')
+        )
 
     def export(self, **kwargs):
         with temp_disconnect_signal(

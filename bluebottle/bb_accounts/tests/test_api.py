@@ -189,7 +189,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(country.id, response.data['address']['country'])
 
-
     def test_unauthenticated_user(self):
         """
         Test retrieving the currently logged in user while not logged in.
@@ -223,8 +222,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                                      'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
-        token = "JWT {0}".format(response.data['jwt_token'])
-        user_id = response.data['id']
+        "JWT {0}".format(response.data['jwt_token'])
 
         # Test that the email field is required on user create.
         response = self.client.post(self.user_create_api_url,
@@ -278,8 +276,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.user_create_api_url,
                                     {'email': new_user_email,
                                      'password': new_user_password})
-        token = "JWT {0}".format(response.data['jwt_token'])
-        user_id = response.data['id']
+        "JWT {0}".format(response.data['jwt_token'])
 
         # Test: resetting the password should be allowed.
         response = self.client.put(self.user_password_reset_api_url,

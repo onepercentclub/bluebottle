@@ -83,6 +83,7 @@ class Wallpost(PolymorphicModel):
 
     # Manager
     objects = WallpostManager()
+    objects_with_deleted = models.Manager()
 
     class Meta:
         ordering = ('created',)
@@ -203,7 +204,7 @@ class Reaction(models.Model):
         verbose_name_plural = _('Reactions')
 
     def __unicode__(self):
-        s = "{0}: {1}".format(self.author.get_full_name(), self.text)
+        s = self.text
         return Truncator(s).words(10)
 
 import mails

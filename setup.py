@@ -55,7 +55,7 @@ install_requires = [
     'djangorestframework-jwt==1.8.0',
     'djangorestframework==3.3.3',
     'dkimpy==0.5.6',
-    'fabric',
+    'Fabric==1.11.1',
     'gunicorn==19.5.0',
     'lxml==3.6.0',
     'micawber==0.3.3',

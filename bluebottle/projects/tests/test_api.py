@@ -1,7 +1,6 @@
+from datetime import timedelta
 import json
-
 from random import randint
-from datetime import datetime, timedelta
 
 from django.test import RequestFactory
 from django.core.urlresolvers import reverse
@@ -9,16 +8,19 @@ from django.utils import timezone
 
 from rest_framework import status
 
-from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.organizations import OrganizationFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
+from bluebottle.test.factory_models.wallposts import (
+    MediaWallpostFactory, MediaWallpostPhotoFactory,
+    TextWallpostFactory)
+from bluebottle.test.utils import BluebottleTestCase
 
 from ..models import Project
 
@@ -47,6 +49,7 @@ class ProjectEndpointTestCase(BluebottleTestCase):
 
         self.campaign_phase = ProjectPhase.objects.get(slug='campaign')
         self.plan_phase = ProjectPhase.objects.get(slug='done-complete')
+        self.projects = []
 
         for char in 'abcdefghijklmnopqrstuvwxyz':
             # Put half of the projects in the campaign phase.
@@ -64,6 +67,8 @@ class ProjectEndpointTestCase(BluebottleTestCase):
                 task = TaskFactory.create(project=project)
                 project.save()
                 task.save()
+
+            self.projects.append(project)
 
         self.projects_preview_url = reverse('project_preview_list')
         self.projects_url = reverse('project_list')
@@ -223,7 +228,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.manage_projects_url = reverse('project_manage_list')
         self.manage_budget_lines_url = reverse('project-budgetline-list')
         self.manage_project_document_url = reverse('manage-project-document-list')
-
         self.some_photo = './bluebottle/projects/test_images/upload.png'
 
     def test_project_create(self):
@@ -300,8 +304,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         project_data['status'] = self.phase_campaign.id
         response = self.client.put(project_url, project_data,
                                    token=self.another_user_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertEqual(response.status_code,
+                         status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEquals(response.data['status'][0],
                           'You can not change the project state.',
                           'status change should not be possible')
@@ -533,7 +537,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.put(budget_line_url, budget_line,
                                    token=self.some_user_token)
         self.assertEquals(response.status_code, status.HTTP_200_OK, response)
-        self.assertEquals(response.data['amount'], 350.00)
+        self.assertEquals(response.data['amount']['amount'], 350.00)
+        self.assertEquals(response.data['amount']['currency'], 'EUR')
 
         # Now remove that line
         response = self.client.delete(
@@ -914,7 +919,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code,
                          status.HTTP_200_OK,
                          response.data)
-        self.assertEqual(u'<p>{0}</p>'.format(text2a),  response.data['text'])
+        self.assertEqual(u'<p>{0}</p>'.format(text2a), response.data['text'])
 
         # Update TextWallpost by another user (not the author) is not allowed
         text2b = u'Mess this up!'
@@ -945,16 +950,15 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-
         # And a bunch of Project Media Wallposts
         self.owner_token = "JWT {0}".format(
             self.some_project.owner.get_jwt_token())
         for char in 'wxyz':
             text = char * 15
             response = self.client.post(self.media_wallposts_url,
-                                       {'text': text, 'parent_type': 'project',
-                                        'parent_id': self.some_project.slug},
-                                       token=self.owner_token)
+                                        {'text': text, 'parent_type': 'project',
+                                         'parent_id': self.some_project.slug},
+                                        token=self.owner_token)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # Retrieve a list of the 26 Project Wallposts
@@ -1007,9 +1011,9 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         for char in 'ABCD':
             text = char * 15
             response = self.client.post(self.media_wallposts_url,
-                                       {'text': text, 'parent_type': 'project',
-                                        'parent_id': self.another_project.slug},
-                                       token=self.another_token)
+                                        {'text': text, 'parent_type': 'project',
+                                         'parent_id': self.another_project.slug},
+                                        token=self.another_token)
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -1041,9 +1045,8 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         """
         Changing project status to submitted sets the date_submitted field
         """
-        project = Project.objects.get(
-            id=Project.objects.last().id - randint(0,
-                                                   Project.objects.count() - 1))
+        random_id = Project.objects.last().id - randint(0, Project.objects.count() - 1)
+        project = Project.objects.get(id=random_id)
         self.assertTrue(project.date_submitted is None)
 
         # Change status of project to Needs work
@@ -1059,8 +1062,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         """
         project = ProjectFactory.create(title="testproject",
                                         slug="testproject",
-                                        status=ProjectPhase.objects.get(
-                                            slug='plan-new'))
+                                        status=ProjectPhase.objects.get(slug='plan-new'))
         self.assertTrue(project.date_submitted is None)
         self.assertTrue(project.campaign_started is None)
 
@@ -1243,3 +1245,88 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         self.assertTrue(loaded_project.campaign_funded is None)
         self.assertEquals(loaded_project.status,
                           ProjectPhase.objects.get(slug="done-incomplete"))
+
+
+class ProjectMediaApi(ProjectEndpointTestCase):
+    """
+    Test that project media return media (pictures & videos) from wallposts.
+    """
+
+    def setUp(self):
+        self.init_projects()
+        self.project = ProjectFactory.create()
+        mwp1 = MediaWallpostFactory.create(content_object=self.project,
+                                           video_url='https://youtu.be/Bal2U5jxZDQ')
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
+
+        mwp2 = MediaWallpostFactory.create(content_object=self.project,
+                                           video_url='https://youtu.be/Bal2U5jxZDQ')
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp2)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp2)
+        MediaWallpostPhotoFactory.create(mediawallpost=mwp2)
+
+        self.project_media_url = reverse('project-media-detail',
+                                         kwargs={'slug': self.project.slug})
+
+    def test_project_media_pictures(self):
+        response = self.client.get(self.project_media_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        self.assertEqual(len(response.data['pictures']), 8)
+        self.assertEqual(len(response.data['videos']), 2)
+
+
+class ProjectSupportersApi(ProjectEndpointTestCase):
+    """
+    Check that project supports api return lists with donors, wallposters and task members.
+    """
+
+    def setUp(self):
+        self.init_projects()
+        self.project = ProjectFactory.create()
+        self.user1 = BlueBottleUserFactory.create()
+        self.user2 = BlueBottleUserFactory.create()
+        self.user3 = BlueBottleUserFactory.create()
+        self.user4 = BlueBottleUserFactory.create()
+
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='success', user=self.user1))
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='success', user=self.user1))
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='success', user=self.user1))
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='pending', user=self.user2))
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='success', user=self.user3))
+        DonationFactory.create(project=self.project, anonymous=True,
+                               order=OrderFactory(status='success', user=self.user4))
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='success', user=None))
+
+        TextWallpostFactory.create(content_object=self.project, author=self.user1)
+        TextWallpostFactory.create(content_object=self.project, author=self.user1)
+        TextWallpostFactory.create(content_object=self.project, author=self.user2)
+        TextWallpostFactory.create(content_object=self.project, author=self.user3)
+
+        task = TaskFactory(project=self.project)
+
+        TaskMemberFactory.create(member=self.user1, task=task, status='accepted')
+        TaskMemberFactory.create(member=self.user2, task=task, status='applied')
+        TaskMemberFactory.create(member=self.user3, task=task, status='realized')
+
+        self.project_supporters_url = reverse('project-supporters-detail',
+                                              kwargs={'slug': self.project.slug})
+
+    def test_project_media_pictures(self):
+
+        response = self.client.get(self.project_supporters_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        self.assertEqual(len(response.data['donors']), 3)
+        self.assertEqual(len(response.data['posters']), 3)
+        self.assertEqual(len(response.data['task_members']), 2)

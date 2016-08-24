@@ -1,3 +1,4 @@
+from bluebottle.wallposts.models import MediaWallpostPhoto
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -74,7 +75,7 @@ class ProjectPhase(models.Model):
         ordering = ['sequence']
 
     def __unicode__(self):
-        return u'{0} - {1}'.format(self.sequence, self.name)
+        return u'{0} - {1}'.format(self.sequence, _(self.name))
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)

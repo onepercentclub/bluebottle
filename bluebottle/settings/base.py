@@ -210,6 +210,7 @@ SOCIAL_AUTH_PIPELINE = (
     'social.pipeline.social_auth.social_uid',
     'social.pipeline.social_auth.auth_allowed',
     'social.pipeline.social_auth.social_user',
+    'bluebottle.auth.utils.fallback_email',
     'social.pipeline.user.get_username',
     'social.pipeline.social_auth.associate_by_email',
     'social.pipeline.user.create_user',
@@ -241,7 +242,6 @@ SHARED_APPS = (
     'django_extensions',
     'raven.contrib.django.raven_compat',
     'djcelery',
-    'sorl.thumbnail',
     'micawber.contrib.mcdjango',  # Embedding videos
     'rest_framework',
     'loginas',
@@ -270,6 +270,9 @@ TENANT_APPS = (
     'admin_tools.menu',
     'admin_tools.dashboard',
 
+    # Thumbnails
+    'sorl.thumbnail',
+
     # FB Auth
     'bluebottle.auth',
 
@@ -284,8 +287,6 @@ TENANT_APPS = (
     'bluebottle.widget',
 
     'rest_framework.authtoken',
-
-
 
     # Newly moved BB apps
     'bluebottle.members',
@@ -532,6 +533,14 @@ PROJECT_PAYOUT_FEES = {
     'not_fully_funded': .05
 }
 
+CURRENCIES_ENABLED = [
+    {
+        'code': 'EUR',
+        'name': 'Euro',
+        'symbol': u"\u20AC"
+    }
+]
+
 LIVE_PAYMENTS_ENABLED = False
 MINIMAL_PAYOUT_AMOUNT = 20
 
@@ -577,13 +586,24 @@ EXPORTDB_EXPORT_CONF = {
                 ('title', 'Title'),
                 ('owner__email', 'Email'),
                 ('location__name', 'Location'),
+                ('region', 'Region'),
+                ('theme', 'Theme'),
                 ('supporters', 'Supporters'),
                 ('funding', 'Funding'),
                 ('sourcing', 'Sourcing'),
                 ('amount_asked', 'Amount asked'),
+                ('task_count', 'Task Count'),
+                ('realized_task_count', 'Realized Task Count'),
+                ('time_spent', 'Time Spent'),
+                ('from_suggestion', 'Submitted Suggestion'),
+                ('vote_count', 'Vote Counts'),
                 ('created', 'Date created'),
                 ('deadline', 'Deadline'),
                 ('updated', 'Last update'),
+                ('date_submitted', 'Date Submitted'),
+                ('campaign_started', 'Campaign Started'),
+                ('campaign_ended', 'Campaign Ended'),
+                ('campaign_funded', 'Campaign Funded'),
             ),
             'resource_class': 'bluebottle.exports.resources.ProjectResource',
             'title': 'Projects',
@@ -596,11 +616,15 @@ EXPORTDB_EXPORT_CONF = {
                 ('author__remote_id', 'Remote ID'),
                 ('get_status_display', 'Status'),
                 ('title', 'Title'),
+                ('project__title', 'Project Title'),
                 ('author__email', 'Email'),
                 ('location', 'Task location'),
+                ('type', 'Type'),
+                ('skill', 'Skill Needed'),
                 ('people_needed', 'People needed'),
                 ('time_needed', 'Time needed'),
                 ('people_applied', 'People applied'),
+                ('time_spent', 'Time Spent'),
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),
@@ -634,6 +658,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('member__location__name', 'Location'),
                 ('get_status_display', 'Status'),
                 ('task__time_needed', 'Time pledged'),
+                ('time_spent', 'Time Spent'),
                 ('externals', 'Partners'),
                 ('created', 'Date'),
             ),
@@ -668,7 +693,9 @@ FLUENT_CONTENTS_CACHE_OUTPUT = False
 CACHE_MIDDLEWARE_SECONDS = 0
 
 # Amounts shown in donation modal
-DONATION_AMOUNTS = (25, 50, 75, 100);
+DONATION_AMOUNTS = {
+    'EUR': (25, 50, 75, 100)
+}
 
 # By default we do not show suggestion on the start-project page
 PROJECT_SUGGESTIONS = False

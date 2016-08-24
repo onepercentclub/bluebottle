@@ -1,18 +1,19 @@
 import datetime
 import pytz
 from django.core.exceptions import FieldError
+
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
-from django.conf import settings
-from django.core.urlresolvers import reverse
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.http import urlquote
 from django.utils.timezone import now
-from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
@@ -26,9 +27,13 @@ from bluebottle.bb_projects.models import (
 from bluebottle.utils.fields import MoneyField
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
+from bluebottle.tasks.models import TaskMember
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 
-from .mails import (mail_project_funded_internal, mail_project_complete,
-                    mail_project_incomplete)
+from .mails import (
+    mail_project_funded_internal, mail_project_complete,
+    mail_project_incomplete
+)
 from .signals import project_funded
 
 GROUP_PERMS = {'Staff': {'perms': ('add_project', 'change_project',
@@ -292,7 +297,8 @@ class Project(BaseProject):
         if not self.campaign_ended and self.deadline < timezone.now() \
                 and self.status.slug not in ["done-complete",
                                              "done-incomplete",
-                                             "closed"]:
+                                             "closed",
+                                             "voting-done"]:
             if self.amount_asked.amount > 0 and self.amount_donated.amount <= 20 \
                     or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
@@ -331,8 +337,8 @@ class Project(BaseProject):
         Update amount based on paid and pending donations.
         """
         total = self.get_money_total([StatusDefinition.PENDING,
-                                       StatusDefinition.SUCCESS,
-                                       StatusDefinition.PLEDGED])
+                                      StatusDefinition.SUCCESS,
+                                      StatusDefinition.PLEDGED])
         if isinstance(total, list):
             DeprecationWarning('Cannot yet handle multiple currencies on one project!')
         self.amount_donated = total
@@ -392,10 +398,7 @@ class Project(BaseProject):
             order__status__in=[StatusDefinition.PLEDGED,
                                StatusDefinition.PENDING,
                                StatusDefinition.SUCCESS])
-        count = \
-            donations.all().aggregate(
-                total=Count('order__user', distinct=True))[
-                'total']
+        count = donations.all().aggregate(total=Count('order__user', distinct=True))['total']
 
         if with_guests:
             donations = self.donation_set
@@ -415,6 +418,15 @@ class Project(BaseProject):
     def task_count(self):
         return len(
             self.task_set.filter(status=Task.TaskStatuses.open).all())
+
+    @property
+    def realized_task_count(self):
+        return len(
+            self.task_set.filter(status=Task.TaskStatuses.realized).all())
+
+    @property
+    def from_suggestion(self):
+        return len(self.suggestions.all()) > 0
 
     @property
     def get_open_tasks(self):
@@ -449,6 +461,40 @@ class Project(BaseProject):
         elif self.amount_donated.amount > self.amount_asked.amount:
             return 100
         return int(100 * self.amount_donated.amount / self.amount_asked.amount)
+
+    @property
+    def wallpost_photos(self):
+        project_type = ContentType.objects.get_for_model(self)
+        return MediaWallpostPhoto.objects.order_by('-mediawallpost__created').\
+            filter(mediawallpost__object_id=self.id, mediawallpost__content_type=project_type)
+
+    @property
+    def wallpost_videos(self):
+        project_type = ContentType.objects.get_for_model(self)
+        return MediaWallpost.objects.order_by('-created').\
+            filter(object_id=self.id, content_type=project_type, video_url__gt="")
+
+    @property
+    def donors(self, limit=20):
+        return self.donation_set.\
+            filter(order__status__in=[StatusDefinition.PLEDGED,
+                                      StatusDefinition.PENDING,
+                                      StatusDefinition.SUCCESS],
+                   anonymous=False).\
+            filter(order__user__isnull=False).\
+            order_by('order__user', '-created').distinct('order__user')[:limit]
+
+    @property
+    def task_members(self, limit=20):
+        return TaskMember.objects.\
+            filter(task__project=self, status__in=['accepted', 'realized']).\
+            order_by('member', '-created').distinct('member')[:limit]
+
+    @property
+    def posters(self, limit=20):
+        return TextWallpost.objects.\
+            filter(object_id=self.id).\
+            order_by('author', '-created').distinct('author')[:limit]
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """
@@ -492,7 +538,6 @@ class Project(BaseProject):
         ordering = ['title']
 
     def status_changed(self, old_status, new_status):
-
         status_complete = ProjectPhase.objects.get(slug="done-complete")
         status_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
 
@@ -578,10 +623,7 @@ def email_project_team_project_funded(sender, instance, first_time_funded,
 @receiver(post_init, sender=Project,
           dispatch_uid="bluebottle.projects.Project.post_init")
 def project_post_init(sender, instance, **kwargs):
-    try:
-        instance._init_status = instance.status
-    except ProjectPhase.DoesNotExist:
-        instance._init_status = None
+    instance._init_status = instance.status_id
 
 
 @receiver(post_save, sender=Project,
@@ -591,7 +633,7 @@ def project_post_save(sender, instance, **kwargs):
         init_status, current_status = None, None
 
         try:
-            init_status = instance._init_status
+            init_status = ProjectPhase.objects.get(id=instance._init_status)
         except ProjectPhase.DoesNotExist:
             pass
 

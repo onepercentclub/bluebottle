@@ -10,11 +10,10 @@ from bluebottle.tasks.models import TaskMember
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.projects import ProjectPhaseFactory, \
-    ProjectFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 
 
 class BlueBottleUserManagerTestCase(BluebottleTestCase):
@@ -159,8 +158,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
         # The setup function also creates a user and generates a mail
         self.assertEqual(len(mail.outbox), 0)
-        new_user = BlueBottleUserFactory.create(
-            email='new_user@onepercentclub.com')
+        BlueBottleUserFactory.create(email='new_user@onepercentclub.com')
         self.assertEqual(len(mail.outbox), 0)
 
     def test_calculate_task_count(self):
@@ -174,7 +172,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         task = TaskFactory.create(author=self.user)
         self.assertEqual(self.user.task_count, 1)
 
-        taskmember = TaskMemberFactory.create(
+        TaskMemberFactory.create(
             member=self.user,
             status=TaskMember.TaskMemberStatuses.applied,
             task=task
@@ -182,7 +180,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
         self.assertEqual(self.user.task_count, 2)
 
-        uncounted_taskmember = TaskMemberFactory.create(
+        TaskMemberFactory.create(
             member=self.user,
             status=TaskMember.TaskMemberStatuses.stopped,
             task=task
@@ -195,7 +193,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertEqual(self.user.donation_count, 0)
 
         order = OrderFactory.create(user=self.user)
-        donation = DonationFactory.create(amount=1000, order=order)
+        DonationFactory.create(amount=1000, order=order)
 
         # Only successful or pending orders/donations are counted
         self.assertEqual(self.user.donation_count, 0)
@@ -226,12 +224,9 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         """ Test the counter for the number of fundraisers a user is owner of """
         self.assertEqual(self.user.fundraiser_count, 0)
 
-        fundraiser = FundraiserFactory.create(amount=4000, owner=self.user)
-
+        FundraiserFactory.create(amount=4000, owner=self.user)
         self.assertEqual(self.user.fundraiser_count, 1)
-
-        fundraiser2 = FundraiserFactory.create(amount=4000, owner=self.user)
-
+        FundraiserFactory.create(amount=4000, owner=self.user)
         self.assertEqual(self.user.fundraiser_count, 2)
 
     def test_base_user_fields(self):

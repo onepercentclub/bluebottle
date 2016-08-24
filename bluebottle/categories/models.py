@@ -2,6 +2,7 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
 
+from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
 
 
@@ -32,7 +33,6 @@ class Category(models.Model):
             self.slug = slugify(self.title)
 
         super(Category, self).save(**kwargs)
-
 
     class Meta:
         verbose_name = _("category")

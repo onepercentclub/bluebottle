@@ -57,7 +57,7 @@ class MonthlyDonationApiTest(BluebottleTestCase):
                                     token=self.some_user_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
-        self.assertEqual(response.data['amount'],
+        self.assertEqual(response.data['amount']['amount'],
                          self.monthly_profile['amount'])
         self.assertEqual(response.data['active'], True)
         some_monthly_donation_id = response.data['id']
@@ -68,7 +68,7 @@ class MonthlyDonationApiTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['amount'],
+        self.assertEqual(response.data['results'][0]['amount']['amount'],
                          self.monthly_profile['amount'])
 
         # Add a preferred projects

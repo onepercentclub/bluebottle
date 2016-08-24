@@ -1,12 +1,16 @@
 import logging
 from django.http.response import Http404
+
 from rest_framework import permissions, generics
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bb_orders.permissions import OrderIsNew, IsOrderCreator
 from bluebottle.clients import properties
-from bluebottle.donations.serializers import LatestDonationSerializer, PreviewDonationSerializer, \
-    PreviewDonationWithoutAmountSerializer, DefaultDonationSerializer, ManageDonationSerializer
+from bluebottle.donations.serializers import (
+    LatestDonationSerializer, PreviewDonationSerializer,
+    PreviewDonationWithoutAmountSerializer,
+    DefaultDonationSerializer, ManageDonationSerializer
+)
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
@@ -121,8 +125,7 @@ class MyProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
 
         project_slug = self.request.query_params.get('project', None)
         try:
-            project = Project.objects.get(slug=project_slug,
-                                                owner=self.request.user)
+            project = Project.objects.get(slug=project_slug, owner=self.request.user)
         except Project.DoesNotExist:
             raise Http404(u"No project found matching the query")
 

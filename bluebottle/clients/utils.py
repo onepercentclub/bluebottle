@@ -1,5 +1,4 @@
 from collections import namedtuple
-import json
 import re
 
 from django.db import connection
@@ -100,6 +99,7 @@ def get_public_properties(request):
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
+            'currencies': properties.CURRENCIES_ENABLED,
             'logoUrl': "/images/logo.svg",
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),

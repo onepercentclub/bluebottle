@@ -5,6 +5,8 @@ from django.db import connection
 from django.conf import settings
 from django.utils.translation import get_language
 
+from djmoney_rates.utils import get_rate
+
 from bluebottle.clients import properties
 from tenant_extras.utils import get_tenant_properties
 
@@ -96,10 +98,15 @@ def get_public_properties(request):
     if connection.tenant:
         current_tenant = connection.tenant
         properties = get_tenant_properties()
+        currencies = properties.CURRENCIES_ENABLED
+
+        for currency in currencies:
+            currency['rate'] = get_rate(currency['code'])
+
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
-            'currencies': properties.CURRENCIES_ENABLED,
+            'currencies': currencies,
             'logoUrl': "/images/logo.svg",
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),

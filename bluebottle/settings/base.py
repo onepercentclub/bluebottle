@@ -685,7 +685,9 @@ FLUENT_CONTENTS_CACHE_OUTPUT = False
 CACHE_MIDDLEWARE_SECONDS = 0
 
 # Amounts shown in donation modal
-DONATION_AMOUNTS = (25, 50, 75, 100);
+DONATION_AMOUNTS = {
+    'EUR': (25, 50, 75, 100)
+}
 
 # By default we do not show suggestion on the start-project page
 PROJECT_SUGGESTIONS = False

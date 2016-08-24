@@ -89,7 +89,7 @@ class TestOrderPaymentPermissions(BluebottleTestCase):
         response = self.client.get(reverse('payment-method-list'), {},
                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['country'], 'all')
+        self.assertEqual(response.data['country'], None)
         self.assertEqual(len(response.data['results']), 3)
 
     @patch('bluebottle.payments.views.get_ip')

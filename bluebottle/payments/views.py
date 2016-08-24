@@ -20,18 +20,18 @@ from bluebottle.utils.utils import get_country_code_by_ip
 
 class PaymentMethodList(APIView):
     def get(self, request, *args, **kwargs):
-        if 'country' in request.GET:
-            country = request.GET['country']
-        else:
+        country = request.GET.get('country')
+
+        if not country and not getattr(settings, 'SKIP_IP_LOOKUP', False):
             ip = get_ip(request)
-            if getattr(settings, 'SKIP_IP_LOOKUP', False):
-                country = 'all'
-            else:
-                country = get_country_code_by_ip(ip)
+            country = get_country_code_by_ip(ip)
 
         # Payment methods are loaded from the settings so they
         # aren't translated at run time. We need to do it manually
-        methods = get_payment_methods(country, 500, request.user)
+        methods = get_payment_methods(
+            country=country, user=request.user, currency=request.GET.get('currency')
+        )
+
         for method in methods:
             method['name'] = _(method['name'])
 

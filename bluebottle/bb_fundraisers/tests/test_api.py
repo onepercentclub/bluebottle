@@ -43,7 +43,7 @@ class FundraiserAPITestCase(BluebottleTestCase):
             'title': 'Testing fundraisers',
             'description': 'Lorem Ipsum',
             'image': self.image,
-            'amount': '1000',
+            'amount': json.dumps({'amount': 1000, 'currency': 'EUR'}),
             'deadline': str(future_date)
         }
 
@@ -64,7 +64,7 @@ class FundraiserAPITestCase(BluebottleTestCase):
             'title': 'Testing fundraisers',
             'description': 'Lorem Ipsum',
             'image': self.image,
-            'amount': '1000',
+            'amount': json.dumps({'amount': 1000, 'currency': 'EUR'}),
             'deadline': str(future_date)
         }
 
@@ -83,7 +83,7 @@ class FundraiserAPITestCase(BluebottleTestCase):
             'title': 'Testing fundraisers',
             'description': 'Lorem Ipsum',
             'image': self.image,
-            'amount': {'amount': 1000, 'currency': 'USD'},
+            'amount': json.dumps({'amount': 1000, 'currency': 'USD'}),
             'deadline': str(future_date)
         }
 

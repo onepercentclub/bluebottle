@@ -166,3 +166,4 @@ class WallpostSerializer(serializers.ModelSerializer):
         fields = ('id', 'type', 'author', 'created',
                   'email_followers', 'share_with_facebook',
                   'share_with_twitter', 'share_with_linkedin')
+

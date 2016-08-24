@@ -217,6 +217,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
         for item in data:
             self.assertIn('id', item)
             self.assertIn('name', item)
+            self.assertIn('description', item)
 
     def test_api_project_theme_list_endpoint_disabled(self):
         """
@@ -239,6 +240,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
         for item in data:
             self.assertIn('id', item)
             self.assertIn('name', item)
+            self.assertIn('description', item)
             self.assertNotEquals(item['id'], disabled.id)
 
 class TestProjectThemeDetail(ProjectEndpointTestCase):
@@ -259,6 +261,7 @@ class TestProjectThemeDetail(ProjectEndpointTestCase):
 
         self.assertIn('id', data)
         self.assertIn('name', data)
+        self.assertIn('description', data)
 
 
 class TestManageProjectList(ProjectEndpointTestCase):

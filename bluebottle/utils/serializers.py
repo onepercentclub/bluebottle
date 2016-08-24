@@ -1,3 +1,4 @@
+import json
 from HTMLParser import HTMLParser
 import re
 from moneyed import Money
@@ -18,14 +19,19 @@ class MoneySerializer(serializers.DecimalField):
         )
 
     def to_representation(self, instance):
-        return instance.amount
+        return {
+            'amount': instance.amount,
+            'currency': str(instance.currency)
+        }
 
     def to_internal_value(self, data):
         if not data:
             return data
-
         try:
             return Money(float(data), 'EUR')
+        except ValueError:
+            data = json.loads(data)
+            return Money(data['amount'], data['currency'])
         except TypeError:
             return Money(data['amount'], data['currency'])
 

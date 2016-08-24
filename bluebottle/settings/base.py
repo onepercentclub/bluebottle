@@ -251,7 +251,8 @@ SHARED_APPS = (
     'filetransfers',
     'rest_framework_swagger',
     'lockdown',
-    'corsheaders'
+    'corsheaders',
+    'djmoney_rates'
 
 )
 
@@ -723,4 +724,9 @@ SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4
 }
 
-
+DJANGO_MONEY_RATES = {
+    'DEFAULT_BACKEND': 'djmoney_rates.backends.OpenExchangeBackend',
+    'OPENEXCHANGE_URL': 'http://openexchangerates.org/api/latest.json',
+    'OPENEXCHANGE_APP_ID': '3e53678e72c140b4857dc5bb1deb59dc',
+    'OPENEXCHANGE_BASE_CURRENCY': 'USD',
+}

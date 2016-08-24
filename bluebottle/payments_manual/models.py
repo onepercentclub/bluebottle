@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 from django.utils.translation import ugettext as _
+
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
 
 from bluebottle.payments.models import Payment
@@ -9,7 +11,7 @@ from bluebottle.payments.models import Payment
 
 
 class ManualPayment(Payment):
-    amount = models.DecimalField(_("amount"), max_digits=15, decimal_places=2, editable=False)
+    amount = MoneyField(_("amount"), editable=False)
     bank_transaction = models.ForeignKey('accounting.BankTransaction', editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)  # track user who entered this record
 

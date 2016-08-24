@@ -5,6 +5,9 @@ from django_extensions.db.fields import CreationDateTimeField, \
 
 from localflavor.generic.models import IBANField, BICField
 from django.utils.translation import ugettext as _
+from moneyed.classes import Money
+
+from bluebottle.utils.fields import MoneyField
 
 
 class MonthlyDonor(models.Model):
@@ -17,7 +20,7 @@ class MonthlyDonor(models.Model):
     updated = ModificationDateTimeField(_("Updated"))
 
     active = models.BooleanField(default=True)
-    amount = models.DecimalField(_("amount"), max_digits=6, decimal_places=2)
+    amount = MoneyField(_("amount"))
 
     iban = IBANField()
     bic = BICField(blank=True, default='')
@@ -28,7 +31,7 @@ class MonthlyDonor(models.Model):
     @property
     def is_valid(self):
         # Check if we're above the DocData minimum for direct debit.
-        if self.amount < 1.13:
+        if self.amount < Money(1.13, 'EUR'):
             return False
 
         # Check if the IBAN / BIC is stored correctly.
@@ -72,8 +75,7 @@ class MonthlyProject(models.Model):
 
     batch = models.ForeignKey(MonthlyBatch)
     project = models.ForeignKey('projects.Project')
-    amount = models.DecimalField(_("amount"), default=0, max_digits=6,
-                                 decimal_places=2)
+    amount = MoneyField(_("amount"), default=0)
 
 
 class MonthlyOrder(models.Model):
@@ -82,9 +84,7 @@ class MonthlyOrder(models.Model):
 
     batch = models.ForeignKey(MonthlyBatch, related_name='orders')
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
-    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
-                                 default=0)
-    currency = models.CharField(max_length=3, default='EUR')
+    amount = MoneyField(_("Amount"), default=0)
     name = models.CharField(max_length=35)
     city = models.CharField(max_length=35)
     iban = IBANField(blank=True, default='')
@@ -97,12 +97,11 @@ class MonthlyOrder(models.Model):
     error = models.CharField(max_length=1000, blank=True, null=True, default='')
 
     def __unicode__(self):
-        return "{0}: {1}".format(self.user, self.amount)
+        return "{0}: {1} {2}".format(self.user, self.amount.currency, self.amount.amount)
 
 
 class MonthlyDonation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     order = models.ForeignKey(MonthlyOrder, related_name='donations')
     project = models.ForeignKey('projects.Project')
-    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
-                                 default=0)
+    amount = MoneyField(_("Amount"), default=0)

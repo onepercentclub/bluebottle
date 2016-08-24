@@ -1,10 +1,41 @@
 from HTMLParser import HTMLParser
 import re
+from moneyed import Money
 
 from rest_framework import serializers
 
 from .validators import validate_postal_code
 from .models import Address, Language
+
+
+class MoneySerializer(serializers.DecimalField):
+
+    def __init__(self,  max_digits=12, decimal_places=2, **kwargs):
+        super(MoneySerializer, self).__init__(
+            max_digits=max_digits,
+            decimal_places=decimal_places,
+            **kwargs
+        )
+
+    def to_representation(self, instance):
+        return instance.amount
+
+    def to_internal_value(self, data):
+        if not data:
+            return data
+
+        try:
+            return Money(float(data), 'EUR')
+        except TypeError:
+            return Money(data['amount'], data['currency'])
+
+
+class MoneyTotalSerializer(serializers.ListField):
+    """
+    Serialize money totals with multiple currencies, e.g.
+    [(450, 'EUR'), (23050, 'XEF')]
+    """
+    child = MoneySerializer()
 
 
 class ShareSerializer(serializers.Serializer):

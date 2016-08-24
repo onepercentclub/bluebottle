@@ -89,7 +89,6 @@ class DonationAdminForm(forms.ModelForm):
                 self.fields['reward'].queryset = Reward.objects.none()
 
 
-
 class DonationAdmin(admin.ModelAdmin):
     form = DonationAdminForm
     date_hierarchy = 'created'

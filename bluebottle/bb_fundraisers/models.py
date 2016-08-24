@@ -1,12 +1,14 @@
+from moneyed import Money
+
+from django.core.exceptions import FieldError
 from django.db import models
-from django.db.models import options
 from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
-from bluebottle.utils.fields import ImageField
+from bluebottle.utils.fields import ImageField, MoneyField
 from bluebottle.utils.utils import GetTweetMixin, StatusDefinition
 
 
@@ -24,8 +26,7 @@ class BaseFundraiser(models.Model, GetTweetMixin):
                        help_text=_("Minimal of 800px wide"))
     video_url = models.URLField(max_length=100, blank=True, default='')
 
-    amount = models.DecimalField(_("amount"), decimal_places=2, max_digits=10)
-    currency = models.CharField(max_length=10, default='EUR')
+    amount = MoneyField(_("amount"))
     deadline = models.DateTimeField(null=True)
 
     created = CreationDateTimeField(_("created"), help_text=_(
@@ -42,11 +43,19 @@ class BaseFundraiser(models.Model, GetTweetMixin):
     def amount_donated(self):
         donations = self.donation_set.filter(
             order__status__in=[StatusDefinition.SUCCESS,
-                               StatusDefinition.PENDING])
-        if donations:
-            total = donations.aggregate(sum=Sum('amount'))
-            return total['sum']
-        return 0.0
+                               StatusDefinition.PENDING,
+                               StatusDefinition.PLEDGED])
+        totals = [
+            Money(data['amount__sum'], data['amount_currency']) for data in
+            donations.values('amount_currency').annotate(Sum('amount')).order_by()
+        ]
+        if len(totals) == 0:
+            totals = [Money(0, 'EUR')]
+
+        if len(totals) > 1:
+            FieldError('Cannot yet handle multiple currencies on one project!')
+
+        return totals[0]
 
     class Meta():
         abstract = True

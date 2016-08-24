@@ -14,8 +14,8 @@ from localflavor.generic.models import BICField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 
-from bluebottle.bb_projects.fields import MoneyField
 from bluebottle.tasks.models import TaskMember
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 
@@ -161,10 +161,10 @@ class BaseProject(models.Model, GetTweetMixin):
 
     # For convenience and performance we also store money donated and needed
     # here.
-    amount_asked = MoneyField(default=0, null=True, blank=True)
-    amount_donated = MoneyField(default=0)
-    amount_needed = MoneyField(default=0)
-    amount_extra = MoneyField(default=0, null=True, blank=True,
+    amount_asked = MoneyField(default=0, null=True)
+    amount_donated = MoneyField(default=0, null=True)
+    amount_needed = MoneyField(default=0, null=True)
+    amount_extra = MoneyField(default=0, null=True,
                               help_text=_("Amount pledged by organisation (matching fund)."))
 
     # Bank detail data
@@ -244,9 +244,9 @@ class BaseProject(models.Model, GetTweetMixin):
              StatusDefinition.PLEDGED])
         self.amount_needed = self.amount_asked - self.amount_donated
 
-        if self.amount_needed < 0:
+        if self.amount_needed.amount < 0:
             # Should never be less than zero
-            self.amount_needed = 0
+            self.amount_needed.amount = 0
 
         if save:
             self.save()
@@ -257,7 +257,7 @@ class BaseProject(models.Model, GetTweetMixin):
         filtered by status.
         """
 
-        if self.amount_asked == 0:
+        if self.amount_asked.amount == 0:
             # No money asked, return 0
             return 0
 
@@ -316,16 +316,6 @@ class BaseProject(models.Model, GetTweetMixin):
     @property
     def supporters(self):
         return self.funding + self.sourcing
-
-
-class BaseProjectPhaseLog(models.Model):
-    project = models.ForeignKey('projects.Project')
-    status = models.ForeignKey("bb_projects.ProjectPhase")
-    start = CreationDateTimeField(
-        _('created'), help_text=_('When this project entered in this status.'))
-
-    class Meta():
-        abstract = True
 
 
 from projectwallmails import *

@@ -5,12 +5,14 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
+from bluebottle.utils.fields import MoneyField
+
 
 class BaseDonation(models.Model):
     """
     Donation of an amount from a user to a project.
     """
-    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
+    amount = MoneyField(_("Amount"))
 
     project = models.ForeignKey('projects.Project',
                                 verbose_name=_("Project"))

@@ -141,7 +141,7 @@ class OrderPaymentTestCase(BluebottleTestCase):
         self.order.save()
 
         self.order_payment.save()
-        self.assertEqual(self.order_payment.amount, 20)
+        self.assertEqual(self.order_payment.amount.amount, 20)
 
 
 class PaymentFeeTestCase(BluebottleTestCase):
@@ -166,7 +166,7 @@ class PaymentFeeTestCase(BluebottleTestCase):
         """
         Check that the 3.25% mockCard fee is calculated
         """
-        self.assertEqual(self.order.total, 60)
+        self.assertEqual(self.order.total.amount, 60)
         self.order_payment.payment_method = 'mockCard'
         self.order_payment.save()
         PaymentService(self.order_payment)

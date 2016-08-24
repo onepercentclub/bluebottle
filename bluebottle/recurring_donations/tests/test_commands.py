@@ -1,5 +1,5 @@
-from decimal import Decimal
 from mock import patch
+from moneyed import Money
 
 from django.core.management import call_command
 from django.test.utils import override_settings
@@ -84,7 +84,7 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         self.assertEqual(monthly_order.donations.count(), 1)
 
         # Donation should have amount 25 and go to first project
-        self.assertEqual(monthly_order.donations.all()[0].amount, Decimal('25'))
+        self.assertEqual(monthly_order.donations.all()[0].amount, Money(25, 'EUR'))
         self.assertEqual(monthly_order.donations.all()[0].project,
                          self.projects[0])
 
@@ -94,13 +94,13 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
             user=self.user2).donations.all()
         self.assertEqual(len(monthly_donations), 3)
 
-        self.assertEqual(monthly_donations[0].amount, Decimal('33.33'))
+        self.assertEqual(monthly_donations[0].amount, Money(33.33, 'EUR'))
         self.assertEqual(monthly_donations[0].project, self.projects[3])
 
-        self.assertEqual(monthly_donations[1].amount, Decimal('33.33'))
+        self.assertEqual(monthly_donations[1].amount, Money(33.33, 'EUR'))
         self.assertEqual(monthly_donations[1].project, self.projects[4])
 
-        self.assertEqual(monthly_donations[2].amount, Decimal('33.34'))
+        self.assertEqual(monthly_donations[2].amount, Money(33.34, 'EUR'))
         self.assertEqual(monthly_donations[2].project, self.projects[0])
 
     @patch.object(process_monthly_donations, 'PAYMENT_METHOD', 'mock')

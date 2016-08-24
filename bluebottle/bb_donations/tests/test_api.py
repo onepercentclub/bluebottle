@@ -120,6 +120,21 @@ class TestDonationPermissions(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Donation.objects.count(), 1)
 
+    def test_currency_does_not_match_project(self, mock_check_status_psp):
+        """ Test that a user who is not owner of an order cannot create a new donation """
+
+        donation = {
+            "project": self.project.slug,
+            "order": self.order.id,
+            "amount": {'currency': 'USD', 'amount': 35}
+        }
+
+        response = self.client.post(reverse('manage-donation-list'), donation,
+                                    token=self.user_token)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Donation.objects.count(), 0)
+
     def test_donation_update_not_same_owner(self, mock_check_status_psp):
         """ Test that an update to a donation where the user is not the owner produces a 403"""
 

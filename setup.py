@@ -86,7 +86,7 @@ install_requires = [
     'django-fluent-contents==1.1.4',
     'django-taggit-autocomplete-modified==0.1.1b1',
     'django-tenant-extras==2.0.8',
-    'django-token-auth==0.3.1'
+    'django-token-auth==0.3.1',
     'django-money-rates==0.3.1'
 ]
 

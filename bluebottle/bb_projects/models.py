@@ -78,7 +78,8 @@ class ProjectPhase(models.Model):
         return u'{0} - {1}'.format(self.sequence, _(self.name))
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
+        if not self.slug:
+            self.slug = slugify(self.name)
         super(ProjectPhase, self).save(*args, **kwargs)
 
 

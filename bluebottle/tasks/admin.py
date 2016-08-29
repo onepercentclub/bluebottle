@@ -17,15 +17,15 @@ mark_as_open.short_description = _("Mark selected Tasks as Open")
 
 def mark_as_in_progress(modeladmin, request, queryset):
     queryset.update(status='in progress')
-mark_as_in_progress.short_description = _("Mark selected Tasks as In Progress")
+mark_as_in_progress.short_description = _("Mark selected Tasks as Running")
 
 def mark_as_closed(modeladmin, request, queryset):
     queryset.update(status='closed')
-mark_as_closed.short_description = _("Mark selected Tasks as Closed")
+mark_as_closed.short_description = _("Mark selected Tasks as Done")
 
 def mark_as_realized(modeladmin, request, queryset):
     queryset.update(status='realized')
-mark_as_realized.short_description = _("Mark selected Tasks as Realized")
+mark_as_realized.short_description = _("Mark selected Tasks as Realised")
 
 #Bulk actions for Task Member
 
@@ -43,11 +43,11 @@ mark_as_rejected.short_description = _("Mark selected Task Members as Rejected")
 
 def mark_as_stopped(modeladmin, request, queryset):
     queryset.update(status='stopped')
-mark_as_stopped.short_description = _("Mark selected Task Members as Stopped")
+mark_as_stopped.short_description = _("Mark selected Task Members as Withdrew")
 
 def mark_as_tm_realized(modeladmin, request, queryset):
     queryset.update(status='realized')
-mark_as_tm_realized.short_description = _("Mark selected Task Members as Realized")
+mark_as_tm_realized.short_description = _("Mark selected Task Members as Realised")
 
 
 class TaskMemberAdminInline(admin.StackedInline):

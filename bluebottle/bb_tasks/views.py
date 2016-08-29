@@ -4,6 +4,7 @@ from datetime import datetime
 
 import django_filters
 from django.db.models.query_utils import Q
+from django.utils import timezone
 
 from rest_framework import generics, filters, serializers
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -87,6 +88,7 @@ class FilterQSParams(object):
             qs = qs.filter(status=status)
         return qs
 
+
 class TaskPreviewList(generics.ListAPIView, FilterQSParams):
     queryset = Task.objects.all()
     serializer_class = TaskPreviewSerializer
@@ -126,6 +128,9 @@ class BaseTaskList(generics.ListCreateAPIView):
                 'closed', 'done-complete', 'done-incomplete', 'voting-done'):
             raise serializers.ValidationError('It is not allowed to add tasks to closed projects')
 
+        deadline = serializer.validated_data['deadline']
+        deadline = timezone.get_current_timezone().localize(datetime.combine(deadline, datetime.max.time()))
+        serializer.validated_data['deadline'] = deadline
         serializer.save(author=self.request.user)
 
 

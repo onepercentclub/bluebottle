@@ -91,6 +91,10 @@ class Task(models.Model):
         self.status = self.TaskStatuses.in_progress
         self.save()
 
+    def set_open(self):
+        self.status = self.TaskStatuses.open
+        self.save()
+
     @property
     def people_applied(self):
         return self.members.count()
@@ -224,6 +228,10 @@ class TaskMember(models.Model):
         super(TaskMember, self).save(*args, **kwargs)
         self.check_number_of_members_needed(self.task)
 
+    def delete(self, using=None, keep_parents=False):
+        super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
+        self.check_number_of_members_needed(self.task)
+
     # TODO: refactor this to use a signal and move code to task model
     def check_number_of_members_needed(self, task):
         members = TaskMember.objects.filter(task=task,
@@ -234,8 +242,14 @@ class TaskMember(models.Model):
 
         members_accepted = members.count() + total_externals
 
-        if task.status == 'open' and task.people_needed <= members_accepted:
+        if task.status == Task.TaskStatuses.open and \
+                        task.people_needed <= members_accepted:
             task.set_in_progress()
+
+        if task.status == Task.TaskStatuses.in_progress and \
+                        task.people_needed > members_accepted:
+            task.set_open()
+
         return members_accepted
 
     @property

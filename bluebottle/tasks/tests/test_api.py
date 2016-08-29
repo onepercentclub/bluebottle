@@ -1,3 +1,6 @@
+from django.core.urlresolvers import reverse
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
+
 from bluebottle.tasks.models import Task
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -36,12 +39,15 @@ class TaskApiTestcase(BluebottleTestCase):
         self.yet_another_token = "JWT {0}".format(
             self.yet_another_user.get_jwt_token())
 
-        self.previews_url = '/api/bb_projects/previews/'
-        self.task_preview_url = '/api/bb_tasks/previews/'
-        self.tasks_url = '/api/bb_tasks/'
+        self.previews_url = reverse('project_preview_list')
+        self.task_preview_url = reverse('task_preview_list')
+        self.tasks_url = reverse('task_list')
+        self.task_member_url = reverse('task_member_list')
 
     def test_task_count(self):
-        """ Test various task_count values """
+        """
+        Test various task_count values
+        """
 
         # No task members assigned to a task of a project, so there is a task open
         response = self.client.get(self.previews_url,
@@ -171,3 +177,66 @@ class TaskApiTestcase(BluebottleTestCase):
 
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['id'], task4.id)
+
+    def test_task_status_changes(self):
+        task = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.some_user,
+            project=self.some_project,
+            people_needed=1
+        )
+
+        task_url = reverse('task_detail', kwargs={'pk': task.id})
+        task_member_data = {
+            'task': task.id,
+            'motivation': 'Pick me!'
+        }
+
+        # Task should have status 'open' at first.
+        response = self.client.get(task_url)
+        self.assertEqual(response.data['status'], 'open')
+
+        # When a member applies and is accepted task status should change to 'in progress'
+        response = self.client.post(self.task_member_url,
+                                    task_member_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        task_member_id = response.data['id']
+        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
+        response = self.client.patch(task_member_url,
+                                   {'status': 'accepted'},
+                                   HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        response = self.client.get(task_url)
+        self.assertEqual(response.data['status'], 'in progress')
+
+        # When the accepted member is rejected task status should change back to 'open'
+        response = self.client.patch(task_member_url,
+                                   {'status': 'rejected'},
+                                   HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        response = self.client.get(task_url)
+        self.assertEqual(response.data['status'], 'open')
+
+        # When a member is accepted task status should change to 'in progress'
+        response = self.client.post(self.task_member_url,
+                                    task_member_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        task_member_id = response.data['id']
+        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
+        response = self.client.patch(task_member_url,
+                                   {'status': 'accepted'},
+                                   HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        response = self.client.get(task_url)
+        self.assertEqual(response.data['status'], 'in progress')
+
+        # When a applied member is withdraws task status should change to 'open'
+        response = self.client.delete(task_member_url,
+                                      HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+        response = self.client.get(task_url)
+        self.assertEqual(response.data['status'], 'open')
+
+

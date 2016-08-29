@@ -3,6 +3,7 @@ from datetime import datetime
 
 from django.db import models
 from django.utils.timezone import now
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (
@@ -162,10 +163,6 @@ class Task(models.Model):
     def save(self, *args, **kwargs):
         if not self.author_id:
             self.author = self.project.owner
-
-        # Ensure deadline time is set to the end of the day
-        self.deadline = pytz.utc.localize(datetime.combine(self.deadline, datetime.max.time()))
-
         super(Task, self).save(*args, **kwargs)
 
 

@@ -33,7 +33,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.
 # In a Windows environment this must be set to your system time zone.
-TIME_ZONE = 'Europe/Amsterdam'
+TIME_ZONE = 'UTC'
 
 # Available user interface translations
 # Ref: https://docs.djangoproject.com/en/1.4/ref/settings/#languages

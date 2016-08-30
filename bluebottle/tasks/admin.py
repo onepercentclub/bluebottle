@@ -77,10 +77,6 @@ class TaskFileAdminInline(admin.StackedInline):
 
 class TaskAdmin(admin.ModelAdmin):
 
-    def __init__(self, model, admin_site):
-        super(TaskAdmin, self).__init__(model=model, admin_site=admin_site)
-        timezone.activate(pytz.timezone('UTC'))
-
     date_hierarchy = 'created'
 
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)

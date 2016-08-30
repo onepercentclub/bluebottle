@@ -239,4 +239,25 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'open')
 
+    def test_deadline_dates(self):
+        """
+        Test the setting of the deadline of a Task on save to the end of a day.
+        """
+        task_data = {
+            'people_needed': 1,
+            'deadline': '2016-08-09T12:45:14.134756',
+            'project': self.some_project.slug,
+            'title': 'Help me',
+            'description': 'I need help',
+            'location': '',
+            'skill': 1,
+            'time_needed': '4.00',
+            'type': 'event'
+        }
+
+        # Task deadline time should changed be just before midnight after setting.
+        response = self.client.post(self.tasks_url, task_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        self.assertEqual(response.data['deadline'], '2016-08-09T23:59:59.999999+02:00')
 

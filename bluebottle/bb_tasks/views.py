@@ -1,4 +1,3 @@
-import pytz
 from dateutil import parser
 from datetime import datetime
 
@@ -25,12 +24,12 @@ from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 def day_start(date_str):
     date_combined = datetime.combine(parser.parse(date_str), datetime.min.time())
-    return pytz.utc.localize(date_combined)
+    return timezone.get_current_timezone().localize(date_combined)
 
 
 def day_end(date_str):
     date_combined = datetime.combine(parser.parse(date_str), datetime.max.time())
-    return pytz.utc.localize(date_combined)
+    return timezone.get_current_timezone().localize(date_combined)
 
 
 def get_dates_query(query, start_date, end_date):

@@ -248,8 +248,7 @@ class TaskMember(models.Model):
         if task.status == Task.TaskStatuses.open and \
                         task.people_needed <= members_accepted:
             task.set_in_progress()
-
-        if task.status == Task.TaskStatuses.in_progress and \
+        elif task.status == Task.TaskStatuses.in_progress and \
                         task.people_needed > members_accepted:
             task.set_open()
 

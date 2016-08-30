@@ -108,7 +108,7 @@ class Metrics():
 
 class CustomIndexDashboard(FluentIndexDashboard):
     """
-    Custom Dashboard for onepercentclub-site.
+    Custom Dashboard for Bluebottle.
     """
     columns = 3
 
@@ -118,15 +118,16 @@ class CustomIndexDashboard(FluentIndexDashboard):
         self.children.append(EndedProjects())
         self.children.append(RecentTasks())
 
-        self.children.append(modules.LinkList(
-            _('Export Metrics'),
-            children=[
-                {
-                    'title': _('Export metrics'),
-                    'url': reverse_lazy('exportdb_export'),
-                }
-            ]
-        ))
+        if context['request'].user.has_perm('sites.export'):
+            self.children.append(modules.LinkList(
+                _('Export Metrics'),
+                children=[
+                    {
+                        'title': _('Export metrics'),
+                        'url': reverse_lazy('exportdb_export'),
+                    }
+                ]
+            ))
 
         self.children.append(MetricsModule(
             title=_("Metrics"),

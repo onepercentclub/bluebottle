@@ -1,49 +1,56 @@
+import pytz
+
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
-from django.forms import ModelForm
-from django.forms.models import ModelChoiceField
+from django.utils import timezone
 
-from bluebottle.members.models import Member
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
-from bluebottle.clients import properties
 
 from bluebottle.utils.admin import export_as_csv_action
+
 
 # Bulk actions for Task
 def mark_as_open(modeladmin, request, queryset):
     queryset.update(status='open')
 mark_as_open.short_description = _("Mark selected Tasks as Open")
 
+
 def mark_as_in_progress(modeladmin, request, queryset):
     queryset.update(status='in progress')
 mark_as_in_progress.short_description = _("Mark selected Tasks as In Progress")
+
 
 def mark_as_closed(modeladmin, request, queryset):
     queryset.update(status='closed')
 mark_as_closed.short_description = _("Mark selected Tasks as Closed")
 
+
 def mark_as_realized(modeladmin, request, queryset):
     queryset.update(status='realized')
 mark_as_realized.short_description = _("Mark selected Tasks as Realized")
 
-#Bulk actions for Task Member
 
+# Bulk actions for Task Member
 def mark_as_applied(modeladmin, request, queryset):
     queryset.update(status='applied')
 mark_as_applied.short_description = _("Mark selected Task Members as Applied")
+
 
 def mark_as_accepted(modeladmin, request, queryset):
     queryset.update(status='accepted')
 mark_as_accepted.short_description = _("Mark selected Task Members as Accepted")
 
+
 def mark_as_rejected(modeladmin, request, queryset):
     queryset.update(status='rejected')
 mark_as_rejected.short_description = _("Mark selected Task Members as Rejected")
 
+
 def mark_as_stopped(modeladmin, request, queryset):
     queryset.update(status='stopped')
 mark_as_stopped.short_description = _("Mark selected Task Members as Stopped")
+
 
 def mark_as_tm_realized(modeladmin, request, queryset):
     queryset.update(status='realized')
@@ -69,6 +76,11 @@ class TaskFileAdminInline(admin.StackedInline):
 
 
 class TaskAdmin(admin.ModelAdmin):
+
+    def __init__(self, model, admin_site):
+        super(TaskAdmin, self).__init__(model=model, admin_site=admin_site)
+        timezone.activate(pytz.timezone('UTC'))
+
     date_hierarchy = 'created'
 
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)

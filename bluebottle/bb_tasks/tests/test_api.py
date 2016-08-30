@@ -486,18 +486,21 @@ class TestTaskSearchCase(BluebottleTestCase):
 
         task = TaskFactory.create(status='open',
                                   type='event',
-                                  deadline=self.now + timezone.timedelta(days=3, hours=4),
+                                  title='task',
+                                  deadline=self.now + timezone.timedelta(days=3),
                                   people_needed=1)
 
         task.save()
 
         task2 = TaskFactory.create(status='open',
+                                   title='task2',
                                    type='event',
                                    deadline=self.now + timezone.timedelta(days=1, hours=23, minutes=59),
                                    people_needed=1)
         task2.save()
 
         task3 = TaskFactory.create(status='open',
+                                   title='task3',
                                    type='event',
                                    deadline=self.now + timezone.timedelta(days=4, hours=0, minutes=0),
                                    people_needed=1)

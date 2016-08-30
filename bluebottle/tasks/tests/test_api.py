@@ -259,5 +259,4 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.post(self.tasks_url, task_data,
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, HTTP_201_CREATED)
-        self.assertEqual(response.data['deadline'], '2016-08-09T23:59:59.999999Z')
-
+        self.assertEqual(response.data['deadline'], '2016-08-09T23:59:59.999999+02:00')

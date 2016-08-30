@@ -251,13 +251,13 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
-            deadline=datetime(2010, 05, 05, tzinfo=timezone.get_current_timezone())
+            deadline=timezone.datetime(2010, 05, 05, tzinfo=timezone.get_current_timezone())
         )
         self.task2 = TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
-            deadline=datetime(2011, 05, 05, tzinfo=timezone.get_current_timezone())
+            deadline=timezone.datetime(2011, 05, 05, tzinfo=timezone.get_current_timezone())
         )
 
         self.assertEqual(2, Project.objects.count())
@@ -361,7 +361,7 @@ class TestTaskSearchCase(BluebottleTestCase):
         self.init_projects()
 
         self.now = datetime.combine(timezone.now(), datetime.max.time())
-        self.now = self.now.replace(tzinfo=timezone.get_current_timezone())
+        self.now = timezone.get_current_timezone().localize(self.now)
         self.tomorrow = self.now + timezone.timedelta(days=1)
         self.week = self.now + timezone.timedelta(days=7)
         self.month = self.now + timezone.timedelta(days=30)
@@ -372,26 +372,31 @@ class TestTaskSearchCase(BluebottleTestCase):
         self.task_url = '/api/bb_tasks/'
 
         self.event_task_1 = TaskFactory.create(status='open',
+                                               title='event_task_1',
                                                type='event',
                                                deadline=self.tomorrow,
                                                people_needed=1)
 
         self.event_task_2 = TaskFactory.create(status='open',
+                                               title='event_task_2',
                                                type='event',
                                                deadline=self.month,
                                                people_needed=1)
 
         self.ongoing_task_1 = TaskFactory.create(status='open',
+                                                 title='ongoing_task_1',
                                                  type='ongoing',
                                                  deadline=self.week,
                                                  people_needed=1)
 
         self.ongoing_task_2 = TaskFactory.create(status='open',
+                                                 title='ongoing_task_2',
                                                  type='ongoing',
                                                  deadline=self.tomorrow,
                                                  people_needed=1)
 
         self.ongoing_task_3 = TaskFactory.create(status='open',
+                                                 title='ongoing_task_3',
                                                  type='ongoing',
                                                  deadline=self.month,
                                                  people_needed=1)
@@ -403,7 +408,7 @@ class TestTaskSearchCase(BluebottleTestCase):
         """
 
         search_date = {
-            'start': str((self.now + timezone.timedelta(days=3)).date())
+            'start': str((self.now + timezone.timedelta(days=3)))
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -425,12 +430,11 @@ class TestTaskSearchCase(BluebottleTestCase):
         """
         event_task_3 = TaskFactory.create(status='open',
                                           type='event',
-                                          deadline=self.now +
-                                          timezone.timedelta(days=3),
+                                          deadline=self.now + timezone.timedelta(days=3),
                                           people_needed=1)
 
         search_date = {
-            'start': str((self.now + timezone.timedelta(days=3)).date())
+            'start': str((self.now + timezone.timedelta(days=3)))
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -440,9 +444,9 @@ class TestTaskSearchCase(BluebottleTestCase):
         # event_task_3 because its on the deadline date
         ids = [self.ongoing_task_1.id, self.ongoing_task_3.id, event_task_3.id]
         self.assertEquals(response.data['count'], 3)
-        self.assertTrue(response.data['results'][0]['id'] in ids)
-        self.assertTrue(response.data['results'][1]['id'] in ids)
-        self.assertTrue(response.data['results'][2]['id'] in ids)
+        self.assertIn(response.data['results'][0]['id'], ids)
+        self.assertIn(response.data['results'][1]['id'], ids)
+        self.assertIn(response.data['results'][2]['id'], ids)
 
     def test_search_for_date_range(self):
         """
@@ -502,7 +506,7 @@ class TestTaskSearchCase(BluebottleTestCase):
         task3 = TaskFactory.create(status='open',
                                    title='task3',
                                    type='event',
-                                   deadline=self.now + timezone.timedelta(days=4, hours=0, minutes=0),
+                                   deadline=self.now + timezone.timedelta(days=4, hours=4, minutes=0),
                                    people_needed=1)
         task3.save()
 
@@ -518,10 +522,9 @@ class TestTaskSearchCase(BluebottleTestCase):
         # Task2 and Task3 should NOT be returned
         ids = [task.id, self.ongoing_task_1.id, self.ongoing_task_3.id]
         self.assertEqual(response.data['count'], 3)
-        self.assertTrue(response.data['results'][0]['id'] in ids)
-        self.assertTrue(response.data['results'][1]['id'] in ids)
-        self.assertTrue(response.data['results'][2]['id'] in ids)
-
+        self.assertIn(response.data['results'][0]['id'], ids)
+        self.assertIn(response.data['results'][1]['id'], ids)
+        self.assertIn(response.data['results'][2]['id'], ids)
 
 
 class SkillListApiTests(BluebottleTestCase):

@@ -1,5 +1,6 @@
+from django.utils import timezone
+
 from bluebottle.test.utils import BluebottleTestCase
-from django.test import TestCase
 from bluebottle.test.factory_models.tasks import SkillFactory, TaskFactory, \
     TaskMemberFactory
 
@@ -81,3 +82,24 @@ class TestTaskCase(BluebottleTestCase):
         task.save()
 
         self.assertEqual(task.status, 'in progress')
+
+
+class TestTaskSearchDate(BluebottleTestCase):
+
+    def test_day_start_method(self):
+        from bluebottle.bb_tasks.views import day_start
+
+        date_str = '2016-08-09T15:45:29.275632Z'
+        result = day_start(date_str)
+        self.assertEqual(result.time(), timezone.datetime(2016, 8, 9, 0, 0).time())
+        self.assertEqual(result.date(), timezone.datetime(2016, 8, 9, 0, 0).date())
+
+        date_str = '2016-08-09T23:45:29.275632Z'
+        result = day_start(date_str)
+        self.assertEqual(result.time(), timezone.datetime(2016, 8, 9, 0, 0).time())
+        self.assertEqual(result.date(), timezone.datetime(2016, 8, 9, 0, 0).date())
+
+        date_str = '2016-08-09T00:15:29.275632Z'
+        result = day_start(date_str)
+        self.assertEqual(result.time(), timezone.datetime(2016, 8, 9, 0, 0).time())
+        self.assertEqual(result.date(), timezone.datetime(2016, 8, 9, 0, 0).date())

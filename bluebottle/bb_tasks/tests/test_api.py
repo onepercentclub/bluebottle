@@ -251,13 +251,13 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
-            deadline=datetime(2010, 05, 05, tzinfo=timezone.UTC())
+            deadline=datetime(2010, 05, 05, tzinfo=timezone.get_current_timezone())
         )
         self.task2 = TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
-            deadline=datetime(2011, 05, 05, tzinfo=timezone.UTC())
+            deadline=datetime(2011, 05, 05, tzinfo=timezone.get_current_timezone())
         )
 
         self.assertEqual(2, Project.objects.count())
@@ -360,10 +360,11 @@ class TestTaskSearchCase(BluebottleTestCase):
         """Setup reusable data."""
         self.init_projects()
 
-        self.now = timezone.now()
-        self.tomorrow = self.now + timedelta(days=1)
-        self.week = self.now + timedelta(days=7)
-        self.month = self.now + timedelta(days=30)
+        self.now = datetime.combine(timezone.now(), datetime.max.time())
+        self.now = self.now.replace(tzinfo=timezone.get_current_timezone())
+        self.tomorrow = self.now + timezone.timedelta(days=1)
+        self.week = self.now + timezone.timedelta(days=7)
+        self.month = self.now + timezone.timedelta(days=30)
 
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
@@ -485,23 +486,20 @@ class TestTaskSearchCase(BluebottleTestCase):
 
         task = TaskFactory.create(status='open',
                                   type='event',
-                                  deadline=self.now +
-                                  timezone.timedelta(days=3, hours=4),
+                                  deadline=self.now + timezone.timedelta(days=3, hours=4),
                                   people_needed=1)
 
         task.save()
 
         task2 = TaskFactory.create(status='open',
                                    type='event',
-                                   deadline=self.now +
-                                   timezone.timedelta(days=1, hours=23, minutes=59),
+                                   deadline=self.now + timezone.timedelta(days=1, hours=23, minutes=59),
                                    people_needed=1)
         task2.save()
 
         task3 = TaskFactory.create(status='open',
                                    type='event',
-                                   deadline=self.now +
-                                   timezone.timedelta(days=4, hours=0, minutes=0),
+                                   deadline=self.now + timezone.timedelta(days=4, hours=0, minutes=0),
                                    people_needed=1)
         task3.save()
 

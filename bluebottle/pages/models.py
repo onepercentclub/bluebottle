@@ -9,6 +9,7 @@ from django_extensions.db.fields import (
     CreationDateTimeField, ModificationDateTimeField)
 from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.models import PlaceholderField
+from fluent_contents.models.fields import ContentItemRelation
 from fluent_contents.rendering import render_placeholder
 
 from bluebottle.utils.serializers import MLStripper
@@ -47,6 +48,9 @@ class Page(models.Model):
         max_length=5,
         choices=lazy(get_languages, tuple)())
     body = PlaceholderField('blog_contents')
+    # This should not be nessecary, but fixes deletion of some pages
+    # See https://github.com/edoburu/django-fluent-contents/issues/19
+    contentitem_set = ContentItemRelation()
 
     # Publication
     status = models.CharField(

@@ -18,6 +18,7 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import TaskMember
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
+from bluebottle.votes.models import Vote
 
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
@@ -112,8 +113,13 @@ class ProjectSerializer(serializers.ModelSerializer):
     categories = serializers.SlugRelatedField(slug_field='slug', many=True,
                                               queryset=Category.objects)
 
+    has_voted = serializers.SerializerMethodField()
+
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
+
+    def get_has_voted(self, obj):
+        return Vote.has_voted(self.context['request'].user, obj)
 
     class Meta:
         model = Project
@@ -126,7 +132,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count',
                   'supporter_count', 'people_requested', 'people_registered',
-                  'voting_deadline', 'latitude', 'longitude', 'video_url',
+                  'voting_deadline', 'latitude', 'longitude', 'video_url', 'has_voted',
                   'video_html', 'location', 'project_type')
 
 

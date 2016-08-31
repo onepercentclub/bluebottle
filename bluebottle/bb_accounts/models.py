@@ -333,16 +333,16 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
              update_fields=None):
         self.generate_username()
 
-        if self.location:
-            self.address.country = self.location.country
-            self.address.save()
-
         super(BlueBottleBaseUser, self).save(force_insert, force_update, using,
                                              update_fields)
         try:
             self.address
         except UserAddress.DoesNotExist:
             self.address = UserAddress.objects.create(user=self)
+            self.address.save()
+
+        if self.location:
+            self.address.country = self.location.country
             self.address.save()
 
 

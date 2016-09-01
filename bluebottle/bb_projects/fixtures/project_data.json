@@ -63,13 +63,27 @@
             "active": true,
             "description": ""
         }
-    },    {
+    },
+    {
         "pk": 6,
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
             "slug": "campaign",
             "name": "Project - Running",
+            "sequence": 6,
+            "editable": false,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
+        "pk": 7,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": true,
+            "slug": "to-be-continued",
+            "name": "Project - To be continued",
             "sequence": 6,
             "editable": false,
             "active": true,

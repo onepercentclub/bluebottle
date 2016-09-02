@@ -533,6 +533,14 @@ PROJECT_PAYOUT_FEES = {
     'not_fully_funded': .05
 }
 
+CURRENCIES = [
+    {
+        'code': 'EUR',
+        'name': 'Euro',
+        'symbol': u"\u20AC"
+    }
+]
+
 LIVE_PAYMENTS_ENABLED = False
 MINIMAL_PAYOUT_AMOUNT = 20
 

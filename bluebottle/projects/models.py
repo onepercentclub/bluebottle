@@ -342,10 +342,6 @@ class Project(BaseProject):
         if isinstance(total, list):
             DeprecationWarning('Cannot yet handle multiple currencies on one project!')
         self.amount_donated = total
-        self.amount_needed = self.amount_asked - self.amount_donated
-        if self.amount_needed.amount < 0:
-            # Should never be less than zero
-            self.amount_needed = Money(0, self.amount_asked.currency)
         self.update_status_after_donation(False)
         if save:
             self.save()

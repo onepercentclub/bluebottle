@@ -19,6 +19,11 @@ from bluebottle.test.utils import BluebottleTestCase, SessionTestMixin
 from bluebottle.utils.utils import StatusDefinition
 
 
+@override_settings(CURRENCIES_ENABLED=[
+    {'code':'EUR','name':'Euro','symbol':u"\u20AC"},
+    {'code':'USD','name':'USDollar','symbol':'$'},
+    {'code':'NGN','name':'Naira','symbol':u"\u20A6"},
+    {'code':'XOF','name':'CFA','symbol':'CFA'}])
 class DonationApiTestCase(BluebottleTestCase, SessionTestMixin):
     def setUp(self):
         super(DonationApiTestCase, self).setUp()
@@ -54,11 +59,6 @@ class DonationApiTestCase(BluebottleTestCase, SessionTestMixin):
 
 # Mock the ManageOrderDetail check_status_psp function which will request status_check at PSP
 @patch.object(ManageOrderDetail, 'check_status_psp')
-@override_settings(CURRENCIES_ENABLED=[
-    {'code':'EUR','name':'Euro','symbol':u"\u20AC"},
-    {'code':'USD','name':'USDollar','symbol':'$'},
-    {'code':'NGN','name':'Naira','symbol':u"\u20A6"},
-    {'code':'XOF','name':'CFA','symbol':'CFA'}])
 class TestDonationPermissions(DonationApiTestCase):
     def test_user_is_order_owner(self, mock_check_status_psp):
         """ Test that a user that is owner of the order can post a new donation """

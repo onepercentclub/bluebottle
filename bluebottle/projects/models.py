@@ -12,6 +12,7 @@ from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
+from django.utils.functional import lazy
 from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
@@ -19,12 +20,13 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from moneyed.classes import Money
+from select_multiple_field.models import SelectMultipleField
 
 from bluebottle.tasks.models import Task
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectDocument)
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import TaskMember
@@ -190,6 +192,10 @@ class Project(BaseProject):
                                            blank=True)
 
     categories = models.ManyToManyField('categories.Category', blank=True)
+
+    currencies = SelectMultipleField(max_length=100,
+                                     default=[lazy(get_default_currency, str)()],
+                                     choices=lazy(get_currency_choices, tuple)())
 
     objects = ProjectManager()
 

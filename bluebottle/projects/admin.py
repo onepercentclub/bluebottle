@@ -276,6 +276,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
         (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
                                 'amount_donated', 'amount_needed',
+                                'currencies',
                                 'popularity', 'vote_count')}),
 
         (_('Dates'), {'fields': ('voting_deadline', 'deadline',

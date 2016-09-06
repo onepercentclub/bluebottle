@@ -39,9 +39,9 @@ class ProjectCurrencyValidator(object):
 
     def __call__(self, data):
         for field in self.fields:
-            if data[field].currency != data['project'].amount_asked.currency:
+            if unicode(data[field].currency) not in data['project'].currencies:
                 raise serializers.ValidationError(
-                    _('Currency does not match project currency.')
+                    _('Currency does not match project any of the currencies.')
                 )
 
 

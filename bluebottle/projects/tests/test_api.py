@@ -1480,7 +1480,7 @@ class ProjectCurrenciesApiTest(BluebottleTestCase):
         self.init_projects()
 
         self.some_project = ProjectFactory.create(currencies=['EUR'])
-        self.another_project = ProjectFactory.create(currencies=['USD', 'NGN'])
+        self.another_project = ProjectFactory.create(currencies=['NGN', 'USD'])
 
     def test_project_currencies(self):
         self.project_url = reverse('project_detail', args=[self.some_project.slug])
@@ -1492,4 +1492,4 @@ class ProjectCurrenciesApiTest(BluebottleTestCase):
         self.project_url = reverse('project_detail', args=[self.another_project.slug])
         response = self.client.get(self.project_url)
         self.assertEqual(response.status_code, HTTP_200_OK)
-        self.assertListEqual(response.data['currencies'], [u'USD', u'NGN'])
+        self.assertListEqual(response.data['currencies'], [u'NGN', u'USD'])

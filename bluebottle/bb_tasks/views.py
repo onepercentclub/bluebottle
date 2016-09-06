@@ -1,9 +1,9 @@
-import pytz
 from dateutil import parser
 from datetime import datetime
 
 import django_filters
 from django.db.models.query_utils import Q
+from django.utils import timezone
 
 from rest_framework import generics, filters, serializers
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -24,12 +24,12 @@ from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 def day_start(date_str):
     date_combined = datetime.combine(parser.parse(date_str), datetime.min.time())
-    return pytz.utc.localize(date_combined)
+    return timezone.get_current_timezone().localize(date_combined)
 
 
 def day_end(date_str):
     date_combined = datetime.combine(parser.parse(date_str), datetime.max.time())
-    return pytz.utc.localize(date_combined)
+    return timezone.get_current_timezone().localize(date_combined)
 
 
 def get_dates_query(query, start_date, end_date):
@@ -87,6 +87,7 @@ class FilterQSParams(object):
             qs = qs.filter(status=status)
         return qs
 
+
 class TaskPreviewList(generics.ListAPIView, FilterQSParams):
     queryset = Task.objects.all()
     serializer_class = TaskPreviewSerializer
@@ -126,6 +127,9 @@ class BaseTaskList(generics.ListCreateAPIView):
                 'closed', 'done-complete', 'done-incomplete', 'voting-done'):
             raise serializers.ValidationError('It is not allowed to add tasks to closed projects')
 
+        deadline = serializer.validated_data['deadline']
+        deadline = timezone.get_current_timezone().localize(datetime.combine(deadline, datetime.max.time()))
+        serializer.validated_data['deadline'] = deadline
         serializer.save(author=self.request.user)
 
 

@@ -44,6 +44,7 @@ install_requires = [
     'django-modeltranslation==0.11',
     'django-money==0.8',
     'django-rest-swagger==0.3.6',
+    'django-select-multiple-field==0.4.2',
     'django-taggit==0.18.3',
     'django-tenant-schemas==1.6.2',
     'django-tinymce==2.3.0',

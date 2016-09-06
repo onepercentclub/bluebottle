@@ -239,11 +239,11 @@ class ImageSerializer(RestrictedImageField):
             large = settings.MEDIA_URL + unicode(
                 get_thumbnail(value, '800x450', crop=self.crop))
             full = settings.MEDIA_URL + unicode(
-                get_thumbnail(value, '1200x900', crop=self.crop))
+                get_thumbnail(value, '1200x900'))
             small = settings.MEDIA_URL + unicode(
-                get_thumbnail(value, '400x380', crop=self.crop))
+                get_thumbnail(value, '400x300', crop=self.crop))
             square = settings.MEDIA_URL + unicode(
-                get_thumbnail(value, '120x120', crop=self.crop))
+                get_thumbnail(value, '600x600', crop=self.crop))
         except Exception:
             if getattr(settings, 'THUMBNAIL_DEBUG', None):
                 raise

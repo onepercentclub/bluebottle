@@ -9,6 +9,8 @@ from django.utils import timezone
 from rest_framework import status
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.test.factory_models.categories import CategoryFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
@@ -1330,3 +1332,124 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
         self.assertEqual(len(response.data['donors']), 3)
         self.assertEqual(len(response.data['posters']), 3)
         self.assertEqual(len(response.data['task_members']), 2)
+
+
+class ProjectVotesTest(BluebottleTestCase):
+    """
+    Integration tests for the Project Media Wallpost API.
+    """
+
+    def setUp(self):
+        super(ProjectVotesTest, self).setUp()
+
+        self.init_projects()
+
+        phase = ProjectPhase.objects.get(slug='voting')
+        self.some_project = ProjectFactory.create(slug='someproject', status=phase)
+        self.another_project = ProjectFactory.create(slug='anotherproject', status=phase)
+
+        self.some_user = BlueBottleUserFactory.create()
+        self.another_user = BlueBottleUserFactory.create()
+
+        self.some_user_token = "JWT {0}".format(self.some_user.get_jwt_token())
+
+        self.project_url = reverse('project_detail', args=[self.some_project.slug])
+
+    def test_has_voted_anonymous(self):
+        """
+        Tests for creating, retrieving, updating and deleting a Project
+        Media Wallpost.
+        """
+        response = self.client.get(self.project_url)
+        self.assertFalse(response.data['has_voted'])
+
+    def test_has_not_voted(self):
+        """
+        Tests for creating, retrieving, updating and deleting a Project
+        Media Wallpost.
+        """
+        response = self.client.get(self.project_url, token=self.some_user_token)
+        self.assertFalse(response.data['has_voted'])
+
+    def test_has_voted(self):
+        """
+        Tests for creating, retrieving, updating and deleting a Project
+        Media Wallpost.
+        """
+        VoteFactory.create(project=self.some_project, voter=self.some_user)
+        response = self.client.get(self.project_url, token=self.some_user_token)
+        self.assertTrue(response.data['has_voted'])
+
+    def test_has_voted_another_project(self):
+        """
+        Tests for creating, retrieving, updating and deleting a Project
+        Media Wallpost.
+        """
+        VoteFactory.create(project=self.another_project, voter=self.some_user)
+        response = self.client.get(self.project_url, token=self.some_user_token)
+        self.assertFalse(response.data['has_voted'])
+
+    def test_has_voted_another_user(self):
+        """
+        Tests for creating, retrieving, updating and deleting a Project
+        Media Wallpost.
+        """
+        VoteFactory.create(project=self.some_project, voter=self.another_user)
+        response = self.client.get(self.project_url, token=self.some_user_token)
+
+        self.assertFalse(response.data['has_voted'])
+
+    def test_has_voted_within_category(self):
+        """
+        Tests for creating, retrieving, updating and deleting a Project
+        Media Wallpost.
+        """
+        category = CategoryFactory.create()
+
+        self.some_project.categories = [category]
+        self.another_project.categories = [category]
+
+        self.some_project.save()
+        self.another_project.save()
+
+        VoteFactory.create(project=self.another_project, voter=self.some_user)
+        response = self.client.get(self.project_url, token=self.some_user_token)
+
+        self.assertTrue(response.data['has_voted'])
+
+    def test_has_voted_within_category_expired_project(self):
+        """
+        Tests for creating, retrieving, updating and deleting a Project
+        Media Wallpost.
+        """
+        category = CategoryFactory.create()
+
+        self.some_project.categories = [category]
+        self.another_project.categories = [category]
+        self.another_project.status = ProjectPhase.objects.get(slug='voting-done')
+
+        self.some_project.save()
+        self.another_project.save()
+
+        VoteFactory.create(project=self.another_project, voter=self.some_user)
+        response = self.client.get(self.project_url, token=self.some_user_token)
+
+        self.assertFalse(response.data['has_voted'])
+
+    def test_another_user_has_voted_within_category(self):
+        """
+        Tests for creating, retrieving, updating and deleting a Project
+        Media Wallpost.
+        """
+        category = CategoryFactory.create()
+
+        self.some_project.categories = [category]
+        self.another_project.categories = [category]
+
+        self.some_project.save()
+        self.another_project.save()
+
+        VoteFactory.create(project=self.another_project, voter=self.another_user)
+        response = self.client.get(self.project_url, token=self.some_user_token)
+
+        self.assertFalse(response.data['has_voted'])

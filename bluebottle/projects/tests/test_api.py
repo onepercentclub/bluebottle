@@ -4,9 +4,11 @@ from random import randint
 
 from django.test import RequestFactory
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 from django.utils import timezone
 
 from rest_framework import status
+from rest_framework.status import HTTP_200_OK
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.categories import CategoryFactory
@@ -1453,3 +1455,41 @@ class ProjectVotesTest(BluebottleTestCase):
         response = self.client.get(self.project_url, token=self.some_user_token)
 
         self.assertFalse(response.data['has_voted'])
+
+
+@override_settings(CURRENCIES_ENABLED=[
+    {'code':'EUR','name':'Euro','symbol':u"\u20AC"},
+    {'code':'USD','name':'USDollar','symbol':'$'},
+    {'code':'NGN','name':'Naira','symbol':u"\u20A6"},
+    {'code':'XOF','name':'CFA','symbol':'CFA'}])
+class ProjectCurrenciesApiTest(BluebottleTestCase):
+    """
+    Integration tests currencies in the Project API.
+    """
+
+    def setUp(self):
+        super(ProjectCurrenciesApiTest, self).setUp()
+
+        self.some_user = BlueBottleUserFactory.create()
+        self.some_user_token = "JWT {0}".format(self.some_user.get_jwt_token())
+
+        self.another_user = BlueBottleUserFactory.create()
+        self.another_user_token = "JWT {0}".format(
+            self.another_user.get_jwt_token())
+
+        self.init_projects()
+
+        self.some_project = ProjectFactory.create(currencies=['EUR'])
+        self.another_project = ProjectFactory.create(currencies=['USD', 'NGN'])
+
+    def test_project_currencies(self):
+        self.project_url = reverse('project_detail', args=[self.some_project.slug])
+        response = self.client.get(self.project_url)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data['currencies'], ['EUR'])
+
+
+        self.project_url = reverse('project_detail', args=[self.another_project.slug])
+        response = self.client.get(self.project_url)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data['currencies'], [u'USD', u'NGN'])

@@ -7,8 +7,7 @@ from django.contrib.auth.management import create_permissions
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Permission, Group
 
 import pygeoip
 import logging
@@ -232,7 +231,9 @@ def get_country_code_by_ip(ip_address=None):
 def update_group_permissions(sender, group_perms=None):
     create_permissions(sender, verbosity=False)
     try:
-        group_perms = sender.module.models.GROUP_PERMS
+        if not group_perms:
+            group_perms = sender.module.models.GROUP_PERMS
+
         for group_name, permissions in group_perms.items():
             group, _ = Group.objects.get_or_create(name=group_name)
             for perm_codename in permissions['perms']:
@@ -240,6 +241,7 @@ def update_group_permissions(sender, group_perms=None):
                 group.permissions.add(perm)
 
             group.save()
-    except Exception, e:
+    except AttributeError:
         pass
-
+    except Permission.DoesNotExist, e:
+        logging.debug(e)

@@ -194,7 +194,6 @@ class Project(BaseProject):
     categories = models.ManyToManyField('categories.Category', blank=True)
 
     currencies = SelectMultipleField(max_length=100,
-                                     default=[lazy(get_default_currency, str)()],
                                      choices=lazy(get_currency_choices, tuple)())
 
     objects = ProjectManager()
@@ -266,6 +265,9 @@ class Project(BaseProject):
 
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")
+
+        if not self.currencies:
+            self.currencies = get_default_currency()
 
         # If the project status is moved to New or Needs Work, clear the
         # date_submitted field

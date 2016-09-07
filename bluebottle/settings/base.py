@@ -139,6 +139,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.clients.middleware.TenantPropertiesMiddleware',
+    'bluebottle.clients.middleware.MediaMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
@@ -695,7 +696,10 @@ CACHE_MIDDLEWARE_SECONDS = 0
 
 # Amounts shown in donation modal
 DONATION_AMOUNTS = {
-    'EUR': (25, 50, 75, 100)
+    'EUR': (25, 50, 75, 100),
+    'USD': (20, 50, 100, 200),
+    'NGN': (2000, 5000, 10000, 25000),
+    'XOF': (500, 1000, 2000, 5000),
 }
 
 # By default we do not show suggestion on the start-project page

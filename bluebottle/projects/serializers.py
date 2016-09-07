@@ -19,6 +19,7 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import TaskMember
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
+from bluebottle.votes.models import Vote
 
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
@@ -118,8 +119,15 @@ class ProjectSerializer(serializers.ModelSerializer):
     categories = serializers.SlugRelatedField(slug_field='slug', many=True,
                                               queryset=Category.objects)
 
+    has_voted = serializers.SerializerMethodField()
+
+    currencies = serializers.JSONField(read_only=True)
+
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
+
+    def get_has_voted(self, obj):
+        return Vote.has_voted(self.context['request'].user, obj)
 
     class Meta:
         model = Project
@@ -127,12 +135,13 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'description', 'owner', 'status', 'image',
                   'country', 'theme', 'categories', 'language',
                   'latitude', 'longitude', 'amount_asked', 'amount_donated',
-                  'amount_needed', 'amount_extra', 'allow_overfunding',
+                  'amount_needed', 'amount_extra',
+                  'allow_overfunding', 'currencies',
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count',
                   'supporter_count', 'people_requested', 'people_registered',
-                  'voting_deadline', 'latitude', 'longitude', 'video_url',
+                  'voting_deadline', 'latitude', 'longitude', 'video_url', 'has_voted',
                   'video_html', 'location', 'project_type')
 
 
@@ -184,6 +193,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     amount_asked = MoneySerializer(required=False, allow_null=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_needed = MoneySerializer(read_only=True)
+    currencies = serializers.JSONField(read_only=True)
 
     budget_lines = ProjectBudgetLineSerializer(many=True,
                                                source='projectbudgetline_set',
@@ -269,8 +279,8 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'account_holder_city', 'account_holder_country',
                   'account_number', 'account_bic', 'documents',
                   'account_bank_country', 'amount_asked',
-                  'amount_donated', 'amount_needed', 'video_url',
-                  'video_html', 'is_funding', 'story',
+                  'amount_donated', 'amount_needed', 'currencies',
+                  'video_url', 'video_html', 'is_funding', 'story',
                   'budget_lines', 'deadline', 'latitude', 'longitude',
                   'project_type')
 

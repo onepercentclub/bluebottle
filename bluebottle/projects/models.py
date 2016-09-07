@@ -12,6 +12,7 @@ from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
+from django.utils.functional import lazy
 from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
@@ -19,12 +20,13 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from moneyed.classes import Money
+from select_multiple_field.models import SelectMultipleField
 
 from bluebottle.tasks.models import Task
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectDocument)
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import TaskMember
@@ -191,6 +193,9 @@ class Project(BaseProject):
 
     categories = models.ManyToManyField('categories.Category', blank=True)
 
+    currencies = SelectMultipleField(max_length=100,
+                                     choices=lazy(get_currency_choices, tuple)())
+
     objects = ProjectManager()
 
     def __unicode__(self):
@@ -260,6 +265,9 @@ class Project(BaseProject):
 
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")
+
+        if not self.currencies:
+            self.currencies = get_default_currency()
 
         # If the project status is moved to New or Needs Work, clear the
         # date_submitted field
@@ -342,10 +350,6 @@ class Project(BaseProject):
         if isinstance(total, list):
             DeprecationWarning('Cannot yet handle multiple currencies on one project!')
         self.amount_donated = total
-        self.amount_needed = self.amount_asked - self.amount_donated
-        if self.amount_needed.amount < 0:
-            # Should never be less than zero
-            self.amount_needed = Money(0, self.amount_asked.currency)
         self.update_status_after_donation(False)
         if save:
             self.save()

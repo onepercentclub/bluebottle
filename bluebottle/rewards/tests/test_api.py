@@ -107,7 +107,7 @@ class RewardTestCase(BluebottleTestCase):
 
         self.assertEqual(
             unicode(response.data['non_field_errors'][0]),
-            u'Currency does not match project currency.'
+            u'Currency does not match project any of the currencies.'
         )
 
 

@@ -24,6 +24,8 @@ from select_multiple_field.models import SelectMultipleField
 
 from bluebottle.tasks.models import Task
 from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.exchange_rates import convert
+
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectDocument)
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
@@ -349,6 +351,7 @@ class Project(BaseProject):
                                       StatusDefinition.PLEDGED])
         if isinstance(total, list):
             DeprecationWarning('Cannot yet handle multiple currencies on one project!')
+
         self.amount_donated = total
         self.update_status_after_donation(False)
         if save:
@@ -359,31 +362,22 @@ class Project(BaseProject):
         Calculate the total (realtime) amount of money for donations,
         optionally filtered by status.
         """
-
-        if self.amount_asked.amount == 0:
+        if not self.amount_asked:
             # No money asked, return 0
-            totals = [Money(0, 'EUR')]
-        else:
+            return Money(0, 'EUR')
 
-            donations = self.donation_set.all()
+        donations = self.donation_set
 
-            if status_in:
-                donations = donations.filter(order__status__in=status_in)
+        if status_in:
+            donations = donations.filter(order__status__in=status_in)
 
-            # total = donations.aggregate(sum=Sum('amount'))
-
-            totals = [
-                Money(data['amount__sum'], data['amount_currency']) for data in
-                donations.values('amount_currency').annotate(Sum('amount')).order_by()
-            ]
-
-        if len(totals) == 0:
-            totals = [Money(0, 'EUR')]
+        totals = donations.values('amount_currency').annotate(total=Sum('amount'))
+        amounts = [Money(total['total'], total['amount_currency']) for total in totals]
 
         if len(totals) > 1:
-            FieldError('Cannot yet handle multiple currencies on one project!')
+            amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
 
-        return totals[0]
+        return sum(amounts) or Money(0, self.amount_asked.currency)
 
     @property
     def is_realised(self):

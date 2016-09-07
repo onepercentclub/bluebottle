@@ -5,4 +5,4 @@ class Order(BaseOrder):
     pass
 
 
-import signals
+import signals  # noqa

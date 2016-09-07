@@ -139,6 +139,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.clients.middleware.TenantPropertiesMiddleware',
+    'bluebottle.clients.middleware.MediaMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
@@ -242,7 +243,6 @@ SHARED_APPS = (
     'django_extensions',
     'raven.contrib.django.raven_compat',
     'djcelery',
-    'sorl.thumbnail',
     'micawber.contrib.mcdjango',  # Embedding videos
     'rest_framework',
     'loginas',
@@ -271,6 +271,9 @@ TENANT_APPS = (
     'admin_tools.menu',
     'admin_tools.dashboard',
 
+    # Thumbnails
+    'sorl.thumbnail',
+
     # FB Auth
     'bluebottle.auth',
 
@@ -285,8 +288,6 @@ TENANT_APPS = (
     'bluebottle.widget',
 
     'rest_framework.authtoken',
-
-
 
     # Newly moved BB apps
     'bluebottle.members',

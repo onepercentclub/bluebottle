@@ -1,22 +1,25 @@
 import re
-
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from bs4 import BeautifulSoup
-from localflavor.generic.validators import IBANValidator, BICValidator
+from localflavor.generic.validators import IBANValidator
 
-from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
-from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
+from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.bluebottle_drf2.serializers import (
     EuroField, OEmbedField, SorlImageField, ImageSerializer,
-    PrivateFileSerializer)
-from bluebottle.donations.models import Donation
-from bluebottle.geo.models import Country
-from bluebottle.geo.serializers import CountrySerializer
-from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.geo.models import Location
+    PrivateFileSerializer
+)
 from bluebottle.categories.models import Category
+from bluebottle.donations.models import Donation
+from bluebottle.geo.models import Country, Location
+from bluebottle.geo.serializers import CountrySerializer
+from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
+from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
+from bluebottle.tasks.models import TaskMember
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
+from bluebottle.votes.models import Vote
+
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,7 +34,7 @@ class ProjectPhaseSerializer(serializers.ModelSerializer):
 class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTheme
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'description')
 
 
 class StoryField(serializers.CharField):
@@ -110,8 +113,13 @@ class ProjectSerializer(serializers.ModelSerializer):
     categories = serializers.SlugRelatedField(slug_field='slug', many=True,
                                               queryset=Category.objects)
 
+    has_voted = serializers.SerializerMethodField()
+
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
+
+    def get_has_voted(self, obj):
+        return Vote.has_voted(self.context['request'].user, obj)
 
     class Meta:
         model = Project
@@ -124,7 +132,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count',
                   'supporter_count', 'people_requested', 'people_registered',
-                  'voting_deadline', 'latitude', 'longitude', 'video_url',
+                  'voting_deadline', 'latitude', 'longitude', 'video_url', 'has_voted',
                   'video_html', 'location', 'project_type')
 
 
@@ -244,14 +252,10 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                 2) the current is new or needs work and the proposed
                    is submitted
                 """
-                if (not (proposed_status == current_status)
-                        and not (proposed_status
-                                 and (current_status == new_status
-                                      or current_status == needs_work_status)
-                                 and proposed_status == submit_status)):
-                    raise serializers.ValidationError(
-                        _("You can not change the project state."))
-
+                if proposed_status == current_status:
+                    return value
+                if proposed_status != submit_status or current_status not in [new_status, needs_work_status]:
+                    raise serializers.ValidationError(_("You can not change the project state."))
         return value
 
     class Meta:
@@ -270,19 +274,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'project_type')
 
 
-class ProjectSupporterSerializer(serializers.ModelSerializer):
-    """
-    For displaying donations on project and member pages.
-    """
-    member = UserPreviewSerializer(source='user')
-    project = ProjectPreviewSerializer()
-    date_donated = serializers.DateTimeField(source='ready')
-
-    class Meta:
-        model = Donation
-        fields = ('date_donated', 'project', 'member',)
-
-
 class ProjectDonationSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer(source='user')
     date_donated = serializers.DateTimeField(source='ready')
@@ -291,3 +282,79 @@ class ProjectDonationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donation
         fields = ('member', 'date_donated', 'amount',)
+
+
+class ProjectWallpostPhotoSerializer(serializers.ModelSerializer):
+    photo = ImageSerializer()
+    created = serializers.DateTimeField(source='mediawallpost.created')
+
+    class Meta:
+        model = MediaWallpostPhoto
+        fields = ('id', 'photo', 'created')
+
+
+class ProjectWallpostVideoSerializer(serializers.ModelSerializer):
+    video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
+    video_url = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = MediaWallpost
+        fields = ('id', 'video_url', 'video_html', 'created')
+
+
+class ProjectMediaSerializer(serializers.ModelSerializer):
+    pictures = ProjectWallpostPhotoSerializer(source='wallpost_photos', many=True)
+    videos = ProjectWallpostVideoSerializer(source='wallpost_videos', many=True)
+    id = serializers.CharField(source='slug')
+
+    class Meta:
+        model = Project
+        fields = ('id', 'title', 'pictures', 'videos')
+
+
+class ProjectDonorSerializer(serializers.ModelSerializer):
+    """
+    Members that made a donation
+    """
+    user = UserPreviewSerializer()
+
+    class Meta:
+        model = Donation
+        fields = ('id', 'user', 'created')
+
+
+class ProjectTaskMemberSerializer(serializers.ModelSerializer):
+    """
+    Members that joined a task
+    """
+    user = UserPreviewSerializer(source='member')
+
+    class Meta:
+        model = TaskMember
+        fields = ('id', 'user', 'created', 'motivation', 'task')
+
+
+class ProjectPosterSerializer(serializers.ModelSerializer):
+    """
+    Members that wrote a wallpost
+    """
+    user = UserPreviewSerializer(source='author')
+
+    class Meta:
+        model = TextWallpost
+        fields = ('id', 'user', 'created', 'text')
+
+
+class ProjectSupportSerializer(serializers.ModelSerializer):
+    """
+    Lists with different project supporter types
+    """
+
+    donors = ProjectDonorSerializer(many=True)
+    task_members = ProjectTaskMemberSerializer(many=True)
+    posters = ProjectPosterSerializer(many=True)
+    id = serializers.CharField(source='slug')
+
+    class Meta:
+        model = Project
+        fields = ('id', 'title', 'donors', 'task_members', 'posters')

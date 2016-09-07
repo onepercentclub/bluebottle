@@ -174,6 +174,7 @@ class FundingFilter(admin.SimpleListFilter):
             return queryset.filter(Q(amount_asked=None) | Q(amount_asked=0.00))
         return queryset
 
+
 class ProjectBudgetLineInline(admin.TabularInline):
     model = ProjectBudgetLine
     extra = 0
@@ -208,7 +209,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
         # Only show Location column if there are any
         if Location.objects.count():
-            filters +=  (LocationFilter, )
+            filters += (LocationFilter, )
         return filters
 
     def get_list_display(self, request):
@@ -216,10 +217,10 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                   'status', 'is_campaign', 'deadline', 'donated_percentage')
         # Only show Location column if there are any
         if Location.objects.count():
-            fields +=  ('location', )
+            fields += ('location', )
         # Only show Vote_count column if there are any votes
         if Vote.objects.count():
-            fields +=  ('vote_count', )
+            fields += ('vote_count', )
         return fields
 
     def get_list_editable(self, request):

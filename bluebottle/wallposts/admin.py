@@ -163,10 +163,12 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
 
 class SystemWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = SystemWallpost
-    readonly_fields = ('ip_address', 'content_type', 'related_type', 'donation_link', 'project_link')
-    fields = readonly_fields + ('author', 'text')
+    readonly_fields = ('ip_address', 'content_type', 'related_type',
+                       'donation_link', 'project_link',
+                       'related_id', 'object_id')
+    fields = readonly_fields + ('author', 'donation', 'text')
     list_display = ('created', 'author', 'content_type', 'related_type', 'text', 'deleted')
-    raw_id_fields = ('author', 'editor')
+    raw_id_fields = ('author', 'editor', 'donation')
     ordering = ('-created',)
 
     def project_link(self, obj):

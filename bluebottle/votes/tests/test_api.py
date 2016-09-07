@@ -3,12 +3,15 @@ import json
 
 from django.core.urlresolvers import reverse
 
+from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.votes.models import Vote
+
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 
-from bluebottle.votes.models import Vote
+from bluebottle.test.factory_models.categories import CategoryFactory
 
 
 class ProjectVotesAPITestCase(BluebottleTestCase):
@@ -27,8 +30,10 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-        self.project1 = ProjectFactory.create(owner=self.user)
-        self.project2 = ProjectFactory.create(owner=self.user)
+        phase = ProjectPhase.objects.get(slug='voting')
+
+        self.project1 = ProjectFactory.create(owner=self.user, status=phase)
+        self.project2 = ProjectFactory.create(owner=self.user, status=phase)
         self.vote_url = reverse('vote_list')
 
     def test_vote(self):
@@ -73,6 +78,25 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
                                     {'project': self.project2.slug},
                                     token=self.user_token)
         self.assertEqual(response.status_code, 201)
+
+    def test_vote_on_second_project_in_same_cateogry(self):
+        category = CategoryFactory.create()
+
+        self.project1.categories = [category]
+        self.project1.save()
+
+        self.project2.categories = [category]
+        self.project2.save()
+
+        self.client.post(self.vote_url, {'project': self.project1.slug},
+                         token=self.user_token)
+        response = self.client.post(self.vote_url,
+                                    {'project': self.project2.slug},
+                                    token=self.user_token)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data['non_field_errors'], [u'You already voted']
+        )
 
     def test_get_votes(self):
         VoteFactory.create_batch(11, project=self.project1)

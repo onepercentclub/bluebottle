@@ -29,7 +29,6 @@ class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
         # Create main tenant
         connection.set_schema_to_public()
 
-        management.call_command('loaddata', 'exchange_rates.json', verbosity=1)
         tenant_domain = 'testserver'
         tenant, _created = get_tenant_model().objects.get_or_create(
             domain_url=tenant_domain,

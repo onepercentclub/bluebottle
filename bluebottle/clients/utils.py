@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils.translation import get_language
 
 from djmoney_rates.utils import get_rate
-
+from djmoney_rates.exceptions import CurrencyConversionException
 from bluebottle.clients import properties
 from tenant_extras.utils import get_tenant_properties
 
@@ -101,7 +101,10 @@ def get_public_properties(request):
         currencies = properties.CURRENCIES_ENABLED
 
         for currency in currencies:
-            currency['rate'] = get_rate(currency['code'])
+            try:
+                currency['rate'] = get_rate(currency['code'])
+            except CurrencyConversionException:
+                currency['rate'] = 1
 
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),

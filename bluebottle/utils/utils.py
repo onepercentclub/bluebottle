@@ -1,5 +1,6 @@
 import socket
 
+from django.db import connection
 from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
 from django.conf import settings
@@ -7,8 +8,7 @@ from django.contrib.auth.management import create_permissions
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
 
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Permission, Group
 
 import pygeoip
 import logging
@@ -99,9 +99,10 @@ class FSMTransition(object):
         try:
             instance_method = getattr(self, transition_method.__name__)
             instance_method()
-        except UnboundLocalError as e:
+        except UnboundLocalError:
             raise TransitionNotAllowed(
-                "Can't switch from state '{0}' to state '{1}' for {2}".format(self.status, new_status, self.__class__.__name__))
+                "Can't switch from state '{0}' to state '{1}' for {2}".format(
+                    self.status, new_status, self.__class__.__name__))
 
         if save:
             self.save()
@@ -230,9 +231,15 @@ def get_country_code_by_ip(ip_address=None):
 
 
 def update_group_permissions(sender, group_perms=None):
+    # Return early if there is no group permissions table. This will happen when running tests.
+    if Group.objects.model._meta.db_table not in connection.introspection.table_names():
+        return
+
     create_permissions(sender, verbosity=False)
     try:
-        group_perms = sender.module.models.GROUP_PERMS
+        if not group_perms:
+            group_perms = sender.module.models.GROUP_PERMS
+
         for group_name, permissions in group_perms.items():
             group, _ = Group.objects.get_or_create(name=group_name)
             for perm_codename in permissions['perms']:
@@ -240,6 +247,7 @@ def update_group_permissions(sender, group_perms=None):
                 group.permissions.add(perm)
 
             group.save()
-    except Exception, e:
+    except AttributeError:
         pass
-
+    except Permission.DoesNotExist, e:
+        logging.debug(e)

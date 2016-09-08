@@ -58,6 +58,7 @@ install_requires = [
     'dkimpy==0.5.6',
     'Fabric==1.11.1',
     'gunicorn==19.5.0',
+    'html5lib==0.9999999',
     'lxml==3.6.0',
     'micawber==0.3.3',
     'mixpanel==4.3.0',

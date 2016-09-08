@@ -45,6 +45,7 @@ install_requires = [
     'django-fluent-dashboard==0.6.1',
     'djangorestframework==3.3.3',
     'dkimpy==0.5.6',
+    'html5lib==0.9999999',
     'micawber==0.3.3',
     'requests==2.5.1',
     'sorl-thumbnail==12.3-github',

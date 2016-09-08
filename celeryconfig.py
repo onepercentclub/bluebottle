@@ -31,6 +31,11 @@ CELERYBEAT_SCHEDULE = {
         'task': 'bluebottle.projects.tasks.update_popularity',
         'schedule': timedelta(hours=1),
     },
+    'update-exchange-rates': {
+        'task': 'bluebottle.projects.tasks.update_exchange_rates',
+        'schedule': crontab(minute=1, hour=3),
+    },
+
 
 }
 

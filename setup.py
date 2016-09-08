@@ -17,7 +17,8 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.8#egg=django-tenant-extras-2.0.8',
     'git+https://github.com/mariocesar/sorl-thumbnail.git@v12.3#egg=sorl-thumbnail-12.3-github',
     'git+https://github.com/onepercentclub/django-token-auth.git@0.3.1#egg=django-token-auth-0.3.1',
-    'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1'
+    'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1',
+    'git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github'
 ]
 
 install_requires = [
@@ -42,7 +43,7 @@ install_requires = [
     'django-lockdown==1.2',
     'django-loginas==0.1.9',
     'django-modeltranslation==0.11',
-    'django-money==0.8',
+    'django-money==0.9.1',
     'django-rest-swagger==0.3.6',
     'django-select-multiple-field==0.4.2',
     'django-taggit==0.18.3',
@@ -86,7 +87,8 @@ install_requires = [
     'django-fluent-contents==1.1.4',
     'django-taggit-autocomplete-modified==0.1.1b1',
     'django-tenant-extras==2.0.8',
-    'django-token-auth==0.3.1'
+    'django-token-auth==0.3.1',
+    'django-money-rates==0.3.1-github'
 ]
 
 tests_requires = [

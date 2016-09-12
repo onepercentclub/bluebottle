@@ -597,7 +597,6 @@ class ProjectBudgetLine(models.Model):
     """
     project = models.ForeignKey('projects.Project')
     description = models.CharField(_('description'), max_length=255, default='')
-    currency = models.CharField(max_length=3, default='EUR')
     amount = MoneyField()
 
     created = CreationDateTimeField()

@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models import options
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 

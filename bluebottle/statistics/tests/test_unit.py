@@ -1,4 +1,3 @@
-from decimal import Decimal
 from moneyed.classes import Money
 
 from bluebottle.utils.utils import StatusDefinition

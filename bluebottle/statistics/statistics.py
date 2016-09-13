@@ -138,7 +138,7 @@ class Statistics(object):
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
 
         if totals:
-            donated = sum([convert(amount, currency) for amount in amounts]).amount
+            donated = int(sum([convert(amount, currency) for amount in amounts]).amount)
         else:
             donated = 0
 

@@ -7,6 +7,8 @@ from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 from django.utils import timezone
 
+from moneyed import Money
+
 from rest_framework import status
 from rest_framework.status import HTTP_200_OK
 
@@ -131,6 +133,16 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         response = self.client.get(
             self.projects_url + '?ordering=deadline&phase=campaign&country=101')
         self.assertEquals(response.status_code, 200)
+
+    def test_project_order_amount_needed(self):
+        for project in Project.objects.all():
+            project.amount_needed = Money(randint(0, int(project.amount_asked.amount)), 'EUR')
+            project.save()
+
+        response = self.client.get(self.projects_preview_url + '?ordering=amount_needed')
+        amounts = [project['amount_needed']['amount'] for project in response.data['results']]
+
+        self.assertEqual(amounts, sorted(amounts))
 
     def test_project_detail_view(self):
         """ Tests retrieving a project detail from the API. """

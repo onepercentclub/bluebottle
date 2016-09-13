@@ -1,12 +1,11 @@
 import datetime
 import pytz
-from django.core.exceptions import FieldError
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
@@ -102,12 +101,13 @@ class ProjectManager(models.Manager):
         return self._ordering(query.get('ordering', None), qs, status)
 
     def _ordering(self, ordering, queryset, status):
-        if ordering == 'amount_asked':
-            queryset = queryset.order_by('status', 'amount_asked', 'id')
-        elif ordering == 'deadline':
+        if ordering == 'deadline':
             queryset = queryset.order_by('status', 'deadline', 'id')
         elif ordering == 'amount_needed':
-            queryset = queryset.order_by('status', 'amount_needed', 'id')
+            # Add the percentage that is still needed to the query and sort on that.
+            # This way we do not have to take currencies into account
+            queryset = queryset.annotate(percentage_needed=F('amount_asked') / F('amount_needed'))
+            queryset = queryset.order_by('status', '-percentage_needed', 'id')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
             queryset = queryset.extra(

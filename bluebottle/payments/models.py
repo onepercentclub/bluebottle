@@ -270,4 +270,4 @@ class Transaction(PolymorphicModel):
         ordering = ('-created', '-updated')
 
 
-import signals
+import signals  # noqa

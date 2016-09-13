@@ -302,7 +302,6 @@ class DocdataClient(object):
             raise NotImplementedError(
                 'Received unknown reply from DocData. No status processed from Docdata.')
 
-
     def get_payment_menu_url(self, order_key, order_id, credentials, return_url=None,
                              client_language=None, **extra_url_args):
         """

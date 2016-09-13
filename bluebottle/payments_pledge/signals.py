@@ -27,5 +27,5 @@ def default_status_check(sender, instance, **kwargs):
             if donation:
                 mail_pledge_platform_admin(donation)
 
-        except IndexError as e:
+        except IndexError:
             logger.critical('No pledge donation found matching Order ID: {0}'.format(instance.order.id))

@@ -106,8 +106,8 @@ class ProjectManager(models.Manager):
         elif ordering == 'amount_needed':
             # Add the percentage that is still needed to the query and sort on that.
             # This way we do not have to take currencies into account
-            queryset = queryset.annotate(percentage_needed=F('amount_asked') / F('amount_needed'))
-            queryset = queryset.order_by('status', '-percentage_needed', 'id')
+            queryset = queryset.annotate(percentage_needed=F('amount_needed') / F('amount_asked'))
+            queryset = queryset.order_by('status', 'percentage_needed', 'id')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
             queryset = queryset.extra(

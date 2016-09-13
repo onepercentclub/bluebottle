@@ -268,7 +268,7 @@ class Project(BaseProject):
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")
 
-        if not self.currencies:
+        if not self.currencies and self.amount_asked:
             self.currencies = [str(self.amount_asked.currency)]
 
         # If the project status is moved to New or Needs Work, clear the

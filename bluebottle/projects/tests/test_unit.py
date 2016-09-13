@@ -318,17 +318,18 @@ class TestProjectAmountTotal(BluebottleTestCase):
         self.assertEqual(total.currency, self.project.amount_asked.currency)
 
     def test_total_multi_currency(self):
-        order = OrderFactory.create(status=StatusDefinition.SUCCESS)
+        order1 = OrderFactory.create(status=StatusDefinition.SUCCESS)
+        order2 = OrderFactory.create(status=StatusDefinition.SUCCESS)
 
         for i in range(100, 401, 100):
             DonationFactory.create(
                 project=self.project,
-                order=order,
+                order=order1,
                 amount=Money(i, 'EUR'),
             )
             DonationFactory.create(
                 project=self.project,
-                order=order,
+                order=order2,
                 amount=Money(i, 'USD'),
             )
 

@@ -3,7 +3,6 @@ import gateway
 
 from django.utils.http import urlencode
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 
 from bluebottle.clients import properties
 from bluebottle.payments.adapters import BasePaymentAdapter
@@ -209,18 +208,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         payment.save()
 
         return payment
-
-    @property
-    def credentials(self):
-        currency = str(self.order_payment.amount.currency)
-        for account in properties.MERCHANT_ACCOUNTS:
-            if (account['merchant'] == 'docdata' and
-                    account['currency'] == currency):
-                return account
-
-        raise ImproperlyConfigured('No docdata merchant account for {}'.format(
-            currency
-        ))
 
     def get_authorization_action(self):
 

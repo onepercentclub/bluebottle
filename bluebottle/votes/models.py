@@ -37,14 +37,11 @@ class Vote(models.Model):
 
         for category in project.categories.all():
             # Make sure our vote is unique among the active projects in this category
-            try:
-                cls.objects.get(
-                    project__categories=category,
-                    project__status__slug='voting',
-                    voter=voter
-                )
+            if len(cls.objects.filter(
+                project__categories=category,
+                project__status__slug='voting',
+                voter=voter
+            )):
                 return True
-            except cls.DoesNotExist:
-                pass
 
         return False

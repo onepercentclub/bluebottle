@@ -44,12 +44,9 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
             raise PaymentException("Can only do Interswitch payments in Nigerian Naira (NGN).")
 
         payment.site_redirect_url = '{0}/payments_interswitch/payment_response/{1}'.format(
-                get_current_host(),
-                self.order_payment.id)
-
+            get_current_host(),
+            self.order_payment.id)
         payment.txn_ref = 'opc-{0}'.format(self.order_payment.id)
-
-
         payment.save()
         return payment
 
@@ -65,8 +62,7 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         """
         hashkey = properties.INTERSWITCH_HASHKEY
         message = "{p.txn_ref}{p.product_id}{p.pay_item_id}" \
-                  "{p.amount}{p.site_redirect_url}{hashkey}".format(
-                p=self.payment, hashkey=hashkey)
+                  "{p.amount}{p.site_redirect_url}{hashkey}".format(p=self.payment, hashkey=hashkey)
         return hashlib.sha512(message).hexdigest()
 
     def _get_status_hash(self):
@@ -77,8 +73,7 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         hashkey
         """
         hashkey = properties.INTERSWITCH_HASHKEY
-        message = "{p.product_id}{p.txn_ref}{hashkey}".format(
-                p=self.payment, hashkey=hashkey)
+        message = "{p.product_id}{p.txn_ref}{hashkey}".format(p=self.payment, hashkey=hashkey)
         return hashlib.sha512(message).hexdigest()
 
     def _get_payload(self):
@@ -116,7 +111,7 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
             status_url, self.payment.product_id, self.payment.txn_ref, self.payment.amount
         )
 
-        response = requests.get(url, headers={"Hash" : self._get_status_hash()}).content
+        response = requests.get(url, headers={"Hash": self._get_status_hash()}).content
         result = simplejson.loads(response)
         self.payment.result = response
 
@@ -132,4 +127,3 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         if 'ResponseDescription' in result and result['ResponseDescription'] == 'Approved Successful':
             self.payment.status = StatusDefinition.SETTLED
             self.payment.save()
-

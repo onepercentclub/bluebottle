@@ -6,7 +6,6 @@ import simplejson
 from bluebottle.payments.exception import PaymentException
 from moneyed import NGN
 
-from bluebottle.clients import properties
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.payments_interswitch.models import InterswitchPayment
 from bluebottle.utils.utils import get_current_host, StatusDefinition
@@ -36,13 +35,12 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         Create a new payment
         """
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment)
-        payment.product_id = properties.INTERSWITCH_PRODUCT_ID
-        payment.pay_item_id = properties.INTERSWITCH_ITEM_ID
+        payment.product_id = self.credentials['product_id']
+        payment.pay_item_id = self.credentials['item_id']
         # Amount on the payment should be in kobo/cents
         payment.amount = int(self.order_payment.amount.amount * 100)
         if self.order_payment.amount.currency != NGN:
             raise PaymentException("Can only do Interswitch payments in Nigerian Naira (NGN).")
-
         payment.site_redirect_url = '{0}/payments_interswitch/payment_response/{1}'.format(
             get_current_host(),
             self.order_payment.id)
@@ -60,7 +58,7 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         site_redirect_url
         hashkey
         """
-        hashkey = properties.INTERSWITCH_HASHKEY
+        hashkey = self.credentials['hashkey']
         message = "{p.txn_ref}{p.product_id}{p.pay_item_id}" \
                   "{p.amount}{p.site_redirect_url}{hashkey}".format(p=self.payment, hashkey=hashkey)
         return hashlib.sha512(message).hexdigest()
@@ -72,7 +70,7 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         product_id
         hashkey
         """
-        hashkey = properties.INTERSWITCH_HASHKEY
+        hashkey = self.credentials['hashkey']
         message = "{p.product_id}{p.txn_ref}{hashkey}".format(p=self.payment, hashkey=hashkey)
         return hashlib.sha512(message).hexdigest()
 
@@ -92,7 +90,7 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         return {'type': 'redirect',
                 'method': 'post',
                 'payload': payload,
-                'url': properties.INTERSWITCH_PAYMENT_URL}
+                'url': self.credentials['payment_url']}
 
     def _get_mapped_status(self, status):
         """
@@ -106,7 +104,7 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         return self.order_payment
 
     def check_payment_status(self):
-        status_url = properties.INTERSWITCH_STATUS_URL
+        status_url = self.credentials['status_url']
         url = "{0}?productid={1}&transactionreference={2}&amount={3}".format(
             status_url, self.payment.product_id, self.payment.txn_ref, self.payment.amount
         )

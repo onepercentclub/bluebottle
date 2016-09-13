@@ -423,6 +423,21 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             status_code=400
         )
 
+    def test_project_create_amounts(self):
+        """
+        Tests for Project Create
+        """
+        amount_asked = {'currency': 'EUR', 'amount': 100}
+        response = self.client.post(self.manage_projects_url,
+                                    {
+                                        'title': 'This is my smart idea',
+                                        'amount_asked': amount_asked
+                                    },
+                                    token=self.some_user_token
+                                    )
+        self.assertEqual(response.data['amount_asked'], amount_asked)
+        self.assertEqual(response.data['currencies'], ['EUR'])
+
     def test_set_bank_details(self):
         """ Set bank details in new project """
 

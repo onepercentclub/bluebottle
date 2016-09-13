@@ -80,6 +80,15 @@ DOCDATA_FEES = {
         'sepa_direct_debit': 0.13
     }
 }
+CURRENCIES_ENABLED = ({
+    'code': 'USD',
+    'name': 'US Dollar',
+    'symbol': '$'
+}, {
+    'code': 'EUR',
+    'name': 'Euro',
+    'symbol': u'\u20ac'
+})
 
 RECURRING_DONATIONS_ENABLED = True
 

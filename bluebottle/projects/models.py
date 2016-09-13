@@ -269,7 +269,7 @@ class Project(BaseProject):
             self.status = ProjectPhase.objects.get(slug="plan-new")
 
         if not self.currencies:
-            self.currencies = get_default_currency()
+            self.currencies = [str(self.amount_asked.currency)]
 
         # If the project status is moved to New or Needs Work, clear the
         # date_submitted field

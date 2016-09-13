@@ -3,7 +3,7 @@ from django_fsm import TransitionNotAllowed
 from mock import patch
 
 from bluebottle import clients
-from bluebottle.payments.services import PaymentService, get_payment_methods
+from bluebottle.payments.services import PaymentService
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import (PaymentFactory,

@@ -1,4 +1,3 @@
-from ipware import ip
 from mock import patch
 
 from django.core.urlresolvers import reverse
@@ -112,4 +111,3 @@ class TestOrderPaymentPermissions(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # self.assertEqual(response.data['country'], 'NL')
         self.assertEqual(len(response.data['results']), 3)
-

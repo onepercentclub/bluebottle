@@ -368,7 +368,7 @@ TENANT_PROPERTIES = "bluebottle.clients.properties"
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 
-THUMBNAIL_DEBUG = True
+THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85
 THUMBNAIL_DUMMY=True
 

@@ -103,8 +103,8 @@ class DocdataClient(object):
         # The _ notation is used to assign attributes to the XML node,
         # instead of child elements.
         self.merchant = self.client.factory.create('ns0:merchant')
-        self.merchant._name = credentials['username']
-        self.merchant._password = credentials['password']
+        self.merchant._name = credentials['merchant_name']
+        self.merchant._password = credentials['merchant_password']
 
         # Create the integration info node which is passed to every request.
         self.integration_info = TechnicalIntegrationInfo()
@@ -332,7 +332,7 @@ class DocdataClient(object):
         args = {
             'command': 'show_payment_cluster',
             'payment_cluster_key': order_key,
-            'merchant_name': credentials['username'],
+            'merchant_name': credentials['merchant_name'],
             'return_url_success': "{0}/{1}/orders/{2}/success".format(
                 return_url, client_language, order_id),
             'return_url_pending': "{0}/{1}/orders/{2}/pending".format(

@@ -16,7 +16,12 @@ warnings.filterwarnings(
 
 
 MERCHANT_ACCOUNTS = [
-    {'merchant': 'docdata', 'username': 'merchant_name', 'password': 'merchant_password', 'currency': 'EUR'},
+    {
+        'merchant': 'docdata',
+        'merchant_name': 'merchant_name',
+        'merchant_password': 'merchant_password',
+        'currency': 'EUR'
+    },
 ]
 
 

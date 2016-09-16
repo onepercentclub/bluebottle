@@ -133,8 +133,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         if payment.default_pm == 'paypal':
             payment.default_pm = 'paypal_express_checkout'
 
-        merchant = gateway.Merchant(name=self.credentials['username'],
-                                    password=self.credentials['password'])
+        merchant = gateway.Merchant(name=self.credentials['merchant_name'],
+                                    password=self.credentials['merchant_password'])
 
         amount = gateway.Amount(value=self.order_payment.amount.amount, currency=self.order_payment.amount.currency)
         user = self.get_user_data()

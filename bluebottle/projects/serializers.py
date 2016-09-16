@@ -1,4 +1,5 @@
 import re
+import bleach
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -38,9 +39,12 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
 
 
 class StoryField(serializers.CharField):
+    TAGS=['p','h1','h2','h3','h4', 'h5','b','i','ul','li','ol','a', 'br', 'pre', 'blockquote']
+    ATTRIBUTES={'a': ['target', 'href']}
+
     def to_representation(self, value):
         """ Reading / Loading the story field """
-        return value
+        return bleach.clean(value, tags=self.TAGS, attributes=self.ATTRIBUTES)
 
     def to_internal_value(self, data):
         """
@@ -52,9 +56,7 @@ class StoryField(serializers.CharField):
         """
         data = data.replace("&lt;;", "<").replace("&gt;;", ">")
         data = data.replace("&lt;", "<").replace("&gt;", ">")
-        soup = BeautifulSoup(data, "html.parser")
-        [s.extract() for s in soup(['script', 'iframe'])]
-        return unicode(soup)
+        return unicode(bleach.clean(data, tags=self.TAGS, attributes=self.ATTRIBUTES))
 
 
 class ProjectCountrySerializer(CountrySerializer):

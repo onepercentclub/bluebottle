@@ -219,24 +219,23 @@ class LockdownMiddleware(BaseLockdownMiddleware):
             if not locked_date:
                 return None
 
+        form_data = request.method == 'POST' and request.POST or {}
+        passwords = (request.META['HTTP_X_LOCKDOWN'],)
+
+        if self.form is None:
+            form_class = _default_form
+        else:
+            form_class = self.form
+
+        form = form_class(passwords=passwords, data=form_data, **self.form_kwargs)
+
         authorized = False
         token = session.get(self.session_key)
-        if token is True:
+        if hasattr(form, 'authenticate'):
+            if form.authenticate(token):
+                authorized = True
+        elif token is True:
             authorized = True
-        else:
-            form_data = request.method == 'POST' and request.POST or {}
-            passwords = (request.META['HTTP_X_LOCKDOWN'],)
-
-            if self.form is None:
-                form_class = _default_form
-            else:
-                form_class = self.form
-
-            form = form_class(passwords=passwords, data=form_data, **self.form_kwargs)
-
-            if hasattr(form, 'authenticate'):
-                if form.authenticate(token):
-                    authorized = True
 
         if authorized and self.logout_key and self.logout_key in request.GET:
             if self.session_key in session:

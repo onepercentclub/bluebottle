@@ -559,6 +559,66 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                           response)
 
 
+class ProjectStoryXssTest(BluebottleTestCase):
+    def setUp(self):
+        super(ProjectStoryXssTest, self).setUp()
+        
+        self.init_projects()
+        self.some_user = BlueBottleUserFactory.create()
+
+    def test_unsafe_story(self):
+        story = '''
+        <p onmouseover=\"alert('Persistent_XSS');\"></p>
+        <br size="&{alert('Injected')}">
+        <div style="background-image: url(javascript:alert('Injected'))">
+        <script>alert('Injected!');</script>
+        '''
+
+        project = ProjectFactory.create(title="testproject",
+                                        slug="testproject",
+                                        story=story,
+                                        owner=self.some_user,
+                                        status=ProjectPhase.objects.get(
+                                            slug='campaign'))
+
+        response = self.client.get(reverse('project_detail',
+                                           args=[project.slug]))
+        escaped_story = '''
+        <p></p>
+        <br>
+        &lt;div style="background-image: url(javascript:alert(\'Injected\'))"&gt;
+        &lt;script&gt;alert(\'Injected!\');&lt;/script&gt;
+        '''
+        self.assertEqual(response.data['story'], escaped_story)
+
+    def test_safe_story(self):
+        story = '''
+            <p>test</p>
+            <blockquote>test</blockquote>
+            <pre>test</pre>
+            <h1>test</h1>
+            <h2>test</h2>
+            <h3>test</h3>
+            <h5>test</h5>
+            <b>test</b>
+            <i>test</i>
+            <ul><li><i>test</i></li></ul>
+            <ol><li><i>test</i></li></ol>
+            <a href="http://test.com" target="_blank">Test</a>
+            <br>
+        '''
+        project = ProjectFactory.create(title="testproject",
+                                        slug="testproject",
+                                        story=story,
+                                        owner=self.some_user,
+                                        status=ProjectPhase.objects.get(
+                                            slug='campaign'))
+
+        response = self.client.get(reverse('project_detail',
+                                           args=[project.slug]))
+        self.assertEqual(response.data['story'], story)
+
+
 class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
     """
     Integration tests for the Project Media Wallpost API.

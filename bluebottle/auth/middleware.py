@@ -219,7 +219,11 @@ class LockdownMiddleware(BaseLockdownMiddleware):
             if not locked_date:
                 return None
 
-        form_data = request.method == 'POST' and request.POST or {}
+        if request.META.get('CONTENT_TYPE') == 'application/x-www-form-urlencoded' and request.method == 'POST':
+            form_data = request.POST
+        else:
+            form_data = {}
+
         passwords = (request.META['HTTP_X_LOCKDOWN'],)
 
         if self.form is None:

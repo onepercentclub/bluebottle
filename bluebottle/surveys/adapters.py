@@ -1,4 +1,7 @@
+from bluebottle.clients import properties
 from surveygizmo import SurveyGizmo
+
+from bluebottle.surveys.models import Survey
 
 
 class BaseAdapter(object):
@@ -7,8 +10,8 @@ class BaseAdapter(object):
         raise NotImplementedError()
 
     def update_surveys(self):
-        for survey in self.get_surveys():
-
+        for surv in self.get_surveys():
+            Survey.objects.get_or_create(remote_id=surv.id, defaults={'specification': surv})
 
 
 class SurveyGizmoAdapter(BaseAdapter):
@@ -16,8 +19,8 @@ class SurveyGizmoAdapter(BaseAdapter):
     def __init__(self):
         self.client = SurveyGizmo(
             api_version='v4',
-            api_token = "E4F796932C2743FEBF150B421BE15EB9",
-            api_token_secret = "A9fGMkJ5pJF1k"
+            api_token = properties.SURVEYGIZMO_API_TOKEN,
+            api_token_secret = properties.SURVEYGIZMO_API_SECRET
         )
 
     def get_surveys(self):

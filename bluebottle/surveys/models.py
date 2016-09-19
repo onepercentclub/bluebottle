@@ -1,11 +1,18 @@
 import urllib
 from django.db import models
 from django_extensions.db.fields.json import JSONField
+from django_extensions.db.fields import (ModificationDateTimeField,
+                                         CreationDateTimeField)
 
 
 class Survey(models.Model):
     remote_id = models.CharField(max_length=200, blank=True, null=True)
+    title = models.CharField(max_length=200, blank=True, null=True)
+    specification = JSONField(null=True)
     link = models.URLField()
+
+    created = CreationDateTimeField()
+    updated = ModificationDateTimeField()
 
     def url(self, task):
         query_params = {
@@ -19,6 +26,28 @@ class Survey(models.Model):
 
 class Question(models.Model):
 
+    AggregationChoices = (
+        ('sum', 'Sum'),
+        ('average', 'Average'),
+    )
+
     survey = models.ForeignKey('surveys.Survey')
+    remote_id = models.CharField(max_length=200, blank=True, null=True)
+    type = models.CharField(max_length=200, blank=True, null=True)
+    aggregation = models.CharField(max_length=200, choices=AggregationChoices, null=True)
+    specification = JSONField(null=True)
+
+
+class Response(models.Model):
+
+    survey = models.ForeignKey('surveys.Survey')
+    remote_id = models.CharField(max_length=200, blank=True, null=True)
+    specification = JSONField(null=True)
+
+
+class Answer(models.Model):
+
+    response = models.ForeignKey('surveys.Response')
+    question = models.ForeignKey('surveys.Question')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     specification = JSONField(null=True)

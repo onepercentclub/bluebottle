@@ -1,4 +1,7 @@
+from bluebottle.clients import properties
 from surveygizmo import SurveyGizmo
+
+from bluebottle.surveys.models import Survey, Question
 
 
 class BaseAdapter(object):
@@ -7,8 +10,24 @@ class BaseAdapter(object):
         raise NotImplementedError()
 
     def update_surveys(self):
-        for survey in self.get_surveys():
+        for data in self.get_surveys():
+            survey, created = Survey.objects.get_or_create(remote_id=data['id'])
+            self.update_survey(survey)
 
+    def update_survey(self, survey):
+        data = self.get_survey(survey.remote_id)
+        survey.specification = data
+        survey.title = data['title']
+        survey.link = data['links']['campaign']
+        survey.save()
+
+        for page in data['pages']:
+            for quest in page['questions']:
+                Question.objects.get_or_create(remote_id=quest['id'], survey=survey,
+                                               defaults={'specification': quest})
+
+    def get_survey(self, remote_id):
+        raise NotImplementedError()
 
 
 class SurveyGizmoAdapter(BaseAdapter):
@@ -16,9 +35,13 @@ class SurveyGizmoAdapter(BaseAdapter):
     def __init__(self):
         self.client = SurveyGizmo(
             api_version='v4',
-            api_token = "E4F796932C2743FEBF150B421BE15EB9",
-            api_token_secret = "A9fGMkJ5pJF1k"
+            api_token = properties.SURVEYGIZMO_API_TOKEN,
+            api_token_secret = properties.SURVEYGIZMO_API_SECRET
         )
 
     def get_surveys(self):
-        return self.client.api.survey.list()
+        return self.client.api.survey.list()['data']
+
+    def get_survey(self, remote_id):
+        return self.client.api.survey.get(remote_id)['data']
+

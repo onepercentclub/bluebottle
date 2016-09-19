@@ -601,6 +601,7 @@ class ProjectStoryXssTest(BluebottleTestCase):
             <h3>test</h3>
             <h5>test</h5>
             <b>test</b>
+            <strong>test</strong>
             <i>test</i>
             <ul><li><i>test</i></li></ul>
             <ol><li><i>test</i></li></ol>

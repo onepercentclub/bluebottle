@@ -39,7 +39,8 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
 
 
 class StoryField(serializers.CharField):
-    TAGS=['p','h1','h2','h3','h4', 'h5','b','i','ul','li','ol','a', 'br', 'pre', 'blockquote']
+    TAGS=['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a', 
+          'br', 'pre', 'blockquote']
     ATTRIBUTES={'a': ['target', 'href']}
 
     def to_representation(self, value):

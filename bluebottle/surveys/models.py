@@ -1,12 +1,18 @@
 import urllib
 from django.db import models
 from django_extensions.db.fields.json import JSONField
+from django_extensions.db.fields import (ModificationDateTimeField,
+                                         CreationDateTimeField)
 
 
 class Survey(models.Model):
     remote_id = models.CharField(max_length=200, blank=True, null=True)
+    title = models.CharField(max_length=200, blank=True, null=True)
     specification = JSONField(null=True)
     link = models.URLField()
+
+    created = CreationDateTimeField()
+    updated = ModificationDateTimeField()
 
     def url(self, task):
         query_params = {

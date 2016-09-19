@@ -11,20 +11,23 @@ class BaseAdapter(object):
 
     def update_surveys(self):
         for data in self.get_surveys():
-            survey = Survey.objects.get_or_create(remote_id=data['id'])
+            survey, created = Survey.objects.get_or_create(remote_id=data['id'])
             self.update_survey(survey)
 
     def update_survey(self, survey):
         data = self.get_survey(survey.remote_id)
         survey.specification = data
+        survey.title = data['title']
+        survey.link = data['links']['campaign']
+        survey.save()
+
         for page in data['pages']:
             for quest in page['questions']:
-                Question.objects.get_or_create(remote_id=quest['id'], default={'specification': quest})
+                Question.objects.get_or_create(remote_id=quest['id'], survey=survey,
+                                               defaults={'specification': quest})
 
     def get_survey(self, remote_id):
         raise NotImplementedError()
-
-    def get_responses(self, survey):
 
 
 class SurveyGizmoAdapter(BaseAdapter):
@@ -40,5 +43,5 @@ class SurveyGizmoAdapter(BaseAdapter):
         return self.client.api.survey.list()['data']
 
     def get_survey(self, remote_id):
-        return self.client.api.survey.list()['data']
+        return self.client.api.survey.get(remote_id)['data']
 

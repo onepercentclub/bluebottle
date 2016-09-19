@@ -20,8 +20,15 @@ class Survey(models.Model):
 
 class Question(models.Model):
 
+    AggregationChoices = (
+        ('sum', 'Sum'),
+        ('average', 'Average'),
+    )
+
     survey = models.ForeignKey('surveys.Survey')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
+    type = models.CharField(max_length=200, blank=True, null=True)
+    aggregation = models.CharField(max_length=200, choices=AggregationChoices, null=True)
     specification = JSONField(null=True)
 
 

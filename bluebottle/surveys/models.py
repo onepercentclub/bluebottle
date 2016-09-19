@@ -10,7 +10,6 @@ class Survey(models.Model):
     title = models.CharField(max_length=200, blank=True, null=True)
     specification = JSONField(null=True)
     link = models.URLField()
-
     created = CreationDateTimeField()
     updated = ModificationDateTimeField()
 
@@ -57,3 +56,4 @@ class Answer(models.Model):
     question = models.ForeignKey('surveys.Question')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     specification = JSONField(null=True)
+    value = models.CharField(max_length=5000, blank=True)

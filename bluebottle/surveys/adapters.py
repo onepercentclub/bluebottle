@@ -1,7 +1,9 @@
+import json
+
 from bluebottle.clients import properties
 from surveygizmo import SurveyGizmo
 
-from bluebottle.surveys.models import Survey, Question
+from bluebottle.surveys.models import Survey, Question, Response
 
 
 class BaseAdapter(object):
@@ -29,9 +31,19 @@ class SurveyGizmoAdapter(BaseAdapter):
     def __init__(self):
         self.client = SurveyGizmo(
             api_version='v4',
-            api_token = properties.SURVEYGIZMO_API_TOKEN,
-            api_token_secret = properties.SURVEYGIZMO_API_SECRET
+            api_token=properties.SURVEYGIZMO_API_TOKEN,
+            api_token_secret=properties.SURVEYGIZMO_API_SECRET
         )
+
+    def get_responses(self, survey):
+        self.client.config.response_type = 'json'
+        data = self.client.api.surveyresponse.list(survey.remote_id)
+        self.client.config.response_type = None
+        data = json.loads(data)
+        print data
+        if int(data['total_count']) > 50:
+            raise ImportWarning('There are more then 50 results, please also load page 2.')
+        return data['data']
 
     def parse_question(self, data):
         props = {}
@@ -59,10 +71,13 @@ class SurveyGizmoAdapter(BaseAdapter):
         for page in data['pages']:
             for quest in page['questions']:
                 if quest['_type'] == 'SurveyQuestion':
-                    question, created = Question.objects.get_or_create(
+                    Question.objects.get_or_create(
                         remote_id=quest['id'], survey=survey,
                         defaults=self.parse_question(quest)
                     )
+        for response in self.get_responses(survey):
+            Response.objects.get_or_create(remote_id=response['responseID'], survey=survey,
+                                           defaults={'specification': json.dumps(response)})
 
     def get_surveys(self):
         return self.client.api.survey.list()['data']

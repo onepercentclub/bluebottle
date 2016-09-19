@@ -1,7 +1,7 @@
 from bluebottle.clients import properties
 from surveygizmo import SurveyGizmo
 
-from bluebottle.surveys.models import Survey
+from bluebottle.surveys.models import Survey, Question
 
 
 class BaseAdapter(object):
@@ -10,8 +10,19 @@ class BaseAdapter(object):
         raise NotImplementedError()
 
     def update_surveys(self):
-        for surv in self.get_surveys():
-            Survey.objects.get_or_create(remote_id=surv.id, defaults={'specification': surv})
+        for data in self.get_surveys():
+            survey = Survey.objects.get_or_create(remote_id=data['id'])
+            self.update_survey(survey)
+
+    def update_survey(self, survey):
+        data = self.get_survey(survey.remote_id)
+        survey.specification = data
+        for page in data['pages']:
+            for quest in page['questions']:
+                Question.objects.get_or_create(remote_id=quest['id'], default={'specification': quest})
+
+    def get_survey(self, remote_id):
+        raise NotImplementedError()
 
 
 class SurveyGizmoAdapter(BaseAdapter):
@@ -24,4 +35,7 @@ class SurveyGizmoAdapter(BaseAdapter):
         )
 
     def get_surveys(self):
-        return self.client.api.survey.list()
+        return self.client.api.survey.list()['data']
+
+    def get_survey(self, remote_id):
+        return self.client.api.survey.list()['data']

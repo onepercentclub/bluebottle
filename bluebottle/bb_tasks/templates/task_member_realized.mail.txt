@@ -10,6 +10,13 @@ You did it! The project owner {{ sender_name }} marked the task '{{ task_title }
 
 Let's celebrate with a short comment!
 {% endblocktrans %}
+
+{% if survey_link %}
+    {% blocktrans with link=survey_link %}
+Please take a moment to fill in a survey about the impact you created; {{ link }}
+    {% endblocktrans %}
+{% endif %}
+
 {% endblock %}
 
 {% block action %}

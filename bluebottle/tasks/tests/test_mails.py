@@ -4,10 +4,11 @@ from django.test.utils import override_settings
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 # import taskmail in order to properly register mail handlers. Without it tests mail fail
-from bluebottle.tasks import taskmail
+from bluebottle.tasks import taskmail  # noqa
 
 
 @override_settings(SEND_WELCOME_MAIL=False)
@@ -48,6 +49,42 @@ class TestTaskMails(BluebottleTestCase):
         self.assertEquals(len(mail.outbox), 2)
         self.assertNotEquals(mail.outbox[1].subject.find("assigned"), -1)
         self.assertEquals(mail.outbox[1].to[0], self.task_member.member.email)
+
+    def test_member_realized_mail(self):
+        task_member = TaskMemberFactory.create(
+            task=self.task,
+            status='accepted'
+        )
+
+        task_member.status = 'realized'
+        task_member.save()
+
+        self.assertEquals(len(mail.outbox), 2)
+
+        email = mail.outbox[-1]
+
+        self.assertNotEquals(email.subject.find("realised"), -1)
+        self.assertEquals(email.to[0], task_member.member.email)
+        self.assertFalse('survey' in email.body)
+
+    def test_member_realized_mail_with_survey(self):
+        survey = SurveyFactory(link='https://example.com/survey/1/')
+
+        task_member = TaskMemberFactory.create(
+            task=self.task,
+            status='accepted'
+        )
+
+        task_member.status = 'realized'
+        task_member.save()
+
+        self.assertEquals(len(mail.outbox), 2)
+
+        email = mail.outbox[-1]
+
+        self.assertNotEquals(email.subject.find("realised"), -1)
+        self.assertEquals(email.to[0], task_member.member.email)
+        self.assertTrue(survey.url(self.task) in email.body)
 
     def test_status_realized_mail(self):
         """

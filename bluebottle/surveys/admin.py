@@ -26,10 +26,11 @@ class SurveyAdmin(admin.ModelAdmin):
 admin.site.register(Survey, SurveyAdmin)
 
 
-class AnswerAdminInline(admin.StackedInline):
+class AnswerAdminInline(admin.TabularInline):
     model = Answer
 
-    readonly_fields = ('value', )
+    readonly_fields = ('question', 'value', )
+    fields = readonly_fields
     extra = 0
 
     def has_add_permission(self, request):
@@ -45,5 +46,13 @@ class ResponseAdmin(admin.ModelAdmin):
     model = Response
     inlines = [AnswerAdminInline]
 
+    readonly_fields = ('remote_id', 'specification', 'survey',
+                       'project', 'task')
+
+    list_display = ('survey', 'submitted', 'answer_count')
+
+    def answer_count(self, obj):
+        return obj.answer_set.count()
 
 admin.site.register(Response, ResponseAdmin)
+

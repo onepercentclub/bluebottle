@@ -1,9 +1,10 @@
 import json
+import re
 
 from bluebottle.clients import properties
 from surveygizmo import SurveyGizmo
 
-from bluebottle.surveys.models import Survey, Question, Response
+from bluebottle.surveys.models import Survey, Question, Response, Answer
 
 
 class BaseAdapter(object):
@@ -35,12 +36,27 @@ class SurveyGizmoAdapter(BaseAdapter):
             api_token_secret=properties.SURVEYGIZMO_API_SECRET
         )
 
+    def parse_answer(self, data):
+        data
+
+    def load_answers(self, data):
+        answers = {}
+        qereg = re.compile("\[question\((\d+)\).*\]")
+        for key in data:
+            match = qereg.match(key)
+            if match:
+                question = match.group(1)
+                if answers.has_key(question):
+                    answers[question] += ", " + data[key]
+                else:
+                    answers[question] = data[key]
+        return answers
+
     def get_responses(self, survey):
         self.client.config.response_type = 'json'
         data = self.client.api.surveyresponse.list(survey.remote_id)
         self.client.config.response_type = None
         data = json.loads(data)
-        print data
         if int(data['total_count']) > 50:
             raise ImportWarning('There are more then 50 results, please also load page 2.')
         return data['data']
@@ -76,8 +92,17 @@ class SurveyGizmoAdapter(BaseAdapter):
                         defaults=self.parse_question(quest)
                     )
         for response in self.get_responses(survey):
-            Response.objects.get_or_create(remote_id=response['responseID'], survey=survey,
-                                           defaults={'specification': json.dumps(response)})
+            resp, created = Response.objects.get_or_create(remote_id=response['responseID'], survey=survey,
+                                                  defaults={'specification': json.dumps(response)})
+            answers = self.load_answers(response)
+            for key in answers:
+                try:
+                    print "OKOK  {0}: {1}".format(key, answers[key])
+                    question = Question.objects.get(remote_id=key)
+                    Answer.objects.get_or_create(response=resp, question=question,
+                                                 defaults={'value': answers[key]})
+                except Question.DoesNotExist:
+                    pass
 
     def get_surveys(self):
         return self.client.api.survey.list()['data']

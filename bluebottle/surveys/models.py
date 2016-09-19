@@ -36,17 +36,23 @@ class Question(models.Model):
     survey = models.ForeignKey('surveys.Survey')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     type = models.CharField(max_length=200, blank=True, null=True)
-    title =  models.TextField(blank=True, null=True)
+    title =  models.CharField(max_length=500, blank=True, null=True)
 
     aggregation = models.CharField(max_length=200, choices=AggregationChoices, null=True)
     properties = JSONField(null=True)
     specification = JSONField(null=True)
+
+    def __unicode__(self):
+        return self.title
 
 
 class Response(models.Model):
 
     survey = models.ForeignKey('surveys.Survey')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
+    submitted = models.DateTimeField(null=True)
+    project = models.ForeignKey('projects.Project', null=True)
+    task = models.ForeignKey('tasks.Task', null=True)
     specification = JSONField(null=True)
 
 

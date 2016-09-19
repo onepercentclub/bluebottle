@@ -23,3 +23,18 @@ class Question(models.Model):
     survey = models.ForeignKey('surveys.Survey')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     specification = JSONField(null=True)
+
+
+class Response(models.Model):
+
+    survey = models.ForeignKey('surveys.Survey')
+    remote_id = models.CharField(max_length=200, blank=True, null=True)
+    specification = JSONField(null=True)
+
+
+class Answer(models.Model):
+
+    response = models.ForeignKey('surveys.Response')
+    question = models.ForeignKey('surveys.Question')
+    remote_id = models.CharField(max_length=200, blank=True, null=True)
+    specification = JSONField(null=True)

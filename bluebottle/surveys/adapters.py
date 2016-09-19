@@ -24,6 +24,8 @@ class BaseAdapter(object):
     def get_survey(self, remote_id):
         raise NotImplementedError()
 
+    def get_responses(self, survey):
+
 
 class SurveyGizmoAdapter(BaseAdapter):
 
@@ -39,3 +41,4 @@ class SurveyGizmoAdapter(BaseAdapter):
 
     def get_survey(self, remote_id):
         return self.client.api.survey.list()['data']
+

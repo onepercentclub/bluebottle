@@ -23,6 +23,9 @@ class Survey(models.Model):
 
         return '{}?{}'.format(self.link, urllib.urlencode(query_params))
 
+    def __unicode__(self):
+        return self.title
+
 
 class Question(models.Model):
 
@@ -34,6 +37,8 @@ class Question(models.Model):
     survey = models.ForeignKey('surveys.Survey')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     type = models.CharField(max_length=200, blank=True, null=True)
+    title =  models.TextField(blank=True, null=True)
+
     aggregation = models.CharField(max_length=200, choices=AggregationChoices, null=True)
     specification = JSONField(null=True)
 

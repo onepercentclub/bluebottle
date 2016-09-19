@@ -14,17 +14,8 @@ class BaseAdapter(object):
             survey, created = Survey.objects.get_or_create(remote_id=data['id'])
             self.update_survey(survey)
 
-    def update_survey(self, survey):
-        data = self.get_survey(survey.remote_id)
-        survey.specification = data
-        survey.title = data['title']
-        survey.link = data['links']['campaign']
-        survey.save()
-
-        for page in data['pages']:
-            for quest in page['questions']:
-                Question.objects.get_or_create(remote_id=quest['id'], survey=survey,
-                                               defaults={'specification': quest})
+    def update_survey(self, remote_id):
+        raise NotImplementedError()
 
     def get_survey(self, remote_id):
         raise NotImplementedError()
@@ -38,6 +29,25 @@ class SurveyGizmoAdapter(BaseAdapter):
             api_token = properties.SURVEYGIZMO_API_TOKEN,
             api_token_secret = properties.SURVEYGIZMO_API_SECRET
         )
+
+    def update_survey(self, survey):
+        data = self.get_survey(survey.remote_id)
+        survey.specification = data
+        survey.title = data['title']
+        survey.link = data['links']['campaign']
+        survey.save()
+
+        for page in data['pages']:
+            for quest in page['questions']:
+                if quest['_type'] == 'SurveyQuestion':
+                    Question.objects.get_or_create(
+                        remote_id=quest['id'], survey=survey,
+                        defaults={
+                            'specification': quest,
+                            'title': quest['title']['English'],
+                            'type': quest['_subtype']
+                        }
+                    )
 
     def get_surveys(self):
         return self.client.api.survey.list()['data']

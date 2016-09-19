@@ -299,6 +299,7 @@ TENANT_APPS = (
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
+    'bluebottle.surveys',
 
     # Plain Bluebottle apps
     'bluebottle.wallposts',

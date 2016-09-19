@@ -78,6 +78,7 @@ install_requires = [
     'mixpanel==4.3.0',
     'wheel==0.29.0',
     'django-cors-headers==1.1.0',
+    'SurveyGizmo==1.2.1',
 
     # Github requirements
     'django-taggit-autocomplete-modified==0.1.1b1',

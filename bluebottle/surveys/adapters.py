@@ -23,12 +23,31 @@ class BaseAdapter(object):
 
 class SurveyGizmoAdapter(BaseAdapter):
 
+    question_properties = ['left_label', 'center_label', 'right_label',
+                           'min_number', 'max_number']
+
     def __init__(self):
         self.client = SurveyGizmo(
             api_version='v4',
             api_token = properties.SURVEYGIZMO_API_TOKEN,
             api_token_secret = properties.SURVEYGIZMO_API_SECRET
         )
+
+    def parse_question(self, data):
+        props = {}
+        if data.has_key('options'):
+            props['options'] = [p['title']['English'] for p in data['options']]
+
+        for p in self.question_properties:
+            if data['properties'].has_key(p):
+                props[p] = data['properties'][p]
+
+        question = {
+            'title': data['title']['English'],
+            'type': data['properties']['map_key'],
+            'properties': props
+        }
+        return question
 
     def update_survey(self, survey):
         data = self.get_survey(survey.remote_id)
@@ -40,13 +59,9 @@ class SurveyGizmoAdapter(BaseAdapter):
         for page in data['pages']:
             for quest in page['questions']:
                 if quest['_type'] == 'SurveyQuestion':
-                    Question.objects.get_or_create(
+                    question, created = Question.objects.get_or_create(
                         remote_id=quest['id'], survey=survey,
-                        defaults={
-                            'specification': quest,
-                            'title': quest['title']['English'],
-                            'type': quest['_subtype']
-                        }
+                        defaults=self.parse_question(quest)
                     )
 
     def get_surveys(self):

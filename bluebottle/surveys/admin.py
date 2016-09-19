@@ -6,7 +6,7 @@ from bluebottle.surveys.models import Survey, Question
 class QuestionAdminInline(admin.StackedInline):
 
     model = Question
-    readonly_fields = ('specification', 'remote_id')
+    readonly_fields = ('specification', 'remote_id', 'properties')
 
     extra = 0
 

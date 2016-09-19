@@ -40,6 +40,7 @@ class Question(models.Model):
     title =  models.TextField(blank=True, null=True)
 
     aggregation = models.CharField(max_length=200, choices=AggregationChoices, null=True)
+    properties = JSONField(null=True)
     specification = JSONField(null=True)
 
 

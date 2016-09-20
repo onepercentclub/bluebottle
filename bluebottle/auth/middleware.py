@@ -1,5 +1,5 @@
 from calendar import timegm
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.utils import timezone
 
 from rest_framework import exceptions
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
@@ -18,6 +19,8 @@ from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
                                  _default_url_exceptions, _default_form)
 
 from lockdown import settings as lockdown_settings
+
+LAST_SEEN_DELTA = 10 # in minutes 
 
 
 def isAdminRequest(request):
@@ -48,7 +51,14 @@ class UserJwtTokenMiddleware:
             user_auth_tuple = None
 
         if user_auth_tuple is not None:
-            request.user, _auth = user_auth_tuple
+            request.user, _ = user_auth_tuple
+
+            # Set last_seen on the user record if it has been > 10 mins
+            # since the record was set.
+            if not request.user.last_seen or (request.user.last_seen < 
+               timezone.now() - timedelta(minutes=LAST_SEEN_DELTA)):
+                request.user.last_seen = timezone.now()
+                request.user.save()
             return
 
 

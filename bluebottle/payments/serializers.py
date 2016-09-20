@@ -23,3 +23,6 @@ class ManageOrderPaymentSerializer(serializers.ModelSerializer):
         model = OrderPayment
         fields = ('id', 'order', 'payment_method', 'integration_data',
                   'amount', 'status', 'authorization_action')
+
+    def validate_amount(self, value):
+        import ipdb; ipdb.set_trace()

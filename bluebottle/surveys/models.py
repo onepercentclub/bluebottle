@@ -31,14 +31,14 @@ class Survey(models.Model):
                 lambda answer: answer.response.project
             )
             answers_by_projects = {
-                project: [answer.value for answer in answers] for project, answers in answers
+                project: [answer.float_value for answer in answers] for project, answers in answers
             }
 
             for project, values in answers_by_projects.items():
                 if question.aggregation == 'sum':
-                    value = sum(float(value or 0) for value in values)
+                    value = sum(value for value in values)
                 else:
-                    value = sum(float(value or 0) for value in values) / float(len(values))
+                    value = sum(value for value in values) / float(len(values))
 
                 AggregateAnswer.objects.get_or_create(
                     project=project,
@@ -88,9 +88,18 @@ class Answer(models.Model):
     specification = JSONField(null=True)
     value = models.CharField(max_length=5000, blank=True)
 
+    @property
+    def float_value(self):
+        try:
+            return float(self.value)
+        except ValueError:
+            return 0
+
 
 class AggregateAnswer(models.Model):
     question = models.ForeignKey('surveys.Question')
     project = models.ForeignKey('projects.Project')
 
     value = models.FloatField()
+
+

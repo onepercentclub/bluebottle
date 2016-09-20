@@ -515,6 +515,18 @@ class Project(BaseProject):
     class Meta(BaseProject.Meta):
         ordering = ['title']
 
+    class Analytics:
+        type = 'project'
+        tags = {
+            'sub_type': 'project_type',
+            'status': 'status.name',
+            'status_slug': 'status.slug',
+            'theme': 'theme.name',
+            'theme_slug': 'theme.slug',
+            'location': 'location.name',
+            'country': 'location.country.name'
+        }
+
     def status_changed(self, old_status, new_status):
         status_complete = ProjectPhase.objects.get(slug="done-complete")
         status_incomplete = ProjectPhase.objects.get(slug="done-incomplete")

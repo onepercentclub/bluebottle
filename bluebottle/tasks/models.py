@@ -80,6 +80,12 @@ class Task(models.Model):
 
         ordering = ['-created']
 
+    class Analytics:
+        type = 'task'
+        tags = {
+            'status': 'status'
+        }
+
     def __init__(self, *args, **kwargs):
         super(Task, self).__init__(*args, **kwargs)
         self._original_status = self.status
@@ -242,6 +248,12 @@ class TaskMember(models.Model):
     class Meta:
         verbose_name = _(u'task member')
         verbose_name_plural = _(u'task members')
+
+    class Analytics:
+        type = 'task_member'
+        tags = {
+            'status': 'status'
+        }
 
     def save(self, *args, **kwargs):
         previous_status = None

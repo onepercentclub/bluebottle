@@ -282,6 +282,7 @@ TENANT_APPS = (
     'django.contrib.admindocs',
     'django.contrib.auth',
 
+    'bluebottle.analytics',
     'bb_salesforce',
 
     #Widget

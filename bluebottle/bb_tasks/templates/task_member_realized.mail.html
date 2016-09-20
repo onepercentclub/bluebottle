@@ -11,6 +11,14 @@
         <br><br>
         Let's celebrate with a short comment!
     {% endblocktrans %}
+
+    {% if survey_link %}
+        {% blocktrans with link=survey_link%}
+        <a href="{{ link}}">Please take a moment to fill in a survey about the impact you created<a/>
+        {% endblocktrans %}
+
+    {% endif %}
+
 {% endblock %}
 
 {% block action %}

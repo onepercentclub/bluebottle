@@ -21,6 +21,7 @@ class QuestionAdminInline(admin.StackedInline):
 
 class SurveyAdmin(admin.ModelAdmin):
     model = Survey
+    readonly_fields = ('title', 'specification', 'link')
     inlines = [QuestionAdminInline]
 
 admin.site.register(Survey, SurveyAdmin)

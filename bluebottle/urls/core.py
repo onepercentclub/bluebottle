@@ -82,6 +82,9 @@ urlpatterns = patterns('',
 
                        url(r'^api/votes/',
                            include('bluebottle.votes.urls.api')),
+                       url(r'^api/surveys/',
+                           include('bluebottle.surveys.urls.api')),
+
 
                        # Organization urls for private documents
                        url(r'^documents/',

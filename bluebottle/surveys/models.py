@@ -10,7 +10,6 @@ class Survey(models.Model):
     title = models.CharField(max_length=200, blank=True, null=True)
     specification = JSONField(null=True)
     link = models.URLField()
-
     created = CreationDateTimeField()
     updated = ModificationDateTimeField()
 
@@ -23,6 +22,9 @@ class Survey(models.Model):
 
         return '{}?{}'.format(self.link, urllib.urlencode(query_params))
 
+    def __unicode__(self):
+        return self.title
+
 
 class Question(models.Model):
 
@@ -34,14 +36,23 @@ class Question(models.Model):
     survey = models.ForeignKey('surveys.Survey')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     type = models.CharField(max_length=200, blank=True, null=True)
+    title =  models.CharField(max_length=500, blank=True, null=True)
+
     aggregation = models.CharField(max_length=200, choices=AggregationChoices, null=True)
+    properties = JSONField(null=True)
     specification = JSONField(null=True)
+
+    def __unicode__(self):
+        return self.title
 
 
 class Response(models.Model):
 
     survey = models.ForeignKey('surveys.Survey')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
+    submitted = models.DateTimeField(null=True)
+    project = models.ForeignKey('projects.Project', null=True)
+    task = models.ForeignKey('tasks.Task', null=True)
     specification = JSONField(null=True)
 
 
@@ -51,3 +62,4 @@ class Answer(models.Model):
     question = models.ForeignKey('surveys.Question')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     specification = JSONField(null=True)
+    value = models.CharField(max_length=5000, blank=True)

@@ -75,10 +75,6 @@ class LocationAdmin(admin.ModelAdmin):
     list_display = ('name', 'position', 'group')
     model = Location
 
-    @property
-    def actions(self):
-        return ['select_%s' % group.id for group in LocationGroup.objects.all()]
-
     def make_action(self, group):
         name = 'select_%s' % group
         action = lambda modeladmin, req, qset: qset.update(group=group)

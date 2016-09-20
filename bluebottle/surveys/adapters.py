@@ -1,20 +1,21 @@
 import json
 import re
 
+from django.db.models import Sum, Avg
+
 from bluebottle.clients import properties
 from surveygizmo import SurveyGizmo
 
-from bluebottle.surveys.models import Survey, Question, Response, Answer
+from bluebottle.surveys.models import Survey, Question, Response, Answer, AggregateAnswer
 
 
 class BaseAdapter(object):
 
     def get_surveys(self):
-        raise NotImplementedError()
+        return Survey.objects.all()
 
     def update_surveys(self):
-        for data in self.get_surveys():
-            survey, created = Survey.objects.get_or_create(remote_id=data['id'])
+        for survey in self.get_surveys():
             self.update_survey(survey)
 
     def update_survey(self, remote_id):
@@ -92,20 +93,21 @@ class SurveyGizmoAdapter(BaseAdapter):
                         defaults=self.parse_question(quest)
                     )
         for response in self.get_responses(survey):
-            resp, created = Response.objects.get_or_create(remote_id=response['responseID'], survey=survey,
-                                                  defaults={'specification': json.dumps(response)})
+            resp, created = Response.objects.get_or_create(
+                remote_id=response['responseID'],
+                survey=survey,
+                defaults={'specification': json.dumps(response)}
+            )
             answers = self.load_answers(response)
             for key in answers:
                 try:
-                    print "OKOK  {0}: {1}".format(key, answers[key])
                     question = Question.objects.get(remote_id=key)
                     Answer.objects.get_or_create(response=resp, question=question,
                                                  defaults={'value': answers[key]})
                 except Question.DoesNotExist:
                     pass
 
-    def get_surveys(self):
-        return self.client.api.survey.list()['data']
+        survey.aggregate()
 
     def get_survey(self, remote_id):
         return self.client.api.survey.get(remote_id)['data']

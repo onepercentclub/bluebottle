@@ -98,7 +98,16 @@ class Task(models.Model):
     @property
     def people_applied(self):
         return self.members.count()
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
 
+        super(TaskMember, self).save(*args, **kwargs)
+
+        # Only log task member status if the status has changed
+        if self is not None and previous_status != self.status:
+            TaskMemberStatusLog.objects.create(
+                task_member=self, status=self.status)
     def get_absolute_url(self):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
@@ -165,9 +174,19 @@ class Task(models.Model):
             bb_track("Task Completed", data)
 
     def save(self, *args, **kwargs):
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
+
         if not self.author_id:
             self.author = self.project.owner
+
         super(Task, self).save(*args, **kwargs)
+
+        # Only log task status if the status has changed
+        if self is not None and previous_status != self.status:
+            TaskStatusLog.objects.create(
+                task=self, status=self.status)
 
 
 class Skill(models.Model):
@@ -225,7 +244,17 @@ class TaskMember(models.Model):
         verbose_name_plural = _(u'task members')
 
     def save(self, *args, **kwargs):
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
+
         super(TaskMember, self).save(*args, **kwargs)
+
+        # Only log task member status if the status has changed
+        if self is not None and previous_status != self.status:
+            TaskMemberStatusLog.objects.create(
+                task_member=self, status=self.status)
+
         self.check_number_of_members_needed(self.task)
 
     def delete(self, using=None, keep_parents=False):
@@ -273,6 +302,20 @@ class TaskFile(models.Model):
     class Meta:
         verbose_name = _(u'task file')
         verbose_name_plural = _(u'task files')
+
+
+class TaskStatusLog(models.Model):
+    task = models.ForeignKey('tasks.Task')
+    status = models.CharField(_('status'), max_length=20)
+    start = CreationDateTimeField(
+        _('created'), help_text=_('When this task entered in this status.'))
+
+
+class TaskMemberStatusLog(models.Model):
+    task_member = models.ForeignKey('tasks.TaskMember')
+    status = models.CharField(_('status'), max_length=20)
+    start = CreationDateTimeField(
+        _('created'), help_text=_('When this task member entered in this status.'))
 
 
 from .taskmail import *

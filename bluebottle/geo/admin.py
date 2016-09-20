@@ -75,5 +75,14 @@ class LocationAdmin(admin.ModelAdmin):
     list_display = ('name', 'position', 'group')
     model = Location
 
+    actions = ['add_to_group_6', 'add_to_group_9', 'add_to_group_7', 'add_to_group_8', 'add_to_group_10']
+
+    def make_action(self, group):
+        name = 'select_%s' % group
+        action = lambda modeladmin, req, qset: qset.update(group=group)
+        return (name, (action, name, "Move selected to %s" % group))
+
+    def get_actions(self, request):
+        return dict([self.make_action(group) for group in LocationGroup.objects.all()])
 
 admin.site.register(Location, LocationAdmin)

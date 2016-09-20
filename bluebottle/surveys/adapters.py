@@ -36,14 +36,11 @@ class SurveyGizmoAdapter(BaseAdapter):
             api_token_secret=properties.SURVEYGIZMO_API_SECRET
         )
 
-    def parse_answer(self, data):
-        data
-
     def load_answers(self, data):
         answers = {}
-        qereg = re.compile("\[question\((\d+)\).*\]")
+        question_ereg = re.compile("\[question\((\d+)\).*\]")
         for key in data:
-            match = qereg.match(key)
+            match = question_ereg.match(key)
             if match:
                 question = match.group(1)
                 if answers.has_key(question):
@@ -51,6 +48,17 @@ class SurveyGizmoAdapter(BaseAdapter):
                 else:
                     answers[question] = data[key]
         return answers
+
+    def parse_query_params(self, data):
+        params = {}
+        url_ereg = re.compile("\[url\(\"(.+)\"\)]")
+        for key in data:
+            match = url_ereg.match(key)
+            if match:
+                param = match.group(1)
+                print param
+                params[param] = data[key]
+        return params
 
     def get_responses(self, survey):
         self.client.config.response_type = 'json'
@@ -92,12 +100,19 @@ class SurveyGizmoAdapter(BaseAdapter):
                         defaults=self.parse_question(quest)
                     )
         for response in self.get_responses(survey):
-            resp, created = Response.objects.get_or_create(remote_id=response['responseID'], survey=survey,
-                                                  defaults={'specification': json.dumps(response)})
+            resp, created = Response.objects.get_or_create(remote_id=response['responseID'], survey=survey)
+            resp.specification = json.dumps(response)
+            resp.submitted = response['datesubmitted']
+            params = self.parse_query_params(response)
+            if params.has_key('project_id'):
+                resp.project_id = params['project_id']
+            if params.has_key('task_id'):
+                resp.task_id = params['task_id']
+            resp.save()
+
             answers = self.load_answers(response)
             for key in answers:
                 try:
-                    print "OKOK  {0}: {1}".format(key, answers[key])
                     question = Question.objects.get(remote_id=key)
                     Answer.objects.get_or_create(response=resp, question=question,
                                                  defaults={'value': answers[key]})

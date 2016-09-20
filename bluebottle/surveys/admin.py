@@ -49,7 +49,7 @@ class ResponseAdmin(admin.ModelAdmin):
     readonly_fields = ('remote_id', 'specification', 'survey',
                        'project', 'task')
 
-    list_display = ('survey', 'submitted', 'answer_count')
+    list_display = ('survey', 'submitted', 'project', 'task', 'answer_count')
 
     def answer_count(self, obj):
         return obj.answer_set.count()

@@ -50,12 +50,12 @@ class ProjectSurveyAPITestCase(BluebottleTestCase):
                 value=random.randint(0, 100)
             )
 
-        self.survey_url = reverse('project_survey_list', args=[self.project.slug])
+        self.survey_url = reverse('project_survey_list')
 
     def test_get_survey(self):
         self.survey.aggregate()
 
-        response = self.client.get(self.survey_url)
+        response = self.client.get(self.survey_url, {'project': self.project.slug})
         self.assertEqual(response.status_code, 200)
 
         data = response.data[0]
@@ -69,7 +69,7 @@ class ProjectSurveyAPITestCase(BluebottleTestCase):
             self.assertTrue('properties' in answer)
 
     def test_get_survey_no_aggregate(self):
-        response = self.client.get(self.survey_url)
+        response = self.client.get(self.survey_url, {'project': self.project.slug})
         self.assertEqual(response.status_code, 200)
 
         data = response.data[0]

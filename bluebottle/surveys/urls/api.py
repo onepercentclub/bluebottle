@@ -4,5 +4,5 @@ from bluebottle.surveys.views import ProjectSurveyList
 
 urlpatterns = patterns(
     '',
-    url(r'^(?P<slug>[\w-]+)/$', ProjectSurveyList.as_view(), name='project_survey_list'),
+    url(r'^$', ProjectSurveyList.as_view(), name='project_survey_list'),
 )

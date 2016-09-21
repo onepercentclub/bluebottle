@@ -14,7 +14,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ('title', 'value', 'type', 'properties')
+        fields = ('id', 'title', 'value', 'type', 'properties')
 
 
 class ProjectSurveySerializer(serializers.ModelSerializer):
@@ -22,4 +22,4 @@ class ProjectSurveySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Survey
-        fields = ('answers', 'title')
+        fields = ('id', 'answers', 'title')

@@ -6,9 +6,8 @@ from bluebottle.surveys.serializers import ProjectSurveySerializer
 
 
 class ProjectSurveyList(generics.ListAPIView):
-    """ Retrieve votes. Or cast a vote as a user.
-    Voting cannot happen twice.
-    The list can be filtered adding vote=<id of user> and project=<slug of project>
+    """
+    Retrieve surveys for a project.
     """
     queryset = Survey.objects.all()
     serializer_class = ProjectSurveySerializer
@@ -16,5 +15,5 @@ class ProjectSurveyList(generics.ListAPIView):
 
     def get_serializer_context(self):
         context = super(ProjectSurveyList, self).get_serializer_context()
-        context['project'] = Project.objects.get(slug=self.kwargs['slug'])
+        context['project'] = Project.objects.get(slug=self.request.query_params['project'])
         return context

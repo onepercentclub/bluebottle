@@ -25,26 +25,21 @@ class Survey(models.Model):
         return '{}?{}'.format(self.link, urllib.urlencode(query_params))
 
     def aggregate(self):
-        for question in Question.objects.exclude(aggregation__isnull=True, survey=self):
+        for question in Question.objects.all():
             answers = itertools.groupby(
                 Answer.objects.filter(question=question, response__project__isnull=False).order_by('response__project'),
                 lambda answer: answer.response.project
             )
             answers_by_projects = {
-                project: [answer.float_value for answer in answers] for project, answers in answers
+                project: list(answers) for project, answers in answers
             }
 
             for project, values in answers_by_projects.items():
-                if question.aggregation == 'sum':
-                    value = sum(value for value in values)
-                else:
-                    value = sum(value for value in values) / float(len(values))
-
-                AggregateAnswer.objects.get_or_create(
-                    project=project,
-                    question=question,
-                    defaults={'value': value}
+                aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
+                    project=project, question=question
                 )
+
+                aggregate_answer.update(values)
 
     def __unicode__(self):
         return self.title or self.remote_id
@@ -100,6 +95,40 @@ class AggregateAnswer(models.Model):
     question = models.ForeignKey('surveys.Question')
     project = models.ForeignKey('projects.Project')
 
-    value = models.FloatField()
+    value = models.FloatField(null=True)
+    list = JSONField(null=True, default=[])
+    options = JSONField(null=True, default={})
 
+    def _aggregate_average(self, answers):
+        self.value = sum(answer.float_value for answer in answers) / float(len(answers))
 
+    def _aggregate_sum(self, answers):
+        self.value = sum(answer.float_value for answer in answers)
+
+    def aggregate_number(self, answers):
+        if self.question.aggregation == 'sum':
+            self._aggregate_sum(answers)
+        else:
+            self._aggregate_average(answers)
+
+    def aggregate_multiplechoice(self, answers):
+        values_by_options = itertools.groupby(
+            sorted(answers, key=lambda answer: answer.value),
+            lambda answer: answer.value
+        )
+        self.options = {
+            value: len(list(answers)) for value, answers in values_by_options
+        }
+
+    def aggregate_list(self, answers):
+        self.list = [answer.value for answer in answers]
+
+    def update(self, answers):
+        if self.question.type in ('number', 'slider'):
+            self.aggregate_number(answers)
+        elif self.question.type == 'radio':
+            self.aggregate_multiplechoice(answers)
+        else:
+            self.aggregate_list(answers)
+
+        self.save()

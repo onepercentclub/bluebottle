@@ -87,9 +87,24 @@ class Country(GeoBaseModel):
         verbose_name_plural = _("countries")
 
 
+class LocationGroup(models.Model):
+    name = models.CharField(_('name'), max_length=255)
+    description = models.TextField(_('description'), blank=True)
+
+    class Meta(GeoBaseModel.Meta):
+        ordering = ['name']
+        verbose_name = _("location group")
+        verbose_name_plural = _("location groups")
+
+    def __unicode__(self):
+        return self.name
+
+
 class Location(models.Model):
     name = models.CharField(_('name'), max_length=255)
     position = GeopositionField(null=True)
+    group = models.ForeignKey('geo.LocationGroup', verbose_name=_('location group'),
+                              null=True, blank=True)
     city = models.CharField(_('city'), blank=True, null=True, max_length=255)
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     description = models.TextField(_('description'), blank=True)

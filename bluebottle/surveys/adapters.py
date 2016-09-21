@@ -88,21 +88,21 @@ class SurveyGizmoAdapter(BaseAdapter):
         for page in data['pages']:
             for quest in page['questions']:
                 if quest['_type'] == 'SurveyQuestion':
-                    Question.objects.get_or_create(
+                    Question.objects.update_or_create(
                         remote_id=quest['id'], survey=survey,
                         defaults=self.parse_question(quest)
                     )
         for response in self.get_responses(survey):
-            resp, created = Response.objects.get_or_create(
+            resp, created = Response.objects.update_or_create(
                 remote_id=response['responseID'],
                 survey=survey,
-                defaults={'specification': json.dumps(response)}
+                defaults={'specification': response}
             )
             answers = self.load_answers(response)
             for key in answers:
                 try:
                     question = Question.objects.get(remote_id=key)
-                    Answer.objects.get_or_create(response=resp, question=question,
+                    Answer.objects.update_or_create(response=resp, question=question,
                                                  defaults={'value': answers[key]})
                 except Question.DoesNotExist:
                     pass

@@ -57,7 +57,7 @@ class TestAggregation(BluebottleTestCase):
         )
 
     def test_sum(self):
-        question = QuestionFactory(survey=self.survey, title='test', aggregation='sum')
+        question = QuestionFactory(survey=self.survey, title='test', aggregation='sum', type='number')
 
         for value in ['30', '10', '20.0']:
             AnswerFactory.create(
@@ -71,7 +71,7 @@ class TestAggregation(BluebottleTestCase):
         self.assertEqual(aggregate.value, 60.0)
 
     def test_average(self):
-        question = QuestionFactory(survey=self.survey, title='test', aggregation='average')
+        question = QuestionFactory(survey=self.survey, title='test', aggregation='average', type='number')
 
         for value in ['30', '10', '20.0']:
             AnswerFactory.create(
@@ -85,7 +85,7 @@ class TestAggregation(BluebottleTestCase):
         self.assertEqual(aggregate.value, 20.0)
 
     def test_average_non_number(self):
-        question = QuestionFactory(survey=self.survey, title='test', aggregation='average')
+        question = QuestionFactory(survey=self.survey, title='test', aggregation='average', type='number')
 
         for value in ['20', '10', 'onzin test']:
             AnswerFactory.create(
@@ -97,6 +97,22 @@ class TestAggregation(BluebottleTestCase):
         self.survey.aggregate()
         aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
         self.assertEqual(aggregate.value, 10.0)
+
+    def test_multiplechoice(self):
+        question = QuestionFactory(survey=self.survey, title='test', aggregation='average', type='radio')
+
+        for value in ['test', 'tast', 'test']:
+            AnswerFactory.create(
+                question=question,
+                response=self.response,
+                value=value,
+            )
+
+        self.survey.aggregate()
+        aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
+        self.assertEqual(aggregate.options, {'test': 2, 'tast': 1})
+
+
 
 
 

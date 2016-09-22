@@ -24,7 +24,7 @@ class QuestionAdminInline(admin.StackedInline):
 class SurveyAdmin(admin.ModelAdmin):
     model = Survey
     readonly_fields = ('title', 'link', 'created', 'updated')
-    fields = readonly_fields
+    fields = ('remote_id', ) + readonly_fields
     list_display = ('title', 'created')
     inlines = [QuestionAdminInline]
 
@@ -64,10 +64,10 @@ admin.site.register(Response, ResponseAdmin)
 
 class AggregateAnswerAdmin(admin.ModelAdmin):
     model = AggregateAnswer
-    readonly_fields = ('question', 'project', 'value', 'options', 'list')
-    list_display = ('survey_question', 'project', 'value')
+    readonly_fields = ('question', 'project', 'value', 'options', 'list', 'response_count')
+    list_display = ('survey_question', 'project', 'response_count', 'value')
 
     def survey_question(self, obj):
-        return "{0} : {1}".format(obj.question.survey, obj.question.display_title)
+        return u"{0} : {1}".format(obj.question.survey, obj.question.display_title[:60])
 
 admin.site.register(AggregateAnswer, AggregateAnswerAdmin)

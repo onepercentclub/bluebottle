@@ -1,11 +1,13 @@
 import json
 import re
 
+from bluebottle.tasks.models import Task
 from django.db.models import Sum, Avg
 
 from bluebottle.clients import properties
 from surveygizmo import SurveyGizmo
 
+from bluebottle.projects.models import Project
 from bluebottle.surveys.models import Survey, Question, Response, Answer, AggregateAnswer
 
 
@@ -106,16 +108,22 @@ class SurveyGizmoAdapter(BaseAdapter):
                 defaults={'specification': response}
             )
             params = self.parse_query_params(response)
-            if params.has_key('project_id'):
-                resp.project_id = params['project_id']
-            if params.has_key('task_id'):
-                resp.task_id = params['task_id']
+            if params.has_key('project_id') and params['project_id']:
+                try:
+                    resp.project = Project.objects.get(pk=int(params['project_id']))
+                except Project.DoesNotExist:
+                    pass
+            if params.has_key('task_id') and params['task_id']:
+                try:
+                    resp.task = Task.objects.get(pk=int(params['task_id']))
+                except Task.DoesNotExist:
+                    pass
             resp.save()
 
             answers = self.parse_answers(response)
             for key in answers:
                 try:
-                    question = Question.objects.get(remote_id=key)
+                    question = Question.objects.get(remote_id=key, survey=survey)
                     Answer.objects.update_or_create(response=resp, question=question,
                                                  defaults={'value': answers[key]})
                 except Question.DoesNotExist:

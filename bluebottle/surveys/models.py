@@ -27,7 +27,7 @@ class Survey(models.Model):
     def aggregate(self):
         for question in Question.objects.all():
             answers = itertools.groupby(
-                Answer.objects.filter(question=question, response__project__isnull=False).order_by('response__project'),
+                Answer.objects.filter(question=question, value__isnull=False, response__project__isnull=False).order_by('response__project'),
                 lambda answer: answer.response.project
             )
             answers_by_projects = {
@@ -38,7 +38,6 @@ class Survey(models.Model):
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                     project=project, question=question
                 )
-
                 aggregate_answer.update(values)
 
     def __unicode__(self):
@@ -50,6 +49,7 @@ class Question(models.Model):
     AggregationChoices = (
         ('sum', 'Sum'),
         ('average', 'Average'),
+        ('winner', 'Winner'),
     )
 
     survey = models.ForeignKey('surveys.Survey')
@@ -103,6 +103,8 @@ class AggregateAnswer(models.Model):
     question = models.ForeignKey('surveys.Question')
     project = models.ForeignKey('projects.Project')
 
+    response_count = models.IntegerField(null=True)
+
     value = models.FloatField(null=True)
     list = JSONField(null=True, default=[])
     options = JSONField(null=True, default={})
@@ -139,4 +141,5 @@ class AggregateAnswer(models.Model):
         else:
             self.aggregate_list(answers)
 
+        self.response_count = len(answers)
         self.save()

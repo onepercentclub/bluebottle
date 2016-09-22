@@ -2,13 +2,12 @@ import json
 import re
 
 from bluebottle.tasks.models import Task
-from django.db.models import Sum, Avg
 
 from bluebottle.clients import properties
 from surveygizmo import SurveyGizmo
 
 from bluebottle.projects.models import Project
-from bluebottle.surveys.models import Survey, Question, Response, Answer, AggregateAnswer
+from bluebottle.surveys.models import Survey, Question, Response, Answer, SubQuestion
 
 
 class BaseAdapter(object):
@@ -64,17 +63,23 @@ class SurveyGizmoAdapter(BaseAdapter):
 
     def get_responses(self, survey):
         self.client.config.response_type = 'json'
-        data = self.client.api.surveyresponse.list(survey.remote_id)
+        data = self.client.api.surveyresponse.filter('status', '=', 'Complete').list(survey.remote_id)
         self.client.config.response_type = None
         data = json.loads(data)
-        if int(data['total_count']) > 50:
-            raise ImportWarning('There are more then 50 results, please also load page 2.')
+        # if int(data['total_count']) > 50:
+        #     raise ImportWarning('There are more then 50 results, please also load page 2.')
         return data['data']
 
-    def parse_question(self, data):
+    def parse_question(self, data, survey):
         props = {}
+        sub_questions = []
         if data.has_key('options'):
             props['options'] = [p['title']['English'] for p in data['options']]
+
+        if data['sub_question_skus']:
+            for sub_id in data['sub_question_skus']:
+                sub = self.client.api.surveyquestion.get(survey.remote_id, sub_id)
+                sub_questions.append((sub_id, sub['data']['title']['English']))
 
         for p in self.question_properties:
             if data['properties'].has_key(p):
@@ -83,7 +88,8 @@ class SurveyGizmoAdapter(BaseAdapter):
         question = {
             'title': data['title']['English'],
             'type': data['properties']['map_key'],
-            'properties': props
+            'properties': props,
+            'sub_questions': sub_questions
         }
         return question
 
@@ -97,15 +103,28 @@ class SurveyGizmoAdapter(BaseAdapter):
         for page in data['pages']:
             for quest in page['questions']:
                 if quest['_type'] == 'SurveyQuestion':
-                    Question.objects.update_or_create(
+                    details = self.parse_question(quest, survey)
+                    question, _created = Question.objects.update_or_create(
                         remote_id=quest['id'], survey=survey,
-                        defaults=self.parse_question(quest)
+                        defaults=details
                     )
+                    for sub_id, sub_title in details['sub_questions']:
+                        SubQuestion.objects.update_or_create(
+                            question=question,
+                            remote_id=sub_id,
+                            defaults={'title': sub_title}
+                        )
+
+
+
         for response in self.get_responses(survey):
             resp, created = Response.objects.update_or_create(
                 remote_id=response['responseID'],
                 survey=survey,
-                defaults={'specification': response}
+                defaults={
+                    'specification': response,
+                    'submitted': response['datesubmitted']
+                }
             )
             params = self.parse_query_params(response)
             if params.has_key('project_id') and params['project_id']:

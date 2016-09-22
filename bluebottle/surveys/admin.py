@@ -6,11 +6,16 @@ from bluebottle.surveys.models import Survey, Question, Response, Answer, Aggreg
 class QuestionAdminInline(admin.StackedInline):
 
     model = Question
-    readonly_fields = ('type', 'properties', 'title')
+    readonly_fields = ('remote_id', 'type', 'properties', 'title', 'sub_questions')
     fields = readonly_fields + ('display', 'display_title',
                                 'display_style', 'aggregation')
 
     extra = 0
+
+
+    def sub_questions(self, obj):
+        return [sub.title for sub in obj.subquestion_set.all()]
+
 
     def has_add_permission(self, request):
         return False
@@ -23,7 +28,7 @@ class QuestionAdminInline(admin.StackedInline):
 
 class SurveyAdmin(admin.ModelAdmin):
     model = Survey
-    readonly_fields = ('title', 'link', 'created', 'updated')
+    readonly_fields = ('title', 'link', 'created', 'updated', 'specification')
     fields = ('remote_id', ) + readonly_fields
     list_display = ('title', 'created')
     inlines = [QuestionAdminInline]
@@ -52,7 +57,7 @@ class ResponseAdmin(admin.ModelAdmin):
     inlines = [AnswerAdminInline]
     raw_id_fields = ('project', 'task')
 
-    readonly_fields = ('remote_id', 'survey')
+    readonly_fields = ('remote_id', 'survey', 'specification')
 
     list_display = ('survey', 'submitted', 'project', 'task', 'answer_count')
 

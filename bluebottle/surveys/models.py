@@ -57,9 +57,17 @@ class Question(models.Model):
     type = models.CharField(max_length=200, blank=True, null=True)
     title =  models.CharField(max_length=500, blank=True, null=True)
 
+    display = models.BooleanField(default=True)
+    display_title =  models.CharField(max_length=500, blank=True, null=True)
+    display_style = models.CharField(max_length=500, blank=True, null=True)
+
     aggregation = models.CharField(max_length=200, choices=AggregationChoices, null=True, blank=True)
     properties = JSONField(null=True)
     specification = JSONField(null=True)
+
+    def clean(self):
+        if not self.display_title:
+            self.display_title = self.title
 
     def __unicode__(self):
         return self.title
@@ -69,9 +77,9 @@ class Response(models.Model):
 
     survey = models.ForeignKey('surveys.Survey')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
-    submitted = models.DateTimeField(null=True)
-    project = models.ForeignKey('projects.Project', null=True)
-    task = models.ForeignKey('tasks.Task', null=True)
+    submitted = models.DateTimeField(null=True, blank=True, auto_now=True)
+    project = models.ForeignKey('projects.Project', null=True, blank=True)
+    task = models.ForeignKey('tasks.Task', null=True, blank=True)
     specification = JSONField(null=True)
 
 

@@ -1,12 +1,14 @@
 from django.contrib import admin
 
-from bluebottle.surveys.models import Survey, Question, Response, Answer
+from bluebottle.surveys.models import Survey, Question, Response, Answer, AggregateAnswer
 
 
 class QuestionAdminInline(admin.StackedInline):
 
     model = Question
-    readonly_fields = ('specification', 'remote_id', 'properties')
+    readonly_fields = ('type', 'properties', 'title')
+    fields = readonly_fields + ('display', 'display_title',
+                                'display_style', 'aggregation')
 
     extra = 0
 
@@ -21,7 +23,9 @@ class QuestionAdminInline(admin.StackedInline):
 
 class SurveyAdmin(admin.ModelAdmin):
     model = Survey
-    readonly_fields = ('title', 'specification', 'link')
+    readonly_fields = ('title', 'link', 'created', 'updated')
+    fields = readonly_fields
+    list_display = ('title', 'created')
     inlines = [QuestionAdminInline]
 
 admin.site.register(Survey, SurveyAdmin)
@@ -46,14 +50,24 @@ class AnswerAdminInline(admin.TabularInline):
 class ResponseAdmin(admin.ModelAdmin):
     model = Response
     inlines = [AnswerAdminInline]
+    raw_id_fields = ('project', 'task')
 
-    readonly_fields = ('remote_id', 'specification', 'survey',
-                       'project', 'task')
+    readonly_fields = ('remote_id', 'survey')
 
-    list_display = ('survey', 'submitted', 'answer_count')
+    list_display = ('survey', 'submitted', 'project', 'task', 'answer_count')
 
     def answer_count(self, obj):
         return obj.answer_set.count()
 
 admin.site.register(Response, ResponseAdmin)
 
+
+class AggregateAnswerAdmin(admin.ModelAdmin):
+    model = AggregateAnswer
+    readonly_fields = ('question', 'project', 'value', 'options', 'list')
+    list_display = ('survey_question', 'project', 'value')
+
+    def survey_question(self, obj):
+        return "{0} : {1}".format(obj.question.survey, obj.question.display_title)
+
+admin.site.register(AggregateAnswer, AggregateAnswerAdmin)

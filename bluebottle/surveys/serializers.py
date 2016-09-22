@@ -9,6 +9,9 @@ class QuestionSerializer(serializers.ModelSerializer):
     options = serializers.SerializerMethodField()
     properties = serializers.SerializerMethodField()
 
+    title = serializers.CharField(source='display_title')
+    style = serializers.CharField(source='display_style')
+
     def get_aggregate_attribute(self, obj, attr):
         try:
             aggregate = obj.aggregateanswer_set.get(project=self.context['project'])
@@ -30,7 +33,9 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ('id', 'title', 'value', 'list', 'options', 'type', 'properties')
+        fields = ('id', 'title', 'type', 'display',
+                  'value', 'list', 'options',
+                  'properties', 'style')
 
 
 class ProjectSurveySerializer(serializers.ModelSerializer):

@@ -57,7 +57,6 @@ class SurveyGizmoAdapter(BaseAdapter):
             match = query_param_re.match(key)
             if match:
                 param = match.group(1)
-                print param
                 params[param] = data[key]
         return params
 

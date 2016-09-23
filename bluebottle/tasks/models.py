@@ -12,6 +12,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
+from bluebottle.utils.utils import PreviousStatusMixin
 
 
 GROUP_PERMS = {
@@ -24,7 +25,7 @@ GROUP_PERMS = {
 }
 
 
-class Task(models.Model):
+class Task(models.Model, PreviousStatusMixin):
 
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
@@ -80,9 +81,11 @@ class Task(models.Model):
 
         ordering = ['-created']
 
-    def __init__(self, *args, **kwargs):
-        super(Task, self).__init__(*args, **kwargs)
-        self._original_status = self.status
+    class Analytics:
+        type = 'task'
+        tags = {
+            'status': 'status'
+        }
 
     def __unicode__(self):
         return self.title
@@ -205,7 +208,7 @@ class Skill(models.Model):
         ordering = ('id',)
 
 
-class TaskMember(models.Model):
+class TaskMember(models.Model, PreviousStatusMixin):
     class TaskMemberStatuses(DjangoChoices):
         applied = ChoiceItem('applied', label=_('Applied'))
         accepted = ChoiceItem('accepted', label=_('Accepted'))
@@ -242,6 +245,12 @@ class TaskMember(models.Model):
     class Meta:
         verbose_name = _(u'task member')
         verbose_name_plural = _(u'task members')
+
+    class Analytics:
+        type = 'task_member'
+        tags = {
+            'status': 'status'
+        }
 
     def save(self, *args, **kwargs):
         previous_status = None
@@ -318,6 +327,6 @@ class TaskMemberStatusLog(models.Model):
         _('created'), help_text=_('When this task member entered in this status.'))
 
 
-from .taskmail import *
-from .taskwallmails import *
-from .signals import *
+from .taskmail import *  # noqa
+from .taskwallmails import *  # noqa 
+from .signals import *  # noqa

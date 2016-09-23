@@ -39,7 +39,7 @@ admin.site.register(Survey, SurveyAdmin)
 class AnswerAdminInline(admin.TabularInline):
     model = Answer
 
-    readonly_fields = ('question', 'value', )
+    readonly_fields = ('question', 'value', 'options')
     fields = readonly_fields
     extra = 0
 

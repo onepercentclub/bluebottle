@@ -103,6 +103,7 @@ class Answer(models.Model):
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     specification = JSONField(null=True)
     value = models.CharField(max_length=5000, blank=True)
+    options = JSONField(null=True)
 
     @property
     def float_value(self):
@@ -134,7 +135,7 @@ class AggregateAnswer(models.Model):
         else:
             self._aggregate_average(answers)
 
-    def aggregate_multiplechoice(self, answers):
+    def aggregate_radio(self, answers):
         values_by_options = itertools.groupby(
             sorted(answers, key=lambda answer: answer.value),
             lambda answer: answer.value
@@ -143,6 +144,9 @@ class AggregateAnswer(models.Model):
             value: len(list(answers)) for value, answers in values_by_options
         }
 
+    def aggregate_table_radio(self, answers):
+        self.options = [a.options for a in answers]
+
     def aggregate_list(self, answers):
         self.list = [answer.value for answer in answers]
 
@@ -150,7 +154,9 @@ class AggregateAnswer(models.Model):
         if self.question.type in ('number', 'slider'):
             self.aggregate_number(answers)
         elif self.question.type == 'radio':
-            self.aggregate_multiplechoice(answers)
+            self.aggregate_radio(answers)
+        elif self.question.type == 'table-radio':
+            self.aggregate_table_radio(answers)
         else:
             self.aggregate_list(answers)
 

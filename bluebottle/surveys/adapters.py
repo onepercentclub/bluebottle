@@ -40,15 +40,24 @@ class SurveyGizmoAdapter(BaseAdapter):
 
     def parse_answers(self, data):
         answers = {}
-        question_re = re.compile("\[question\((\d+)\).*\]")
+        question_re = re.compile("\[question\((\d+)\)\]")
         for key in data:
             match = question_re.match(key)
             if match:
                 question = match.group(1)
-                if answers.has_key(question):
-                    answers[question] += ", " + data[key]
-                else:
-                    answers[question] = data[key]
+                answers[question] = data[key]
+        question_re = re.compile("\[question\((\d+)\)\,\ option.*\]")
+
+        # Get question with multiple answers (return an array)
+        for key in data:
+            match = question_re.match(key)
+            if match:
+                question = match.group(1)
+                if not answers.has_key(question):
+                    answers[question] = []
+                if data[key]:
+                    answers[question].append(data[key])
+
         return answers
 
     def parse_query_params(self, data):
@@ -76,6 +85,7 @@ class SurveyGizmoAdapter(BaseAdapter):
         if data.has_key('options'):
             props['options'] = [p['title']['English'] for p in data['options']]
 
+        # Collect sub_questions
         if data['sub_question_skus']:
             for sub_id in data['sub_question_skus']:
                 sub = self.client.api.surveyquestion.get(survey.remote_id, sub_id)
@@ -115,8 +125,6 @@ class SurveyGizmoAdapter(BaseAdapter):
                             defaults={'title': sub_title}
                         )
 
-
-
         for response in self.get_responses(survey):
             resp, created = Response.objects.update_or_create(
                 remote_id=response['responseID'],
@@ -137,16 +145,33 @@ class SurveyGizmoAdapter(BaseAdapter):
                     resp.task = Task.objects.get(pk=int(params['task_id']))
                 except Task.DoesNotExist:
                     pass
+
+            resp.project = Project.objects.get(id=5427)
             resp.save()
 
             answers = self.parse_answers(response)
             for key in answers:
+                question = None
                 try:
                     question = Question.objects.get(remote_id=key, survey=survey)
+                    # If it's a list then store it in options
+                    if isinstance(answers[key], list):
+                        answer_data = {'options': answers[key]}
+                    else:
+                        answer_data = {'value': answers[key]}
                     Answer.objects.update_or_create(response=resp, question=question,
-                                                 defaults={'value': answers[key]})
+                                                    defaults=answer_data)
                 except Question.DoesNotExist:
-                    pass
+                    try:
+                        sub_question = SubQuestion.objects.get(remote_id=key, question__survey=survey)
+                        answer, _created = Answer.objects.update_or_create(response=resp, question=sub_question.question)
+                        options = answer.options or {}
+                        options[sub_question.title] = answers[key]
+                        answer.options = options
+                        answer.save()
+                    except SubQuestion.DoesNotExist:
+                        pass
+
         survey.aggregate()
 
     def get_survey(self, remote_id):

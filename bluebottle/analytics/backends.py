@@ -28,5 +28,4 @@ class InfluxExporter:
             }
         ]
 
-        # import ipdb; ipdb.set_trace()
         self.client.write_points(json_body)

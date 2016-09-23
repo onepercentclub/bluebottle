@@ -1,5 +1,6 @@
 import urllib
 import itertools
+from collections import Counter
 
 from django.db import models
 from django_extensions.db.fields.json import JSONField
@@ -145,7 +146,12 @@ class AggregateAnswer(models.Model):
         }
 
     def aggregate_table_radio(self, answers):
-        self.options = [a.options for a in answers]
+        results = [a.options for a in answers]
+        if len(results):
+            options = Counter()
+            for item in results:
+                options.update(item)
+            self.options = [(k, float(v) / len(results)) for k, v in options.items()]
 
     def aggregate_list(self, answers):
         self.list = [answer.value for answer in answers]
@@ -154,6 +160,8 @@ class AggregateAnswer(models.Model):
         if self.question.type in ('number', 'slider'):
             self.aggregate_number(answers)
         elif self.question.type == 'radio':
+            self.aggregate_radio(answers)
+        elif self.question.type == 'checkbox':
             self.aggregate_radio(answers)
         elif self.question.type == 'table-radio':
             self.aggregate_table_radio(answers)

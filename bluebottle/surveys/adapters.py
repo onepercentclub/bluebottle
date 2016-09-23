@@ -166,7 +166,7 @@ class SurveyGizmoAdapter(BaseAdapter):
                         sub_question = SubQuestion.objects.get(remote_id=key, question__survey=survey)
                         answer, _created = Answer.objects.update_or_create(response=resp, question=sub_question.question)
                         options = answer.options or {}
-                        options[sub_question.title] = answers[key]
+                        options[sub_question.title] = int("0" + answers[key])
                         answer.options = options
                         answer.save()
                     except SubQuestion.DoesNotExist:

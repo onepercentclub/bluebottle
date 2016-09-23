@@ -70,7 +70,7 @@ admin.site.register(Response, ResponseAdmin)
 class AggregateAnswerAdmin(admin.ModelAdmin):
     model = AggregateAnswer
     readonly_fields = ('question', 'project', 'value', 'options', 'list', 'response_count')
-    list_display = ('survey_question', 'project', 'response_count', 'value')
+    list_display = ('survey_question', 'project', 'response_count', 'value', 'options', 'list')
 
     def survey_question(self, obj):
         return u"{0} : {1}".format(obj.question.survey, obj.question.display_title[:60])

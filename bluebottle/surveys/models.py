@@ -109,7 +109,7 @@ class Answer(models.Model):
     @property
     def float_value(self):
         try:
-            return float(self.value)
+            return float(self.value.replace('%', ''))
         except ValueError:
             return 0
 
@@ -136,33 +136,38 @@ class AggregateAnswer(models.Model):
         else:
             self._aggregate_average(answers)
 
-    def aggregate_radio(self, answers):
-        values_by_options = itertools.groupby(
-            sorted(answers, key=lambda answer: answer.value),
-            lambda answer: answer.value
-        )
-        self.options = {
-            value: len(list(answers)) for value, answers in values_by_options
-        }
-
-    def aggregate_table_radio(self, answers):
+    def aggregate_multiple_choice(self, answers):
+        """
+        Count how many times an item is picked (radio or checkbox)
+        {'Cheese': 4, 'Peperoni': 3, 'Pineapple': 0}
+        """
         results = [a.options for a in answers]
         if len(results):
             options = Counter()
             for item in results:
                 options.update(item)
-            self.options = [(k, float(v) / len(results)) for k, v in options.items()]
+            self.options = {k: v for k,v in options.items()}
+
+    def aggregate_table_radio(self, answers):
+        """
+        Get the scores for all items in a radio-table and average them.
+        {{'Before': 5.6,
+        """
+        results = [a.options for a in answers]
+        if len(results):
+            options = Counter()
+            for item in results:
+                options.update(item)
+            self.options = {k: float(v)/len(results) for k, v in options.items()}
 
     def aggregate_list(self, answers):
         self.list = [answer.value for answer in answers]
 
     def update(self, answers):
-        if self.question.type in ('number', 'slider'):
+        if self.question.type in ('number', 'slider', 'percent'):
             self.aggregate_number(answers)
-        elif self.question.type == 'radio':
-            self.aggregate_radio(answers)
-        elif self.question.type == 'checkbox':
-            self.aggregate_radio(answers)
+        elif self.question.type in ('radio', 'checkbox'):
+            self.aggregate_multiple_choice(answers)
         elif self.question.type == 'table-radio':
             self.aggregate_table_radio(answers)
         else:

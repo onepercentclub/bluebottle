@@ -25,6 +25,11 @@ class Survey(models.Model):
 
         return '{}?{}'.format(self.link, urllib.urlencode(query_params))
 
+    def synchronize(self):
+        from bluebottle.surveys.adapters import SurveyGizmoAdapter
+        survey_adapter = SurveyGizmoAdapter()
+        survey_adapter.update_survey(self)
+
     def aggregate(self):
         for question in Question.objects.all():
             answers = itertools.groupby(

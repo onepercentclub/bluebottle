@@ -85,6 +85,17 @@ class Wallpost(PolymorphicModel):
     objects = WallpostManager()
     objects_with_deleted = models.Manager()
 
+    class Analytics():
+        type = 'wallpost'
+        tags = {}
+        fields = {
+            'id': 'id',
+            'user_id': 'author.id'
+        }
+
+        def skip(self, obj):
+            return True if obj.wallpost_type == 'system' else False
+
     class Meta:
         ordering = ('created',)
 

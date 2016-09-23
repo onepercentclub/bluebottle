@@ -465,6 +465,20 @@ SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [('birthday', 'birthday')]
 RECURRING_DONATIONS_ENABLED = False
 DONATIONS_ENABLED = True
 
+# Analytics Service
+ANALYTICS_ENABLED = False
+ANALYTICS_BACKENDS = {
+    'default': {
+        'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
+        'domain': 'localhost',
+        'port': 8086,
+        'username': '',
+        'password': '',
+        'database': 'platform_v1',
+        'measurement': 'saas'
+    }
+}
+
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'
 # If only one project type is set then project create should be set to 'combined'

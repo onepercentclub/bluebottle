@@ -24,7 +24,7 @@ from bluebottle.bb_projects.models import (
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 
 from .mails import (
@@ -127,7 +127,7 @@ class ProjectDocument(BaseProjectDocument):
         return None
 
 
-class Project(BaseProject):
+class Project(BaseProject, PreviousStatusMixin):
     latitude = models.DecimalField(
         _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
     longitude = models.DecimalField(

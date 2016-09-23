@@ -251,3 +251,12 @@ def update_group_permissions(sender, group_perms=None):
         pass
     except Permission.DoesNotExist, e:
         logging.debug(e)
+
+
+class PreviousStatusMixin(object):
+    """
+    Store the status of the instance on init to be accessed as _original_status
+    """
+    def __init__(self, *args, **kwargs):
+        super(PreviousStatusMixin, self).__init__(*args, **kwargs)
+        self._original_status = self.status

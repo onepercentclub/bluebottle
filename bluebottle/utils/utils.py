@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import Permission, Group
 
 import pygeoip
@@ -251,3 +251,16 @@ def update_group_permissions(sender, group_perms=None):
         pass
     except Permission.DoesNotExist, e:
         logging.debug(e)
+
+
+class PreviousStatusMixin(object):
+    """
+    Store the status of the instance on init to be accessed as _original_status
+    """
+    def __init__(self, *args, **kwargs):
+        super(PreviousStatusMixin, self).__init__(*args, **kwargs)
+
+        try:
+            self._original_status = self.status
+        except ObjectDoesNotExist:
+            self._original_status = None

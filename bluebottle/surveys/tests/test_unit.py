@@ -1,4 +1,6 @@
 from urlparse import urlparse, parse_qs
+
+from bluebottle.surveys.models import Answer
 from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
@@ -98,20 +100,48 @@ class TestAggregation(BluebottleTestCase):
         aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
         self.assertEqual(aggregate.value, 10.0)
 
-    def test_multiplechoice(self):
-        question = QuestionFactory(survey=self.survey, title='test', aggregation='average', type='radio')
+    def test_multiplechoice_radio(self):
+        question = QuestionFactory(survey=self.survey, title='test', type='radio')
 
         for value in ['test', 'tast', 'test']:
             AnswerFactory.create(
                 question=question,
                 response=self.response,
-                value=value,
+                options=[value]
             )
 
         self.survey.aggregate()
         aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
         self.assertEqual(aggregate.options, {'test': 2, 'tast': 1})
 
+    def test_multiplechoice_checkbox(self):
+        question = QuestionFactory(survey=self.survey, title='test', type='checkbox')
+
+        for values in [['test'], ['test', 'tast'], ['test'], ['tast', 'wokkel']]:
+            AnswerFactory.create(
+                question=question,
+                response=self.response,
+                options=values
+            )
+
+        self.survey.aggregate()
+        aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
+        self.assertEqual(aggregate.options, {"test": 3, "wokkel": 1, "tast": 2})
+
+    def test_table_radio(self):
+        question = QuestionFactory(survey=self.survey, title='test', type='table-radio')
+
+
+        for values in [{'test': 2, 'tast': 8}, {'test': 4, 'tast': 9}, {'test': 3, 'tast': 7}]:
+            AnswerFactory.create(
+                question=question,
+                response=self.response,
+                options=values
+            )
+
+        self.survey.aggregate()
+        aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
+        self.assertEqual(aggregate.options, {'test': 3.0, 'tast': 8.0})
 
 
 

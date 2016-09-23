@@ -1,12 +1,13 @@
 import json
 import re
 
-from django.db.models import Sum, Avg
+from bluebottle.tasks.models import Task
 
 from bluebottle.clients import properties
 from surveygizmo import SurveyGizmo
 
-from bluebottle.surveys.models import Survey, Question, Response, Answer, AggregateAnswer
+from bluebottle.projects.models import Project
+from bluebottle.surveys.models import Survey, Question, Response, Answer, SubQuestion
 
 
 class BaseAdapter(object):
@@ -39,15 +40,24 @@ class SurveyGizmoAdapter(BaseAdapter):
 
     def parse_answers(self, data):
         answers = {}
-        question_re = re.compile("\[question\((\d+)\).*\]")
+        question_re = re.compile("\[question\((\d+)\)\]")
         for key in data:
             match = question_re.match(key)
             if match:
                 question = match.group(1)
-                if answers.has_key(question):
-                    answers[question] += ", " + data[key]
-                else:
-                    answers[question] = data[key]
+                answers[question] = data[key]
+        question_re = re.compile("\[question\((\d+)\)\,\ option.*\]")
+
+        # Get question with multiple answers (return an array)
+        for key in data:
+            match = question_re.match(key)
+            if match:
+                question = match.group(1)
+                if not answers.has_key(question):
+                    answers[question] = []
+                if data[key]:
+                    answers[question].append(data[key])
+
         return answers
 
     def parse_query_params(self, data):
@@ -57,32 +67,42 @@ class SurveyGizmoAdapter(BaseAdapter):
             match = query_param_re.match(key)
             if match:
                 param = match.group(1)
-                print param
                 params[param] = data[key]
         return params
 
     def get_responses(self, survey):
         self.client.config.response_type = 'json'
-        data = self.client.api.surveyresponse.list(survey.remote_id)
+        data = self.client.api.surveyresponse.filter('status', '=', 'Complete').list(survey.remote_id)
         self.client.config.response_type = None
         data = json.loads(data)
-        if int(data['total_count']) > 50:
-            raise ImportWarning('There are more then 50 results, please also load page 2.')
+        # if int(data['total_count']) > 50:
+        #     raise ImportWarning('There are more then 50 results, please also load page 2.')
         return data['data']
 
-    def parse_question(self, data):
-        props = {}
+    def parse_question(self, data, survey):
+        properties = {}
+        sub_questions = []
         if data.has_key('options'):
-            props['options'] = [p['title']['English'] for p in data['options']]
+            properties['options'] = [p['title']['English'] for p in data['options']]
 
+        # Collect sub_questions
+        if data['sub_question_skus']:
+            for sub_id in data['sub_question_skus']:
+                sub = self.client.api.surveyquestion.get(survey.remote_id, sub_id)
+                sub_questions.append((sub_id, sub['data']['title']['English']))
+
+        # Collect relevant properties (specified above)
         for p in self.question_properties:
-            if data['properties'].has_key(p):
-                props[p] = data['properties'][p]
+            if data['properties'].has_key(p) and data['properties'][p]:
+                properties[p] = data['properties'][p]
+            if data['properties']['messages'].has_key(p) and data['properties']['messages'][p]:
+                properties[p] = data['properties']['messages'][p]['English']
 
         question = {
             'title': data['title']['English'],
             'type': data['properties']['map_key'],
-            'properties': props
+            'properties': properties,
+            'sub_questions': sub_questions
         }
         return question
 
@@ -96,31 +116,66 @@ class SurveyGizmoAdapter(BaseAdapter):
         for page in data['pages']:
             for quest in page['questions']:
                 if quest['_type'] == 'SurveyQuestion':
-                    Question.objects.update_or_create(
+                    details = self.parse_question(quest, survey)
+                    sub_questions = details.pop('sub_questions')
+                    question, _created = Question.objects.update_or_create(
                         remote_id=quest['id'], survey=survey,
-                        defaults=self.parse_question(quest)
+                        defaults=details
                     )
+                    for sub_id, sub_title in sub_questions:
+                        SubQuestion.objects.update_or_create(
+                            question=question,
+                            remote_id=sub_id,
+                            defaults={'title': sub_title}
+                        )
+
         for response in self.get_responses(survey):
             resp, created = Response.objects.update_or_create(
                 remote_id=response['responseID'],
                 survey=survey,
-                defaults={'specification': response}
+                defaults={
+                    'specification': response,
+                    'submitted': response['datesubmitted']
+                }
             )
             params = self.parse_query_params(response)
-            if params.has_key('project_id'):
-                resp.project_id = params['project_id']
-            if params.has_key('task_id'):
-                resp.task_id = params['task_id']
+            if params.has_key('project_id') and params['project_id']:
+                try:
+                    resp.project = Project.objects.get(pk=int(params['project_id']))
+                except Project.DoesNotExist:
+                    pass
+            if params.has_key('task_id') and params['task_id']:
+                try:
+                    resp.task = Task.objects.get(pk=int(params['task_id']))
+                except Task.DoesNotExist:
+                    pass
+
+            resp.project = Project.objects.get(id=5427)
             resp.save()
 
             answers = self.parse_answers(response)
             for key in answers:
+                question = None
                 try:
-                    question = Question.objects.get(remote_id=key)
+                    question = Question.objects.get(remote_id=key, survey=survey)
+                    # If it's a list then store it in options
+                    if isinstance(answers[key], list):
+                        answer_data = {'options': answers[key]}
+                    else:
+                        answer_data = {'value': answers[key]}
                     Answer.objects.update_or_create(response=resp, question=question,
-                                                 defaults={'value': answers[key]})
+                                                    defaults=answer_data)
                 except Question.DoesNotExist:
-                    pass
+                    try:
+                        sub_question = SubQuestion.objects.get(remote_id=key, question__survey=survey)
+                        answer, _created = Answer.objects.update_or_create(response=resp, question=sub_question.question)
+                        options = answer.options or {}
+                        options[sub_question.title] = int("0" + answers[key])
+                        answer.options = options
+                        answer.save()
+                    except SubQuestion.DoesNotExist:
+                        pass
+
         survey.aggregate()
 
     def get_survey(self, remote_id):

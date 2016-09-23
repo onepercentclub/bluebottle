@@ -1,5 +1,6 @@
 import urllib
 import itertools
+from collections import Counter
 
 from django.db import models
 from django_extensions.db.fields.json import JSONField
@@ -27,7 +28,7 @@ class Survey(models.Model):
     def aggregate(self):
         for question in Question.objects.all():
             answers = itertools.groupby(
-                Answer.objects.filter(question=question, response__project__isnull=False).order_by('response__project'),
+                Answer.objects.filter(question=question, value__isnull=False, response__project__isnull=False).order_by('response__project'),
                 lambda answer: answer.response.project
             )
             answers_by_projects = {
@@ -38,7 +39,6 @@ class Survey(models.Model):
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                     project=project, question=question
                 )
-
                 aggregate_answer.update(values)
 
     def __unicode__(self):
@@ -50,6 +50,7 @@ class Question(models.Model):
     AggregationChoices = (
         ('sum', 'Sum'),
         ('average', 'Average'),
+        ('winner', 'Winner'),
     )
 
     survey = models.ForeignKey('surveys.Survey')
@@ -57,8 +58,29 @@ class Question(models.Model):
     type = models.CharField(max_length=200, blank=True, null=True)
     title =  models.CharField(max_length=500, blank=True, null=True)
 
+    display = models.BooleanField(default=True)
+    display_title =  models.CharField(max_length=500, blank=True, null=True)
+    display_style = models.CharField(max_length=500, blank=True, null=True)
+
     aggregation = models.CharField(max_length=200, choices=AggregationChoices, null=True, blank=True)
     properties = JSONField(null=True)
+    specification = JSONField(null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.display_title:
+            self.display_title = self.title
+        return super(Question, self).save(*args, **kwargs)
+
+    def __unicode__(self):
+        return self.title
+
+
+class SubQuestion(models.Model):
+
+    remote_id = models.CharField(max_length=200, blank=True, null=True)
+    question = models.ForeignKey('surveys.Question')
+    type = models.CharField(max_length=200, blank=True, null=True)
+    title =  models.CharField(max_length=500, blank=True, null=True)
     specification = JSONField(null=True)
 
     def __unicode__(self):
@@ -69,9 +91,9 @@ class Response(models.Model):
 
     survey = models.ForeignKey('surveys.Survey')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
-    submitted = models.DateTimeField(null=True)
-    project = models.ForeignKey('projects.Project', null=True)
-    task = models.ForeignKey('tasks.Task', null=True)
+    submitted = models.DateTimeField(null=True, blank=True)
+    project = models.ForeignKey('projects.Project', null=True, blank=True)
+    task = models.ForeignKey('tasks.Task', null=True, blank=True)
     specification = JSONField(null=True)
 
 
@@ -82,11 +104,12 @@ class Answer(models.Model):
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     specification = JSONField(null=True)
     value = models.CharField(max_length=5000, blank=True)
+    options = JSONField(null=True)
 
     @property
     def float_value(self):
         try:
-            return float(self.value)
+            return float(self.value.replace('%', ''))
         except ValueError:
             return 0
 
@@ -94,6 +117,8 @@ class Answer(models.Model):
 class AggregateAnswer(models.Model):
     question = models.ForeignKey('surveys.Question')
     project = models.ForeignKey('projects.Project')
+
+    response_count = models.IntegerField(null=True)
 
     value = models.FloatField(null=True)
     list = JSONField(null=True, default=[])
@@ -111,24 +136,42 @@ class AggregateAnswer(models.Model):
         else:
             self._aggregate_average(answers)
 
-    def aggregate_multiplechoice(self, answers):
-        values_by_options = itertools.groupby(
-            sorted(answers, key=lambda answer: answer.value),
-            lambda answer: answer.value
-        )
-        self.options = {
-            value: len(list(answers)) for value, answers in values_by_options
-        }
+    def aggregate_multiple_choice(self, answers):
+        """
+        Count how many times an item is picked (radio or checkbox)
+        {'Cheese': 4, 'Peperoni': 3, 'Pineapple': 0}
+        """
+        results = [a.options for a in answers]
+        if len(results):
+            options = Counter()
+            for item in results:
+                options.update(item)
+            self.options = {k: v for k,v in options.items()}
+
+    def aggregate_table_radio(self, answers):
+        """
+        Get the scores for all items in a radio-table and average them.
+        {{'Before': 5.6,
+        """
+        results = [a.options for a in answers]
+        if len(results):
+            options = Counter()
+            for item in results:
+                options.update(item)
+            self.options = {k: float(v)/len(results) for k, v in options.items()}
 
     def aggregate_list(self, answers):
         self.list = [answer.value for answer in answers]
 
     def update(self, answers):
-        if self.question.type in ('number', 'slider'):
+        if self.question.type in ('number', 'slider', 'percent'):
             self.aggregate_number(answers)
-        elif self.question.type == 'radio':
-            self.aggregate_multiplechoice(answers)
+        elif self.question.type in ('radio', 'checkbox'):
+            self.aggregate_multiple_choice(answers)
+        elif self.question.type == 'table-radio':
+            self.aggregate_table_radio(answers)
         else:
             self.aggregate_list(answers)
 
+        self.response_count = len(answers)
         self.save()

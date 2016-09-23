@@ -8,6 +8,10 @@ class QuestionSerializer(serializers.ModelSerializer):
     list = serializers.SerializerMethodField()
     options = serializers.SerializerMethodField()
     properties = serializers.SerializerMethodField()
+    response_count = serializers.SerializerMethodField()
+
+    title = serializers.CharField(source='display_title')
+    style = serializers.CharField(source='display_style')
 
     def get_aggregate_attribute(self, obj, attr):
         try:
@@ -25,12 +29,18 @@ class QuestionSerializer(serializers.ModelSerializer):
     def get_options(self, obj):
         return self.get_aggregate_attribute(obj, 'options')
 
+    def get_response_count(self, obj):
+        return self.get_aggregate_attribute(obj, 'response_count')
+
     def get_properties(self, obj):
         return obj.properties
 
     class Meta:
         model = Question
-        fields = ('id', 'title', 'value', 'list', 'options', 'type', 'properties')
+        fields = ('id', 'title', 'type', 'display',
+                  'value', 'list', 'options',
+                  'response_count',
+                  'properties', 'style')
 
 
 class ProjectSurveySerializer(serializers.ModelSerializer):

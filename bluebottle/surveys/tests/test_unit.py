@@ -1,6 +1,5 @@
 from urlparse import urlparse, parse_qs
 
-from bluebottle.surveys.models import Answer
 from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
@@ -10,8 +9,8 @@ from bluebottle.test.factory_models.surveys import SurveyFactory, QuestionFactor
 
 class TestProjectStatusUpdate(BluebottleTestCase):
     """
-        save() automatically updates some fields, specifically
-        the status field. Make sure it picks the right one
+    save() automatically updates some fields, specifically
+    the status field. Make sure it picks the right one
     """
 
     def setUp(self):
@@ -131,7 +130,6 @@ class TestAggregation(BluebottleTestCase):
     def test_table_radio(self):
         question = QuestionFactory(survey=self.survey, title='test', type='table-radio')
 
-
         for values in [{'test': 2, 'tast': 8}, {'test': 4, 'tast': 9}, {'test': 3, 'tast': 7}]:
             AnswerFactory.create(
                 question=question,
@@ -142,8 +140,3 @@ class TestAggregation(BluebottleTestCase):
         self.survey.aggregate()
         aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
         self.assertEqual(aggregate.options, {'test': 3.0, 'tast': 8.0})
-
-
-
-
-

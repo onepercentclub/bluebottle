@@ -53,7 +53,7 @@ class SurveyGizmoAdapter(BaseAdapter):
             match = question_re.match(key)
             if match:
                 question = match.group(1)
-                if not answers.has_key(question):
+                if question not in answers:
                     answers[question] = []
                 if data[key]:
                     answers[question].append(data[key])
@@ -82,7 +82,7 @@ class SurveyGizmoAdapter(BaseAdapter):
     def parse_question(self, data, survey):
         properties = {}
         sub_questions = []
-        if data.has_key('options'):
+        if 'options' in data:
             properties['options'] = [p['title']['English'] for p in data['options']]
 
         # Collect sub_questions
@@ -93,9 +93,9 @@ class SurveyGizmoAdapter(BaseAdapter):
 
         # Collect relevant properties (specified above)
         for p in self.question_properties:
-            if data['properties'].has_key(p) and data['properties'][p]:
+            if p in data['properties'] and data['properties'][p]:
                 properties[p] = data['properties'][p]
-            if data['properties']['messages'].has_key(p) and data['properties']['messages'][p]:
+            if p in data['properties']['messages'] and data['properties']['messages'][p]:
                 properties[p] = data['properties']['messages'][p]['English']
 
         question = {
@@ -139,12 +139,12 @@ class SurveyGizmoAdapter(BaseAdapter):
                 }
             )
             params = self.parse_query_params(response)
-            if params.has_key('project_id') and params['project_id']:
+            if 'project_id' in params and params['project_id']:
                 try:
                     resp.project = Project.objects.get(pk=int(params['project_id']))
                 except Project.DoesNotExist:
                     pass
-            if params.has_key('task_id') and params['task_id']:
+            if 'task_id' in params and params['task_id']:
                 try:
                     resp.task = Task.objects.get(pk=int(params['task_id']))
                 except Task.DoesNotExist:
@@ -168,7 +168,8 @@ class SurveyGizmoAdapter(BaseAdapter):
                 except Question.DoesNotExist:
                     try:
                         sub_question = SubQuestion.objects.get(remote_id=key, question__survey=survey)
-                        answer, _created = Answer.objects.update_or_create(response=resp, question=sub_question.question)
+                        answer, _c = Answer.objects.update_or_create(response=resp,
+                                                                     question=sub_question.question)
                         options = answer.options or {}
                         options[sub_question.title] = int("0" + answers[key])
                         answer.options = options
@@ -180,4 +181,3 @@ class SurveyGizmoAdapter(BaseAdapter):
 
     def get_survey(self, remote_id):
         return self.client.api.survey.get(remote_id)['data']
-

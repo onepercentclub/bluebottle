@@ -12,10 +12,8 @@ class QuestionAdminInline(admin.StackedInline):
 
     extra = 0
 
-
     def sub_questions(self, obj):
         return [sub.title for sub in obj.subquestion_set.all()]
-
 
     def has_add_permission(self, request):
         return False
@@ -34,7 +32,6 @@ class SurveyAdmin(admin.ModelAdmin):
     inlines = [QuestionAdminInline]
 
     actions = ['synchronize_surveys']
-
 
     def synchronize_surveys(self, request, queryset):
         for survey in queryset:

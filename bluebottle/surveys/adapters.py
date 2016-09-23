@@ -80,10 +80,10 @@ class SurveyGizmoAdapter(BaseAdapter):
         return data['data']
 
     def parse_question(self, data, survey):
-        props = {}
+        properties = {}
         sub_questions = []
         if data.has_key('options'):
-            props['options'] = [p['title']['English'] for p in data['options']]
+            properties['options'] = [p['title']['English'] for p in data['options']]
 
         # Collect sub_questions
         if data['sub_question_skus']:
@@ -91,14 +91,17 @@ class SurveyGizmoAdapter(BaseAdapter):
                 sub = self.client.api.surveyquestion.get(survey.remote_id, sub_id)
                 sub_questions.append((sub_id, sub['data']['title']['English']))
 
+        # Collect relevant properties (specified above)
         for p in self.question_properties:
-            if data['properties'].has_key(p):
-                props[p] = data['properties'][p]
+            if data['properties'].has_key(p) and data['properties'][p]:
+                properties[p] = data['properties'][p]
+            if data['properties']['messages'].has_key(p) and data['properties']['messages'][p]:
+                properties[p] = data['properties']['messages'][p]['English']
 
         question = {
             'title': data['title']['English'],
             'type': data['properties']['map_key'],
-            'properties': props,
+            'properties': properties,
             'sub_questions': sub_questions
         }
         return question
@@ -114,11 +117,12 @@ class SurveyGizmoAdapter(BaseAdapter):
             for quest in page['questions']:
                 if quest['_type'] == 'SurveyQuestion':
                     details = self.parse_question(quest, survey)
+                    sub_questions = details.pop('sub_questions')
                     question, _created = Question.objects.update_or_create(
                         remote_id=quest['id'], survey=survey,
                         defaults=details
                     )
-                    for sub_id, sub_title in details['sub_questions']:
+                    for sub_id, sub_title in sub_questions:
                         SubQuestion.objects.update_or_create(
                             question=question,
                             remote_id=sub_id,

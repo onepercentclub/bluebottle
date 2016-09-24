@@ -12,7 +12,7 @@ class InfluxExporter:
         self.password = conf['password']
         self.database = conf['database']
 
-        self.client = self._client
+        self.client = self._client()
 
     def _client(self):
         return InfluxDBClient(self.domain, self.port, self.username,

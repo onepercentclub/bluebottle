@@ -235,7 +235,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('created', 'created'),
         ('status', 'status'),
         ('theme', 'theme'),
-        ('region', 'region'),
+        ('location__group', 'region'),
         ('location', 'location'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),

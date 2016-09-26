@@ -1,4 +1,5 @@
 import socket
+from importlib import import_module
 
 from django.db import connection
 from django_fsm import TransitionNotAllowed
@@ -7,7 +8,7 @@ from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import Permission, Group
 
 import pygeoip
@@ -165,11 +166,18 @@ def clean_for_hashtag(text):
     return " #".join(tags)
 
 
-def import_class(cl):
-    d = cl.rfind(".")
-    class_name = cl[d + 1:len(cl)]
-    m = __import__(cl[0:d], globals(), locals(), [class_name])
-    return getattr(m, class_name)
+# Get the class from dotted string
+def get_class(cl): 
+    try:
+        # try to call handler
+        parts = cl.split('.')
+        module_path, class_name = '.'.join(parts[:-1]), parts[-1]
+        module = import_module(module_path)
+        return getattr(module, class_name)
+
+    except (ImportError, AttributeError) as e:
+        error_message = "Could not import '%s'. %s: %s." % (cl, e.__class__.__name__, e)
+        raise Exception(error_message)
 
 
 def get_current_host():
@@ -251,3 +259,16 @@ def update_group_permissions(sender, group_perms=None):
         pass
     except Permission.DoesNotExist, e:
         logging.debug(e)
+
+
+class PreviousStatusMixin(object):
+    """
+    Store the status of the instance on init to be accessed as _original_status
+    """
+    def __init__(self, *args, **kwargs):
+        super(PreviousStatusMixin, self).__init__(*args, **kwargs)
+
+        try:
+            self._original_status = self.status
+        except ObjectDoesNotExist:
+            self._original_status = None

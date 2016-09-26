@@ -12,6 +12,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
+from bluebottle.utils.utils import PreviousStatusMixin
 
 
 GROUP_PERMS = {
@@ -24,7 +25,7 @@ GROUP_PERMS = {
 }
 
 
-class Task(models.Model):
+class Task(models.Model, PreviousStatusMixin):
 
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
@@ -80,9 +81,11 @@ class Task(models.Model):
 
         ordering = ['-created']
 
-    def __init__(self, *args, **kwargs):
-        super(Task, self).__init__(*args, **kwargs)
-        self._original_status = self.status
+    class Analytics:
+        type = 'task'
+        tags = {
+            'status': 'status'
+        }
 
     def __unicode__(self):
         return self.title
@@ -98,7 +101,16 @@ class Task(models.Model):
     @property
     def people_applied(self):
         return self.members.count()
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
 
+        super(TaskMember, self).save(*args, **kwargs)
+
+        # Only log task member status if the status has changed
+        if self is not None and previous_status != self.status:
+            TaskMemberStatusLog.objects.create(
+                task_member=self, status=self.status)
     def get_absolute_url(self):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
@@ -165,9 +177,19 @@ class Task(models.Model):
             bb_track("Task Completed", data)
 
     def save(self, *args, **kwargs):
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
+
         if not self.author_id:
             self.author = self.project.owner
+
         super(Task, self).save(*args, **kwargs)
+
+        # Only log task status if the status has changed
+        if self is not None and previous_status != self.status:
+            TaskStatusLog.objects.create(
+                task=self, status=self.status)
 
 
 class Skill(models.Model):
@@ -186,7 +208,7 @@ class Skill(models.Model):
         ordering = ('id',)
 
 
-class TaskMember(models.Model):
+class TaskMember(models.Model, PreviousStatusMixin):
     class TaskMemberStatuses(DjangoChoices):
         applied = ChoiceItem('applied', label=_('Applied'))
         accepted = ChoiceItem('accepted', label=_('Accepted'))
@@ -224,8 +246,24 @@ class TaskMember(models.Model):
         verbose_name = _(u'task member')
         verbose_name_plural = _(u'task members')
 
+    class Analytics:
+        type = 'task_member'
+        tags = {
+            'status': 'status'
+        }
+
     def save(self, *args, **kwargs):
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
+
         super(TaskMember, self).save(*args, **kwargs)
+
+        # Only log task member status if the status has changed
+        if self is not None and previous_status != self.status:
+            TaskMemberStatusLog.objects.create(
+                task_member=self, status=self.status)
+
         self.check_number_of_members_needed(self.task)
 
     def delete(self, using=None, keep_parents=False):
@@ -275,6 +313,20 @@ class TaskFile(models.Model):
         verbose_name_plural = _(u'task files')
 
 
-from .taskmail import *
-from .taskwallmails import *
-from .signals import *
+class TaskStatusLog(models.Model):
+    task = models.ForeignKey('tasks.Task')
+    status = models.CharField(_('status'), max_length=20)
+    start = CreationDateTimeField(
+        _('created'), help_text=_('When this task entered in this status.'))
+
+
+class TaskMemberStatusLog(models.Model):
+    task_member = models.ForeignKey('tasks.TaskMember')
+    status = models.CharField(_('status'), max_length=20)
+    start = CreationDateTimeField(
+        _('created'), help_text=_('When this task member entered in this status.'))
+
+
+from .taskmail import *  # noqa
+from .taskwallmails import *  # noqa 
+from .signals import *  # noqa

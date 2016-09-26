@@ -24,7 +24,7 @@ from bluebottle.bb_projects.models import (
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 
 from .mails import (
@@ -127,7 +127,7 @@ class ProjectDocument(BaseProjectDocument):
         return None
 
 
-class Project(BaseProject):
+class Project(BaseProject, PreviousStatusMixin):
     latitude = models.DecimalField(
         _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
     longitude = models.DecimalField(
@@ -395,6 +395,16 @@ class Project(BaseProject):
         return count
 
     @property
+    def country_name(self):
+        try:
+            if self.country:
+                return self.country.name
+            elif self.location:
+                return self.location.country.name 
+        except AttributeError:
+            return ''
+
+    @property
     def vote_count(self):
         return self.vote_set.count()
 
@@ -514,6 +524,18 @@ class Project(BaseProject):
 
     class Meta(BaseProject.Meta):
         ordering = ['title']
+
+    class Analytics:
+        type = 'project'
+        tags = {
+            'sub_type': 'project_type',
+            'status': 'status.name',
+            'status_slug': 'status.slug',
+            'theme': 'theme.name',
+            'theme_slug': 'theme.slug',
+            'location': 'location.name',
+            'country': 'country_name'
+        }
 
     def status_changed(self, old_status, new_status):
         status_complete = ProjectPhase.objects.get(slug="done-complete")

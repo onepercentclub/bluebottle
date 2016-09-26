@@ -182,7 +182,6 @@ class Answer(models.Model):
     specification = JSONField(null=True)
     value = models.CharField(max_length=5000, blank=True)
     options = JSONField(null=True)
-    list = JSONField(null=True)
 
     @property
     def float_value(self):

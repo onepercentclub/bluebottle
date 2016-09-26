@@ -108,10 +108,27 @@ class TestSimpleProjectSurveyAggregation(BluebottleTestCase):
                                                      project=self.project)
         self.assertEqual(aggregate.value, 10.0)
 
-    def test_multiplechoice_radio(self):
+    def test_slider(self):
+        question = QuestionFactory(survey=self.survey, title='how', aggregation='average', type='slider')
+
+        for value in [80, 70, 90]:
+            AnswerFactory.create(
+                question=question,
+                response=self.response,
+                value=value,
+            )
+
+        self.survey.aggregate()
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project',
+                                                     project=self.project)
+        self.assertEqual(aggregate.value, 80.0)
+
+    def test_multiple_choice_radio(self):
         question = QuestionFactory(survey=self.survey, title='test', type='radio')
 
-        for value in ['test', 'tast', 'test']:
+        for value in ['test', 'toast', 'test']:
             AnswerFactory.create(
                 question=question,
                 response=self.response,
@@ -122,12 +139,12 @@ class TestSimpleProjectSurveyAggregation(BluebottleTestCase):
         aggregate = question.aggregateanswer_set.get(question=question,
                                                      aggregation_type='project',
                                                      project=self.project)
-        self.assertEqual(aggregate.options, {'test': 2, 'tast': 1})
+        self.assertEqual(aggregate.options, {'test': 2, 'toast': 1})
 
-    def test_multiplechoice_checkbox(self):
+    def test_multiple_choice_checkbox(self):
         question = QuestionFactory(survey=self.survey, title='test', type='checkbox')
 
-        for values in [['test'], ['test', 'tast'], ['test'], ['tast', 'wokkel']]:
+        for values in [['test'], ['test', 'toast'], ['test'], ['toast', 'wokkel']]:
             AnswerFactory.create(
                 question=question,
                 response=self.response,
@@ -138,12 +155,12 @@ class TestSimpleProjectSurveyAggregation(BluebottleTestCase):
         aggregate = question.aggregateanswer_set.get(question=question,
                                                      aggregation_type='project',
                                                      project=self.project)
-        self.assertEqual(aggregate.options, {"test": 3, "wokkel": 1, "tast": 2})
+        self.assertEqual(aggregate.options, {"test": 3, "wokkel": 1, "toast": 2})
 
     def test_table_radio(self):
         question = QuestionFactory(survey=self.survey, title='test', type='table-radio')
 
-        for values in [{'test': 2, 'tast': 8}, {'test': 4, 'tast': 9}, {'test': 3, 'tast': 7}]:
+        for values in [{'test': 2, 'toast': 8}, {'test': 4, 'toast': 9}, {'test': 3, 'toast': 7}]:
             AnswerFactory.create(
                 question=question,
                 response=self.response,
@@ -154,7 +171,7 @@ class TestSimpleProjectSurveyAggregation(BluebottleTestCase):
         aggregate = question.aggregateanswer_set.get(question=question,
                                                      aggregation_type='project',
                                                      project=self.project)
-        self.assertEqual(aggregate.options, {'test': 3.0, 'tast': 8.0})
+        self.assertEqual(aggregate.options, {'test': 3.0, 'toast': 8.0})
 
 
 class TestTaskSurveyAggregation(BluebottleTestCase):
@@ -277,26 +294,138 @@ class TestTaskSurveyAggregation(BluebottleTestCase):
                                                      project=self.project)
         self.assertEqual(aggregate.value, 160.0)
 
-    def test_project_aggregates(self):
+    def test_list(self):
+        question = QuestionFactory(survey=self.survey, title='shoot', type='list')
 
-        question = QuestionFactory(survey=self.survey, title='test', aggregation='sum', type='number')
-
-        for value in ['110', '130']:
+        for value in ['Panda', 'Elephant', 'Rhino']:
             AnswerFactory.create(
                 question=question,
-                response=self.project_response,
+                response=self.task_response1,
+                value=value,
+            )
+
+        for value in ['Hedgehog']:
+            AnswerFactory.create(
+                question=question,
+                response=self.task_response2,
+                value=value,
+            )
+
+        for value in ['Bear', 'Lion']:
+            AnswerFactory.create(
+                question=question,
+                response=self.task_response3,
                 value=value,
             )
 
         self.survey.aggregate()
 
         aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='task',
+                                                     task=self.task1,
+                                                     project=self.project)
+        self.assertListEqual(aggregate.list, ['Elephant', 'Panda', 'Rhino'])
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project_tasks',
+                                                     project=self.project)
+        self.assertEqual(aggregate.list, ['Bear', 'Elephant', 'Hedgehog', 'Lion', 'Panda', 'Rhino'])
+
+    def test_multiple_choice_radio(self):
+        question = QuestionFactory(survey=self.survey, title='test', type='table-radio')
+
+        for values in [{'test': 2, 'toast': 8}, {'test': 4, 'toast': 9}, {'test': 3, 'toast': 7}]:
+            AnswerFactory.create(
+                question=question,
+                response=self.task_response1,
+                options=values
+            )
+
+        for values in [{'test': 1, 'toast': 9}]:
+            AnswerFactory.create(
+                question=question,
+                response=self.task_response2,
+                options=values
+            )
+
+        self.survey.aggregate()
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='task',
+                                                     task=self.task1)
+        self.assertEqual(aggregate.options, {'test': 3.0, 'toast': 8.0})
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='task',
+                                                     task=self.task2)
+        self.assertEqual(aggregate.options, {'test': 1.0, 'toast': 9.0})
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project_tasks',
+                                                     project=self.project)
+        self.assertEqual(aggregate.options, {'test': 2.0, 'toast': 8.5})
+
+
+class TestCombinedSurveyAggregation(BluebottleTestCase):
+    """
+    Check some task survey aggregations.
+    """
+
+    def setUp(self):
+        super(TestCombinedSurveyAggregation, self).setUp()
+
+        self.init_projects()
+
+        self.project = ProjectFactory.create()
+        self.task1 = TaskFactory.create(project=self.project)
+        self.task2 = TaskFactory.create(project=self.project)
+        self.task3 = TaskFactory.create(project=self.project)
+
+        self.survey = SurveyFactory(title='test survey')
+
+        self.project_response = ResponseFactory.create(
+            project=self.project,
+            survey=self.survey
+        )
+
+        self.task_response1 = ResponseFactory.create(
+            project=self.project,
+            task=self.task1,
+            survey=self.survey
+        )
+
+        self.task_response2 = ResponseFactory.create(
+            project=self.project,
+            task=self.task2,
+            survey=self.survey
+        )
+
+        self.task_response3 = ResponseFactory.create(
+            project=self.project,
+            task=self.task3,
+            survey=self.survey
+        )
+
+    def test_project_aggregates(self):
+
+        question1 = QuestionFactory(survey=self.survey, title='test', aggregation='sum', type='number')
+
+        for value in ['110', '130']:
+            AnswerFactory.create(
+                question=question1,
+                response=self.project_response,
+                value=value,
+            )
+
+        self.survey.aggregate()
+
+        aggregate = question1.aggregateanswer_set.get(question=question1,
                                                      aggregation_type='project',
                                                      project=self.project)
 
         self.assertEqual(aggregate.value, 120.0)
 
-    def test_combined_aggregates(self):
+    def test_combined_number(self):
 
         question = QuestionFactory(survey=self.survey, title='test', aggregation='sum', type='number')
 
@@ -328,11 +457,57 @@ class TestTaskSurveyAggregation(BluebottleTestCase):
                 value=value,
             )
 
+        self.survey.aggregate()
+
+        aggregate1 = question.aggregateanswer_set.get(question=question,
+                                                       aggregation_type='combined',
+                                                       project=self.project)
+        self.assertEqual(aggregate1.value, 140.0)
+
+    def test_combined_table_radio(self):
+
+        question = QuestionFactory(survey=self.survey, title='test', type='table-radio')
+
+        for values in [{'test': 2, 'toast': 8}, {'test': 4, 'toast': 9}, {'test': 3, 'toast': 7}]:
+            AnswerFactory.create(
+                question=question,
+                response=self.task_response1,
+                options=values
+            )
+
+        for values in [{'test': 1, 'toast': 9}]:
+            AnswerFactory.create(
+                question=question,
+                response=self.task_response2,
+                options=values
+            )
+
+        for value in [{'before': 7, 'after': 9}, {'before': 5, 'after': 7}]:
+            AnswerFactory.create(
+                question=question,
+                response=self.project_response,
+                value=value,
+            )
 
         self.survey.aggregate()
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='task',
+                                                     task=self.task1)
+        self.assertEqual(aggregate.options, {'test': 3.0, 'toast': 8.0})
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project_tasks',
+                                                     project=self.project)
+        self.assertEqual(aggregate.options, {'test': 2.0, 'toast': 8.5})
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project',
+                                                     project=self.project)
+        self.assertEqual(aggregate.value, {'before': 6, 'after': 8})
 
         aggregate = question.aggregateanswer_set.get(question=question,
                                                      aggregation_type='combined',
                                                      project=self.project)
 
-        self.assertEqual(aggregate.value, 140.0)
+        self.assertEqual(aggregate.value, {'before': 5, 'after': 10})

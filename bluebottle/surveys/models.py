@@ -31,6 +31,29 @@ class Survey(models.Model):
         survey_adapter = SurveyGizmoAdapter()
         survey_adapter.update_survey(self)
 
+    def _aggregate_projects(self):
+        for question in self.question_set.all():
+
+            # Calculate aggregates by project
+            project_answers = itertools.groupby(
+                Answer.objects.filter(question=question,
+                                      value__isnull=False,
+                                      response__task__isnull=True,
+                                      response__project__isnull=False).order_by('response__project'),
+                lambda answer: answer.response.project
+            )
+
+            answers_by_projects = {
+                project: list(answers) for project, answers in project_answers
+            }
+
+            for project, values in answers_by_projects.items():
+                aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
+                    project=project, question=question,
+                    aggregation_type='project'
+                )
+                aggregate_answer.update(values)
+
     def _aggregate_tasks(self):
         # Calculate aggregates by task
         for question in self.question_set.all():
@@ -72,41 +95,19 @@ class Survey(models.Model):
     def _aggregate_tasks_and_project(self):
         # Combine tasks with their project
         for question in self.question_set.all():
-            task_aggregates = itertools.groupby(
+            both_aggregates = itertools.groupby(
                 AggregateAnswer.objects.filter(question=question,
                                                aggregation_type__in=['project_tasks', 'project']).order_by('project'),
                 lambda answer: answer.project
             )
             answers_by_project = {
-                project: list(answers) for project, answers in task_aggregates
+                project: list(answers) for project, answers in both_aggregates
             }
             for project, values in answers_by_project.items():
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                     project=project,
-                    aggregation_type='combined', question=question
-                )
-                aggregate_answer.update(values)
-
-    def _aggregate_projects(self):
-        for question in self.question_set.all():
-
-            # Calculate aggregates by project
-            project_answers = itertools.groupby(
-                Answer.objects.filter(question=question,
-                                      value__isnull=False,
-                                      response__task__isnull=True,
-                                      response__project__isnull=False).order_by('response__project'),
-                lambda answer: answer.response.project
-            )
-
-            answers_by_projects = {
-                project: list(answers) for project, answers in project_answers
-            }
-
-            for project, values in answers_by_projects.items():
-                aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
-                    project=project, question=question,
-                    aggregation_type='project'
+                    question=question,
+                    aggregation_type='combined'
                 )
                 aggregate_answer.update(values)
 
@@ -181,6 +182,7 @@ class Answer(models.Model):
     specification = JSONField(null=True)
     value = models.CharField(max_length=5000, blank=True)
     options = JSONField(null=True)
+    list = JSONField(null=True)
 
     @property
     def float_value(self):
@@ -254,7 +256,13 @@ class AggregateAnswer(models.Model):
             self.options = {k: float(v) / len(results) for k, v in options.items()}
 
     def aggregate_list(self, answers):
-        self.list = [answer.value for answer in answers]
+        if isinstance(answers[0], AggregateAnswer):
+            self.list = []
+            for answer in answers:
+                self.list += answer.list
+                self.list = sorted(self.list)
+        else:
+            self.list = sorted([answer.value for answer in answers])
 
     def update(self, answers):
         if self.question.type in ('number', 'slider', 'percent'):

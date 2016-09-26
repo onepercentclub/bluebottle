@@ -36,14 +36,13 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.assertEqual(query['task_id'], [str(self.task.id)])
 
 
-class TestAggregation(BluebottleTestCase):
+class TestSimpleProjectSurveyAggregation(BluebottleTestCase):
     """
-        save() automatically updates some fields, specifically
-        the status field. Make sure it picks the right one
+    Check some simple project survey aggregations.
     """
 
     def setUp(self):
-        super(TestAggregation, self).setUp()
+        super(TestSimpleProjectSurveyAggregation, self).setUp()
 
         self.init_projects()
 
@@ -57,7 +56,7 @@ class TestAggregation(BluebottleTestCase):
             survey=self.survey
         )
 
-    def test_sum(self):
+    def test_ignore_sum(self):
         """
         Aggregation=sum only is only intended for tasks-by-project aggregations.
         For project aggregations it should still be mean.
@@ -156,3 +155,122 @@ class TestAggregation(BluebottleTestCase):
                                                      aggregation_type='project',
                                                      project=self.project)
         self.assertEqual(aggregate.options, {'test': 3.0, 'tast': 8.0})
+
+
+class TestTaskSurveyAggregation(BluebottleTestCase):
+    """
+    Check some task survey aggregations.
+    """
+
+    def setUp(self):
+        super(TestTaskSurveyAggregation, self).setUp()
+
+        self.init_projects()
+
+        self.project = ProjectFactory.create()
+        self.task1 = TaskFactory.create(project=self.project)
+        self.task2 = TaskFactory.create(project=self.project)
+        self.task3 = TaskFactory.create(project=self.project)
+
+        self.survey = SurveyFactory(title='test survey')
+
+        self.response1 = ResponseFactory.create(
+            project=self.project,
+            task=self.task1,
+            survey=self.survey
+        )
+
+        self.response2 = ResponseFactory.create(
+            project=self.project,
+            task=self.task2,
+            survey=self.survey
+        )
+
+        self.response3 = ResponseFactory.create(
+            project=self.project,
+            task=self.task3,
+            survey=self.survey
+        )
+
+    def test_average(self):
+        question = QuestionFactory(survey=self.survey, title='test', aggregation='average', type='number')
+
+        for value in ['10', '20', '30']:
+            AnswerFactory.create(
+                question=question,
+                response=self.response1,
+                value=value,
+            )
+
+        for value in ['50']:
+            AnswerFactory.create(
+                question=question,
+                response=self.response2,
+                value=value,
+            )
+
+        for value in ['80']:
+            AnswerFactory.create(
+                question=question,
+                response=self.response3,
+                value=value,
+            )
+
+        self.survey.aggregate()
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='task',
+                                                     task=self.task1,
+                                                     project=self.project)
+        self.assertEqual(aggregate.value, 20.0)
+
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='task',
+                                                     task=self.task2,
+                                                     project=self.project)
+        self.assertEqual(aggregate.value, 50.0)
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='task',
+                                                     task=self.task3,
+                                                     project=self.project)
+        self.assertEqual(aggregate.value, 80.0)
+
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project_tasks',
+                                                     project=self.project)
+        self.assertEqual(aggregate.value, 50.0)
+
+    def test_sum(self):
+        question = QuestionFactory(survey=self.survey, title='test', aggregation='sum', type='number')
+
+        for value in ['10', '20', '30']:
+            AnswerFactory.create(
+                question=question,
+                response=self.response1,
+                value=value,
+            )
+
+        for value in ['50']:
+            AnswerFactory.create(
+                question=question,
+                response=self.response2,
+                value=value,
+            )
+
+        for value in ['90']:
+            AnswerFactory.create(
+                question=question,
+                response=self.response3,
+                value=value,
+            )
+
+        self.survey.aggregate()
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project_tasks',
+                                                     project=self.project)
+        self.assertEqual(aggregate.value, 160.0)
+

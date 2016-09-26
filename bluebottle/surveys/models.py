@@ -102,6 +102,7 @@ class Response(models.Model):
     project = models.ForeignKey('projects.Project', null=True, blank=True)
     task = models.ForeignKey('tasks.Task', null=True, blank=True)
     specification = JSONField(null=True)
+    params = JSONField(null=True)
 
 
 class Answer(models.Model):

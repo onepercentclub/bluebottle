@@ -139,6 +139,10 @@ class SurveyGizmoAdapter(BaseAdapter):
                 }
             )
             params = self.parse_query_params(response)
+            # Store all params
+            resp.params = params
+
+            # Find and store project/task
             if 'project_id' in params and params['project_id']:
                 try:
                     resp.project = Project.objects.get(pk=int(params['project_id']))
@@ -150,7 +154,6 @@ class SurveyGizmoAdapter(BaseAdapter):
                 except Task.DoesNotExist:
                     pass
 
-            resp.project = Project.objects.get(id=5427)
             resp.save()
 
             answers = self.parse_answers(response)

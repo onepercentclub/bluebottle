@@ -2,8 +2,10 @@ from importlib import import_module
 
 from django.conf import settings
 
+from celery import shared_task
 
-# NOTE: Stubbed method for testing
+
+@shared_task
 def queue_analytics_record(timestamp, tags={}, fields={}):
     # Get the default backend for analytics
     def get_handler_class(handler): 

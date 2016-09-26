@@ -174,19 +174,24 @@ class TestTaskSurveyAggregation(BluebottleTestCase):
 
         self.survey = SurveyFactory(title='test survey')
 
-        self.response1 = ResponseFactory.create(
+        self.project_response = ResponseFactory.create(
+            project=self.project,
+            survey=self.survey
+        )
+
+        self.task_response1 = ResponseFactory.create(
             project=self.project,
             task=self.task1,
             survey=self.survey
         )
 
-        self.response2 = ResponseFactory.create(
+        self.task_response2 = ResponseFactory.create(
             project=self.project,
             task=self.task2,
             survey=self.survey
         )
 
-        self.response3 = ResponseFactory.create(
+        self.task_response3 = ResponseFactory.create(
             project=self.project,
             task=self.task3,
             survey=self.survey
@@ -198,21 +203,21 @@ class TestTaskSurveyAggregation(BluebottleTestCase):
         for value in ['10', '20', '30']:
             AnswerFactory.create(
                 question=question,
-                response=self.response1,
+                response=self.task_response1,
                 value=value,
             )
 
         for value in ['50']:
             AnswerFactory.create(
                 question=question,
-                response=self.response2,
+                response=self.task_response2,
                 value=value,
             )
 
         for value in ['80']:
             AnswerFactory.create(
                 question=question,
-                response=self.response3,
+                response=self.task_response3,
                 value=value,
             )
 
@@ -223,7 +228,6 @@ class TestTaskSurveyAggregation(BluebottleTestCase):
                                                      task=self.task1,
                                                      project=self.project)
         self.assertEqual(aggregate.value, 20.0)
-
 
         aggregate = question.aggregateanswer_set.get(question=question,
                                                      aggregation_type='task',
@@ -237,7 +241,6 @@ class TestTaskSurveyAggregation(BluebottleTestCase):
                                                      project=self.project)
         self.assertEqual(aggregate.value, 80.0)
 
-
         aggregate = question.aggregateanswer_set.get(question=question,
                                                      aggregation_type='project_tasks',
                                                      project=self.project)
@@ -249,21 +252,21 @@ class TestTaskSurveyAggregation(BluebottleTestCase):
         for value in ['10', '20', '30']:
             AnswerFactory.create(
                 question=question,
-                response=self.response1,
+                response=self.task_response1,
                 value=value,
             )
 
         for value in ['50']:
             AnswerFactory.create(
                 question=question,
-                response=self.response2,
+                response=self.task_response2,
                 value=value,
             )
 
         for value in ['90']:
             AnswerFactory.create(
                 question=question,
-                response=self.response3,
+                response=self.task_response3,
                 value=value,
             )
 
@@ -274,3 +277,62 @@ class TestTaskSurveyAggregation(BluebottleTestCase):
                                                      project=self.project)
         self.assertEqual(aggregate.value, 160.0)
 
+    def test_project_aggregates(self):
+
+        question = QuestionFactory(survey=self.survey, title='test', aggregation='sum', type='number')
+
+        for value in ['110', '130']:
+            AnswerFactory.create(
+                question=question,
+                response=self.project_response,
+                value=value,
+            )
+
+        self.survey.aggregate()
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project',
+                                                     project=self.project)
+
+        self.assertEqual(aggregate.value, 120.0)
+
+    def test_combined_aggregates(self):
+
+        question = QuestionFactory(survey=self.survey, title='test', aggregation='sum', type='number')
+
+        for value in ['110', '130']:
+            AnswerFactory.create(
+                question=question,
+                response=self.project_response,
+                value=value,
+            )
+
+        for value in ['10', '20', '30']:
+            AnswerFactory.create(
+                question=question,
+                response=self.task_response1,
+                value=value,
+            )
+
+        for value in ['50']:
+            AnswerFactory.create(
+                question=question,
+                response=self.task_response2,
+                value=value,
+            )
+
+        for value in ['90']:
+            AnswerFactory.create(
+                question=question,
+                response=self.task_response3,
+                value=value,
+            )
+
+
+        self.survey.aggregate()
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='combined',
+                                                     project=self.project)
+
+        self.assertEqual(aggregate.value, 140.0)

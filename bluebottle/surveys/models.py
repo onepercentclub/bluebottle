@@ -83,7 +83,7 @@ class Survey(models.Model):
             for project, values in answers_by_project.items():
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                     project=project,
-                    aggregation_type='project_tasks', question=question
+                    aggregation_type='combined', question=question
                 )
                 aggregate_answer.update(values)
 

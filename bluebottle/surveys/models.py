@@ -124,7 +124,8 @@ class Answer(models.Model):
 
 class AggregateAnswer(models.Model):
     question = models.ForeignKey('surveys.Question')
-    project = models.ForeignKey('projects.Project')
+    project = models.ForeignKey('projects.Project', null=True)
+    task = models.ForeignKey('tasks.Task', null=True)
 
     response_count = models.IntegerField(null=True)
 

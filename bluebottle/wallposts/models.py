@@ -85,7 +85,7 @@ class Wallpost(PolymorphicModel):
     objects = WallpostManager()
     objects_with_deleted = models.Manager()
 
-    class Analytics():
+    class Analytics:
         type = 'wallpost'
         tags = {}
         fields = {

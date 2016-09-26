@@ -13,6 +13,9 @@ from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.analytics import signals
+from bluebottle.analytics.backends import InfluxExporter
+
+from .common import FakeInfluxDBClient
 
 
 def fake_trans(str):
@@ -20,9 +23,16 @@ def fake_trans(str):
         return 'Cleaning the park'
     return str
 
+def fake_process(self, timestamp, tags={}, fields={}):
+    pass
+
+
+fake_client = FakeInfluxDBClient()
+
 
 @override_settings(ANALYTICS_ENABLED=True)
 @patch.object(signals, 'queue_analytics_record')
+@patch.object(InfluxExporter, 'client', fake_client)
 class TestProjectAnalytics(BluebottleTestCase):
     def setUp(self):
         super(TestProjectAnalytics, self).setUp()
@@ -30,13 +40,14 @@ class TestProjectAnalytics(BluebottleTestCase):
 
         self.theme = ProjectThemeFactory.create(name='Cleaning the beach',
                                                 slug='cleaning-the-beach')
+        self.country = CountryFactory.create()
         self.status = ProjectPhase.objects.get(slug='campaign')
         self.expected_tags = {
             'status': self.status.name,
-            'theme_slug': 'cleaning-the-beach',
+            'theme_slug': u'cleaning-the-beach',
             'status_slug': self.status.slug,
-            'country': '',
-            'theme': 'Cleaning the beach',
+            'country': self.country.name,
+            'theme': u'Cleaning the beach',
             'location': '',
             'type': 'project',
             'sub_type': None,
@@ -45,16 +56,16 @@ class TestProjectAnalytics(BluebottleTestCase):
         self.expected_fields = {}
 
     def test_country_tag(self, queue_mock):
-        country = CountryFactory.create()
-        ProjectFactory.create(theme=self.theme, status=self.status, country=country)
+        ProjectFactory.create(theme=self.theme, status=self.status,
+                              country=self.country)
 
-        self.expected_tags['country'] = country.name
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], self.expected_tags)
 
     def test_location_country_tag(self, queue_mock):
         location = LocationFactory.create()
-        ProjectFactory.create(theme=self.theme, status=self.status, location=location)
+        ProjectFactory.create(theme=self.theme, status=self.status,
+                              location=location, country=None)
 
         self.expected_tags['country'] = location.country.name
         self.expected_tags['location'] = location.name
@@ -62,7 +73,8 @@ class TestProjectAnalytics(BluebottleTestCase):
         self.assertEqual(kwargs['tags'], self.expected_tags)
 
     def test_tags_generation(self, queue_mock):
-        ProjectFactory.create(theme=self.theme, status=self.status)
+        ProjectFactory.create(theme=self.theme, status=self.status,
+                              country=self.country)
 
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], self.expected_tags)
@@ -70,7 +82,8 @@ class TestProjectAnalytics(BluebottleTestCase):
 
     @patch.object(signals, '_', fake_trans)
     def test_tags_translated(self, queue_mock):
-        ProjectFactory.create(theme=self.theme, status=self.status)
+        ProjectFactory.create(theme=self.theme, status=self.status,
+                              country=self.country)
 
         # Simple translation added via fake_trans method above
         self.expected_tags['theme'] = 'Cleaning the park'
@@ -79,7 +92,8 @@ class TestProjectAnalytics(BluebottleTestCase):
         self.assertEqual(kwargs['fields'], self.expected_fields)
 
     def test_unchanged_status(self, queue_mock):
-        project = ProjectFactory.create(theme=self.theme, status=self.status)
+        project = ProjectFactory.create(theme=self.theme, status=self.status,
+                                        country=self.country)
         previous_call_count = queue_mock.call_count
 
         # Update record without changing status
@@ -92,26 +106,28 @@ class TestProjectAnalytics(BluebottleTestCase):
 
 @override_settings(ANALYTICS_ENABLED=True)
 @patch.object(signals, 'queue_analytics_record')
+@patch.object(InfluxExporter, 'client', fake_client)
 class TestTaskAnalytics(BluebottleTestCase):
     def setUp(self):
         super(TestTaskAnalytics, self).setUp()
         self.init_projects()
-        self.user = BlueBottleUserFactory.create()
 
     def test_tags_generation(self, queue_mock):
-        TaskFactory.create(author=self.user)
-        self.expected_tags = {
+        user = BlueBottleUserFactory.create()
+        TaskFactory.create(author=user)
+        expected_tags = {
             'type': 'task',
             'tenant': u'test',
             'status': 'open'
         }
-        self.expected_fields = {}
+        expected_fields = {}
         args, kwargs = queue_mock.call_args
-        self.assertEqual(kwargs['tags'], self.expected_tags)
-        self.assertEqual(kwargs['fields'], self.expected_fields)
+        self.assertEqual(kwargs['tags'], expected_tags)
+        self.assertEqual(kwargs['fields'], expected_fields)
 
     def test_unchanged_status(self, queue_mock):
-        task = TaskFactory.create(author=self.user) 
+        user = BlueBottleUserFactory.create()
+        task = TaskFactory.create(author=user) 
         previous_call_count = queue_mock.call_count
 
         # Update record without changing status
@@ -124,29 +140,31 @@ class TestTaskAnalytics(BluebottleTestCase):
 
 @override_settings(ANALYTICS_ENABLED=True)
 @patch.object(signals, 'queue_analytics_record')
+@patch.object(InfluxExporter, 'client', fake_client)
 class TestTaskMemberAnalytics(BluebottleTestCase):
     def setUp(self):
         super(TestTaskMemberAnalytics, self).setUp()
         self.init_projects()
-        self.user = BlueBottleUserFactory.create()
 
     def test_tags_generation(self, queue_mock):
-        self.expected_tags = {
+        user = BlueBottleUserFactory.create()
+        expected_tags = {
             'type': 'task_member',
             'tenant': u'test',
             'status': 'applied'
         }
-        self.expected_fields = {}
+        expected_fields = {}
 
-        task = TaskFactory.create(author=self.user, people_needed=2)
-        TaskMemberFactory.create(member=self.user, task=task, status='applied')
+        task = TaskFactory.create(author=user, people_needed=2)
+        TaskMemberFactory.create(member=user, task=task, status='applied')
 
         args, kwargs = queue_mock.call_args
-        self.assertEqual(kwargs['tags'], self.expected_tags)
-        self.assertEqual(kwargs['fields'], self.expected_fields)
+        self.assertEqual(kwargs['tags'], expected_tags)
+        self.assertEqual(kwargs['fields'], expected_fields)
 
     def test_unchanged_status(self, queue_mock):
-        task_member = TaskMemberFactory.create(member=self.user)
+        user = BlueBottleUserFactory.create()
+        task_member = TaskMemberFactory.create(member=user)
         previous_call_count = queue_mock.call_count
 
         # Update record without changing status
@@ -159,26 +177,27 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
 
 @override_settings(ANALYTICS_ENABLED=True)
 @patch.object(signals, 'queue_analytics_record')
+@patch.object(InfluxExporter, 'client', fake_client)
 class TestOrderAnalytics(BluebottleTestCase):
     def setUp(self):
         super(TestOrderAnalytics, self).setUp()
 
     def test_tags_generation(self, queue_mock):
-        self.order = OrderFactory.create(total=100)
-        self.expected_tags = {
+        order = OrderFactory.create(total=100)
+        expected_tags = {
             'type': 'order',
             'tenant': u'test',
             'status': u'created',
             'anonymous': False
         }
-        self.expected_fields = {
-            'amount': self.order.total,
-            'id': self.order.id
+        expected_fields = {
+            'amount': order.total,
+            'id': order.id
         }
 
         args, kwargs = queue_mock.call_args
-        self.assertEqual(kwargs['tags'], self.expected_tags)
-        self.assertEqual(kwargs['fields'], self.expected_fields)
+        self.assertEqual(kwargs['tags'], expected_tags)
+        self.assertEqual(kwargs['fields'], expected_fields)
 
     def test_unchanged_status(self, queue_mock):
         order = OrderFactory.create(total=100)
@@ -194,66 +213,69 @@ class TestOrderAnalytics(BluebottleTestCase):
 
 @override_settings(ANALYTICS_ENABLED=True)
 @patch.object(signals, 'queue_analytics_record')
+@patch.object(InfluxExporter, 'client', fake_client)
 class TestVoteAnalytics(BluebottleTestCase):
     def setUp(self):
         super(TestVoteAnalytics, self).setUp()
         self.init_projects()
 
     def test_tags_generation(self, queue_mock):
-        self.vote = VoteFactory.create()
-        self.expected_tags = {
+        vote = VoteFactory.create()
+        expected_tags = {
             'type': 'vote', 
             'tenant': u'test'
         }
-        self.expected_fields = {
-            'id': self.vote.id,
-            'user_id': self.vote.voter.id,
-            'project_id': self.vote.project.id
+        expected_fields = {
+            'id': vote.id,
+            'user_id': vote.voter.id,
+            'project_id': vote.project.id
         }
 
         args, kwargs = queue_mock.call_args
-        self.assertEqual(kwargs['tags'], self.expected_tags)
-        self.assertEqual(kwargs['fields'], self.expected_fields)
+        self.assertEqual(kwargs['tags'], expected_tags)
+        self.assertEqual(kwargs['fields'], expected_fields)
 
 
 @override_settings(ANALYTICS_ENABLED=True)
 @patch.object(signals, 'queue_analytics_record')
+@patch.object(InfluxExporter, 'client', fake_client)
 class TestWallpostAnalytics(BluebottleTestCase):
     def setUp(self):
         super(TestWallpostAnalytics, self).setUp()
         self.init_projects()
 
     def test_tags_generation(self, queue_mock):
-        self.project = ProjectFactory.create()
-        self.donation = DonationFactory.create(project=self.project)
+        project = ProjectFactory.create()
+        donation = DonationFactory.create(project=project)
 
         wallpost = TextWallpostFactory.create()
-        self.expected_tags = {
+        expected_tags = {
             'type': 'wallpost',
             'tenant': u'test'
         }
-        self.expected_fields = {
+        expected_fields = {
             'id': wallpost.id,
             'user_id': wallpost.author.id
         }
 
         args, kwargs = queue_mock.call_args
-        self.assertEqual(kwargs['tags'], self.expected_tags)
-        self.assertEqual(kwargs['fields'], self.expected_fields)
+        self.assertEqual(kwargs['tags'], expected_tags)
+        self.assertEqual(kwargs['fields'], expected_fields)
 
     def test_system_wallpost(self, queue_mock):
-        self.project = ProjectFactory.create()
-        self.donation = DonationFactory.create(project=self.project)
+        project = ProjectFactory.create()
+        donation = DonationFactory.create(project=project)
 
         previous_call_count = queue_mock.call_count
 
-        SystemWallpostFactory.create(related_object=self.donation, content_object=self.project)
+        SystemWallpostFactory.create(related_object=donation, content_object=project)
         self.assertEqual(queue_mock.call_count, previous_call_count,
                          'Analytics should not be sent for system wallposts')
 
 
 @override_settings(ANALYTICS_ENABLED=True)
 @patch.object(signals, 'queue_analytics_record')
+@patch.object(InfluxExporter, 'client', fake_client)
 class TestMemberAnalytics(BluebottleTestCase):
     def test_tags_generation(self, queue_mock):
         member = BlueBottleUserFactory.create()

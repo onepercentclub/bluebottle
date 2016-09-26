@@ -33,13 +33,33 @@ class Survey(models.Model):
 
     def aggregate(self):
         for question in Question.objects.all():
-            answers = itertools.groupby(
+
+            # Calculate aggregates by task
+            task_answers = itertools.groupby(
                 Answer.objects.filter(question=question, value__isnull=False,
+                                      response__task__isnull=False).order_by('response__project'),
+                lambda answer: answer.response.project
+            )
+            answers_by_tasks = {
+                task: list(answers) for task, answers in task_answers
+            }
+
+            for task, values in answers_by_tasks.items():
+                aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
+                    task=task, question=question
+                )
+                aggregate_answer.update(values)
+
+            # Calculate aggregates by project
+            project_answers = itertools.groupby(
+                Answer.objects.filter(question=question, value__isnull=False,
+                                      response__task__isnull=True,
                                       response__project__isnull=False).order_by('response__project'),
                 lambda answer: answer.response.project
             )
+
             answers_by_projects = {
-                project: list(answers) for project, answers in answers
+                project: list(answers) for project, answers in project_answers
             }
 
             for project, values in answers_by_projects.items():

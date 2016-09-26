@@ -5,10 +5,11 @@ from django.test.utils import override_settings
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory 
 from bluebottle.test.factory_models.orders import OrderFactory 
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory 
 from bluebottle.test.factory_models.votes import VoteFactory 
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory, SystemWallpostFactory 
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.analytics import signals
@@ -42,6 +43,23 @@ class TestProjectAnalytics(BluebottleTestCase):
             'tenant': u'test',
         }
         self.expected_fields = {}
+
+    def test_country_tag(self, queue_mock):
+        country = CountryFactory.create()
+        ProjectFactory.create(theme=self.theme, status=self.status, country=country)
+
+        self.expected_tags['country'] = country.name
+        args, kwargs = queue_mock.call_args
+        self.assertEqual(kwargs['tags'], self.expected_tags)
+
+    def test_location_country_tag(self, queue_mock):
+        location = LocationFactory.create()
+        ProjectFactory.create(theme=self.theme, status=self.status, location=location)
+
+        self.expected_tags['country'] = location.country.name
+        self.expected_tags['location'] = location.name
+        args, kwargs = queue_mock.call_args
+        self.assertEqual(kwargs['tags'], self.expected_tags)
 
     def test_tags_generation(self, queue_mock):
         ProjectFactory.create(theme=self.theme, status=self.status)
@@ -150,8 +168,8 @@ class TestOrderAnalytics(BluebottleTestCase):
         self.expected_tags = {
             'type': 'order',
             'tenant': u'test',
-            'status': 'created',
-            'anonymous': True
+            'status': u'created',
+            'anonymous': False
         }
         self.expected_fields = {
             'amount': self.order.total,
@@ -232,3 +250,31 @@ class TestWallpostAnalytics(BluebottleTestCase):
         SystemWallpostFactory.create(related_object=self.donation, content_object=self.project)
         self.assertEqual(queue_mock.call_count, previous_call_count,
                          'Analytics should not be sent for system wallposts')
+
+
+@override_settings(ANALYTICS_ENABLED=True)
+@patch.object(signals, 'queue_analytics_record')
+class TestMemberAnalytics(BluebottleTestCase):
+    def test_tags_generation(self, queue_mock):
+        member = BlueBottleUserFactory.create()
+        expected_tags = {
+            'type': 'member', 
+            'tenant': u'test',
+            'event': 'signup'
+        }
+        expected_fields = {
+            'user_id': member.id
+        }
+
+        args, kwargs = queue_mock.call_args
+        self.assertEqual(kwargs['tags'], expected_tags)
+        self.assertEqual(kwargs['fields'], expected_fields)
+
+    def test_member_update(self, queue_mock):
+        member = BlueBottleUserFactory.create()
+        previous_call_count = queue_mock.call_count
+
+        member.first_name = 'Bob'
+        member.save()
+        self.assertEqual(queue_mock.call_count, previous_call_count,
+                         'Analytics should not be sent when member updated')

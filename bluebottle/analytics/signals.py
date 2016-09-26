@@ -19,12 +19,14 @@ def post_save_analytics(sender, instance, **kwargs):
     if instance.__class__.__name__ == 'Migration':
         return
 
+    created = kwargs['created']
+
     # Check if the instance has an _original_status and whether the status
     # has changed. If not then skip recording this save event. This can be
     # skipped if the record has been created as we will always record metrics
     # for a newly created record.
     try:
-        if not kwargs['created'] and instance._original_status == instance.status:
+        if not created and instance._original_status == instance.status:
             return
     except AttributeError:
         pass
@@ -54,12 +56,17 @@ def post_save_analytics(sender, instance, **kwargs):
 
     analytics = analytics_cls()
     try:
-        if analytics.skip(instance):
+        if analytics.skip(instance, created):
             return
     except AttributeError:
         pass
     
-    tags = {}
+    # Check for instance specific tags
+    try:
+        tags = analytics.extra_tags(instance, created)
+    except AttributeError:
+        tags = {}
+
     fields = {}
     tags['type'] = getattr(analytics, 'type', camelize(instance.__class__.__name__))
     tags['tenant'] = tenant_name
@@ -87,5 +94,10 @@ def post_save_analytics(sender, instance, **kwargs):
     except AttributeError:
         pass
 
-    queue_analytics_record(timestamp=timezone.now(), 
-                           tags=tags, fields=fields)
+    # If enabled, use celery to queue task
+    if not getattr(settings, 'CELERY_RESULT_BACKEND', None):
+        queue_analytics_record(timestamp=timezone.now(),
+                               tags=tags, fields=fields)
+    else:
+        queue_analytics_record.delay(timestamp=timezone.now(),
+                                     tags=tags, fields=fields)

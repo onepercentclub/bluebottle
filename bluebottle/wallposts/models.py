@@ -93,7 +93,7 @@ class Wallpost(PolymorphicModel):
             'user_id': 'author.id'
         }
 
-        def skip(self, obj):
+        def skip(self, obj, created):
             return True if obj.wallpost_type == 'system' else False
 
     class Meta:

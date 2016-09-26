@@ -5,6 +5,7 @@ from django.test.utils import override_settings
 from django.test import SimpleTestCase
 
 from bluebottle.analytics.utils import queue_analytics_record
+from bluebottle.analytics.signals import post_save_analytics
 from bluebottle.analytics.backends import InfluxExporter
 
 

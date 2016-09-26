@@ -5,7 +5,7 @@ from bluebottle.utils.utils import PreviousStatusMixin
 class Order(BaseOrder, PreviousStatusMixin):
     @property
     def anonymous(self):
-        return True if self.user else False
+        return False if self.user else True
 
     class Analytics:
         type = 'order'

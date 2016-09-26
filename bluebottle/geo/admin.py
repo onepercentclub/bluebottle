@@ -70,6 +70,8 @@ class LocationGroupAdmin(admin.ModelAdmin):
     list_display = ('name', )
     model = LocationGroup
 
+admin.site.register(LocationGroup, LocationGroupAdmin)
+
 
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('name', 'position', 'group')

@@ -395,6 +395,16 @@ class Project(BaseProject, PreviousStatusMixin):
         return count
 
     @property
+    def country_name(self):
+        try:
+            if self.country:
+                return self.country.name
+            elif self.location:
+                return self.location.country.name 
+        except AttributeError:
+            return ''
+
+    @property
     def vote_count(self):
         return self.vote_set.count()
 
@@ -524,7 +534,7 @@ class Project(BaseProject, PreviousStatusMixin):
             'theme': 'theme.name',
             'theme_slug': 'theme.slug',
             'location': 'location.name',
-            'country': 'location.country.name'
+            'country': 'country_name'
         }
 
     def status_changed(self, old_status, new_status):

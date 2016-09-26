@@ -31,28 +31,69 @@ class Survey(models.Model):
         survey_adapter = SurveyGizmoAdapter()
         survey_adapter.update_survey(self)
 
-    def aggregate(self):
-        for question in Question.objects.all():
-
-            # Calculate aggregates by task
+    def _aggregate_tasks(self):
+        # Calculate aggregates by task
+        for question in self.question_set.all():
             task_answers = itertools.groupby(
-                Answer.objects.filter(question=question, value__isnull=False,
-                                      response__task__isnull=False).order_by('response__project'),
-                lambda answer: answer.response.project
+                Answer.objects.filter(question=question,
+                                      value__isnull=False,
+                                      response__task__isnull=False).order_by('response__task'),
+                lambda answer: answer.response.task
             )
             answers_by_tasks = {
                 task: list(answers) for task, answers in task_answers
             }
 
             for task, values in answers_by_tasks.items():
-                aggregate_task_answer, _created = AggregateAnswer.objects.get_or_create(
-                    task=task, project=task.project, aggregation_type='task', question=question
+                aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
+                    task=task, project=task.project,
+                    aggregation_type='task', question=question
                 )
                 aggregate_answer.update(values)
 
+    def _aggregate_tasks_by_project(self):
+        # Calculate aggregates of all tasks in a project
+        for question in self.question_set.all():
+            task_aggregates = itertools.groupby(
+                AggregateAnswer.objects.filter(question=question,
+                                               aggregation_type='task').order_by('project'),
+                lambda answer: answer.project
+            )
+            answers_by_project = {
+                project: list(answers) for project, answers in task_aggregates
+            }
+            for project, values in answers_by_project.items():
+                aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
+                    project=project,
+                    aggregation_type='project_tasks', question=question
+                )
+                aggregate_answer.update(values)
+
+    def _aggregate_tasks_and_project(self):
+        # Combine tasks with their project
+        for question in self.question_set.all():
+            task_aggregates = itertools.groupby(
+                AggregateAnswer.objects.filter(question=question,
+                                               aggregation_type__in=['project_tasks', 'project']).order_by('project'),
+                lambda answer: answer.project
+            )
+            answers_by_project = {
+                project: list(answers) for project, answers in task_aggregates
+            }
+            for project, values in answers_by_project.items():
+                aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
+                    project=project,
+                    aggregation_type='project_tasks', question=question
+                )
+                aggregate_answer.update(values)
+
+    def _aggregate_projects(self):
+        for question in self.question_set.all():
+
             # Calculate aggregates by project
             project_answers = itertools.groupby(
-                Answer.objects.filter(question=question, value__isnull=False,
+                Answer.objects.filter(question=question,
+                                      value__isnull=False,
                                       response__task__isnull=True,
                                       response__project__isnull=False).order_by('response__project'),
                 lambda answer: answer.response.project
@@ -65,11 +106,15 @@ class Survey(models.Model):
             for project, values in answers_by_projects.items():
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                     project=project, question=question,
-                    aggregation_type='task'
+                    aggregation_type='project'
                 )
                 aggregate_answer.update(values)
 
-
+    def aggregate(self):
+        self._aggregate_tasks()
+        self._aggregate_projects()
+        self._aggregate_tasks_by_project()
+        self._aggregate_tasks_and_project()
 
     def __unicode__(self):
         return self.title or self.remote_id
@@ -148,10 +193,10 @@ class Answer(models.Model):
 class AggregateAnswer(models.Model):
 
     AGGREGATION_TYPES = (
-        ('project', 'project'),
+        ('project', 'Project'),
         ('task', 'Task'),
-        ('tasks', 'Tasks on project level'),
-        ('all', 'Project and tasks')
+        ('project_tasks', 'Tasks in project'),
+        ('combined', 'Project and tasks')
     )
 
     question = models.ForeignKey('surveys.Question')
@@ -167,6 +212,10 @@ class AggregateAnswer(models.Model):
     list = JSONField(null=True, default=[])
     options = JSONField(null=True, default={})
 
+    @property
+    def float_value(self):
+        return self.value
+
     def _aggregate_average(self, answers):
         self.value = sum(answer.float_value for answer in answers) / float(len(answers))
 
@@ -174,7 +223,8 @@ class AggregateAnswer(models.Model):
         self.value = sum(answer.float_value for answer in answers)
 
     def aggregate_number(self, answers):
-        if self.question.aggregation == 'sum':
+        # See if we want to sum the values here.
+        if self.aggregation_type == 'project_tasks' and self.question.aggregation == 'sum':
             self._aggregate_sum(answers)
         else:
             self._aggregate_average(answers)
@@ -194,7 +244,7 @@ class AggregateAnswer(models.Model):
     def aggregate_table_radio(self, answers):
         """
         Get the scores for all items in a radio-table and average them.
-        {{'Before': 5.6,
+        {{'Before': 5.6, 'After': 8.7}}
         """
         results = [a.options for a in answers]
         if len(results):

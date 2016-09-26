@@ -58,6 +58,10 @@ class TestAggregation(BluebottleTestCase):
         )
 
     def test_sum(self):
+        """
+        Aggregation=sum only is only intended for tasks-by-project aggregations.
+        For project aggregations it should still be mean.
+        """
         question = QuestionFactory(survey=self.survey, title='test', aggregation='sum', type='number')
 
         for value in ['30', '10', '20.0']:
@@ -68,8 +72,10 @@ class TestAggregation(BluebottleTestCase):
             )
 
         self.survey.aggregate()
-        aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
-        self.assertEqual(aggregate.value, 60.0)
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project',
+                                                     project=self.project)
+        self.assertEqual(aggregate.value, 20.0)
 
     def test_average(self):
         question = QuestionFactory(survey=self.survey, title='test', aggregation='average', type='number')
@@ -82,7 +88,9 @@ class TestAggregation(BluebottleTestCase):
             )
 
         self.survey.aggregate()
-        aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project',
+                                                     project=self.project)
         self.assertEqual(aggregate.value, 20.0)
 
     def test_average_non_number(self):
@@ -96,7 +104,9 @@ class TestAggregation(BluebottleTestCase):
             )
 
         self.survey.aggregate()
-        aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project',
+                                                     project=self.project)
         self.assertEqual(aggregate.value, 10.0)
 
     def test_multiplechoice_radio(self):
@@ -110,7 +120,9 @@ class TestAggregation(BluebottleTestCase):
             )
 
         self.survey.aggregate()
-        aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project',
+                                                     project=self.project)
         self.assertEqual(aggregate.options, {'test': 2, 'tast': 1})
 
     def test_multiplechoice_checkbox(self):
@@ -124,7 +136,9 @@ class TestAggregation(BluebottleTestCase):
             )
 
         self.survey.aggregate()
-        aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project',
+                                                     project=self.project)
         self.assertEqual(aggregate.options, {"test": 3, "wokkel": 1, "tast": 2})
 
     def test_table_radio(self):
@@ -138,5 +152,7 @@ class TestAggregation(BluebottleTestCase):
             )
 
         self.survey.aggregate()
-        aggregate = question.aggregateanswer_set.get(question=question, project=self.project)
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='project',
+                                                     project=self.project)
         self.assertEqual(aggregate.options, {'test': 3.0, 'tast': 8.0})

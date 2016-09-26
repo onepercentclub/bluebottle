@@ -282,7 +282,6 @@ TENANT_APPS = (
     'django.contrib.admindocs',
     'django.contrib.auth',
 
-    'bluebottle.analytics',
     'bb_salesforce',
 
     #Widget
@@ -304,6 +303,7 @@ TENANT_APPS = (
     # Plain Bluebottle apps
     'bluebottle.wallposts',
     'bluebottle.utils',
+    'bluebottle.analytics',
     'bluebottle.categories',
     'bluebottle.contentplugins',
     'bluebottle.contact',

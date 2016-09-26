@@ -1,4 +1,5 @@
 import socket
+from importlib import import_module
 
 from django.db import connection
 from django_fsm import TransitionNotAllowed
@@ -165,11 +166,18 @@ def clean_for_hashtag(text):
     return " #".join(tags)
 
 
-def import_class(cl):
-    d = cl.rfind(".")
-    class_name = cl[d + 1:len(cl)]
-    m = __import__(cl[0:d], globals(), locals(), [class_name])
-    return getattr(m, class_name)
+# Get the class from dotted string
+def get_class(cl): 
+    try:
+        # try to call handler
+        parts = cl.split('.')
+        module_path, class_name = '.'.join(parts[:-1]), parts[-1]
+        module = import_module(module_path)
+        return getattr(module, class_name)
+
+    except (ImportError, AttributeError) as e:
+        error_message = "Could not import '%s'. %s: %s." % (cl, e.__class__.__name__, e)
+        raise Exception(error_message)
 
 
 def get_current_host():

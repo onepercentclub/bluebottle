@@ -10,27 +10,17 @@ from bluebottle.analytics import signals
 from bluebottle.analytics.utils import queue_analytics_record
 from bluebottle.analytics.backends import InfluxExporter
 
-
-class FakeInfluxDBClient():
-    def __init__(self, *args):
-        pass
-
-    def write_points(self, **kwargs):
-        pass
+from .common import FakeInfluxDBClient, FakeModel
 
 
-class FakeModel():
-    class Analytics:
-        type = 'fake'
-        tags = {}
-        fields = {}
+fake_client = FakeInfluxDBClient()
 
 
 @override_settings(ANALYTICS_ENABLED=True)
-@patch.object(InfluxExporter, '_client')
 @patch.object(InfluxExporter, 'process')
+@patch.object(InfluxExporter, 'client', fake_client)
 class TestRecordAnalytics(SimpleTestCase):
-    def test_tags_generation(self, mock_process, mock_client):
+    def test_tags_generation(self, mock_process):
         tags = {
             'tenant': 'test',
             'type': 'order'
@@ -39,8 +29,6 @@ class TestRecordAnalytics(SimpleTestCase):
             'amount': 100
         }
 
-        
-        mock_client.return_value = FakeInfluxDBClient()
         now = timezone.now()
         queue_analytics_record(timestamp=now, tags=tags, fields=fields)
         mock_process.assert_called_with(now, tags, fields)

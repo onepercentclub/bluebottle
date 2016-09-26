@@ -45,8 +45,8 @@ class Survey(models.Model):
             }
 
             for task, values in answers_by_tasks.items():
-                aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
-                    task=task, question=question
+                aggregate_task_answer, _created = AggregateAnswer.objects.get_or_create(
+                    task=task, project=task.project, aggregation_type='task', question=question
                 )
                 aggregate_answer.update(values)
 
@@ -64,9 +64,12 @@ class Survey(models.Model):
 
             for project, values in answers_by_projects.items():
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
-                    project=project, question=question
+                    project=project, question=question,
+                    aggregation_type='task'
                 )
                 aggregate_answer.update(values)
+
+
 
     def __unicode__(self):
         return self.title or self.remote_id
@@ -143,10 +146,21 @@ class Answer(models.Model):
 
 
 class AggregateAnswer(models.Model):
+
+    AGGREGATION_TYPES = (
+        ('project', 'project'),
+        ('task', 'Task'),
+        ('tasks', 'Tasks on project level'),
+        ('all', 'Project and tasks')
+    )
+
     question = models.ForeignKey('surveys.Question')
     project = models.ForeignKey('projects.Project', null=True)
     task = models.ForeignKey('tasks.Task', null=True)
 
+    aggregation_type = models.CharField(max_length=20,
+                                        choices=AGGREGATION_TYPES,
+                                        default='project')
     response_count = models.IntegerField(null=True)
 
     value = models.FloatField(null=True)

@@ -80,7 +80,7 @@ class TestSurveyGizmoAdapter(BluebottleTestCase):
             adapter.update_survey(self.survey)
 
         # There should now be 12 questions
-        self.assertEqual(len(self.survey.question_set.all()), 12)
+        self.assertEqual(len(self.survey.question_set.all()), 15)
         # The project should have 2 response objects
         self.assertEqual(len(self.project.response_set.all()), 7)
         # All questions should be aggregated

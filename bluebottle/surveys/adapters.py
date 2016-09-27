@@ -45,7 +45,8 @@ class SurveyGizmoAdapter(BaseAdapter):
             match = question_re.match(key)
             if match:
                 question = match.group(1)
-                answers[question] = data[key]
+                if bool(data[key]):
+                    answers[question] = data[key]
         question_re = re.compile("\[question\((\d+)\)\,\ option.*\]")
 
         # Get question with multiple answers (return an array)
@@ -75,15 +76,16 @@ class SurveyGizmoAdapter(BaseAdapter):
         data = self.client.api.surveyresponse.filter('status', '=', 'Complete').list(survey.remote_id)
         self.client.config.response_type = None
         data = json.loads(data)
-        # if int(data['total_count']) > 50:
-        #     raise ImportWarning('There are more then 50 results, please also load page 2.')
+        # FIXME: Handle pagination BB-8029
+        if int(data['total_count']) > 50:
+            raise ImportWarning('There are more then 50 results, please also load page 2.')
         return data['data']
 
     def parse_question(self, data, survey):
-        properties = {}
+        props = {}
         sub_questions = []
         if 'options' in data:
-            properties['options'] = [p['title']['English'] for p in data['options']]
+            props['options'] = [p['title']['English'] for p in data['options']]
 
         # Collect sub_questions
         if data['sub_question_skus']:
@@ -94,14 +96,14 @@ class SurveyGizmoAdapter(BaseAdapter):
         # Collect relevant properties (specified above)
         for p in self.question_properties:
             if p in data['properties'] and data['properties'][p]:
-                properties[p] = data['properties'][p]
+                props[p] = data['properties'][p]
             if p in data['properties']['messages'] and data['properties']['messages'][p]:
-                properties[p] = data['properties']['messages'][p]['English']
+                props[p] = data['properties']['messages'][p]['English']
 
         question = {
             'title': data['title']['English'],
             'type': data['properties']['map_key'],
-            'properties': properties,
+            'properties': props,
             'sub_questions': sub_questions
         }
         return question
@@ -150,6 +152,11 @@ class SurveyGizmoAdapter(BaseAdapter):
             try:
                 resp.task = Task.objects.get(pk=int(params['task_id']))
             except (KeyError, Task.DoesNotExist):
+                pass
+
+            try:
+                resp.user_type = params['user_type']
+            except KeyError:
                 pass
 
             resp.save()

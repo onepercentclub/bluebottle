@@ -15,7 +15,8 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     def get_aggregate_attribute(self, obj, attr):
         try:
-            aggregate = obj.aggregateanswer_set.get(project=self.context['project'])
+            aggregate = obj.aggregateanswer_set.get(project=self.context['project'],
+                                                    aggregation_type='combined')
             return getattr(aggregate, attr)
         except obj.aggregateanswer_set.model.DoesNotExist:
             return None

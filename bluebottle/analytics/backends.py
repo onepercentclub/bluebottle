@@ -20,7 +20,10 @@ class InfluxExporter:
         return InfluxDBClient(self.domain, self.port, self.username,
                               self.password, self.database)
 
-    def process(self, timestamp, tags={}, fields={}):
+    def process(self, timestamp, tags, fields):
+        tags = tags or {}
+        fields = fields or {}
+
         json_body = [
             {
                 "measurement": self.measurement,
@@ -34,5 +37,4 @@ class InfluxExporter:
             self.client.write_points(json_body)
         except InfluxDBClientError as e:
             logger.exception('Failed to write to InfluxDB: %s', e.message,
-                           exc_info=1)
-
+                             exc_info=1)

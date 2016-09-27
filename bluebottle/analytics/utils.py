@@ -9,14 +9,18 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task
-def queue_analytics_record(timestamp, tags={}, fields={}):
+def queue_analytics_record(timestamp, tags, fields):
+    tags = tags or {}
+    fields = fields or {}
+
     try:
         # TODO: logging to multiple backends could happen here, eg
         #       to influxdb and to log file.
         backend = settings.ANALYTICS_BACKENDS['default']
         handler_class = backend['handler_class']
     except AttributeError as e:
-        logger.warning('Analytics backend not found: {0}'.format(e.message))
+        logger.warning('Analytics backend not found: %s', e.message,
+                       exc_info=1)
         return
 
     handler = get_class(handler_class)(conf=backend)

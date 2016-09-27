@@ -1,25 +1,17 @@
 from mock import patch
 
-from celery.app import task
-
 from django.utils import timezone
 from django.test.utils import override_settings
 from django.test import SimpleTestCase
 
-from bluebottle.test.factory_models.wallposts import TextWallpostFactory
-
 from bluebottle.analytics import signals
-from bluebottle.analytics.utils import queue_analytics_record
+from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.analytics.backends import InfluxExporter
 
 from .common import FakeInfluxDBClient, FakeModel
 
 
 fake_client = FakeInfluxDBClient()
-
-
-def fake_delay():
-    pass
 
 
 @override_settings(ANALYTICS_ENABLED=True)

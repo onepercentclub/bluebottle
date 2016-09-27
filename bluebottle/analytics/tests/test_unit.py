@@ -1,5 +1,7 @@
 from mock import patch
 
+from celery.app import task
+
 from django.utils import timezone
 from django.test.utils import override_settings
 from django.test import SimpleTestCase
@@ -14,6 +16,10 @@ from .common import FakeInfluxDBClient, FakeModel
 
 
 fake_client = FakeInfluxDBClient()
+
+
+def fake_delay():
+    pass
 
 
 @override_settings(ANALYTICS_ENABLED=True)
@@ -36,18 +42,18 @@ class TestRecordAnalytics(SimpleTestCase):
 
 @override_settings(ANALYTICS_ENABLED=True,
                    CELERY_RESULT_BACKEND='amqp')
-@patch.object(queue_analytics_record, 'delay')
 class TestAnalyticsCelery(SimpleTestCase):
     @patch.object(signals.connection, 'schema_name', 'test')
-    def test_tags_generation(self, mock_delay):
+    def test_tags_generation(self):
         tags = {
             'tenant': 'test',
             'type': 'fake'
         }
         fields = {}
 
-        signals.post_save_analytics(None, FakeModel(), **{'created': True})
+        with patch('bluebottle.analytics.tasks.queue_analytics_record.delay') as mock_delay:
+            signals.post_save_analytics(None, FakeModel(), **{'created': True})
 
-        args, kwargs = mock_delay.call_args
-        self.assertEqual(kwargs['tags'], tags)
-        self.assertEqual(kwargs['fields'], fields)
+            args, kwargs = mock_delay.call_args
+            self.assertEqual(kwargs['tags'], tags)
+            self.assertEqual(kwargs['fields'], fields)

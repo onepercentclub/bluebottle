@@ -1,9 +1,10 @@
 import urllib
 import itertools
 from collections import Counter
-from operator import attrgetter
 
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
+
 from django_extensions.db.fields.json import JSONField
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
@@ -219,12 +220,19 @@ class SubQuestion(models.Model):
 
 class Response(models.Model):
 
+    USER_TYPES = (
+        ('task_member', _('Task member')),
+        ('initiator', _('Project initiator')),
+        ('organization', _('Partner organisation'))
+    )
+
     survey = models.ForeignKey('surveys.Survey')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     submitted = models.DateTimeField(null=True, blank=True)
     project = models.ForeignKey('projects.Project', null=True, blank=True)
     task = models.ForeignKey('tasks.Task', null=True, blank=True)
-    user_type = models.CharField(max_length=200, blank=True, null=True)
+    user_type = models.CharField(max_length=200, choices=USER_TYPES,
+                                 blank=True, null=True)
     specification = JSONField(null=True)
     params = JSONField(null=True)
 
@@ -249,12 +257,12 @@ class Answer(models.Model):
 class AggregateAnswer(models.Model):
 
     AGGREGATION_TYPES = (
-        ('project', 'Project'),
-        ('initiator', 'Project initiator'),
-        ('organization', 'Partner organisation'),
-        ('task', 'Task'),
-        ('project_tasks', 'Tasks in project'),
-        ('combined', 'Project and tasks')
+        ('project', _('Project')),
+        ('initiator', _('Project initiator')),
+        ('organization', _('Partner organisation')),
+        ('task', _('Task')),
+        ('project_tasks', _('Tasks in project')),
+        ('combined', _('Project and tasks'))
     )
 
     question = models.ForeignKey('surveys.Question')

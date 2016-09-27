@@ -14,7 +14,7 @@ from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.geo.admin import LocationFilter
+from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
@@ -201,15 +201,14 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
-    list_filter = ('country__subregion__region',)
-
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', ProjectThemeFilter,
-                   'country__subregion__region', 'project_type')
+        filters = ('status', 'is_campaign', ProjectThemeFilter, 'project_type')
 
         # Only show Location column if there are any
         if Location.objects.count():
-            filters += (LocationFilter, )
+            filters += (LocationGroupFilter, LocationFilter)
+        else:
+            filters += ('country__subregion__region', )
         return filters
 
     def get_list_display(self, request):
@@ -236,7 +235,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('created', 'created'),
         ('status', 'status'),
         ('theme', 'theme'),
-        ('region', 'region'),
+        ('location__group', 'region'),
         ('location', 'location'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),

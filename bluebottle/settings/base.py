@@ -304,6 +304,7 @@ TENANT_APPS = (
     # Plain Bluebottle apps
     'bluebottle.wallposts',
     'bluebottle.utils',
+    'bluebottle.analytics',
     'bluebottle.categories',
     'bluebottle.contentplugins',
     'bluebottle.contact',
@@ -465,6 +466,21 @@ SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [('birthday', 'birthday')]
 RECURRING_DONATIONS_ENABLED = False
 DONATIONS_ENABLED = True
 
+# Analytics Service
+ANALYTICS_ENABLED = False
+ANALYTICS_BACKENDS = {
+    'default': {
+        'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
+        'host': 'localhost',
+        'port': 8086,
+        'username': '',
+        'password': '',
+        'database': 'platform_v1',
+        'measurement': 'saas',
+        'ssl': True
+    }
+}
+
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'
 # If only one project type is set then project create should be set to 'combined'
@@ -579,7 +595,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('status__name', 'Status'),
                 ('title', 'Title'),
                 ('owner__email', 'Email'),
-                ('location__name', 'Location'),
+                ('location', 'Location'),
+                ('location__group', 'Region'),
                 ('region', 'Region'),
                 ('theme', 'Theme'),
                 ('supporters', 'Supporters'),
@@ -613,6 +630,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('project__title', 'Project Title'),
                 ('author__email', 'Email'),
                 ('location', 'Task location'),
+                ('location__group', 'Task Region'),
                 ('type', 'Type'),
                 ('skill', 'Skill Needed'),
                 ('people_needed', 'People needed'),
@@ -633,7 +651,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('fundraiser__id', 'Fundraiser ID'),
                 ('user__get_full_name', 'Name'),
                 ('order__user__email', 'Email'),
-                ('order__user__location__name', 'Location'),
+                ('order__user__location', 'Location'),
+                ('order__user__location__group', 'Region'),
                 ('status', 'Status'),
                 ('amount', 'Amount'),
                 ('created', 'Date'),
@@ -649,7 +668,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('task__id', 'Task ID'),
                 ('member__get_full_name', 'Name'),
                 ('member__email', 'Email'),
-                ('member__location__name', 'Location'),
+                ('member__location', 'Location'),
+                ('member__location__group', 'Region'),
                 ('get_status_display', 'Status'),
                 ('task__time_needed', 'Time pledged'),
                 ('time_spent', 'Time Spent'),

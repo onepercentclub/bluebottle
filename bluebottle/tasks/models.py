@@ -86,6 +86,10 @@ class Task(models.Model, PreviousStatusMixin):
         tags = {
             'status': 'status'
         }
+        fields = {
+            'id': 'id',
+            'user_id': 'author.id'
+        }
 
     def __unicode__(self):
         return self.title
@@ -250,6 +254,11 @@ class TaskMember(models.Model, PreviousStatusMixin):
         type = 'task_member'
         tags = {
             'status': 'status'
+        }
+        fields = {
+            'id': 'id',
+            'task_id': 'task.id',
+            'user_id': 'member.id'
         }
 
     def save(self, *args, **kwargs):

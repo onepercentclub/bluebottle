@@ -48,7 +48,8 @@ class SurveyGizmoAdapter(BaseAdapter):
             match = question_re.match(key)
             if match:
                 question = match.group(1)
-                answers[question] = data[key]
+                if bool(data[key]):
+                    answers[question] = data[key]
         question_re = re.compile("\[question\((\d+)\)\,\ option.*\]")
 
         # Get question with multiple answers (return an array)
@@ -56,7 +57,7 @@ class SurveyGizmoAdapter(BaseAdapter):
             match = question_re.match(key)
             if match:
                 question = match.group(1)
-                if not answers.has_key(question):
+                if question not in answers:
                     answers[question] = []
                 if data[key]:
                     answers[question].append(data[key])
@@ -90,6 +91,7 @@ class SurveyGizmoAdapter(BaseAdapter):
             next_page = None
 
         self.client.config.response_type = None
+
         return data['data'], next_page
 
     def get_responses(self, survey):
@@ -102,10 +104,10 @@ class SurveyGizmoAdapter(BaseAdapter):
         return result
 
     def parse_question(self, data, survey):
-        properties = {}
+        props = {}
         sub_questions = []
-        if data.has_key('options'):
-            properties['options'] = [p['title']['English'] for p in data['options']]
+        if 'options' in data:
+            props['options'] = [p['title']['English'] for p in data['options']]
 
         # Collect sub_questions
         if data['sub_question_skus']:
@@ -116,15 +118,15 @@ class SurveyGizmoAdapter(BaseAdapter):
 
         # Collect relevant properties (specified above)
         for p in self.question_properties:
-            if data['properties'].has_key(p) and data['properties'][p]:
-                properties[p] = data['properties'][p]
-            if data['properties']['messages'].has_key(p) and data['properties']['messages'][p]:
-                properties[p] = data['properties']['messages'][p]['English']
+            if p in data['properties'] and data['properties'][p]:
+                props[p] = data['properties'][p]
+            if p in data['properties']['messages'] and data['properties']['messages'][p]:
+                props[p] = data['properties']['messages'][p]['English']
 
         question = {
             'title': data['title']['English'],
             'type': data['properties']['map_key'],
-            'properties': properties,
+            'properties': props,
             'sub_questions': sub_questions
         }
         return question
@@ -164,16 +166,23 @@ class SurveyGizmoAdapter(BaseAdapter):
                 }
             )
             params = self.parse_query_params(response)
-            if params.has_key('project_id') and params['project_id']:
-                try:
-                    resp.project = Project.objects.get(pk=int(params['project_id']))
-                except Project.DoesNotExist:
-                    pass
-            if params.has_key('task_id') and params['task_id']:
-                try:
-                    resp.task = Task.objects.get(pk=int(params['task_id']))
-                except Task.DoesNotExist:
-                    pass
+            # Store all params
+            resp.params = params
+
+            # Find and store project/task
+            try:
+                resp.project = Project.objects.get(pk=int(params['project_id']))
+            except (KeyError, Project.DoesNotExist):
+                pass
+            try:
+                resp.task = Task.objects.get(pk=int(params['task_id']))
+            except (KeyError, Task.DoesNotExist):
+                pass
+
+            try:
+                resp.user_type = params['user_type']
+            except KeyError:
+                pass
 
             resp.save()
 
@@ -192,7 +201,8 @@ class SurveyGizmoAdapter(BaseAdapter):
                 except Question.DoesNotExist:
                     try:
                         sub_question = SubQuestion.objects.get(remote_id=key, question__survey=survey)
-                        answer, _created = Answer.objects.update_or_create(response=resp, question=sub_question.question)
+                        answer, _c = Answer.objects.update_or_create(response=resp,
+                                                                     question=sub_question.question)
                         options = answer.options or {}
                         options[sub_question.title] = int("0" + answers[key])
                         answer.options = options
@@ -206,4 +216,3 @@ class SurveyGizmoAdapter(BaseAdapter):
 
     def get_survey(self, remote_id):
         return self.client.api.survey.get(remote_id)['data']
-

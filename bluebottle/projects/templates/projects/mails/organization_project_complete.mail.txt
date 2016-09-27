@@ -6,10 +6,7 @@
 
 Hi {{receiver_name}},
 
-Congratulations! Your project "{{title}}" has been realised! It's time to
-celebrate!
-
-Why don't you share this success with your supporters.
+TODO: fix content
 {% endblocktrans %}
 {% if survey_link %}
 {% blocktrans with link=survey_link %}

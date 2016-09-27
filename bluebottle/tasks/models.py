@@ -127,23 +127,12 @@ class Task(models.Model):
         """ called by post_save signal handler, if status changed """
         # confirm everything with task owner
 
-        if oldstate in ("in progress", "open") and newstate == "realized":
 
-            if self.deadline < now():
-                with TenantLanguage(self.author.primary_language):
-                    subject = _("The deadline for task '{0}' has been reached").format(self.title)
-
-                send_mail(
-                    template_name="tasks/mails/task_deadline_reached.mail",
-                    subject=subject,
-                    title=self.title,
-                    to=self.author,
-                    site=tenant_url(),
-                    link='/go/tasks/{0}'.format(self.id)
-                )
+        if oldstate in ("in progress", "open", "closed") and newstate == "realized":
+            self.project.check_task_status()
 
             with TenantLanguage(self.author.primary_language):
-                subject = _("You've set '{0}' to realized").format(self.title)
+                subject = _("The status of your task '{0}' is set to realized").format(self.title)
 
             send_mail(
                 template_name="tasks/mails/task_status_realized.mail",
@@ -153,6 +142,21 @@ class Task(models.Model):
                 site=tenant_url(),
                 link='/go/tasks/{0}'.format(self.id)
             )
+
+        if oldstate in ("in progress", "open") and newstate == "closed":
+
+            with TenantLanguage(self.author.primary_language):
+                subject = _("The status of your task '{0}' is set to closed").format(self.title)
+
+            send_mail(
+                template_name="tasks/mails/task_status_closed.mail",
+                subject=subject,
+                title=self.title,
+                to=self.author,
+                site=tenant_url(),
+                link='/go/tasks/{0}'.format(self.id)
+            )
+
 
         if oldstate in ("in progress", "open") and newstate in ("realized", "closed"):
             data = {

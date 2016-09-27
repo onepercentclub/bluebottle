@@ -44,11 +44,12 @@ class TestProjectAnalytics(BluebottleTestCase):
         self.status = ProjectPhase.objects.get(slug='campaign')
         self.expected_tags = {
             'status': self.status.name,
-            'theme_slug': u'cleaning-the-beach',
+            'theme_slug': 'cleaning-the-beach',
             'status_slug': self.status.slug,
             'country': self.country.name,
-            'theme': u'Cleaning the beach',
+            'theme': 'Cleaning the beach',
             'location': '',
+            'location_group': '',
             'type': 'project',
             'sub_type': None,
             'tenant': u'test',

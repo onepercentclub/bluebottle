@@ -79,6 +79,7 @@ install_requires = [
     'mixpanel==4.3.0',
     'wheel==0.29.0',
     'django-cors-headers==1.1.0',
+    'SurveyGizmo==1.2.1',
     'influxdb==3.0.0',
 
     # Github requirements

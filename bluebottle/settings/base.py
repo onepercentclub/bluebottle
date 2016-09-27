@@ -299,6 +299,7 @@ TENANT_APPS = (
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
+    'bluebottle.surveys',
 
     # Plain Bluebottle apps
     'bluebottle.wallposts',
@@ -734,4 +735,7 @@ SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4
 }
 
+
+SURVEYGIZMO_API_TOKEN = ''
+SURVEYGIZMO_API_SECRET = ''
 

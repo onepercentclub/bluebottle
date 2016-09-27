@@ -569,6 +569,12 @@ class Project(BaseProject, PreviousStatusMixin):
 
             bb_track("Project Completed", data)
 
+    def check_task_status(self):
+        if (not self.is_funding and
+                all([task.status == Task.TaskStatuses.realized for task in self.task_set.all()])):
+            self.status = ProjectPhase.objects.get(slug='done-complete')
+            self.save()
+
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
         if self.is_funding:
@@ -581,7 +587,8 @@ class Project(BaseProject, PreviousStatusMixin):
         else:
             if self.task_set.filter(
                     status__in=[Task.TaskStatuses.in_progress,
-                                Task.TaskStatuses.open]).count() > 0:
+                                Task.TaskStatuses.open,
+                                Task.TaskStatuses.closed]).count() > 0:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-complete")

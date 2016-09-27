@@ -543,7 +543,7 @@ class Project(BaseProject):
             bb_track("Project Completed", data)
 
     def check_task_status(self):
-        if ((not self.is_funding) and
+        if (not self.is_funding and
                 all([task.status == Task.TaskStatuses.realized for task in self.task_set.all()])):
             self.status = ProjectPhase.objects.get(slug='done-complete')
             self.save()

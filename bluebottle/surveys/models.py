@@ -16,12 +16,22 @@ class Survey(models.Model):
     created = CreationDateTimeField()
     updated = ModificationDateTimeField()
 
-    def url(self, task):
+    def url(self, project_or_task, user_type='task_member'):
+        if hasattr(project_or_task, 'project'):
+            project = project_or_task.project
+            task = project_or_task
+        else:
+            project = project_or_task
+            task = None
+
         query_params = {
-            'theme': task.project.theme.slug,
-            'task_id': task.id,
-            'project_id': task.project.id
+            'theme': project.theme.slug,
+            'project_id': project.id,
+            'type': user_type
         }
+
+        if task:
+            query_params['task_id'] = task.id
 
         return '{}?{}'.format(self.link, urllib.urlencode(query_params))
 

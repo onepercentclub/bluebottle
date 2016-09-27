@@ -17,6 +17,7 @@ class Survey(models.Model):
     link = models.URLField(null=True)
     created = CreationDateTimeField()
     updated = ModificationDateTimeField()
+    last_synced = models.DateTimeField(null=True)
 
     def url(self, project_or_task, user_type='task_member'):
         if hasattr(project_or_task, 'project'):

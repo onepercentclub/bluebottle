@@ -61,5 +61,5 @@ class MediaWallpostPhotoFactory(factory.DjangoModelFactory):
 
     mediawallpost = factory.SubFactory(MediaWallpostFactory)
     photo = SimpleUploadedFile(name='test_image.jpg',
-                               content=open('./bluebottle/test/files/bb1.jpg', 'rb').read(),
+                               content=b'',
                                content_type='image/jpeg')

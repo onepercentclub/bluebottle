@@ -61,9 +61,9 @@ class ResponseAdmin(admin.ModelAdmin):
     inlines = [AnswerAdminInline]
     raw_id_fields = ('project', 'task')
 
-    readonly_fields = ('remote_id', 'survey')
+    readonly_fields = ('remote_id', 'survey', 'user_type')
 
-    list_display = ('survey', 'submitted', 'project', 'task', 'answer_count')
+    list_display = ('survey', 'user_type', 'submitted', 'project', 'task', 'answer_count')
 
     def answer_count(self, obj):
         return obj.answer_set.count()

@@ -93,11 +93,66 @@ class Survey(models.Model):
                 )
                 aggregate_answer.update(values)
 
-    def _aggregate_combined(self):
-        # Combine tasks with their project
+    def _aggregate_project_initiators(self):
         for question in self.question_set.all():
+
+            # Calculate aggregates by project
+            project_answers = itertools.groupby(
+                Answer.objects.filter(question=question,
+                                      value__isnull=False,
+                                      response__user_type='initiator',
+                                      response__task__isnull=True,
+                                      response__project__isnull=False).order_by('response__project'),
+                lambda answer: answer.response.project
+            )
+
+            answers_by_projects = {
+                project: list(answers) for project, answers in project_answers
+            }
+
+            for project, values in answers_by_projects.items():
+                aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
+                    project=project, question=question,
+                    aggregation_type='initiator'
+                )
+                aggregate_answer.update(values)
+
+    def _aggregate_project_organizations(self):
+        for question in self.question_set.all():
+
+            # Calculate aggregates by project
+            project_answers = itertools.groupby(
+                Answer.objects.filter(question=question,
+                                      value__isnull=False,
+                                      response__user_type='organization',
+                                      response__task__isnull=True,
+                                      response__project__isnull=False).order_by('response__project'),
+                lambda answer: answer.response.project
+            )
+
+            answers_by_projects = {
+                project: list(answers) for project, answers in project_answers
+            }
+
+            for project, values in answers_by_projects.items():
+                aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
+                    project=project, question=question,
+                    aggregation_type='organization'
+                )
+                aggregate_answer.update(values)
+
+    def _aggregate_combined(self):
+        # Combine project tasks with initators and organizations
+        for question in self.question_set.all():
+            combined_aggregates = itertools.groupby(
+                AggregateAnswer.objects.filter(aggregation_type__in=['project_tasks',
+                                                                     'initiator',
+                                                                     'organization'],
+                                               question=question,).order_by('project'),
+                lambda answer: answer.project
+            )
             answers_by_project = {
-                project: list(answers) for project, answers in both_aggregates
+                project: list(answers) for project, answers in combined_aggregates
             }
 
             for project, values in answers_by_project.items():
@@ -112,6 +167,8 @@ class Survey(models.Model):
         self._aggregate_tasks()
         self._aggregate_projects()
         self._aggregate_tasks_by_project()
+        self._aggregate_project_initiators()
+        self._aggregate_project_organizations()
         self._aggregate_combined()
 
     def __unicode__(self):

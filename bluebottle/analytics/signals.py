@@ -45,8 +45,8 @@ def post_save_analytics(sender, instance, **kwargs):
                     raise
         return obj
 
-    def camelize(name):
-        return re.sub('_.',lambda x: x.group()[1].upper(), name)
+    def snakecase(name):
+        return re.sub("([A-Z])", "_\\1", name).lower().lstrip("_")
 
     try:
         analytics_cls = instance.Analytics
@@ -68,7 +68,7 @@ def post_save_analytics(sender, instance, **kwargs):
         tags = {}
 
     fields = {}
-    tags['type'] = getattr(analytics, 'type', camelize(instance.__class__.__name__))
+    tags['type'] = getattr(analytics, 'type', snakecase(instance.__class__.__name__))
     tags['tenant'] = tenant_name
 
     # Process tags

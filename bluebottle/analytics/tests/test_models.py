@@ -23,9 +23,6 @@ def fake_trans(str):
         return 'Cleaning the park'
     return str
 
-def fake_process(self, timestamp, tags={}, fields={}):
-    pass
-
 
 fake_client = FakeInfluxDBClient()
 
@@ -156,7 +153,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
     def test_tags_generation(self, queue_mock):
         user = BlueBottleUserFactory.create()
         task = TaskFactory.create(author=user, people_needed=2)
-        task_member = TaskMemberFactory.create(member=user, task=task, status='applied')
+        task_member = TaskMemberFactory.create(time_spent=10, member=user, task=task, status='applied')
 
         expected_tags = {
             'type': 'task_member',
@@ -166,7 +163,8 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         expected_fields = {
             'id': task_member.id,
             'task_id': task.id,
-            'user_id': user.id
+            'user_id': user.id,
+            'hours': task_member.time_spent
         }
 
         args, kwargs = queue_mock.call_args
@@ -202,7 +200,7 @@ class TestOrderAnalytics(BluebottleTestCase):
             'anonymous': False
         }
         expected_fields = {
-            'amount': order.total,
+            'total': order.total,
             'user_id': order.user.id,
             'id': order.id
         }

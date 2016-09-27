@@ -261,6 +261,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
         }
         fields = {
             'id': 'id',
+            'hours': 'time_spent',
             'task_id': 'task.id',
             'user_id': 'member.id'
         }

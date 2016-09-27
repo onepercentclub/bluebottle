@@ -383,8 +383,15 @@ class TestCombinedSurveyAggregation(BluebottleTestCase):
 
         self.survey = SurveyFactory(title='test survey')
 
-        self.project_response = ResponseFactory.create(
+        self.intitiator_response = ResponseFactory.create(
             project=self.project,
+            user_type='initiator',
+            survey=self.survey
+        )
+
+        self.organization_response = ResponseFactory.create(
+            project=self.project,
+            user_type='organization',
             survey=self.survey
         )
 
@@ -413,7 +420,7 @@ class TestCombinedSurveyAggregation(BluebottleTestCase):
         for value in ['110', '130']:
             AnswerFactory.create(
                 question=question1,
-                response=self.project_response,
+                response=self.intitiator_response,
                 value=value,
             )
 
@@ -432,7 +439,14 @@ class TestCombinedSurveyAggregation(BluebottleTestCase):
         for value in ['110', '130']:
             AnswerFactory.create(
                 question=question,
-                response=self.project_response,
+                response=self.intitiator_response,
+                value=value,
+            )
+
+        for value in ['200']:
+            AnswerFactory.create(
+                question=question,
+                response=self.organization_response,
                 value=value,
             )
 
@@ -462,16 +476,28 @@ class TestCombinedSurveyAggregation(BluebottleTestCase):
         aggregate1 = question.aggregateanswer_set.get(question=question,
                                                        aggregation_type='combined',
                                                        project=self.project)
-        self.assertEqual(aggregate1.value, 140.0)
+        # Expected value is calculated
+        # initiator:        (110 + 130) / 2
+        # organization:     200
+        # tasks:            (10 + 20 + 30) / 3 + 50 + 90
+        # Mean:             (120 + 200 + 160)/ 3 = 160
+        self.assertEqual(aggregate1.value, 160.0)
 
     def test_combined_table_radio(self):
 
         question = QuestionFactory(survey=self.survey, title='test', type='table-radio')
 
-        for values in [{'test': 2, 'toast': 6}, {'test': 7, 'toast': 10}]:
+        for values in [{'test': 4, 'toast': 6}]:
             AnswerFactory.create(
                 question=question,
-                response=self.project_response,
+                response=self.intitiator_response,
+                options=values
+            )
+
+        for values in [{'test': 5, 'toast': 9}, {'test': 7, 'toast': 10}]:
+            AnswerFactory.create(
+                question=question,
+                response=self.organization_response,
                 options=values
             )
 
@@ -504,10 +530,24 @@ class TestCombinedSurveyAggregation(BluebottleTestCase):
         aggregate = question.aggregateanswer_set.get(question=question,
                                                      aggregation_type='project',
                                                      project=self.project)
-        self.assertEqual(aggregate.options, {'test': 4.5, 'toast': 8})
+        self.assertEqual(aggregate.options, {'test': 5.333333333333333, 'toast': 8.333333333333334})
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='organization',
+                                                     project=self.project)
+        self.assertEqual(aggregate.options, {'test': 6.0, 'toast': 9.5})
+
+        aggregate = question.aggregateanswer_set.get(question=question,
+                                                     aggregation_type='initiator',
+                                                     project=self.project)
+        self.assertEqual(aggregate.options, {'test': 4.0, 'toast': 6.0})
 
         aggregate = question.aggregateanswer_set.get(question=question,
                                                      aggregation_type='combined',
                                                      project=self.project)
-
-        self.assertEqual(aggregate.options, {'test': 3.25, 'toast': 8.25})
+        # Calculation of combined
+        # Initiator mean:    {'test': 4.0, 'toast': 6.0}
+        # Organization mean: {'test': 6.0, 'toast': 9.5}
+        # Tasks mean:        {'test': 2.0, 'toast': 8.5}
+        # Combined:          {'test': 4.0, 'toast': 8.0}
+        self.assertEqual(aggregate.options, {'test': 4.0, 'toast': 8.0})

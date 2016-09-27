@@ -156,7 +156,7 @@ class SurveyGizmoAdapter(BaseAdapter):
 
             try:
                 resp.user_type = params['user_type']
-            except AttributeError:
+            except KeyError:
                 pass
 
             resp.save()

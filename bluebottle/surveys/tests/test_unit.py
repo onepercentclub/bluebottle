@@ -468,6 +468,13 @@ class TestCombinedSurveyAggregation(BluebottleTestCase):
 
         question = QuestionFactory(survey=self.survey, title='test', type='table-radio')
 
+        for values in [{'test': 2, 'toast': 6}, {'test': 7, 'toast': 10}]:
+            AnswerFactory.create(
+                question=question,
+                response=self.project_response,
+                options=values
+            )
+
         for values in [{'test': 2, 'toast': 8}, {'test': 4, 'toast': 9}, {'test': 3, 'toast': 7}]:
             AnswerFactory.create(
                 question=question,
@@ -480,13 +487,6 @@ class TestCombinedSurveyAggregation(BluebottleTestCase):
                 question=question,
                 response=self.task_response2,
                 options=values
-            )
-
-        for value in [{'before': 7, 'after': 9}, {'before': 5, 'after': 7}]:
-            AnswerFactory.create(
-                question=question,
-                response=self.project_response,
-                value=value,
             )
 
         self.survey.aggregate()
@@ -504,10 +504,10 @@ class TestCombinedSurveyAggregation(BluebottleTestCase):
         aggregate = question.aggregateanswer_set.get(question=question,
                                                      aggregation_type='project',
                                                      project=self.project)
-        self.assertEqual(aggregate.value, {'before': 6, 'after': 8})
+        self.assertEqual(aggregate.options, {'test': 4.5, 'toast': 8})
 
         aggregate = question.aggregateanswer_set.get(question=question,
                                                      aggregation_type='combined',
                                                      project=self.project)
 
-        self.assertEqual(aggregate.value, {'before': 5, 'after': 10})
+        self.assertEqual(aggregate.options, {'test': 3.25, 'toast': 8.25})

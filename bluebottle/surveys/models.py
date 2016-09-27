@@ -92,7 +92,7 @@ class Survey(models.Model):
                 )
                 aggregate_answer.update(values)
 
-    def _aggregate_tasks_and_project(self):
+    def _aggregate_combined(self):
         # Combine tasks with their project
         for question in self.question_set.all():
             both_aggregates = itertools.groupby(
@@ -115,7 +115,7 @@ class Survey(models.Model):
         self._aggregate_tasks()
         self._aggregate_projects()
         self._aggregate_tasks_by_project()
-        self._aggregate_tasks_and_project()
+        self._aggregate_combined()
 
     def __unicode__(self):
         return self.title or self.remote_id
@@ -250,9 +250,12 @@ class AggregateAnswer(models.Model):
         results = [a.options for a in answers]
         if len(results):
             options = Counter()
+            item_length = 0
             for item in results:
-                options.update(item)
-            self.options = {k: float(v) / len(results) for k, v in options.items()}
+                if bool(item):
+                    item_length += 1
+                    options.update(item)
+            self.options = {k: float(v) / item_length for k, v in options.items()}
 
     def aggregate_list(self, answers):
         if isinstance(answers[0], AggregateAnswer):

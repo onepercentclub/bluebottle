@@ -15,6 +15,7 @@ class Order(BaseOrder, PreviousStatusMixin):
         }
         fields = {
             'id': 'id',
+            'user_id': 'user.id',
             'amount': 'total'
         }
 

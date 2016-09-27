@@ -537,6 +537,10 @@ class Project(BaseProject, PreviousStatusMixin):
             'location_group': 'location.group.name',
             'country': 'country_name'
         }
+        fields = {
+            'id': 'id',
+            'user_id': 'owner.id'
+        }
 
     def status_changed(self, old_status, new_status):
         status_complete = ProjectPhase.objects.get(slug="done-complete")

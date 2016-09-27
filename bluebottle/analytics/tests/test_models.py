@@ -54,7 +54,6 @@ class TestProjectAnalytics(BluebottleTestCase):
             'sub_type': None,
             'tenant': u'test',
         }
-        self.expected_fields = {}
 
     def test_country_tag(self, queue_mock):
         ProjectFactory.create(theme=self.theme, status=self.status,
@@ -74,8 +73,13 @@ class TestProjectAnalytics(BluebottleTestCase):
         self.assertEqual(kwargs['tags'], self.expected_tags)
 
     def test_tags_generation(self, queue_mock):
-        ProjectFactory.create(theme=self.theme, status=self.status,
+        project = ProjectFactory.create(theme=self.theme, status=self.status,
                               country=self.country)
+
+        self.expected_fields = {
+            'id': project.id,
+            'user_id': project.owner.id
+        }
 
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], self.expected_tags)
@@ -90,7 +94,6 @@ class TestProjectAnalytics(BluebottleTestCase):
         self.expected_tags['theme'] = 'Cleaning the park'
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], self.expected_tags)
-        self.assertEqual(kwargs['fields'], self.expected_fields)
 
     def test_unchanged_status(self, queue_mock):
         project = ProjectFactory.create(theme=self.theme, status=self.status,
@@ -115,13 +118,16 @@ class TestTaskAnalytics(BluebottleTestCase):
 
     def test_tags_generation(self, queue_mock):
         user = BlueBottleUserFactory.create()
-        TaskFactory.create(author=user)
+        task = TaskFactory.create(author=user)
         expected_tags = {
             'type': 'task',
             'tenant': u'test',
             'status': 'open'
         }
-        expected_fields = {}
+        expected_fields = {
+            'id': task.id,
+            'user_id': task.author.id
+        }
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
@@ -149,15 +155,19 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
 
     def test_tags_generation(self, queue_mock):
         user = BlueBottleUserFactory.create()
+        task = TaskFactory.create(author=user, people_needed=2)
+        task_member = TaskMemberFactory.create(member=user, task=task, status='applied')
+
         expected_tags = {
             'type': 'task_member',
             'tenant': u'test',
             'status': 'applied'
         }
-        expected_fields = {}
-
-        task = TaskFactory.create(author=user, people_needed=2)
-        TaskMemberFactory.create(member=user, task=task, status='applied')
+        expected_fields = {
+            'id': task_member.id,
+            'task_id': task.id,
+            'user_id': user.id
+        }
 
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], expected_tags)
@@ -193,6 +203,7 @@ class TestOrderAnalytics(BluebottleTestCase):
         }
         expected_fields = {
             'amount': order.total,
+            'user_id': order.user.id,
             'id': order.id
         }
 

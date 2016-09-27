@@ -9,16 +9,18 @@ logger = logging.getLogger(__name__)
 class InfluxExporter:
     def __init__(self, conf):
         self.measurement = conf['measurement']
-        self.domain = conf['domain']
+        self.host = conf['host']
         self.port = conf['port']
         self.username = conf['username']
         self.password = conf['password']
         self.database = conf['database']
+        self.ssl = conf['ssl']
 
     @property
     def client(self):
-        return InfluxDBClient(self.domain, self.port, self.username,
-                              self.password, self.database)
+        return InfluxDBClient(host=self.host, port=self.port, username=self.username,
+                              password=self.password, database=self.database,
+                              ssl=self.ssl)
 
     def process(self, timestamp, tags, fields):
         tags = tags or {}

@@ -470,12 +470,13 @@ ANALYTICS_ENABLED = False
 ANALYTICS_BACKENDS = {
     'default': {
         'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
-        'domain': 'localhost',
+        'host': 'localhost',
         'port': 8086,
         'username': '',
         'password': '',
         'database': 'platform_v1',
-        'measurement': 'saas'
+        'measurement': 'saas',
+        'ssl': True
     }
 }
 

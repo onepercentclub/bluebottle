@@ -534,6 +534,7 @@ class Project(BaseProject, PreviousStatusMixin):
             'theme': 'theme.name',
             'theme_slug': 'theme.slug',
             'location': 'location.name',
+            'location_group': 'location.group.name',
             'country': 'country_name'
         }
 

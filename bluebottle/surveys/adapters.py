@@ -147,11 +147,11 @@ class SurveyGizmoAdapter(BaseAdapter):
             # Find and store project/task
             try:
                 resp.project = Project.objects.get(pk=int(params['project_id']))
-            except (KeyError, Project.DoesNotExist):
+            except (KeyError, ValueError, Project.DoesNotExist):
                 pass
             try:
                 resp.task = Task.objects.get(pk=int(params['task_id']))
-            except (KeyError, Task.DoesNotExist):
+            except (KeyError, ValueError, Task.DoesNotExist):
                 pass
 
             try:

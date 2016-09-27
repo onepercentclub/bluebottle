@@ -154,6 +154,11 @@ class SurveyGizmoAdapter(BaseAdapter):
             except (KeyError, Task.DoesNotExist):
                 pass
 
+            try:
+                resp.user_type = params['user_type']
+            except AttributeError:
+                pass
+
             resp.save()
 
             answers = self.parse_answers(response)

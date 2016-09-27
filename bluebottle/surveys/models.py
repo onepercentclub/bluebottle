@@ -1,6 +1,7 @@
 import urllib
 import itertools
 from collections import Counter
+from operator import attrgetter
 
 from django.db import models
 from django_extensions.db.fields.json import JSONField
@@ -95,14 +96,10 @@ class Survey(models.Model):
     def _aggregate_combined(self):
         # Combine tasks with their project
         for question in self.question_set.all():
-            both_aggregates = itertools.groupby(
-                AggregateAnswer.objects.filter(question=question,
-                                               aggregation_type__in=['project_tasks', 'project']).order_by('project'),
-                lambda answer: answer.project
-            )
             answers_by_project = {
                 project: list(answers) for project, answers in both_aggregates
             }
+
             for project, values in answers_by_project.items():
                 aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
                     project=project,
@@ -170,6 +167,7 @@ class Response(models.Model):
     submitted = models.DateTimeField(null=True, blank=True)
     project = models.ForeignKey('projects.Project', null=True, blank=True)
     task = models.ForeignKey('tasks.Task', null=True, blank=True)
+    user_type = models.CharField(max_length=200, blank=True, null=True)
     specification = JSONField(null=True)
     params = JSONField(null=True)
 
@@ -195,6 +193,8 @@ class AggregateAnswer(models.Model):
 
     AGGREGATION_TYPES = (
         ('project', 'Project'),
+        ('initiator', 'Project initiator'),
+        ('organization', 'Partner organisation'),
         ('task', 'Task'),
         ('project_tasks', 'Tasks in project'),
         ('combined', 'Project and tasks')

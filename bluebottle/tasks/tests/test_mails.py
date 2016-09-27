@@ -12,19 +12,21 @@ from bluebottle.tasks import taskmail  # noqa
 
 
 @override_settings(SEND_WELCOME_MAIL=False)
-class TestTaskMails(BluebottleTestCase):
+class TaskMailTestBase(BluebottleTestCase):
     """
     Test the sending of email notifications when a Task' status changes
     """
 
     def setUp(self):
-        super(TestTaskMails, self).setUp()
+        super(TaskMailTestBase, self).setUp()
 
         self.init_projects()
         self.status_running = ProjectPhase.objects.get(slug='campaign')
         self.project = ProjectFactory.create(status=self.status_running)
         self.task = TaskFactory.create(project=self.project)
 
+
+class TestTaskMemberMail(TaskMailTestBase):
     def test_member_applied_to_task_mail(self):
         """
         Test emails for realized task with a task member
@@ -86,6 +88,8 @@ class TestTaskMails(BluebottleTestCase):
         self.assertEquals(email.to[0], task_member.member.email)
         self.assertTrue(survey.url(self.task) in email.body)
 
+
+class TestTaskStatusMail(TaskMailTestBase):
     def test_status_realized_mail(self):
         """
         Setting status to realized should trigger email
@@ -98,7 +102,7 @@ class TestTaskMails(BluebottleTestCase):
         self.task.save()
         self.assertEquals(len(mail.outbox), 1)
 
-        self.failIf(mail.outbox[0].body.find("You've set your task") == -1)
+        self.assertTrue('set to realized' in mail.outbox[0].subject)
 
     def test_status_realized_to_ip(self):
         """
@@ -113,15 +117,13 @@ class TestTaskMails(BluebottleTestCase):
 
         self.assertEquals(len(mail.outbox), 0)
 
-    def test_expired_mail(self):
+    def test_closed_mail(self):
         """
-        deadline_reached should send email
+        Closing a project should send an email
         """
-        self.task.status = "in progress"
-        from django.utils import timezone
-        from datetime import timedelta
-        self.task.deadline = timezone.now() - timedelta(days=1)
+        self.task.status = "closed"
         self.task.save()
-        self.task.deadline_reached()
-        self.assertEquals(len(mail.outbox), 2)
-        self.failIf(mail.outbox[0].body.find("The deadline of your task") == -1)
+        self.assertEquals(len(mail.outbox), 1)
+
+        self.assertTrue('set to closed' in mail.outbox[0].subject)
+

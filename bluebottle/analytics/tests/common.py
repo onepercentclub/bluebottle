@@ -11,3 +11,8 @@ class FakeModel():
         type = 'fake'
         tags = {}
         fields = {}
+
+class FakeModelTwo():
+    class Analytics:
+        tags = {}
+        fields = {}

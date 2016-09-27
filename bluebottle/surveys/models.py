@@ -25,10 +25,17 @@ class Survey(models.Model):
 
         return '{}?{}'.format(self.link, urllib.urlencode(query_params))
 
+    def synchronize(self):
+        from bluebottle.surveys.adapters import SurveyGizmoAdapter
+
+        survey_adapter = SurveyGizmoAdapter()
+        survey_adapter.update_survey(self)
+
     def aggregate(self):
         for question in Question.objects.all():
             answers = itertools.groupby(
-                Answer.objects.filter(question=question, value__isnull=False, response__project__isnull=False).order_by('response__project'),
+                Answer.objects.filter(question=question, value__isnull=False,
+                                      response__project__isnull=False).order_by('response__project'),
                 lambda answer: answer.response.project
             )
             answers_by_projects = {
@@ -56,10 +63,10 @@ class Question(models.Model):
     survey = models.ForeignKey('surveys.Survey')
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     type = models.CharField(max_length=200, blank=True, null=True)
-    title =  models.CharField(max_length=500, blank=True, null=True)
+    title = models.CharField(max_length=500, blank=True, null=True)
 
     display = models.BooleanField(default=True)
-    display_title =  models.CharField(max_length=500, blank=True, null=True)
+    display_title = models.CharField(max_length=500, blank=True, null=True)
     display_style = models.CharField(max_length=500, blank=True, null=True)
 
     aggregation = models.CharField(max_length=200, choices=AggregationChoices, null=True, blank=True)
@@ -80,7 +87,7 @@ class SubQuestion(models.Model):
     remote_id = models.CharField(max_length=200, blank=True, null=True)
     question = models.ForeignKey('surveys.Question')
     type = models.CharField(max_length=200, blank=True, null=True)
-    title =  models.CharField(max_length=500, blank=True, null=True)
+    title = models.CharField(max_length=500, blank=True, null=True)
     specification = JSONField(null=True)
 
     def __unicode__(self):
@@ -95,6 +102,7 @@ class Response(models.Model):
     project = models.ForeignKey('projects.Project', null=True, blank=True)
     task = models.ForeignKey('tasks.Task', null=True, blank=True)
     specification = JSONField(null=True)
+    params = JSONField(null=True)
 
 
 class Answer(models.Model):
@@ -146,7 +154,7 @@ class AggregateAnswer(models.Model):
             options = Counter()
             for item in results:
                 options.update(item)
-            self.options = {k: v for k,v in options.items()}
+            self.options = {k: v for k, v in options.items()}
 
     def aggregate_table_radio(self, answers):
         """
@@ -158,7 +166,7 @@ class AggregateAnswer(models.Model):
             options = Counter()
             for item in results:
                 options.update(item)
-            self.options = {k: float(v)/len(results) for k, v in options.items()}
+            self.options = {k: float(v) / len(results) for k, v in options.items()}
 
     def aggregate_list(self, answers):
         self.list = [answer.value for answer in answers]

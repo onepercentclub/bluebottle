@@ -12,10 +12,8 @@ class QuestionAdminInline(admin.StackedInline):
 
     extra = 0
 
-
     def sub_questions(self, obj):
         return [sub.title for sub in obj.subquestion_set.all()]
-
 
     def has_add_permission(self, request):
         return False
@@ -28,10 +26,16 @@ class QuestionAdminInline(admin.StackedInline):
 
 class SurveyAdmin(admin.ModelAdmin):
     model = Survey
-    readonly_fields = ('title', 'link', 'created', 'updated', 'specification')
+    readonly_fields = ('title', 'link', 'created', 'updated')
     fields = ('remote_id', ) + readonly_fields
     list_display = ('title', 'created')
     inlines = [QuestionAdminInline]
+
+    actions = ['synchronize_surveys']
+
+    def synchronize_surveys(self, request, queryset):
+        for survey in queryset:
+            survey.synchronize()
 
 admin.site.register(Survey, SurveyAdmin)
 
@@ -57,7 +61,7 @@ class ResponseAdmin(admin.ModelAdmin):
     inlines = [AnswerAdminInline]
     raw_id_fields = ('project', 'task')
 
-    readonly_fields = ('remote_id', 'survey', 'specification')
+    readonly_fields = ('remote_id', 'survey')
 
     list_display = ('survey', 'submitted', 'project', 'task', 'answer_count')
 

@@ -7,7 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import connection
 
-from .utils import queue_analytics_record
+from .tasks import queue_analytics_record
 
 
 @receiver(post_save, weak=False, dispatch_uid='model_analytics')

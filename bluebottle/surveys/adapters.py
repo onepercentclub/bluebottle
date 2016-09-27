@@ -1,6 +1,9 @@
 import json
 import re
 
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+
 from bluebottle.tasks.models import Task
 
 from bluebottle.clients import properties
@@ -70,14 +73,33 @@ class SurveyGizmoAdapter(BaseAdapter):
                 params[param] = data[key]
         return params
 
-    def get_responses(self, survey):
+    def get_paged_responses(self, survey, page):
         self.client.config.response_type = 'json'
-        data = self.client.api.surveyresponse.filter('status', '=', 'Complete').list(survey.remote_id)
+        data = self.client.api.surveyresponse.filter(
+            'status', '=', 'Complete'
+        )
+        if survey.last_synced:
+            data = data.filter(
+                'datesubmitted', '>=', str(survey.last_synced.date())
+            )
+        data = json.loads(data.list(survey.remote_id, page=page))
+
+        if int(data['page']) < int(data['total_pages']):
+            next_page = int(data['page']) + 1
+        else:
+            next_page = None
+
         self.client.config.response_type = None
-        data = json.loads(data)
-        # if int(data['total_count']) > 50:
-        #     raise ImportWarning('There are more then 50 results, please also load page 2.')
-        return data['data']
+        return data['data'], next_page
+
+    def get_responses(self, survey):
+        result, next_page = self.get_paged_responses(survey, 1)
+
+        while next_page:
+            paged_result, next_page = self.get_paged_responses(survey, next_page)
+            result += paged_result
+
+        return result
 
     def parse_question(self, data, survey):
         properties = {}
@@ -89,6 +111,7 @@ class SurveyGizmoAdapter(BaseAdapter):
         if data['sub_question_skus']:
             for sub_id in data['sub_question_skus']:
                 sub = self.client.api.surveyquestion.get(survey.remote_id, sub_id)
+
                 sub_questions.append((sub_id, sub['data']['title']['English']))
 
         # Collect relevant properties (specified above)
@@ -111,7 +134,6 @@ class SurveyGizmoAdapter(BaseAdapter):
         survey.specification = data
         survey.title = data['title']
         survey.link = data['links']['campaign']
-        survey.save()
 
         for page in data['pages']:
             for quest in page['questions']:
@@ -130,12 +152,15 @@ class SurveyGizmoAdapter(BaseAdapter):
                         )
 
         for response in self.get_responses(survey):
+            submitted = timezone.make_aware(
+                parse_datetime(response['datesubmitted'])
+            )
             resp, created = Response.objects.update_or_create(
                 remote_id=response['responseID'],
                 survey=survey,
                 defaults={
                     'specification': response,
-                    'submitted': response['datesubmitted']
+                    'submitted': submitted
                 }
             )
             params = self.parse_query_params(response)
@@ -150,7 +175,6 @@ class SurveyGizmoAdapter(BaseAdapter):
                 except Task.DoesNotExist:
                     pass
 
-            resp.project = Project.objects.get(id=5427)
             resp.save()
 
             answers = self.parse_answers(response)
@@ -176,7 +200,9 @@ class SurveyGizmoAdapter(BaseAdapter):
                     except SubQuestion.DoesNotExist:
                         pass
 
+        survey.last_synced = timezone.now()
         survey.aggregate()
+        survey.save()
 
     def get_survey(self, remote_id):
         return self.client.api.survey.get(remote_id)['data']

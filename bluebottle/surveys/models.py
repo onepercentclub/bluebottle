@@ -15,6 +15,7 @@ class Survey(models.Model):
     link = models.URLField(null=True)
     created = CreationDateTimeField()
     updated = ModificationDateTimeField()
+    last_synced = models.DateTimeField(null=True)
 
     def url(self, task):
         query_params = {

@@ -9,9 +9,9 @@ Hi {{receiver_name}},
 TODO: fix content
 {% endblocktrans %}
 {% if survey_link %}
-{% blocktrans with link=survey_link%}
+{% blocktrans with link=survey_link %}
 Please take a moment to fill in a survey about the impact you created:
-{{link}}
+{{ link }}
 {% endblocktrans %}
 {% endif %}
 {% endblock %}

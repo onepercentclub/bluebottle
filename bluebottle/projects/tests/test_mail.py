@@ -34,7 +34,7 @@ class TestProjectMails(BluebottleTestCase):
         self.assertNotEquals(email.subject.find("has been realised"), -1)
         self.assertTrue(self.survey.url(self.project, user_type='initiator') in email.body)
 
-    def test_complete_with_organisation(self):
+    def test_complete_with_organization(self):
         self.project.organization = OrganizationFactory.create(email='organization@example.com')
         self.project.status = self.complete
         self.project.save()

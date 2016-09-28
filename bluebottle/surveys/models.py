@@ -331,7 +331,13 @@ class AggregateAnswer(models.Model):
                 if bool(item):
                     item_length += 1
                     options.update(item)
-            self.options = {k: float(v) / item_length for k, v in options.items()}
+            result = {k: float(v) / item_length for k, v in options.items()}
+            self.options = {}
+            for sub in self.question.subquestion_set.all():
+                try:
+                    self.options[sub.title] = result[sub.title]
+                except KeyError:
+                    pass
 
     def aggregate_list(self, answers):
         if isinstance(answers[0], AggregateAnswer):

@@ -2,6 +2,8 @@ import urllib
 import itertools
 from collections import Counter
 
+import bleach
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -223,7 +225,7 @@ class Question(models.Model):
         return super(Question, self).save(*args, **kwargs)
 
     def __unicode__(self):
-        return self.title
+        return bleach.clean(self.title, strip=True, tags=[])
 
 
 class SubQuestion(models.Model):

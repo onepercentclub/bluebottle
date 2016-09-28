@@ -23,7 +23,7 @@ class Survey(models.Model):
     def url(cls, project_or_task, user_type='task_member'):
         try:
             survey = cls.objects.all()[0]
-        except cls.DoesNotExist:
+        except IndexError:
             return None
 
         if hasattr(project_or_task, 'project'):

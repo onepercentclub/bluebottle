@@ -37,6 +37,11 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.assertEqual(query['task_id'], [str(self.task.id)])
         self.assertEqual(query['user_type'], ['task_member'])
 
+    def test_survey_url_no_survey(self):
+        self.survey.delete()
+
+        self.assertIsNone(Survey.url(self.task))
+
     def test_survey_url_project(self):
         url = urlparse(
             Survey.url(self.project)

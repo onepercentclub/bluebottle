@@ -6,7 +6,7 @@ from bluebottle.surveys.models import Survey, Question, Response, Answer, Aggreg
 class QuestionAdminInline(admin.StackedInline):
 
     model = Question
-    readonly_fields = ('remote_id', 'type', 'properties', 'title', 'sub_questions')
+    readonly_fields = ('type', )
     fields = readonly_fields + ('display', 'display_title',
                                 'display_style', 'aggregation')
 

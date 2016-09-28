@@ -6,17 +6,14 @@
 
 Hello {{receiver_name}}
 
-The deadline of your task "{{title}}" is reached.
+The status of your task "{{ title }}" has changed to 'closed'.
 
-Is your task realised?
-Please confirm the participants.
-{{ site }}{{ link }} Confirm participants
-Too early to celebrate?<br>
-By changing the deadline you can extend the task period. You can also choose to close the task.
+Please let us know if your task is realised:
+{{ site}}{{link}}
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-{% trans 'Edit task' context 'email' %} {{ site }}{{ link }}/edit
+{% trans 'Go to task' context 'email' %} {{ site }}{{ link }}/edit
 {% endblock %}
 

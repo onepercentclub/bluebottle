@@ -4,12 +4,15 @@
 {% block content %}
     {% blocktrans with receiver_name=to.short_name %}
 
-        Hello {{ receiver_name }}
-        TODO: Fix content
+        Hello {{ receiver_name }},
+
+        The status of your task "{{ title }}" has changed to 'closed'.
+        Please let us know if your <a href="{{ site }}{{ link}}">task is realised.</a> 
+
     {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
     <a href="{{ site }}{{ link }}/edit"
-       class="action-email">{% trans 'Edit task' context 'email' %}</a>
+       class="action-email">{% trans 'Go to task' context 'email' %}</a>
 {% endblock %}

@@ -1,6 +1,6 @@
 import factory
 
-from bluebottle.surveys.models import Survey, Question, Answer, Response
+from bluebottle.surveys.models import Survey, Question, Answer, Response, SubQuestion
 
 
 class SurveyFactory(factory.DjangoModelFactory):
@@ -11,6 +11,11 @@ class SurveyFactory(factory.DjangoModelFactory):
 class QuestionFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Question
+
+
+class SubQuestionFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = SubQuestion
 
 
 class AnswerFactory(factory.DjangoModelFactory):

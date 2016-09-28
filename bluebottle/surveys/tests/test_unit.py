@@ -4,7 +4,8 @@ from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.tasks import TaskFactory
-from bluebottle.test.factory_models.surveys import SurveyFactory, QuestionFactory, ResponseFactory, AnswerFactory
+from bluebottle.test.factory_models.surveys import SurveyFactory, QuestionFactory, ResponseFactory, AnswerFactory, \
+    SubQuestionFactory
 
 
 class TestProjectStatusUpdate(BluebottleTestCase):
@@ -159,6 +160,8 @@ class TestSimpleProjectSurveyAggregation(BluebottleTestCase):
 
     def test_table_radio(self):
         question = QuestionFactory(survey=self.survey, title='test', type='table-radio')
+        SubQuestionFactory(question=question, title='toast')
+        SubQuestionFactory(question=question, title='test')
 
         for values in [{'test': 2, 'toast': 8}, {'test': 4, 'toast': 9}, {'test': 3, 'toast': 7}]:
             AnswerFactory.create(
@@ -171,7 +174,8 @@ class TestSimpleProjectSurveyAggregation(BluebottleTestCase):
         aggregate = question.aggregateanswer_set.get(question=question,
                                                      aggregation_type='project',
                                                      project=self.project)
-        self.assertEqual(aggregate.options, {'test': 3.0, 'toast': 8.0})
+        # Answers should follow the ordering of sub questions
+        self.assertEqual(aggregate.options, {'toast': 8.0, 'test': 3.0})
 
 
 class TestTaskSurveyAggregation(BluebottleTestCase):
@@ -333,6 +337,8 @@ class TestTaskSurveyAggregation(BluebottleTestCase):
 
     def test_multiple_choice_radio(self):
         question = QuestionFactory(survey=self.survey, title='test', type='table-radio')
+        SubQuestionFactory(question=question, title='test')
+        SubQuestionFactory(question=question, title='toast')
 
         for values in [{'test': 2, 'toast': 8}, {'test': 4, 'toast': 9}, {'test': 3, 'toast': 7}]:
             AnswerFactory.create(
@@ -474,8 +480,8 @@ class TestCombinedSurveyAggregation(BluebottleTestCase):
         self.survey.aggregate()
 
         aggregate1 = question.aggregateanswer_set.get(question=question,
-                                                       aggregation_type='combined',
-                                                       project=self.project)
+                                                      aggregation_type='combined',
+                                                      project=self.project)
         # Expected value is calculated
         # initiator:        (110 + 130) / 2
         # organization:     200
@@ -486,6 +492,8 @@ class TestCombinedSurveyAggregation(BluebottleTestCase):
     def test_combined_table_radio(self):
 
         question = QuestionFactory(survey=self.survey, title='test', type='table-radio')
+        SubQuestionFactory(question=question, title='test')
+        SubQuestionFactory(question=question, title='toast')
 
         for values in [{'test': 4, 'toast': 6}]:
             AnswerFactory.create(

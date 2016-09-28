@@ -2,6 +2,7 @@ from django.core import mail
 from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.surveys.models import Survey
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.surveys import SurveyFactory
@@ -43,12 +44,12 @@ class TestProjectMails(BluebottleTestCase):
         initiator_email = mail.outbox[0]
         self.assertEqual(initiator_email.to, [self.project.owner.email])
         self.assertTrue('has been realised' in initiator_email.subject)
-        self.assertTrue(self.survey.url(self.project, user_type='initiator') in initiator_email.body)
+        self.assertTrue(Survey.url(self.project, user_type='initiator') in initiator_email.body)
 
         organization_email = mail.outbox[1]
         self.assertEqual(organization_email.to, [self.project.organization.email])
         self.assertTrue('has been realised' in organization_email.subject)
-        self.assertTrue(self.survey.url(self.project, user_type='organization') in organization_email.body)
+        self.assertTrue(Survey.url(self.project, user_type='organization') in organization_email.body)
 
     def test_incomplete(self):
         self.project.status = self.incomplete

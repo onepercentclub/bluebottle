@@ -55,7 +55,7 @@ def mail_project_complete(project):
             subject = _(u"The project '{0}' has been realised").format(project.title)
 
         survey_link = mark_safe(
-            Survey.url(project, user_type='initiator')
+            Survey.url(project, user_type='organization')
         )
 
         send_mail(

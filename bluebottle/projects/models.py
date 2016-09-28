@@ -184,6 +184,12 @@ class Project(BaseProject, PreviousStatusMixin):
 
     categories = models.ManyToManyField('categories.Category', blank=True)
 
+    celebrate_results = models.BooleanField(
+        _('Celebrate Results'),
+        help_text=_('Show celebration when project is complete'),
+        default=True
+    )
+
     objects = ProjectManager()
 
     def __unicode__(self):
@@ -400,7 +406,7 @@ class Project(BaseProject, PreviousStatusMixin):
             if self.country:
                 return self.country.name
             elif self.location:
-                return self.location.country.name 
+                return self.location.country.name
         except AttributeError:
             return ''
 

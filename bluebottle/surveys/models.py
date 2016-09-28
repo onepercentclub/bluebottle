@@ -19,7 +19,13 @@ class Survey(models.Model):
     updated = ModificationDateTimeField()
     last_synced = models.DateTimeField(null=True)
 
-    def url(self, project_or_task, user_type='task_member'):
+    @classmethod
+    def url(cls, project_or_task, user_type='task_member'):
+        try:
+            survey = cls.objects.all()[0]
+        except cls.DoesNotExist:
+            return None
+
         if hasattr(project_or_task, 'project'):
             project = project_or_task.project
             task = project_or_task
@@ -27,16 +33,19 @@ class Survey(models.Model):
             project = project_or_task
             task = None
 
+        if not project.celebrate_results:
+            return None
+
         query_params = {
             'theme': project.theme.slug,
             'project_id': project.id,
-            'type': user_type
+            'user_type': user_type
         }
 
         if task:
             query_params['task_id'] = task.id
 
-        return '{}?{}'.format(self.link, urllib.urlencode(query_params))
+        return '{}?{}'.format(survey.link, urllib.urlencode(query_params))
 
     def synchronize(self):
         from bluebottle.surveys.adapters import SurveyGizmoAdapter

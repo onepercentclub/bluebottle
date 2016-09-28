@@ -264,7 +264,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization',
                                 'status', 'title', 'slug', 'project_type',
-                                'is_campaign')}),
+                                'is_campaign', 'celebrate_results')}),
 
         (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
 

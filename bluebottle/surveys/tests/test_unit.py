@@ -1,5 +1,6 @@
 from urlparse import urlparse, parse_qs
 
+from bluebottle.surveys.models import Survey
 from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
@@ -27,7 +28,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
 
     def test_survey_url(self):
         url = urlparse(
-            self.survey.url(self.task)
+            Survey.url(self.task)
         )
         query = parse_qs(url.query)
 
@@ -35,6 +36,41 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.assertEqual(query['theme'], [self.theme.slug])
         self.assertEqual(query['project_id'], [str(self.project.id)])
         self.assertEqual(query['task_id'], [str(self.task.id)])
+        self.assertEqual(query['user_type'], ['task_member'])
+
+    def test_survey_url_no_survey(self):
+        self.survey.delete()
+
+        self.assertIsNone(Survey.url(self.task))
+
+    def test_survey_url_project(self):
+        url = urlparse(
+            Survey.url(self.project)
+        )
+        query = parse_qs(url.query)
+
+        self.assertEqual(url.netloc, 'example.com')
+        self.assertEqual(query['theme'], [self.theme.slug])
+        self.assertEqual(query['project_id'], [str(self.project.id)])
+        self.assertTrue('task_id' not in query)
+
+    def test_survey_url_user_type(self):
+        url = urlparse(
+            Survey.url(self.task, user_type='initiator'),
+        )
+        query = parse_qs(url.query)
+
+        self.assertEqual(url.netloc, 'example.com')
+        self.assertEqual(query['theme'], [self.theme.slug])
+        self.assertEqual(query['project_id'], [str(self.project.id)])
+        self.assertEqual(query['task_id'], [str(self.task.id)])
+        self.assertEqual(query['user_type'], ['initiator'])
+
+    def test_survey_url_no_celebration(self):
+        self.project.celebrate_results = False
+        self.project.save()
+
+        self.assertIsNone(Survey.url(self.project))
 
 
 class TestSimpleProjectSurveyAggregation(BluebottleTestCase):

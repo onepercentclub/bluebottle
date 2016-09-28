@@ -84,16 +84,6 @@ class TaskMemberAcceptedMail(TaskMemberMailSender):
 
 
 class TaskMemberRealizedMail(TaskMemberMailSender):
-    @property
-    def survey_url(self):
-        try:
-            survey = Survey.objects.all()[0]
-            return mark_safe(
-                survey.url(self.task)
-            )
-        except IndexError:
-            return None
-
     def __init__(self, instance, *args, **kwargs):
         TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
 
@@ -103,10 +93,14 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
         with TenantLanguage(self.receiver.primary_language):
             self.subject = _('You realised a task!')
 
+        survey_url = mark_safe(
+            Survey.url(self.task)
+        )
+
         self.ctx = {'task': self.task, 'receiver': self.receiver,
                     'sender': self.task.author,
                     'link': self.task_link,
-                    'survey_link': self.survey_url,
+                    'survey_link': survey_url,
                     'site': self.site,
                     'task_list': self.task_list,
                     'project_link': self.project_link}

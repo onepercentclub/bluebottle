@@ -67,7 +67,6 @@ class TestTaskMemberMail(TaskMailTestBase):
 
         self.assertNotEquals(email.subject.find("realised"), -1)
         self.assertEquals(email.to[0], task_member.member.email)
-        self.assertFalse('survey' in email.body)
 
     def test_member_realized_mail_with_survey(self):
         survey = SurveyFactory(link='https://example.com/survey/1/')

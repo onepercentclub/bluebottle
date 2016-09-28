@@ -133,7 +133,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'amount_needed', 'amount_extra', 'allow_overfunding',
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
-                  'status', 'deadline', 'is_funding', 'vote_count',
+                  'status', 'deadline', 'is_funding', 'vote_count', 'celebrate_results',
                   'supporter_count', 'people_requested', 'people_registered',
                   'voting_deadline', 'latitude', 'longitude', 'video_url', 'has_voted',
                   'video_html', 'location', 'project_type')
@@ -154,7 +154,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'theme', 'categories', 'owner', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'deadline', 'latitude',
                   'longitude', 'task_count', 'allow_overfunding', 'is_campaign',
-                  'is_funding', 'people_requested',
+                  'is_funding', 'people_requested', 'celebrate_results',
                   'people_registered', 'location', 'vote_count',
                   'voting_deadline', 'project_type')
 

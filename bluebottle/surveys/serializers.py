@@ -47,6 +47,11 @@ class QuestionSerializer(serializers.ModelSerializer):
 class ProjectSurveySerializer(serializers.ModelSerializer):
     answers = QuestionSerializer(many=True, read_only=True, source='question_set')
 
+    response_count = serializers.SerializerMethodField()
+
+    def get_response_count(self, obj):
+        return len(obj.response_set.filter(project=self.context['project']))
+
     class Meta:
         model = Survey
-        fields = ('id', 'answers', 'title')
+        fields = ('id', 'answers', 'title', 'response_count')

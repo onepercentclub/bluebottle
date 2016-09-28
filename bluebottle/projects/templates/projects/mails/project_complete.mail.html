@@ -5,12 +5,19 @@
     {% blocktrans %}
 
         Hi {{ receiver_name }},
-        TODO: Fix content
+        <br><br>
+        Congratulations! Your project "{{ title }}" has been realised! It's time
+        to celebrate!<br>
+        <br>
+        Why don't you share this success with your supporters.<br>
+
     {% endblocktrans %}
 
     {% if survey_link %}
         {% blocktrans with link=survey_link %}
-        <a href="{{ link }}">Please take a moment to fill in a survey about the impact you created<a/>
+        To record the impact we have with our projects, your input is extremely important.
+        <br><br>
+        Please help us by filling out our 1 minute <a href="{{ link }}">survey</a>.
         {% endblocktrans %}
     {% endif %}
 {% endblock %}

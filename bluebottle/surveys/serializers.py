@@ -40,6 +40,7 @@ class QuestionSerializer(serializers.ModelSerializer):
         model = Question
         fields = ('id', 'title', 'type', 'display',
                   'value', 'list', 'options',
+                  'left_label', 'right_label',
                   'response_count',
                   'properties', 'style')
 

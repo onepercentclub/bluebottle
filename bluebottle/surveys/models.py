@@ -228,8 +228,14 @@ class Question(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.display_title = self.title
-            self.left_label = self.title
-            self.right_label = self.title
+            try:
+                self.left_label = self.properties['left_label']
+            except KeyError:
+                pass
+            try:
+                self.right_label = self.properties['right_label']
+            except KeyError:
+                pass
         return super(Question, self).save(*args, **kwargs)
 
     def __unicode__(self):
@@ -251,7 +257,7 @@ class SubQuestion(models.Model):
         return super(SubQuestion, self).save(*args, **kwargs)
 
     def __unicode__(self):
-        return self.display_title
+        return self.title
 
 
 class Response(models.Model):

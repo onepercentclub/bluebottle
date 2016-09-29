@@ -45,7 +45,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class ProjectSurveySerializer(serializers.ModelSerializer):
-    answers = QuestionSerializer(many=True, read_only=True, source='question_set')
+    answers = QuestionSerializer(many=True, read_only=True, source='questions')
 
     response_count = serializers.SerializerMethodField()
 

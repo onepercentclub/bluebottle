@@ -21,6 +21,10 @@ class Survey(models.Model):
     updated = ModificationDateTimeField()
     last_synced = models.DateTimeField(null=True)
 
+    @property
+    def questions(self):
+        return self.question_set.order_by('id')
+
     @classmethod
     def url(cls, project_or_task, user_type='task_member'):
         try:
@@ -214,14 +218,18 @@ class Question(models.Model):
     display = models.BooleanField(default=True)
     display_title = models.CharField(max_length=500, blank=True, null=True)
     display_style = models.CharField(max_length=500, blank=True, null=True)
+    left_label = models.CharField(max_length=200, blank=True, null=True)
+    right_label = models.CharField(max_length=200, blank=True, null=True)
 
     aggregation = models.CharField(max_length=200, choices=AggregationChoices, null=True, blank=True)
     properties = JSONField(null=True)
     specification = JSONField(null=True)
 
     def save(self, *args, **kwargs):
-        if not self.display_title:
+        if not self.id:
             self.display_title = self.title
+            self.left_label = self.title
+            self.right_label = self.title
         return super(Question, self).save(*args, **kwargs)
 
     def __unicode__(self):
@@ -234,10 +242,16 @@ class SubQuestion(models.Model):
     question = models.ForeignKey('surveys.Question')
     type = models.CharField(max_length=200, blank=True, null=True)
     title = models.CharField(max_length=500, blank=True, null=True)
+    display_title = models.CharField(max_length=500, blank=True, null=True)
     specification = JSONField(null=True)
 
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.display_title = self.title
+        return super(SubQuestion, self).save(*args, **kwargs)
+
     def __unicode__(self):
-        return self.title
+        return self.display_title
 
 
 class Response(models.Model):

@@ -191,12 +191,17 @@ class SurveyGizmoAdapter(BaseAdapter):
                 question = None
                 try:
                     question = Question.objects.get(remote_id=key, survey=survey)
+                    answer_data = None
                     # If it's a list then store it in options
-                    if isinstance(answers[key], list):
+                    if question.type == 'slider':
+                        if len(answers[key]):
+                            answer_data = {'value': answers[key][0]}
+                    elif isinstance(answers[key], list):
                         answer_data = {'options': answers[key]}
                     else:
                         answer_data = {'value': answers[key]}
-                    Answer.objects.update_or_create(response=resp, question=question,
+                    if answer_data:
+                        Answer.objects.update_or_create(response=resp, question=question,
                                                     defaults=answer_data)
                 except Question.DoesNotExist:
                     try:

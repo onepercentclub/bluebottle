@@ -1,3 +1,5 @@
+from django.http.response import HttpResponse
+from django.views.generic.base import View
 from rest_framework import generics, permissions
 
 from bluebottle.projects.models import Project
@@ -17,3 +19,16 @@ class ProjectSurveyList(generics.ListAPIView):
         context = super(ProjectSurveyList, self).get_serializer_context()
         context['project'] = Project.objects.get(slug=self.request.query_params['project'])
         return context
+
+
+class SurveyUpdateView(View):
+
+    def get(self, request, **kwargs):
+        survey_id = kwargs['survey_id']
+        try:
+            survey = Survey.objects.get(remote_id=survey_id)
+        except Survey.DoesNotExist:
+            raise Exception("Couldn't find survey: {0}".format(survey_id))
+
+        survey.synchronize()
+        return HttpResponse('success')

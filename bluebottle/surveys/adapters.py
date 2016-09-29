@@ -1,4 +1,5 @@
 import json
+import pytz
 import re
 
 from django.utils import timezone
@@ -155,7 +156,8 @@ class SurveyGizmoAdapter(BaseAdapter):
 
         for response in self.get_responses(survey):
             submitted = timezone.make_aware(
-                parse_datetime(response['datesubmitted'])
+                parse_datetime(response['datesubmitted']),
+                timezone=pytz.timezone("America/New_York")
             )
             resp, created = Response.objects.update_or_create(
                 remote_id=response['responseID'],

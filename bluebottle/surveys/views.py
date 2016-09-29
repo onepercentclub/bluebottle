@@ -32,3 +32,5 @@ class SurveyUpdateView(View):
 
         survey.synchronize()
         return HttpResponse('success')
+    
+    post = get

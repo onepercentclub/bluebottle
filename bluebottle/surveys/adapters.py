@@ -81,7 +81,7 @@ class SurveyGizmoAdapter(BaseAdapter):
         )
         if survey.last_synced:
             data = data.filter(
-                'datesubmitted', '>=', str(survey.last_synced.date())
+                'datesubmitted', '>=', str(survey.last_synced.date() - timezone.timedelta(hours=4))
             )
         data = json.loads(data.list(survey.remote_id, page=page))
 

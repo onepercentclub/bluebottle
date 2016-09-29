@@ -64,8 +64,10 @@ class ResponseAdmin(admin.ModelAdmin):
     raw_id_fields = ('project', 'task')
 
     readonly_fields = ('remote_id', 'survey', 'user_type')
-
     list_display = ('survey', 'user_type', 'submitted', 'project', 'task', 'answer_count')
+
+    search_fields = ('project__title', 'task__title')
+    list_filter = ('user_type', )
 
     def answer_count(self, obj):
         return obj.answer_set.count()
@@ -75,11 +77,13 @@ admin.site.register(Response, ResponseAdmin)
 
 class AggregateAnswerAdmin(admin.ModelAdmin):
     model = AggregateAnswer
+    search_fields = ('project__title', 'question__title')
     readonly_fields = ('question', 'project', 'task', 'aggregation_type', 'value', 'options', 'list', 'response_count')
     list_display = ('survey_question', 'project', 'response_count', 'aggregation_type', 'value', 'options', 'list')
-    list_filter = ('aggregation_type',)
+    list_filter = ('aggregation_type', 'question')
 
     def survey_question(self, obj):
-        return u"{0} : {1}".format(obj.question.survey, obj.question.display_title[:60])
+        return u"<span title='{1}'>{0}</span>".format(unicode(obj.question)[:30], obj.question)
+    survey_question.allow_tags = True
 
 admin.site.register(AggregateAnswer, AggregateAnswerAdmin)

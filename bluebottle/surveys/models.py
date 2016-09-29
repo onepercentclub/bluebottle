@@ -114,11 +114,12 @@ class Survey(models.Model):
                 project: list(answers) for project, answers in task_aggregates
             }
             for project, values in answers_by_project.items():
-                aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
-                    project=project,
-                    aggregation_type='project_tasks', question=question
-                )
-                aggregate_answer.update(values)
+                if len(values):
+                    aggregate_answer, _created = AggregateAnswer.objects.get_or_create(
+                        project=project,
+                        aggregation_type='project_tasks', question=question
+                    )
+                    aggregate_answer.update(values)
 
     def _aggregate_project_initiators(self):
         for question in self.question_set.all():

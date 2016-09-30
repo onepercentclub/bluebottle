@@ -35,9 +35,7 @@ def mail_project_complete(project):
     with TenantLanguage(project.owner.primary_language):
         subject = _(u"The project '{0}' has been realised").format(project.title)
 
-    survey_link = mark_safe(
-        Survey.url(project, user_type='initiator')
-    )
+    survey_link = Survey.url(project, user_type='initiator')
 
     send_mail(
         template_name="projects/mails/project_complete.mail",
@@ -45,7 +43,7 @@ def mail_project_complete(project):
         to=project.owner,
         title=project.title,
         receiver_name=project.owner.short_name,
-        survey_link=survey_link,
+        survey_link=mark_safe(survey_link) if survey_link else None,
         site=tenant_url(),
         link='/go/projects/{0}'.format(project.slug)
     )
@@ -54,9 +52,7 @@ def mail_project_complete(project):
         with TenantLanguage(project.owner.primary_language):
             subject = _(u"The project '{0}' has been realised").format(project.title)
 
-        survey_link = mark_safe(
-            Survey.url(project, user_type='organization')
-        )
+        survey_link = Survey.url(project, user_type='organization')
 
         send_mail(
             template_name="projects/mails/organization_project_complete.mail",
@@ -64,7 +60,7 @@ def mail_project_complete(project):
             to=project.organization,
             title=project.title,
             receiver_name=project.organization.name,
-            survey_link=survey_link,
+            survey_link=mark_safe(survey_link) if survey_link else None,
             site=tenant_url(),
             link='/go/projects/{0}'.format(project.slug)
         )

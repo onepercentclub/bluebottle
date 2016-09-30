@@ -46,7 +46,8 @@ class BaseTaskSerializer(serializers.ModelSerializer):
                                            decimal_places=2)
 
     def validate(self, data):
-        if not data['deadline'] or data['deadline'] > data['project'].deadline:
+        if (not self.instance.deadline.date() == data['deadline'].date() and  # Only validate if the date changed
+                (not data['deadline'] or data['deadline'] > data['project'].deadline)):
             raise serializers.ValidationError(
                 {'deadline': [_("The deadline must be before the project deadline.")]}
             )

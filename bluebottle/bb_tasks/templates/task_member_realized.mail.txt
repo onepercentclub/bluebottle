@@ -12,13 +12,17 @@ Let's celebrate with a short comment!
 {% endblocktrans %}
 
 {% if survey_link %}
-    {% blocktrans with link=survey_link %}
+{% blocktrans with link=survey_link %}
 Please take a moment to fill in a survey about the impact you created; {{ link }}
-    {% endblocktrans %}
+{% endblocktrans %}
 {% endif %}
 
 {% endblock %}
 
 {% block action %}
+{% if survey_link %}
+{% trans 'Fill in the survey' context 'email' %}: {{ survey_link }}
+{% else %}
 {% trans 'Comment' context 'email' %}: {{ site }}{{ link }}
+{% endif %}
 {% endblock %}

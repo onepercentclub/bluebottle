@@ -14,6 +14,7 @@
     {% endblocktrans %}
 
     {% if survey_link %}
+        <br><br>
         {% blocktrans with link=survey_link %}
         To record the impact we have with our projects, your input is extremely important.
         <br><br>
@@ -23,6 +24,11 @@
 {% endblock %}
 
 {% block action %}
+    {% if survey_link %}
+        <a href="{{ survey_link }}"
+           class="action-email">{% trans 'Fill out survey' %}</a>
+    {% else %}
     <a href="{{ site }}{{ link }}"
        class="action-email">{% trans 'Share an update' context 'email' %}</a>
+    {% endif %}
 {% endblock %}`

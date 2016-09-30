@@ -22,6 +22,12 @@
 {% endblock %}
 
 {% block action %}
-    <a href="{{ site }}{{ link }}"
-       class="action-email">{% trans 'Comment' context 'email' %}</a>
+    {% if survey_link %}
+        <a href="{{ survey_link }}"
+           class="action-email">{% trans 'Fill out survey' %}</a>
+
+    {% else %}
+        <a href="{{ site }}{{ link }}"
+           class="action-email">{% trans 'Comment' context 'email' %}</a>
+    {% endif %}
 {% endblock %}

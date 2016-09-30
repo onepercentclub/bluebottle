@@ -30,10 +30,14 @@ class SurveyAdmin(admin.ModelAdmin):
     model = Survey
     readonly_fields = ('title', 'link', 'created', 'updated')
     fields = ('remote_id', 'last_synced') + readonly_fields
-    list_display = ('title', 'created')
+    list_display = ('title', 'last_synced', 'response_count')
+
     inlines = [QuestionAdminInline]
 
     actions = ['synchronize_surveys']
+
+    def response_count(self, obj):
+        return obj.response_set.count()
 
     def synchronize_surveys(self, request, queryset):
         for survey in queryset:

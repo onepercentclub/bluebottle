@@ -93,14 +93,12 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
         with TenantLanguage(self.receiver.primary_language):
             self.subject = _('You realised a task!')
 
-        survey_url = mark_safe(
-            Survey.url(self.task)
-        )
+        survey_url = Survey.url(self.task)
 
         self.ctx = {'task': self.task, 'receiver': self.receiver,
                     'sender': self.task.author,
                     'link': self.task_link,
-                    'survey_link': survey_url,
+                    'survey_link': mark_safe(survey_url) if survey_url else None,
                     'site': self.site,
                     'task_list': self.task_list,
                     'project_link': self.project_link}

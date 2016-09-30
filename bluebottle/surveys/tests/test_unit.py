@@ -469,8 +469,8 @@ class TestCombinedSurveyAggregation(BluebottleTestCase):
         self.survey.aggregate()
 
         aggregate = question1.aggregateanswer_set.get(question=question1,
-                                                     aggregation_type='project',
-                                                     project=self.project)
+                                                      aggregation_type='project',
+                                                      project=self.project)
 
         self.assertEqual(aggregate.value, 120.0)
 

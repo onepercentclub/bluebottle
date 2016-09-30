@@ -194,6 +194,19 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         self.assertEqual(previous_call_count, queue_mock.call_count,
                          'Analytics should only be sent when status changes')
 
+    def test_changed_status(self, queue_mock):
+        user = BlueBottleUserFactory.create()
+        task_member = TaskMemberFactory.create(member=user)
+        previous_call_count = queue_mock.call_count
+
+        task_member.status = 'realized'
+        task_member.save()
+
+        args, kwargs = queue_mock.call_args
+        self.assertEqual(kwargs['tags']['status'], 'realized')
+        self.assertNotEqual(previous_call_count, queue_mock.call_count,
+                         'Task member analytics should be sent when status changes')
+
 
 @override_settings(ANALYTICS_ENABLED=True)
 @patch.object(signals, 'queue_analytics_record')
@@ -220,7 +233,6 @@ class TestOrderAnalytics(BluebottleTestCase):
             'id': order.id
         }
 
-        print queue_mock.call_args_list
         args, kwargs = queue_mock.call_args_list[0]
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)

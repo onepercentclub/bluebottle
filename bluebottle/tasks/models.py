@@ -84,7 +84,11 @@ class Task(models.Model, PreviousStatusMixin):
     class Analytics:
         type = 'task'
         tags = {
-            'status': 'status'
+            'status': 'status',
+            'location': 'project.location.name',
+            'location_group': 'project.location.group.name',
+            'theme': 'project.theme.name',
+            'theme_slug': 'project.theme.slug'
         }
         fields = {
             'id': 'id',
@@ -257,7 +261,11 @@ class TaskMember(models.Model, PreviousStatusMixin):
     class Analytics:
         type = 'task_member'
         tags = {
-            'status': 'status'
+            'status': 'status',
+            'location': 'task.project.location.name',
+            'location_group': 'task.project.location.group.name',
+            'theme': 'task.project.theme.name',
+            'theme_slug': 'task.project.theme.slug'
         }
         fields = {
             'id': 'id',

@@ -48,6 +48,13 @@ FLUENT_DASHBOARD_APP_GROUPS = (
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
     }),
+    (_('Surveys'), {
+        'models': (
+            'bluebottle.surveys.*',
+        ),
+        'module': 'fluent_dashboard.modules.AppIconList',
+        'collapsible': False,
+    }),
     (_('Wallposts'), {
         'models': (
             'bluebottle.wallposts.*',

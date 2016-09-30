@@ -68,7 +68,6 @@ class LocationGroupAdmin(admin.ModelAdmin):
     list_display = ('name', )
     model = LocationGroup
 
-
 admin.site.register(LocationGroup, LocationGroupAdmin)
 
 

@@ -18,6 +18,20 @@ class Vote(models.Model):
     def __unicode__(self):
         return "{0} -> {1}".format(self.voter, self.project)
 
+    class Analytics:
+        type = 'vote'
+        tags = {
+            'location': 'project.location.name',
+            'location_group': 'project.location.group.name',
+            'theme': 'project.theme.name',
+            'theme_slug': 'project.theme.slug'
+        }
+        fields = {
+            'id': 'id',
+            'user_id': 'voter.id',
+            'project_id': 'project.id'
+        }
+
     class Meta:
         unique_together = (('project', 'voter'),)
         ordering = ('-created',)

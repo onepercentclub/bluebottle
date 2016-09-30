@@ -2,7 +2,7 @@ import factory
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from bluebottle.wallposts.models import TextWallpost, Reaction, MediaWallpost, MediaWallpostPhoto
+from bluebottle.wallposts.models import TextWallpost, Reaction, SystemWallpost, MediaWallpost, MediaWallpostPhoto
 
 from .accounts import BlueBottleUserFactory
 from .projects import ProjectFactory
@@ -34,6 +34,11 @@ class TextWallpostFactory(factory.DjangoModelFactory):
     # content_object = generic.GenericForeignKey('content_type', 'object_id')
 
 
+class SystemWallpostFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = SystemWallpost
+
+
 class ReactionFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Reaction
@@ -56,5 +61,5 @@ class MediaWallpostPhotoFactory(factory.DjangoModelFactory):
 
     mediawallpost = factory.SubFactory(MediaWallpostFactory)
     photo = SimpleUploadedFile(name='test_image.jpg',
-                               content=open('./bluebottle/test/files/bb1.jpg', 'rb').read(),
+                               content=b'',
                                content_type='image/jpeg')

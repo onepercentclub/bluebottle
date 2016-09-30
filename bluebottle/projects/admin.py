@@ -235,7 +235,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('created', 'created'),
         ('status', 'status'),
         ('theme', 'theme'),
-        ('region', 'region'),
+        ('location__group', 'region'),
         ('location', 'location'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),
@@ -264,7 +264,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization',
                                 'status', 'title', 'slug', 'project_type',
-                                'is_campaign')}),
+                                'is_campaign', 'celebrate_results')}),
 
         (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
 

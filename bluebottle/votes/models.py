@@ -20,7 +20,12 @@ class Vote(models.Model):
 
     class Analytics:
         type = 'vote'
-        tags = {}
+        tags = {
+            'location': 'project.location.name',
+            'location_group': 'project.location.group.name',
+            'theme': 'project.theme.name',
+            'theme_slug': 'project.theme.slug'
+        }
         fields = {
             'id': 'id',
             'user_id': 'voter.id',

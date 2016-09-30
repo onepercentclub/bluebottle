@@ -9,11 +9,11 @@ Hello {{receiver_name}}
 The status of your task "{{ title }}" has changed to 'closed'.
 
 Please let us know if your task is realised:
-{{ site}}{{link}}
+{{ site}}{{link}}/edit
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-{% trans 'Go to task' context 'email' %} {{ site }}{{ link }}/edit
+{% trans 'Go to task' context 'email' %} {{ site }}{{ link }}
 {% endblock %}
 

@@ -1,6 +1,8 @@
 import json
 import re
 
+import pytz
+
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
@@ -154,7 +156,8 @@ class SurveyGizmoAdapter(BaseAdapter):
                         )
 
         for response in self.get_responses(survey):
-            submitted = timezone.make_aware(
+
+            submitted = pytz.timezone('EST').localize(  # Survey Monkey times are in EST
                 parse_datetime(response['datesubmitted'])
             )
             resp, created = Response.objects.update_or_create(

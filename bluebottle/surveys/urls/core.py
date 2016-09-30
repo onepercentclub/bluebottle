@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url
 
-from bluebottle.surveys.views import ProjectSurveyList, SurveyUpdateView
+from bluebottle.surveys.views import SurveyUpdateView
 
 urlpatterns = patterns(
     '',

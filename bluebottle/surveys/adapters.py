@@ -205,7 +205,7 @@ class SurveyGizmoAdapter(BaseAdapter):
                         answer_data = {'value': answers[key]}
                     if answer_data:
                         Answer.objects.update_or_create(response=resp, question=question,
-                                                    defaults=answer_data)
+                                                        defaults=answer_data)
                 except Question.DoesNotExist:
                     try:
                         sub_question = SubQuestion.objects.get(remote_id=key, question__survey=survey)

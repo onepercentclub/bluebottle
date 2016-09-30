@@ -9,7 +9,6 @@ from bluebottle.surveys.serializers import ProjectSurveySerializer
 from bluebottle.surveys.tasks import sync_survey
 
 
-
 class ProjectSurveyList(generics.ListAPIView):
     """
     Retrieve surveys for a project.
@@ -34,5 +33,5 @@ class SurveyUpdateView(View):
             raise Exception("Couldn't find survey: {0}".format(survey_id))
         sync_survey.delay(connection.tenant, survey)
         return HttpResponse('success')
-    
+
     post = get

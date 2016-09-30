@@ -20,7 +20,7 @@
 {% endblock %}
 
 {% block action %}
-    {% survey_link %}
+    {% if survey_link %}
         <a href="{{ survey_link }}"
            class="action-email">{% trans 'Fill out survey' %}</a>
     {% endif %}

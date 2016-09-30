@@ -1,3 +1,4 @@
+from django.db import connection
 from django.http.response import HttpResponse
 from django.views.generic.base import View
 from rest_framework import generics, permissions
@@ -5,6 +6,8 @@ from rest_framework import generics, permissions
 from bluebottle.projects.models import Project
 from bluebottle.surveys.models import Survey
 from bluebottle.surveys.serializers import ProjectSurveySerializer
+from bluebottle.surveys.tasks import sync_survey
+
 
 
 class ProjectSurveyList(generics.ListAPIView):
@@ -29,8 +32,7 @@ class SurveyUpdateView(View):
             survey = Survey.objects.get(remote_id=survey_id)
         except Survey.DoesNotExist:
             raise Exception("Couldn't find survey: {0}".format(survey_id))
-
-        survey.synchronize()
+        sync_survey.delay(connection.tenant, survey)
         return HttpResponse('success')
     
     post = get

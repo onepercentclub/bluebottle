@@ -1,4 +1,5 @@
 from mock import patch
+from decimal import Decimal
 
 from bluebottle.test.utils import BluebottleTestCase
 from django.test.utils import override_settings
@@ -249,15 +250,16 @@ class TestOrderAnalytics(BluebottleTestCase):
             self.user = BlueBottleUserFactory.create()
 
     def test_tags_generation(self, queue_mock):
-        order = OrderFactory.create(total=100, user=self.user)
+        order = OrderFactory.create(total=Decimal('100.00'), user=self.user)
         expected_tags = {
             'type': 'order',
             'tenant': u'test',
             'status': u'created',
+            'total_currency': 'EUR',
             'anonymous': False
         }
         expected_fields = {
-            'total': 100,
+            'total': 100.0,
             'user_id': order.user.id,
             'id': order.id
         }
@@ -266,6 +268,7 @@ class TestOrderAnalytics(BluebottleTestCase):
         args, kwargs = queue_mock.call_args_list[0]
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
+        self.assertEqual(str(kwargs['fields']['total']), '100.0')
 
     def test_unchanged_status(self, queue_mock):
         order = OrderFactory.create(total=100)

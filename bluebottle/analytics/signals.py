@@ -60,7 +60,7 @@ def post_save_analytics(sender, instance, **kwargs):
             return
     except AttributeError:
         pass
-    
+
     # Check for instance specific tags
     try:
         tags = analytics.extra_tags(instance, created)

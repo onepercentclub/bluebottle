@@ -2,6 +2,9 @@ from mock import patch
 
 from bluebottle.test.utils import BluebottleTestCase
 from django.test.utils import override_settings
+
+from bluebottle.projects.models import Project
+from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -105,6 +108,19 @@ class TestProjectAnalytics(BluebottleTestCase):
         self.assertEqual(previous_call_count, queue_mock.call_count,
                          'Analytics should only be sent when status changes')
 
+    def test_bulk_status_change(self, queue_mock):
+        for i in range(10):
+            ProjectFactory.create(theme=self.theme, country=self.country)
+
+        previous_call_count = queue_mock.call_count
+        Project.objects.update(status=self.status)
+
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Project.objects.all()),
+                         'Analytics should be sent when update is called')
+
+        args, kwargs = queue_mock.call_args
+        self.assertEqual(kwargs['tags'], self.expected_tags)
+
 
 @override_settings(ANALYTICS_ENABLED=True)
 @patch.object(signals, 'queue_analytics_record')
@@ -146,6 +162,19 @@ class TestTaskAnalytics(BluebottleTestCase):
 
         self.assertEqual(previous_call_count, queue_mock.call_count,
                          'Analytics should only be sent when status changes')
+
+    def test_bulk_status_change(self, queue_mock):
+        for i in range(10):
+            TaskFactory.create()
+
+        previous_call_count = queue_mock.call_count
+        Task.objects.update(status='realized')
+
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()),
+                         'Analytics should be sent when update is called')
+
+        args, kwargs = queue_mock.call_args
+        self.assertEqual(kwargs['tags']['status'], 'realized')
 
 
 @override_settings(ANALYTICS_ENABLED=True)
@@ -193,6 +222,19 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
 
         self.assertEqual(previous_call_count, queue_mock.call_count,
                          'Analytics should only be sent when status changes')
+
+    def test_bulk_status_change(self, queue_mock):
+        for i in range(10):
+            TaskMemberFactory.create()
+
+        previous_call_count = queue_mock.call_count
+        TaskMember.objects.update(status='realized')
+
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()),
+                         'Analytics should be sent when update is called')
+
+        args, kwargs = queue_mock.call_args
+        self.assertEqual(kwargs['tags']['status'], 'realized')
 
 
 @override_settings(ANALYTICS_ENABLED=True)

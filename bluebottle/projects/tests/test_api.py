@@ -9,6 +9,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.tasks.models import Task
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -562,7 +563,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 class ProjectStoryXssTest(BluebottleTestCase):
     def setUp(self):
         super(ProjectStoryXssTest, self).setUp()
-        
+
         self.init_projects()
         self.some_user = BlueBottleUserFactory.create()
 
@@ -1385,6 +1386,17 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
                                               kwargs={'slug': self.project.slug})
 
     def test_project_media_pictures(self):
+
+        response = self.client.get(self.project_supporters_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        self.assertEqual(len(response.data['donors']), 3)
+        self.assertEqual(len(response.data['posters']), 3)
+        self.assertEqual(len(response.data['task_members']), 2)
+
+    def test_project_media_pictures_only_from_project(self):
+        self.task = TaskFactory.create(id=self.project.id)
+        TextWallpostFactory.create(content_object=self.task, author=self.user4)
 
         response = self.client.get(self.project_supporters_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)

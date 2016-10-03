@@ -486,9 +486,10 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def posters(self, limit=20):
-        return TextWallpost.objects.\
-            filter(object_id=self.id).\
-            order_by('author', '-created').distinct('author')[:limit]
+        return TextWallpost.objects.filter(
+            object_id=self.id,
+            content_type=ContentType.objects.get_for_model(self.__class__)
+        ).order_by('author', '-created').distinct('author')[:limit]
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """

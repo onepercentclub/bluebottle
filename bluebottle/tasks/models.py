@@ -191,7 +191,10 @@ class Task(models.Model, PreviousStatusMixin):
     def save(self, *args, **kwargs):
         previous_status = None
         if self.pk:
-            previous_status = self.__class__.objects.get(pk=self.pk).status
+            try:
+                previous_status = self.__class__.objects.get(pk=self.pk).status
+            except self.__class__.DoesNotExist:
+                pass
 
         if not self.author_id:
             self.author = self.project.owner
@@ -350,5 +353,5 @@ class TaskMemberStatusLog(models.Model):
 
 
 from .taskmail import *  # noqa
-from .taskwallmails import *  # noqa 
+from .taskwallmails import *  # noqa
 from .signals import *  # noqa

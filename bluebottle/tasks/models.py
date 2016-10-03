@@ -256,7 +256,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
 
     _initial_status = None
 
-    # objects = models.Manager()
+    objects = UpdateSignalsQuerySet.as_manager()
 
     class Meta:
         verbose_name = _(u'task member')

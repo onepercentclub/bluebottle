@@ -32,7 +32,7 @@ class SurveyUpdateView(View):
         except Survey.DoesNotExist:
             raise Exception("Couldn't find survey: {0}".format(survey_id))
         # Run sync 5 minutes from now.
-        sync_survey.apply_async(connection.tenant, survey, countdown=300)
+        sync_survey.apply_async((connection.tenant, survey), countdown=600)
         return HttpResponse('success')
 
     post = get

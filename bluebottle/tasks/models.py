@@ -12,6 +12,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
+from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
 
 
@@ -60,7 +61,7 @@ class Task(models.Model, PreviousStatusMixin):
 
     deadline = models.DateTimeField(_('date'), help_text=_('Deadline or event date'))
 
-    objects = models.Manager()
+    objects = UpdateSignalsQuerySet.as_manager()
 
     # required resources
     time_needed = models.FloatField(

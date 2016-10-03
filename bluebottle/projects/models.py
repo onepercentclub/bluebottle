@@ -21,6 +21,7 @@ from django_extensions.db.fields import (ModificationDateTimeField,
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument
 )
+from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
@@ -42,6 +43,9 @@ class ProjectPhaseLog(BaseProjectPhaseLog):
 
 
 class ProjectManager(models.Manager):
+    def get_queryset(self):
+        return UpdateSignalsQuerySet(self.model, using=self._db)
+
     def search(self, query):
         qs = super(ProjectManager, self).get_queryset()
 

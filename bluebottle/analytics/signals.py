@@ -67,7 +67,12 @@ def post_save_analytics(sender, instance, **kwargs):
     except AttributeError:
         tags = {}
 
-    fields = {}
+    # Check for instance specific fields
+    try:
+        fields = analytics.extra_fields(instance, created)
+    except AttributeError:
+        fields = {}
+
     tags['type'] = getattr(analytics, 'type', snakecase(instance.__class__.__name__))
     tags['tenant'] = tenant_name
 

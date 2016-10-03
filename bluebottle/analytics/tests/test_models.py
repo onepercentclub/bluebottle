@@ -3,12 +3,12 @@ from mock import patch
 from bluebottle.test.utils import BluebottleTestCase
 from django.test.utils import override_settings
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory 
-from bluebottle.test.factory_models.orders import OrderFactory 
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.donations import DonationFactory 
-from bluebottle.test.factory_models.votes import VoteFactory 
-from bluebottle.test.factory_models.wallposts import TextWallpostFactory, SystemWallpostFactory 
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.votes import VoteFactory
+from bluebottle.test.factory_models.wallposts import TextWallpostFactory, SystemWallpostFactory, ReactionFactory
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
 
 from bluebottle.bb_projects.models import ProjectPhase
@@ -103,7 +103,7 @@ class TestProjectAnalytics(BluebottleTestCase):
         project.save()
 
         self.assertEqual(previous_call_count, queue_mock.call_count,
-                         'Analytics should only be sent when status changes') 
+                         'Analytics should only be sent when status changes')
 
 
 @override_settings(ANALYTICS_ENABLED=True)
@@ -137,7 +137,7 @@ class TestTaskAnalytics(BluebottleTestCase):
 
     def test_unchanged_status(self, queue_mock):
         user = BlueBottleUserFactory.create()
-        task = TaskFactory.create(author=user) 
+        task = TaskFactory.create(author=user)
         previous_call_count = queue_mock.call_count
 
         # Update record without changing status
@@ -145,7 +145,7 @@ class TestTaskAnalytics(BluebottleTestCase):
         task.save()
 
         self.assertEqual(previous_call_count, queue_mock.call_count,
-                         'Analytics should only be sent when status changes') 
+                         'Analytics should only be sent when status changes')
 
 
 @override_settings(ANALYTICS_ENABLED=True)
@@ -254,7 +254,7 @@ class TestVoteAnalytics(BluebottleTestCase):
         vote = VoteFactory.create(project=self.project)
         project = vote.project
         expected_tags = {
-            'type': 'vote', 
+            'type': 'vote',
             'tenant': u'test',
             'location': self.location.name,
             'location_group': self.location.group.name,
@@ -309,6 +309,26 @@ class TestWallpostAnalytics(BluebottleTestCase):
         self.assertEqual(queue_mock.call_count, previous_call_count,
                          'Analytics should not be sent for system wallposts')
 
+    def test_reaction(self, queue_mock):
+        wallpost = TextWallpostFactory.create()
+        reaction = ReactionFactory.create(wallpost=wallpost, author=wallpost.author)
+
+        expected_tags = {
+            'type': 'wallpost',
+            'sub_type': 'reaction',
+            'tenant': u'test'
+        }
+
+        expected_fields = {
+            'id': reaction.id,
+            'user_id': reaction.author.id
+        }
+
+        args, kwargs = queue_mock.call_args
+
+        self.assertEqual(kwargs['tags'], expected_tags)
+        self.assertEqual(kwargs['fields'], expected_fields)
+
 
 @override_settings(ANALYTICS_ENABLED=True)
 @patch.object(signals, 'queue_analytics_record')
@@ -317,7 +337,7 @@ class TestMemberAnalytics(BluebottleTestCase):
     def test_tags_generation(self, queue_mock):
         member = BlueBottleUserFactory.create()
         expected_tags = {
-            'type': 'member', 
+            'type': 'member',
             'tenant': u'test',
             'event': 'signup'
         }

@@ -106,19 +106,19 @@ def prepare_monthly_batch():
             if donor_project.project.status != ProjectPhase.objects.get(
                     slug="campaign"):
                 donor_project.delete()
-            elif donor_project.project.amount_needed <= 0:
+            elif donor_project.project.amount_needed.amount <= 0:
                 donor_project.delete()
             else:
                 monthly_project, created = MonthlyProject.objects.get_or_create(
                     batch=batch, project=donor_project.project)
-                if donor_project.project.amount_needed - monthly_project.amount <= 0:
+                if donor_project.project.amount_needed.amount - monthly_project.amount.amount <= 0:
                     donor_project.delete()
 
         # Remove Projects from top 3
         for project in top_three_projects:
             monthly_project, created = MonthlyProject.objects.get_or_create(
                 batch=batch, project=project)
-            if project.amount_needed - monthly_project.amount <= 0:
+            if project.amount_needed.amount - monthly_project.amount.amount <= 0:
                 # Remove project if it's doesn't need more many and add another from top_projects
                 top_three_projects.remove(project)
                 new_project = top_projects.pop(0)
@@ -284,12 +284,12 @@ def _process_monthly_order(monthly_order, send_email=False):
         service = PaymentService(order_payment)
         service.start_payment()
     except PaymentException as e:
-        order_payment.delete()
-        order.delete()
         error_message = "Problem starting payment. {0}".format(e)
         monthly_order.error = "{0}".format(e.message)
         monthly_order.save()
         logger.error(error_message)
+        order_payment.delete()
+        order.delete()
         return False
 
     logger.debug("Payment for '{0}' started.".format(monthly_order))

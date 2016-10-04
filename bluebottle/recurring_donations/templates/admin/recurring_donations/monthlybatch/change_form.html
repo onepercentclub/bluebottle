@@ -4,7 +4,7 @@
 {% block object-tools-items %}
     <li>
         {% if original.status == 'new' %}
-            <a href="{% url 'admin:monthly-batch-process' object_id %}" style="background-color: darkred">Process this monthly batch</a>
+            <a href="{% url 'admin:recurring_donations_monthlybatch_process' object_id %}" style="background-color: darkred">Process this monthly batch</a>
         {% elif original.status == 'processing' %}
             <a href="#" style="background-color: orangered">Processing</a>
         {% elif original.status == 'done' %}

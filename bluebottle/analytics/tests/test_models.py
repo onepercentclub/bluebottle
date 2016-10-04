@@ -12,7 +12,7 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.votes import VoteFactory
-from bluebottle.test.factory_models.wallposts import TextWallpostFactory, SystemWallpostFactory
+from bluebottle.test.factory_models.wallposts import TextWallpostFactory, SystemWallpostFactory, ReactionFactory
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
 
 from bluebottle.bb_projects.models import ProjectPhase
@@ -353,6 +353,26 @@ class TestWallpostAnalytics(BluebottleTestCase):
         SystemWallpostFactory.create(related_object=donation, content_object=project)
         self.assertEqual(queue_mock.call_count, previous_call_count,
                          'Analytics should not be sent for system wallposts')
+
+    def test_reaction(self, queue_mock):
+        wallpost = TextWallpostFactory.create()
+        reaction = ReactionFactory.create(wallpost=wallpost, author=wallpost.author)
+
+        expected_tags = {
+            'type': 'wallpost',
+            'sub_type': 'reaction',
+            'tenant': u'test'
+        }
+
+        expected_fields = {
+            'id': reaction.id,
+            'user_id': reaction.author.id
+        }
+
+        args, kwargs = queue_mock.call_args
+
+        self.assertEqual(kwargs['tags'], expected_tags)
+        self.assertEqual(kwargs['fields'], expected_fields)
 
 
 @override_settings(ANALYTICS_ENABLED=True)

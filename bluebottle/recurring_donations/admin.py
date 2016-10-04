@@ -1,8 +1,14 @@
+from django.conf.urls import url, patterns
 from django.contrib import admin
 from django.contrib.admin.filters import SimpleListFilter
+from django.core.urlresolvers import reverse
+from django.db import connection
+from django.http.response import HttpResponse, HttpResponseRedirect
 from django.utils.translation import ugettext as _
 
 from bluebottle.recurring_donations.models import MonthlyProject
+from bluebottle.recurring_donations.tasks import process_batch_task
+from bluebottle.recurring_donations.utils import prepare_monthly_batch, process_monthly_batch
 
 from .models import (MonthlyDonation, MonthlyBatch, MonthlyOrder,
                      MonthlyDonor, MonthlyDonorProject)
@@ -103,6 +109,30 @@ class MonthlyBatchAdmin(admin.ModelAdmin):
         )
 
     monthly_orders.allow_tags = True
+
+    def get_urls(self):
+        urls = super(MonthlyBatchAdmin, self).get_urls()
+        process_urls = patterns('',
+            url(r'^prepare/$', self.prepare, name="monthly-batch-prepare"),
+            url(r'^process/(?P<pk>\d+)/$', self.process_batch, name="monthly-batch-process")
+        )
+        return process_urls + urls
+
+    def process_batch(self, request, pk=None):
+        batch = MonthlyBatch.objects.get(pk=pk)
+        tenant = connection.tenant
+        process_batch_task.delay(tenant, batch)
+        batch_url = reverse('admin:recurring_donations_monthlybatch_change', args=(batch.id,))
+        response = HttpResponseRedirect(batch_url)
+        return response
+
+    process_batch.short_description = "Process monthly batch"
+
+    def prepare(self, request):
+        batch = prepare_monthly_batch()
+        batch_url = reverse('admin:recurring_donations_monthlybatch_change', args=(batch.id,))
+        response = HttpResponseRedirect(batch_url)
+        return response
 
 
 admin.site.register(MonthlyBatch, MonthlyBatchAdmin)

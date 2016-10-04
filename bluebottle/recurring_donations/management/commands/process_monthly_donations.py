@@ -3,16 +3,16 @@ import logging
 
 from optparse import make_option
 
-from ...utils import (
-    prepare_monthly_batch, process_monthly_batch,
-    process_single_monthly_order
-)
 from django.core.management.base import BaseCommand
 from django.db import connection
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 
+from ...tasks import (
+    prepare_monthly_batch, process_monthly_batch,
+    process_single_monthly_order
+)
 PAYMENT_METHOD = 'docdataDirectdebit'
 
 logger = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ class Command(BaseCommand):
                 prepare_monthly_batch()
 
             if options['process']:
-                process_monthly_batch(None, send_email)
+                process_monthly_batch(client, None, send_email)
 
             if options['process_single']:
                 process_single_monthly_order(options['process_single'], None,

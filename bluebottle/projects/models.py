@@ -20,10 +20,8 @@ from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from moneyed.classes import Money
 
-from bluebottle.tasks.models import Task
-from bluebottle.utils.utils import StatusDefinition
 from bluebottle.bb_projects.models import (
-    BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument
+    BaseProject, ProjectPhase, BaseProjectDocument
 )
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.clients import properties
@@ -31,7 +29,9 @@ from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
-from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
+from bluebottle.wallposts.models import (
+    MediaWallpostPhoto, MediaWallpost, TextWallpost
+)
 
 from .mails import (
     mail_project_funded_internal, mail_project_complete,

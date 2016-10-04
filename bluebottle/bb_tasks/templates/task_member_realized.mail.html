@@ -11,9 +11,23 @@
         <br><br>
         Let's celebrate with a short comment!
     {% endblocktrans %}
+
+    {% if survey_link %}
+        {% blocktrans with link=survey_link%}
+        <a href="{{ link}}">Please take a moment to fill in a survey about the impact you created<a/>
+        {% endblocktrans %}
+
+    {% endif %}
+
 {% endblock %}
 
 {% block action %}
-    <a href="{{ site }}{{ link }}"
-       class="action-email">{% trans 'Comment' context 'email' %}</a>
+    {% if survey_link %}
+        <a href="{{ survey_link }}"
+           class="action-email">{% trans 'Fill out survey' %}</a>
+
+    {% else %}
+        <a href="{{ site }}{{ link }}"
+           class="action-email">{% trans 'Comment' context 'email' %}</a>
+    {% endif %}
 {% endblock %}

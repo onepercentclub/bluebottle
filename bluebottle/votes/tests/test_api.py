@@ -34,6 +34,7 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
 
         self.project1 = ProjectFactory.create(owner=self.user, status=phase)
         self.project2 = ProjectFactory.create(owner=self.user, status=phase)
+        self.project3 = ProjectFactory.create(owner=self.user, status=phase)
         self.vote_url = reverse('vote_list')
 
     def test_vote(self):
@@ -92,6 +93,29 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
                          token=self.user_token)
         response = self.client.post(self.vote_url,
                                     {'project': self.project2.slug},
+                                    token=self.user_token)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data['non_field_errors'], [u'You already voted']
+        )
+
+    def test_vote_already_votes_twice(self):
+        category = CategoryFactory.create()
+
+        self.project1.categories = [category]
+        self.project1.save()
+
+        self.project2.categories = [category]
+        self.project2.save()
+
+        self.project3.categories = [category]
+        self.project3.save()
+
+        VoteFactory.create(voter=self.user, project=self.project1)
+        VoteFactory.create(voter=self.user, project=self.project2)
+
+        response = self.client.post(self.vote_url,
+                                    {'project': self.project3.slug},
                                     token=self.user_token)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(

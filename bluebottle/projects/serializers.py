@@ -1,4 +1,5 @@
 import re
+import bleach
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -17,7 +18,7 @@ from bluebottle.categories.models import Category
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
-from bluebottle.tasks.models import TaskMember
+from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 from bluebottle.votes.models import Vote
 
@@ -39,9 +40,13 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
 
 
 class StoryField(serializers.CharField):
+    TAGS=['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
+          'br', 'pre', 'blockquote']
+    ATTRIBUTES={'a': ['target', 'href']}
+
     def to_representation(self, value):
         """ Reading / Loading the story field """
-        return value
+        return bleach.clean(value, tags=self.TAGS, attributes=self.ATTRIBUTES)
 
     def to_internal_value(self, data):
         """
@@ -53,9 +58,7 @@ class StoryField(serializers.CharField):
         """
         data = data.replace("&lt;;", "<").replace("&gt;;", ">")
         data = data.replace("&lt;", "<").replace("&gt;", ">")
-        soup = BeautifulSoup(data, "html.parser")
-        [s.extract() for s in soup(['script', 'iframe'])]
-        return unicode(soup)
+        return unicode(bleach.clean(data, tags=self.TAGS, attributes=self.ATTRIBUTES))
 
 
 class ProjectCountrySerializer(CountrySerializer):
@@ -136,7 +139,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'amount_needed', 'amount_extra', 'allow_overfunding',
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
-                  'status', 'deadline', 'is_funding', 'vote_count',
+                  'status', 'deadline', 'is_funding', 'vote_count', 'celebrate_results',
                   'supporter_count', 'people_requested', 'people_registered',
                   'voting_deadline', 'latitude', 'longitude', 'video_url', 'has_voted',
                   'video_html', 'location', 'project_type')
@@ -157,7 +160,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'theme', 'categories', 'owner', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'deadline', 'latitude',
                   'longitude', 'task_count', 'allow_overfunding', 'is_campaign',
-                  'is_funding', 'people_requested',
+                  'is_funding', 'people_requested', 'celebrate_results',
                   'people_registered', 'location', 'vote_count',
                   'voting_deadline', 'project_type')
 
@@ -169,6 +172,19 @@ class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id', 'title', 'slug', 'status', 'image', 'latitude', 'longitude')
+
+
+class ManageTaskSerializer(serializers.ModelSerializer):
+    skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
+    time_needed = serializers.DecimalField(min_value=0.0,
+                                           max_digits=5,
+                                           decimal_places=2)
+
+    class Meta:
+        model = Task
+        fields = ('id', 'skill', 'description', 'type',
+                  'location', 'deadline', 'time_needed', 'title',
+                  'people_needed')
 
 
 class ManageProjectSerializer(serializers.ModelSerializer):
@@ -198,6 +214,12 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                              maxheight='315')
     story = StoryField(required=False, allow_blank=True)
     is_funding = serializers.ReadOnlyField()
+
+    tasks = ManageTaskSerializer(
+         many=True,
+         source='task_set',
+         read_only=True
+     )
 
     documents = ProjectDocumentSerializer(
         many=True, read_only=True)
@@ -276,7 +298,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'account_number', 'account_bic', 'documents',
                   'account_bank_country', 'amount_asked',
                   'amount_donated', 'amount_needed', 'video_url',
-                  'video_html', 'is_funding', 'story',
+                  'video_html', 'is_funding', 'story', 'tasks',
                   'budget_lines', 'deadline', 'latitude', 'longitude',
                   'project_type')
 

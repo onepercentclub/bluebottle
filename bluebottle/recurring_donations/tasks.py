@@ -30,27 +30,31 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task
-def process_monthly_batch(client, batch=None, send_email=False):
+def process_monthly_batch(tenant, monthly_batch, send_email):
     """
-    Process the prepared monthly orders. This will create the actual payments.
+    Process monthly donations
+    :param tenant: The tenant.
+    :param monthly_batch: The monthly donation batch to process
+    :param send_email: Are emails to be send or do we run this quietly.
+    :return:
     """
-    connection.set_tenant(client)
-    with LocalTenant(client, clear_tenant=True):
-        process_monthly_batch(batch)
+    connection.set_tenant(tenant)
+    with LocalTenant(tenant, clear_tenant=True):
 
-        if not batch:
+        if not monthly_batch:
             logger.info("No batch found using latest...")
-            batch = MonthlyBatch.objects.order_by('-date', '-created').all()[0]
+            monthly_batch = MonthlyBatch.objects.order_by('-date', '-created').all()[0]
 
-        if batch.status != 'new':
+        if monthly_batch.status != 'new':
             raise MethodNotAllowed("Can only process monthlys batch with status 'New'")
         else:
-            batch.status = 'processing'
-            batch.save()
-            for monthly_order in batch.orders.all():
+            monthly_batch.status = 'processing'
+            monthly_batch.save()
+            for monthly_order in monthly_batch.orders.all():
                 _process_monthly_order(monthly_order, send_email)
-            batch.status = 'done'
-            batch.save()
+            monthly_batch.status = 'done'
+            monthly_batch.save()
+
 
 def prepare_monthly_batch():
     """

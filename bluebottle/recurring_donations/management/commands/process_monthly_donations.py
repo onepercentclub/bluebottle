@@ -80,7 +80,7 @@ class Command(BaseCommand):
                 prepare_monthly_batch()
 
             if options['process']:
-                process_monthly_batch(client, None, send_email)
+                process_monthly_batch(tenant=client, monthly_batch=None, send_email=send_email)
 
             if options['process_single']:
                 process_single_monthly_order(options['process_single'], None,

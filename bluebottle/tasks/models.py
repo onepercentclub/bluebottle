@@ -12,6 +12,8 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
+from bluebottle.utils.managers import UpdateSignalsQuerySet
+from bluebottle.utils.utils import PreviousStatusMixin
 
 
 GROUP_PERMS = {
@@ -24,7 +26,7 @@ GROUP_PERMS = {
 }
 
 
-class Task(models.Model):
+class Task(models.Model, PreviousStatusMixin):
 
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
@@ -59,7 +61,7 @@ class Task(models.Model):
 
     deadline = models.DateTimeField(_('date'), help_text=_('Deadline or event date'))
 
-    objects = models.Manager()
+    objects = UpdateSignalsQuerySet.as_manager()
 
     # required resources
     time_needed = models.FloatField(
@@ -80,9 +82,19 @@ class Task(models.Model):
 
         ordering = ['-created']
 
-    def __init__(self, *args, **kwargs):
-        super(Task, self).__init__(*args, **kwargs)
-        self._original_status = self.status
+    class Analytics:
+        type = 'task'
+        tags = {
+            'status': 'status',
+            'location': 'project.location.name',
+            'location_group': 'project.location.group.name',
+            'theme': 'project.theme.name',
+            'theme_slug': 'project.theme.slug'
+        }
+        fields = {
+            'id': 'id',
+            'user_id': 'author.id'
+        }
 
     def __unicode__(self):
         return self.title
@@ -98,7 +110,16 @@ class Task(models.Model):
     @property
     def people_applied(self):
         return self.members.count()
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
 
+        super(TaskMember, self).save(*args, **kwargs)
+
+        # Only log task member status if the status has changed
+        if self is not None and previous_status != self.status:
+            TaskMemberStatusLog.objects.create(
+                task_member=self, status=self.status)
     def get_absolute_url(self):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
@@ -127,23 +148,12 @@ class Task(models.Model):
         """ called by post_save signal handler, if status changed """
         # confirm everything with task owner
 
-        if oldstate in ("in progress", "open") and newstate == "realized":
 
-            if self.deadline < now():
-                with TenantLanguage(self.author.primary_language):
-                    subject = _("The deadline for task '{0}' has been reached").format(self.title)
-
-                send_mail(
-                    template_name="tasks/mails/task_deadline_reached.mail",
-                    subject=subject,
-                    title=self.title,
-                    to=self.author,
-                    site=tenant_url(),
-                    link='/go/tasks/{0}'.format(self.id)
-                )
+        if oldstate in ("in progress", "open", "closed") and newstate == "realized":
+            self.project.check_task_status()
 
             with TenantLanguage(self.author.primary_language):
-                subject = _("You've set '{0}' to realized").format(self.title)
+                subject = _("The status of your task '{0}' is set to realized").format(self.title)
 
             send_mail(
                 template_name="tasks/mails/task_status_realized.mail",
@@ -153,6 +163,21 @@ class Task(models.Model):
                 site=tenant_url(),
                 link='/go/tasks/{0}'.format(self.id)
             )
+
+        if oldstate in ("in progress", "open") and newstate == "closed":
+
+            with TenantLanguage(self.author.primary_language):
+                subject = _("The status of your task '{0}' is set to closed").format(self.title)
+
+            send_mail(
+                template_name="tasks/mails/task_status_closed.mail",
+                subject=subject,
+                title=self.title,
+                to=self.author,
+                site=tenant_url(),
+                link='/go/tasks/{0}'.format(self.id)
+            )
+
 
         if oldstate in ("in progress", "open") and newstate in ("realized", "closed"):
             data = {
@@ -165,9 +190,22 @@ class Task(models.Model):
             bb_track("Task Completed", data)
 
     def save(self, *args, **kwargs):
+        previous_status = None
+        if self.pk:
+            try:
+                previous_status = self.__class__.objects.get(pk=self.pk).status
+            except self.__class__.DoesNotExist:
+                pass
+
         if not self.author_id:
             self.author = self.project.owner
+
         super(Task, self).save(*args, **kwargs)
+
+        # Only log task status if the status has changed
+        if self is not None and previous_status != self.status:
+            TaskStatusLog.objects.create(
+                task=self, status=self.status)
 
 
 class Skill(models.Model):
@@ -186,7 +224,7 @@ class Skill(models.Model):
         ordering = ('id',)
 
 
-class TaskMember(models.Model):
+class TaskMember(models.Model, PreviousStatusMixin):
     class TaskMemberStatuses(DjangoChoices):
         applied = ChoiceItem('applied', label=_('Applied'))
         accepted = ChoiceItem('accepted', label=_('Accepted'))
@@ -218,14 +256,40 @@ class TaskMember(models.Model):
 
     _initial_status = None
 
-    # objects = models.Manager()
+    objects = UpdateSignalsQuerySet.as_manager()
 
     class Meta:
         verbose_name = _(u'task member')
         verbose_name_plural = _(u'task members')
 
+    class Analytics:
+        type = 'task_member'
+        tags = {
+            'status': 'status',
+            'location': 'task.project.location.name',
+            'location_group': 'task.project.location.group.name',
+            'theme': 'task.project.theme.name',
+            'theme_slug': 'task.project.theme.slug'
+        }
+        fields = {
+            'id': 'id',
+            'hours': 'time_spent',
+            'task_id': 'task.id',
+            'user_id': 'member.id'
+        }
+
     def save(self, *args, **kwargs):
+        previous_status = None
+        if self.pk:
+            previous_status = self.__class__.objects.get(pk=self.pk).status
+
         super(TaskMember, self).save(*args, **kwargs)
+
+        # Only log task member status if the status has changed
+        if self is not None and previous_status != self.status:
+            TaskMemberStatusLog.objects.create(
+                task_member=self, status=self.status)
+
         self.check_number_of_members_needed(self.task)
 
     def delete(self, using=None, keep_parents=False):
@@ -234,8 +298,10 @@ class TaskMember(models.Model):
 
     # TODO: refactor this to use a signal and move code to task model
     def check_number_of_members_needed(self, task):
-        members = TaskMember.objects.filter(task=task,
-                                            status='accepted')
+        members = TaskMember.objects.filter(
+            task=task,
+            status__in=('accepted', 'realized')
+        )
         total_externals = 0
         for member in members:
             total_externals += member.externals
@@ -275,6 +341,20 @@ class TaskFile(models.Model):
         verbose_name_plural = _(u'task files')
 
 
-from .taskmail import *
-from .taskwallmails import *
-from .signals import *
+class TaskStatusLog(models.Model):
+    task = models.ForeignKey('tasks.Task')
+    status = models.CharField(_('status'), max_length=20)
+    start = CreationDateTimeField(
+        _('created'), help_text=_('When this task entered in this status.'))
+
+
+class TaskMemberStatusLog(models.Model):
+    task_member = models.ForeignKey('tasks.TaskMember')
+    status = models.CharField(_('status'), max_length=20)
+    start = CreationDateTimeField(
+        _('created'), help_text=_('When this task member entered in this status.'))
+
+
+from .taskmail import *  # noqa
+from .taskwallmails import *  # noqa
+from .signals import *  # noqa

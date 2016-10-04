@@ -28,10 +28,15 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectDocument)
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
+from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
-from bluebottle.tasks.models import TaskMember
-from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
+from bluebottle.tasks.models import Task, TaskMember
+from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
+from bluebottle.wallposts.models import (
+    MediaWallpostPhoto, MediaWallpost, TextWallpost
+)
 
 from .mails import (
     mail_project_funded_internal, mail_project_complete,
@@ -52,6 +57,9 @@ class ProjectPhaseLog(models.Model):
 
 
 class ProjectManager(models.Manager):
+    def get_queryset(self):
+        return UpdateSignalsQuerySet(self.model, using=self._db)
+
     def search(self, query):
         qs = super(ProjectManager, self).get_queryset()
 
@@ -138,7 +146,7 @@ class ProjectDocument(BaseProjectDocument):
         return None
 
 
-class Project(BaseProject):
+class Project(BaseProject, PreviousStatusMixin):
     latitude = models.DecimalField(
         _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
     longitude = models.DecimalField(
@@ -197,6 +205,12 @@ class Project(BaseProject):
 
     currencies = SelectMultipleField(max_length=100,
                                      choices=lazy(get_currency_choices, tuple)())
+
+    celebrate_results = models.BooleanField(
+        _('Celebrate Results'),
+        help_text=_('Show celebration when project is complete'),
+        default=True
+    )
 
     objects = ProjectManager()
 
@@ -409,6 +423,16 @@ class Project(BaseProject):
         return count
 
     @property
+    def country_name(self):
+        try:
+            if self.country:
+                return self.country.name
+            elif self.location:
+                return self.location.country.name
+        except AttributeError:
+            return ''
+
+    @property
     def vote_count(self):
         return self.vote_set.count()
 
@@ -490,9 +514,10 @@ class Project(BaseProject):
 
     @property
     def posters(self, limit=20):
-        return TextWallpost.objects.\
-            filter(object_id=self.id).\
-            order_by('author', '-created').distinct('author')[:limit]
+        return TextWallpost.objects.filter(
+            object_id=self.id,
+            content_type=ContentType.objects.get_for_model(self.__class__)
+        ).order_by('author', '-created').distinct('author')[:limit]
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """
@@ -535,6 +560,23 @@ class Project(BaseProject):
     class Meta(BaseProject.Meta):
         ordering = ['title']
 
+    class Analytics:
+        type = 'project'
+        tags = {
+            'sub_type': 'project_type',
+            'status': 'status.name',
+            'status_slug': 'status.slug',
+            'theme': 'theme.name',
+            'theme_slug': 'theme.slug',
+            'location': 'location.name',
+            'location_group': 'location.group.name',
+            'country': 'country_name'
+        }
+        fields = {
+            'id': 'id',
+            'user_id': 'owner.id'
+        }
+
     def status_changed(self, old_status, new_status):
         status_complete = ProjectPhase.objects.get(slug="done-complete")
         status_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
@@ -562,6 +604,12 @@ class Project(BaseProject):
 
             bb_track("Project Completed", data)
 
+    def check_task_status(self):
+        if (not self.is_funding and
+                all([task.status == Task.TaskStatuses.realized for task in self.task_set.all()])):
+            self.status = ProjectPhase.objects.get(slug='done-complete')
+            self.save()
+
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
         if self.is_funding:
@@ -574,7 +622,8 @@ class Project(BaseProject):
         else:
             if self.task_set.filter(
                     status__in=[Task.TaskStatuses.in_progress,
-                                Task.TaskStatuses.open]).count() > 0:
+                                Task.TaskStatuses.open,
+                                Task.TaskStatuses.closed]).count() > 0:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-complete")

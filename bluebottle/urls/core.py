@@ -7,7 +7,6 @@ from django.template.context import RequestContext
 
 from bluebottle.auth.views import GetAuthToken
 
-
 urlpatterns = patterns('',
                        # The api urls are in the / url namespace so that
                        # they're not redirected to /en/.
@@ -76,6 +75,10 @@ urlpatterns = patterns('',
                            include('bluebottle.payments_docdata.urls.core')),
                        url(r'^payments_interswitch/',
                            include('bluebottle.payments_interswitch.urls.core')),
+
+                       url(r'^surveys/',
+                           include('bluebottle.surveys.urls.core')),
+
                        url(r'^api/organizations/',
                            include('bluebottle.organizations.urls.api')),
                        url(r'^api/suggestions/',

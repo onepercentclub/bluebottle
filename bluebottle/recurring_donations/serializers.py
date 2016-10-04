@@ -2,6 +2,7 @@ from bluebottle.recurring_donations.models import (MonthlyDonor,
                                                    MonthlyDonorProject)
 from rest_framework import serializers
 from bluebottle.projects.models import Project
+from bluebottle.utils.serializers import MoneySerializer
 
 
 class MonthlyDonationProjectSerializer(serializers.ModelSerializer):
@@ -17,6 +18,7 @@ class MonthlyDonationProjectSerializer(serializers.ModelSerializer):
 
 class MonthlyDonationSerializer(serializers.ModelSerializer):
     projects = MonthlyDonationProjectSerializer(many=True, read_only=True)
+    amount = MoneySerializer()
 
     class Meta():
         model = MonthlyDonor

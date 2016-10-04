@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recurring_donations', '0001_initial'),
+        ('recurring_donations', '0003_auto_20160721_1739'),
     ]
 
     operations = [

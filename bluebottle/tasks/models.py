@@ -12,6 +12,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
+from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
 
 
@@ -60,7 +61,7 @@ class Task(models.Model, PreviousStatusMixin):
 
     deadline = models.DateTimeField(_('date'), help_text=_('Deadline or event date'))
 
-    objects = models.Manager()
+    objects = UpdateSignalsQuerySet.as_manager()
 
     # required resources
     time_needed = models.FloatField(
@@ -255,7 +256,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
 
     _initial_status = None
 
-    # objects = models.Manager()
+    objects = UpdateSignalsQuerySet.as_manager()
 
     class Meta:
         verbose_name = _(u'task member')
@@ -297,8 +298,10 @@ class TaskMember(models.Model, PreviousStatusMixin):
 
     # TODO: refactor this to use a signal and move code to task model
     def check_number_of_members_needed(self, task):
-        members = TaskMember.objects.filter(task=task,
-                                            status='accepted')
+        members = TaskMember.objects.filter(
+            task=task,
+            status__in=('accepted', 'realized')
+        )
         total_externals = 0
         for member in members:
             total_externals += member.externals

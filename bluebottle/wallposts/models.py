@@ -209,6 +209,18 @@ class Reaction(models.Model):
     objects = ReactionManager()
     objects_with_deleted = models.Manager()
 
+    class Analytics:
+        type = 'wallpost'
+        tags = {}
+
+        fields = {
+            'id': 'id',
+            'user_id': 'author.id'
+        }
+
+        def extra_tags(self, instance, created):
+            return {'sub_type': 'reaction'}
+
     class Meta:
         ordering = ('created',)
         verbose_name = _('Reaction')

@@ -29,7 +29,7 @@ class InfluxExporter:
         json_body = [
             {
                 "measurement": self.measurement,
-                "time": timestamp ,
+                "time": timestamp,
                 "tags": tags,
                 "fields": fields
             }

@@ -35,7 +35,7 @@ class MonthlyDonationApiTest(BluebottleTestCase):
                                 'name': 'Nijntje het Konijntje',
                                 'city': 'Amsterdam',
                                 'country': self.country.id,
-                                'amount': u'50.00'}
+                                'amount': 50.00}
 
     def test_create_monthly_donation(self):
         """

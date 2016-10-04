@@ -128,7 +128,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             payment = DocdataPayment(order_payment=self.order_payment,
                                      **self.order_payment.integration_data)
 
-        payment.total_gross_amount = self.order_payment.amount * 100
+        payment.total_gross_amount = self.order_payment.amount.amount * 100
 
         if payment.default_pm == 'paypal':
             payment.default_pm = 'paypal_express_checkout'
@@ -136,7 +136,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         merchant = gateway.Merchant(name=properties.DOCDATA_MERCHANT_NAME,
                                     password=properties.DOCDATA_MERCHANT_PASSWORD)
 
-        amount = gateway.Amount(value=self.order_payment.amount, currency='EUR')
+        amount = gateway.Amount(value=self.order_payment.amount.amount, currency=self.order_payment.amount.currency)
         user = self.get_user_data()
 
         if payment.default_pm == 'ideal':

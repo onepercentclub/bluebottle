@@ -295,10 +295,11 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return obj.vote_set.count()
 
     def donated_percentage(self, obj):
-        if not obj.amount_asked:
-            return "-"
-        percentage = "%.2f" % (100 * obj.amount_donated / obj.amount_asked)
-        return "{0} %".format(percentage)
+        try:
+            percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
+            return "{0} %".format(percentage)
+        except AttributeError:
+            return '-'
 
     def get_queryset(self, request):
         # Optimization: Select related fields that are used in admin specific

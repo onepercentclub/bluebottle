@@ -8,13 +8,14 @@ from localflavor.generic.validators import IBANValidator
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.bluebottle_drf2.serializers import (
-    EuroField, OEmbedField, SorlImageField, ImageSerializer,
+    OEmbedField, SorlImageField, ImageSerializer,
     PrivateFileSerializer
 )
-from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer
+from bluebottle.categories.models import Category
+from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import Task, TaskMember, Skill
@@ -69,7 +70,7 @@ class ProjectCountrySerializer(CountrySerializer):
 
 
 class ProjectBudgetLineSerializer(serializers.ModelSerializer):
-    amount = EuroField()
+    amount = MoneySerializer()
     project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
 
     class Meta:
@@ -78,7 +79,7 @@ class ProjectBudgetLineSerializer(serializers.ModelSerializer):
 
 
 class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
-    amount = EuroField()
+    amount = MoneySerializer()
 
     class Meta:
         model = ProjectBudgetLine
@@ -112,6 +113,11 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     people_requested = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
+
+    amount_asked = MoneySerializer()
+    amount_donated = MoneySerializer()
+    amount_needed = MoneySerializer()
+    amount_extra = MoneySerializer()
 
     categories = serializers.SlugRelatedField(slug_field='slug', many=True,
                                               queryset=Category.objects)
@@ -196,10 +202,11 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     image = ImageSerializer(required=False, allow_null=True)
     pitch = serializers.CharField(required=False, allow_null=True)
     slug = serializers.CharField(read_only=True)
-    amount_asked = serializers.DecimalField(max_digits=20, decimal_places=2, required=False,
-                                            allow_null=True)
-    amount_donated = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
-    amount_needed = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+
+    amount_asked = MoneySerializer(required=False, allow_null=True)
+    amount_donated = MoneySerializer(read_only=True)
+    amount_needed = MoneySerializer(read_only=True)
+
     budget_lines = ProjectBudgetLineSerializer(many=True,
                                                source='projectbudgetline_set',
                                                read_only=True)
@@ -299,7 +306,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
 class ProjectDonationSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer(source='user')
     date_donated = serializers.DateTimeField(source='ready')
-    amount = EuroField()
+    amount = MoneySerializer()
 
     class Meta:
         model = Donation

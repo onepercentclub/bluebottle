@@ -5,7 +5,7 @@
         <th class="donation-title">
             {% trans "Donation" %} {% if donation.reward %} - {{donation.reward.title}} {% endif %}
         </th>
-        <th class="donation-amount">&euro; {{ donation.amount }}</th>
+        <th class="donation-amount">{{ donation.amount.currency }} {{ donation.amount.amount }}</th>
         <tr class="donation-location">
             <td><a href="{{ site }}/projects/{{donation.project.slug}}">{{donation.project.title}}</a></td>
         </tr>

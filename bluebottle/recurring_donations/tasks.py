@@ -4,10 +4,12 @@ import math
 import logging
 from celery import shared_task
 from collections import namedtuple
+from moneyed import Money
 
 from django.db import connection
 from django.utils.timezone import now
 from django.utils import timezone
+
 from rest_framework.exceptions import MethodNotAllowed
 
 from bluebottle.clients.utils import LocalTenant
@@ -154,7 +156,7 @@ def prepare_monthly_batch():
 
         # Safety check to ensure the modifications to the donations in the recurring result
         # in an Order total that matches the RecurringDirectDebitPayment.
-        if donor.amount != Decimal(recurring_order.amount):
+        if donor.amount != recurring_order.amount:
             error_message = ("Monthly donation amount: {0} does not equal recurring "
                              "Order amount: {1} for '{2}'. Not processing this recurring "
                              "donation.").format(donor.amount, recurring_order.amount, donor)
@@ -208,8 +210,7 @@ def create_recurring_order(user, projects, batch, donor):
     """
     Creates a recurring Order with donations to the supplied projects.
     """
-    project_amount = Decimal(
-        math.floor(donor.amount * 100 / len(projects))) / 100
+    project_amount = Money((math.floor(donor.amount.amount * 100 / len(projects)) / 100), 'EUR')
     order = MonthlyOrder.objects.create(user=user, batch=batch,
                                         amount=donor.amount, name=donor.name,
                                         city=donor.city, iban=donor.iban,

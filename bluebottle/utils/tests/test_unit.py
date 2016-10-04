@@ -1,16 +1,12 @@
-import json
 import uuid
 import mock
 import dkim
-from mock import patch
-from bunch import bunchify
 
 import unittest
-from django.test import TestCase, RequestFactory
+from django.test import TestCase
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
-from django.core.urlresolvers import reverse
 from django.apps import apps
 from bluebottle.test.utils import BluebottleTestCase
 from django.test.client import Client
@@ -22,13 +18,15 @@ from fluent_contents.models import Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.text.models import TextItem
 
+from moneyed import Money
+
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.utils.models import MetaDataModel
 from bluebottle.utils.utils import clean_for_hashtag
-from bluebottle.clients.middleware import TenantProperties
-from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from ..email_backend import send_mail, create_message
+
+from bluebottle.utils.serializers import MoneySerializer
 
 BB_USER_MODEL = get_user_model()
 
@@ -40,9 +38,10 @@ def generate_random_slug():
 def generate_random_email():
     return str(uuid.uuid4())[:10] + '@' + str(uuid.uuid4())[:30] + '.com'
 
+
 def mock_attr(self, k):
     if k == 'TOKEN_AUTH':
-        return  {
+        return {
             'assertion_mapping': {
                 'email': 'email_attr',
                 'first_name': 'first_name_attr',
@@ -429,3 +428,33 @@ class TestTenantAwareMailServer(unittest.TestCase):
             self.assertTrue(smtp.called)
             self.assertEquals(smtp.call_args[0], ('tenanthost', 4242))
             self.assertTrue(connection.sendmail.called)
+
+
+class MoneySerializerTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.serializer = MoneySerializer()
+
+    def test_amount_to_money(self):
+        data = 10
+
+        self.assertEqual(
+            self.serializer.to_internal_value(data),
+            Money(10, 'EUR')
+        )
+
+    def test_float_to_money(self):
+        data = 10.0
+
+        self.assertEqual(
+            self.serializer.to_internal_value(data),
+            Money(10.0, 'EUR')
+        )
+
+
+    def test_object_to_money(self):
+        data = {'amount': 10, 'currency': 'USD'}
+
+        self.assertEqual(
+            self.serializer.to_internal_value(data),
+            Money(10, 'USD')
+        )

@@ -52,7 +52,7 @@ class TestProjectAnalytics(BluebottleTestCase):
             'location': '',
             'location_group': '',
             'type': 'project',
-            'sub_type': None,
+            'sub_type': 'funding',
             'tenant': u'test',
         }
 
@@ -264,7 +264,6 @@ class TestOrderAnalytics(BluebottleTestCase):
             'id': order.id
         }
 
-        print queue_mock.call_args_list
         args, kwargs = queue_mock.call_args_list[0]
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)

@@ -255,7 +255,7 @@ class TaskApiTestcase(BluebottleTestCase):
 
        # When a applied member is realized task status should stay 'in progress''
         response = self.client.patch(task_member_url,
-                                   {'status': 'accepted'},
+                                   {'status': 'realized'},
                                    HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, HTTP_200_OK)
         response = self.client.get(task_url)

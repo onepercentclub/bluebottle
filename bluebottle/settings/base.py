@@ -194,7 +194,8 @@ JWT_AUTH = {
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
 # List of paths to ignore for locale redirects
-LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata', '/payments_mock', '/media')
+LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
+                          '/payments_mock', '/media', '/surveys')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
@@ -299,10 +300,12 @@ TENANT_APPS = (
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
+    'bluebottle.surveys',
 
     # Plain Bluebottle apps
     'bluebottle.wallposts',
     'bluebottle.utils',
+    'bluebottle.analytics',
     'bluebottle.categories',
     'bluebottle.contentplugins',
     'bluebottle.contact',
@@ -368,7 +371,7 @@ TENANT_PROPERTIES = "bluebottle.clients.properties"
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 
-THUMBNAIL_DEBUG = True
+THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85
 THUMBNAIL_DUMMY=True
 
@@ -463,6 +466,21 @@ SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [('birthday', 'birthday')]
 # Default Client properties
 RECURRING_DONATIONS_ENABLED = False
 DONATIONS_ENABLED = True
+
+# Analytics Service
+ANALYTICS_ENABLED = False
+ANALYTICS_BACKENDS = {
+    'default': {
+        'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
+        'host': 'localhost',
+        'port': 8086,
+        'username': '',
+        'password': '',
+        'database': 'platform_v1',
+        'measurement': 'saas',
+        'ssl': True
+    }
+}
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'
@@ -578,7 +596,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('status__name', 'Status'),
                 ('title', 'Title'),
                 ('owner__email', 'Email'),
-                ('location__name', 'Location'),
+                ('location', 'Location'),
+                ('location__group', 'Region'),
                 ('region', 'Region'),
                 ('theme', 'Theme'),
                 ('supporters', 'Supporters'),
@@ -612,6 +631,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('project__title', 'Project Title'),
                 ('author__email', 'Email'),
                 ('location', 'Task location'),
+                ('location__group', 'Task Region'),
                 ('type', 'Type'),
                 ('skill', 'Skill Needed'),
                 ('people_needed', 'People needed'),
@@ -632,7 +652,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('fundraiser__id', 'Fundraiser ID'),
                 ('user__get_full_name', 'Name'),
                 ('order__user__email', 'Email'),
-                ('order__user__location__name', 'Location'),
+                ('order__user__location', 'Location'),
+                ('order__user__location__group', 'Region'),
                 ('status', 'Status'),
                 ('amount', 'Amount'),
                 ('created', 'Date'),
@@ -648,7 +669,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('task__id', 'Task ID'),
                 ('member__get_full_name', 'Name'),
                 ('member__email', 'Email'),
-                ('member__location__name', 'Location'),
+                ('member__location', 'Location'),
+                ('member__location__group', 'Region'),
                 ('get_status_display', 'Status'),
                 ('task__time_needed', 'Time pledged'),
                 ('time_spent', 'Time Spent'),
@@ -714,4 +736,7 @@ SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
     'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4
 }
 
+
+SURVEYGIZMO_API_TOKEN = ''
+SURVEYGIZMO_API_SECRET = ''
 

@@ -108,6 +108,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         male = ChoiceItem('male', label=_('Male'))
         female = ChoiceItem('female', label=_('Female'))
 
+
     class UserType(DjangoChoices):
         person = ChoiceItem('person', label=_('Person'))
         company = ChoiceItem('company', label=_('Company'))
@@ -142,6 +143,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                  null=True, blank=True)
     favourite_themes = models.ManyToManyField(ProjectTheme, blank=True)
     skills = models.ManyToManyField('tasks.Skill', blank=True)
+
+    last_seen = models.DateTimeField(_('Last Seen'), null=True, blank=True)
 
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)

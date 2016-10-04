@@ -9,6 +9,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.tasks.models import Task
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -557,6 +558,67 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.status_code,
                           status.HTTP_403_FORBIDDEN,
                           response)
+
+
+class ProjectStoryXssTest(BluebottleTestCase):
+    def setUp(self):
+        super(ProjectStoryXssTest, self).setUp()
+
+        self.init_projects()
+        self.some_user = BlueBottleUserFactory.create()
+
+    def test_unsafe_story(self):
+        story = '''
+        <p onmouseover=\"alert('Persistent_XSS');\"></p>
+        <br size="&{alert('Injected')}">
+        <div style="background-image: url(javascript:alert('Injected'))">
+        <script>alert('Injected!');</script>
+        '''
+
+        project = ProjectFactory.create(title="testproject",
+                                        slug="testproject",
+                                        story=story,
+                                        owner=self.some_user,
+                                        status=ProjectPhase.objects.get(
+                                            slug='campaign'))
+
+        response = self.client.get(reverse('project_detail',
+                                           args=[project.slug]))
+        escaped_story = '''
+        <p></p>
+        <br>
+        &lt;div style="background-image: url(javascript:alert(\'Injected\'))"&gt;
+        &lt;script&gt;alert(\'Injected!\');&lt;/script&gt;
+        '''
+        self.assertEqual(response.data['story'], escaped_story)
+
+    def test_safe_story(self):
+        story = '''
+            <p>test</p>
+            <blockquote>test</blockquote>
+            <pre>test</pre>
+            <h1>test</h1>
+            <h2>test</h2>
+            <h3>test</h3>
+            <h5>test</h5>
+            <b>test</b>
+            <strong>test</strong>
+            <i>test</i>
+            <ul><li><i>test</i></li></ul>
+            <ol><li><i>test</i></li></ol>
+            <a href="http://test.com" target="_blank">Test</a>
+            <br>
+        '''
+        project = ProjectFactory.create(title="testproject",
+                                        slug="testproject",
+                                        story=story,
+                                        owner=self.some_user,
+                                        status=ProjectPhase.objects.get(
+                                            slug='campaign'))
+
+        response = self.client.get(reverse('project_detail',
+                                           args=[project.slug]))
+        self.assertEqual(response.data['story'], story)
 
 
 class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
@@ -1324,6 +1386,17 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
                                               kwargs={'slug': self.project.slug})
 
     def test_project_media_pictures(self):
+
+        response = self.client.get(self.project_supporters_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        self.assertEqual(len(response.data['donors']), 3)
+        self.assertEqual(len(response.data['posters']), 3)
+        self.assertEqual(len(response.data['task_members']), 2)
+
+    def test_project_media_pictures_only_from_project(self):
+        self.task = TaskFactory.create(id=self.project.id)
+        TextWallpostFactory.create(content_object=self.task, author=self.user4)
 
         response = self.client.get(self.project_supporters_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)

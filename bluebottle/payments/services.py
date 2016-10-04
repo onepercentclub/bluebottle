@@ -4,7 +4,7 @@ import importlib
 from bluebottle.clients import properties
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
-from bluebottle.utils.utils import import_class
+from bluebottle.utils.utils import get_class
 
 
 def check_access_handler(handler, user):
@@ -92,7 +92,7 @@ class PaymentService(object):
         class_path = 'bluebottle.' + app_name + '.adapters.' + class_name
 
         try:
-            adapter_class = import_class(class_path)
+            adapter_class = get_class(class_path)
         except ImportError:
             raise PaymentException(
                 "Couldn't find an adapter for payment method '{0}'".format(

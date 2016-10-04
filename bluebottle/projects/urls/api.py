@@ -8,10 +8,10 @@ from django.conf.urls import patterns, url
 urlpatterns = patterns(
     '',
 
-    url(r'^media/(?P<slug>[\w-]+)/$',
+    url(r'^media/(?P<slug>[\w-]+)$',
         ProjectMediaDetail.as_view(),
         name='project-media-detail'),
-    url(r'^support/(?P<slug>[\w-]+)/$',
+    url(r'^support/(?P<slug>[\w-]+)$',
         ProjectSupportDetail.as_view(),
         name='project-supporters-detail'),
 

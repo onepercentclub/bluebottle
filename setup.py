@@ -16,14 +16,14 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.2.2#egg=django-bb-salesforce-1.2.2',
     'git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.8#egg=django-tenant-extras-2.0.8',
     'git+https://github.com/mariocesar/sorl-thumbnail.git@v12.3#egg=sorl-thumbnail-12.3-github',
-    'git+https://github.com/onepercentclub/django-token-auth.git@0.3.1#egg=django-token-auth-0.3.1',
+    'git+https://github.com/onepercentclub/django-token-auth.git@0.3.2#egg=django-token-auth-0.3.2',
     'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1'
 ]
 
 install_requires = [
     'Babel==2.3.4',
     'beautifulsoup4==4.4.1',
-    'BeautifulSoup==3.2.1',
+    'bleach==1.4.3',
     'bunch==1.0.1',
     'celery==3.1.23',
     'django-admin-tools==0.7.2',
@@ -57,6 +57,8 @@ install_requires = [
     'dkimpy==0.5.6',
     'fabric',
     'gunicorn==19.5.0',
+    'html5lib==0.9999999',
+    'influxdb==3.0.0',
     'lxml==3.6.0',
     'micawber==0.3.3',
     'mixpanel==4.3.0',
@@ -74,6 +76,7 @@ install_requires = [
     'Sphinx==1.4.1',
     'suds-jurko==0.6',
     'surlex==0.2.0',
+    'SurveyGizmo==1.2.1',
     'transifex-client==0.11',
     'unicodecsv==0.14.1',
     'wheel==0.29.0',
@@ -85,7 +88,7 @@ install_requires = [
     'django-fluent-contents==1.1.4',
     'django-taggit-autocomplete-modified==0.1.1b1',
     'django-tenant-extras==2.0.8',
-    'django-token-auth==0.3.1'
+    'django-token-auth==0.3.2'
 ]
 
 tests_requires = [

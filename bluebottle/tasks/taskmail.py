@@ -2,11 +2,13 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save, pre_delete
 from django.utils.translation import ugettext as _
 from django.utils import translation
+from django.utils.safestring import mark_safe
 
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import tenant_url
 from bluebottle.tasks.models import TaskMember
+from bluebottle.surveys.models import Survey
 from bluebottle.utils.email_backend import send_mail
 
 
@@ -91,9 +93,12 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
         with TenantLanguage(self.receiver.primary_language):
             self.subject = _('You realised a task!')
 
+        survey_url = Survey.url(self.task)
+
         self.ctx = {'task': self.task, 'receiver': self.receiver,
                     'sender': self.task.author,
                     'link': self.task_link,
+                    'survey_link': mark_safe(survey_url) if survey_url else None,
                     'site': self.site,
                     'task_list': self.task_list,
                     'project_link': self.project_link}
@@ -134,7 +139,6 @@ class TaskMemberMailAdapter:
     mail_sender = None
 
     def __init__(self, instance, status=None):
-
         if not status:
             status = instance.status
         # If a mailer is provided for the task status, set the mail_sender

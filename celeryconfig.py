@@ -31,7 +31,10 @@ CELERYBEAT_SCHEDULE = {
         'task': 'bluebottle.projects.tasks.update_popularity',
         'schedule': timedelta(hours=1),
     },
-
+    'sync-surveys': {
+        'task': 'bluebottle.surveys.tasks.sync_surveys',
+        'schedule': timedelta(hours=1),
+    },
 }
 
 CELERY_TIMEZONE = 'Europe/Amsterdam'

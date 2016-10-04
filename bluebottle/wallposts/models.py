@@ -212,6 +212,7 @@ class Reaction(models.Model):
     class Analytics:
         type = 'wallpost'
         tags = {}
+
         fields = {
             'id': 'id',
             'user_id': 'author.id'
@@ -219,11 +220,6 @@ class Reaction(models.Model):
 
         def extra_tags(self, instance, created):
             return {'sub_type': 'reaction'}
-
-        def skip(self, obj, created):
-            return True if obj.wallpost_type == 'system' else False
-
-
 
     class Meta:
         ordering = ('created',)

@@ -53,7 +53,7 @@ class Statistics(object):
         fundraiser_owner_ids = Fundraiser.objects.order_by(
             'owner__id').distinct('owner').values_list('owner_id', flat=True)
         project_owner_ids = Project.objects.filter(status__slug__in=(
-            'campaign', 'done-complete', 'done-incomplete',)).order_by(
+            'voting', 'voting-done', 'to-be-continued', 'campaign', 'done-complete', 'done-incomplete',)).order_by(
             'owner__id').distinct('owner').values_list('owner_id', flat=True)
         task_member_ids = TaskMember.objects.order_by('member__id').distinct(
             'member').values_list('member_id', flat=True)
@@ -115,7 +115,7 @@ class Statistics(object):
         """ Count all running projects (status == campaign) """
         if self._get_cached('projects-online-total'):
             return self._get_cached('projects-online-total')
-        project_count = Project.objects.filter(status__slug='campaign').count()
+        project_count = Project.objects.filter(status__slug__in=('voting', 'campaign')).count()
         self._set_cached('projects-online-total', project_count)
 
         return project_count

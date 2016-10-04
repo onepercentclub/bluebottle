@@ -1,14 +1,15 @@
 import socket
+from importlib import import_module
 
+from django.db import connection
 from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
-
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import Permission
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import Permission, Group
 
 import pygeoip
 import logging
@@ -99,9 +100,10 @@ class FSMTransition(object):
         try:
             instance_method = getattr(self, transition_method.__name__)
             instance_method()
-        except UnboundLocalError as e:
+        except UnboundLocalError:
             raise TransitionNotAllowed(
-                "Can't switch from state '{0}' to state '{1}' for {2}".format(self.status, new_status, self.__class__.__name__))
+                "Can't switch from state '{0}' to state '{1}' for {2}".format(
+                    self.status, new_status, self.__class__.__name__))
 
         if save:
             self.save()
@@ -164,11 +166,18 @@ def clean_for_hashtag(text):
     return " #".join(tags)
 
 
-def import_class(cl):
-    d = cl.rfind(".")
-    class_name = cl[d + 1:len(cl)]
-    m = __import__(cl[0:d], globals(), locals(), [class_name])
-    return getattr(m, class_name)
+# Get the class from dotted string
+def get_class(cl): 
+    try:
+        # try to call handler
+        parts = cl.split('.')
+        module_path, class_name = '.'.join(parts[:-1]), parts[-1]
+        module = import_module(module_path)
+        return getattr(module, class_name)
+
+    except (ImportError, AttributeError) as e:
+        error_message = "Could not import '%s'. %s: %s." % (cl, e.__class__.__name__, e)
+        raise Exception(error_message)
 
 
 def get_current_host():
@@ -230,9 +239,15 @@ def get_country_code_by_ip(ip_address=None):
 
 
 def update_group_permissions(sender, group_perms=None):
+    # Return early if there is no group permissions table. This will happen when running tests.
+    if Group.objects.model._meta.db_table not in connection.introspection.table_names():
+        return
+
     create_permissions(sender, verbosity=False)
     try:
-        group_perms = sender.module.models.GROUP_PERMS
+        if not group_perms:
+            group_perms = sender.module.models.GROUP_PERMS
+
         for group_name, permissions in group_perms.items():
             group, _ = Group.objects.get_or_create(name=group_name)
             for perm_codename in permissions['perms']:
@@ -240,6 +255,20 @@ def update_group_permissions(sender, group_perms=None):
                 group.permissions.add(perm)
 
             group.save()
-    except Exception, e:
+    except AttributeError:
         pass
+    except Permission.DoesNotExist, e:
+        logging.debug(e)
 
+
+class PreviousStatusMixin(object):
+    """
+    Store the status of the instance on init to be accessed as _original_status
+    """
+    def __init__(self, *args, **kwargs):
+        super(PreviousStatusMixin, self).__init__(*args, **kwargs)
+
+        try:
+            self._original_status = self.status
+        except ObjectDoesNotExist:
+            self._original_status = None

@@ -18,6 +18,20 @@ class Vote(models.Model):
     def __unicode__(self):
         return "{0} -> {1}".format(self.voter, self.project)
 
+    class Analytics:
+        type = 'vote'
+        tags = {
+            'location': 'project.location.name',
+            'location_group': 'project.location.group.name',
+            'theme': 'project.theme.name',
+            'theme_slug': 'project.theme.slug'
+        }
+        fields = {
+            'id': 'id',
+            'user_id': 'voter.id',
+            'project_id': 'project.id'
+        }
+
     class Meta:
         unique_together = (('project', 'voter'),)
         ordering = ('-created',)
@@ -37,14 +51,11 @@ class Vote(models.Model):
 
         for category in project.categories.all():
             # Make sure our vote is unique among the active projects in this category
-            try:
-                cls.objects.get(
-                    project__categories=category,
-                    project__status__slug='voting',
-                    voter=voter
-                )
+            if len(cls.objects.filter(
+                project__categories=category,
+                project__status__slug='voting',
+                voter=voter
+            )):
                 return True
-            except cls.DoesNotExist:
-                pass
 
         return False

@@ -14,6 +14,7 @@ from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
 
 
 class BlueBottleUserManagerTestCase(BluebottleTestCase):
@@ -41,6 +42,13 @@ class BlueBottleUserManagerTestCase(BluebottleTestCase):
             user = BlueBottleUserFactory.build()
             user.email = None
             user.save()
+
+    def test_location_sets_country(self):
+        country = CountryFactory.create()
+        location = LocationFactory.create(country=country)
+
+        user = BlueBottleUserFactory.create(
+            email='john_doe@onepercentclub.com', location=location)
 
 
 class BlueBottleUserTestCase(BluebottleTestCase):

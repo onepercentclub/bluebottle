@@ -72,7 +72,6 @@ def prepare_monthly_batch():
 
     batch = MonthlyBatch.objects.create(date=now())
     batch.save()
-    top_three_donation = False
 
     donor_queryset = MonthlyDonor.objects.filter(active=True).order_by(
         'user__email')
@@ -81,14 +80,14 @@ def prepare_monthly_batch():
     RecurringDonationError = namedtuple('RecurringDonationError',
                                         'recurring_payment error_message')
     skipped_recurring_payments = []
-    SkippedRecurringPayment = namedtuple('SkippedRecurringPayment',
-                                         'recurring_payment orders')
+
     donation_count = 0
 
-    popular_projects_all = Project.objects.exclude(skip_monthly=True,
-                                                         amount_needed=0).filter(
-        status=ProjectPhase.objects.get(slug="campaign")).order_by(
-        '-popularity')
+    popular_projects_all = Project.objects.\
+        exclude(skip_monthly=True, amount_needed=0).\
+        filter(status=ProjectPhase.objects.get(slug="campaign")).\
+        order_by('-popularity')
+
     top_three_projects = list(popular_projects_all[:3])
     top_projects = list(popular_projects_all[3:])
 
@@ -146,8 +145,6 @@ def prepare_monthly_batch():
             recurring_order = create_recurring_order(donor.user,
                                                      top_three_projects, batch,
                                                      donor)
-            top_three_donation = True
-
         # Update amounts for projects
         for donation in recurring_order.donations.all():
             monthly_project, created = MonthlyProject.objects.get_or_create(
@@ -155,18 +152,12 @@ def prepare_monthly_batch():
             monthly_project.amount += donation.amount
             monthly_project.save()
 
-        # At this point the order should be correctly setup and ready for the DocData payment.
-        if top_three_donation:
-            donation_type_message = "supporting the 'Top Three' projects"
-        else:
-            donation_type_message = "with {0} donations".format(
-                recurring_order.donations.count())
-
-        # Safety check to ensure the modifications to the donations in the recurring result in an Order total that
-        # matches the RecurringDirectDebitPayment.
+        # Safety check to ensure the modifications to the donations in the recurring result
+        # in an Order total that matches the RecurringDirectDebitPayment.
         if donor.amount != Decimal(recurring_order.amount):
-            error_message = "Monthly donation amount: {0} does not equal recurring Order amount: {1} for '{2}'. Not processing this recurring donation.".format(
-                donor.amount, recurring_order.amount, donor)
+            error_message = ("Monthly donation amount: {0} does not equal recurring "
+                             "Order amount: {1} for '{2}'. Not processing this recurring "
+                             "donation.").format(donor.amount, recurring_order.amount, donor)
             logger.error(error_message)
             recurring_donation_errors.append(
                 RecurringDonationError(donor, error_message))
@@ -246,8 +237,8 @@ def _process_monthly_order(monthly_order, send_email=False):
 
     ten_days_ago = timezone.now() + timezone.timedelta(days=-10)
     recent_orders = Order.objects.filter(user=monthly_order.user,
-                                               order_type='recurring',
-                                               updated__gt=ten_days_ago)
+                                         order_type='recurring',
+                                         updated__gt=ten_days_ago)
 
     if recent_orders.count() > 0:
         message = "Skipping '{0}' recently processed a recurring order for {1}:".format(
@@ -262,8 +253,8 @@ def _process_monthly_order(monthly_order, send_email=False):
         return False
 
     order = Order.objects.create(status=StatusDefinition.LOCKED,
-                                       user=monthly_order.user,
-                                       order_type='recurring')
+                                 user=monthly_order.user,
+                                 order_type='recurring')
     order.save()
 
     logger.info(
@@ -271,9 +262,9 @@ def _process_monthly_order(monthly_order, send_email=False):
                                                            monthly_order.donations.count()))
     for monthly_donation in monthly_order.donations.all():
         donation = Donation.objects.create(amount=monthly_donation.amount,
-                                                 user=monthly_donation.user,
-                                                 project=monthly_donation.project,
-                                                 order=order)
+                                           user=monthly_donation.user,
+                                           project=monthly_donation.project,
+                                           order=order)
         donation.save()
 
     integration_data = {'account_name': monthly_order.name,
@@ -326,8 +317,7 @@ def process_single_monthly_order(email, batch=None, send_email=False):
         logger.error("Found multiple MonthlyOrders for {0}.".format(email))
     elif monthly_orders.count() == 1:
         monthly_order = monthly_orders.get()
-        payment = _process_monthly_order(monthly_order, send_email)
+        _process_monthly_order(monthly_order, send_email)
     else:
         logger.error(
             "No MonthlyOrder found for {0} in Batch {1}.".format(email, batch))
-

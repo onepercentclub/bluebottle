@@ -112,7 +112,8 @@ class MonthlyBatchAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         urls = super(MonthlyBatchAdmin, self).get_urls()
-        process_urls = patterns('',
+        process_urls = patterns(
+            '',
             url(r'^prepare/$', self.prepare, name="monthly-batch-prepare"),
             url(r'^process/(?P<pk>\d+)/$', self.process_batch, name="monthly-batch-process")
         )

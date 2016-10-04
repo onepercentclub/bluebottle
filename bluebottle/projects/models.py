@@ -235,20 +235,27 @@ class Project(BaseProject, PreviousStatusMixin):
             created__gte=last_month
         )
 
-        # Loop over all projects that where changed, or where a donation was recently done
-        for project in self.objects.filter(
-                Q(updated__gte=last_month) |
-                Q(donation__created__gte=last_month,
-                  donation__order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING]) |
-                Q(task__members__created__gte=last_month) |
-                Q(vote__created__gte=last_month)).distinct():
+        # Loop over all projects that have popularity set, where a donation was recently done,
+        # where a taskmember was created or that recieved a vote
+        # These queries CAN be combined into one query, but that is very inefficient.
+        queries = [
+            Q(popularity__gt=0),
+            Q(donation__created__gte=last_month,
+              donation__order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING]),
+            Q(task__members__created__gte=last_month),
+            Q(vote__created__gte=last_month)
+        ]
 
-            project.popularity = (
-                weight * len(donations.filter(project=project)) +
-                weight * len(task_members.filter(task__project=project)) +
-                len(votes.filter(project=project))
-            )
-            project.save()
+        for query in queries:
+            for project in self.objects.filter(query).distinct():
+                popularity = (
+                    weight * len(donations.filter(project=project)) +
+                    weight * len(task_members.filter(task__project=project)) +
+                    len(votes.filter(project=project))
+                )
+                # Save the new value to the db, but skip .save
+                # this way we will not trigger signals and hit the save method
+                self.objects.filter(pk=project.pk).update(popularity=popularity)
 
     def save(self, *args, **kwargs):
         if not self.slug:

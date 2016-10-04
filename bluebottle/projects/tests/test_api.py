@@ -5,6 +5,7 @@ from random import randint
 from django.test import RequestFactory
 from django.core.urlresolvers import reverse
 from django.utils import timezone
+from django.test.utils import override_settings
 
 from rest_framework import status
 
@@ -361,6 +362,41 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.get(project_url, token=self.some_user_token)
         self.assertEquals(
             response.status_code, status.HTTP_403_FORBIDDEN, response)
+
+    @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
+    def test_project_type(self):
+        # Add some values to this project
+        project_data = {
+            'title': 'My idea is way smarter!',
+            'pitch': 'Lorem ipsum, bla bla ',
+            'description': 'Some more text',
+            'amount_asked': 1000
+        }
+
+        response = self.client.post(self.manage_projects_url,
+                                    project_data,
+                                    token=self.another_user_token)
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED, response)
+        self.assertEquals(response.data['project_type'], 'sourcing',
+                          'Project should have a default project_type')
+
+    @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
+    def test_project_type_defined(self):
+        # Add some values to this project
+        project_data = {
+            'title': 'My idea is way smarter!',
+            'pitch': 'Lorem ipsum, bla bla ',
+            'description': 'Some more text',
+            'amount_asked': 1000,
+            'project_type': 'funding'
+        }
+
+        response = self.client.post(self.manage_projects_url,
+                                    project_data,
+                                    token=self.another_user_token)
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED, response)
+        self.assertEquals(response.data['project_type'], 'funding',
+                          'Project should use project_type if defined')
 
     def test_project_document_upload(self):
         project = ProjectFactory.create(title="testproject",

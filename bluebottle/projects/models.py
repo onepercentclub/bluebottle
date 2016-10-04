@@ -1,5 +1,6 @@
 import datetime
 import pytz
+import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -22,6 +23,7 @@ from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument
 )
 from bluebottle.utils.managers import UpdateSignalsQuerySet
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
@@ -36,6 +38,8 @@ from .signals import project_funded
 
 GROUP_PERMS = {'Staff': {'perms': ('add_project', 'change_project',
                                    'delete_project')}}
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectPhaseLog(BaseProjectPhaseLog):
@@ -251,6 +255,7 @@ class Project(BaseProject, PreviousStatusMixin):
             project.save()
 
     def save(self, *args, **kwargs):
+        # Set valid slug
         if not self.slug:
             original_slug = slugify(self.title)
             counter = 2
@@ -260,6 +265,15 @@ class Project(BaseProject, PreviousStatusMixin):
                 original_slug = '{0}-{1}'.format(original_slug, counter)
                 counter += 1
             self.slug = original_slug
+
+        # set default project_type if not already defined
+        with LocalTenant():
+            if not self.project_type:
+                try:
+                    self.project_type = properties.PROJECT_CREATE_TYPES[0]
+                except (AttributeError, KeyError):
+                    logger.warning('Tenant has no PROJECT_CREATE_TYPES: %s', properties.tenant.name,
+                                                                             exc_info=1)
 
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")

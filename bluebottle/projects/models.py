@@ -267,8 +267,8 @@ class Project(BaseProject, PreviousStatusMixin):
             self.slug = original_slug
 
         # set default project_type if not already defined
-        with LocalTenant():
-            if not self.project_type:
+        if not self.project_type:
+            with LocalTenant():
                 try:
                     self.project_type = properties.PROJECT_CREATE_TYPES[0]
                 except (AttributeError, KeyError):

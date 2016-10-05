@@ -121,5 +121,3 @@ class TaskPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-
-

@@ -20,11 +20,13 @@ def task_post_save(sender, instance, **kwargs):
     except AttributeError:
         pass
 
+
 @receiver(pre_save, weak=False, sender=TaskMember,
           dispatch_uid='set-hours-spent-taskmember')
 def set_hours_spent_taskmember(sender, instance, **kwargs):
     if instance.status != instance._initial_status and instance.status == TaskMember.TaskMemberStatuses.realized:
         instance.time_spent = instance.task.time_needed
+
 
 # post save members needed
 @receiver(post_save, sender=TaskMember,
@@ -39,12 +41,11 @@ def calculate_members_needed(sender, instance, **kwargs):
     for member in members:
         total_externals += member.externals
 
-    members_accepted = members.count() + total_externals
+    people_accepted = members.count() + total_externals
 
-    if task.status == Task.TaskStatuses.open and \
-                    task.people_needed <= members_accepted:
+    if task.status == Task.TaskStatuses.open and task.people_needed <= people_accepted:
         task.set_in_progress()
 
-    if task.status == Task.TaskStatuses.in_progress and \
-                    task.people_needed > members_accepted:
+    if task.status == Task.TaskStatuses.in_progress and task.people_needed > people_accepted:
         task.set_open()
+    task.save()

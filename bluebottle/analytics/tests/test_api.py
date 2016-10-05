@@ -49,4 +49,3 @@ class TaskMemberApiAnalyticsTest(BluebottleTestCase):
         self.client.delete(task_member_url, token="JWT {0}".format(user.get_jwt_token()))
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags']['status'], 'withdrew')
-

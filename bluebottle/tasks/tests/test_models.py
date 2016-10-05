@@ -1,8 +1,5 @@
-from django.utils import timezone
-
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.test.factory_models.tasks import SkillFactory, TaskFactory, \
-    TaskMemberFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.tasks.models import TaskStatusLog, TaskMemberStatusLog
 
 
@@ -32,4 +29,3 @@ class TestTaskMemberStatusLog(BluebottleTestCase):
         self.assertEqual(TaskStatusLog.objects.count(), 1)
         self.assertEqual(log.status, 'applied')
         self.assertEqual(log.task_member_id, task_member.id)
-

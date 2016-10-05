@@ -1,20 +1,17 @@
-import pytz
-from datetime import datetime
-
 from django.db import models
-from django.utils.timezone import now
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
+from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
+from bluebottle.clients.utils import tenant_url
+from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
-
 
 GROUP_PERMS = {
     'Staff': {
@@ -137,7 +134,7 @@ class Task(models.Model, PreviousStatusMixin):
             owner """
         # send "The deadline of your task" - mail
 
-        if (self.status == 'in progress'):
+        if self.status == 'in progress':
             self.status = 'realized'
         else:
             self.status = 'closed'
@@ -152,7 +149,6 @@ class Task(models.Model, PreviousStatusMixin):
     def status_changed(self, oldstate, newstate):
         """ called by post_save signal handler, if status changed """
         # confirm everything with task owner
-
 
         if oldstate in ("in progress", "open", "closed") and newstate == "realized":
             self.project.check_task_status()
@@ -182,7 +178,6 @@ class Task(models.Model, PreviousStatusMixin):
                 site=tenant_url(),
                 link='/go/tasks/{0}'.format(self.id)
             )
-
 
         if oldstate in ("in progress", "open") and newstate in ("realized", "closed"):
             data = {
@@ -296,6 +291,9 @@ class TaskMember(models.Model, PreviousStatusMixin):
         if self is not None and previous_status != self.status:
             TaskMemberStatusLog.objects.create(
                 task_member=self, status=self.status)
+
+    def delete(self, using=None, keep_parents=False):
+        super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
 
     @property
     def time_applied_for(self):

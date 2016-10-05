@@ -25,7 +25,7 @@ class TaskMemberApiAnalyticsTest(BluebottleTestCase):
 
         self.init_projects()
 
-    def test_task_status_changes(self, queue_mock):
+    def test_taskmember_status_changes(self, queue_mock):
         user = BlueBottleUserFactory.create()
         task = TaskFactory.create(author=user, people_needed=2, status='realized')
         task_member = TaskMemberFactory.create(time_spent=10, member=user, task=task, status='applied')
@@ -36,7 +36,17 @@ class TaskMemberApiAnalyticsTest(BluebottleTestCase):
             'status': 'realized'
         }
 
-        response = self.client.put(task_member_url, task_member_data,
-                                    token="JWT {0}".format(user.get_jwt_token()))
+        self.client.put(task_member_url, task_member_data, token="JWT {0}".format(user.get_jwt_token()))
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags']['status'], 'realized')
+
+    def test_taskmember_delete_status_changes(self, queue_mock):
+        user = BlueBottleUserFactory.create()
+        task = TaskFactory.create(author=user, people_needed=2, status='realized')
+        task_member = TaskMemberFactory.create(time_spent=10, member=user, task=task, status='applied')
+
+        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member.id})
+        self.client.delete(task_member_url, token="JWT {0}".format(user.get_jwt_token()))
+        args, kwargs = queue_mock.call_args
+        self.assertEqual(kwargs['tags']['status'], 'withdrew')
+

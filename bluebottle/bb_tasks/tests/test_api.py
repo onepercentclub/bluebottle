@@ -309,13 +309,13 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         task = TaskFactory.create()
         task_member = TaskMemberFactory.create(member=self.some_user, task=task)
 
-        self.assertEquals(task.members.count(), 1)
+        self.assertEquals(task.people_applied, 1)
 
         response = self.client.delete(
             '{0}{1}'.format(self.task_members_url, task_member.id),
             token=self.some_token)
 
-        self.assertEquals(task.members.count(), 0)
+        self.assertEquals(task.people_applied, 0)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT,
                          response.data)
 

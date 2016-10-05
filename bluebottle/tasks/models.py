@@ -110,18 +110,21 @@ class Task(models.Model, PreviousStatusMixin):
         self.save()
 
     @property
+    def members_applied(self):
+        return self.members.exclude(status='withdrew')
+
+    @property
     def people_applied(self):
-        return self.members.count()
-        previous_status = None
-        if self.pk:
-            previous_status = self.__class__.objects.get(pk=self.pk).status
+        return self.members.exclude(status='withdrew').count()
 
-        super(TaskMember, self).save(*args, **kwargs)
+    @property
+    def people_accepted(self):
+        members = self.members.filter(status__in=['accepted', 'realized'])
+        total_externals = 0
+        for member in members:
+            total_externals += member.externals
+        return members.count() + total_externals
 
-        # Only log task member status if the status has changed
-        if self is not None and previous_status != self.status:
-            TaskMemberStatusLog.objects.create(
-                task_member=self, status=self.status)
     def get_absolute_url(self):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
@@ -231,7 +234,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
         applied = ChoiceItem('applied', label=_('Applied'))
         accepted = ChoiceItem('accepted', label=_('Accepted'))
         rejected = ChoiceItem('rejected', label=_('Rejected'))
-        stopped = ChoiceItem('stopped', label=_('Withdrew'))
+        withdrew = ChoiceItem('withdrew', label=_('Withdrew'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
     member = models.ForeignKey('members.Member',
@@ -293,34 +296,6 @@ class TaskMember(models.Model, PreviousStatusMixin):
         if self is not None and previous_status != self.status:
             TaskMemberStatusLog.objects.create(
                 task_member=self, status=self.status)
-
-        self.check_number_of_members_needed(self.task)
-
-    def delete(self, using=None, keep_parents=False):
-        super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
-        self.check_number_of_members_needed(self.task)
-
-    # TODO: refactor this to use a signal and move code to task model
-    def check_number_of_members_needed(self, task):
-        members = TaskMember.objects.filter(
-            task=task,
-            status__in=('accepted', 'realized')
-        )
-        total_externals = 0
-        for member in members:
-            total_externals += member.externals
-
-        members_accepted = members.count() + total_externals
-
-        if task.status == Task.TaskStatuses.open and \
-                        task.people_needed <= members_accepted:
-            task.set_in_progress()
-
-        if task.status == Task.TaskStatuses.in_progress and \
-                        task.people_needed > members_accepted:
-            task.set_open()
-
-        return members_accepted
 
     @property
     def time_applied_for(self):

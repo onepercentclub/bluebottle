@@ -6,7 +6,9 @@ from django.db.models.query_utils import Q
 from django.utils import timezone
 
 from rest_framework import generics, filters, serializers
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
@@ -191,7 +193,7 @@ class TaskMemberList(generics.ListCreateAPIView):
     pagination_class = TaskPagination
     filter_fields = ('task', 'status',)
     permission_classes = (TenantConditionalOpenClose,
-                          IsAuthenticatedOrReadOnly,)
+                          IsAuthenticatedOrReadOnly)
     queryset = TaskMember.objects.all()
 
     def perform_create(self, serializer):
@@ -204,10 +206,7 @@ class MyTaskMemberList(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = super(MyTaskMemberList, self).get_queryset()
-        # valid_statuses = [TaskMember.TaskMemberStatuses.accepted,
-        # TaskMember.TaskMemberStatuses.realized]
-        return queryset.filter(
-            member=self.request.user)  # , status__in=valid_statuses)
+        return queryset.filter(member=self.request.user)
 
 
 class TaskMemberDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -216,6 +215,12 @@ class TaskMemberDetail(generics.RetrieveUpdateDestroyAPIView):
 
     permission_classes = (TenantConditionalOpenClose,
                           IsMemberOrAuthorOrReadOnly,)
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.status = 'withdrew'
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TaskFileList(generics.ListCreateAPIView):

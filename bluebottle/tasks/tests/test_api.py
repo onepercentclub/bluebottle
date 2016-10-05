@@ -253,7 +253,7 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'in progress')
 
-       # When a applied member is realized task status should stay 'in progress''
+        # When a applied member is realized task status should stay 'in progress''
         response = self.client.patch(task_member_url,
                                    {'status': 'realized'},
                                    HTTP_AUTHORIZATION=self.some_token)

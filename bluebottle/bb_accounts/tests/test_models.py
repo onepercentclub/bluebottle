@@ -190,7 +190,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
         TaskMemberFactory.create(
             member=self.user,
-            status=TaskMember.TaskMemberStatuses.stopped,
+            status=TaskMember.TaskMemberStatuses.withdrew,
             task=task
         )
 

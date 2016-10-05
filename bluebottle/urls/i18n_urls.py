@@ -1,28 +1,16 @@
 from django.conf.urls import include, url
 from django.contrib import admin
-from django.conf.urls import patterns
 from django.core.urlresolvers import reverse_lazy
 from django.views.generic import RedirectView
 
 from bluebottle.views import HomeView
+from bluebottle.auth.views import admin_password_reset
+from django.contrib.auth.views import password_reset, password_reset_done, password_reset_confirm
 
 admin.autodiscover()
 
 
-urlpatterns = patterns(
-    '',
-
-    # Django Admin, docs and password reset
-    url(r'^admin/password_reset/$',
-        'bluebottle.auth.views.admin_password_reset',
-        name='admin_password_reset'),
-    url(r'^admin/password_reset/done/$',
-        'django.contrib.auth.views.password_reset_done'),
-
-    url(
-        r'^admin/password_reset/confirm/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        'django.contrib.auth.views.password_reset_confirm',
-        name='password_reset_confirm'),
+urlpatterns = [
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/exportdb/', include('exportdb.urls')),
     url(r'^admin/', include(admin.site.urls)),
@@ -40,10 +28,14 @@ urlpatterns = patterns(
         include('django.contrib.auth.urls', namespace='accounts')),
 
     # Django Admin, docs and password reset
-    url(r'^admin/password_reset/$', 'django.contrib.auth.views.password_reset',
+    url(r'^admin/password_reset/$', password_reset,
         name='admin_password_reset'),
-    url(r'^admin/password_reset/done/$',
-        'django.contrib.auth.views.password_reset_done'),
+    url(r'^admin/password_reset/done/$', password_reset_done),
+    url(
+        r'^admin/password_reset/confirm/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+        password_reset_confirm,
+        name='password_reset_confirm'),
+
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/', include(admin.site.urls)),
 
@@ -60,4 +52,4 @@ urlpatterns = patterns(
 
     url(r'^', HomeView.as_view(), name='home'),
 
-)
+]

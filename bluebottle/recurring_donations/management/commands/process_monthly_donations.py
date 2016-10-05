@@ -4,7 +4,6 @@ import sys
 import logging
 
 from collections import namedtuple
-from optparse import make_option
 
 from django.utils.timezone import now
 from django.core.management.base import BaseCommand
@@ -50,30 +49,28 @@ class Command(BaseCommand):
         '3': logging.DEBUG  # 3 means very verbose output.
     }
 
-    option_list = BaseCommand.option_list + (
-        make_option('--tenant', '-t', action='store', dest='tenant',
-                    help="The tenant to run the recurring donations for."),
+    def add_arguments(self, parser):
+        parser.add_argument('--tenant', '-t', action='store', dest='tenant',
+                            help="The tenant to run the recurring donations for.")
 
-        make_option('--no-email', action='store_true', dest='no_email',
-                    default=False,
-                    help="Don't send the monthly donation email to users (when processing)."),
+        parser.add_argument('--no-email', action='store_true', dest='no_email',
+                            default=False,
+                            help="Don't send the monthly donation email to users (when processing).")
 
-        make_option('--prepare', action='store_true', dest='prepare',
-                    default=False,
-                    help="Prepare the monthly donations and create records that can be processed later."),
+        parser.add_argument('--prepare', action='store_true', dest='prepare',
+                            default=False,
+                            help="Prepare the monthly donations and create records that can be processed later.")
 
-        make_option('--process', action='store_true', dest='process',
-                    default=False,
-                    help="Process the prepared records."),
+        parser.add_argument('--process', action='store_true', dest='process',
+                            default=False,
+                            help="Process the prepared records.")
 
-        make_option('--process-single', action='store', dest='process_single',
-                    default=False,
-                    metavar='<someone@gmail.com>', type='str',
-                    help="Process only the MonthlyOrder for specified e-mail address."),
+        parser.add_argument('--process-single', action='store', dest='process_single',
+                            default=False,
+                            metavar='<someone@gmail.com>',
+                            help="Process only the MonthlyOrder for specified e-mail address.")
 
-    )
-
-    def handle(self, *args, **options):
+    def handle(self, **options):
         logger = logging.getLogger('console')
 
         send_email = not options['no_email']

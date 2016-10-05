@@ -115,8 +115,7 @@ class ShareFlyer(views.APIView):
         Hope to hear from you soon
         Cheers,
         Jane"""
-        result = render_to_string('utils/mails/share_flyer.mail.html', {},
-                                  Context(args))
+        result = render_to_string('utils/mails/share_flyer.mail.html', args)
         return response.Response({'preview': result})
 
     def post(self, request, *args, **kwargs):

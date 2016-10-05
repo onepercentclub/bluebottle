@@ -20,7 +20,6 @@ def facebook_access_token(url, request):
 
 @httmock.urlmatch(netloc='graph.facebook.com', path='/me/permissions')
 def facebook_me_permissions_mock(url, request):
-    print request.headers['authorization']
     if request.headers['authorization'] == 'Bearer test_token':
         return json.dumps({"data": [{"permission": "publish_actions", "status": "granted"}]})
     else:

@@ -459,11 +459,10 @@ class TestTaskSearchCase(BluebottleTestCase):
                                             timezone.timedelta(days=365),
                                             people_needed=1)
 
-        event_task_5 = TaskFactory.create(status='open',
-                                          type='event',
-                                          deadline=self.now +
-                                          timezone.timedelta(days=365),
-                                          people_needed=1)
+        TaskFactory.create(status='open',
+                           type='event',
+                           deadline=self.now + timezone.timedelta(days=365),
+                           people_needed=1)
 
         search_date = {
             'start': str((self.tomorrow + timezone.timedelta(days=3)).date()),
@@ -548,9 +547,3 @@ class SkillListApiTests(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
         self.assertEquals(len(response.data), 3)
-
-
-
-# TODO: Test edit task
-# TODO: Test change TaskMember edit status
-# TODO: Test File uploads

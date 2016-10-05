@@ -1,5 +1,7 @@
 import datetime
 import pytz
+from django.core.exceptions import FieldError
+import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -29,6 +31,7 @@ from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectDocument)
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.managers import UpdateSignalsQuerySet
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
@@ -46,6 +49,8 @@ from .signals import project_funded
 
 GROUP_PERMS = {'Staff': {'perms': ('add_project', 'change_project',
                                    'delete_project')}}
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectPhaseLog(models.Model):
@@ -253,22 +258,30 @@ class Project(BaseProject, PreviousStatusMixin):
             created__gte=last_month
         )
 
-        # Loop over all projects that where changed, or where a donation was recently done
-        for project in self.objects.filter(
-                Q(updated__gte=last_month) |
-                Q(donation__created__gte=last_month,
-                  donation__order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING]) |
-                Q(task__members__created__gte=last_month) |
-                Q(vote__created__gte=last_month)).distinct():
+        # Loop over all projects that have popularity set, where a donation was recently done,
+        # where a taskmember was created or that recieved a vote
+        # These queries CAN be combined into one query, but that is very inefficient.
+        queries = [
+            Q(popularity__gt=0),
+            Q(donation__created__gte=last_month,
+              donation__order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING]),
+            Q(task__members__created__gte=last_month),
+            Q(vote__created__gte=last_month)
+        ]
 
-            project.popularity = (
-                weight * len(donations.filter(project=project)) +
-                weight * len(task_members.filter(task__project=project)) +
-                len(votes.filter(project=project))
-            )
-            project.save()
+        for query in queries:
+            for project in self.objects.filter(query).distinct():
+                popularity = (
+                    weight * len(donations.filter(project=project)) +
+                    weight * len(task_members.filter(task__project=project)) +
+                    len(votes.filter(project=project))
+                )
+                # Save the new value to the db, but skip .save
+                # this way we will not trigger signals and hit the save method
+                self.objects.filter(pk=project.pk).update(popularity=popularity)
 
     def save(self, *args, **kwargs):
+        # Set valid slug
         if not self.slug:
             original_slug = slugify(self.title)
             counter = 2
@@ -278,6 +291,15 @@ class Project(BaseProject, PreviousStatusMixin):
                 original_slug = '{0}-{1}'.format(original_slug, counter)
                 counter += 1
             self.slug = original_slug
+
+        # set default project_type if not already defined
+        if not self.project_type:
+            with LocalTenant():
+                try:
+                    self.project_type = properties.PROJECT_CREATE_TYPES[0]
+                except (AttributeError, KeyError):
+                    logger.warning('Tenant has no PROJECT_CREATE_TYPES: %s', properties.tenant.name,
+                                                                             exc_info=1)
 
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")
@@ -566,7 +588,9 @@ class Project(BaseProject, PreviousStatusMixin):
             'sub_type': 'project_type',
             'status': 'status.name',
             'status_slug': 'status.slug',
-            'theme': 'theme.name',
+            'theme': {
+                'theme.name': {'translate': True}
+            },
             'theme_slug': 'theme.slug',
             'location': 'location.name',
             'location_group': 'location.group.name',

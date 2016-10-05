@@ -11,6 +11,8 @@ from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, SorlImageField, ImageSerializer,
     PrivateFileSerializer
 )
+from bluebottle.clients import properties
+from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer

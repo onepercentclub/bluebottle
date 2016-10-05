@@ -563,7 +563,9 @@ class Project(BaseProject, PreviousStatusMixin):
             'sub_type': 'project_type',
             'status': 'status.name',
             'status_slug': 'status.slug',
-            'theme': 'theme.name',
+            'theme': {
+                'theme.name': {'translate': True}
+            },
             'theme_slug': 'theme.slug',
             'location': 'location.name',
             'location_group': 'location.group.name',

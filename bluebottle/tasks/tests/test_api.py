@@ -233,9 +233,13 @@ class TaskApiTestcase(BluebottleTestCase):
         self.assertEqual(response.data['status'], 'in progress')
 
         # When a applied member is withdraws task status should change to 'open'
-        response = self.client.delete(task_member_url,
-                                      HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+        response = self.client.put(task_member_url,
+                                   {
+                                       'status': 'withdrew',
+                                       'task': task.id
+                                   },
+                                   HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_200_OK)
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'open')
 

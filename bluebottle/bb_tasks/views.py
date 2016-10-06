@@ -209,18 +209,12 @@ class MyTaskMemberList(generics.ListAPIView):
         return queryset.filter(member=self.request.user)
 
 
-class TaskMemberDetail(generics.RetrieveUpdateDestroyAPIView):
+class TaskMemberDetail(generics.RetrieveUpdateAPIView):
     queryset = TaskMember.objects.all()
     serializer_class = BaseTaskMemberSerializer
 
     permission_classes = (TenantConditionalOpenClose,
                           IsMemberOrAuthorOrReadOnly,)
-
-    def delete(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.status = 'withdrew'
-        instance.save()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TaskFileList(generics.ListCreateAPIView):

@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.tasks.models import TaskMember, Task, TaskStatusLog, TaskMemberStatusLog
@@ -29,11 +31,11 @@ class TestTaskMemberCase(BluebottleTestCase):
         task = TaskFactory.create(status='open', people_needed=4)
 
         task_member1 = TaskMemberFactory.create(task=task, status='accepted')
-        self.assertEqual(task_member1.check_number_of_members_needed(task), 1)
+        self.assertEqual(task_member1.task.people_accepted, 1)
 
         task_member2 = TaskMemberFactory.create(task=task, status='accepted')
-        self.assertEqual(task_member2.check_number_of_members_needed(task), 2)
-        self.assertEqual(task_member1.check_number_of_members_needed(task), 2)
+        self.assertEqual(task_member2.task.people_accepted, 2)
+        self.assertEqual(task_member1.task.people_accepted, 2)
 
     def test_check_number_of_members_needed_with_externals_count(self):
         """ Test that 'check_number_of_members_needed' returns the right count with externals"""
@@ -41,12 +43,12 @@ class TestTaskMemberCase(BluebottleTestCase):
 
         task_member1 = TaskMemberFactory.create(task=task, status='accepted',
                                                 externals=1)
-        self.assertEqual(task_member1.check_number_of_members_needed(task), 2)
+        self.assertEqual(task_member1.task.people_accepted, 2)
 
         task_member2 = TaskMemberFactory.create(task=task, status='accepted',
                                                 externals=2)
-        self.assertEqual(task_member2.check_number_of_members_needed(task), 5)
-        self.assertEqual(task_member1.check_number_of_members_needed(task), 5)
+        self.assertEqual(task_member2.task.people_accepted, 5)
+        self.assertEqual(task_member1.task.people_accepted, 5)
 
     def test_check_number_of_members_needed_set_in_progress(self):
         """ Test that the task status changes when enough people are accepted for a task. It shouldn't update 
@@ -56,14 +58,14 @@ class TestTaskMemberCase(BluebottleTestCase):
         task_member1 = TaskMemberFactory.create(task=task, status='accepted',
                                                 externals=1)
 
-        self.assertEqual(task_member1.check_number_of_members_needed(task), 2)
+        self.assertEqual(task_member1.task.people_accepted, 2)
         # Not enough people yet
         self.assertEqual(task.status, 'open')
 
         task_member2 = TaskMemberFactory.create(task=task, status='accepted',
                                                 externals=2)
 
-        self.assertEqual(task_member2.check_number_of_members_needed(task), 5)
+        self.assertEqual(task_member2.task.people_accepted, 5)
         # More than people_needed have applied
         self.assertEqual(task.status, 'in progress')
 

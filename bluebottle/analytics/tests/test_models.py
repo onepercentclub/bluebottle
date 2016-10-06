@@ -52,7 +52,7 @@ class TestProjectAnalytics(BluebottleTestCase):
             'location': '',
             'location_group': '',
             'type': 'project',
-            'sub_type': None,
+            'sub_type': 'funding',
             'tenant': u'test',
         }
 
@@ -164,6 +164,17 @@ class TestTaskAnalytics(BluebottleTestCase):
         self.assertEqual(previous_call_count, queue_mock.call_count,
                          'Analytics should only be sent when status changes')
 
+    @patch.object(signals, '_', fake_trans)
+    def test_theme_translated(self, queue_mock):
+        theme = ProjectThemeFactory.create(name='Cleaning the beach',
+                                           slug='cleaning-the-beach')
+        project = ProjectFactory.create(theme=theme)
+        user = BlueBottleUserFactory.create()
+        task = TaskFactory.create(author=user, project=project)
+
+        args, kwargs = queue_mock.call_args
+        self.assertEqual(kwargs['tags']['theme'], 'Cleaning the park')
+
     def test_bulk_status_change(self, queue_mock):
         for i in range(10):
             TaskFactory.create()
@@ -224,6 +235,30 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         self.assertEqual(previous_call_count, queue_mock.call_count,
                          'Analytics should only be sent when status changes')
 
+    def test_status_change(self, queue_mock):
+        user = BlueBottleUserFactory.create()
+        task = TaskFactory.create(author=user, people_needed=2)
+        task_member = TaskMemberFactory.create(member=user, task=task, status='approved')
+        previous_call_count = queue_mock.call_count
+
+        # Update record without changing status
+        task_member.status = 'realized'
+        task_member.save()
+
+        self.assertEqual(previous_call_count+1, queue_mock.call_count,
+                         'Analytics should be sent when task member status changes')
+
+    @patch.object(signals, '_', fake_trans)
+    def test_theme_translated(self, queue_mock):
+        theme = ProjectThemeFactory.create(name='Cleaning the beach',
+                                           slug='cleaning-the-beach')
+        project = ProjectFactory.create(theme=theme)
+        task = TaskFactory.create(project=project)
+        task_member = TaskMemberFactory.create(task=task)
+
+        args, kwargs = queue_mock.call_args
+        self.assertEqual(kwargs['tags']['theme'], 'Cleaning the park')
+
     def test_bulk_status_change(self, queue_mock):
         for i in range(10):
             TaskMemberFactory.create()
@@ -264,7 +299,6 @@ class TestOrderAnalytics(BluebottleTestCase):
             'id': order.id
         }
 
-        print queue_mock.call_args_list
         args, kwargs = queue_mock.call_args_list[0]
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)

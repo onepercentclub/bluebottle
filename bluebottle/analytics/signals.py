@@ -7,7 +7,26 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import connection
 
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.clients import properties
 from .tasks import queue_analytics_record
+
+from tenant_extras.utils import TenantLanguage
+
+
+def _multi_getattr(obj, attr, **kw):
+    attributes = attr.split(".")
+    for i in attributes:
+        try:
+            obj = getattr(obj, i)
+            if callable(obj):
+                obj = obj()
+        except AttributeError:
+            if kw.has_key('default'):
+                return kw['default']
+            else:
+                raise
+    return obj
 
 
 @receiver(post_save, weak=False, dispatch_uid='model_analytics')
@@ -31,20 +50,6 @@ def post_save_analytics(sender, instance, **kwargs):
     except AttributeError:
         pass
 
-    def multi_getattr(obj, attr, **kw):
-        attributes = attr.split(".")
-        for i in attributes:
-            try:
-                obj = getattr(obj, i)
-                if callable(obj):
-                    obj = obj()
-            except AttributeError:
-                if kw.has_key('default'):
-                    return kw['default']
-                else:
-                    raise
-        return obj
-
     def snakecase(name):
         return re.sub("([A-Z])", "_\\1", name).lower().lstrip("_")
 
@@ -61,11 +66,49 @@ def post_save_analytics(sender, instance, **kwargs):
     except AttributeError:
         pass
 
+    # _merge_attrs combines the base and instance tag or field values with
+    # the class values. It also handles translateable attrs.
+    def _merge_attrs(data, attrs):
+        try:
+            items = attrs.iteritems()
+        except AttributeError:
+            return
+
+        for label, attr in items:
+            options = {}
+            # import ipdb; ipdb.set_trace()
+            # If a dict is passed then the key is the dotted
+            # property string and the value is options.
+            try:
+                new_attr = attr.keys()[0]
+                options = attr[new_attr]
+                attr = new_attr
+            except AttributeError:
+                pass
+
+            value = _multi_getattr(instance, attr, default='')
+
+            if options.get('translate', False):
+                with LocalTenant():
+                    # Translate using the default tenant language
+                    with TenantLanguage(getattr(properties, 'LANGUAGE_CODE', 'en')):
+                        # If attr is a string then try to translate
+                        # Note: tag values should always be strings.
+                        value = _(value)
+
+            data[label] = value
+
     # Check for instance specific tags
     try:
         tags = analytics.extra_tags(instance, created)
     except AttributeError:
         tags = {}
+
+    tags['type'] = getattr(analytics, 'type', snakecase(instance.__class__.__name__))
+    tags['tenant'] = tenant_name
+
+    # Process tags
+    _merge_attrs(tags, analytics.tags)
 
     # Check for instance specific fields
     try:
@@ -73,31 +116,8 @@ def post_save_analytics(sender, instance, **kwargs):
     except AttributeError:
         fields = {}
 
-    tags['type'] = getattr(analytics, 'type', snakecase(instance.__class__.__name__))
-    tags['tenant'] = tenant_name
-
-    # Process tags
-    try:
-        for label, tag_attr in analytics.tags.iteritems():
-            attr = multi_getattr(instance, tag_attr, default='')
-            # If attr is a string then try to translate
-            # Note: tag values should always be strings.
-            if isinstance(attr, basestring):
-                attr = _(attr)
-            tags[label] = attr
-    except AttributeError:
-        pass
-
     # Process fields
-    try:
-        for label, field_attr in analytics.fields.iteritems():
-            attr = multi_getattr(instance, field_attr, default='')
-            # If attr is a string then try to translate
-            if isinstance(attr, basestring):
-                attr = _(attr)
-            fields[label] = attr
-    except AttributeError:
-        pass
+    _merge_attrs(fields, analytics.fields)
 
     # If enabled, use celery to queue task
     if not getattr(settings, 'CELERY_RESULT_BACKEND', None):

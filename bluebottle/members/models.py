@@ -26,6 +26,20 @@ class Member(BlueBottleBaseUser):
                                  blank=True,
                                  null=True)
 
+    class Analytics:
+        type = 'member'
+        tags = {}
+        fields = {
+            'user_id': 'id'
+        }
+
+        def extra_tags(self, obj, created):
+            return {'event': 'signup'} if created else {}
+
+        def skip(self, obj, created):
+            # Currently only the signup (created) event is being recorded
+            return False if created else True
+
     def get_tasks_qs(self):
         return TaskMember.objects.filter(
             member=self, status__in=['applied', 'accepted', 'realized'])

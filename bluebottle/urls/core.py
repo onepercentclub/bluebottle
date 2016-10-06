@@ -76,6 +76,10 @@ urlpatterns = patterns('',
                            include('bluebottle.payments_docdata.urls.core')),
                        url(r'^payments_interswitch/',
                            include('bluebottle.payments_interswitch.urls.core')),
+
+                       url(r'^surveys/',
+                           include('bluebottle.surveys.urls.core')),
+
                        url(r'^api/organizations/',
                            include('bluebottle.organizations.urls.api')),
                        url(r'^api/suggestions/',
@@ -83,6 +87,9 @@ urlpatterns = patterns('',
 
                        url(r'^api/votes/',
                            include('bluebottle.votes.urls.api')),
+                       url(r'^api/surveys/',
+                           include('bluebottle.surveys.urls.api')),
+
 
                        # Organization urls for private documents
                        url(r'^documents/',

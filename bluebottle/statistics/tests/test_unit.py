@@ -68,25 +68,67 @@ class StatisticsTest(BluebottleTestCase):
     def tearDown(self):
         self.stats.clear_cached()
 
-    def test_project_campaign_stats(self):
-        self.some_project.status = self.campaign_status
+    def _test_project_stats(self, status, online, involved):
+        self.some_project.status = status
         self.some_project.save()
 
-        self.assertEqual(self.stats.projects_online, 1)
+        self.assertEqual(self.stats.projects_online, online)
         # People involved:
         # - campaigner
-        self.assertEqual(self.stats.people_involved, 1)
+        self.assertEqual(self.stats.people_involved, involved)
+
+    def test_project_campaign_stats(self):
+        self._test_project_stats(
+            self.campaign_status,
+            online=1,
+            involved=1
+        )
 
     def test_project_complete_stats(self):
-        self.some_project.status = ProjectPhase.objects.get(
-            slug='done-complete')
-        self.some_project.save()
-
-        self.assertEqual(self.stats.projects_online, 0)
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='done-complete'
+            ),
+            online=0,
+            involved=1
+        )
         self.assertEqual(self.stats.projects_realized, 1)
-        # People involved:
-        # - campaigner
-        self.assertEqual(self.stats.people_involved, 1)
+
+    def test_project_voting_stats(self):
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='voting'
+            ),
+            online=1,
+            involved=1
+        )
+
+    def test_project_voting_done_stats(self):
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='voting-done'
+            ),
+            online=0,
+            involved=1
+        )
+
+    def test_project_to_be_continued_stats(self):
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='to-be-continued'
+            ),
+            online=0,
+            involved=1
+        )
+
+    def test_project_draft_stats(self):
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='plan-new'
+            ),
+            online=0,
+            involved=0
+        )
 
     def test_task_stats(self):
         self.assertEqual(self.stats.tasks_realized, 0)

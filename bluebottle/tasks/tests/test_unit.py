@@ -1,15 +1,11 @@
 import datetime
 
-from django.core import mail
 from django.utils import timezone
-from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
-
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 # import taskmail in order to properly register mail handlers. Without it tests mail fail
@@ -35,7 +31,7 @@ class TestDeadline(TaskUnitTestBase):
     def setUp(self):
         super(TestDeadline, self).setUp()
 
-        self.task.deadline = deadline=timezone.now() - datetime.timedelta(days=1)
+        self.task.deadline = timezone.now() - datetime.timedelta(days=1)
         self.task.save()
 
     def test_deadline_realised(self):

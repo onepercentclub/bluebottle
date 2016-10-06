@@ -225,7 +225,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
 
     def test_unchanged_status(self, queue_mock):
         user = BlueBottleUserFactory.create()
-        task_member = TaskMemberFactory.create(member=user)
+        task_member = TaskMemberFactory.create(member=user, status='applied')
         previous_call_count = queue_mock.call_count
 
         # Update record without changing status

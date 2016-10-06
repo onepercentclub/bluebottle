@@ -1,20 +1,17 @@
-import pytz
-from datetime import datetime
-
 from django.db import models
-from django.utils.timezone import now
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
+from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
+from bluebottle.clients.utils import tenant_url
+from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
-
 
 GROUP_PERMS = {
     'Staff': {
@@ -127,8 +124,20 @@ class Task(models.Model, PreviousStatusMixin):
             self.save()
 
     @property
+    def members_applied(self):
+        return self.members.exclude(status='withdrew')
+
+    @property
     def people_applied(self):
-        return self.members.count() 
+        return self.members.exclude(status='withdrew').count()
+
+    @property
+    def people_accepted(self):
+        members = self.members.filter(status__in=['accepted', 'realized'])
+        total_externals = 0
+        for member in members:
+            total_externals += member.externals
+        return members.count() + total_externals
 
     def get_absolute_url(self):
         """ Get the URL for the current task. """
@@ -142,7 +151,7 @@ class Task(models.Model, PreviousStatusMixin):
             owner """
         # send "The deadline of your task" - mail
 
-        if (self.status == 'in progress'):
+        if self.status == 'in progress':
             self.status = 'realized'
         else:
             self.status = 'closed'
@@ -157,7 +166,6 @@ class Task(models.Model, PreviousStatusMixin):
     def status_changed(self, oldstate, newstate):
         """ called by post_save signal handler, if status changed """
         # confirm everything with task owner
-
 
         if oldstate in ("in progress", "open", "closed") and newstate == "realized":
             self.project.check_task_status()
@@ -187,7 +195,6 @@ class Task(models.Model, PreviousStatusMixin):
                 site=tenant_url(),
                 link='/go/tasks/{0}'.format(self.id)
             )
-
 
         if oldstate in ("in progress", "open") and newstate in ("realized", "closed"):
             data = {
@@ -239,7 +246,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
         applied = ChoiceItem('applied', label=_('Applied'))
         accepted = ChoiceItem('accepted', label=_('Accepted'))
         rejected = ChoiceItem('rejected', label=_('Rejected'))
-        stopped = ChoiceItem('stopped', label=_('Withdrew'))
+        withdrew = ChoiceItem('withdrew', label=_('Withdrew'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
     member = models.ForeignKey('members.Member',
@@ -302,33 +309,8 @@ class TaskMember(models.Model, PreviousStatusMixin):
             TaskMemberStatusLog.objects.create(
                 task_member=self, status=self.status)
 
-        self.check_number_of_members_needed(self.task)
-
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
-        self.check_number_of_members_needed(self.task)
-
-    # TODO: refactor this to use a signal and move code to task model
-    def check_number_of_members_needed(self, task):
-        members = TaskMember.objects.filter(
-            task=task,
-            status__in=('accepted', 'realized')
-        )
-        total_externals = 0
-        for member in members:
-            total_externals += member.externals
-
-        members_accepted = members.count() + total_externals
-
-        if task.status == Task.TaskStatuses.open and \
-                        task.people_needed <= members_accepted:
-            task.set_in_progress()
-
-        if task.status == Task.TaskStatuses.in_progress and \
-                        task.people_needed > members_accepted:
-            task.set_open()
-
-        return members_accepted
 
     @property
     def time_applied_for(self):

@@ -333,8 +333,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             '{0}{1}'.format(self.task_members_url, task_member.id),
             token=self.some_token)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN,
-                         response.data)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_withdraw_task_member_unauthorized(self):
         task = TaskFactory.create()

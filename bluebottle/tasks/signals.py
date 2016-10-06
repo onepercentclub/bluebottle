@@ -20,7 +20,14 @@ def task_post_save(sender, instance, **kwargs):
     except AttributeError:
         pass
 
-@receiver(pre_save, weak=False, sender=TaskMember, dispatch_uid='set-hours-spent-taskmember')
+@receiver(pre_save, weak=False, sender=TaskMember, 
+          dispatch_uid='set-hours-spent-taskmember')
 def set_hours_spent_taskmember(sender, instance, **kwargs):
     if instance.status != instance._initial_status and instance.status == TaskMember.TaskMemberStatuses.realized:
         instance.time_spent = instance.task.time_needed
+
+@receiver(post_save, weak=False, sender=TaskMember, 
+          dispatch_uid='bluebottle.tasks.signals.check_task_status')
+def check_task_status(sender, instance, **kwargs):
+    if instance.status != instance._initial_status and instance.status == TaskMember.TaskMemberStatuses.realized:
+        instance.task.task_member_realized()

@@ -109,19 +109,27 @@ class Task(models.Model, PreviousStatusMixin):
         self.status = self.TaskStatuses.open
         self.save()
 
+    def task_member_realized(self):
+        # Called if a task member is realized. Now check if the other members 
+        # are also realized and the deadline has expired. If so, then the task 
+        # should also be realized. Members who are rejected, stopped, realized
+        # or applied can be ignored as these are not seen as active members.
+        if self.status == self.TaskStatuses.realized or self.deadline > timezone.now():
+            return
+
+        accepted_count = TaskMember.objects.filter(
+            task=self,
+            status__in=('accepted',)
+        ).count()
+
+        if accepted_count == 0:
+            self.status = self.TaskStatuses.realized
+            self.save()
+
     @property
     def people_applied(self):
-        return self.members.count()
-        previous_status = None
-        if self.pk:
-            previous_status = self.__class__.objects.get(pk=self.pk).status
+        return self.members.count() 
 
-        super(TaskMember, self).save(*args, **kwargs)
-
-        # Only log task member status if the status has changed
-        if self is not None and previous_status != self.status:
-            TaskMemberStatusLog.objects.create(
-                task_member=self, status=self.status)
     def get_absolute_url(self):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)

@@ -9,7 +9,7 @@ class Vote(models.Model):
     """
     Mixin for generating an invoice reference.
     """
-    created = CreationDateTimeField(_('created'))
+    created = CreationDateTimeField(_('created'), db_index=True)
     project = models.ForeignKey('projects.Project')
     ip_address = models.GenericIPAddressField()
 

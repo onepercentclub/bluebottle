@@ -40,10 +40,10 @@ class ManageOrganizationList(generics.ListCreateAPIView):
         queryset = queryset.filter(id__in=org_ids)
         return queryset
 
-    def post_save(self, obj, created=False):
-        if created:
-            member = OrganizationMember(user=self.request.user, organization=obj)
-            member.save()
+    def perform_create(self, serializer):
+        organization = serializer.save()
+        member = OrganizationMember(organization=organization, user=self.request.user)
+        member.save()
 
 
 class ManageOrganizationDetail(generics.RetrieveUpdateDestroyAPIView):

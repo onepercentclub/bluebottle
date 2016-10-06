@@ -239,6 +239,28 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'open')
 
+        # When a member is accepted task status should change to 'in progress'
+        response = self.client.post(self.task_member_url,
+                                    task_member_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        task_member_id = response.data['id']
+        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
+        response = self.client.patch(task_member_url,
+                                   {'status': 'accepted'},
+                                   HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        response = self.client.get(task_url)
+        self.assertEqual(response.data['status'], 'in progress')
+
+       # When a applied member is realized task status should stay 'in progress''
+        response = self.client.patch(task_member_url,
+                                   {'status': 'realized'},
+                                   HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        response = self.client.get(task_url)
+        self.assertEqual(response.data['status'], 'in progress')
+
     def test_deadline_dates(self):
         """
         Test the setting of the deadline of a Task on save to the end of a day.

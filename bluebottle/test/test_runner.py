@@ -19,9 +19,6 @@ class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
             schema_name='test2',
             client_name='test2')
 
-        tenant2.save(
-            verbosity=self.verbosity)
-
         # Add basic data for tenant
         connection.set_tenant(tenant2)
         self.init_projects()
@@ -30,13 +27,11 @@ class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
         connection.set_schema_to_public()
 
         tenant_domain = 'testserver'
+
         tenant, _created = get_tenant_model().objects.get_or_create(
             domain_url=tenant_domain,
             schema_name='test',
             client_name='test')
-
-        tenant.save(
-            verbosity=self.verbosity)
 
         connection.set_tenant(tenant)
 

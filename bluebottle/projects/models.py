@@ -7,12 +7,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldError
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
+from django.utils.functional import lazy
 from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
@@ -20,12 +21,18 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from moneyed.classes import Money
+from select_multiple_field.models import SelectMultipleField
+
+from bluebottle.tasks.models import Task
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.exchange_rates import convert
 
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectDocument
 )
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
@@ -108,12 +115,13 @@ class ProjectManager(models.Manager):
         return self._ordering(query.get('ordering', None), qs, status)
 
     def _ordering(self, ordering, queryset, status):
-        if ordering == 'amount_asked':
-            queryset = queryset.order_by('status', 'amount_asked', 'id')
-        elif ordering == 'deadline':
+        if ordering == 'deadline':
             queryset = queryset.order_by('status', 'deadline', 'id')
         elif ordering == 'amount_needed':
-            queryset = queryset.order_by('status', 'amount_needed', 'id')
+            # Add the percentage that is still needed to the query and sort on that.
+            # This way we do not have to take currencies into account
+            queryset = queryset.annotate(percentage_needed=F('amount_needed') / F('amount_asked'))
+            queryset = queryset.order_by('status', 'percentage_needed', 'id')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
             queryset = queryset.extra(
@@ -200,6 +208,9 @@ class Project(BaseProject, PreviousStatusMixin):
                                            blank=True)
 
     categories = models.ManyToManyField('categories.Category', blank=True)
+
+    currencies = SelectMultipleField(max_length=100,
+                                     choices=lazy(get_currency_choices, tuple)())
 
     celebrate_results = models.BooleanField(
         _('Celebrate Results'),
@@ -294,6 +305,9 @@ class Project(BaseProject, PreviousStatusMixin):
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")
 
+        if not self.currencies and self.amount_asked:
+            self.currencies = [str(self.amount_asked.currency)]
+
         # If the project status is moved to New or Needs Work, clear the
         # date_submitted field
         if self.status.slug in ["plan-new", "plan-needs-work"]:
@@ -374,11 +388,8 @@ class Project(BaseProject, PreviousStatusMixin):
                                       StatusDefinition.PLEDGED])
         if isinstance(total, list):
             DeprecationWarning('Cannot yet handle multiple currencies on one project!')
+
         self.amount_donated = total
-        self.amount_needed = self.amount_asked - self.amount_donated
-        if self.amount_needed.amount < 0:
-            # Should never be less than zero
-            self.amount_needed = Money(0, self.amount_asked.currency)
         self.update_status_after_donation(False)
         if save:
             self.save()
@@ -388,31 +399,22 @@ class Project(BaseProject, PreviousStatusMixin):
         Calculate the total (realtime) amount of money for donations,
         optionally filtered by status.
         """
-
-        if self.amount_asked.amount == 0:
+        if not self.amount_asked:
             # No money asked, return 0
-            totals = [Money(0, 'EUR')]
-        else:
+            return Money(0, 'EUR')
 
-            donations = self.donation_set.all()
+        donations = self.donation_set
 
-            if status_in:
-                donations = donations.filter(order__status__in=status_in)
+        if status_in:
+            donations = donations.filter(order__status__in=status_in)
 
-            # total = donations.aggregate(sum=Sum('amount'))
-
-            totals = [
-                Money(data['amount__sum'], data['amount_currency']) for data in
-                donations.values('amount_currency').annotate(Sum('amount')).order_by()
-            ]
-
-        if len(totals) == 0:
-            totals = [Money(0, 'EUR')]
+        totals = donations.values('amount_currency').annotate(total=Sum('amount'))
+        amounts = [Money(total['total'], total['amount_currency']) for total in totals]
 
         if len(totals) > 1:
-            FieldError('Cannot yet handle multiple currencies on one project!')
+            amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
 
-        return totals[0]
+        return sum(amounts) or Money(0, self.amount_asked.currency)
 
     @property
     def is_realised(self):
@@ -669,7 +671,6 @@ class ProjectBudgetLine(models.Model):
     """
     project = models.ForeignKey('projects.Project')
     description = models.CharField(_('description'), max_length=255, default='')
-    currency = models.CharField(max_length=3, default='EUR')
     amount = MoneyField()
 
     created = CreationDateTimeField()

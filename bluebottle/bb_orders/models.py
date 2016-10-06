@@ -7,6 +7,7 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from django_fsm import FSMField, transition
+from moneyed.classes import Money
 
 from bluebottle.donations.models import Donation
 from bluebottle.utils.fields import MoneyField
@@ -92,8 +93,15 @@ class BaseOrder(models.Model, FSMTransition):
         self.confirmed = None
 
     def update_total(self, save=True):
-        donations = Donation.objects.filter(order=self)
-        self.total = donations.aggregate(Sum('amount'))['amount__sum'] or 0
+        donations = Donation.objects.filter(order=self, amount__gt=0)
+        total = [
+            Money(data['amount__sum'], data['amount_currency']) for data in
+                donations.values('amount_currency').annotate(Sum('amount')).order_by()
+
+        ]
+        if len(total) > 1:
+            raise ValueError('Multiple currencies in one order')
+        self.total = total[0]
         if save:
             self.save()
 

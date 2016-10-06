@@ -35,3 +35,21 @@ def update_popularity():
             Project.update_popularity()
 
     logger.info("Finished updating projects popularity using Celery")
+
+
+@shared_task
+def update_exchange_rates():
+    """ Update the popularity score of all the projects
+
+    Simply loops over all the tenants, and updates the scores
+    """
+    logger.info("Retrieving up to date exchange rates")
+    #call_command('update_rates')
+
+    logger.info("Updating amounts of all running projects")
+    for tenant in Client.objects.all():
+        connection.set_tenant(tenant)
+        with LocalTenant(tenant, clear_tenant=True):
+            for project in Project.objects.filter(status__slug='campaign'):
+                project.update_amounts()
+

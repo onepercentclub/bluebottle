@@ -1,17 +1,16 @@
+import logging
 from bunch import bunchify
 
-from django.template.loader import get_template
 from django.db import connection
 from django.utils.translation import ugettext as _
 
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.clients.context import ClientContext
-from bluebottle.clients.mail import EmailMultiAlternatives
-from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients import properties
 from bluebottle.bb_donations.donationmail import get_payment_method
+
+logger = logging.getLogger(__name__)
 
 
 def mail_pledge_platform_admin(donation):
@@ -27,7 +26,7 @@ def mail_pledge_platform_admin(donation):
 
     try:
         admin_email = properties.TENANT_MAIL_PROPERTIES.get('address')
-    except AttributeError as e:
+    except AttributeError:
         logger.critical('No mail properties found for {0}'.format(connection.tenant.client_name))
 
     if admin_email:

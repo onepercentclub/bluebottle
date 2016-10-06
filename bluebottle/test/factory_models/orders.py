@@ -9,7 +9,6 @@ from .accounts import BlueBottleUserFactory
 class OrderFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Order
-
     user = factory.SubFactory(BlueBottleUserFactory)
     status = StatusDefinition.CREATED
 

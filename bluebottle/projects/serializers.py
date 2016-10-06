@@ -16,7 +16,6 @@ from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer
-from bluebottle.categories.models import Category
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project

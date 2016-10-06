@@ -1,8 +1,9 @@
 import json
 
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 
-from bluebottle.organizations.models import Organization
+from bluebottle.organizations.models import Organization, OrganizationMember
 from bluebottle.test.utils import BluebottleTestCase
 from rest_framework import status
 
@@ -80,6 +81,22 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
     Endpoint: /api/bb_organizations/manage/
     """
 
+    def setUp(self):
+        super(ManageOrganizationListTestCase, self).setUp()
+
+        self.post_data = {
+            'name': '1% Club',
+            'address_line1': "'s Gravenhekje 1a",
+            'address_line2': '1011 TG',
+            'city': 'Amsterdam',
+            'state': 'North Holland',
+            'country': self.organization_1.country.pk,
+            'postal_code': '1011TG',
+            'phone_number': '(+31) 20 715 8980',
+            'website': 'http://onepercentclub.com',
+            'email': 'info@onepercentclub.com',
+        }
+
     def test_api_manage_organizations_list_user_filter(self):
         """
         Tests that the organizations returned are those which belongs to the
@@ -98,18 +115,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         """
         Tests POSTing new data to the endpoint.
         """
-        post_data = {
-            'name': '1% Club',
-            'address_line1': "'s Gravenhekje 1a",
-            'address_line2': '1011 TG',
-            'city': 'Amsterdam',
-            'state': 'North Holland',
-            'country': self.organization_1.country.pk,
-            'postal_code': '1011TG',
-            'phone_number': '(+31) 20 715 8980',
-            'website': 'http://onepercentclub.com',
-            'email': 'info@onepercentclub.com',
-        }
+        post_data = self.post_data
 
         response = self.client.post(
             reverse('manage_organization_list'),
@@ -133,6 +139,23 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(organization.phone_number, post_data['phone_number'])
         self.assertEqual(organization.website, post_data['website'])
         self.assertEqual(organization.email, post_data['email'])
+
+    @override_settings(CLOSED_SITE=False)
+    def test_api_manage_organizations_membership(self):
+        """
+        Tests POSTing new data to the endpoint.
+        """
+        post_data = self.post_data
+
+        response = self.client.post(
+            reverse('manage_organization_list'),
+            post_data,
+            token=self.user_1_token)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(OrganizationMember.objects.filter(user=self.user_1,
+                                                           organization_id=response.data['id']
+                                                           ).count(), 1)
 
 
 class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):

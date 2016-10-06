@@ -108,6 +108,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         male = ChoiceItem('male', label=_('Male'))
         female = ChoiceItem('female', label=_('Female'))
 
+
     class UserType(DjangoChoices):
         person = ChoiceItem('person', label=_('Person'))
         company = ChoiceItem('company', label=_('Company'))
@@ -142,6 +143,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                  null=True, blank=True)
     favourite_themes = models.ManyToManyField(ProjectTheme, blank=True)
     skills = models.ManyToManyField('tasks.Skill', blank=True)
+
+    last_seen = models.DateTimeField(_('Last Seen'), null=True, blank=True)
 
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)
@@ -333,16 +336,16 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
              update_fields=None):
         self.generate_username()
 
-        if self.location:
-            self.address.country = self.location.country
-            self.address.save()
-
         super(BlueBottleBaseUser, self).save(force_insert, force_update, using,
                                              update_fields)
         try:
             self.address
         except UserAddress.DoesNotExist:
             self.address = UserAddress.objects.create(user=self)
+            self.address.save()
+
+        if self.location:
+            self.address.country = self.location.country
             self.address.save()
 
 

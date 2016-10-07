@@ -275,10 +275,13 @@ class TaskMember(models.Model, PreviousStatusMixin):
         }
         fields = {
             'id': 'id',
-            'hours': 'time_spent',
             'task_id': 'task.id',
             'user_id': 'member.id'
         }
+
+        def extra_fields(self, obj, created):
+            # Force the time_spent to an int.
+            return {'hours': int(obj.time_spent)}
 
     def save(self, *args, **kwargs):
         previous_status = None

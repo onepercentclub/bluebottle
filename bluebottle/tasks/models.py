@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (
@@ -106,13 +107,30 @@ class Task(models.Model, PreviousStatusMixin):
         self.status = self.TaskStatuses.open
         self.save()
 
+    def task_member_realized(self):
+        # Called if a task member is realized. Now check if the other members 
+        # are also realized and the deadline has expired. If so, then the task 
+        # should also be realized. Members who are rejected, stopped, realized
+        # withdrew or applied can be ignored as these are not seen as active members.
+        if self.status == self.TaskStatuses.realized or self.deadline > timezone.now():
+            return
+
+        accepted_count = TaskMember.objects.filter(
+            task=self,
+            status__in=('accepted',)
+        ).count()
+
+        if accepted_count == 0:
+            self.status = self.TaskStatuses.realized
+            self.save()
+
     @property
     def members_applied(self):
-        return self.members.exclude(status='withdrew')
+        return self.members.exclude(status__in=['stopped', 'withdrew'])
 
     @property
     def people_applied(self):
-        return self.members.exclude(status='withdrew').count()
+        return self.members_applied.count()
 
     @property
     def people_accepted(self):
@@ -229,6 +247,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
         applied = ChoiceItem('applied', label=_('Applied'))
         accepted = ChoiceItem('accepted', label=_('Accepted'))
         rejected = ChoiceItem('rejected', label=_('Rejected'))
+        stopped = ChoiceItem('stopped', label=_('Stopped'))
         withdrew = ChoiceItem('withdrew', label=_('Withdrew'))
         realized = ChoiceItem('realized', label=_('Realised'))
 

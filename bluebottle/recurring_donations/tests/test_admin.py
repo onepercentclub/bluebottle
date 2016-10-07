@@ -1,11 +1,13 @@
 from mock import patch
 from moneyed import Money
 
-from django.core.management import call_command
 from django.test.utils import override_settings
 from django.core import mail
 
-from bluebottle.recurring_donations.models import MonthlyOrder
+from django_webtest import WebTestMixin
+from tenant_schemas.urlresolvers import reverse
+
+from bluebottle.recurring_donations.models import MonthlyOrder, MonthlyBatch
 from bluebottle.recurring_donations.tests.model_factory import \
     MonthlyDonorFactory, MonthlyDonorProjectFactory
 from bluebottle.bb_projects.models import ProjectPhase
@@ -20,10 +22,15 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
+@patch.object(tasks, 'PAYMENT_METHOD', 'mock')
 @override_settings(SEND_WELCOME_MAIL=False)
-class MonthlyDonationCommandsTest(BluebottleTestCase):
+class MonthlyDonationAdminTest(WebTestMixin, BluebottleTestCase):
+
     def setUp(self):
-        super(MonthlyDonationCommandsTest, self).setUp()
+        super(MonthlyDonationAdminTest, self).setUp()
+
+        self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
+        self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
 
         self.init_projects()
         self.phase_campaign = ProjectPhase.objects.get(slug='campaign')
@@ -71,8 +78,20 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         Project.update_popularity()
 
     def test_prepare(self):
-        call_command('process_monthly_donations', prepare=True,
-                     tenant='test')
+        del mail.outbox[:]
+        admin_prepare_url = reverse('admin:recurring_donations_monthlybatch_prepare')
+        prepare_page = self.app.get(admin_prepare_url, user=self.superuser)
+
+        self.assertEqual(prepare_page.status_code, 302)
+
+        # Now check that we have 1 prepared batch.
+        self.assertEqual(MonthlyBatch.objects.count(), 1)
+        batch = MonthlyBatch.objects.all()[0]
+        self.assertEqual(batch.status, 'new')
+
+        # Check that we get redirect to the monthly batch detail page
+        admin_batch_url = reverse('admin:recurring_donations_monthlybatch_change', args=(batch.id,))
+        self.assertRedirects(prepare_page, admin_batch_url)
 
         # Now check that we have 2 prepared donations.
         self.assertEqual(MonthlyOrder.objects.count(), 2)
@@ -103,10 +122,13 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         self.assertEqual(monthly_donations[2].amount, Money(33.34, 'EUR'))
         self.assertEqual(monthly_donations[2].project, self.projects[0])
 
-    @patch.object(tasks, 'PAYMENT_METHOD', 'mock')
-    def test_email(self):
-        with patch.object(LocalTenant, '__new__') as mocked_init:
-            # Clear the outbox before running monthly donations
-            del mail.outbox[:]
-            call_command('process_monthly_donations', tenant='test', process=True, prepare=True)
-            self.assertEquals(len(mail.outbox), 2)
+        # Now process it
+        admin_prepare_url = reverse('admin:recurring_donations_monthlybatch_process', args=(batch.id,))
+        prepare_page = self.app.get(admin_prepare_url, user=self.superuser)
+
+        self.assertEqual(prepare_page.status_code, 302)
+        self.assertRedirects(prepare_page, admin_batch_url)
+
+        self.assertEquals(len(mail.outbox), 2)
+        batch = MonthlyBatch.objects.all()[0]
+        self.assertEqual(batch.status, 'done')

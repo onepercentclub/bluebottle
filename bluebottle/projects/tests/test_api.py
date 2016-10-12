@@ -4,10 +4,14 @@ from random import randint
 
 from django.test import RequestFactory
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 from django.utils import timezone
 from django.test.utils import override_settings
 
+from moneyed import Money
+
 from rest_framework import status
+from rest_framework.status import HTTP_200_OK
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
@@ -131,6 +135,16 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         response = self.client.get(
             self.projects_url + '?ordering=deadline&phase=campaign&country=101')
         self.assertEquals(response.status_code, 200)
+
+    def test_project_order_amount_needed(self):
+        for project in Project.objects.all():
+            project.amount_needed = Money(randint(0, int(project.amount_asked.amount)), 'EUR')
+            project.save()
+
+        response = self.client.get(self.projects_preview_url + '?ordering=amount_needed')
+        amounts = [project['amount_needed']['amount'] for project in response.data['results']]
+
+        self.assertEqual(amounts, sorted(amounts))
 
     def test_project_detail_view(self):
         """ Tests retrieving a project detail from the API. """
@@ -458,6 +472,21 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             status_code=400
         )
 
+    def test_project_create_amounts(self):
+        """
+        Tests for Project Create
+        """
+        amount_asked = {'currency': 'EUR', 'amount': 100}
+        response = self.client.post(self.manage_projects_url,
+                                    {
+                                        'title': 'This is my smart idea',
+                                        'amount_asked': amount_asked
+                                    },
+                                    token=self.some_user_token
+                                    )
+        self.assertEqual(response.data['amount_asked'], amount_asked)
+        self.assertEqual(response.data['currencies'], ['EUR'])
+
     def test_set_bank_details(self):
         """ Set bank details in new project """
 
@@ -576,7 +605,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.put(budget_line_url, budget_line,
                                    token=self.some_user_token)
         self.assertEquals(response.status_code, status.HTTP_200_OK, response)
-        self.assertEquals(response.data['amount'], 350.00)
+        self.assertEquals(response.data['amount']['amount'], 350.00)
+        self.assertEquals(response.data['amount']['currency'], 'EUR')
 
         # Now remove that line
         response = self.client.delete(
@@ -1561,3 +1591,41 @@ class ProjectVotesTest(BluebottleTestCase):
         response = self.client.get(self.project_url, token=self.some_user_token)
 
         self.assertFalse(response.data['has_voted'])
+
+
+@override_settings(CURRENCIES_ENABLED=[
+    {'code':'EUR','name':'Euro','symbol':u"\u20AC"},
+    {'code':'USD','name':'USDollar','symbol':'$'},
+    {'code':'NGN','name':'Naira','symbol':u"\u20A6"},
+    {'code':'XOF','name':'CFA','symbol':'CFA'}])
+class ProjectCurrenciesApiTest(BluebottleTestCase):
+    """
+    Integration tests currencies in the Project API.
+    """
+
+    def setUp(self):
+        super(ProjectCurrenciesApiTest, self).setUp()
+
+        self.some_user = BlueBottleUserFactory.create()
+        self.some_user_token = "JWT {0}".format(self.some_user.get_jwt_token())
+
+        self.another_user = BlueBottleUserFactory.create()
+        self.another_user_token = "JWT {0}".format(
+            self.another_user.get_jwt_token())
+
+        self.init_projects()
+
+        self.some_project = ProjectFactory.create(currencies=['EUR'])
+        self.another_project = ProjectFactory.create(currencies=['NGN', 'USD'])
+
+    def test_project_currencies(self):
+        self.project_url = reverse('project_detail', args=[self.some_project.slug])
+        response = self.client.get(self.project_url)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.data['currencies'], ['EUR'])
+
+
+        self.project_url = reverse('project_detail', args=[self.another_project.slug])
+        response = self.client.get(self.project_url)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertListEqual(response.data['currencies'], [u'NGN', u'USD'])

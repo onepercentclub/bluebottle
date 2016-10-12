@@ -1,5 +1,6 @@
 from django.test.runner import DiscoverRunner
 from django.db import connection
+from django.core import management
 
 from tenant_schemas.utils import get_tenant_model
 
@@ -24,6 +25,7 @@ class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
 
         # Create main tenant
         connection.set_schema_to_public()
+
         tenant_domain = 'testserver'
 
         tenant, _created = get_tenant_model().objects.get_or_create(

@@ -76,7 +76,6 @@ def post_save_analytics(sender, instance, **kwargs):
 
         for label, attr in items:
             options = {}
-            # import ipdb; ipdb.set_trace()
             # If a dict is passed then the key is the dotted
             # property string and the value is options.
             try:

@@ -305,29 +305,49 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
         self.assertEqual(response.data['count'], 0)
 
-    def test_delete_task_member(self):
+    def test_withdraw_task_member(self):
         task = TaskFactory.create()
         task_member = TaskMemberFactory.create(member=self.some_user, task=task)
 
-        self.assertEquals(task.members.count(), 1)
+        self.assertEquals(task.people_applied, 1)
+
+        response = self.client.put(
+            '{0}{1}'.format(self.task_members_url, task_member.id),
+            {
+                'status': 'withdrew',
+                'task': task.id
+            },
+            token=self.some_token)
+
+        self.assertEquals(task.people_applied, 0)
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
+                         response.data)
+
+    def test_delete_task_member_no_allowed(self):
+        task = TaskFactory.create()
+        task_member = TaskMemberFactory.create(member=self.some_user, task=task)
+
+        self.assertEquals(task.people_applied, 1)
 
         response = self.client.delete(
             '{0}{1}'.format(self.task_members_url, task_member.id),
             token=self.some_token)
 
-        self.assertEquals(task.members.count(), 0)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT,
-                         response.data)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_delete_task_member_unauthorized(self):
+    def test_withdraw_task_member_unauthorized(self):
         task = TaskFactory.create()
         task_member = TaskMemberFactory.create(member=self.another_user,
                                                task=task)
 
         self.assertEquals(task.members.count(), 1)
 
-        response = self.client.delete(
+        response = self.client.put(
             '{0}{1}'.format(self.task_members_url, task_member.id),
+            {
+                'status': 'withdrew',
+                'task': task.id
+            },
             token=self.some_token)
 
         self.assertEquals(task.members.count(), 1)
@@ -459,11 +479,10 @@ class TestTaskSearchCase(BluebottleTestCase):
                                             timezone.timedelta(days=365),
                                             people_needed=1)
 
-        event_task_5 = TaskFactory.create(status='open',
-                                          type='event',
-                                          deadline=self.now +
-                                          timezone.timedelta(days=365),
-                                          people_needed=1)
+        TaskFactory.create(status='open',
+                           type='event',
+                           deadline=self.now + timezone.timedelta(days=365),
+                           people_needed=1)
 
         search_date = {
             'start': str((self.tomorrow + timezone.timedelta(days=3)).date()),
@@ -548,9 +567,3 @@ class SkillListApiTests(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
         self.assertEquals(len(response.data), 3)
-
-
-
-# TODO: Test edit task
-# TODO: Test change TaskMember edit status
-# TODO: Test File uploads

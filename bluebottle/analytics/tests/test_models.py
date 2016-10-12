@@ -200,7 +200,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
     def test_tags_generation(self, queue_mock):
         user = BlueBottleUserFactory.create()
         task = TaskFactory.create(author=user, people_needed=2)
-        task_member = TaskMemberFactory.create(time_spent=10, member=user, task=task, status='applied')
+        task_member = TaskMemberFactory.create(time_spent=10.5, member=user, task=task, status='applied')
 
         project = task.project
         expected_tags = {
@@ -216,7 +216,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
             'id': task_member.id,
             'task_id': task.id,
             'user_id': user.id,
-            'hours': task_member.time_spent
+            'hours': int(task_member.time_spent)
         }
 
         args, kwargs = queue_mock.call_args
@@ -225,7 +225,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
 
     def test_unchanged_status(self, queue_mock):
         user = BlueBottleUserFactory.create()
-        task_member = TaskMemberFactory.create(member=user)
+        task_member = TaskMemberFactory.create(member=user, status='applied')
         previous_call_count = queue_mock.call_count
 
         # Update record without changing status

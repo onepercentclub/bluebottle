@@ -1,12 +1,8 @@
-import pytz
-
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
-from django.utils import timezone
 
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
-
 from bluebottle.utils.admin import export_as_csv_action
 
 
@@ -170,7 +166,6 @@ class TaskMemberAdmin(admin.ModelAdmin):
     member_email.admin_order_field = 'member__email'
     member_email.short_description = "Member Email"
 
-
     def lookup_allowed(self, key, value):
         if key in ('task__deadline__year',):
             return True
@@ -179,8 +174,6 @@ class TaskMemberAdmin(admin.ModelAdmin):
 
 
 admin.site.register(TaskMember, TaskMemberAdmin)
-
-from django.utils import translation
 
 
 class SkillAdmin(admin.ModelAdmin):

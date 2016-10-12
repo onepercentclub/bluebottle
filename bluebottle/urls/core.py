@@ -11,13 +11,9 @@ from bluebottle.auth.views import GetAuthToken
 
 
 urlpatterns = [
-    # The api urls are in the / url namespace so that
-    # they're not redirected to /en/.
-    url(r'^docs/', include('rest_framework_swagger.urls')),
-
     url(r'^api/config',
         include('bluebottle.clients.urls.api')),
-    url(r'^api/redirects',
+    url(r'^api/redirects/?',
         include('bluebottle.redirects.urls.api')),
     url(r'^api/users/',
         include('bluebottle.bb_accounts.urls.api')),

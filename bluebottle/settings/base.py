@@ -13,7 +13,6 @@ BASE_DIR = os.path.abspath(os.path.join(
 PROJECT_ROOT = BASE_DIR
 
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 COMPRESS_ENABLED = False
 COMPRESS_TEMPLATES = False
 
@@ -109,6 +108,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'OPTIONS': {
+            'debug': DEBUG,
             'loaders': [
                 'tenant_extras.template_loaders.FilesystemLoader',
                 'django.template.loaders.filesystem.Loader',
@@ -251,7 +251,6 @@ SHARED_APPS = (
     'tenant_extras',
     'localflavor',
     'filetransfers',
-    'rest_framework_swagger',
     'lockdown',
     'corsheaders'
 
@@ -512,13 +511,6 @@ SEND_WELCOME_MAIL = True
 
 EMAIL_BACKEND = 'bluebottle.utils.email_backend.TestMailBackend'
 
-SWAGGER_SETTINGS = {
-    'api_version': '1.1',
-    'resource_url_prefix': 'api/',
-    'resource_access_handler': 'bluebottle.auth.handlers.resource_access_handler',
-    'is_authenticated': True
-}
-
 # and provide a default (without it django-rest-framework-jwt will default
 # to SECRET_KEY. Even better, provide one in a client's properties.py file
 TENANT_JWT_SECRET = 'global-tenant-secret'
@@ -739,3 +731,4 @@ SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
 SURVEYGIZMO_API_TOKEN = ''
 SURVEYGIZMO_API_SECRET = ''
 
+GEOPOSITION_GOOGLE_MAPS_API_KEY = ''

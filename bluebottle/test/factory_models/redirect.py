@@ -8,4 +8,3 @@ class RedirectFactory(factory.DjangoModelFactory):
 
     old_path = factory.Sequence(lambda n: '/old-{0}'.format(n))
     new_path = factory.Sequence(lambda n: '/new/{0}'.format(n))
-    fallback_redirect = 'default'

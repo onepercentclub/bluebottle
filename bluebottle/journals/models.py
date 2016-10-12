@@ -65,6 +65,7 @@ class BaseJournal(models.Model):
             self.related_model.journal_set.all().filter(**filter_).values('amount_currency').annotate(Sum('amount')).order_by()
         ]
 
+
         if len(totals) == 0:
             totals = [Money(0, 'EUR')]
 
@@ -126,7 +127,6 @@ class OrderPaymentJournal(models.Model):
     date = CreationDateTimeField(_("Created"))
 
 
-@receiver(post_save, sender=DonationJournal)
 @receiver(post_save, sender=OrganizationPayoutJournal)
 @receiver(post_save, sender=ProjectPayoutJournal)
 def update_related_model_when_journal_is_saved(sender, instance, created, **kwargs):
@@ -141,7 +141,7 @@ def update_related_model_when_journal_is_saved(sender, instance, created, **kwar
     journal_total = instance.get_journal_total()
     related_model_total = instance.get_related_model_amount()
 
-    if journal_total != related_model_total:
+    if journal_total.currency != related_model_total.currency or journal_total != related_model_total:
         related_model = instance.related_model
         amount_key = instance.related_model_amount_field_name
 
@@ -187,11 +187,10 @@ def create_journal_for_sender(sender, instance, created, data_migration=None):
         # and add the correction when needed
         journal = journals.first()  # even when there are more, the get_journal_total will return the correct value
         journal_amount = journal.get_journal_total()
-        diff = amount_instance - journal_amount
-        if diff.amount == 0.0:
+        if journal_amount.currency == amount_instance.currency and journal_amount == amount_instance:
             return  # dont save, or should a new journal be made when amount is not changed?Hry
         journal_date = instance.updated
-        journal_amount = diff
+        journal_amount = journal_amount
     else:
         journal_date = instance.created
         journal_amount = amount_instance

@@ -84,7 +84,7 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectBudgetLine
-        fields = ('description', 'amount')
+        fields = ('id', 'description', 'amount')
 
 
 class ProjectDocumentSerializer(serializers.ModelSerializer):

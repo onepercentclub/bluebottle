@@ -70,7 +70,6 @@ class TestPledgePayments(BluebottleTestCase, SessionTestMixin):
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-
     def test_create_orderpayment_and_login(self):
         """
         Anonymous user creates order then logs in as can_pledge user
@@ -117,7 +116,7 @@ class TestPledgePayments(BluebottleTestCase, SessionTestMixin):
         self.assertEqual(len(results), 2)
         # Pledge method_access_handler should not be returned in the api
         with self.assertRaises(KeyError):
-            key = results[1]['method_access_handler']
+            results[1]['method_access_handler']
 
     def test_get_payment_methods_non_pledge_user(self):
         """ Test that non-pledge users see the correct payment methods """

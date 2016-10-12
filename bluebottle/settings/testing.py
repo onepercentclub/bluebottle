@@ -14,8 +14,15 @@ warnings.filterwarnings(
     r"DateTimeField .* received a naive datetime",
     RuntimeWarning, r'django\.db\.models\.fields')
 
-DOCDATA_MERCHANT_NAME = 'merchant_name'
-DOCDATA_MERCHANT_PASSWORD = 'merchant_password'
+
+MERCHANT_ACCOUNTS = [
+    {
+        'merchant': 'docdata',
+        'merchant_name': 'merchant_name',
+        'merchant_password': 'merchant_password',
+        'currency': 'EUR'
+    },
+]
 
 
 # Set up a proper testing email backend
@@ -78,6 +85,16 @@ DOCDATA_FEES = {
         'sepa_direct_debit': 0.13
     }
 }
+
+CURRENCIES_ENABLED = ({
+    'code': 'EUR',
+    'name': 'Euro',
+    'symbol': u'\u20ac'
+}, {
+    'code': 'USD',
+    'name': 'US Dollar',
+    'symbol': '$'
+}, )
 
 RECURRING_DONATIONS_ENABLED = True
 

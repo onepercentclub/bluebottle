@@ -1,11 +1,14 @@
+# -*- coding: utf-8 -*-
+
 from collections import namedtuple
-import json
 import re
 
 from django.db import connection
 from django.conf import settings
 from django.utils.translation import get_language
 
+from djmoney_rates.utils import get_rate
+from djmoney_rates.exceptions import CurrencyConversionException
 from bluebottle.clients import properties
 from tenant_extras.utils import get_tenant_properties
 
@@ -97,9 +100,18 @@ def get_public_properties(request):
     if connection.tenant:
         current_tenant = connection.tenant
         properties = get_tenant_properties()
+        currencies = properties.CURRENCIES_ENABLED
+
+        for currency in currencies:
+            try:
+                currency['rate'] = get_rate(currency['code'])
+            except CurrencyConversionException:
+                currency['rate'] = 1
+
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
+            'currencies': currencies,
             'logoUrl': "/images/logo.svg",
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),

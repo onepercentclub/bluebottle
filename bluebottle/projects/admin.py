@@ -275,6 +275,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
         (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
                                 'amount_donated', 'amount_needed',
+                                'currencies',
                                 'popularity', 'vote_count')}),
 
         (_('Dates'), {'fields': ('voting_deadline', 'deadline',
@@ -295,6 +296,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return obj.vote_set.count()
 
     def donated_percentage(self, obj):
+        if not obj.amount_asked or not obj.amount_asked.amount:
+            return '-'
         try:
             percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
             return "{0} %".format(percentage)

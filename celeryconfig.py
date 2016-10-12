@@ -35,6 +35,12 @@ CELERYBEAT_SCHEDULE = {
         'task': 'bluebottle.surveys.tasks.sync_surveys',
         'schedule': timedelta(hours=1),
     },
+    'update-exchange-rates': {
+        'task': 'bluebottle.projects.tasks.update_exchange_rates',
+        'schedule': crontab(minute=1, hour=3),
+    },
+
+
 }
 
 CELERY_TIMEZONE = 'Europe/Amsterdam'

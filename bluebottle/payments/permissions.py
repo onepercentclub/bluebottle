@@ -27,7 +27,7 @@ class CanAccessPaymentMethod(permissions.BasePermission):
                 handler = methods[0]['method_access_handler']
                 allowed = check_access_handler(handler, request.user)
 
-            except KeyError as e:
+            except KeyError:
                 # No access handler for payment method
                 pass
 

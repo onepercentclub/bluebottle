@@ -7,7 +7,7 @@ from bluebottle.projects.serializers import \
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.orders.models import Order
 from bluebottle.projects.models import Project
-from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.serializers import MoneySerializer, ProjectCurrencyValidator
 
 
 class ManageDonationSerializer(serializers.ModelSerializer):
@@ -16,6 +16,8 @@ class ManageDonationSerializer(serializers.ModelSerializer):
     order = serializers.PrimaryKeyRelatedField(queryset=Order.objects)
     amount = MoneySerializer()
     status = serializers.CharField(read_only=True)
+
+    validators = [ProjectCurrencyValidator()]
 
     class Meta:
         model = Donation

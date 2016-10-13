@@ -29,9 +29,16 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
               'email',
               'p_type']
 
-    def _get_hosts(self):
+    def _get_return_host(self):
         host = get_current_host()
-        host = 'https://nexteconomy.com'
+        if '8000' in host:
+            host.replace('8000', '4200')
+        return host
+
+    def _get_callback_host(self):
+        host = get_current_host()
+        if '8000' in host:
+            host = 'https://nexteconomy.com'
         return host
 
     def create_payment(self):
@@ -45,19 +52,19 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         if self.order_payment.amount.currency != XOF:
             raise PaymentException("Can only do Vitepay payments in XOF, Communauté Financière Africaine (BCEAO).")
         payment.callback_url = '{0}/payments_vitepay/payment_response/{1}'.format(
-            self._get_hosts(),
+            self._get_callback_host(),
             self.order_payment.id)
 
         payment.return_url = '{0}/orders/{1}/success'.format(
-            self._get_hosts(),
+            self._get_return_host(),
             self.order_payment.order.id)
 
         payment.decline_url = '{0}/orders/{1}/failed'.format(
-            self._get_hosts(),
+            self._get_return_host(),
             self.order_payment.order.id)
 
         payment.cancel_url = '{0}/orders/{1}/failed'.format(
-            get_current_host(),
+            self._get_return_host(),
             self.order_payment.order.id)
 
         payment.order_id = 'opc-{0}'.format(self.order_payment.id)

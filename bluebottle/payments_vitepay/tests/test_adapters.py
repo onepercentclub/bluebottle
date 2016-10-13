@@ -1,42 +1,38 @@
-from bluebottle.test.factory_models.projects import ProjectFactory
-
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.orders import OrderFactory
 from django.core.exceptions import ImproperlyConfigured
 from django.test.utils import override_settings
 
-from moneyed.classes import Money, NGN, EUR
+from moneyed.classes import Money, XOF, EUR
 from mock import patch
 
-from bluebottle.payments_interswitch.adapters import InterswitchPaymentAdapter
+from bluebottle.payments_vitepay.adapters import VitepayPaymentAdapter
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.utils import BluebottleTestCase
 
-interswitch_settings = {
+vitepay_settings = {
     'MERCHANT_ACCOUNTS': [
         {
-            'merchant': 'interswitch',
-            'currency': 'NGN',
-            'product_id': '1234',
+            'merchant': 'vitepay',
+            'currency': 'XOF',
             'item_id': '123',
-            'hashkey': '123456789012345678901234567890123456789012345678901234567890',
-            'payment_url': 'https://stageserv.interswitchng.com/test_paydirect/pay',
-            'status_url': 'https://stageserv.interswitchng.com/test_paydirect/api/v1/gettransaction.json'
+            'api_secret': '123456789012345678901234567890123456789012345678901234567890',
+            'payment_url': 'https://api.vitepay.com/v1/prod/payments'
         }
     ]
 }
 
 
-@override_settings(**interswitch_settings)
-class InterswitchPaymentAdapterTestCase(BluebottleTestCase):
+@override_settings(**vitepay_settings)
+class VitepayPaymentAdapterTestCase(BluebottleTestCase):
 
-    @patch('bluebottle.payments_interswitch.adapters.get_current_host', return_value='https://onepercentclub.com')
+    @patch('bluebottle.payments_vitepay.adapters.get_current_host', return_value='https://onepercentclub.com')
     def test_create_payment(self, get_current_host):
         self.init_projects()
         order = OrderFactory.create()
-        DonationFactory.create(amount=Money(2000, NGN), order=order)
-        order_payment = OrderPaymentFactory.create(payment_method='interswitchWebpay', order=order)
-        adapter = InterswitchPaymentAdapter(order_payment)
+        DonationFactory.create(amount=Money(2000, XOF), order=order)
+        order_payment = OrderPaymentFactory.create(payment_method='vitepayOrangeMoney', order=order)
+        adapter = VitepayPaymentAdapterTestCase(order_payment)
         self.assertEqual(adapter.payment.amount, 200000)
 
         #  Check generated payload
@@ -45,18 +41,18 @@ class InterswitchPaymentAdapterTestCase(BluebottleTestCase):
         self.assertEqual(payload['amount'], 200000)
         self.assertEqual(payload['txn_ref'], 'opc-{0}'.format(order_payment.id))
 
-    @patch('bluebottle.payments_interswitch.adapters.get_current_host',
+    @patch('bluebottle.payments_vitepay.adapters.get_current_host',
            return_value='https://onepercentclub.com')
     def test_create_payment_with_wrong_currency(self, get_current_host):
         with self.assertRaises(ImproperlyConfigured):
-            order_payment = OrderPaymentFactory.create(payment_method='interswitchWebpay',
+            order_payment = OrderPaymentFactory.create(payment_method='vitepayOrangeMoney',
                                                        amount=Money(200, EUR))
-            InterswitchPaymentAdapter(order_payment)
+            VitepayPaymentAdapterTestCase(order_payment)
 
-    @patch('bluebottle.payments_interswitch.adapters.get_current_host',
+    @patch('bluebottle.payments_vitepay.adapters.get_current_host',
            return_value='https://onepercentclub.com')
     def test_create_payment_with_wrong_payment_method(self, get_current_host):
         with self.assertRaises(ImproperlyConfigured):
             order_payment = OrderPaymentFactory.create(payment_method='docdataIdeal',
-                                                       amount=Money(3500, NGN))
-            InterswitchPaymentAdapter(order_payment)
+                                                       amount=Money(3500, XOF))
+            VitepayPaymentAdapterTestCase(order_payment)

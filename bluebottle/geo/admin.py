@@ -74,6 +74,7 @@ admin.site.register(LocationGroup, LocationGroupAdmin)
 class LocationAdmin(admin.ModelAdmin):
     list_display = ('name', 'position', 'group')
     model = Location
+    search_fields = ('name', 'description', 'city')
 
     def make_action(self, group):
         name = 'select_%s' % group

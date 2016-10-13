@@ -10,6 +10,7 @@ from bluebottle.payments_docdata.admin import (
     DocdataPaymentAdmin,
     DocdataDirectdebitPaymentAdmin)
 from bluebottle.payments_logger.admin import PaymentLogEntryInline
+from bluebottle.payments_vitepay.admin import VitepayPaymentAdmin
 from bluebottle.payments_voucher.admin import VoucherPaymentAdmin
 
 
@@ -83,7 +84,8 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
         return tuple(
             (admin.model, admin) for admin in (
                 DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin,
-                VoucherPaymentAdmin, InterswitchPaymentAdmin
+                VoucherPaymentAdmin, InterswitchPaymentAdmin,
+                VitepayPaymentAdmin
             )
         )
 

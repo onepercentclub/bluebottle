@@ -1,7 +1,7 @@
 # coding=utf-8
 import hashlib
 import json
-import urllib2
+import requests
 
 from bluebottle.payments.exception import PaymentException
 from moneyed import XOF
@@ -29,27 +29,31 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
               'email',
               'p_type']
 
+    def _get_hosts(self):
+        host = get_current_host()
+        host = 'https://nexteconomy.com'
+        return host
+
     def create_payment(self):
         """
         Create a new payment
         """
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment)
-        payment.product_id = self.credentials['product_id']
-        payment.pay_item_id = self.credentials['item_id']
         # Amount on the payment should be in CFA * 100
         payment.amount = int(self.order_payment.amount.amount * 100)
+        payment.description = "Thanks for your donation!"
         if self.order_payment.amount.currency != XOF:
             raise PaymentException("Can only do Vitepay payments in XOF, Communauté Financière Africaine (BCEAO).")
         payment.callback_url = '{0}/payments_vitepay/payment_response/{1}'.format(
-            get_current_host(),
+            self._get_hosts(),
             self.order_payment.id)
 
         payment.return_url = '{0}/orders/{1}/success'.format(
-            get_current_host(),
+            self._get_hosts(),
             self.order_payment.order.id)
 
         payment.decline_url = '{0}/orders/{1}/failed'.format(
-            get_current_host(),
+            self._get_hosts(),
             self.order_payment.order.id)
 
         payment.cancel_url = '{0}/orders/{1}/failed'.format(
@@ -77,8 +81,9 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         du site pour lequel vous souhaitez faire l'intégration pour récupérer cette information.
         """
         api_secret = self.credentials['api_secret']
-        message = "{p.order_id};{p.amount_100};{p.currency_code};" \
+        message = "{p.order_id};{p.amount};{p.currency_code};" \
                   "{p.callback_url};{api_secret}".format(p=self.payment, api_secret=api_secret)
+        print message
         return hashlib.sha1(message.upper()).hexdigest()
 
     def _get_payment_url(self):
@@ -92,19 +97,23 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
             "return_url": self.payment.return_url,
             "decline_url": self.payment.decline_url,
             "cancel_url": self.payment.cancel_url,
-            "callback_url": self.payment.calllback_url,
+            "callback_url": self.payment.callback_url,
             "p_type": "orange_money",
             "redirect": "0",
             "api_key": self.credentials['api_key'],
             "hash": self._get_create_hash()
         }
 
-        req = urllib2.Request('http://example.com/api/posts/create')
-        req.add_header('Content-Type', 'application/json')
-        response = urllib2.urlopen(req, json.dumps(data))
-        self.payment.payment_url = response
+        url = self.credentials['api_url']
+        headers = {'Content-Type': 'application/json'}
+        response = requests.post(url, data=json.dumps(data), headers=headers)
+        print data
+        if response.status_code == 200:
+            self.payment.payment_url = response.content
+        else:
+            raise PaymentException('Error creating payment: {0}'.format(response.content))
         self.payment.save()
-        return response
+        return response.content
 
     def get_authorization_action(self):
         """

@@ -1,7 +1,7 @@
 import factory
-from ..models import InterswitchPayment
+from ..models import VitepayPayment
 
 
-class InterswitchPaymentFactory(factory.DjangoModelFactory):
+class VitepayPaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = InterswitchPayment
+        model = VitepayPayment

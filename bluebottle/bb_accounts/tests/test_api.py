@@ -5,7 +5,6 @@ import httmock
 
 from django.core import mail
 from django.test.utils import override_settings
-from django.contrib.auth import get_user_model
 
 from rest_framework import status
 
@@ -64,7 +63,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         excluded_fields = ['email', 'address', 'newsletter',
                            'campaign_notifications',
                            'birthdate', 'gender', 'first_name', 'last_name',
-                           'password']
+                           'username', 'password']
 
         for field in excluded_fields:
             self.assertFalse(field in response.data)
@@ -91,7 +90,8 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'website', 'twitter', 'facebook', 'skypename',
                              'email',
                              'address', 'newsletter', 'campaign_notifications',
-                             'birthdate', 'gender', 'first_name', 'last_name']
+                             'birthdate', 'gender', 'first_name', 'last_name',
+                             'username']
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)
@@ -267,10 +267,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                                      'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
-
-        user = get_user_model().objects.get(email=new_user_email)
-
-        self.assertEqual(user.username, new_user_email)
+        self.assertEqual(response.data['username'], new_user_email)
 
     def test_password_reset(self):
         # Setup: create a user.

@@ -70,9 +70,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'country', 'verified')
-
-
+            'country', 'verified', 'username')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

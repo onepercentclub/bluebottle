@@ -1,45 +1,37 @@
-from django.http import Http404, HttpResponse
-from django.shortcuts import get_object_or_404
+import json
+from django.http import HttpResponse
 from django.views.generic import View
-from django.views.generic.base import RedirectView
 
-from bluebottle.payments.models import OrderPayment
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.services import PaymentService
-from bluebottle.utils.utils import get_current_host
-
-
-class PaymentResponseView(RedirectView):
-
-    permanent = False
-    query_string = True
-    pattern_name = 'vitepay-payment-response'
-
-    def get_redirect_url(self, *args, **kwargs):
-        order_payment = get_object_or_404(OrderPayment, id=kwargs['order_payment_id'])
-        service = PaymentService(order_payment)
-        service.check_payment_status()
-        return "{0}/orders/{1}/success".format(get_current_host(), order_payment.order.id)
+from bluebottle.payments_vitepay.models import VitepayPayment
 
 
 class PaymentStatusListener(View):
     """
-    This view simulates our listener that handles incoming messages from an external PSP to update the status of
-    a payment. It's an "underwater" view and the user does not directly engage with this view or url, only the
-    external server by making a POST request to it.
+    Listens to Vitepay updates.
     """
 
     def post(self, request, *args, **kwargs):
-        status = request.POST.get('status', None)
-        order_payment_id = request.POST.get('order_payment_id')
+        data = json.loads(request.body)
+        success = data.get('success', 0)
+        failure = data.get('failure', 0)
+        authenticity = data.get('authenticity')
+        order_id = data.get('order_id')
 
         try:
-            order_payment = OrderPayment.objects.get(id=order_payment_id)
-        except OrderPayment.DoesNotExist:
-            raise Http404
+            payment = VitepayPayment.objects.get(order_id=order_id)
+            order_payment = payment.order_payment
+        except VitepayPayment.DoesNotExist:
+            return HttpResponse('{"status": "0", "message": "Order not found."}')
 
         service = PaymentService(order_payment)
 
-        # We pass the MockPayment status and get back the status name of our OrderStatus definition
-        service.adapter.set_order_payment_new_status(status)
+        # We pass the post params to the adapter to do the status update
 
-        return HttpResponse('success')
+        try:
+            service.adapter.status_update(authenticity, success, failure)
+            return HttpResponse('{"status": "1"}')
+        except PaymentException as e:
+            return HttpResponse('{"status": "0", "message": "%s"}' % e)
+

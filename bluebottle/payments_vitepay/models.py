@@ -66,8 +66,8 @@ class VitepayPayment(Payment):
 
     class Meta:
         ordering = ('-created', '-updated')
-        verbose_name = "Interswitch Payment"
-        verbose_name_plural = "Interswitch Payments"
+        verbose_name = "Vitepay Payment"
+        verbose_name_plural = "Vitepay Payments"
 
     def get_method_name(self):
         """ Return the payment method name."""

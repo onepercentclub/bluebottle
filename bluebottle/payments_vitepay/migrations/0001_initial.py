@@ -36,8 +36,8 @@ class Migration(migrations.Migration):
             ],
             options={
                 'ordering': ('-created', '-updated'),
-                'verbose_name': 'Interswitch Payment',
-                'verbose_name_plural': 'Interswitch Payments',
+                'verbose_name': 'Vitepay Payment',
+                'verbose_name_plural': 'Vitepay Payments',
             },
             bases=('payments.payment',),
         ),

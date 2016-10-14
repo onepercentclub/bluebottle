@@ -45,12 +45,17 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         """
         Create a new payment
         """
-        payment = self.MODEL_CLASSES[0](order_payment=self.order_payment)
-        # Amount on the payment should be in CFA * 100
-        payment.amount = int(self.order_payment.amount.amount * 100)
-        payment.description = "Thanks for your donation!"
+
         if self.order_payment.amount.currency != XOF:
             raise PaymentException("Can only do Vitepay payments in XOF, Communauté Financière Africaine (BCEAO).")
+
+        if self.merchant != 'vitepay':
+            raise PaymentException("Not a VitePay order-payment. Merchant is {0}".format(self.merchant))
+
+        payment = self.MODEL_CLASSES[0].objects.create(order_payment=self.order_payment)
+        # Amount on the payment should be in CFA * 100
+        payment.amount_100 = int(self.order_payment.amount.amount * 100)
+        payment.description = "Thanks for your donation!"
         payment.callback_url = '{0}/payments_vitepay/payment_response/{1}'.format(
             self._get_callback_host(),
             self.order_payment.id)
@@ -69,12 +74,9 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
 
         payment.order_id = 'opc-{0}'.format(self.order_payment.id)
         payment.save()
-
-
-
         return payment
 
-    def _get_create_hash(self):
+    def _create_payment_hash(self):
         """
         Le hash est une valeur calculée avec la formule suivante :
         SHA1(UPPERCASE("order_id;amount_100;currency_code;callback_url;api_secret"))
@@ -88,9 +90,8 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         du site pour lequel vous souhaitez faire l'intégration pour récupérer cette information.
         """
         api_secret = self.credentials['api_secret']
-        message = "{p.order_id};{p.amount};{p.currency_code};" \
+        message = "{p.order_id};{p.amount_100};{p.currency_code};" \
                   "{p.callback_url};{api_secret}".format(p=self.payment, api_secret=api_secret)
-        print message
         return hashlib.sha1(message.upper()).hexdigest()
 
     def _get_payment_url(self):
@@ -108,17 +109,17 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
             "p_type": "orange_money",
             "redirect": "0",
             "api_key": self.credentials['api_key'],
-            "hash": self._get_create_hash()
+            "hash": self._create_payment_hash()
         }
 
         url = self.credentials['api_url']
         headers = {'Content-Type': 'application/json'}
         response = requests.post(url, data=json.dumps(data), headers=headers)
-        print data
         if response.status_code == 200:
             self.payment.payment_url = response.content
         else:
             raise PaymentException('Error creating payment: {0}'.format(response.content))
+        self.payment.status = StatusDefinition.STARTED
         self.payment.save()
         return response.content
 
@@ -137,6 +138,32 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         """
         return status
 
-    def check_payment_status(self):
-        # TODO
-        pass
+    def _create_update_hash(self):
+        """
+        Cette information permet de sécuriser la communication serveur-à-serveur.
+        En effet, vous devez recalculer cette chaîne au niveau de votre intégration et
+        la comparer à celle que nous vous transmettons. Ne modifier votre panier que
+        s'il y a une correspondance parfaite.
+
+        Littéralement, authenticity est la valeur SHA1 de la concaténation du numéro
+        de comande, montant de de la transaction (x100), devise et signature du site marchand.
+        authenticity = SHA1("order_id;amount_100;currency_code;api_secret")
+        """
+        api_secret = self.credentials['api_secret']
+        message = "{p.order_id};{p.amount_100};{p.currency_code};" \
+                  "{api_secret}".format(p=self.payment, api_secret=api_secret)
+        return hashlib.sha1(message.upper()).hexdigest()
+
+    def status_update(self, authenticity, success, failure):
+        if authenticity != self._create_update_hash():
+            raise PaymentException('Authenticity incorrect.')
+        elif success and failure:
+            raise PaymentException('Both failure and succes are set. Not sure what to do.')
+        elif not success and  not failure:
+            raise PaymentException('Both failure and succes are unset. Not sure what to do.')
+        elif failure:
+            self.payment.status = StatusDefinition.FAILED
+        else:
+            self.payment.status = StatusDefinition.SETTLED
+        self.payment.save()
+        return True

@@ -129,7 +129,7 @@ class ManageProfileSerializer(UserProfileSerializer):
         model = BB_USER_MODEL
         fields = UserProfileSerializer.Meta.fields + (
             'email', 'address', 'newsletter', 'campaign_notifications', 'location',
-            'birthdate', 'gender', 'first_name', 'last_name',
+            'birthdate', 'gender', 'first_name', 'last_name', 'username'
         )
 
     def update(self, instance, validated_data):
@@ -176,6 +176,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     email_confirmation = serializers.EmailField(
         label=_('password_confirmation'), max_length=254, required=False)
     password = PasswordField(required=True, max_length=128)
+    username = serializers.CharField(read_only=True)
     jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
     primary_language = serializers.CharField(required=False)
 
@@ -214,7 +215,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id',  'first_name', 'last_name', 'email_confirmation',
+        fields = ('id', 'username', 'first_name', 'last_name', 'email_confirmation',
                   'email', 'password', 'jwt_token', 'primary_language')
 
 

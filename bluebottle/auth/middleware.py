@@ -19,8 +19,10 @@ from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
                                  _default_url_exceptions, _default_form)
 
 from lockdown import settings as lockdown_settings
+from bluebottle.utils.utils import get_client_ip
 
-LAST_SEEN_DELTA = 10 # in minutes 
+
+LAST_SEEN_DELTA = 10 # in minutes
 
 
 def isAdminRequest(request):
@@ -55,7 +57,7 @@ class UserJwtTokenMiddleware:
 
             # Set last_seen on the user record if it has been > 10 mins
             # since the record was set.
-            if not request.user.last_seen or (request.user.last_seen < 
+            if not request.user.last_seen or (request.user.last_seen <
                timezone.now() - timedelta(minutes=LAST_SEEN_DELTA)):
                 request.user.last_seen = timezone.now()
                 request.user.save()
@@ -280,4 +282,24 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         response = render_to_response('lockdown/form.html', page_data,
                                       context_instance=RequestContext(request))
         response.status_code = 401
+        return response
+
+
+authorization_logger = logging.getLogger('authorization')
+
+class LogAuthFailureMiddleWare:
+    def process_request(self, request):
+        request.body
+
+    def process_response(self, request, response):
+        if reverse('admin:login') == request.path and request.method == 'POST' and response.status_code != 302:
+            authorization_logger.error('Authorization failed: {username} {ip}'.format(
+               ip=get_client_ip(request), username=request.POST.get('username')
+            ))
+
+        if reverse('token-auth') == request.path and request.method == 'POST' and response.status_code != 200:
+            authorization_logger.error('Authorization failed: {username} {ip}'.format(
+               ip=get_client_ip(request), username=request.POST.get('email')
+            ))
+
         return response

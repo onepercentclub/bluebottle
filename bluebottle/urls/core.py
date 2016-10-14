@@ -148,7 +148,7 @@ urlpatterns += patterns('',
 
                         # JSON Web Token based authentication for Django REST framework
                         url(r'^api/token-auth/',
-                            'rest_framework_jwt.views.obtain_jwt_token'),
+                            'rest_framework_jwt.views.obtain_jwt_token', name='token-auth'),
                         url(r'^api/token-auth-refresh/$',
                             'rest_framework_jwt.views.refresh_jwt_token'),
 

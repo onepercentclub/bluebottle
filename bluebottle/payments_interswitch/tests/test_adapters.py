@@ -1,15 +1,13 @@
-from bluebottle.payments_interswitch.models import InterswitchPayment
-from bluebottle.test.factory_models.projects import ProjectFactory
-
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from django.core.exceptions import ImproperlyConfigured
-from django.test.utils import override_settings
-
 from moneyed.classes import Money, NGN, EUR
 from mock import patch
 
+from django.core.exceptions import ImproperlyConfigured
+from django.test.utils import override_settings
+
 from bluebottle.payments_interswitch.adapters import InterswitchPaymentAdapter
+from bluebottle.payments_interswitch.models import InterswitchPayment
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.utils import BluebottleTestCase
 

@@ -1,8 +1,6 @@
-import json
 from moneyed.classes import Money, XOF, EUR
 from mock import patch
 
-from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 

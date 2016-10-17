@@ -135,7 +135,6 @@ TEMPLATES = [
 ]
 
 MIDDLEWARE_CLASSES = (
-    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
     'django.middleware.cache.UpdateCacheMiddleware',
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
@@ -148,6 +147,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
+    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.LockdownMiddleware',

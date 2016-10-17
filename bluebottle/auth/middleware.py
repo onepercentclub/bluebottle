@@ -1,5 +1,6 @@
 from calendar import timegm
 from datetime import datetime, timedelta
+import json
 import logging
 
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -289,17 +290,23 @@ authorization_logger = logging.getLogger('authorization')
 
 class LogAuthFailureMiddleWare:
     def process_request(self, request):
-        request.body
+        request.body  # touch the body so that we have access to it in process_response
 
     def process_response(self, request, response):
+        """ Log a message for each failed login attempt. """
         if reverse('admin:login') == request.path and request.method == 'POST' and response.status_code != 302:
             authorization_logger.error('Authorization failed: {username} {ip}'.format(
                ip=get_client_ip(request), username=request.POST.get('username')
             ))
 
         if reverse('token-auth') == request.path and request.method == 'POST' and response.status_code != 200:
+            try:
+                data = json.loads(request.body)
+            except ValueError:
+                data  = request.POST
+
             authorization_logger.error('Authorization failed: {username} {ip}'.format(
-               ip=get_client_ip(request), username=request.POST.get('email')
+               ip=get_client_ip(request), username=data.get('email')
             ))
 
         return response

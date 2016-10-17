@@ -34,4 +34,3 @@ class PaymentStatusListener(View):
             return HttpResponse('{"status": "1"}')
         except PaymentException as e:
             return HttpResponse('{"status": "0", "message": "%s"}' % e)
-

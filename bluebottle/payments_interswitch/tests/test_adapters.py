@@ -1,3 +1,4 @@
+from bluebottle.payments_interswitch.models import InterswitchPayment
 from bluebottle.test.factory_models.projects import ProjectFactory
 
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -44,6 +45,17 @@ class InterswitchPaymentAdapterTestCase(BluebottleTestCase):
         self.assertEqual(payload['product_id'], '1234')
         self.assertEqual(payload['amount'], 200000)
         self.assertEqual(payload['txn_ref'], 'opc-{0}'.format(order_payment.id))
+
+    @patch('bluebottle.payments_interswitch.adapters.get_current_host', return_value='https://onepercentclub.com')
+    def test_create_only_one_payment(self, get_current_host):
+        self.init_projects()
+        order = OrderFactory.create()
+        DonationFactory.create(amount=Money(2000, NGN), order=order)
+        order_payment = OrderPaymentFactory.create(payment_method='interswitchWebpay', order=order)
+        InterswitchPaymentAdapter(order_payment)
+        self.assertEqual(InterswitchPayment.objects.count(), 1)
+        InterswitchPaymentAdapter(order_payment)
+        self.assertEqual(InterswitchPayment.objects.count(), 1)
 
     @patch('bluebottle.payments_interswitch.adapters.get_current_host',
            return_value='https://onepercentclub.com')

@@ -76,6 +76,8 @@ urlpatterns = patterns('',
                            include('bluebottle.payments_docdata.urls.core')),
                        url(r'^payments_interswitch/',
                            include('bluebottle.payments_interswitch.urls.core')),
+                       url(r'^payments_vitepay/',
+                           include('bluebottle.payments_vitepay.urls.core')),
 
                        url(r'^surveys/',
                            include('bluebottle.surveys.urls.core')),

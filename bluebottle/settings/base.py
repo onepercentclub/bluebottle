@@ -196,7 +196,7 @@ JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 # List of paths to ignore for locale redirects
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_mock', '/payments_interswitch',
-                          '/media', '/surveys')
+                          '/payments_vitepay', '/media', '/surveys')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
@@ -319,6 +319,7 @@ TENANT_APPS = (
     'bluebottle.payments',
     'bluebottle.payments_docdata',
     'bluebottle.payments_interswitch',
+    'bluebottle.payments_vitepay',
     'bluebottle.payments_pledge',
     'bluebottle.payments_logger',
     'bluebottle.payments_voucher',

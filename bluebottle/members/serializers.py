@@ -47,7 +47,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name',
+        fields = ('id', 'first_name', 'last_name', 'username',
                   'avatar', 'full_name', 'short_name')
 
 

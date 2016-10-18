@@ -1,8 +1,7 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from ..views import CategoryList
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^$', CategoryList.as_view(), name='category-list'),
-)
+]

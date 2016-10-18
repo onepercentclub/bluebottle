@@ -20,14 +20,13 @@ from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
 
 from lockdown import settings as lockdown_settings
 
-LAST_SEEN_DELTA = 10 # in minutes 
+LAST_SEEN_DELTA = 10 # in minutes
 
 
 def isAdminRequest(request):
     admin_base = reverse('admin:index')
-    docs_base = reverse('django.swagger.base.view')
 
-    return request.path.startswith(admin_base) or request.path.startswith(docs_base)
+    return request.path.startswith(admin_base)
 
 
 class UserJwtTokenMiddleware:
@@ -55,7 +54,7 @@ class UserJwtTokenMiddleware:
 
             # Set last_seen on the user record if it has been > 10 mins
             # since the record was set.
-            if not request.user.last_seen or (request.user.last_seen < 
+            if not request.user.last_seen or (request.user.last_seen <
                timezone.now() - timedelta(minutes=LAST_SEEN_DELTA)):
                 request.user.last_seen = timezone.now()
                 request.user.save()

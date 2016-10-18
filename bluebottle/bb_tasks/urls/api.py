@@ -1,12 +1,11 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from ..views import (
     TaskDetail, TaskList, TaskMemberList, TaskMemberDetail,
     TaskFileList, TaskFileDetail, MyTaskList, MyTaskDetail,
     TaskPreviewList, MyTaskMemberList, SkillList, UsedSkillList)
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^$', TaskList.as_view(), name='task_list'),
     url(r'^(?P<pk>\d+)$', TaskDetail.as_view(), name='task_detail'),
     url(r'^my/$', MyTaskList.as_view(), name='my_task_list'),
@@ -29,4 +28,4 @@ urlpatterns = patterns(
     url(r'^files/$', TaskFileList.as_view(), name='task_file_list'),
     url(r'^files/(?P<pk>\d+)$', TaskFileDetail.as_view(),
         name='task_file_detail'),
-)
+]

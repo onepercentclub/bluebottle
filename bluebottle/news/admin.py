@@ -1,7 +1,7 @@
 import json
 
 from django.conf import settings
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -49,16 +49,16 @@ class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
         # Include extra API views in this admin page
         base_urls = super(NewsItemAdmin, self).get_urls()
         info = self.model._meta.app_label, self.model._meta.model_name
-        urlpatterns = patterns('',
-                               url(r'^(?P<pk>\d+)/preview-canvas/$',
-                                   self.admin_site.admin_view(
-                                       self.preview_canvas),
-                                   name="{0}_{1}_preview_canvas".format(*info)),
-                               url(r'^(?P<pk>\d+)/get_preview/$',
-                                   self.admin_site.admin_view(
-                                       self.get_preview_html),
-                                   name="{0}_{1}_get_preview".format(*info))
-                               )
+        urlpatterns = [
+            url(r'^(?P<pk>\d+)/preview-canvas/$',
+                self.admin_site.admin_view(
+                    self.preview_canvas),
+                name="{0}_{1}_preview_canvas".format(*info)),
+            url(r'^(?P<pk>\d+)/get_preview/$',
+                self.admin_site.admin_view(
+                    self.get_preview_html),
+                name="{0}_{1}_get_preview".format(*info))
+        ]
 
         return urlpatterns + base_urls
 

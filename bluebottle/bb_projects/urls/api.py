@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from ..views import (
     ManageProjectDetail, ManageProjectList, ProjectDetail,
@@ -9,8 +9,7 @@ from ..views import (
     ManageProjectDocumentList, ManageProjectDocumentDetail)
 
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^projects/$', ProjectList.as_view(), name='project_list'),
     url(r'^projects/(?P<slug>[\w-]+)$', ProjectDetail.as_view(),
         name='project_detail'),
@@ -46,4 +45,4 @@ urlpatterns = patterns(
     url(r'^documents/manage/(?P<pk>\d+)$', ManageProjectDocumentDetail.as_view(),
         name='manage_project_document_detail'),
 
-)
+]

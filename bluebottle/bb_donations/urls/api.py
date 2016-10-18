@@ -1,10 +1,10 @@
 from bluebottle.bb_donations.views import ProjectDonationList, \
     ProjectDonationDetail, LatestDonationsList
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from ..views import DonationList, DonationDetail, ManageDonationDetail, \
     ManageDonationList, MyProjectDonationList, MyFundraiserDonationList
 
-urlpatterns = patterns('',
+urlpatterns = [
     url(r'^$', DonationList.as_view(), name='donation-list'),
     url(r'^(?P<pk>\d+)$', DonationDetail.as_view(),
        name='donation-detail'),
@@ -31,4 +31,4 @@ urlpatterns = patterns('',
     url(r'^latest-donations/$',
        LatestDonationsList.as_view(),
        name='fund-ticker-list'),
-)
+]

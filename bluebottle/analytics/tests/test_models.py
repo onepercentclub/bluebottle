@@ -141,6 +141,7 @@ class TestTaskAnalytics(BluebottleTestCase):
             'status': 'open',
             'location': '',
             'location_group': '',
+            'country': '',
             'theme': project.theme.name,
             'theme_slug': project.theme.slug,
         }
@@ -209,6 +210,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
             'status': 'applied',
             'location': '',
             'location_group': '',
+            'country': task.project.country.name,
             'theme': project.theme.name,
             'theme_slug': project.theme.slug,
         }
@@ -337,6 +339,7 @@ class TestVoteAnalytics(BluebottleTestCase):
             'tenant': u'test',
             'location': self.location.name,
             'location_group': self.location.group.name,
+            'country': project.country.name,
             'theme': project.theme.name,
             'theme_slug': project.theme.slug
 

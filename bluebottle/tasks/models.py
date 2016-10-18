@@ -86,6 +86,7 @@ class Task(models.Model, PreviousStatusMixin):
             'status': 'status',
             'location': 'project.location.name',
             'location_group': 'project.location.group.name',
+            'country': 'task.project.country_name',
             'theme': {
                 'project.theme.name': {'translate': True}
             },
@@ -287,6 +288,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
             'status': 'status',
             'location': 'task.project.location.name',
             'location_group': 'task.project.location.group.name',
+            'country': 'task.project.country_name',
             'theme': {
                 'task.project.theme.name': {'translate': True}
             },

@@ -141,6 +141,7 @@ class TestTaskAnalytics(BluebottleTestCase):
             'status': 'open',
             'location': '',
             'location_group': '',
+            'country': '',
             'theme': project.theme.name,
             'theme_slug': project.theme.slug,
         }
@@ -209,6 +210,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
             'status': 'applied',
             'location': '',
             'location_group': '',
+            'country': task.project.country.name,
             'theme': project.theme.name,
             'theme_slug': project.theme.slug,
         }
@@ -337,6 +339,7 @@ class TestVoteAnalytics(BluebottleTestCase):
             'tenant': u'test',
             'location': self.location.name,
             'location_group': self.location.group.name,
+            'country': project.country.name,
             'theme': project.theme.name,
             'theme_slug': project.theme.slug
 
@@ -429,10 +432,14 @@ class TestMemberAnalytics(BluebottleTestCase):
         self.assertEqual(kwargs['fields'], expected_fields)
 
     def test_member_update(self, queue_mock):
-        member = BlueBottleUserFactory.create()
-        previous_call_count = queue_mock.call_count
+        def do_nothing(**kwargs):
+            pass
+
+        with patch('bluebottle.analytics.signals.queue_analytics_record') as mock_queue:
+            mock_queue.side_effect = do_nothing
+            member = BlueBottleUserFactory.create()
 
         member.first_name = 'Bob'
         member.save()
-        self.assertEqual(queue_mock.call_count, previous_call_count,
-                         'Analytics should not be sent when member updated')
+        self.assertEqual(queue_mock.call_count, 0,
+                         'Analytics should not be sent when member updated directly')

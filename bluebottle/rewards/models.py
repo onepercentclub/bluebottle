@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (CreationDateTimeField,
                                          ModificationDateTimeField)
 
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
 
 
@@ -11,7 +12,7 @@ class Reward(models.Model):
     """
     Rewards for donations
     """
-    amount = models.DecimalField(_('Amount'), max_digits=16, decimal_places=2)
+    amount = MoneyField(_('Amount'))
     title = models.CharField(_('Title'), max_length=30)
     description = models.CharField(_('Description'), max_length=200)
     project = models.ForeignKey('projects.Project', verbose_name=_('Project'))

@@ -395,7 +395,7 @@ class AccountingStatisticsTests(BluebottleTestCase):
 
         order_payment = OrderPaymentFactory.create(order=order, amount=Decimal('77'))
         self.assertEqual(OrderPayment.objects.filter(payment=None).first().pk, order_payment.pk)
-        self.assertEqual(order_payment.amount, Decimal()) # because it has no payment
+        self.assertEqual(order_payment.amount.amount, 0.00) # because it has no payment
 
         # ##### EXTRA BANKTRANSACTIONS  ##### #
         BankTransactionFactory.create(amount=Decimal('77'),

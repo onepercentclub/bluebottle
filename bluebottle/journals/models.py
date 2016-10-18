@@ -1,3 +1,6 @@
+from decimal import Decimal
+from moneyed import Money
+
 from django.db import models
 from django.db.models.aggregates import Sum
 from django.dispatch import receiver
@@ -5,9 +8,7 @@ from django.db.models.signals import post_save
 from django.utils.translation import ugettext as _
 from django_extensions.db.fields import CreationDateTimeField
 
-from bluebottle.bb_projects.fields import MoneyField
-
-from decimal import Decimal
+from bluebottle.utils.fields import MoneyField
 
 
 class BaseJournal(models.Model):
@@ -59,8 +60,18 @@ class BaseJournal(models.Model):
         related_model_name = self.related_model_field_name  # 'donation'
         filter_ = {related_model_name: self.related_model}  # {'donation': self.donation}
 
-        return self.related_model.journal_set.all().filter(**filter_).aggregate(
-            Sum('amount'))['amount__sum'] or 0
+        totals = [
+            Money(data['amount__sum'], data['amount_currency']) for data in
+            self.related_model.journal_set.all().filter(**filter_).values('amount_currency').annotate(Sum('amount')).order_by()
+        ]
+
+        if len(totals) == 0:
+            totals = [Money(0, 'EUR')]
+
+        if len(totals) > 1:
+            DeprecationWarning('Cannot yet handle multiple currencies on one journal!')
+
+        return totals[0]
 
     def save(self, *args, **kwargs):
         # could be prefilled via the admin by the (staff) user that does a change
@@ -176,10 +187,9 @@ def create_journal_for_sender(sender, instance, created, data_migration=None):
         # and add the correction when needed
         journal = journals.first()  # even when there are more, the get_journal_total will return the correct value
         journal_amount = journal.get_journal_total()
-
         diff = amount_instance - journal_amount
-        if diff == Decimal():
-            return  # dont save, or should a new journal be made when amount is not changed?
+        if diff.amount == 0.0:
+            return  # dont save, or should a new journal be made when amount is not changed?Hry
         journal_date = instance.updated
         journal_amount = diff
     else:

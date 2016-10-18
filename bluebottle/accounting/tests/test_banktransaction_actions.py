@@ -1,11 +1,9 @@
 from datetime import date, timedelta
 from decimal import Decimal
 
-from django.db.models import Sum
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 from django.utils import timezone
-from django.utils.translation import ugettext as _
 
 from django_webtest import WebTestMixin
 from bluebottle.bb_projects.models import ProjectPhase
@@ -15,10 +13,9 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.accounting import BankTransactionFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.bb_payouts.models import BaseProjectPayout
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.payments_manual.models import ManualPayment
 from ..models import BankTransaction
 
 

@@ -3,6 +3,7 @@ from rest_framework import serializers
 from bluebottle.donations.serializers import ManageDonationSerializer
 from bluebottle.orders.models import Order
 from bluebottle.members.models import Member
+from bluebottle.utils.serializers import MoneySerializer
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -15,7 +16,7 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class ManageOrderSerializer(serializers.ModelSerializer):
-    total = serializers.DecimalField(read_only=True, max_digits=10, decimal_places=2)
+    total = MoneySerializer(read_only=True)
     status = serializers.ChoiceField(choices=Order.STATUS_CHOICES, read_only=True)
     user = serializers.PrimaryKeyRelatedField(queryset=Member.objects, required=False, allow_null=True)
     donations = ManageDonationSerializer(many=True, read_only=True)

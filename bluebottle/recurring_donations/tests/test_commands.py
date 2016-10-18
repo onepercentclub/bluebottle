@@ -1,5 +1,5 @@
-from decimal import Decimal
 from mock import patch
+from moneyed import Money
 
 from django.core.management import call_command
 from django.test.utils import override_settings
@@ -11,7 +11,7 @@ from bluebottle.recurring_donations.tests.model_factory import \
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.projects.models import Project
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.recurring_donations.management.commands import process_monthly_donations
+from bluebottle.recurring_donations import tasks
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
@@ -84,7 +84,7 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         self.assertEqual(monthly_order.donations.count(), 1)
 
         # Donation should have amount 25 and go to first project
-        self.assertEqual(monthly_order.donations.all()[0].amount, Decimal('25'))
+        self.assertEqual(monthly_order.donations.all()[0].amount, Money(25, 'EUR'))
         self.assertEqual(monthly_order.donations.all()[0].project,
                          self.projects[0])
 
@@ -94,23 +94,19 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
             user=self.user2).donations.all()
         self.assertEqual(len(monthly_donations), 3)
 
-        self.assertEqual(monthly_donations[0].amount, Decimal('33.33'))
+        self.assertEqual(monthly_donations[0].amount, Money(33.33, 'EUR'))
         self.assertEqual(monthly_donations[0].project, self.projects[3])
 
-        self.assertEqual(monthly_donations[1].amount, Decimal('33.33'))
+        self.assertEqual(monthly_donations[1].amount, Money(33.33, 'EUR'))
         self.assertEqual(monthly_donations[1].project, self.projects[4])
 
-        self.assertEqual(monthly_donations[2].amount, Decimal('33.34'))
+        self.assertEqual(monthly_donations[2].amount, Money(33.34, 'EUR'))
         self.assertEqual(monthly_donations[2].project, self.projects[0])
 
-    @patch.object(process_monthly_donations, 'PAYMENT_METHOD', 'mock')
+    @patch.object(tasks, 'PAYMENT_METHOD', 'mock')
     def test_email(self):
         with patch.object(LocalTenant, '__new__') as mocked_init:
             # Clear the outbox before running monthly donations
             del mail.outbox[:]
             call_command('process_monthly_donations', tenant='test', process=True, prepare=True)
-
             self.assertEquals(len(mail.outbox), 2)
-            # LocalTenant should be called once to set the correct tenant properties
-            mocked_init.assert_called_once_with(LocalTenant, self.tenant,
-                                                clear_tenant=True)

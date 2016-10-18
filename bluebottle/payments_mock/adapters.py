@@ -13,7 +13,7 @@ class MockPaymentAdapter(BasePaymentAdapter):
         """
         Have some basic criteria that might fail so we can check our error parsing.
         """
-        if self.order_payment.amount < 10:
+        if self.order_payment.amount.amount < 10:
             raise PaymentException(
                 "Amount for Mock payments should be greater then 10")
 

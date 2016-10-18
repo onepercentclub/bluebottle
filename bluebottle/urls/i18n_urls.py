@@ -40,7 +40,8 @@ urlpatterns = patterns(
         include('django.contrib.auth.urls', namespace='accounts')),
 
     # Django Admin, docs and password reset
-    url(r'^admin/password_reset/$', 'django.contrib.auth.views.password_reset',
+    url(r'^admin/password_reset/$',
+        'django.contrib.auth.views.password_reset',
         name='admin_password_reset'),
     url(r'^admin/password_reset/done/$',
         'django.contrib.auth.views.password_reset_done'),

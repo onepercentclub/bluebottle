@@ -1,9 +1,12 @@
 from django.test.utils import override_settings
 from mock import patch
 
+from decimal import Decimal
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
+
+from moneyed import Money
 
 from bluebottle.bb_orders.views import ManageOrderDetail
 from bluebottle.clients import properties
@@ -249,6 +252,31 @@ class TestDonationPermissions(DonationApiTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Donation.objects.count(), 1)
+
+    def test_donation_update_order_change_currency(self, mock_check_status_psp):
+        """ Test that an update to a donation where the order does has status CREATED produces 200 OK response"""
+
+        order = OrderFactory.create(user=self.user,
+                                    status=StatusDefinition.CREATED)
+
+        donation = DonationFactory(order=order, amount=Money(100, 'USD'))
+
+        updated_donation = {
+            "project": donation.project.slug,
+            "order": order.id,
+            "amount": {'amount': 200, 'currency': 'EUR'}
+        }
+
+        self.assertEqual(Donation.objects.count(), 1)
+        response = self.client.put(reverse('manage-donation-detail',
+                                           kwargs={'pk': donation.id}),
+                                   updated_donation,
+                                   token=self.user_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Donation.objects.count(), 1)
+
+        self.assertEqual(response.data['amount'], {'currency': 'EUR', 'amount': Decimal(200)})
 
 
 # Mock the ManageOrderDetail check_status_psp function which will request status_check at PSP

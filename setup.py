@@ -17,6 +17,9 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.8#egg=django-tenant-extras-2.0.8',
     'git+https://github.com/mariocesar/sorl-thumbnail.git@v12.3#egg=sorl-thumbnail-12.3-github',
     'git+https://github.com/onepercentclub/django-token-auth.git@0.3.2#egg=django-token-auth-0.3.2',
+    # Use pre-release version of django-money as long as
+    # https://github.com/django-money/django-money/issues/221 is not released
+    'git+https://github.com/django-money/django-money.git@c6fc1aad48712b2780b8c8563c78831fb9c88a73#egg=django-money-0.10-pre',
     'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1',
     'git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github'
 ]
@@ -43,7 +46,7 @@ install_requires = [
     'django-lockdown==1.2',
     'django-loginas==0.1.9',
     'django-modeltranslation==0.11',
-    'django-money==0.9.1',
+    'django-money==0.10-pre',
     'django-rest-swagger==0.3.6',
     'django-select-multiple-field==0.4.2',
     'django-taggit==0.18.3',

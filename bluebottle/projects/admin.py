@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import logging
+from decimal import InvalidOperation
 
 from django import forms
 from django.db.models import Count, Sum
@@ -275,6 +276,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
         (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
                                 'amount_donated', 'amount_needed',
+                                'currencies',
                                 'popularity', 'vote_count')}),
 
         (_('Dates'), {'fields': ('voting_deadline', 'deadline',
@@ -295,10 +297,13 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return obj.vote_set.count()
 
     def donated_percentage(self, obj):
-        if not obj.amount_asked:
-            return "-"
-        percentage = "%.2f" % (100 * obj.amount_donated / obj.amount_asked)
-        return "{0} %".format(percentage)
+        if not obj.amount_asked or not obj.amount_asked.amount:
+            return '-'
+        try:
+            percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
+            return "{0} %".format(percentage)
+        except (AttributeError, InvalidOperation):
+            return '-'
 
     def get_queryset(self, request):
         # Optimization: Select related fields that are used in admin specific

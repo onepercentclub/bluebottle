@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models import options
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
@@ -16,6 +15,7 @@ from django_fsm import FSMField, transition
 from bluebottle import clients
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.managers import PaymentManager
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 
@@ -126,7 +126,7 @@ class OrderPayment(models.Model, FSMTransition):
     updated = ModificationDateTimeField(_("Updated"))
     closed = models.DateTimeField(
         _("Closed"), blank=True, editable=False, null=True)
-    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
+    amount = MoneyField(_("Amount"))
 
     transaction_fee = models.DecimalField(_("Transaction Fee"), max_digits=16,
                                           decimal_places=2, null=True,
@@ -270,4 +270,4 @@ class Transaction(PolymorphicModel):
         ordering = ('-created', '-updated')
 
 
-import signals
+import signals  # noqa

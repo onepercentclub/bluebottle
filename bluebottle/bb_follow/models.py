@@ -31,7 +31,7 @@ class Follow(models.Model):
 
     def __unicode__(self):
         if self.followed_object:
-            return str(self.followed_object)
+            return unicode(self.followed_object)
         return self.id
 
     def validate_unique(self, exclude=None):

@@ -206,20 +206,6 @@ class SlugGenericRelatedField(serializers.RelatedField):
             return to_instance.id
 
 
-class EuroField(serializers.CharField):
-    # Note: You need to override save and set the currency to 'EUR' in the
-    # Serializer where this is used.
-    def to_representation(self, value):
-        # Convert model instance int -> text for reading.
-        return '{0}.{1}'.format(str(value)[:-2], str(value)[-2:])
-
-    def to_internal_value(self, value):
-        # Convert text -> model instance int for writing.
-        if not value:
-            return 0
-        return int(decimal.Decimal(value) * 100)
-
-
 class FileSerializer(serializers.FileField):
     def to_representation(self, value):
         if value:
@@ -315,8 +301,3 @@ class PrivateFileSerializer(FileSerializer):
                       kwargs={'content_type': content_type, 'pk': pk})
         return {'name': os.path.basename(value.name),
                 'url': url}
-
-
-class ObjectFieldSerializer(serializers.CharField):
-    def to_internal_value(self, data):
-        return json.dumps(data)

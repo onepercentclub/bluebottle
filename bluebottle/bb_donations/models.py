@@ -1,29 +1,32 @@
 from django.db import models
-from django.db.models import options
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
+
+from bluebottle.utils.fields import MoneyField
 
 
 class BaseDonation(models.Model):
     """
     Donation of an amount from a user to a project.
     """
-    amount = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2)
+    amount = MoneyField(_("Amount"))
 
     project = models.ForeignKey('projects.Project',
                                 verbose_name=_("Project"))
     fundraiser = models.ForeignKey('fundraisers.Fundraiser',
-                                   verbose_name=_("Fundraiser"), null=True,
-                                   blank=True)
+                                   verbose_name=_("Fundraiser"),
+                                   null=True, blank=True)
     order = models.ForeignKey('orders.Order',
-                              verbose_name=_("Order"), related_name='donations',
+                              verbose_name=_("Order"),
+                              related_name='donations',
                               null=True, blank=True)
 
     reward = models.ForeignKey('rewards.Reward',
-                              verbose_name=_("Reward"), related_name='reward',
-                              null=True, blank=True)
+                               verbose_name=_("Reward"),
+                               related_name='reward',
+                               null=True, blank=True)
 
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))

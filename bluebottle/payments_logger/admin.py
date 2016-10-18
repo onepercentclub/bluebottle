@@ -1,4 +1,3 @@
-from django.contrib.admin.templatetags.admin_static import static
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from bluebottle.payments_logger.models import PaymentLogEntry

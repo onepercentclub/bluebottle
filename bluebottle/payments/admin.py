@@ -1,18 +1,19 @@
+from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.http.response import HttpResponseRedirect
 
 from polymorphic.admin import (PolymorphicParentModelAdmin,
                                PolymorphicChildModelAdmin)
 
 from bluebottle.payments.models import Payment, OrderPayment
-from bluebottle.payments_docdata.admin import (DocdataPaymentAdmin,
-                                               DocdataDirectdebitPaymentAdmin)
-from bluebottle.payments_logger.admin import PaymentLogEntryInline
+from bluebottle.payments.services import PaymentService
+from bluebottle.payments_interswitch.admin import InterswitchPaymentAdmin
 from bluebottle.payments_docdata.admin import (
-    DocdataPaymentAdmin, DocdataPaymentAdmin,
+    DocdataPaymentAdmin,
     DocdataDirectdebitPaymentAdmin)
 from bluebottle.payments_logger.admin import PaymentLogEntryInline
-from bluebottle.payments.exception import PaymentAdminException
+from bluebottle.payments_vitepay.admin import VitepayPaymentAdmin
 from bluebottle.payments_voucher.admin import VoucherPaymentAdmin
 
 
@@ -25,6 +26,33 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     fields = ('user',) + readonly_fields
     list_display = ('created', 'user', 'status', 'amount',
                     'payment_method', 'transaction_fee')
+
+    list_filter = ('status', 'payment_method')
+    ordering = ('-created',)
+
+    actions = ['batch_check_status']
+
+    def get_urls(self):
+        urls = super(OrderPaymentAdmin, self).get_urls()
+        process_urls = [
+            url(r'^check/(?P<pk>\d+)/$', self.check_status, name="payments_orderpayment_check")
+        ]
+        return process_urls + urls
+
+    def check_status(self, request, pk=None):
+        order_payment = OrderPayment.objects.get(pk=pk)
+        service = PaymentService(order_payment)
+        service.check_payment_status()
+        order_payment_url = reverse('admin:payments_orderpayment_change', args=(order_payment.id,))
+        response = HttpResponseRedirect(order_payment_url)
+        return response
+
+    def batch_check_status(self, request, queryset):
+        for order_payment in queryset:
+            service = PaymentService(order_payment)
+            service.check_payment_status()
+
+    batch_check_status.short_description = 'Check status at PSP'
 
     def order_link(self, obj):
         object = obj.order
@@ -74,19 +102,17 @@ class OrderPaymentInline(admin.TabularInline):
 
 class PaymentAdmin(PolymorphicParentModelAdmin):
     base_model = Payment
-
     list_display = ('created', 'order_payment_amount', 'polymorphic_ctype')
 
     inlines = (PaymentLogEntryInline,)
-
-    # list_filter = ('status', )
     ordering = ('-created',)
 
     def get_child_models(self):
         return tuple(
             (admin.model, admin) for admin in (
                 DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin,
-                VoucherPaymentAdmin
+                VoucherPaymentAdmin, InterswitchPaymentAdmin,
+                VitepayPaymentAdmin
             )
         )
 

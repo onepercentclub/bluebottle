@@ -128,15 +128,15 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             payment = DocdataPayment(order_payment=self.order_payment,
                                      **self.order_payment.integration_data)
 
-        payment.total_gross_amount = self.order_payment.amount * 100
+        payment.total_gross_amount = self.order_payment.amount.amount * 100
 
         if payment.default_pm == 'paypal':
             payment.default_pm = 'paypal_express_checkout'
 
-        merchant = gateway.Merchant(name=properties.DOCDATA_MERCHANT_NAME,
-                                    password=properties.DOCDATA_MERCHANT_PASSWORD)
+        merchant = gateway.Merchant(name=self.credentials['merchant_name'],
+                                    password=self.credentials['merchant_password'])
 
-        amount = gateway.Amount(value=self.order_payment.amount, currency='EUR')
+        amount = gateway.Amount(value=self.order_payment.amount.amount, currency=self.order_payment.amount.currency)
         user = self.get_user_data()
 
         if payment.default_pm == 'ideal':
@@ -186,7 +186,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         bill_to = gateway.Destination(name=name, address=address)
 
-        client = gateway.DocdataClient(self.live_mode)
+        client = gateway.DocdataClient(self.credentials, self.live_mode)
 
         info_text = self.order_payment.info_text
 
@@ -211,7 +211,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
     def get_authorization_action(self):
 
-        client = gateway.DocdataClient(self.live_mode)
+        client = gateway.DocdataClient(self.credentials, self.live_mode)
 
         # Get the language that the user marked as his / her primary language
         # or fallback on the default LANGUAGE_CODE in settings
@@ -236,6 +236,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         try:
             url = client.get_payment_menu_url(
                 order_key=self.payment.payment_cluster_key,
+                credentials=self.credentials,
                 order_id=self.order_payment.order_id,
                 return_url=return_url_base,
                 client_language=client_language,
@@ -252,6 +253,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         url = client.get_payment_menu_url(
             order_key=self.payment.payment_cluster_key,
             order_id=self.order_payment.order_id,
+            credentials=self.credentials,
             return_url=return_url_base,
             client_language=client_language,
         )
@@ -394,7 +396,7 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         dd_transaction.save()
 
     def _fetch_status(self):
-        client = gateway.DocdataClient(self.live_mode)
+        client = gateway.DocdataClient(self.credentials, self.live_mode)
         response = client.status(self.payment.payment_cluster_key)
 
         return response

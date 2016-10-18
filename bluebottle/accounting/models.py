@@ -54,13 +54,13 @@ class BankTransaction(models.Model):
     tenant = models.ForeignKey('accounting.BankTransactionTenant', verbose_name=_('Tenant'), blank=True, null=True)
 
     sender_account = models.CharField(_('holder account number'), max_length=35)
-    currency = models.CharField(_('currency'), max_length=3)
     interest_date = models.DateField(_('interest date'))
     credit_debit = models.CharField(
         _('credit/debit'), max_length=1, db_index=True,
         choices=CreditDebit.choices
     )
     amount = models.DecimalField(_('amount'), max_digits=14, decimal_places=2)
+    currency = models.CharField(_('currency'), max_length=3)
     counter_account = models.CharField(_('recipient account'), max_length=35)
     counter_name = models.CharField(_('recipient name'), max_length=70)
     book_date = models.DateField(_('book date'), db_index=True)

@@ -1,30 +1,19 @@
-from decimal import Decimal
-import math
 import sys
 import logging
 
 from collections import namedtuple
+from optparse import make_option
 
-from django.utils.timezone import now
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 from django.db import connection
 
 from bluebottle.clients.models import Client
-from bluebottle.donations.models import Donation
-from bluebottle.orders.models import Order
-from bluebottle.payments.exception import PaymentException
-from bluebottle.payments.models import OrderPayment
-from bluebottle.projects.models import Project
-from bluebottle.recurring_donations.models import MonthlyProject
-from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.utils.utils import StatusDefinition
-from bluebottle.payments.services import PaymentService
 from bluebottle.clients.utils import LocalTenant
 
-from ...models import MonthlyDonor, MonthlyDonation, MonthlyOrder, MonthlyBatch
-from ...mails import mail_monthly_donation_processed_notification
-
+from ...tasks import (
+    prepare_monthly_batch, process_monthly_batch,
+    process_single_monthly_order
+)
 PAYMENT_METHOD = 'docdataDirectdebit'
 
 logger = logging.getLogger(__name__)
@@ -87,10 +76,10 @@ class Command(BaseCommand):
 
         with LocalTenant(client, clear_tenant=True):
             if options['prepare']:
-                prepare_monthly_donations()
+                prepare_monthly_batch()
 
             if options['process']:
-                process_monthly_batch(None, send_email)
+                process_monthly_batch(tenant=client, monthly_batch=None, send_email=send_email)
 
             if options['process_single']:
                 process_single_monthly_order(options['process_single'], None,
@@ -115,7 +104,7 @@ def create_recurring_order(user, projects, batch, donor):
     project_count = len(projects)
     for index, project in enumerate(projects):
         amount = project_amount if index < project_count - 1 else project_amount + rest_amount
-        don = MonthlyDonation.objects.create(user=user, project=project,
+        don = MonthlyDonation.objects.create(user, project=project,
                                              amount=amount, order=order)
         don.save()
 
@@ -373,30 +362,4 @@ def _process_monthly_order(monthly_order, send_email=False):
     return True
 
 
-def process_single_monthly_order(email, batch=None, send_email=False):
-    if not batch:
-        logger.info("No batch found using latest...")
-        batch = MonthlyBatch.objects.order_by('-date', '-created').all()[0]
 
-    monthly_orders = batch.orders.filter(user__email=email)
-    if monthly_orders.count() > 1:
-        logger.error("Found multiple MonthlyOrders for {0}.".format(email))
-    elif monthly_orders.count() == 1:
-        monthly_order = monthly_orders.get()
-        payment = _process_monthly_order(monthly_order, send_email)
-    else:
-        logger.error(
-            "No MonthlyOrder found for {0} in Batch {1}.".format(email, batch))
-
-
-def process_monthly_batch(batch=None, send_email=False):
-    """
-    Process the prepared monthly orders. This will create the actual payments.
-    """
-
-    if not batch:
-        logger.info("No batch found using latest...")
-        batch = MonthlyBatch.objects.order_by('-date', '-created').all()[0]
-
-    for monthly_order in batch.orders.all():
-        _process_monthly_order(monthly_order, send_email)

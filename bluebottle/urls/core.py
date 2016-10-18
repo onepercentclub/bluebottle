@@ -71,6 +71,10 @@ urlpatterns = [
         include('bluebottle.payments_mock.urls.core')),
     url(r'^payments_docdata/',
         include('bluebottle.payments_docdata.urls.core')),
+    url(r'^payments_interswitch/',
+        include('bluebottle.payments_interswitch.urls.core')),
+    url(r'^payments_vitepay/',
+        include('bluebottle.payments_vitepay.urls.core')),
 
     url(r'^surveys/',
         include('bluebottle.surveys.urls.core')),
@@ -92,13 +96,17 @@ urlpatterns = [
 
     url(r'^embed/', include('bluebottle.widget.urls.core')),
 
+    # JSON Web Token based authentication for Django REST framework
+    url(r'^api/token-auth/', obtain_jwt_token, name='token-auth'),
+
+    url(r'^api/token-auth-refresh/$', refresh_jwt_token),
+
     # Social token authorization
     url(r'^api/social/',
         include('bluebottle.social.urls.api')),
 
     url(r'token/', include('token_auth.urls')),
 ]
-
 
 # Nicely parse 500 errors so we get semantic messages in tests.
 def handler500(request):
@@ -107,10 +115,6 @@ def handler500(request):
     response.status_code = 500
     return response
 
-
-js_info_dict = {
-    'packages': ('apps.bb_accounts', 'apps.bb_projects'),
-}
 
 # Serve django-staticfiles (only works in DEBUG)
 # https://docs.djangoproject.com/en/dev/howto/static-files/#serving-static-files-in-development
@@ -130,10 +134,6 @@ urlpatterns += [
     # Needed for the self-documenting API in Django Rest Framework.
     url(r'^api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
-
-    # JSON Web Token based authentication for Django REST framework
-    url(r'^api/token-auth/', obtain_jwt_token, name='token-auth'),
-    url(r'^api/token-auth-refresh/$', refresh_jwt_token),
 
     url(r'^', include('django.conf.urls.i18n')),
 ]

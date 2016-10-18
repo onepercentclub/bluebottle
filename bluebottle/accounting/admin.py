@@ -445,9 +445,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
         return ' &bull; '.join(actions)
     show_actions.allow_tags = True
 
-
-admin.site.unregister(OrderPayment)
-admin.site.register(OrderPayment, OrderPaymentAdmin)
+# We don't register this OrderPaymentAdmin because we want to use the one from payments now.
 
 admin.site.register(BankTransaction, BankTransactionAdmin)
 admin.site.register(RemoteDocdataPayout, DocdataPayoutAdmin)

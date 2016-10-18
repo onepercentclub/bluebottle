@@ -61,10 +61,10 @@ class Command(BaseCommand):
             is calculated => when the value is lte 0 then set campaign_funded.
             """
             self.stdout.write("Checking Project funded and still running...")
-            Project.objects.filter(amount_needed__lte=0,
-                                   status=campaign_phase,
-                                   deadline__gt=now()).update(
-                campaign_funded=now())
+            for project in Project.objects.filter(status=campaign_phase, deadline__gt=now()):
+                if project.amount_needed <= 0:
+                    project.campaign_funded = now()
+                    project.save()
 
             """
             Projects which are still in campaign phase but have expired need to be

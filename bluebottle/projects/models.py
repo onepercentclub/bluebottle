@@ -4,31 +4,43 @@ import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import FieldError
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
+from django.utils.functional import lazy
 from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
+from moneyed.classes import Money
+from select_multiple_field.models import SelectMultipleField
+
+from bluebottle.tasks.models import Task
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.exchange_rates import convert
 
 from bluebottle.bb_projects.models import (
-    BaseProject, ProjectPhase, BaseProjectPhaseLog, BaseProjectDocument
+    BaseProject, ProjectPhase, BaseProjectDocument
 )
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
-from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
+from bluebottle.wallposts.models import (
+    MediaWallpostPhoto, MediaWallpost, TextWallpost
+)
 
 from .mails import (
     mail_project_funded_internal, mail_project_complete,
@@ -42,8 +54,12 @@ GROUP_PERMS = {'Staff': {'perms': ('add_project', 'change_project',
 logger = logging.getLogger(__name__)
 
 
-class ProjectPhaseLog(BaseProjectPhaseLog):
-    pass
+class ProjectPhaseLog(models.Model):
+    project = models.ForeignKey('projects.Project')
+    status = models.ForeignKey('bb_projects.ProjectPhase')
+    start = CreationDateTimeField(
+        _('created'), help_text=_('When this project entered in this status.')
+    )
 
 
 class ProjectManager(models.Manager):
@@ -99,12 +115,13 @@ class ProjectManager(models.Manager):
         return self._ordering(query.get('ordering', None), qs, status)
 
     def _ordering(self, ordering, queryset, status):
-        if ordering == 'amount_asked':
-            queryset = queryset.order_by('status', 'amount_asked', 'id')
-        elif ordering == 'deadline':
+        if ordering == 'deadline':
             queryset = queryset.order_by('status', 'deadline', 'id')
         elif ordering == 'amount_needed':
-            queryset = queryset.order_by('status', 'amount_needed', 'id')
+            # Add the percentage that is still needed to the query and sort on that.
+            # This way we do not have to take currencies into account
+            queryset = queryset.annotate(percentage_needed=F('amount_needed') / F('amount_asked'))
+            queryset = queryset.order_by('status', 'percentage_needed', 'id')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
             queryset = queryset.extra(
@@ -191,6 +208,9 @@ class Project(BaseProject, PreviousStatusMixin):
                                            blank=True)
 
     categories = models.ManyToManyField('categories.Category', blank=True)
+
+    currencies = SelectMultipleField(max_length=100, null=True,
+                                     choices=lazy(get_currency_choices, tuple)())
 
     celebrate_results = models.BooleanField(
         _('Celebrate Results'),
@@ -285,6 +305,9 @@ class Project(BaseProject, PreviousStatusMixin):
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")
 
+        if not self.currencies and self.amount_asked:
+            self.currencies = [str(self.amount_asked.currency)]
+
         # If the project status is moved to New or Needs Work, clear the
         # date_submitted field
         if self.status.slug in ["plan-new", "plan-needs-work"]:
@@ -316,17 +339,17 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.amount_asked:
             self.update_amounts(False)
 
-        # FIXME: CLean up this code, make it readable
+        # FIXME: Clean up this code, make it readable
         # Project is not ended, complete, funded or stopped and its deadline has expired.
         if not self.campaign_ended and self.deadline < timezone.now() \
                 and self.status.slug not in ["done-complete",
                                              "done-incomplete",
                                              "closed",
                                              "voting-done"]:
-            if self.amount_asked > 0 and self.amount_donated <= 20 \
+            if self.amount_asked.amount > 0 and self.amount_donated.amount <= 20 \
                     or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
-            elif self.amount_asked > 0 \
+            elif self.amount_asked.amount > 0 \
                     and self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
             else:
@@ -351,25 +374,23 @@ class Project(BaseProject, PreviousStatusMixin):
         if not self.campaign_funded and not self.campaign_ended and \
                 self.status not in ProjectPhase.objects.filter(
                     Q(slug="done-complete") |
-                    Q(slug="done-incomplete")) and self.amount_needed <= 0:
+                    Q(slug="done-incomplete")) and self.amount_needed.amount <= 0:
             self.campaign_funded = timezone.now()
             if save:
                 self.save()
 
     def update_amounts(self, save=True):
-        """ Update amount based on paid and pending donations. """
+        """
+        Update amount based on paid and pending donations.
+        """
+        total = self.get_money_total([StatusDefinition.PENDING,
+                                      StatusDefinition.SUCCESS,
+                                      StatusDefinition.PLEDGED])
+        if isinstance(total, list):
+            DeprecationWarning('Cannot yet handle multiple currencies on one project!')
 
-        self.amount_donated = self.get_money_total(
-            [StatusDefinition.PENDING, StatusDefinition.SUCCESS,
-             StatusDefinition.PLEDGED])
-        self.amount_needed = self.amount_asked - self.amount_donated
-
-        if self.amount_needed < 0:
-            # Should never be less than zero
-            self.amount_needed = 0
-
+        self.amount_donated = total
         self.update_status_after_donation(False)
-
         if save:
             self.save()
 
@@ -378,23 +399,22 @@ class Project(BaseProject, PreviousStatusMixin):
         Calculate the total (realtime) amount of money for donations,
         optionally filtered by status.
         """
-
-        if self.amount_asked == 0:
+        if not self.amount_asked:
             # No money asked, return 0
-            return 0
+            return Money(0, 'EUR')
 
-        donations = self.donation_set.all()
+        donations = self.donation_set
 
         if status_in:
             donations = donations.filter(order__status__in=status_in)
 
-        total = donations.aggregate(sum=Sum('amount'))
+        totals = donations.values('amount_currency').annotate(total=Sum('amount'))
+        amounts = [Money(total['total'], total['amount_currency']) for total in totals]
 
-        if not total['sum']:
-            # No donations, manually set amount
-            return 0
+        if len(totals) > 1:
+            amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
 
-        return total['sum']
+        return sum(amounts) or Money(0, self.amount_asked.currency)
 
     @property
     def is_realised(self):
@@ -403,7 +423,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def is_funding(self):
-        return self.amount_asked > 0
+        return self.amount_asked.amount > 0
 
     def supporter_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API
@@ -462,6 +482,12 @@ class Project(BaseProject, PreviousStatusMixin):
         return self.campaign_funded
 
     @property
+    def donation_totals(self):
+        return self.get_money_total([StatusDefinition.PENDING,
+                                     StatusDefinition.SUCCESS,
+                                     StatusDefinition.PLEDGED])
+
+    @property
     def amount_pending(self):
         return self.get_money_total([StatusDefinition.PENDING])
 
@@ -475,11 +501,11 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def donated_percentage(self):
-        if not self.amount_asked:
+        if not self.amount_asked.amount:
             return 0
-        elif self.amount_donated > self.amount_asked:
+        elif self.amount_donated.amount > self.amount_asked.amount:
             return 100
-        return int(100 * self.amount_donated / self.amount_asked)
+        return int(100 * self.amount_donated.amount / self.amount_asked.amount)
 
     @property
     def wallpost_photos(self):
@@ -614,7 +640,7 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.is_funding:
             if self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
-            elif self.amount_donated <= 20 or not self.campaign_started:
+            elif self.amount_donated.amount <= 20 or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
@@ -645,8 +671,7 @@ class ProjectBudgetLine(models.Model):
     """
     project = models.ForeignKey('projects.Project')
     description = models.CharField(_('description'), max_length=255, default='')
-    currency = models.CharField(max_length=3, default='EUR')
-    amount = models.PositiveIntegerField(_('amount (in cents)'))
+    amount = MoneyField()
 
     created = CreationDateTimeField()
     updated = ModificationDateTimeField()
@@ -656,7 +681,7 @@ class ProjectBudgetLine(models.Model):
         verbose_name_plural = _('budget lines')
 
     def __unicode__(self):
-        return u'{0} - {1}'.format(self.description, self.amount / 100.0)
+        return u'{0} - {1}'.format(self.description, self.amount)
 
 
 @receiver(project_funded, weak=False, sender=Project,

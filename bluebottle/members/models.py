@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Sum
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import cached_property
+from django.core.exceptions import ObjectDoesNotExist
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.projects.models import Project
@@ -26,6 +27,14 @@ class Member(BlueBottleBaseUser):
                                  blank=True,
                                  null=True)
 
+    def __init__(self, *args, **kwargs):
+        super(Member, self).__init__(*args, **kwargs)
+
+        try:
+            self._previous_last_seen = self.last_seen
+        except ObjectDoesNotExist:
+            self._previous_last_seen = None
+
     class Analytics:
         type = 'member'
         tags = {}
@@ -34,11 +43,17 @@ class Member(BlueBottleBaseUser):
         }
 
         def extra_tags(self, obj, created):
-            return {'event': 'signup'} if created else {}
+            if created:
+                return {'event': 'signup'}
+            else:
+                # The skip method below is being used to ensure analytics are only
+                # triggered if the last_seen field has changed.
+                return {'event': 'seen'}
 
         def skip(self, obj, created):
             # Currently only the signup (created) event is being recorded
-            return False if created else True
+            # and when the last_seen changes.
+            return False if created or obj.last_seen != obj._previous_last_seen else True
 
     def get_tasks_qs(self):
         return TaskMember.objects.filter(

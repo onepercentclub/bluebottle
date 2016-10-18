@@ -7,6 +7,7 @@ MOCK_PAYMENT_METHODS = (
         'profile': 'paypal',
         'name': 'MockPal',
         'supports_recurring': False,
+        'currencies': ['EUR'],
     },
     {
         'provider': 'mock',
@@ -15,6 +16,7 @@ MOCK_PAYMENT_METHODS = (
         'name': 'MockDeal',
         'restricted_countries': ('NL',),
         'supports_recurring': False,
+        'currencies': ['USD', 'EUR'],
     },
     {
         'provider': 'mock',
@@ -22,6 +24,7 @@ MOCK_PAYMENT_METHODS = (
         'profile': 'creditcard',
         'name': 'MockCard',
         'supports_recurring': False,
+        'currencies': ['USD'],
     }
 )
 

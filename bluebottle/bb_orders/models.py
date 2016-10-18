@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.db import models
-from django.db.models import options
 from django.db.models.aggregates import Sum
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
@@ -8,8 +7,10 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from django_fsm import FSMField, transition
+from moneyed.classes import Money
 
 from bluebottle.donations.models import Donation
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 
@@ -54,8 +55,7 @@ class BaseOrder(models.Model, FSMTransition):
     completed = models.DateTimeField(_("Completed"), blank=True, editable=False,
                                      null=True)
 
-    total = models.DecimalField(_("Amount"), max_digits=16, decimal_places=2,
-                                default=0)
+    total = MoneyField(_("Amount"), )
 
     @transition(field=status,
                 source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED],
@@ -93,8 +93,15 @@ class BaseOrder(models.Model, FSMTransition):
         self.confirmed = None
 
     def update_total(self, save=True):
-        donations = Donation.objects.filter(order=self)
-        self.total = donations.aggregate(Sum('amount'))['amount__sum'] or 0
+        donations = Donation.objects.filter(order=self, amount__gt=0)
+        total = [
+            Money(data['amount__sum'], data['amount_currency']) for data in
+                donations.values('amount_currency').annotate(Sum('amount')).order_by()
+
+        ]
+        if len(total) > 1:
+            raise ValueError('Multiple currencies in one order')
+        self.total = total[0]
         if save:
             self.save()
 

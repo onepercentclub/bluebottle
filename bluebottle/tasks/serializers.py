@@ -33,7 +33,7 @@ class TaskFileSerializer(serializers.ModelSerializer):
 
 
 class BaseTaskSerializer(serializers.ModelSerializer):
-    members = BaseTaskMemberSerializer(many=True, read_only=True)
+    members = BaseTaskMemberSerializer(many=True, read_only=True, source='members_applied')
     files = TaskFileSerializer(many=True, read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug',
                                            queryset=Project.objects)
@@ -117,9 +117,7 @@ class TaskPreviewSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
     project = ProjectPreviewSerializer()
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill)
-    members = BaseTaskMemberSerializer(many=True, read_only=True)
+    members = BaseTaskMemberSerializer(many=True, read_only=True, source="members_applied")
 
     class Meta:
         model = Task
-
-

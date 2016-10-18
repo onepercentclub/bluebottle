@@ -41,6 +41,7 @@ class ProjectFactory(factory.DjangoModelFactory):
     status = factory.SubFactory(ProjectPhaseFactory, sequence=1)
     theme = factory.SubFactory(ProjectThemeFactory, name='Education')
     country = factory.SubFactory(CountryFactory)
+    currencies = ['EUR']
 
     deadline = timezone.now() + timedelta(days=100)
     amount_needed = 100

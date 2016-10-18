@@ -1,5 +1,6 @@
 import os
 from decimal import Decimal
+from moneyed import Money
 
 from django.test.utils import override_settings
 from django.conf import settings
@@ -70,6 +71,7 @@ class PayoutBaseTestCase(BluebottleTestCase):
         # from the db again.
         self.project = Project.objects.get(pk=self.project.id)
 
+
 @override_settings(
     MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
                                   'properties'))
@@ -136,7 +138,7 @@ class PayoutTestCase(PayoutBaseTestCase):
 
         # Check the project and the amount
         self.assertEquals(payout.project, self.project)
-        self.assertEquals(payout.amount_raised, Decimal('60.00'))
+        self.assertEquals(payout.amount_raised, Money(60.00, 'EUR'))
 
     def test_dont_create_payout(self):
         """
@@ -196,8 +198,8 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout.calculate_amounts()
 
         self.assertEquals(payout.payout_rule, ProjectPayout.PayoutRules.five)
-        self.assertEquals(payout.organization_fee, Decimal('3'))
-        self.assertEquals(payout.amount_payable, Decimal('57'))
+        self.assertEquals(payout.organization_fee, Money('3', 'EUR'))
+        self.assertEquals(payout.amount_payable, Money('57', 'EUR'))
 
     def test_amounts_new(self):
         """ Test amounts for new donations. """
@@ -211,12 +213,12 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         # No money is even pending
-        self.assertEquals(payout.amount_raised, Decimal('0.00'))
-        self.assertEquals(payout.amount_payable, Decimal('0.00'))
+        self.assertEquals(payout.amount_raised, Money(0.00, 'EUR'))
+        self.assertEquals(payout.amount_payable, Money(0.00, 'EUR'))
 
-        self.assertEquals(payout.get_amount_pending(), Decimal('0.00'))
-        self.assertEquals(payout.get_amount_safe(), Decimal('0.00'))
-        self.assertEquals(payout.get_amount_failed(), Decimal('0.00'))
+        self.assertEquals(payout.get_amount_pending(), Money(0.00, 'EUR'))
+        self.assertEquals(payout.get_amount_safe(), Money(0.00, 'EUR'))
+        self.assertEquals(payout.get_amount_failed(), Money(0.00, 'EUR'))
 
     def test_amounts_pending(self):
         """ Test amounts for pending donations. """
@@ -236,13 +238,13 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         # Money is pending but not paid
-        self.assertEquals(payout.amount_raised, Decimal('60.00'))
+        self.assertEquals(payout.amount_raised, Money(60.00, 'EUR'))
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('55.80'))
+        self.assertEquals(payout.amount_payable, Money(55.80, 'EUR'))
 
-        self.assertEquals(payout.get_amount_pending(), Decimal('60.00'))
-        self.assertEquals(payout.get_amount_safe(), Decimal('0.00'))
-        self.assertEquals(payout.get_amount_failed(), Decimal('0.00'))
+        self.assertEquals(payout.get_amount_pending(), Money(60.00, 'EUR'))
+        self.assertEquals(payout.get_amount_safe(), Money(0.00, 'EUR'))
+        self.assertEquals(payout.get_amount_failed(), Money(0.00, 'EUR'))
 
     def test_amounts_failed(self):
         """
@@ -269,13 +271,13 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         # Saved amounts should be same as pending
-        self.assertEquals(payout.amount_raised, Decimal('0.0'))
-        self.assertEquals(payout.amount_payable, Decimal('0.0'))
+        self.assertEquals(payout.amount_raised, Money(0.00, 'EUR'))
+        self.assertEquals(payout.amount_payable, Money(0.00, 'EUR'))
 
         # Real time amounts should be different
-        self.assertEquals(payout.get_amount_pending(), Decimal('0.00'))
-        self.assertEquals(payout.get_amount_safe(), Decimal('0.00'))
-        self.assertEquals(payout.get_amount_failed(), Decimal('0.00'))
+        self.assertEquals(payout.get_amount_pending(), Money(0.00, 'EUR'))
+        self.assertEquals(payout.get_amount_safe(), Money(0.00, 'EUR'))
+        self.assertEquals(payout.get_amount_failed(), Money(0.00, 'EUR'))
 
     def test_amounts_paid(self):
         """ Test amounts for paid donations. """
@@ -302,14 +304,14 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         # Money is safe now, nothing pending
-        self.assertEquals(payout.amount_raised, Decimal('60.00'))
+        self.assertEquals(payout.amount_raised, Money(60.00, 'EUR'))
 
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('55.80'))
+        self.assertEquals(payout.amount_payable, Money(55.80, 'EUR'))
 
-        self.assertEquals(payout.amount_pending, Decimal('0.00'))
-        self.assertEquals(payout.amount_safe, Decimal('60.00'))
-        self.assertEquals(payout.amount_failed, Decimal('0.00'))
+        self.assertEquals(payout.amount_pending, Money(0.00, 'EUR'))
+        self.assertEquals(payout.amount_safe, Money(60.00, 'EUR'))
+        self.assertEquals(payout.amount_failed, Money(0.00, 'EUR'))
 
     def test_amounts_paid_fully_funded(self):
         """ Test amounts for paid donations. """
@@ -336,13 +338,13 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         # Money is safe now, nothing pending
-        self.assertEquals(payout.amount_raised, Decimal('60.00'))
+        self.assertEquals(payout.amount_raised, Money(60.00, 'EUR'))
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('55.80'))
+        self.assertEquals(payout.amount_payable, Money(55.80, 'EUR'))
 
-        self.assertEquals(payout.amount_pending, Decimal('0.00'))
-        self.assertEquals(payout.amount_safe, Decimal('60.00'))
-        self.assertEquals(payout.amount_failed, Decimal('0.00'))
+        self.assertEquals(payout.amount_pending, Money(0.00, 'EUR'))
+        self.assertEquals(payout.amount_safe, Money(60.00, 'EUR'))
+        self.assertEquals(payout.amount_failed, Money(0.00, 'EUR'))
 
     def test_amounts_paid_not_fully_funded(self):
         """ Test amounts for paid donations. """
@@ -369,16 +371,15 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         # Money is safe now, nothing pending
-        self.assertEquals(payout.amount_raised, Decimal('60.00'))
+        self.assertEquals(payout.amount_raised, Money(60.00, 'EUR'))
         self.assertEquals(payout.payout_rule, 'not_fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('52.80'))
+        self.assertEquals(payout.amount_payable, Money(52.80, 'EUR'))
 
-        self.assertEquals(payout.amount_pending, Decimal('0.00'))
-        self.assertEquals(payout.amount_safe, Decimal('60.00'))
-        self.assertEquals(payout.amount_failed, Decimal('0.00'))
+        self.assertEquals(payout.amount_pending, Money(0.00, 'EUR'))
+        self.assertEquals(payout.amount_safe, Money(60.00, 'EUR'))
+        self.assertEquals(payout.amount_failed, Money(0.00, 'EUR'))
 
-
-    @override_settings(PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .5})
+    @override_settings(PROJECT_PAYOUT_FEES={'beneath_threshold': 1, 'fully_funded': .1, 'not_fully_funded': .5})
     def test_changed_fees_amounts_paid_fully_funded(self):
         """ Test amounts for paid donations. """
 
@@ -404,15 +405,15 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         # Money is safe now, nothing pending
-        self.assertEquals(payout.amount_raised, Decimal('60.00'))
+        self.assertEquals(payout.amount_raised, Money(60.00, 'EUR'))
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('55.80'))
+        self.assertEquals(payout.amount_payable, Money(55.80, 'EUR'))
 
-        self.assertEquals(payout.amount_pending, Decimal('0.00'))
-        self.assertEquals(payout.amount_safe, Decimal('60.00'))
-        self.assertEquals(payout.amount_failed, Decimal('0.00'))
+        self.assertEquals(payout.amount_pending, Money(0.00, 'EUR'))
+        self.assertEquals(payout.amount_safe, Money(60.00, 'EUR'))
+        self.assertEquals(payout.amount_failed, Money(0.00, 'EUR'))
 
-    @override_settings(PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .5})
+    @override_settings(PROJECT_PAYOUT_FEES={'beneath_threshold': 1, 'fully_funded': .1, 'not_fully_funded': .5})
     def test_changed_fees_amounts_paid_not_fully_funded(self):
         """ Test amounts for paid donations. """
 
@@ -439,13 +440,13 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         # Money is safe now, nothing pending
-        self.assertEquals(payout.amount_raised, Decimal('60.00'))
+        self.assertEquals(payout.amount_raised, Money(60.00, 'EUR'))
         self.assertEquals(payout.payout_rule, 'not_fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('52.80'))
+        self.assertEquals(payout.amount_payable, Money(52.80, 'EUR'))
 
-        self.assertEquals(payout.amount_pending, Decimal('0.00'))
-        self.assertEquals(payout.amount_safe, Decimal('60.00'))
-        self.assertEquals(payout.amount_failed, Decimal('0.00'))
+        self.assertEquals(payout.amount_pending, Money(0.00, 'EUR'))
+        self.assertEquals(payout.amount_safe, Money(60.00, 'EUR'))
+        self.assertEquals(payout.amount_failed, Money(0.00, 'EUR'))
 
     def test_changed_fees_amounts_beneath_threshold(self):
         """ Test amounts when donations are beneath minimal payout amount. """
@@ -489,13 +490,13 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         # Money is safe now, nothing pending
-        self.assertEquals(payout.amount_raised, Decimal('5.00'))
+        self.assertEquals(payout.amount_raised, Money(5.00, 'EUR'))
         self.assertEquals(payout.payout_rule, 'beneath_threshold')
-        self.assertEquals(payout.amount_payable, Decimal('0.00'))
+        self.assertEquals(payout.amount_payable, Money(0.00, 'EUR'))
 
-        self.assertEquals(payout.amount_pending, Decimal('0.00'))
-        self.assertEquals(payout.amount_safe, Decimal('5.00'))
-        self.assertEquals(payout.amount_failed, Decimal('0.00'))
+        self.assertEquals(payout.amount_pending, Money(0.00, 'EUR'))
+        self.assertEquals(payout.amount_safe, Money(5.00, 'EUR'))
+        self.assertEquals(payout.amount_failed, Money(0.00, 'EUR'))
 
     def test_beneath_threshold_status_completed(self):
         """
@@ -513,7 +514,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.assertEquals(ProjectPayout.objects.count(), 1)
         payout = ProjectPayout.objects.all()[0]
         self.assertEquals(payout.payout_rule, 'beneath_threshold')
-        self.assertEquals(payout.amount_payable, Decimal('0.00'))
+        self.assertEquals(payout.amount_payable, Money(0.00, 'EUR'))
         self.assertEqual(Donation.objects.filter(project=project)
                          .count(), 0)
         self.assertEqual(payout.completed, timezone.now().date())
@@ -556,7 +557,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         self.assertEquals(payout.payout_rule, 'beneath_threshold')
-        self.assertEquals(payout.amount_payable, Decimal('0.00'))
+        self.assertEquals(payout.amount_payable, Money(0.00, 'EUR'))
         self.assertEqual(Donation.objects.filter(project=project)
                          .count(), 1)
         self.assertEqual(payout.status, 'new')
@@ -645,7 +646,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         self._reload_project()
-        self.assertEqual(self.project.amount_donated, Decimal(60))
+        self.assertEqual(self.project.amount_donated, Money(60, 'EUR'))
 
         payout1 = ProjectPayoutFactory.create(
             project=self.project,
@@ -654,7 +655,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         )
         payout1 = payout1.__class__.objects.get(pk=payout1.pk)
         payout1.calculate_amounts()
-        self.assertEqual(payout1.amount_raised, Decimal(60))
+        self.assertEqual(payout1.amount_raised, Money(60, 'EUR'))
 
         payout2 = ProjectPayoutFactory.create(
             completed=None,
@@ -664,16 +665,16 @@ class PayoutTestCase(PayoutBaseTestCase):
             amount_payable=Decimal(10),
             organization_fee=0
         )
-        self.assertEqual(payout2.get_amount_raised(), Decimal(10))
-        self.assertEqual(payout2.get_amount_safe(), Decimal(10))
-        self.assertEqual(payout2.get_amount_pending(), 0)
-        self.assertEqual(payout2.get_amount_failed(), 0)
+        self.assertEqual(payout2.get_amount_raised(), Money(10, 'EUR'))
+        self.assertEqual(payout2.get_amount_safe(), Money(10, 'EUR'))
+        self.assertEqual(payout2.get_amount_pending(), Money(0, 'EUR'))
+        self.assertEqual(payout2.get_amount_failed(), Money(0, 'EUR'))
 
         with self.assertRaises(AssertionError):
             payout2.calculate_amounts()
 
 
-@override_settings(PROJECT_PAYOUT_FEES = {'beneath_threshold': 1, 'fully_funded': .1,'not_fully_funded': .2})
+@override_settings(PROJECT_PAYOUT_FEES={'beneath_threshold': 1, 'fully_funded': .1, 'not_fully_funded': .2})
 class PayoutPledgeTestCase(PayoutBaseTestCase):
     """ Test case for Pledge Payouts. """
 
@@ -726,11 +727,11 @@ class PayoutPledgeTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         # Money is safe now, nothing pending
-        self.assertEquals(payout.amount_raised, Decimal('120.00'))
+        self.assertEquals(payout.amount_raised, Money(120.00, 'EUR'))
         self.assertEquals(payout.payout_rule, 'fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('54.00'))
-        self.assertEquals(payout.amount_pledged, Decimal('60.00'))
-        self.assertEquals(payout.organization_fee, Decimal('6.00'))
+        self.assertEquals(payout.amount_payable, Money(54.00, 'EUR'))
+        self.assertEquals(payout.amount_pledged, Money(60.00, 'EUR'))
+        self.assertEquals(payout.organization_fee, Money(6.00, 'EUR'))
 
     def test_pledge_paid_not_fully_funded(self):
         """ Test amounts for paid donations. """
@@ -756,8 +757,8 @@ class PayoutPledgeTestCase(PayoutBaseTestCase):
         payout = ProjectPayout.objects.all()[0]
 
         # Money is safe now, nothing pending
-        self.assertEquals(payout.amount_raised, Decimal('90.00'))
+        self.assertEquals(payout.amount_raised, Money(90.00, 'EUR'))
         self.assertEquals(payout.payout_rule, 'not_fully_funded')
-        self.assertEquals(payout.amount_payable, Decimal('48.00'))
-        self.assertEquals(payout.amount_pledged, Decimal('30.00'))
-        self.assertEquals(payout.organization_fee, Decimal('12.00'))
+        self.assertEquals(payout.amount_payable, Money(48.00, 'EUR'))
+        self.assertEquals(payout.amount_pledged, Money(30.00, 'EUR'))
+        self.assertEquals(payout.organization_fee, Money(12.00, 'EUR'))

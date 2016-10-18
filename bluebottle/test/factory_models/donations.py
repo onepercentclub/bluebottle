@@ -1,4 +1,5 @@
 import factory
+from moneyed import Money
 
 from bluebottle.donations.models import Donation
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -14,4 +15,4 @@ class DonationFactory(factory.DjangoModelFactory):
     order = factory.SubFactory(OrderFactory)
     project = factory.SubFactory(ProjectFactory)
     reward = None
-    amount = 25
+    amount = Money(25, 'EUR')

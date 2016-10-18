@@ -52,27 +52,19 @@ class BaseJournal(models.Model):
     def get_user_reference(self):
         return ''
 
-    def get_journal_total(self):
+    def get_journal_total(self, currency=None):
         """
         Return the total amount for all Journals
         belonging to the current Donation, ProjectPayout or OrganizationPayout,
         """
+        if not currency:
+            currency = self.amount.currency
+
         related_model_name = self.related_model_field_name  # 'donation'
-        filter_ = {related_model_name: self.related_model}  # {'donation': self.donation}
+        filter_ = {related_model_name: self.related_model, 'amount_currency': currency}  # {'donation': self.donation}
 
-        totals = [
-            Money(data['amount__sum'], data['amount_currency']) for data in
-            self.related_model.journal_set.all().filter(**filter_).values('amount_currency').annotate(Sum('amount')).order_by()
-        ]
-
-
-        if len(totals) == 0:
-            totals = [Money(0, 'EUR')]
-
-        if len(totals) > 1:
-            DeprecationWarning('Cannot yet handle multiple currencies on one journal!')
-
-        return totals[0]
+        total = self.related_model.journal_set.filter(**filter_).aggregate(sum=Sum('amount'))
+        return Money(total['sum'] or 0, currency)
 
     def save(self, *args, **kwargs):
         # could be prefilled via the admin by the (staff) user that does a change
@@ -126,7 +118,7 @@ class OrderPaymentJournal(models.Model):
 
     date = CreationDateTimeField(_("Created"))
 
-
+@receiver(post_save, sender=DonationJournal)
 @receiver(post_save, sender=OrganizationPayoutJournal)
 @receiver(post_save, sender=ProjectPayoutJournal)
 def update_related_model_when_journal_is_saved(sender, instance, created, **kwargs):
@@ -186,11 +178,14 @@ def create_journal_for_sender(sender, instance, created, data_migration=None):
         # so it is a modified Payout or Donation, check if the amount was changed,
         # and add the correction when needed
         journal = journals.first()  # even when there are more, the get_journal_total will return the correct value
-        journal_amount = journal.get_journal_total()
-        if journal_amount.currency == amount_instance.currency and journal_amount == amount_instance:
+        journal_amount = journal.get_journal_total(currency=amount_instance.currency)
+
+        if journal.amount.currency == amount_instance.currency and journal_amount == amount_instance:
             return  # dont save, or should a new journal be made when amount is not changed?Hry
+
+        diff = amount_instance - journal_amount
         journal_date = instance.updated
-        journal_amount = journal_amount
+        journal_amount = diff
     else:
         journal_date = instance.created
         journal_amount = amount_instance

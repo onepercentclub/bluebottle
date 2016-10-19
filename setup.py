@@ -68,7 +68,6 @@ install_requires = [
     'lxml==3.6.0',
     'micawber==0.3.3',
     'mixpanel==4.3.0',
-    'Pillow==3.2.0',
     'psycopg2==2.6.1',
     'pygeoip==0.3.2',
     'python-dateutil==2.5.3',

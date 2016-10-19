@@ -1,13 +1,9 @@
-import logging
 import os
 
 from django.core import mail
 from django.test.utils import override_settings
 from django.conf import settings
 
-from mock import patch
-
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -32,14 +28,15 @@ class TestPledgeMails(BluebottleTestCase):
         self.init_projects()
 
         self.user = BlueBottleUserFactory(can_pledge=True)
-        self.project_owner = BlueBottleUserFactory(username='proj1_owner', 
-                                                    email='owner@proj1.nl', password='proj1')
+        self.project_owner = BlueBottleUserFactory(username='proj1_owner',
+                                                   email='owner@proj1.nl', password='proj1')
         self.organization = OrganizationFactory.create(name='test_org', slug='test_org')
 
         self.project = ProjectFactory(owner=self.project_owner, organization=self.organization,
-                                        title='Project 1', amount_needed=1111, amount_asked=1111)
+                                      title='Project 1', amount_needed=1111, amount_asked=1111)
         self.order = OrderFactory.create(user=self.user)
-        self.donation = DonationFactory(amount=60, order=self.order, project=self.project, fundraiser=None)
+        self.donation = DonationFactory(amount=60, order=self.order,
+                                        project=self.project, fundraiser=None)
 
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='pledgeStandard')

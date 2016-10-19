@@ -16,7 +16,6 @@ class PaymentResponseView(RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         order_payment = get_object_or_404(OrderPayment, id=kwargs['order_payment_id'])
-        post = self.request.POST
         service = PaymentService(order_payment)
         service.check_payment_status()
         return "{0}/orders/{1}/success".format(get_current_host(), order_payment.order.id)

@@ -1,5 +1,6 @@
 from calendar import timegm
-from datetime import datetime
+from datetime import datetime, timedelta
+import json
 import logging
 
 from django.contrib.sessions.middleware import SessionMiddleware
@@ -9,6 +10,7 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.utils import timezone
 
 from rest_framework import exceptions
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
@@ -18,6 +20,10 @@ from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
                                  _default_url_exceptions, _default_form)
 
 from lockdown import settings as lockdown_settings
+from bluebottle.utils.utils import get_client_ip
+
+
+LAST_SEEN_DELTA = 10 # in minutes
 
 
 def isAdminRequest(request):
@@ -48,7 +54,14 @@ class UserJwtTokenMiddleware:
             user_auth_tuple = None
 
         if user_auth_tuple is not None:
-            request.user, _auth = user_auth_tuple
+            request.user, _ = user_auth_tuple
+
+            # Set last_seen on the user record if it has been > 10 mins
+            # since the record was set.
+            if not request.user.last_seen or (request.user.last_seen <
+               timezone.now() - timedelta(minutes=LAST_SEEN_DELTA)):
+                request.user.last_seen = timezone.now()
+                request.user.save()
             return
 
 
@@ -219,7 +232,11 @@ class LockdownMiddleware(BaseLockdownMiddleware):
             if not locked_date:
                 return None
 
-        form_data = request.method == 'POST' and request.POST or {}
+        if request.META.get('CONTENT_TYPE') == 'application/x-www-form-urlencoded' and request.method == 'POST':
+            form_data = request.POST
+        else:
+            form_data = {}
+
         passwords = (request.META['HTTP_X_LOCKDOWN'],)
 
         if self.form is None:
@@ -266,4 +283,30 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         response = render_to_response('lockdown/form.html', page_data,
                                       context_instance=RequestContext(request))
         response.status_code = 401
+        return response
+
+
+authorization_logger = logging.getLogger('authorization')
+
+class LogAuthFailureMiddleWare:
+    def process_request(self, request):
+        request.body  # touch the body so that we have access to it in process_response
+
+    def process_response(self, request, response):
+        """ Log a message for each failed login attempt. """
+        if reverse('admin:login') == request.path and request.method == 'POST' and response.status_code != 302:
+            authorization_logger.error('Authorization failed: {username} {ip}'.format(
+               ip=get_client_ip(request), username=request.POST.get('username')
+            ))
+
+        if reverse('token-auth') == request.path and request.method == 'POST' and response.status_code != 200:
+            try:
+                data = json.loads(request.body)
+            except ValueError:
+                data  = request.POST
+
+            authorization_logger.error('Authorization failed: {username} {ip}'.format(
+               ip=get_client_ip(request), username=data.get('email')
+            ))
+
         return response

@@ -54,9 +54,9 @@ class TaskApiTestcase(BluebottleTestCase):
                                    HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.data['results'][0]['task_count'], 1)
 
-        task_member = TaskMemberFactory.create(member=self.another_user,
-                                               task=self.task1,
-                                               status='accepted')
+        TaskMemberFactory.create(member=self.another_user,
+                                 task=self.task1,
+                                 status='accepted')
 
         # The task has one task member and two people needed, still one task open
         response = self.client.get(self.previews_url,
@@ -99,7 +99,7 @@ class TaskApiTestcase(BluebottleTestCase):
         self.task1.status = Task.TaskStatuses.open
         self.task1.save()
 
-        task2 = TaskFactory.create(
+        TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.some_project.owner,
             project=self.some_project,
@@ -204,15 +204,40 @@ class TaskApiTestcase(BluebottleTestCase):
         task_member_id = response.data['id']
         task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
         response = self.client.patch(task_member_url,
-                                   {'status': 'accepted'},
-                                   HTTP_AUTHORIZATION=self.some_token)
+                                     {'status': 'accepted'},
+                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, HTTP_200_OK)
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'in progress')
 
         # When the accepted member is rejected task status should change back to 'open'
         response = self.client.patch(task_member_url,
-                                   {'status': 'rejected'},
+                                     {'status': 'rejected'},
+                                     HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        response = self.client.get(task_url)
+        self.assertEqual(response.data['status'], 'open')
+
+        # When a member is accepted task status should change to 'in progress'
+        response = self.client.post(self.task_member_url,
+                                    task_member_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        task_member_id = response.data['id']
+        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
+        response = self.client.patch(task_member_url,
+                                     {'status': 'accepted'},
+                                     HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_200_OK)
+        response = self.client.get(task_url)
+        self.assertEqual(response.data['status'], 'in progress')
+
+        # When a applied member is withdraws task status should change to 'open'
+        response = self.client.put(task_member_url,
+                                   {
+                                       'status': 'withdrew',
+                                       'task': task.id
+                                   },
                                    HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, HTTP_200_OK)
         response = self.client.get(task_url)
@@ -226,18 +251,19 @@ class TaskApiTestcase(BluebottleTestCase):
         task_member_id = response.data['id']
         task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
         response = self.client.patch(task_member_url,
-                                   {'status': 'accepted'},
-                                   HTTP_AUTHORIZATION=self.some_token)
+                                     {'status': 'accepted'},
+                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, HTTP_200_OK)
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'in progress')
 
-        # When a applied member is withdraws task status should change to 'open'
-        response = self.client.delete(task_member_url,
-                                      HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+        # When a applied member is realized task status should stay 'in progress''
+        response = self.client.patch(task_member_url,
+                                     {'status': 'realized'},
+                                     HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, HTTP_200_OK)
         response = self.client.get(task_url)
-        self.assertEqual(response.data['status'], 'open')
+        self.assertEqual(response.data['status'], 'in progress')
 
     def test_deadline_dates(self):
         """
@@ -260,4 +286,3 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, HTTP_201_CREATED)
         self.assertEqual(response.data['deadline'], '2016-08-09T23:59:59.999999+02:00')
-

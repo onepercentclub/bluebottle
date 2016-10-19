@@ -1,5 +1,6 @@
 import factory
-from bluebottle.geo.models import Country, SubRegion, Region, Location
+from bluebottle.geo.models import (Country, SubRegion, Region,
+                                   Location, LocationGroup)
 from geoposition import Geoposition
 
 
@@ -26,6 +27,13 @@ class CountryFactory(factory.DjangoModelFactory):
     subregion = factory.SubFactory(SubRegionFactory)
 
 
+class LocationGroupFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = LocationGroup
+
+    name = factory.Sequence(lambda n: 'LocationGroup_{0}'.format(n))
+
+
 class LocationFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Location
@@ -33,3 +41,4 @@ class LocationFactory(factory.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Location_{0}'.format(n))
     position = Geoposition(52.5, 13.4)
     country = factory.SubFactory(CountryFactory)
+    group = factory.SubFactory(LocationGroupFactory)

@@ -1,4 +1,6 @@
-from django.db import models
+from django.db import models, transaction
+from django.db.models.signals import pre_save, post_save
+from django.db.models.query import QuerySet
 from django.contrib.contenttypes.models import ContentType
 from django.utils.encoding import force_unicode
 
@@ -23,3 +25,26 @@ class GenericForeignKeyManagerMixin(object):
         QuerySet for all models for particular content_type.
         """
         return self.get_queryset().filter(content_type=content_type)
+
+
+
+class UpdateSignalsQuerySet(QuerySet):
+    """ Queryset that sends signals when calling update instead of updating models one by one.
+    """
+    @transaction.atomic
+    def update(self, **kwargs):
+        for instance in self:
+            pre_save.send(sender=instance.__class__, instance=instance, raw=False,
+                          using=self.db, update_fields=kwargs.keys())
+
+        result = super(UpdateSignalsQuerySet, self.all()).update(**kwargs)
+        for instance in self:
+            for key, value in kwargs.items():
+                # Fake setting off values from kwargs
+                setattr(instance, key, value)
+
+            post_save.send(sender=instance.__class__, instance=instance, created=False,
+                           raw=False, using=self.db, update_fields=kwargs.keys())
+        return result
+
+    update.alters_data = True

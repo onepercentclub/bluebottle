@@ -6,7 +6,6 @@ import simplejson
 from bluebottle.payments.exception import PaymentException
 from moneyed import NGN
 
-from bluebottle.clients import properties
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.payments_interswitch.models import InterswitchPayment
 from bluebottle.utils.utils import get_current_host, StatusDefinition
@@ -36,20 +35,16 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         Create a new payment
         """
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment)
-        payment.product_id = properties.INTERSWITCH_PRODUCT_ID
-        payment.pay_item_id = properties.INTERSWITCH_ITEM_ID
+        payment.product_id = self.credentials['product_id']
+        payment.pay_item_id = self.credentials['item_id']
         # Amount on the payment should be in kobo/cents
         payment.amount = int(self.order_payment.amount.amount * 100)
         if self.order_payment.amount.currency != NGN:
             raise PaymentException("Can only do Interswitch payments in Nigerian Naira (NGN).")
-
         payment.site_redirect_url = '{0}/payments_interswitch/payment_response/{1}'.format(
-                get_current_host(),
-                self.order_payment.id)
-
+            get_current_host(),
+            self.order_payment.id)
         payment.txn_ref = 'opc-{0}'.format(self.order_payment.id)
-
-
         payment.save()
         return payment
 
@@ -63,10 +58,9 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         site_redirect_url
         hashkey
         """
-        hashkey = properties.INTERSWITCH_HASHKEY
+        hashkey = self.credentials['hashkey']
         message = "{p.txn_ref}{p.product_id}{p.pay_item_id}" \
-                  "{p.amount}{p.site_redirect_url}{hashkey}".format(
-                p=self.payment, hashkey=hashkey)
+                  "{p.amount}{p.site_redirect_url}{hashkey}".format(p=self.payment, hashkey=hashkey)
         return hashlib.sha512(message).hexdigest()
 
     def _get_status_hash(self):
@@ -76,9 +70,8 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         product_id
         hashkey
         """
-        hashkey = properties.INTERSWITCH_HASHKEY
-        message = "{p.product_id}{p.txn_ref}{hashkey}".format(
-                p=self.payment, hashkey=hashkey)
+        hashkey = self.credentials['hashkey']
+        message = "{p.product_id}{p.txn_ref}{hashkey}".format(p=self.payment, hashkey=hashkey)
         return hashlib.sha512(message).hexdigest()
 
     def _get_payload(self):
@@ -97,39 +90,21 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         return {'type': 'redirect',
                 'method': 'post',
                 'payload': payload,
-                'url': properties.INTERSWITCH_PAYMENT_URL}
-
-    def _get_mapped_status(self, status):
-        """
-        Helper to map the status of a PSP specific status (Mock PSP) to our own status pipeline for an OrderPayment.
-        The status of a MockPayment maps 1-1 to OrderStatus so we can return the status
-        """
-        return status
-
-    def set_order_payment_new_status(self, status):
-        self.order_payment.transition_to(self._get_mapped_status(status))
-        return self.order_payment
+                'url': self.credentials['payment_url']}
 
     def check_payment_status(self):
-        status_url = properties.INTERSWITCH_STATUS_URL
+        status_url = self.credentials['status_url']
         url = "{0}?productid={1}&transactionreference={2}&amount={3}".format(
             status_url, self.payment.product_id, self.payment.txn_ref, self.payment.amount
         )
 
-        response = requests.get(url, headers={"Hash" : self._get_status_hash()}).content
+        response = requests.get(url, headers={"Hash": self._get_status_hash()}).content
         result = simplejson.loads(response)
         self.payment.result = response
 
-        # req = urllib2.Request(url, headers={"Hash" : self._get_status_hash()})
-        # opener = urllib2.build_opener()
-        # f = opener.open(req)
-        # result = simplejson.load(f)
-        #
-        # self.payment.result = f
-
-        self.payment.save()
-
         if 'ResponseDescription' in result and result['ResponseDescription'] == 'Approved Successful':
             self.payment.status = StatusDefinition.SETTLED
-            self.payment.save()
+        else:
+            self.payment.status = StatusDefinition.FAILED
 
+        self.payment.save()

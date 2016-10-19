@@ -3,7 +3,6 @@ import gateway
 
 from django.utils.http import urlencode
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 
 from bluebottle.clients import properties
 from bluebottle.payments.adapters import BasePaymentAdapter
@@ -134,8 +133,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         if payment.default_pm == 'paypal':
             payment.default_pm = 'paypal_express_checkout'
 
-        merchant = gateway.Merchant(name=self.credentials['username'],
-                                    password=self.credentials['password'])
+        merchant = gateway.Merchant(name=self.credentials['merchant_name'],
+                                    password=self.credentials['merchant_password'])
 
         amount = gateway.Amount(value=self.order_payment.amount.amount, currency=self.order_payment.amount.currency)
         user = self.get_user_data()
@@ -209,18 +208,6 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         payment.save()
 
         return payment
-
-    @property
-    def credentials(self):
-        currency = str(self.order_payment.amount.currency)
-        for account in properties.MERCHANT_ACCOUNTS:
-            if (account['merchant'] == 'docdata' and
-                    account['currency'] == currency):
-                return account
-
-        raise ImproperlyConfigured('No docdata merchant account for {}'.format(
-            currency
-        ))
 
     def get_authorization_action(self):
 

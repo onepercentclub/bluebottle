@@ -32,8 +32,7 @@ def order_payment_changed(sender, instance, **kwargs):
 
 @receiver(post_save, weak=False, dispatch_uid='payments_previous_status')
 def set_previous_status(sender, instance, **kwargs):
-    if not (isinstance(instance, Payment)
-            or isinstance(instance, OrderPayment)):
+    if not (isinstance(instance, Payment) or isinstance(instance, OrderPayment)):
         return
 
     # Store the previous status when the Instance is saved

@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import logging
+from decimal import InvalidOperation
 
 from django import forms
 from django.db.models import Count, Sum
@@ -14,7 +15,7 @@ from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.geo.admin import LocationFilter
+from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
@@ -201,15 +202,14 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
-    list_filter = ('country__subregion__region',)
-
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', ProjectThemeFilter,
-                   'country__subregion__region', 'project_type')
+        filters = ('status', 'is_campaign', ProjectThemeFilter, 'project_type')
 
         # Only show Location column if there are any
         if Location.objects.count():
-            filters += (LocationFilter, )
+            filters += (LocationGroupFilter, LocationFilter)
+        else:
+            filters += ('country__subregion__region', )
         return filters
 
     def get_list_display(self, request):
@@ -236,7 +236,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('created', 'created'),
         ('status', 'status'),
         ('theme', 'theme'),
-        ('region', 'region'),
+        ('location__group', 'region'),
         ('location', 'location'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),
@@ -265,7 +265,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization',
                                 'status', 'title', 'slug', 'project_type',
-                                'is_campaign')}),
+                                'is_campaign', 'celebrate_results')}),
 
         (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
 
@@ -302,7 +302,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         try:
             percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
             return "{0} %".format(percentage)
-        except AttributeError:
+        except (AttributeError, InvalidOperation):
             return '-'
 
     def get_queryset(self, request):

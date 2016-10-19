@@ -54,7 +54,6 @@ class IsProjectOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, Project):
             return obj.owner == request.user
-        print obj.project.owner == request.user
         return obj.project.owner == request.user
 
     def has_permission(self, request, view):

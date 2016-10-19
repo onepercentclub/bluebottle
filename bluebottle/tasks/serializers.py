@@ -33,7 +33,7 @@ class TaskFileSerializer(serializers.ModelSerializer):
 
 
 class BaseTaskSerializer(serializers.ModelSerializer):
-    members = BaseTaskMemberSerializer(many=True, read_only=True)
+    members = BaseTaskMemberSerializer(many=True, read_only=True, source='members_applied')
     files = TaskFileSerializer(many=True, read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug',
                                            queryset=Project.objects)
@@ -46,7 +46,11 @@ class BaseTaskSerializer(serializers.ModelSerializer):
                                            decimal_places=2)
 
     def validate(self, data):
-        if not data['deadline'] or data['deadline'] > data['project'].deadline:
+        if self.instance and data.get('deadline') and self.instance.deadline.date() == data['deadline'].date():
+            # The date has not changed: Do not validate
+            return data
+
+        if (not data['deadline'] or data['deadline'] > data['project'].deadline):
             raise serializers.ValidationError(
                 {'deadline': [_("The deadline must be before the project deadline.")]}
             )
@@ -113,9 +117,7 @@ class TaskPreviewSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()
     project = ProjectPreviewSerializer()
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill)
-    members = BaseTaskMemberSerializer(many=True, read_only=True)
+    members = BaseTaskMemberSerializer(many=True, read_only=True, source="members_applied")
 
     class Meta:
         model = Task
-
-

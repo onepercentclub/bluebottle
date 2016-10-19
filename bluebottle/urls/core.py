@@ -76,6 +76,12 @@ urlpatterns = patterns('',
                            include('bluebottle.payments_docdata.urls.core')),
                        url(r'^payments_interswitch/',
                            include('bluebottle.payments_interswitch.urls.core')),
+                       url(r'^payments_vitepay/',
+                           include('bluebottle.payments_vitepay.urls.core')),
+
+                       url(r'^surveys/',
+                           include('bluebottle.surveys.urls.core')),
+
                        url(r'^api/organizations/',
                            include('bluebottle.organizations.urls.api')),
                        url(r'^api/suggestions/',
@@ -83,6 +89,9 @@ urlpatterns = patterns('',
 
                        url(r'^api/votes/',
                            include('bluebottle.votes.urls.api')),
+                       url(r'^api/surveys/',
+                           include('bluebottle.surveys.urls.api')),
+
 
                        # Organization urls for private documents
                        url(r'^documents/',
@@ -143,7 +152,7 @@ urlpatterns += patterns('',
 
                         # JSON Web Token based authentication for Django REST framework
                         url(r'^api/token-auth/',
-                            'rest_framework_jwt.views.obtain_jwt_token'),
+                            'rest_framework_jwt.views.obtain_jwt_token', name='token-auth'),
                         url(r'^api/token-auth-refresh/$',
                             'rest_framework_jwt.views.refresh_jwt_token'),
 

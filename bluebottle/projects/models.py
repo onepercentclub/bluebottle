@@ -1,12 +1,13 @@
 import datetime
 import pytz
-from django.core.exceptions import FieldError
+import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import FieldError
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
@@ -27,12 +28,19 @@ from bluebottle.utils.utils import StatusDefinition
 from bluebottle.utils.exchange_rates import convert
 
 from bluebottle.bb_projects.models import (
-    BaseProject, ProjectPhase, BaseProjectDocument)
+    BaseProject, ProjectPhase, BaseProjectDocument
+)
+from bluebottle.utils.managers import UpdateSignalsQuerySet
+from bluebottle.clients.utils import LocalTenant
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
-from bluebottle.tasks.models import TaskMember
-from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
+from bluebottle.tasks.models import Task, TaskMember
+from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
+from bluebottle.wallposts.models import (
+    MediaWallpostPhoto, MediaWallpost, TextWallpost
+)
 
 from .mails import (
     mail_project_funded_internal, mail_project_complete,
@@ -42,6 +50,8 @@ from .signals import project_funded
 
 GROUP_PERMS = {'Staff': {'perms': ('add_project', 'change_project',
                                    'delete_project')}}
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectPhaseLog(models.Model):
@@ -53,6 +63,9 @@ class ProjectPhaseLog(models.Model):
 
 
 class ProjectManager(models.Manager):
+    def get_queryset(self):
+        return UpdateSignalsQuerySet(self.model, using=self._db)
+
     def search(self, query):
         qs = super(ProjectManager, self).get_queryset()
 
@@ -102,12 +115,13 @@ class ProjectManager(models.Manager):
         return self._ordering(query.get('ordering', None), qs, status)
 
     def _ordering(self, ordering, queryset, status):
-        if ordering == 'amount_asked':
-            queryset = queryset.order_by('status', 'amount_asked', 'id')
-        elif ordering == 'deadline':
+        if ordering == 'deadline':
             queryset = queryset.order_by('status', 'deadline', 'id')
         elif ordering == 'amount_needed':
-            queryset = queryset.order_by('status', 'amount_needed', 'id')
+            # Add the percentage that is still needed to the query and sort on that.
+            # This way we do not have to take currencies into account
+            queryset = queryset.annotate(percentage_needed=F('amount_needed') / F('amount_asked'))
+            queryset = queryset.order_by('status', 'percentage_needed', 'id')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
             queryset = queryset.extra(
@@ -138,7 +152,7 @@ class ProjectDocument(BaseProjectDocument):
         return None
 
 
-class Project(BaseProject):
+class Project(BaseProject, PreviousStatusMixin):
     latitude = models.DecimalField(
         _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
     longitude = models.DecimalField(
@@ -195,8 +209,14 @@ class Project(BaseProject):
 
     categories = models.ManyToManyField('categories.Category', blank=True)
 
-    currencies = SelectMultipleField(max_length=100,
+    currencies = SelectMultipleField(max_length=100, null=True,
                                      choices=lazy(get_currency_choices, tuple)())
+
+    celebrate_results = models.BooleanField(
+        _('Celebrate Results'),
+        help_text=_('Show celebration when project is complete'),
+        default=True
+    )
 
     objects = ProjectManager()
 
@@ -239,22 +259,30 @@ class Project(BaseProject):
             created__gte=last_month
         )
 
-        # Loop over all projects that where changed, or where a donation was recently done
-        for project in self.objects.filter(
-                Q(updated__gte=last_month) |
-                Q(donation__created__gte=last_month,
-                  donation__order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING]) |
-                Q(task__members__created__gte=last_month) |
-                Q(vote__created__gte=last_month)).distinct():
+        # Loop over all projects that have popularity set, where a donation was recently done,
+        # where a taskmember was created or that recieved a vote
+        # These queries CAN be combined into one query, but that is very inefficient.
+        queries = [
+            Q(popularity__gt=0),
+            Q(donation__created__gte=last_month,
+              donation__order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING]),
+            Q(task__members__created__gte=last_month),
+            Q(vote__created__gte=last_month)
+        ]
 
-            project.popularity = (
-                weight * len(donations.filter(project=project)) +
-                weight * len(task_members.filter(task__project=project)) +
-                len(votes.filter(project=project))
-            )
-            project.save()
+        for query in queries:
+            for project in self.objects.filter(query).distinct():
+                popularity = (
+                    weight * len(donations.filter(project=project)) +
+                    weight * len(task_members.filter(task__project=project)) +
+                    len(votes.filter(project=project))
+                )
+                # Save the new value to the db, but skip .save
+                # this way we will not trigger signals and hit the save method
+                self.objects.filter(pk=project.pk).update(popularity=popularity)
 
     def save(self, *args, **kwargs):
+        # Set valid slug
         if not self.slug:
             original_slug = slugify(self.title)
             counter = 2
@@ -265,11 +293,20 @@ class Project(BaseProject):
                 counter += 1
             self.slug = original_slug
 
+        # set default project_type if not already defined
+        if not self.project_type:
+            with LocalTenant():
+                try:
+                    self.project_type = properties.PROJECT_CREATE_TYPES[0]
+                except (AttributeError, KeyError):
+                    logger.warning('Tenant has no PROJECT_CREATE_TYPES: %s', properties.tenant.name,
+                                                                             exc_info=1)
+
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")
 
-        if not self.currencies:
-            self.currencies = get_default_currency()
+        if not self.currencies and self.amount_asked:
+            self.currencies = [str(self.amount_asked.currency)]
 
         # If the project status is moved to New or Needs Work, clear the
         # date_submitted field
@@ -409,6 +446,16 @@ class Project(BaseProject):
         return count
 
     @property
+    def country_name(self):
+        try:
+            if self.country:
+                return self.country.name
+            elif self.location:
+                return self.location.country.name
+        except AttributeError:
+            return ''
+
+    @property
     def vote_count(self):
         return self.vote_set.count()
 
@@ -490,9 +537,10 @@ class Project(BaseProject):
 
     @property
     def posters(self, limit=20):
-        return TextWallpost.objects.\
-            filter(object_id=self.id).\
-            order_by('author', '-created').distinct('author')[:limit]
+        return TextWallpost.objects.filter(
+            object_id=self.id,
+            content_type=ContentType.objects.get_for_model(self.__class__)
+        ).order_by('author', '-created').distinct('author')[:limit]
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """
@@ -535,6 +583,25 @@ class Project(BaseProject):
     class Meta(BaseProject.Meta):
         ordering = ['title']
 
+    class Analytics:
+        type = 'project'
+        tags = {
+            'sub_type': 'project_type',
+            'status': 'status.name',
+            'status_slug': 'status.slug',
+            'theme': {
+                'theme.name': {'translate': True}
+            },
+            'theme_slug': 'theme.slug',
+            'location': 'location.name',
+            'location_group': 'location.group.name',
+            'country': 'country_name'
+        }
+        fields = {
+            'id': 'id',
+            'user_id': 'owner.id'
+        }
+
     def status_changed(self, old_status, new_status):
         status_complete = ProjectPhase.objects.get(slug="done-complete")
         status_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
@@ -562,6 +629,12 @@ class Project(BaseProject):
 
             bb_track("Project Completed", data)
 
+    def check_task_status(self):
+        if (not self.is_funding and
+                all([task.status == Task.TaskStatuses.realized for task in self.task_set.all()])):
+            self.status = ProjectPhase.objects.get(slug='done-complete')
+            self.save()
+
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
         if self.is_funding:
@@ -574,7 +647,8 @@ class Project(BaseProject):
         else:
             if self.task_set.filter(
                     status__in=[Task.TaskStatuses.in_progress,
-                                Task.TaskStatuses.open]).count() > 0:
+                                Task.TaskStatuses.open,
+                                Task.TaskStatuses.closed]).count() > 0:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-complete")

@@ -2,8 +2,7 @@ from ipware.ip import get_ip
 
 from rest_framework import status
 from rest_framework.exceptions import ParseError
-from rest_framework.generics import (RetrieveUpdateAPIView, ListCreateAPIView,
-                                     RetrieveAPIView)
+from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 

@@ -301,8 +301,3 @@ class PrivateFileSerializer(FileSerializer):
                       kwargs={'content_type': content_type, 'pk': pk})
         return {'name': os.path.basename(value.name),
                 'url': url}
-
-
-class ObjectFieldSerializer(serializers.CharField):
-    def to_internal_value(self, data):
-        return json.dumps(data)

@@ -16,7 +16,12 @@ warnings.filterwarnings(
 
 
 MERCHANT_ACCOUNTS = [
-    {'merchant': 'docdata', 'username': 'merchant_name', 'password': 'merchant_password', 'currency': 'EUR'},
+    {
+        'merchant': 'docdata',
+        'merchant_name': 'merchant_name',
+        'merchant_password': 'merchant_password',
+        'currency': 'EUR'
+    },
 ]
 
 
@@ -80,6 +85,16 @@ DOCDATA_FEES = {
         'sepa_direct_debit': 0.13
     }
 }
+
+CURRENCIES_ENABLED = ({
+    'code': 'EUR',
+    'name': 'Euro',
+    'symbol': u'\u20ac'
+}, {
+    'code': 'USD',
+    'name': 'US Dollar',
+    'symbol': '$'
+}, )
 
 RECURRING_DONATIONS_ENABLED = True
 

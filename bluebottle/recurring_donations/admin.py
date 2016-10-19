@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.conf.urls import url, patterns
+from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.filters import SimpleListFilter
 from django.core.urlresolvers import reverse
@@ -112,11 +112,10 @@ class MonthlyBatchAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         urls = super(MonthlyBatchAdmin, self).get_urls()
-        process_urls = patterns(
-            '',
+        process_urls = [
             url(r'^prepare/$', self.prepare, name="recurring_donations_monthlybatch_prepare"),
             url(r'^process/(?P<pk>\d+)/$', self.process_batch, name="recurring_donations_monthlybatch_process")
-        )
+        ]
         return process_urls + urls
 
     def process_batch(self, request, pk=None):

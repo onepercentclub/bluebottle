@@ -1,9 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from bluebottle.surveys.views import SurveyUpdateView
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^update/(?P<survey_id>[\d]+)$',
         SurveyUpdateView.as_view(), name='survey-update'),
-)
+]

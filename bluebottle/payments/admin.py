@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
@@ -34,10 +34,9 @@ class OrderPaymentAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         urls = super(OrderPaymentAdmin, self).get_urls()
-        process_urls = patterns(
-            '',
+        process_urls = [
             url(r'^check/(?P<pk>\d+)/$', self.check_status, name="payments_orderpayment_check")
-        )
+        ]
         return process_urls + urls
 
     def check_status(self, request, pk=None):

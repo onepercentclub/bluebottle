@@ -1,8 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from ..views import ContactRequestCreate
 
-urlpatterns = patterns('',
-                       url(r'^$', ContactRequestCreate.as_view(),
-                           name='contact_request_create'),
-                       )
+urlpatterns = [
+    url(r'^$', ContactRequestCreate.as_view(),
+        name='contact_request_create'),
+]

@@ -2,7 +2,6 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.geo.models import Country
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -90,7 +89,6 @@ class MonthlyDonationApiTest(BluebottleTestCase):
         self.assertEqual(len(response.data['results'][0]['projects']), 1)
         self.assertEqual(response.data['results'][0]['projects'][0]['project'],
                          self.some_project.slug)
-
 
         # Another should not have a monthly donation
         response = self.client.get(self.monthly_donation_url,

@@ -125,4 +125,3 @@ class TestTaskStatusMail(TaskMailTestBase):
         self.assertEquals(len(mail.outbox), 1)
 
         self.assertTrue('set to closed' in mail.outbox[0].subject)
-

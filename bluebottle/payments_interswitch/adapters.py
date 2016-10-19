@@ -92,17 +92,6 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
                 'payload': payload,
                 'url': self.credentials['payment_url']}
 
-    def _get_mapped_status(self, status):
-        """
-        Helper to map the status of a PSP specific status (Mock PSP) to our own status pipeline for an OrderPayment.
-        The status of a MockPayment maps 1-1 to OrderStatus so we can return the status
-        """
-        return status
-
-    def set_order_payment_new_status(self, status):
-        self.order_payment.transition_to(self._get_mapped_status(status))
-        return self.order_payment
-
     def check_payment_status(self):
         status_url = self.credentials['status_url']
         url = "{0}?productid={1}&transactionreference={2}&amount={3}".format(
@@ -112,8 +101,10 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         response = requests.get(url, headers={"Hash": self._get_status_hash()}).content
         result = simplejson.loads(response)
         self.payment.result = response
-        self.payment.save()
 
         if 'ResponseDescription' in result and result['ResponseDescription'] == 'Approved Successful':
             self.payment.status = StatusDefinition.SETTLED
-            self.payment.save()
+        else:
+            self.payment.status = StatusDefinition.FAILED
+
+        self.payment.save()

@@ -147,6 +147,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
+    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.LockdownMiddleware',
@@ -196,7 +197,7 @@ JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 # List of paths to ignore for locale redirects
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_mock', '/payments_interswitch',
-                          '/media', '/surveys')
+                          '/payments_vitepay', '/media', '/surveys')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
@@ -319,6 +320,7 @@ TENANT_APPS = (
     'bluebottle.payments',
     'bluebottle.payments_docdata',
     'bluebottle.payments_interswitch',
+    'bluebottle.payments_vitepay',
     'bluebottle.payments_pledge',
     'bluebottle.payments_logger',
     'bluebottle.payments_voucher',
@@ -367,6 +369,9 @@ TENANT_APPS = (
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
+
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"

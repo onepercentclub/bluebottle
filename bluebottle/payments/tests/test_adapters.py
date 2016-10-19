@@ -30,12 +30,12 @@ class PaymentAdapterTestCase(BluebottleTestCase):
     def test_credentials(self):
         credentials = self.adapter.credentials
 
-        self.assertTrue('EUR'in credentials['currency'])
+        self.assertTrue('EUR'in credentials['currencies'])
 
     def test_credentials_usd(self):
-        self.order_payments.amount = Money(100, 'USD')
+        self.order_payment.amount = Money(100, 'USD')
         self.order_payment.save()
 
         credentials = self.adapter.credentials
 
-        self.assertTrue('USD' in credentials['currency'])
+        self.assertTrue('USD' in credentials['currencies'])

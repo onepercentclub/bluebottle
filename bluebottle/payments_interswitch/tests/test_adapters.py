@@ -15,7 +15,7 @@ interswitch_settings = {
     'MERCHANT_ACCOUNTS': [
         {
             'merchant': 'interswitch',
-            'currency': 'NGN',
+            'currencies': ['NGN'],
             'product_id': '1234',
             'item_id': '123',
             'hashkey': '123456789012345678901234567890123456789012345678901234567890',

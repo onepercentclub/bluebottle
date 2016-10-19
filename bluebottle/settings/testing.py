@@ -20,7 +20,7 @@ MERCHANT_ACCOUNTS = [
         'merchant': 'docdata',
         'merchant_name': 'merchant_name',
         'merchant_password': 'merchant_password',
-        'currency': 'EUR'
+        'currencies': ['EUR']
     },
 ]
 

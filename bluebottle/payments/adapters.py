@@ -53,7 +53,7 @@ class BasePaymentAdapter(object):
     @property
     def credentials(self):
         for account in properties.MERCHANT_ACCOUNTS:
-            if account['merchant'] == self.merchant and account['currency'] == self.currency:
+            if account['merchant'] == self.merchant and self.currency in account['currencies']:
                 return account
         raise ImproperlyConfigured('No merchant account for {} {}'.format(
             self.currency, self.merchant

@@ -15,7 +15,7 @@ vitepay_settings = {
     'MERCHANT_ACCOUNTS': [
         {
             'merchant': 'vitepay',
-            'currency': 'XOF',
+            'currencies': ['XOF'],
             'api_key': '123',
             'api_secret': '123456789012345678901234567890123456789012345678901234567890',
             'payment_url': 'https://api.vitepay.com/v1/prod/payments'

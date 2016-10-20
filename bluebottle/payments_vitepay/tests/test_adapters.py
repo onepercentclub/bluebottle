@@ -69,11 +69,6 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
         """
         Play some posts that Vitepay might fire at us.
         """
-        self.init_projects()
-        order = OrderFactory.create()
-        DonationFactory.create(amount=Money(2000, XOF), order=order)
-        order_payment = OrderPaymentFactory.create(payment_method='vitepayOrangemoney', order=order)
-        adapter = VitepayPaymentAdapter(order_payment)
         authorization_action = adapter.get_authorization_action()
         data = '{"hash": "123123", "description": "Thanks for your donation!", ' \
                '"order_id": "opc-%s", "decline_url": ' \

@@ -48,9 +48,12 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
             self.order_payment.id)
         tenant = connection.tenant
         payment.site_name = str(tenant.domain_url)
-        payment.cust_id = self.order_payment.user.id
-        payment.cust_name = str(self.order_payment.user.full_name)
-        payment.cust_name_desc = 'name'
+        try:
+            payment.cust_id = self.order_payment.user.id
+            payment.cust_name = str(self.order_payment.user.full_name)
+        except AttributeError:
+            # Anonymous order
+            pass
         payment.txn_ref = '{0}-{1}'.format(tenant.name, self.order_payment.id)
         payment.save()
         return payment

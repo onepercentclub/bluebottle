@@ -1,3 +1,4 @@
+from django.db import connection
 from moneyed.classes import Money, NGN, EUR
 from mock import patch
 
@@ -42,7 +43,8 @@ class InterswitchPaymentAdapterTestCase(BluebottleTestCase):
         payload = adapter._get_payload()
         self.assertEqual(payload['product_id'], '1234')
         self.assertEqual(payload['amount'], 200000)
-        self.assertEqual(payload['txn_ref'], 'opc-{0}'.format(order_payment.id))
+        tenant = connection.tenant
+        self.assertEqual(payload['txn_ref'], '{0}-{1}'.format(tenant.name, order_payment.id))
 
     @patch('bluebottle.payments_interswitch.adapters.get_current_host', return_value='https://onepercentclub.com')
     def test_create_only_one_payment(self, get_current_host):

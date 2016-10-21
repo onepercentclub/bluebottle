@@ -135,7 +135,7 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         return hashlib.sha1(message.upper()).hexdigest()
 
     def check_payment_status(self):
-        raise NotImplementedError('Not possible to activily check payment status at VitePay.')
+        pass
 
     def status_update(self, authenticity, success, failure):
         """

@@ -80,7 +80,8 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
                '"currency_code": "XOF", ' \
                '"callback_url": "https://onepercentclub.com/payments_vitepay/payment_response/%s", ' \
                '"return_url": "https://onepercentclub.com/orders/%s/success"}' % \
-               (order_payment.id, order_payment.order.id, order_payment.order.id, order_payment.id, order_payment.order.id)
+               (order_payment.id, order_payment.order.id, order_payment.order.id,
+                order_payment.id, order_payment.order.id)
         mock_post.assert_called_with('https://api.vitepay.com/v1/prod/payments',
                                      data=data,
                                      headers={'Content-Type': 'application/json'})

@@ -18,7 +18,7 @@ class PaymentResponseView(RedirectView):
         order_payment = get_object_or_404(OrderPayment, id=kwargs['order_payment_id'])
         service = PaymentService(order_payment)
         service.check_payment_status()
-        return "{0}/orders/{1}/success".format(get_current_host(), order_payment.order.id)
+        return "{0}/orders/{1}/success".format(get_current_host().replace('8000', '4200/en'), order_payment.order.id)
 
 
 class PaymentStatusListener(View):

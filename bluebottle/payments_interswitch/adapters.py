@@ -3,11 +3,13 @@ import hashlib
 import requests
 
 import simplejson
+from django.db import connection
+
 from bluebottle.payments.exception import PaymentException
 from moneyed import NGN
 
 from bluebottle.payments.adapters import BasePaymentAdapter
-from bluebottle.payments_interswitch.models import InterswitchPayment
+from bluebottle.payments_interswitch.models import InterswitchPayment, InterswitchPaymentStatusUpdate
 from bluebottle.utils.utils import get_current_host, StatusDefinition
 
 
@@ -44,7 +46,15 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         payment.site_redirect_url = '{0}/payments_interswitch/payment_response/{1}'.format(
             get_current_host(),
             self.order_payment.id)
-        payment.txn_ref = 'opc-{0}'.format(self.order_payment.id)
+        tenant = connection.tenant
+        payment.site_name = str(tenant.domain_url)
+        try:
+            payment.cust_id = self.order_payment.user.id
+            payment.cust_name = str(self.order_payment.user.full_name)
+        except AttributeError:
+            # Anonymous order
+            pass
+        payment.txn_ref = '{0}-{1}'.format(tenant.name, self.order_payment.id)
         payment.save()
         return payment
 
@@ -97,10 +107,11 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         url = "{0}?productid={1}&transactionreference={2}&amount={3}".format(
             status_url, self.payment.product_id, self.payment.txn_ref, self.payment.amount
         )
-
         response = requests.get(url, headers={"Hash": self._get_status_hash()}).content
         result = simplejson.loads(response)
         self.payment.result = response
+
+        InterswitchPaymentStatusUpdate.objects.create(payment=self.payment, result=response)
 
         if 'ResponseDescription' in result and result['ResponseDescription'] == 'Approved Successful':
             self.payment.status = StatusDefinition.SETTLED

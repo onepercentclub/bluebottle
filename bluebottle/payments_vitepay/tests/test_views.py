@@ -30,15 +30,6 @@ class VitepayUpdateApiTest(BluebottleTestCase):
         super(VitepayUpdateApiTest, self).setUp()
         pass
 
-    def test_invalid_update(self, get_current_host):
-        data = {}
-        response = self.client.post(
-            reverse('vitepay-status-update'), data)
-
-        data = json.loads(response.content)
-        self.assertEqual(data['status'], '0')
-        self.assertEqual(data['message'], 'Order not found.')
-
     def test_valid_update(self, get_current_host):
         order_payment = VitepayOrderPaymentFactory.create(amount=Money(2000, XOF))
         payment = VitepayPaymentFactory.create(order_id='opc-1', order_payment=order_payment)
@@ -55,6 +46,30 @@ class VitepayUpdateApiTest(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['status'], '1')
         self.assertEqual(payment.status, 'settled')
+
+    def test_invalid_update(self, get_current_host):
+        data = {}
+        response = self.client.post(
+            reverse('vitepay-status-update'), data)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['status'], '0')
+        self.assertEqual(data['message'], 'Order not found.')
+
+    def test_invalid_auth(self, get_current_host):
+        order_payment = VitepayOrderPaymentFactory.create(amount=Money(2000, XOF))
+        payment = VitepayPaymentFactory.create(order_id='opc-1', order_payment=order_payment)
+
+        data = {
+            'success': 1,
+            'authenticity': 'blahblah',
+            'order_id': 'opc-1'
+        }
+        response = self.client.post(
+            reverse('vitepay-status-update'), data)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['status'], '0')
 
     def test_mixed_status(self, get_current_host):
         order_payment = VitepayOrderPaymentFactory.create(amount=Money(2000, XOF))

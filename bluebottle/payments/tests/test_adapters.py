@@ -3,6 +3,7 @@ from moneyed import Money
 
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.test.factory_models.payments import OrderPaymentFactory, PaymentFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -19,9 +20,10 @@ from bluebottle.test.utils import BluebottleTestCase
 }])
 class PaymentAdapterTestCase(BluebottleTestCase):
     def setUp(self):
+        self.order = OrderFactory.create(total=Money(200, 'EUR'))
         self.order_payment = OrderPaymentFactory.create(
             payment_method='docdata',
-            amount=Money(200, 'EUR')
+            order=self.order
         )
 
         PaymentFactory.create(order_payment=self.order_payment)
@@ -33,7 +35,8 @@ class PaymentAdapterTestCase(BluebottleTestCase):
         self.assertEqual('EUR', credentials['currency'])
 
     def test_credentials_usd(self):
-        self.order_payment.amount = Money(100, 'USD')
+        self.order.total = Money(100, 'USD')
+        self.order.save()
         self.order_payment.save()
 
         credentials = self.adapter.credentials

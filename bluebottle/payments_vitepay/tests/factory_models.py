@@ -16,6 +16,16 @@ class VitepayOrderPaymentFactory(OrderPaymentFactory):
     amount = Money(2000, XOF)
 
 
+class VitepayOrderFactory(OrderFactory):
+    total = Money(2000, XOF)
+
+
+class VitepayOrderPaymentFactory(OrderPaymentFactory):
+    payment_method = 'vitepayOrangemoney'
+    order = factory.SubFactory(VitepayOrderFactory)
+    amount = Money(2000, XOF)
+
+
 class VitepayPaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = VitepayPayment

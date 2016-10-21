@@ -23,6 +23,7 @@ class Vote(models.Model):
         tags = {
             'location': 'project.location.name',
             'location_group': 'project.location.group.name',
+            'country': 'project.country_name',
             'theme': 'project.theme.name',
             'theme_slug': 'project.theme.slug'
         }

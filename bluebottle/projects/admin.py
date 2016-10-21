@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import logging
+from decimal import InvalidOperation
 
 from django import forms
 from django.db.models import Count, Sum
@@ -301,7 +302,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         try:
             percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
             return "{0} %".format(percentage)
-        except AttributeError:
+        except (AttributeError, InvalidOperation):
             return '-'
 
     def get_queryset(self, request):

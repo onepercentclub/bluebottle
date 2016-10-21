@@ -1,7 +1,6 @@
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.test.utils import BluebottleTestCase
 from django.core import mail
-from django.test import TestCase
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -9,7 +8,9 @@ from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 
 
 class TaskEmailTests(BluebottleTestCase):
-    """ Tests for tasks: sending e-mails on certain status changes. """
+    """
+    Tests for tasks: sending e-mails on certain status changes.
+    """
 
     def setUp(self):
         super(TaskEmailTests, self).setUp()
@@ -43,7 +44,9 @@ class TaskEmailTests(BluebottleTestCase):
         self.task.save()
 
     def test_mail_taskmember_applied_sent(self):
-        """ Test that the e-mails were sent for the task applications """
+        """
+        Test that the e-mails were sent for the task applications.
+        """
         self.assertEqual(len(mail.outbox), 2)
 
         m = mail.outbox.pop(0)
@@ -59,8 +62,9 @@ class TaskEmailTests(BluebottleTestCase):
         self.assertEqual(m.recipients()[0], self.some_project.owner.email)
 
     def test_mail_member_accepted(self):
-        """ Test the sent mail for accepted task members """
-
+        """
+        Test the sent mail for accepted task members.
+        """
         # there should be two mails in the outbox from the application
         self.assertEqual(len(mail.outbox), 2)
         # delete them, they're not relevant for this test

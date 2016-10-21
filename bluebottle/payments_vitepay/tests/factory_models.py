@@ -4,7 +4,6 @@ from moneyed.classes import Money, XOF
 from bluebottle.test.factory_models.payments import OrderPaymentFactory, OrderFactory
 
 from ..models import VitepayPayment
-from ..models import VitepayPayment
 
 
 class VitepayOrderFactory(OrderFactory):

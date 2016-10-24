@@ -301,9 +301,9 @@ class TestProjectBulkActions(BluebottleTestCase):
             self.assertEqual(project.status.slug, 'plan-new')
 
 
-class TestProjectAmountTotal(BluebottleTestCase):
+class TestProjectUpdateAmounts(BluebottleTestCase):
     def setUp(self):
-        super(TestProjectAmountTotal, self).setUp()
+        super(TestProjectUpdateAmounts, self).setUp()
         self.init_projects()
 
         rate_source = RateSourceFactory.create(base_currency='USD')
@@ -313,9 +313,10 @@ class TestProjectAmountTotal(BluebottleTestCase):
         self.project = ProjectFactory.create(title='test')
 
     def test_total_no_donations(self):
-        total = self.project.get_money_total()
-        self.assertEqual(total.amount, 0)
-        self.assertEqual(total.currency, self.project.amount_asked.currency)
+        total = self.project.update_amounts()
+        self.assertEqual(self.project.amount_donated.amount, 0)
+        self.assertEqual(self.project.amount_needed, self.project.amount_asked)
+        self.assertEqual(self.project.amount_donated.currency, self.project.amount_asked.currency)
 
     def test_total_multi_currency(self):
         order1 = OrderFactory.create(status=StatusDefinition.SUCCESS)
@@ -333,6 +334,7 @@ class TestProjectAmountTotal(BluebottleTestCase):
                 amount=Money(i, 'USD'),
             )
 
-        total = self.project.get_money_total()
-        self.assertEqual(total.amount, 2500)
-        self.assertEqual(total.currency, self.project.amount_asked.currency)
+        total = self.project.update_amounts()
+        self.assertEqual(self.project.amount_donated.amount, 2500)
+        self.assertEqual(self.project.amount_needed.amount, self.project.amount_asked.amount - 2500)
+        self.assertEqual(self.project.amount_donated.currency, self.project.amount_asked.currency)

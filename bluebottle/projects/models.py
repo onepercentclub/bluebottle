@@ -390,6 +390,8 @@ class Project(BaseProject, PreviousStatusMixin):
             DeprecationWarning('Cannot yet handle multiple currencies on one project!')
 
         self.amount_donated = total
+        self.amount_needed = self.amount_asked - self.amount_donated
+
         self.update_status_after_donation(False)
         if save:
             self.save()

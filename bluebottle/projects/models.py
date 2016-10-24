@@ -386,13 +386,15 @@ class Project(BaseProject, PreviousStatusMixin):
         total = self.get_money_total([StatusDefinition.PENDING,
                                       StatusDefinition.SUCCESS,
                                       StatusDefinition.PLEDGED])
-        if isinstance(total, list):
-            DeprecationWarning('Cannot yet handle multiple currencies on one project!')
 
         self.amount_donated = total
         self.amount_needed = self.amount_asked - self.amount_donated
 
         self.update_status_after_donation(False)
+
+        if self.amount_asked.currency != self.amount_extra.currency:
+            self.amount_extra.currency = self.amount_asked.currency
+
         if save:
             self.save()
 

@@ -338,3 +338,15 @@ class TestProjectUpdateAmounts(BluebottleTestCase):
         self.assertEqual(self.project.amount_donated.amount, 2500)
         self.assertEqual(self.project.amount_needed.amount, self.project.amount_asked.amount - 2500)
         self.assertEqual(self.project.amount_donated.currency, self.project.amount_asked.currency)
+
+    def test_change_amount_asked_currency(self):
+        new_amount = Money(1000, 'USD')
+        self.project.amount_asked = new_amount
+        self.project.save()
+
+        self.assertEqual(self.project.amount_asked.currency, new_amount.currency)
+        self.assertEqual(self.project.amount_extra.currency, new_amount.currency)
+        self.assertEqual(self.project.amount_donated.currency, new_amount.currency)
+
+
+

@@ -5,7 +5,7 @@ from collections import namedtuple
 import re
 
 from babel.numbers import get_currency_symbol, get_currency_name
-from django.db import connection
+from django.db import connection, ProgrammingError
 from django.conf import settings
 from django.utils.translation import get_language
 
@@ -81,7 +81,7 @@ def get_currencies():
     for currency in currencies:
         try:
             currency['rate'] = get_rate(currency['code'])
-        except CurrencyConversionException:
+        except (CurrencyConversionException, ProgrammingError):
             currency['rate'] = 1
 
     return currencies

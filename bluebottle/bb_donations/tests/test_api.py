@@ -31,9 +31,9 @@ PAYMENT_METHODS=[{
         'restricted_countries': ('NL', ),
         'supports_recurring': False,
         'currencies': {
-            'EUR': {'min_amount': 5, 'max_amount': 100}
-            'USD': {'min_amount': 5, 'max_amount': 100}
-            'NGN': {'min_amount': 5, 'max_amount': 100}
+            'EUR': {'min_amount': 5, 'max_amount': 100},
+            'USD': {'min_amount': 5, 'max_amount': 100},
+            'NGN': {'min_amount': 5, 'max_amount': 100},
         }
     }]
 )

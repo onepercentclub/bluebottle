@@ -19,7 +19,6 @@ from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
-from bluebottle.test.factory_models.rates import RateSourceFactory, RateFactory
 from bluebottle.suggestions.models import Suggestion
 
 
@@ -305,10 +304,6 @@ class TestProjectAmountTotal(BluebottleTestCase):
     def setUp(self):
         super(TestProjectAmountTotal, self).setUp()
         self.init_projects()
-
-        rate_source = RateSourceFactory.create(base_currency='USD')
-        RateFactory.create(source=rate_source, currency='USD', value=1)
-        RateFactory.create(source=rate_source, currency='EUR', value=1.5)
 
         self.project = ProjectFactory.create(title='test')
 

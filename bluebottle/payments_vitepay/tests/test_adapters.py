@@ -11,6 +11,8 @@ from bluebottle.payments_vitepay.adapters import VitepayPaymentAdapter
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
+from bluebottle.test.factory_models.rates import RateSourceFactory, RateFactory
+
 from bluebottle.test.utils import BluebottleTestCase
 
 from .factory_models import VitepayPaymentFactory, VitepayOrderPaymentFactory

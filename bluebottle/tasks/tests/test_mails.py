@@ -40,8 +40,10 @@ class TestTaskMemberMail(TaskMailTestBase):
 
         # Task owner receives email about new task member
         self.assertEquals(len(mail.outbox), 1)
-        self.assertNotEquals(mail.outbox[0].body.find("applied for your task"),
-                             -1)
+        body = mail.outbox[0].body
+        self.assertTrue('applied for your task' in body)
+        self.assertTrue(self.task_member.member.first_name in body)
+        self.assertTrue(self.task_member.member.last_name in body)
         self.assertEquals(mail.outbox[0].to[0], self.task.author.email)
 
         self.task_member.status = 'accepted'
@@ -51,6 +53,21 @@ class TestTaskMemberMail(TaskMailTestBase):
         self.assertEquals(len(mail.outbox), 2)
         self.assertNotEquals(mail.outbox[1].subject.find("assigned"), -1)
         self.assertEquals(mail.outbox[1].to[0], self.task_member.member.email)
+
+    def test_member_withdrew_to_task_mail(self):
+        """
+        Test emails for realized task with a task member
+        """
+        self.task_member = TaskMemberFactory.create(task=self.task,
+                                                    status='withdrew')
+
+        # Task owner receives email about new task member
+        self.assertEquals(len(mail.outbox), 1)
+        body = mail.outbox[0].body
+        self.assertTrue('withdrew from the task' in body)
+        self.assertTrue(self.task_member.member.first_name in body)
+        self.assertTrue(self.task_member.member.last_name in body)
+        self.assertEquals(mail.outbox[0].to[0], self.task.author.email)
 
     def test_member_realized_mail(self):
         task_member = TaskMemberFactory.create(

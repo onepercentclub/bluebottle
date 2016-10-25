@@ -423,6 +423,10 @@ class Project(BaseProject, PreviousStatusMixin):
     def is_funding(self):
         return self.amount_asked.amount > 0
 
+    @property
+    def has_survey(self):
+        return len(self.response_set.all()) > 0
+
     def supporter_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API
         # something like /projects/<slug>/donations

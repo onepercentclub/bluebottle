@@ -10,14 +10,15 @@ import sorl.thumbnail
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 
 from bluebottle.clients import properties
+from bluebottle.clients.utils import get_currencies
 
 
 def get_currency_choices():
-    return [(currency['code'], currency['name']) for currency in properties.CURRENCIES_ENABLED]
+    return [(currency['code'], currency['name']) for currency in get_currencies()]
 
 
 def get_default_currency():
-    return properties.CURRENCIES_ENABLED[0]['code']
+    return properties.DEFAULT_CURRENCY
 
 
 class MoneyField(DjangoMoneyField):

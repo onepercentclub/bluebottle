@@ -236,22 +236,6 @@ class BaseProject(models.Model, GetTweetMixin):
     def __unicode__(self):
         return self.slug if not self.title else self.title
 
-    def update_amounts(self, save=True):
-        """
-        Update amount_donated and amount_needed
-        """
-        self.amount_donated = self.get_amount_total(
-            [StatusDefinition.SUCCESS, StatusDefinition.PENDING,
-             StatusDefinition.PLEDGED])
-        self.amount_needed = self.amount_asked - self.amount_donated
-
-        if self.amount_needed.amount < 0:
-            # Should never be less than zero
-            self.amount_needed.amount = 0
-
-        if save:
-            self.save()
-
     def get_amount_total(self, status_in=None):
         """
         Calculate the total (real time) amount of money for donations,

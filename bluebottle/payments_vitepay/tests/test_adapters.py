@@ -9,6 +9,8 @@ from bluebottle.payments_vitepay.adapters import VitepayPaymentAdapter
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
+from bluebottle.test.factory_models.rates import RateSourceFactory, RateFactory
+
 from bluebottle.test.utils import BluebottleTestCase
 
 vitepay_settings = {
@@ -26,7 +28,6 @@ vitepay_settings = {
 
 @override_settings(**vitepay_settings)
 class VitepayPaymentAdapterTestCase(BluebottleTestCase):
-
     @patch('bluebottle.payments_vitepay.adapters.get_current_host',
            return_value='https://onepercentclub.com')
     def test_create_payment(self, get_current_host):

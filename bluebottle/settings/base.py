@@ -560,14 +560,6 @@ PROJECT_PAYOUT_FEES = {
     'not_fully_funded': .05
 }
 
-CURRENCIES_ENABLED = [
-    {
-        'code': 'EUR',
-        'name': 'Euro',
-        'symbol': u"\u20AC"
-    }
-]
-
 LIVE_PAYMENTS_ENABLED = False
 MINIMAL_PAYOUT_AMOUNT = 20
 
@@ -730,6 +722,8 @@ DONATION_AMOUNTS = {
     'NGN': (2000, 5000, 10000, 25000),
     'XOF': (500, 1000, 2000, 5000),
 }
+
+DEFAULT_CURRENCY = 'EUR'
 
 # By default we do not show suggestion on the start-project page
 PROJECT_SUGGESTIONS = False

@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import itertools
 from collections import namedtuple
 import re
 
-from django.db import connection
+from babel.numbers import get_currency_symbol, get_currency_name
+from django.db import connection, ProgrammingError
 from django.conf import settings
 from django.utils.translation import get_language
 
@@ -62,6 +64,29 @@ def tenant_site():
     return namedtuple('Site', ['name', 'domain'])(tenant_name(),
                                                   connection.tenant.domain_url)
 
+
+def get_currencies():
+    properties = get_tenant_properties()
+
+    currencies = set(itertools.chain(*[
+        method['currencies'].keys() for method in properties.PAYMENT_METHODS
+    ]))
+
+    currencies = [{
+        'code': code,
+        'name': get_currency_name(code),
+        'symbol': get_currency_symbol(code)
+    } for code in currencies]
+
+    for currency in currencies:
+        try:
+            currency['rate'] = get_rate(currency['code'])
+        except (CurrencyConversionException, ProgrammingError):
+            currency['rate'] = 1
+
+    return currencies
+
+
 def get_public_properties(request):
     """
 
@@ -100,18 +125,10 @@ def get_public_properties(request):
     if connection.tenant:
         current_tenant = connection.tenant
         properties = get_tenant_properties()
-        currencies = properties.CURRENCIES_ENABLED
-
-        for currency in currencies:
-            try:
-                currency['rate'] = get_rate(currency['code'])
-            except CurrencyConversionException:
-                currency['rate'] = 1
-
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
-            'currencies': currencies,
+            'currencies': get_currencies(),
             'logoUrl': "/images/logo.svg",
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),

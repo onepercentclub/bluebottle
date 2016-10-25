@@ -22,11 +22,21 @@ from bluebottle.test.utils import BluebottleTestCase, SessionTestMixin
 from bluebottle.utils.utils import StatusDefinition
 
 
-@override_settings(CURRENCIES_ENABLED=[
-    {'code':'EUR','name':'Euro','symbol':u"\u20AC"},
-    {'code':'USD','name':'USDollar','symbol':'$'},
-    {'code':'NGN','name':'Naira','symbol':u"\u20A6"},
-    {'code':'XOF','name':'CFA','symbol':'CFA'}])
+@override_settings(
+PAYMENT_METHODS=[{
+        'provider': 'docdata',
+        'id': 'docdata-ideal',
+        'profile': 'ideal',
+        'name': 'iDEAL',
+        'restricted_countries': ('NL', ),
+        'supports_recurring': False,
+        'currencies': {
+            'EUR': {'min_amount': 5, 'max_amount': 100},
+            'USD': {'min_amount': 5, 'max_amount': 100},
+            'NGN': {'min_amount': 5, 'max_amount': 100},
+        }
+    }]
+)
 class DonationApiTestCase(BluebottleTestCase, SessionTestMixin):
     def setUp(self):
         super(DonationApiTestCase, self).setUp()

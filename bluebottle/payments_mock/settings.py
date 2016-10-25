@@ -7,7 +7,9 @@ MOCK_PAYMENT_METHODS = (
         'profile': 'paypal',
         'name': 'MockPal',
         'supports_recurring': False,
-        'currencies': ['EUR'],
+        'currencies': {
+            'EUR': {'min_amount': 5},
+        }
     },
     {
         'provider': 'mock',
@@ -16,7 +18,10 @@ MOCK_PAYMENT_METHODS = (
         'name': 'MockDeal',
         'restricted_countries': ('NL',),
         'supports_recurring': False,
-        'currencies': ['USD', 'EUR'],
+        'currencies': {
+            'EUR': {'min_amount': 5},
+            'USD': {'min_amount': 5},
+        }
     },
     {
         'provider': 'mock',
@@ -24,7 +29,9 @@ MOCK_PAYMENT_METHODS = (
         'profile': 'creditcard',
         'name': 'MockCard',
         'supports_recurring': False,
-        'currencies': ['USD'],
+        'currencies': {
+            'EUR': {'min_amount': 5},
+        }
     }
 )
 

@@ -59,13 +59,11 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
             adapter.create_payment()
 
 
-    @patch('bluebottle.payments_vitepay.adapters.get_current_host',
-           return_value='https://onepercentclub.com')
     @patch('bluebottle.payments_vitepay.adapters.VitepayPaymentAdapter._create_payment_hash',
            return_value='123123')
     @patch('bluebottle.payments_vitepay.adapters.requests.post',
            return_value=type('obj', (object,), {'status_code': 200, 'content': 'https://vitepay.com/some-path-to-pay'}))
-    def test_authorization_action(self, mock_post, get_current_host, create_hash):
+    def test_authorization_action(self, mock_post, create_hash, get_current_host):
         """
         Play some posts that Vitepay might fire at us.
         """

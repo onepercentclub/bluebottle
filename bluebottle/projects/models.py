@@ -415,8 +415,7 @@ class Project(BaseProject, PreviousStatusMixin):
         totals = donations.values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
 
-        if len(totals) > 1:
-            amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
+        amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
 
         return sum(amounts) or Money(0, self.amount_asked.currency)
 

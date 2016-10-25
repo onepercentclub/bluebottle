@@ -42,8 +42,7 @@ class TestTaskMemberMail(TaskMailTestBase):
         self.assertEquals(len(mail.outbox), 1)
         body = mail.outbox[0].body
         self.assertTrue('applied for your task' in body)
-        self.assertTrue(self.task_member.member.first_name in body)
-        self.assertTrue(self.task_member.member.last_name in body)
+        self.assertTrue(self.task_member.member.full_name in body)
         self.assertEquals(mail.outbox[0].to[0], self.task.author.email)
 
         self.task_member.status = 'accepted'
@@ -65,8 +64,7 @@ class TestTaskMemberMail(TaskMailTestBase):
         self.assertEquals(len(mail.outbox), 1)
         body = mail.outbox[0].body
         self.assertTrue('withdrew from the task' in body)
-        self.assertTrue(self.task_member.member.first_name in body)
-        self.assertTrue(self.task_member.member.last_name in body)
+        self.assertTrue(self.task_member.member.full_name in body)
         self.assertEquals(mail.outbox[0].to[0], self.task.author.email)
 
     def test_member_realized_mail(self):

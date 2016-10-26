@@ -101,7 +101,6 @@ class Metrics():
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
         amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
         return sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
-        return Donation.objects.filter(order__status__in=['success', 'pending']).aggregate(sum=Sum('amount'))['sum']
 
     def calculate_initiators(self):
         """ Return number of unique users that started a project, which now has a valid status """

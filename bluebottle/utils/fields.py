@@ -1,3 +1,5 @@
+from babel.numbers import get_currency_name
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -14,7 +16,11 @@ from bluebottle.clients.utils import get_currencies
 
 
 def get_currency_choices():
-    return [(currency['code'], currency['name']) for currency in get_currencies()]
+    currencies = []
+    for method in properties.PAYMENT_METHODS:
+        currencies += method['currencies'].keys()
+
+    return [(currency, get_currency_name(currency)) for currency in set(currencies)]
 
 
 def get_default_currency():

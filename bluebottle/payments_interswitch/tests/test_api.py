@@ -25,23 +25,23 @@ interswitch_settings = {
             'status_url': 'https://stageserv.interswitchng.com/test_paydirect/api/v1/gettransaction.json'
         }
     ],
-    'CURRENCIES_ENABLED': [
-        {
-            'code': 'USD',
-            'name': 'US Dollar',
-            'symbol': u"\u0024"
-        },
-        {
-            'code': 'NGN',
-            'name': 'Naira',
-            'symbol': u"\u20A6"
-        },
-        {
-            'code': 'XOF',
-            'name': 'CFA',
-            'symbol': 'CFA'
+    'PAYMENT_METHODS': [{
+        'provider': 'interswitch',
+        'id': 'interswitch-webpay',
+        'profile': 'webpay',
+        'name': 'WebPay',
+        'currencies': {'NGN': {}},
+        'supports_recurring': False,
+    }, {
+        'provider': 'mock',
+        'id': 'mock-creditcard',
+        'profile': 'creditcard',
+        'name': 'MockCard',
+        'supports_recurring': False,
+        'currencies': {
+            'USD': {'min_amount': 5},
         }
-    ]
+    }]
 }
 
 
@@ -138,7 +138,7 @@ class PaymentInterswitchApiTests(BluebottleTestCase):
 
         authorization_action = [
             ('type', 'redirect'),
-            ('method', 'post'), 
+            ('method', 'post'),
             ('url', u'https://stageserv.interswitchng.com/test_paydirect/pay'),
             ('payload', expected)]
 

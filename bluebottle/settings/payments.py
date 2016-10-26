@@ -8,6 +8,7 @@ PAYMENT_METHODS = (
         'name': 'iDEAL',
         'restricted_countries': ('NL', 'Netherlands'),
         'supports_recurring': False,
+        'currencies': {}
     },
     {
         'provider': 'docdata',
@@ -15,6 +16,7 @@ PAYMENT_METHODS = (
         'profile': 'directdebit',
         'name': 'Direct Debit',
         'supports_recurring': True,
+        'currencies': {}
     },
     {
         'provider': 'docdata',
@@ -22,6 +24,7 @@ PAYMENT_METHODS = (
         'profile': 'creditcard',
         'name': 'CreditCard',
         'supports_recurring': False,
+        'currencies': {}
     }
 )
 VAT_RATE = 0.21

@@ -25,26 +25,24 @@ vitepay_settings = {
             'api_url': 'https://api.vitepay.com/v1/prod/payments'
         }
     ],
-    'CURRENCIES_ENABLED': [
-        {
-            'code': 'USD',
-            'name': 'US Dollar',
-            'symbol': u"\u0024"
-        },
-        {
-            'code': 'NGN',
-            'name': 'Naira',
-            'symbol': u"\u20A6"
-        },
-        {
-            'code': 'XOF',
-            'name': 'CFA',
-            'symbol': 'CFA'
+    'PAYMENT_METHODS': [{
+        'provider': 'vitepay',
+        'id': 'vitepay-orangemoney',
+        'profile': 'orangemoney',
+        'name': 'Orange Money',
+        'currencies': {'XOF': {}},
+        'supports_recurring': False,
+    },{
+        'provider': 'mock',
+        'id': 'mock-creditcard',
+        'profile': 'creditcard',
+        'name': 'MockCard',
+        'supports_recurring': False,
+        'currencies': {
+            'USD': {'min_amount': 5},
         }
-    ]
+    }]
 }
-
-
 @override_settings(**vitepay_settings)
 class PaymentVitepayApiTests(BluebottleTestCase):
     """

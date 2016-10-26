@@ -8,7 +8,7 @@ MOCK_PAYMENT_METHODS = (
         'name': 'MockPal',
         'supports_recurring': False,
         'currencies': {
-            'EUR': {'min_amount': 5},
+            'EUR': {'min_amount': 5, 'max_amount': 100}
         }
     },
     {

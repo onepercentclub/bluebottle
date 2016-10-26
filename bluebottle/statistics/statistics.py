@@ -131,14 +131,14 @@ class Statistics(object):
         """ Add all donation amounts for all donations ever """
         if self._get_cached('donations-total'):
             return self._get_cached('donations-total')
-        currency = properties.CURRENCIES_ENABLED[0]['code']
+
         donations = Donation.objects.filter(order__status__in=(
             StatusDefinition.PENDING, StatusDefinition.SUCCESS))
         totals = donations.values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
 
         if totals:
-            donated = int(sum([convert(amount, currency) for amount in amounts]).amount)
+            donated = int(sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]).amount)
         else:
             donated = 0
 

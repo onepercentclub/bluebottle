@@ -58,7 +58,7 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         payment.save()
         return payment
 
-    def _get_create_hash(self):
+    def _create_hash(self):
         """
         SHA512 of combined data:
         txn_ref
@@ -88,7 +88,7 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         payload = {}
         for field in self.fields:
             payload[field] = getattr(self.payment, field)
-        payload['hash'] = self._get_create_hash()
+        payload['hash'] = self._create_hash()
         return payload
 
     def get_authorization_action(self):

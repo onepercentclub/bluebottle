@@ -72,3 +72,37 @@ class InterswitchPaymentAdapterTestCase(BluebottleTestCase):
             order_payment = OrderPaymentFactory.create(payment_method='docdataIdeal',
                                                        amount=Money(3500, NGN))
             InterswitchPaymentAdapter(order_payment)
+
+
+    @patch('bluebottle.payments_interswitch.adapters.get_current_host',
+           return_value='https://onepercentclub.com')
+    @patch('bluebottle.payments_interswitch.adapters.InterswitchPaymentAdapter._create_hash',
+           return_value='123123')
+    def test_authorization_action(self, get_current_host, create_hash):
+        """
+        Play some posts that Vitepay might fire at us.
+        """
+        self.init_projects()
+        order = OrderFactory.create()
+        DonationFactory.create(amount=Money(2000, NGN), order=order)
+        order_payment = OrderPaymentFactory.create(payment_method='interswitchWebpay', order=order)
+        adapter = InterswitchPaymentAdapter(order_payment)
+        authorization_action = adapter.get_authorization_action()
+        data = {
+            'hash': '123123',
+            'product_id': '1234',
+            'site_redirect_url': 'https://onepercentclub.com/payments_interswitch/payment_response/{0}'.format(order_payment.id),
+            'local_date_time': None,
+            'txn_ref': '-{0}'.format(order_payment.id),
+            'cust_name': None,
+            'currency': '566',
+            'amount': 200000,
+            'pay_item_name': None,
+            'cust_id': None,
+            'pay_item_id': '123',
+            'site_name': 'testserver',
+            'cust_id_desc': None,
+            'cust_name_desc': None
+        }
+        self.assertEqual(authorization_action['url'], 'https://stageserv.interswitchng.com/test_paydirect/pay')
+        self.assertEqual(authorization_action['payload'], data)

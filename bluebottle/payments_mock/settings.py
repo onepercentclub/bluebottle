@@ -19,7 +19,8 @@ MOCK_PAYMENT_METHODS = (
         'restricted_countries': ('NL',),
         'supports_recurring': False,
         'currencies': {
-            'EUR': {'min_amount': 5, 'max_amount': 100}
+            'EUR': {'min_amount': 5},
+            'USD': {'min_amount': 5},
         }
     },
     {
@@ -29,7 +30,7 @@ MOCK_PAYMENT_METHODS = (
         'name': 'MockCard',
         'supports_recurring': False,
         'currencies': {
-            'EUR': {'min_amount': 5, 'max_amount': 100}
+            'USD': {'min_amount': 5},
         }
     }
 )

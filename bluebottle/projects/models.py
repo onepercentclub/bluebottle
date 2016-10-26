@@ -339,7 +339,7 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.amount_asked:
             self.update_amounts(False)
 
-        if self.amount_asked.currency != self.amount_extra.currency:
+        if self.amount_asked and self.amount_asked.currency != self.amount_extra.currency:
             self.amount_extra = Money(
                 self.amount_extra.amount, self.amount_asked.currency
             )

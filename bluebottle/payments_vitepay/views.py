@@ -13,7 +13,11 @@ class PaymentStatusListener(View):
     """
 
     def post(self, request, *args, **kwargs):
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except ValueError:
+            return HttpResponse('Could not decode json', status=400)
+
         success = data.get('success', 0)
         failure = data.get('failure', 0)
         authenticity = data.get('authenticity')

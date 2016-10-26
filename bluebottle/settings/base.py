@@ -762,3 +762,5 @@ DJANGO_MONEY_RATES = {
     'OPENEXCHANGE_BASE_CURRENCY': 'USD',
 }
 AUTO_CONVERT_MONEY = False
+
+LOCKDOWN_URL_EXCEPTIONS = [r'^/payments_vitepay/status_update/']

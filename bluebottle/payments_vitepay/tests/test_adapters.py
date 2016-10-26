@@ -1,3 +1,5 @@
+import json
+
 from moneyed.classes import Money, XOF, EUR
 from mock import patch
 
@@ -72,20 +74,28 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
         order_payment = OrderPaymentFactory.create(payment_method='vitepayOrangemoney', order=order)
         adapter = VitepayPaymentAdapter(order_payment)
         authorization_action = adapter.get_authorization_action()
-        data = '{"hash": "123123", "description": "Thanks for your donation!", ' \
-               '"order_id": "opc-%s", "decline_url": ' \
-               '"https://onepercentclub.com/orders/%s/failed", ' \
-               '"p_type": "orange_money", "country_code": "ML", ' \
-               '"language_code": "en", "redirect": "0", "api_key": "123", ' \
-               '"amount_100": 200000, "cancel_url": "https://onepercentclub.com/orders/%s/failed", ' \
-               '"currency_code": "XOF", ' \
-               '"callback_url": "https://onepercentclub.com/payments_vitepay/payment_response/%s", ' \
-               '"return_url": "https://onepercentclub.com/orders/%s/success"}' % \
-               (order_payment.id, order_payment.order.id, order_payment.order.id,
-                order_payment.id, order_payment.order.id)
-        mock_post.assert_called_with('https://api.vitepay.com/v1/prod/payments',
-                                     data=data,
-                                     headers={'Content-Type': 'application/json'})
+        data = {
+            u"api_key": u"123",
+            u"hash": u"123123",
+            u"redirect": 0,
+            u"payment": {
+                u"description": u"Thanks for your donation!",
+                u"order_id": u"opc-{}".format(order_payment.id),
+                u"decline_url": u"https://onepercentclub.com/orders/{}/failed".format(order_payment.order.id),
+                u"p_type": u"orange_money",
+                u"country_code": u"ML",
+                u"language_code": u"fr",
+                u"amount_100": 200000,
+                u"cancel_url": u"https://onepercentclub.com/orders/{}/failed".format(order_payment.order.id),
+                u"currency_code": u"XOF",
+                u"callback_url": u"https://onepercentclub.com/payments_vitepay/status_update/",
+                u"return_url": u"https://onepercentclub.com/orders/{}/success".format(order_payment.order.id)
+            }
+        }
+
+        self.assertEqual(mock_post.call_args[0][0], 'https://api.vitepay.com/v1/prod/payments')
+        self.assertEqual(json.loads(mock_post.call_args[1]['data']), data)
+        self.assertEqual(mock_post.call_args[1]['headers'], {'Content-Type': 'application/json'})
 
         self.assertEqual(authorization_action['url'], 'https://vitepay.com/some-path-to-pay')
 

@@ -1,4 +1,5 @@
 import json
+import urllib
 
 from moneyed.classes import Money, XOF, EUR
 from mock import patch
@@ -119,5 +120,5 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
             'order_id': adapter.payment.order_id,
             'authenticity': authenticity
         }
-        response = self.client.post(update_view, data)
+        response = self.client.post(update_view, data, format='multipart')
         self.assertEqual(response.content, '{"status": "1"}')

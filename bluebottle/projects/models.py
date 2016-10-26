@@ -209,7 +209,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     categories = models.ManyToManyField('categories.Category', blank=True)
 
-    currencies = SelectMultipleField(max_length=100, null=True,
+    currencies = SelectMultipleField(max_length=100, null=True, default=[],
                                      choices=lazy(get_currency_choices, tuple)())
 
     celebrate_results = models.BooleanField(

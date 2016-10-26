@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from moneyed import Money
 from django.utils import timezone
 from bluebottle.test.utils import BluebottleTestCase
 from dashboard import Metrics

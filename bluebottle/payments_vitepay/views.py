@@ -18,8 +18,8 @@ class PaymentStatusListener(View):
         except ValueError:
             return HttpResponse('Could not decode json', status=400)
 
-        success = data.get('success', 0)
-        failure = data.get('failure', 0)
+        success = 'success' in data
+        failure = 'failure' in data
         authenticity = data.get('authenticity')
         order_id = data.get('order_id')
 

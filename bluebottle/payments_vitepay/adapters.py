@@ -116,9 +116,14 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         authenticity = SHA1("order_id;amount_100;currency_code;api_secret")
         """
         api_secret = self.credentials['api_secret']
-        message = "{p.order_id};{p.amount_100};{p.currency_code};" \
-                  "{api_secret}".format(p=self.payment, api_secret=api_secret)
-        return hashlib.sha1(message.upper()).hexdigest()
+        message = '{order_id};{amount};{currency};{api_secret}'.format(
+            order_id=self.payment.order_id.upper(),
+            amount=self.payment.amount_100,
+            currency=self.payment.currency_code,
+            api_secret=api_secret
+        )
+
+        return hashlib.sha1(message).hexdigest().upper()
 
     def check_payment_status(self):
         pass

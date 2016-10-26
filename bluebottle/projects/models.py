@@ -339,6 +339,14 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.amount_asked:
             self.update_amounts(False)
 
+        if self.amount_asked.currency != self.amount_extra.currency:
+            self.amount_extra = Money(
+                self.amount_extra.amount, self.amount_asked.currency
+            )
+
+        if self.amount_asked not in self.currencies:
+            self.currencies.append(str(self.amount_asked.currency))
+
         # FIXME: Clean up this code, make it readable
         # Project is not ended, complete, funded or stopped and its deadline has expired.
         if not self.campaign_ended and self.deadline < timezone.now() \
@@ -391,9 +399,6 @@ class Project(BaseProject, PreviousStatusMixin):
         self.amount_needed = self.amount_asked - self.amount_donated
 
         self.update_status_after_donation(False)
-
-        if self.amount_asked.currency != self.amount_extra.currency:
-            self.amount_extra.currency = self.amount_asked.currency
 
         if save:
             self.save()

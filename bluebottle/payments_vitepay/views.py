@@ -13,15 +13,10 @@ class PaymentStatusListener(View):
     """
 
     def post(self, request, *args, **kwargs):
-        try:
-            data = json.loads(request.body)
-        except ValueError:
-            return HttpResponse('Could not decode json', status=400)
-
-        success = 'success' in data
-        failure = 'failure' in data
-        authenticity = data.get('authenticity')
-        order_id = data.get('order_id')
+        success = 'success' in request.POST
+        failure = 'failure' in request.POST
+        authenticity = request.POST.get('authenticity')
+        order_id = request.POST.get('order_id')
 
         try:
             payment = VitepayPayment.objects.get(order_id=order_id)

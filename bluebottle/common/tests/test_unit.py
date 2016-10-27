@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from moneyed import Money
 from django.utils import timezone
 from bluebottle.test.utils import BluebottleTestCase
 from dashboard import Metrics
@@ -188,7 +189,7 @@ class MetricsTest(BluebottleTestCase):
         order4.save()
 
         # order2, order3, order4 should be counted
-        self.assertEqual(self.metrics.calculate_total_raised(), 30)
+        self.assertEqual(self.metrics.calculate_total_raised(), Money(30, 'EUR'))
 
     def test_initiators(self):
         """

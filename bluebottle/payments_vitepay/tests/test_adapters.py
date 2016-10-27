@@ -1,5 +1,8 @@
 import json
+<<<<<<< HEAD
 import urllib
+=======
+>>>>>>> release/sprint-19
 
 from moneyed.classes import Money, XOF, EUR
 from mock import patch
@@ -65,7 +68,11 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
            return_value='123123')
     @patch('bluebottle.payments_vitepay.adapters.requests.post',
            return_value=type('obj', (object,), {'status_code': 200, 'content': 'https://vitepay.com/some-path-to-pay'}))
+<<<<<<< HEAD
     def test_authorization_action(self, mock_post, create_hash):
+=======
+    def test_authorization_action(self, mock_post, create_hash, get_current_host):
+>>>>>>> release/sprint-19
         """
         Play some posts that Vitepay might fire at us.
         """
@@ -101,8 +108,6 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
         self.assertEqual(authorization_action['url'], 'https://vitepay.com/some-path-to-pay')
 
 
-    @patch('bluebottle.payments_vitepay.adapters.get_current_host',
-           return_value='https://onepercentclub.com')
     def test_update_payment(self, get_current_host):
         """
         Play some posts that Vitepay might fire at us.

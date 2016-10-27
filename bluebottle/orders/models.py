@@ -19,16 +19,9 @@ class Order(BaseOrder, PreviousStatusMixin):
         }
 
         def extra_tags(self, obj, created):
-            # Handle future introduction of currency field for total
-            try:
-                return {'total_currency': obj.total_currency}
-            except AttributeError:
-                return {'total_currency': 'EUR'}
+            return {'total_currency': str(obj.total.currency)}
 
         def extra_fields(self, obj, created):
-            # Force the total to a float. We don't currently have floats for 
-            # order totals but in the future we may and Influxdb won't accept 
-            # a later change in the type for a field.
             return {'total': float(obj.total)}
 
 

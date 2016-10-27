@@ -93,7 +93,7 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
             "country_code": "ML",
             "order_id": self.payment.order_id,
             "description": self.payment.description,
-            "amount_100": self.payment.amount,
+            "amount_100": self.payment.amount_100,
             "return_url": self.payment.return_url,
             "decline_url": self.payment.decline_url,
             "cancel_url": self.payment.cancel_url,
@@ -135,7 +135,7 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         return hashlib.sha1(message.upper()).hexdigest()
 
     def check_payment_status(self):
-        raise NotImplementedError('Not possible to activily check payment status at VitePay.')
+        pass
 
     def status_update(self, authenticity, success, failure):
         """

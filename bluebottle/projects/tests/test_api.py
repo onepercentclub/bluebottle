@@ -1250,7 +1250,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         self.assertTrue(project.campaign_ended is None)
         self.assertTrue(project.campaign_funded is None)
 
-        DonationFactory.create(user=self.user, project=project, amount=10000)
+        DonationFactory.create(project=project, amount=10000)
 
         Project.objects.get(pk=project.pk)
 
@@ -1269,7 +1269,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         self.assertTrue(project.campaign_ended is None)
         self.assertTrue(project.campaign_funded is None)
 
-        DonationFactory.create(user=self.user, project=project, amount=10000)
+        DonationFactory.create(project=project, amount=10000)
 
         loaded_project = Project.objects.get(pk=project.pk)
         self.assertTrue(loaded_project.campaign_ended is None)
@@ -1292,7 +1292,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         self.assertTrue(project.campaign_ended is None)
         self.assertTrue(project.campaign_funded is None)
 
-        DonationFactory.create(user=self.user, project=project, amount=99)
+        DonationFactory.create(project=project, amount=99)
 
         loaded_project = Project.objects.get(pk=project.pk)
         self.assertTrue(loaded_project.campaign_ended is None)

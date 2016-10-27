@@ -3,7 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from django.db import transaction
 
-from django.conf.urls import url, patterns
+from django.conf.urls import url
 from django.shortcuts import render
 
 from django.utils.translation import ugettext_lazy as _
@@ -39,13 +39,13 @@ class IncrementalCSVImportMixin(ExtendibleModelAdminMixin):
         """ Add import view to URL's. """
         urls = super(IncrementalCSVImportMixin, self).get_urls()
 
-        new_urls = patterns('',
-                            url(
-                                r'^import/$',
-                                self._wrap(self.import_view),
-                                name=self._view_name('import')
-                            )
-                            )
+        new_urls = [
+            url(
+                r'^import/$',
+                self._wrap(self.import_view),
+                name=self._view_name('import')
+            )
+        ]
 
         return new_urls + urls
 

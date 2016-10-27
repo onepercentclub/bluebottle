@@ -1,6 +1,6 @@
 from django import forms
 from django.conf import settings
-from django.conf.urls import patterns
+from django.conf.urls import url
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
@@ -216,11 +216,11 @@ class MemberAdmin(UserAdmin):
     def get_urls(self):
         urls = super(MemberAdmin, self).get_urls()
 
-        extra_urls = patterns('',
-                              (r'^login-as/(?P<user_id>\d+)/$',
-                               self.admin_site.admin_view(
-                                   self.login_as_redirect)),
-                              )
+        extra_urls = [
+            url(r'^login-as/(?P<user_id>\d+)/$',
+             self.admin_site.admin_view(
+                 self.login_as_redirect))
+        ]
         return extra_urls + urls
 
     def login_as_redirect(self, *args, **kwargs):

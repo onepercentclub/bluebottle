@@ -67,8 +67,7 @@ class JournalModelTests(BluebottleTestCase):
 
         self.assertEqual(Member.objects.count(), 2)  # self.user and self.project_owner
         # creates another user for fundraiser
-        self.donation = DonationFactory.create(user=self.user,
-                                               amount=Money(100, 'EUR'),
+        self.donation = DonationFactory.create(amount=Money(100, 'EUR'),
                                                project=self.project,
                                                order__user=self.user)
         self.assertEqual(Member.objects.count(), 4)

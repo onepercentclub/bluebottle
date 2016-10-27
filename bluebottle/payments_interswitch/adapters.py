@@ -113,7 +113,7 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
 
         InterswitchPaymentStatusUpdate.objects.create(payment=self.payment, result=response)
 
-        if 'ResponseDescription' in result and result['ResponseDescription'] == 'Approved Successful':
+        if 'ResponseCode' in result and result['ResponseCode'] == '00':
             self.payment.status = StatusDefinition.SETTLED
         else:
             self.payment.status = StatusDefinition.FAILED

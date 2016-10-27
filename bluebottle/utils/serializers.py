@@ -78,9 +78,9 @@ class MoneySerializer(serializers.DecimalField):
             return Money(float(data), 'EUR')
         except ValueError:
             data = json.loads(data)
-            return Money(data['amount'], data['currency'])
+            return Money(data.get('amount', 0), data['currency'])
         except TypeError:
-            return Money(data['amount'], data['currency'])
+            return Money(data.get('amount', 0), data['currency'])
 
 
 class MoneyTotalSerializer(serializers.ListField):

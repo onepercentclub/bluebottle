@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
@@ -75,14 +77,14 @@ class ClientSettingsTestCase(BluebottleTestCase):
             'XOF': {'min_amount': 5, 'max_amount': 100},
         }
     }])
-    def test_settings_read_only(self):
+    def test_settings_currencies(self):
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)
 
         self.assertEqual(
             response.data['currencies'],
-            [{'symbol': u'CFA', 'code': 'XOF', 'name': u'West African CFA Franc', 'rate': 1},
-             {'symbol': u'\u20a6', 'code': 'NGN', 'name': u'Nigerian Naira', 'rate': 1},
-             {'symbol': u'$', 'code': 'USD', 'name': u'US Dollar', 'rate': 1},
-             {'symbol': u'\u20ac', 'code': 'EUR', 'name': u'Euro', 'rate': 1}]
+            [{'symbol': u'CFA', 'code': 'XOF', 'name': u'West African CFA Franc', 'rate': Decimal(1000.0)},
+             {'symbol': u'\u20a6', 'code': 'NGN', 'name': u'Nigerian Naira', 'rate': Decimal(500.0)},
+             {'symbol': u'$', 'code': 'USD', 'name': u'US Dollar', 'rate': Decimal(1.0)},
+             {'symbol': u'\u20ac', 'code': 'EUR', 'name': u'Euro', 'rate': Decimal(1.5)}]
         )

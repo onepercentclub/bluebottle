@@ -26,6 +26,9 @@ class Command(BaseCommand):
                     for string in strings:
                         temp.write('gettext("{}")\n'.format(string))
 
+            for currency in get_currencies:
+                temp.write('gettext("{}")\n'.format(currency['name'])
+
             temp.flush()
 
             return super(Command, self).handle(*args, **kwargs)

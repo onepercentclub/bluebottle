@@ -209,7 +209,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     categories = models.ManyToManyField('categories.Category', blank=True)
 
-    currencies = SelectMultipleField(max_length=100, null=True,
+    currencies = SelectMultipleField(max_length=100, null=True, default=[],
                                      choices=lazy(get_currency_choices, tuple)())
 
     celebrate_results = models.BooleanField(
@@ -339,6 +339,11 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.amount_asked:
             self.update_amounts(False)
 
+        if self.amount_asked and self.amount_asked.currency != self.amount_extra.currency:
+            self.amount_extra = Money(
+                self.amount_extra.amount, self.amount_asked.currency
+            )
+
         # FIXME: Clean up this code, make it readable
         # Project is not ended, complete, funded or stopped and its deadline has expired.
         if not self.campaign_ended and self.deadline < timezone.now() \
@@ -386,11 +391,12 @@ class Project(BaseProject, PreviousStatusMixin):
         total = self.get_money_total([StatusDefinition.PENDING,
                                       StatusDefinition.SUCCESS,
                                       StatusDefinition.PLEDGED])
-        if isinstance(total, list):
-            DeprecationWarning('Cannot yet handle multiple currencies on one project!')
 
         self.amount_donated = total
+        self.amount_needed = self.amount_asked - self.amount_donated
+
         self.update_status_after_donation(False)
+
         if save:
             self.save()
 
@@ -411,8 +417,7 @@ class Project(BaseProject, PreviousStatusMixin):
         totals = donations.values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
 
-        if len(totals) > 1:
-            amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
+        amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
 
         return sum(amounts) or Money(0, self.amount_asked.currency)
 

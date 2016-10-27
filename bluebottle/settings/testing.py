@@ -86,16 +86,6 @@ DOCDATA_FEES = {
     }
 }
 
-CURRENCIES_ENABLED = ({
-    'code': 'EUR',
-    'name': 'Euro',
-    'symbol': u'\u20ac'
-}, {
-    'code': 'USD',
-    'name': 'US Dollar',
-    'symbol': '$'
-}, )
-
 RECURRING_DONATIONS_ENABLED = True
 
 SEND_WELCOME_MAIL = False

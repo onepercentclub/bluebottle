@@ -147,7 +147,6 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
-    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.LockdownMiddleware',
@@ -156,6 +155,7 @@ MIDDLEWARE_CLASSES = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
+    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
 )
 
 REST_FRAMEWORK = {

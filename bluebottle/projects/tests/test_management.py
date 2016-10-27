@@ -61,7 +61,7 @@ class TestStatusMC(BluebottleTestCase):
         some_project.status = self.campaign
         some_project.save()
 
-        call_command('cron_status_realised', 'test')
+        call_command('cron_status_realised')
 
         project = Project.objects.get(title='test')
         self.assertEqual(project.status, self.closed)
@@ -95,7 +95,7 @@ class TestStatusMC(BluebottleTestCase):
         some_project.status = self.campaign
         some_project.save()
 
-        call_command('cron_status_realised', 'test')
+        call_command('cron_status_realised')
 
         project = Project.objects.get(title='test')
         self.assertEqual(project.status, self.closed)
@@ -132,7 +132,7 @@ class TestStatusMC(BluebottleTestCase):
         some_project.status = self.campaign
         some_project.save()
 
-        call_command('cron_status_realised', 'test')
+        call_command('cron_status_realised')
 
         project = Project.objects.get(title='test')
         self.assertEqual(project.status, self.incomplete)
@@ -169,7 +169,7 @@ class TestStatusMC(BluebottleTestCase):
         some_project.status = self.campaign
         some_project.save()
 
-        call_command('cron_status_realised', 'test')
+        call_command('cron_status_realised')
 
         project = Project.objects.get(title='test')
         self.assertEqual(project.status, self.complete)
@@ -189,7 +189,7 @@ class TestStatusMC(BluebottleTestCase):
         self.assertEqual(task.status, 'in progress')
         self.assertEqual(task2.status, 'open')
 
-        call_command('cron_status_realised', 'test')
+        call_command('cron_status_realised')
 
         task1 = Task.objects.get(title='task1')
         task2 = Task.objects.get(title='task2')

@@ -1,9 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from ..views import QuoteList
 
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^$', QuoteList.as_view(), name='quote_list'),
-)
+]

@@ -17,7 +17,6 @@ def order_payment_changed(sender, instance, **kwargs):
     # This is to ensure any components listening for a status
     # on an OrderPayment will also receive the initial status.
 
-    # Get the default status for the status field on OrderPayment
     default_status = StatusDefinition.CREATED
 
     # Signal new status if current status is the default value

@@ -13,7 +13,6 @@ BASE_DIR = os.path.abspath(os.path.join(
 PROJECT_ROOT = BASE_DIR
 
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 COMPRESS_ENABLED = False
 COMPRESS_TEMPLATES = False
 
@@ -109,6 +108,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'OPTIONS': {
+            'debug': DEBUG,
             'loaders': [
                 'tenant_extras.template_loaders.FilesystemLoader',
                 'django.template.loaders.filesystem.Loader',
@@ -117,13 +117,13 @@ TEMPLATES = [
                 'admin_tools.template_loaders.Loader',
             ],
             'context_processors': [
-                'django.core.context_processors.request',
+                'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
-                'django.core.context_processors.debug',
-                'django.core.context_processors.i18n',
-                'django.core.context_processors.media',
-                'django.core.context_processors.static',
-                'django.core.context_processors.tz',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
                 'social.apps.django_app.context_processors.backends',
                 'social.apps.django_app.context_processors.login_redirect',
@@ -147,7 +147,6 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
-    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.LockdownMiddleware',
@@ -156,6 +155,7 @@ MIDDLEWARE_CLASSES = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
+    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
 )
 
 REST_FRAMEWORK = {
@@ -253,7 +253,6 @@ SHARED_APPS = (
     'tenant_extras',
     'localflavor',
     'filetransfers',
-    'rest_framework_swagger',
     'lockdown',
     'corsheaders',
     'djmoney_rates'
@@ -298,7 +297,6 @@ TENANT_APPS = (
     'bluebottle.projects',
     'bluebottle.organizations',
     'bluebottle.tasks',
-    'bluebottle.hbtemplates',
     'bluebottle.bluebottle_dashboard',
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
@@ -520,13 +518,6 @@ HTML_ACTIVATION_EMAIL = False
 SEND_WELCOME_MAIL = True
 
 EMAIL_BACKEND = 'bluebottle.utils.email_backend.TestMailBackend'
-
-SWAGGER_SETTINGS = {
-    'api_version': '1.1',
-    'resource_url_prefix': 'api/',
-    'resource_access_handler': 'bluebottle.auth.handlers.resource_access_handler',
-    'is_authenticated': True
-}
 
 # and provide a default (without it django-rest-framework-jwt will default
 # to SECRET_KEY. Even better, provide one in a client's properties.py file
@@ -755,6 +746,8 @@ SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
 SURVEYGIZMO_API_TOKEN = ''
 SURVEYGIZMO_API_SECRET = ''
 
+GEOPOSITION_GOOGLE_MAPS_API_KEY = ''
+
 DJANGO_MONEY_RATES = {
     'DEFAULT_BACKEND': 'djmoney_rates.backends.OpenExchangeBackend',
     'OPENEXCHANGE_URL': 'http://openexchangerates.org/api/latest.json',
@@ -762,3 +755,5 @@ DJANGO_MONEY_RATES = {
     'OPENEXCHANGE_BASE_CURRENCY': 'USD',
 }
 AUTO_CONVERT_MONEY = False
+
+LOCKDOWN_URL_EXCEPTIONS = [r'^/payments_vitepay/status_update/']

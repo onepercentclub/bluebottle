@@ -98,6 +98,7 @@ class Wallpost(PolymorphicModel):
 
     class Meta:
         ordering = ('created',)
+        base_manager_name = 'objects_with_deleted' # when doing update / delete queries use the manager with all the objects
 
     def __unicode__(self):
         return str(self.id)
@@ -223,6 +224,7 @@ class Reaction(models.Model):
 
     class Meta:
         ordering = ('created',)
+        base_manager_name = 'objects_with_deleted' # when doing update / delete queries use the manager with all the objects
         verbose_name = _('Reaction')
         verbose_name_plural = _('Reactions')
 

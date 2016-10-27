@@ -1,9 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from bluebottle.payments_mock.views import PaymentMock, \
     PaymentResponseMockHandler, PaymentStatusListener
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     # This is the url that simulates the mock server. The adapter sets this urk in the authorization_action.
     url(r'^payment-service-provider/(?P<order_payment_id>\d+)$',
         PaymentMock.as_view(), name='payment-service-provider'),
@@ -17,4 +16,4 @@ urlpatterns = patterns(
     url(r'^payment-service-provider/status-update/$',
         PaymentStatusListener.as_view(),
         name='payment-service-provider-status-update'),
-)
+]

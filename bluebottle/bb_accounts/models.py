@@ -223,7 +223,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         if not self.username:
             username = self.email
             original_username = username
-            queryset = self._default_manager.all()
+            queryset = self.__class__.objects.all()
             if self.pk:
                 queryset = queryset.exclude(pk=self.pk)
 

@@ -378,7 +378,9 @@ class BaseProjectPayout(PayoutBase):
                           " '{1}'".format(self.payout_rule, calculator_name)
                 raise PayoutException(message)
 
-            self.amount_payable = round(calculator(raised_without_pledges), 2)
+            self.amount_payable = Money(
+                round(calculator(raised_without_pledges), 2), self.amount_raised.currency
+            )
 
         self.organization_fee = raised_without_pledges - self.amount_payable
 

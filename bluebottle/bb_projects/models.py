@@ -1,3 +1,5 @@
+from moneyed.classes import Money
+
 from bluebottle.wallposts.models import MediaWallpostPhoto
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
@@ -15,7 +17,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, DEFAULT_CURRENCY
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 
@@ -162,10 +164,10 @@ class BaseProject(models.Model, GetTweetMixin):
 
     # For convenience and performance we also store money donated and needed
     # here.
-    amount_asked = MoneyField(default=0, null=True)
-    amount_donated = MoneyField(default=0, null=True)
-    amount_needed = MoneyField(default=0, null=True)
-    amount_extra = MoneyField(default=0, null=True,
+    amount_asked = MoneyField(default=Money(0, DEFAULT_CURRENCY))
+    amount_donated = MoneyField(default=Money(0, DEFAULT_CURRENCY))
+    amount_needed = MoneyField(default=Money(0, DEFAULT_CURRENCY))
+    amount_extra = MoneyField(default=Money(0, DEFAULT_CURRENCY),
                               help_text=_("Amount pledged by organisation (matching fund)."))
 
     # Bank detail data

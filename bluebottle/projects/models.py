@@ -322,8 +322,9 @@ class Project(BaseProject, PreviousStatusMixin):
                                           datetime.time(23, 59, 59))
             )
 
-        if self.amount_asked:
+        if self.amount_asked.amount:
             self.update_amounts(False)
+
 
         # FIXME: Clean up this code, make it readable
         # Project is not ended, complete, funded or stopped and its deadline has expired.

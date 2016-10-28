@@ -1,13 +1,10 @@
 from django.conf.urls import patterns, url
 
-from ..views import PaymentResponseView, PaymentStatusListener
+from ..views import PaymentResponseView
 
 urlpatterns = patterns(
     '',
-    url(r'^status_update/$',
-        PaymentStatusListener.as_view(),
-        name='interswitch-status-update'),
     url(r'^payment_response/(?P<order_payment_id>\d+)$',
         PaymentResponseView.as_view(),
-        name='interswitch-payment-reposponse'),
+        name='interswitch-payment-response'),
 )

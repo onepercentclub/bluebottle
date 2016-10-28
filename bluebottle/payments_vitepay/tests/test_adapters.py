@@ -23,7 +23,7 @@ vitepay_settings = {
     'MERCHANT_ACCOUNTS': [
         {
             'merchant': 'vitepay',
-            'currencies': {'XOF': {}},
+            'currency': 'XOF',
             'api_key': '123',
             'api_secret': '123456789012345678901234567890123456789012345678901234567890',
             'api_url': 'https://api.vitepay.com/v1/prod/payments'
@@ -110,7 +110,7 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
         order_payment = VitepayOrderPaymentFactory.create(amount=Money(2000, XOF))
         payment = VitepayPaymentFactory.create(order_id='opc-1', order_payment=order_payment)
         # authenticity = sha1({order_id};{amount_100};{currency_code};{api_secret})
-        authenticity = 'd2492ecd8d51ae72a43e5c6460e8da7ceae8195a'
+        authenticity = '69E78BC6C64D43DA76DEB90F911AF213DA9DE89D'
         update_view = reverse('vitepay-status-update')
         data = {
             'success': 1,
@@ -131,7 +131,7 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
             'order_id': payment.order_id,
             'authenticity': 'hashyhashy'
         }
-        response = self.client.post(update_view, data)
+        response = self.client.post(update_view, data, format='multipart')
         data = json.loads(response.content)
         self.assertEqual(data['status'], '0')
         self.assertEqual(data['message'], 'Authenticity incorrect.')
@@ -146,7 +146,7 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
             'order_id': 999,
             'authenticity': 'hashyhashy'
         }
-        response = self.client.post(update_view, data)
+        response = self.client.post(update_view, data, format='multipart')
         data = json.loads(response.content)
         self.assertEqual(data['status'], '0')
         self.assertEqual(data['message'], 'Order not found.')

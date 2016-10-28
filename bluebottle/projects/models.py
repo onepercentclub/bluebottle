@@ -29,7 +29,7 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, DEFAULT_CURRENCY
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     MediaWallpostPhoto, MediaWallpost, TextWallpost
@@ -321,6 +321,9 @@ class Project(BaseProject, PreviousStatusMixin):
                 datetime.datetime.combine(local_time.date(),
                                           datetime.time(23, 59, 59))
             )
+
+        if not self.amount_asked:
+            self.amount_asked = Money(0, DEFAULT_CURRENCY)
 
         if self.amount_asked.amount:
             self.update_amounts(False)

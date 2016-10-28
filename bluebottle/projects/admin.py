@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import logging
+from decimal import InvalidOperation
 
 from django import forms
 from django.db.models import Count, Sum
@@ -14,7 +15,7 @@ from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.geo.admin import LocationFilter
+from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
@@ -41,47 +42,47 @@ def mark_as(slug, queryset):
 
 def mark_as_plan_new(modeladmin, request, queryset):
     mark_as('plan-new', queryset)
-mark_as_plan_new.short_description = _("Mark selected projects as status Plan New")
+mark_as_plan_new.short_description = _("Mark selected projects as status Plan - Draft")
 
 
 def mark_as_plan_submitted(modeladmin, request, queryset):
     mark_as('plan-submitted', queryset)
-mark_as_plan_submitted.short_description = _("Mark selected projects as status Plan Submitted")
+mark_as_plan_submitted.short_description = _("Mark selected projects as status Plan - Submitted")
 
 
 def mark_as_plan_needs_work(modeladmin, request, queryset):
     mark_as('plan-needs-work', queryset)
-mark_as_plan_needs_work.short_description = _("Mark selected projects as status Plan Needs Work")
+mark_as_plan_needs_work.short_description = _("Mark selected projects as status Plan - Needs Work")
 
 
 def mark_as_voting(modeladmin, request, queryset):
     mark_as('voting', queryset)
-mark_as_voting.short_description = _("Mark selected projects as status Voting")
+mark_as_voting.short_description = _("Mark selected projects as status Voting - Running")
 
 
 def mark_as_voting_done(modeladmin, request, queryset):
     mark_as('voting-done', queryset)
-mark_as_voting_done.short_description = _("Mark selected projects as status Voting Done")
+mark_as_voting_done.short_description = _("Mark selected projects as status Voting - Done")
 
 
 def mark_as_campaign(modeladmin, request, queryset):
     mark_as('campaign', queryset)
-mark_as_campaign.short_description = _("Mark selected projects as status Campaign")
+mark_as_campaign.short_description = _("Mark selected projects as status Project - Running")
 
 
 def mark_as_done_complete(modeladmin, request, queryset):
     mark_as('done-complete', queryset)
-mark_as_done_complete.short_description = _("Mark selected projects as status Done Complete")
+mark_as_done_complete.short_description = _("Mark selected projects as status Project - Realised")
 
 
 def mark_as_done_incomplete(modeladmin, request, queryset):
     mark_as('done-incomplete', queryset)
-mark_as_done_incomplete.short_description = _("Mark selected projects as status Done Incomplete")
+mark_as_done_incomplete.short_description = _("Mark selected projects as status Project - Done")
 
 
 def mark_as_closed(modeladmin, request, queryset):
     mark_as('closed', queryset)
-mark_as_closed.short_description = _("Mark selected projects as status Closed")
+mark_as_closed.short_description = _("Mark selected projects as status Rejected / Canceled")
 
 
 class ProjectThemeAdmin(admin.ModelAdmin):
@@ -174,6 +175,7 @@ class FundingFilter(admin.SimpleListFilter):
             return queryset.filter(Q(amount_asked=None) | Q(amount_asked=0.00))
         return queryset
 
+
 class ProjectBudgetLineInline(admin.TabularInline):
     model = ProjectBudgetLine
     extra = 0
@@ -200,15 +202,14 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
-    list_filter = ('country__subregion__region',)
-
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', ProjectThemeFilter,
-                   'country__subregion__region', 'project_type')
+        filters = ('status', 'is_campaign', ProjectThemeFilter, 'project_type')
 
         # Only show Location column if there are any
         if Location.objects.count():
-            filters +=  (LocationFilter, )
+            filters += (LocationGroupFilter, LocationFilter)
+        else:
+            filters += ('country__subregion__region', )
         return filters
 
     def get_list_display(self, request):
@@ -216,10 +217,10 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                   'status', 'is_campaign', 'deadline', 'donated_percentage')
         # Only show Location column if there are any
         if Location.objects.count():
-            fields +=  ('location', )
+            fields += ('location', )
         # Only show Vote_count column if there are any votes
         if Vote.objects.count():
-            fields +=  ('vote_count', )
+            fields += ('vote_count', )
         return fields
 
     def get_list_editable(self, request):
@@ -235,7 +236,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('created', 'created'),
         ('status', 'status'),
         ('theme', 'theme'),
-        ('region', 'region'),
+        ('location__group', 'region'),
         ('location', 'location'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),
@@ -264,7 +265,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization',
                                 'status', 'title', 'slug', 'project_type',
-                                'is_campaign')}),
+                                'is_campaign', 'celebrate_results')}),
 
         (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
 
@@ -275,6 +276,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
         (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
                                 'amount_donated', 'amount_needed',
+                                'currencies',
                                 'popularity', 'vote_count')}),
 
         (_('Dates'), {'fields': ('voting_deadline', 'deadline',
@@ -295,10 +297,11 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return obj.vote_set.count()
 
     def donated_percentage(self, obj):
-        if not obj.amount_asked or not obj.amount_asked.amount:
-            return "-"
-        percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
-        return "{0} %".format(percentage)
+        try:
+            percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
+            return "{0} %".format(percentage)
+        except (AttributeError, InvalidOperation):
+            return '-'
 
     def get_queryset(self, request):
         # Optimization: Select related fields that are used in admin specific

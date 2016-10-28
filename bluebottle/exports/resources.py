@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.db.models.signals import post_init
+from django.db.models import Sum
 
 from exportdb.exporter import ExportModelResource
 
@@ -24,11 +25,16 @@ class DateRangeResource(ExportModelResource):
 
 class UserResource(DateRangeResource):
     range_field = 'date_joined'
-    select_related = ('location',)
+    select_related = ('location', 'location__group')
 
 
 class ProjectResource(DateRangeResource):
-    select_related = ('status', 'owner', 'location',)
+    select_related = ('status', 'owner', 'location', 'location__group', 'theme')
+
+    def get_queryset(self):
+        return super(ProjectResource, self).get_queryset().annotate(
+            time_spent=Sum('task__members__time_spent')
+        )
 
     def export(self, **kwargs):
         with temp_disconnect_signal(
@@ -63,7 +69,7 @@ class TaskResource(DateRangeResource):
 
 
 class TaskMemberResource(DateRangeResource):
-    select_related = ('member', 'task', 'task__project', 'member__location')
+    select_related = ('member', 'task', 'task__project', 'member__location', 'member__location__group')
 
     def export(self, **kwargs):
         task_signal = dict(
@@ -85,7 +91,7 @@ class TaskMemberResource(DateRangeResource):
 
 
 class DonationResource(DateRangeResource):
-    select_related = ('order', 'order__user', 'order__user__location',
+    select_related = ('order', 'order__user', 'order__user__location', 'order__user__location__group',
                       'project', 'project', 'fundraiser')
 
     def export(self, **kwargs):

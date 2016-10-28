@@ -2,7 +2,6 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.geo.models import Country
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -57,7 +56,7 @@ class MonthlyDonationApiTest(BluebottleTestCase):
                                     token=self.some_user_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
-        self.assertEqual(response.data['amount'],
+        self.assertEqual(response.data['amount']['amount'],
                          self.monthly_profile['amount'])
         self.assertEqual(response.data['active'], True)
         some_monthly_donation_id = response.data['id']
@@ -68,7 +67,7 @@ class MonthlyDonationApiTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['amount'],
+        self.assertEqual(response.data['results'][0]['amount']['amount'],
                          self.monthly_profile['amount'])
 
         # Add a preferred projects
@@ -90,7 +89,6 @@ class MonthlyDonationApiTest(BluebottleTestCase):
         self.assertEqual(len(response.data['results'][0]['projects']), 1)
         self.assertEqual(response.data['results'][0]['projects'][0]['project'],
                          self.some_project.slug)
-
 
         # Another should not have a monthly donation
         response = self.client.get(self.monthly_donation_url,

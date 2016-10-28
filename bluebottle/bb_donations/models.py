@@ -1,5 +1,4 @@
 from django.db import models
-from django.db.models import options
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
@@ -17,15 +16,17 @@ class BaseDonation(models.Model):
     project = models.ForeignKey('projects.Project',
                                 verbose_name=_("Project"))
     fundraiser = models.ForeignKey('fundraisers.Fundraiser',
-                                   verbose_name=_("Fundraiser"), null=True,
-                                   blank=True)
+                                   verbose_name=_("Fundraiser"),
+                                   null=True, blank=True)
     order = models.ForeignKey('orders.Order',
-                              verbose_name=_("Order"), related_name='donations',
+                              verbose_name=_("Order"),
+                              related_name='donations',
                               null=True, blank=True)
 
     reward = models.ForeignKey('rewards.Reward',
-                              verbose_name=_("Reward"), related_name='reward',
-                              null=True, blank=True)
+                               verbose_name=_("Reward"),
+                               related_name='reward',
+                               null=True, blank=True)
 
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))

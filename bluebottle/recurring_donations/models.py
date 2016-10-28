@@ -56,9 +56,17 @@ class MonthlyDonorProject(models.Model):
 
 
 class MonthlyBatch(models.Model):
+
+    BATCH_STATUSES = (
+        ('new', _('New')),
+        ('processing', _('Processing')),
+        ('done', _('Processed')),
+    )
+
     date = models.DateField()
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
+    status = models.CharField(max_length=20, choices=BATCH_STATUSES, default='new')
 
     def __unicode__(self):
         return self.date.strftime('%B %Y')

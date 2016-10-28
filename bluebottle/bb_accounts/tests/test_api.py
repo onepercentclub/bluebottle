@@ -5,6 +5,7 @@ import httmock
 
 from django.core import mail
 from django.test.utils import override_settings
+from django.contrib.auth import get_user_model
 
 from rest_framework import status
 
@@ -63,7 +64,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         excluded_fields = ['email', 'address', 'newsletter',
                            'campaign_notifications',
                            'birthdate', 'gender', 'first_name', 'last_name',
-                           'username', 'password']
+                           'password']
 
         for field in excluded_fields:
             self.assertFalse(field in response.data)
@@ -90,8 +91,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'website', 'twitter', 'facebook', 'skypename',
                              'email',
                              'address', 'newsletter', 'campaign_notifications',
-                             'birthdate', 'gender', 'first_name', 'last_name',
-                             'username']
+                             'birthdate', 'gender', 'first_name', 'last_name']
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)
@@ -189,7 +189,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(country.id, response.data['address']['country'])
 
-
     def test_unauthenticated_user(self):
         """
         Test retrieving the currently logged in user while not logged in.
@@ -223,8 +222,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                                      'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
-        token = "JWT {0}".format(response.data['jwt_token'])
-        user_id = response.data['id']
+        "JWT {0}".format(response.data['jwt_token'])
 
         # Test that the email field is required on user create.
         response = self.client.post(self.user_create_api_url,
@@ -269,7 +267,10 @@ class UserApiIntegrationTest(BluebottleTestCase):
                                      'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED,
                          response.data)
-        self.assertEqual(response.data['username'], new_user_email)
+
+        user = get_user_model().objects.get(email=new_user_email)
+
+        self.assertEqual(user.username, new_user_email)
 
     def test_password_reset(self):
         # Setup: create a user.
@@ -278,8 +279,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.user_create_api_url,
                                     {'email': new_user_email,
                                      'password': new_user_password})
-        token = "JWT {0}".format(response.data['jwt_token'])
-        user_id = response.data['id']
+        "JWT {0}".format(response.data['jwt_token'])
 
         # Test: resetting the password should be allowed.
         response = self.client.put(self.user_password_reset_api_url,

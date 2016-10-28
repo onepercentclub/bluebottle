@@ -5,7 +5,6 @@ from bluebottle.test.factory_models.payments import OrderPaymentFactory
 
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments.exception import PaymentException
-from bluebottle.payments_pledge.adapters import PledgePaymentAdapter
 from bluebottle.utils.utils import StatusDefinition
 
 
@@ -34,7 +33,7 @@ class AdapterTestCase(BluebottleTestCase, FsmTestMixin):
         order_payment = OrderPaymentFactory.create(
             order=order, user=user, payment_method='pledgeStandard'
         )
-        service = PaymentService(order_payment=order_payment)
+        PaymentService(order_payment=order_payment)
 
         # Check that the status propagated through to order
         self.assert_status(order, StatusDefinition.PLEDGED)

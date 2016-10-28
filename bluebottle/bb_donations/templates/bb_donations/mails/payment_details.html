@@ -1,3 +1,5 @@
+{% load i18n %}
+
 {% block content %}
     <tr class="donation-table-row">
         <tr class="donation-table-address">
@@ -9,15 +11,15 @@
             <td>
                 <table>
                     <tr class="order-block">
-                        <td>Date</td>
+                        <td>{% trans "Date" %}</td>
                         <td nowrap="true">{{donation.created}}</td>
                     </tr>
                     <tr class="order-block">
-                        <td>Method</td>
+                        <td>{% trans "Method" %}</td>
                         <td>{{payment_method}}</td>
                     </tr>
                     <tr class="order-block">
-                        <td>Order</td>
+                        <td>{% trans "Order" %}</td>
                         <td>{{donation.order.id}}</td>
                     </tr>
                 </table>

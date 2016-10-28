@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 
-from bluebottle.projects.models import Project
+from bluebottle.projects.models import Project, ProjectPhase
 from bluebottle.tasks.models import Task
 from bluebottle.test.utils import BluebottleTestCase
 from django.utils import timezone
@@ -158,6 +158,30 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
         self.assertTrue('deadline' in response.data)
 
+    def test_create_task_closed_project(self):
+        self.some_project.status = ProjectPhase.objects.get(slug='closed')
+        self.some_project.save()
+
+        future_date = timezone.now() + timezone.timedelta(days=30)
+
+        # Now let's create a task.
+        some_task_data = {
+            'project': self.some_project.slug,
+            'title': 'A nice task!',
+            'description': 'Well, this is nice',
+            'time_needed': 5,
+            'skill': '{0}'.format(self.skill1.id),
+            'location': 'Overthere',
+            'deadline': str(future_date)
+        }
+
+        response = self.client.post(self.task_url, some_task_data,
+                                    token=self.some_token)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
+                         response.data)
+        self.assertTrue('closed projects' in response.data[0])
+
     def test_apply_for_task(self):
         future_date = timezone.now() + timezone.timedelta(days=60)
 
@@ -227,13 +251,13 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
-            deadline=datetime(2010, 05, 05, tzinfo=timezone.UTC())
+            deadline=timezone.datetime(2010, 05, 05, tzinfo=timezone.get_current_timezone())
         )
         self.task2 = TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
-            deadline=datetime(2011, 05, 05, tzinfo=timezone.UTC())
+            deadline=timezone.datetime(2011, 05, 05, tzinfo=timezone.get_current_timezone())
         )
 
         self.assertEqual(2, Project.objects.count())
@@ -281,29 +305,49 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
         self.assertEqual(response.data['count'], 0)
 
-    def test_delete_task_member(self):
+    def test_withdraw_task_member(self):
         task = TaskFactory.create()
         task_member = TaskMemberFactory.create(member=self.some_user, task=task)
 
-        self.assertEquals(task.members.count(), 1)
+        self.assertEquals(task.people_applied, 1)
+
+        response = self.client.put(
+            '{0}{1}'.format(self.task_members_url, task_member.id),
+            {
+                'status': 'withdrew',
+                'task': task.id
+            },
+            token=self.some_token)
+
+        self.assertEquals(task.people_applied, 0)
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
+                         response.data)
+
+    def test_delete_task_member_no_allowed(self):
+        task = TaskFactory.create()
+        task_member = TaskMemberFactory.create(member=self.some_user, task=task)
+
+        self.assertEquals(task.people_applied, 1)
 
         response = self.client.delete(
             '{0}{1}'.format(self.task_members_url, task_member.id),
             token=self.some_token)
 
-        self.assertEquals(task.members.count(), 0)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT,
-                         response.data)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_delete_task_member_unauthorized(self):
+    def test_withdraw_task_member_unauthorized(self):
         task = TaskFactory.create()
         task_member = TaskMemberFactory.create(member=self.another_user,
                                                task=task)
 
         self.assertEquals(task.members.count(), 1)
 
-        response = self.client.delete(
+        response = self.client.put(
             '{0}{1}'.format(self.task_members_url, task_member.id),
+            {
+                'status': 'withdrew',
+                'task': task.id
+            },
             token=self.some_token)
 
         self.assertEquals(task.members.count(), 1)
@@ -336,7 +380,8 @@ class TestTaskSearchCase(BluebottleTestCase):
         """Setup reusable data."""
         self.init_projects()
 
-        self.now = timezone.now()
+        self.now = datetime.combine(timezone.now(), datetime.max.time())
+        self.now = timezone.get_current_timezone().localize(self.now)
         self.tomorrow = self.now + timezone.timedelta(days=1)
         self.week = self.now + timezone.timedelta(days=7)
         self.month = self.now + timezone.timedelta(days=30)
@@ -347,26 +392,31 @@ class TestTaskSearchCase(BluebottleTestCase):
         self.task_url = '/api/bb_tasks/'
 
         self.event_task_1 = TaskFactory.create(status='open',
+                                               title='event_task_1',
                                                type='event',
                                                deadline=self.tomorrow,
                                                people_needed=1)
 
         self.event_task_2 = TaskFactory.create(status='open',
+                                               title='event_task_2',
                                                type='event',
                                                deadline=self.month,
                                                people_needed=1)
 
         self.ongoing_task_1 = TaskFactory.create(status='open',
+                                                 title='ongoing_task_1',
                                                  type='ongoing',
                                                  deadline=self.week,
                                                  people_needed=1)
 
         self.ongoing_task_2 = TaskFactory.create(status='open',
+                                                 title='ongoing_task_2',
                                                  type='ongoing',
                                                  deadline=self.tomorrow,
                                                  people_needed=1)
 
         self.ongoing_task_3 = TaskFactory.create(status='open',
+                                                 title='ongoing_task_3',
                                                  type='ongoing',
                                                  deadline=self.month,
                                                  people_needed=1)
@@ -378,7 +428,7 @@ class TestTaskSearchCase(BluebottleTestCase):
         """
 
         search_date = {
-            'start': str(self.now + timezone.timedelta(days=3))
+            'start': str((self.now + timezone.timedelta(days=3)))
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -400,12 +450,11 @@ class TestTaskSearchCase(BluebottleTestCase):
         """
         event_task_3 = TaskFactory.create(status='open',
                                           type='event',
-                                          deadline=self.now +
-                                          timezone.timedelta(days=3),
+                                          deadline=self.now + timezone.timedelta(days=3),
                                           people_needed=1)
 
         search_date = {
-            'start': str(self.now + timezone.timedelta(days=3))
+            'start': str((self.now + timezone.timedelta(days=3)))
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -415,9 +464,9 @@ class TestTaskSearchCase(BluebottleTestCase):
         # event_task_3 because its on the deadline date
         ids = [self.ongoing_task_1.id, self.ongoing_task_3.id, event_task_3.id]
         self.assertEquals(response.data['count'], 3)
-        self.assertTrue(response.data['results'][0]['id'] in ids)
-        self.assertTrue(response.data['results'][1]['id'] in ids)
-        self.assertTrue(response.data['results'][2]['id'] in ids)
+        self.assertIn(response.data['results'][0]['id'], ids)
+        self.assertIn(response.data['results'][1]['id'], ids)
+        self.assertIn(response.data['results'][2]['id'], ids)
 
     def test_search_for_date_range(self):
         """
@@ -430,15 +479,14 @@ class TestTaskSearchCase(BluebottleTestCase):
                                             timezone.timedelta(days=365),
                                             people_needed=1)
 
-        event_task_5 = TaskFactory.create(status='open',
-                                          type='event',
-                                          deadline=self.now +
-                                          timezone.timedelta(days=365),
-                                          people_needed=1)
+        TaskFactory.create(status='open',
+                           type='event',
+                           deadline=self.now + timezone.timedelta(days=365),
+                           people_needed=1)
 
         search_date = {
-            'start': str(self.tomorrow + timezone.timedelta(days=3)),
-            'end': str(self.month + timezone.timedelta(days=15))
+            'start': str((self.tomorrow + timezone.timedelta(days=3)).date()),
+            'end': str((self.month + timezone.timedelta(days=15)).date())
         }
 
         response = self.client.get(self.task_url, search_date,
@@ -453,11 +501,69 @@ class TestTaskSearchCase(BluebottleTestCase):
         self.assertTrue(response.data['results'][2]['id'] in ids)
         self.assertTrue(response.data['results'][3]['id'] in ids)
 
+    def test_search_event_correct_timezone_awareness(self):
+        """
+        Test that the search for an event yields the correct
+        tasks, given a task with a tricky timezone.
+        """
+
+        task = TaskFactory.create(status='open',
+                                  type='event',
+                                  title='task',
+                                  deadline=self.now + timezone.timedelta(days=3),
+                                  people_needed=1)
+
+        task.save()
+
+        task2 = TaskFactory.create(status='open',
+                                   title='task2',
+                                   type='event',
+                                   deadline=self.now + timezone.timedelta(days=1, hours=23, minutes=59),
+                                   people_needed=1)
+        task2.save()
+
+        task3 = TaskFactory.create(status='open',
+                                   title='task3',
+                                   type='event',
+                                   deadline=self.now + timezone.timedelta(days=4, hours=4, minutes=0),
+                                   people_needed=1)
+        task3.save()
+
+        search_date = {
+            'start': str(task.deadline.date()),
+            'end': str(task.deadline.date())
+        }
+
+        response = self.client.get(self.task_url, search_date,
+                                   token=self.some_token)
+
+        # Search should return task, ongoing_task_1, and ongoing_task_3
+        # Task2 and Task3 should NOT be returned
+        ids = [task.id, self.ongoing_task_1.id, self.ongoing_task_3.id]
+        self.assertEqual(response.data['count'], 3)
+        self.assertIn(response.data['results'][0]['id'], ids)
+        self.assertIn(response.data['results'][1]['id'], ids)
+        self.assertIn(response.data['results'][2]['id'], ids)
 
 
+class SkillListApiTests(BluebottleTestCase):
+    """ Tests for tasks. """
 
+    def setUp(self):
+        super(SkillListApiTests, self).setUp()
 
+        self.skill1 = SkillFactory.create()
+        self.skill2 = SkillFactory.create()
+        self.skill3 = SkillFactory.create()
+        self.skill4 = SkillFactory.create(disabled=True)
 
-# TODO: Test edit task
-# TODO: Test change TaskMember edit status
-# TODO: Test File uploads
+        self.skills_url = '/api/bb_tasks/skills/'
+
+    def test_get_list(self):
+        """
+        Test that the list of tasks contains all the not disabled tasks.
+        """
+        response = self.client.get(self.skills_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK,
+                         response.data)
+        self.assertEquals(len(response.data), 3)

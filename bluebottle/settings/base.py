@@ -139,6 +139,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.clients.middleware.TenantPropertiesMiddleware',
+    'bluebottle.clients.middleware.MediaMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
@@ -154,6 +155,7 @@ MIDDLEWARE_CLASSES = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
+    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
 )
 
 REST_FRAMEWORK = {
@@ -193,7 +195,9 @@ JWT_AUTH = {
 JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
 # List of paths to ignore for locale redirects
-LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata', '/payments_mock', '/media')
+LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
+                          '/payments_mock', '/payments_interswitch',
+                          '/payments_vitepay', '/media', '/surveys')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
@@ -210,6 +214,7 @@ SOCIAL_AUTH_PIPELINE = (
     'social.pipeline.social_auth.social_uid',
     'social.pipeline.social_auth.auth_allowed',
     'social.pipeline.social_auth.social_user',
+    'bluebottle.auth.utils.fallback_email',
     'social.pipeline.user.get_username',
     'social.pipeline.social_auth.associate_by_email',
     'social.pipeline.user.create_user',
@@ -241,7 +246,6 @@ SHARED_APPS = (
     'django_extensions',
     'raven.contrib.django.raven_compat',
     'djcelery',
-    'sorl.thumbnail',
     'micawber.contrib.mcdjango',  # Embedding videos
     'rest_framework',
     'loginas',
@@ -251,7 +255,8 @@ SHARED_APPS = (
     'filetransfers',
     'rest_framework_swagger',
     'lockdown',
-    'corsheaders'
+    'corsheaders',
+    'djmoney_rates'
 
 )
 
@@ -270,6 +275,9 @@ TENANT_APPS = (
     'admin_tools.menu',
     'admin_tools.dashboard',
 
+    # Thumbnails
+    'sorl.thumbnail',
+
     # FB Auth
     'bluebottle.auth',
 
@@ -285,8 +293,6 @@ TENANT_APPS = (
 
     'rest_framework.authtoken',
 
-
-
     # Newly moved BB apps
     'bluebottle.members',
     'bluebottle.projects',
@@ -297,10 +303,12 @@ TENANT_APPS = (
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
+    'bluebottle.surveys',
 
     # Plain Bluebottle apps
     'bluebottle.wallposts',
     'bluebottle.utils',
+    'bluebottle.analytics',
     'bluebottle.categories',
     'bluebottle.contentplugins',
     'bluebottle.contact',
@@ -311,6 +319,8 @@ TENANT_APPS = (
     'bluebottle.quotes',
     'bluebottle.payments',
     'bluebottle.payments_docdata',
+    'bluebottle.payments_interswitch',
+    'bluebottle.payments_vitepay',
     'bluebottle.payments_pledge',
     'bluebottle.payments_logger',
     'bluebottle.payments_voucher',
@@ -360,13 +370,16 @@ TENANT_APPS = (
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 
-THUMBNAIL_DEBUG = True
+THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85
 THUMBNAIL_DUMMY=True
 
@@ -381,10 +394,10 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(asctime)s %(levelname)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '%(levelname)s %(message)s'
+            'format': '%(asctime)s %(levelname)s %(message)s'
         },
     },
     'filters': {
@@ -461,6 +474,21 @@ SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [('birthday', 'birthday')]
 # Default Client properties
 RECURRING_DONATIONS_ENABLED = False
 DONATIONS_ENABLED = True
+
+# Analytics Service
+ANALYTICS_ENABLED = False
+ANALYTICS_BACKENDS = {
+    'default': {
+        'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
+        'host': 'localhost',
+        'port': 8086,
+        'username': '',
+        'password': '',
+        'database': 'platform_v1',
+        'measurement': 'saas',
+        'ssl': True
+    }
+}
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'
@@ -576,14 +604,26 @@ EXPORTDB_EXPORT_CONF = {
                 ('status__name', 'Status'),
                 ('title', 'Title'),
                 ('owner__email', 'Email'),
-                ('location__name', 'Location'),
+                ('location', 'Location'),
+                ('location__group', 'Region'),
+                ('region', 'Region'),
+                ('theme', 'Theme'),
                 ('supporters', 'Supporters'),
                 ('funding', 'Funding'),
                 ('sourcing', 'Sourcing'),
                 ('amount_asked', 'Amount asked'),
+                ('task_count', 'Task Count'),
+                ('realized_task_count', 'Realized Task Count'),
+                ('time_spent', 'Time Spent'),
+                ('from_suggestion', 'Submitted Suggestion'),
+                ('vote_count', 'Vote Counts'),
                 ('created', 'Date created'),
                 ('deadline', 'Deadline'),
                 ('updated', 'Last update'),
+                ('date_submitted', 'Date Submitted'),
+                ('campaign_started', 'Campaign Started'),
+                ('campaign_ended', 'Campaign Ended'),
+                ('campaign_funded', 'Campaign Funded'),
             ),
             'resource_class': 'bluebottle.exports.resources.ProjectResource',
             'title': 'Projects',
@@ -596,11 +636,16 @@ EXPORTDB_EXPORT_CONF = {
                 ('author__remote_id', 'Remote ID'),
                 ('get_status_display', 'Status'),
                 ('title', 'Title'),
+                ('project__title', 'Project Title'),
                 ('author__email', 'Email'),
                 ('location', 'Task location'),
+                ('location__group', 'Task Region'),
+                ('type', 'Type'),
+                ('skill', 'Skill Needed'),
                 ('people_needed', 'People needed'),
                 ('time_needed', 'Time needed'),
                 ('people_applied', 'People applied'),
+                ('time_spent', 'Time Spent'),
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),
@@ -615,7 +660,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('fundraiser__id', 'Fundraiser ID'),
                 ('user__get_full_name', 'Name'),
                 ('order__user__email', 'Email'),
-                ('order__user__location__name', 'Location'),
+                ('order__user__location', 'Location'),
+                ('order__user__location__group', 'Region'),
                 ('status', 'Status'),
                 ('amount', 'Amount'),
                 ('created', 'Date'),
@@ -631,9 +677,11 @@ EXPORTDB_EXPORT_CONF = {
                 ('task__id', 'Task ID'),
                 ('member__get_full_name', 'Name'),
                 ('member__email', 'Email'),
-                ('member__location__name', 'Location'),
+                ('member__location', 'Location'),
+                ('member__location__group', 'Region'),
                 ('get_status_display', 'Status'),
                 ('task__time_needed', 'Time pledged'),
+                ('time_spent', 'Time Spent'),
                 ('externals', 'Partners'),
                 ('created', 'Date'),
             ),
@@ -668,7 +716,14 @@ FLUENT_CONTENTS_CACHE_OUTPUT = False
 CACHE_MIDDLEWARE_SECONDS = 0
 
 # Amounts shown in donation modal
-DONATION_AMOUNTS = (25, 50, 75, 100);
+DONATION_AMOUNTS = {
+    'EUR': (25, 50, 75, 100),
+    'USD': (20, 50, 100, 200),
+    'NGN': (2000, 5000, 10000, 25000),
+    'XOF': (500, 1000, 2000, 5000),
+}
+
+DEFAULT_CURRENCY = 'EUR'
 
 # By default we do not show suggestion on the start-project page
 PROJECT_SUGGESTIONS = False
@@ -697,3 +752,15 @@ SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
 }
 
 
+SURVEYGIZMO_API_TOKEN = ''
+SURVEYGIZMO_API_SECRET = ''
+
+DJANGO_MONEY_RATES = {
+    'DEFAULT_BACKEND': 'djmoney_rates.backends.OpenExchangeBackend',
+    'OPENEXCHANGE_URL': 'http://openexchangerates.org/api/latest.json',
+    'OPENEXCHANGE_APP_ID': '3e53678e72c140b4857dc5bb1deb59dc',
+    'OPENEXCHANGE_BASE_CURRENCY': 'USD',
+}
+AUTO_CONVERT_MONEY = False
+
+LOCKDOWN_URL_EXCEPTIONS = [r'^/payments_vitepay/status_update/']

@@ -2,12 +2,17 @@ from rest_framework import generics
 from rest_framework.permissions import IsAdminUser
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
+from bluebottle.projects.models import ProjectBudgetLine, Project
 from bluebottle.projects.serializers import (
     ProjectBudgetLineSerializer,
     ProjectDocumentSerializer,
     ProjectPayoutSerializer
 )
 from bluebottle.projects.permissions import IsProjectOwner
+from bluebottle.projects.serializers import (
+    ProjectBudgetLineSerializer, ProjectDocumentSerializer,
+    ProjectMediaSerializer,
+    ProjectSupportSerializer)
 from bluebottle.utils.utils import get_client_ip
 
 from .models import ProjectDocument, ProjectBudgetLine, Project
@@ -56,6 +61,22 @@ class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
         serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))
 
 
+class ProjectMediaDetail(generics.RetrieveAPIView):
+    queryset = Project.objects.all()
+    pagination_class = BluebottlePagination
+    serializer_class = ProjectMediaSerializer
+
+    lookup_field = 'slug'
+
+
+class ProjectSupportDetail(generics.RetrieveAPIView):
+    queryset = Project.objects.all()
+    pagination_class = BluebottlePagination
+    serializer_class = ProjectSupportSerializer
+
+    lookup_field = 'slug'
+
+
 class ProjectPayoutList(generics.ListAPIView):
     pagination_class = BluebottlePagination
     queryset = Project.objects.filter(status__slug__in=['done-complete', 'done-incomplete']).order_by('-created').all()
@@ -67,4 +88,3 @@ class ProjectPayoutDetail(generics.RetrieveUpdateAPIView):
     queryset = Project.objects.filter(campaign_ended__isnull=False).all()
     serializer_class = ProjectPayoutSerializer
     # permission_classes = (IsAdminUser,)
-

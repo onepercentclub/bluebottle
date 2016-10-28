@@ -3,12 +3,12 @@ import random
 import string
 import uuid
 
+from django.contrib.auth.models import (
+    AbstractBaseUser, PermissionsMixin, BaseUserManager
+)
 from django.conf import settings
-from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin,
-                                        BaseUserManager)
 from django.core.mail.message import EmailMessage
 from django.db import models
-from django.db.models import options as options
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
@@ -18,16 +18,15 @@ from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from rest_framework_jwt.settings import api_settings
 
-from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bb_accounts.utils import valid_email
+from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
+from bluebottle.geo.models import Country
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.clients import properties
-from bluebottle.geo.models import Country
-from bluebottle.utils.models import Address
-
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.models import Address
 
 
 # TODO: Make this generic for all user file uploads.
@@ -86,7 +85,6 @@ class BlueBottleUserManager(BaseUserManager):
         return u
 
 
-
 def get_language_choices():
     """ Lazyly get the language choices."""
     return properties.LANGUAGES
@@ -109,6 +107,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     class Gender(DjangoChoices):
         male = ChoiceItem('male', label=_('Male'))
         female = ChoiceItem('female', label=_('Female'))
+
 
     class UserType(DjangoChoices):
         person = ChoiceItem('person', label=_('Person'))
@@ -144,6 +143,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                  null=True, blank=True)
     favourite_themes = models.ManyToManyField(ProjectTheme, blank=True)
     skills = models.ManyToManyField('tasks.Skill', blank=True)
+
+    last_seen = models.DateTimeField(_('Last Seen'), null=True, blank=True)
 
     # TODO Use generate_picture_filename (or something) for upload_to
     picture = ImageField(_('picture'), upload_to='profiles', blank=True)
@@ -335,16 +336,16 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
              update_fields=None):
         self.generate_username()
 
-        if self.location:
-            self.address.country = self.location.country
-            self.address.save()
-
         super(BlueBottleBaseUser, self).save(force_insert, force_update, using,
                                              update_fields)
         try:
             self.address
         except UserAddress.DoesNotExist:
             self.address = UserAddress.objects.create(user=self)
+            self.address.save()
+
+        if self.location:
+            self.address.country = self.location.country
             self.address.save()
 
 

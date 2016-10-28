@@ -6,6 +6,7 @@ from .orders import OrderFactory
 
 
 class OrderPaymentFactory(factory.DjangoModelFactory):
+
     class Meta(object):
         model = OrderPayment
 

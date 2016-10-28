@@ -83,6 +83,18 @@ class Wallpost(PolymorphicModel):
 
     # Manager
     objects = WallpostManager()
+    objects_with_deleted = models.Manager()
+
+    class Analytics:
+        type = 'wallpost'
+        tags = {}
+        fields = {
+            'id': 'id',
+            'user_id': 'author.id'
+        }
+
+        def skip(self, obj, created):
+            return True if obj.wallpost_type == 'system' else False
 
     class Meta:
         ordering = ('created',)
@@ -197,13 +209,25 @@ class Reaction(models.Model):
     objects = ReactionManager()
     objects_with_deleted = models.Manager()
 
+    class Analytics:
+        type = 'wallpost'
+        tags = {}
+
+        fields = {
+            'id': 'id',
+            'user_id': 'author.id'
+        }
+
+        def extra_tags(self, instance, created):
+            return {'sub_type': 'reaction'}
+
     class Meta:
         ordering = ('created',)
         verbose_name = _('Reaction')
         verbose_name_plural = _('Reactions')
 
     def __unicode__(self):
-        s = "{0}: {1}".format(self.author.get_full_name(), self.text)
+        s = self.text
         return Truncator(s).words(10)
 
 import mails

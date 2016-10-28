@@ -46,7 +46,8 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
                        'share_with_linkedin', 'email_followers')
     fields = readonly_fields + ('text', 'author', 'editor')
     raw_id_fields = ('author', 'editor')
-    list_display = ('created', 'view_online', 'get_text', 'thumbnail', 'author')
+    list_display = ('created', 'view_online', 'get_text', 'thumbnail', 'author', 'deleted')
+    search_fields = ('text', 'author__first_name',  'author__last_name')
 
     extra_fields = ('gallery',)
 
@@ -117,35 +118,57 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 
     gallery.allow_tags = True
 
+    def get_queryset(self, request):
+        """ The Admin needs to show all the Reactions. """
+        return self.model.objects_with_deleted.all()
+
 
 class TextWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = Wallpost
-    readonly_fields = ('ip_address', 'deleted', 'wallpost_link',)
-    list_display = ('created', 'author', 'content_type', 'text')
-    raw_id_fields = ('author', 'editor')
+    readonly_fields = ('ip_address', 'deleted', 'posted_on', 'donation_link')
+    search_fields = ('text', 'author__first_name',  'author__last_name')
+    list_display = ('created', 'author', 'content_type', 'text', 'deleted')
+    raw_id_fields = ('author', 'editor', 'donation')
+    fields = readonly_fields + ('text', 'author', 'editor')
     ordering = ('-created',)
 
-    def wallpost_link(self, obj):
-        if str(obj.content_type) == 'task':
-            task = obj.content_object
-            url = '/projects/{project_slug}/tasks/{task_id}'.format(
-                project_slug=task.project.slug,
-                task_id=task.id,
-            )
-            return "<a href='%s'>%s</a>" % (str(url), task.title)
-        # Assume it's a Project wallpost
-        return u'<a href="/go/projects/{slug}">{title}</a>'.format(
-            slug=obj.content_object.slug, title=obj.content_object.title)
+    def posted_on(self, obj):
+        type = str(obj.content_type).title()
+        title = obj.content_object.title
+        if type == 'Task':
+            url = reverse('admin:tasks_task_change',
+                          args=(obj.content_object.id,))
+        if type == 'Project':
+            url = reverse('admin:projects_project_change',
+                          args=(obj.content_object.id,))
+        if type == 'Fundraiser':
+            url = reverse('admin:fundraisers_fundraiser_change',
+                          args=(obj.content_object.id,))
+        return u'{0}: <a href="{1}">{2}</a>'.format(type, url, title)
 
-    wallpost_link.allow_tags = True
+    posted_on.allow_tags = True
+
+
+    def donation_link(self, obj):
+        if obj.donation:
+            link = reverse('admin:donations_donation_change', args=(obj.donation.id,))
+            return "<a href='{0}'>{1}</a>".format(link, obj.donation)
+
+    donation_link.allow_tags = True
+
+    def get_queryset(self, request):
+        """ The Admin needs to show all the Reactions. """
+        return self.model.objects_with_deleted.all()
 
 
 class SystemWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = SystemWallpost
-    readonly_fields = ('ip_address', 'content_type', 'related_type', 'donation_link', 'project_link')
-    fields = readonly_fields + ('author', 'text')
-    list_display = ('created', 'author', 'content_type', 'related_type', 'text')
-    raw_id_fields = ('author', 'editor')
+    readonly_fields = ('ip_address', 'content_type', 'related_type',
+                       'donation_link', 'project_link',
+                       'related_id', 'object_id')
+    fields = readonly_fields + ('author', 'donation', 'text')
+    list_display = ('created', 'author', 'content_type', 'related_type', 'text', 'deleted')
+    raw_id_fields = ('author', 'editor', 'donation')
     ordering = ('-created',)
 
     def project_link(self, obj):
@@ -161,12 +184,17 @@ class SystemWallpostAdmin(PolymorphicChildModelAdmin):
 
     donation_link.allow_tags = True
 
+    def get_queryset(self, request):
+        """ The Admin needs to show all the Reactions. """
+        return self.model.objects_with_deleted.all()
+
 
 class WallpostParentAdmin(PolymorphicParentModelAdmin):
     """ The parent model admin """
     base_model = Wallpost
-    list_display = ('created', 'author', 'content_type', 'type')
+    list_display = ('created', 'author', 'content_type', 'type', 'deleted')
     fields = ('title', 'text', 'author', 'ip_address')
+    list_filter = ('created', 'deleted')
     ordering = ('-created',)
     child_models = (
         (MediaWallpost, MediaWallpostAdmin),
@@ -176,6 +204,10 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
 
     def type(self, obj):
         return obj.get_real_instance_class().__name__
+
+    def get_queryset(self, request):
+        """ The Admin needs to show all the Reactions. """
+        return self.model.objects_with_deleted.all()
 
 
 # Only the parent needs to be registered:
@@ -196,7 +228,7 @@ class ReactionAdmin(admin.ModelAdmin):
     list_filter = ('created', 'updated', 'deleted')
     date_hierarchy = 'created'
     ordering = ('-created',)
-    raw_id_fields = ('author', 'editor')
+    raw_id_fields = ('author', 'editor', 'wallpost')
     search_fields = ('text', 'author__username', 'author__email',
                      'author__first_name', 'author__last_name', 'ip_address')
 
@@ -233,9 +265,9 @@ class ReactionAdmin(admin.ModelAdmin):
         set_author_editor_ip(request, obj)
         super(ReactionAdmin, self).save_model(request, obj, form, change)
 
-    def queryset(self, request):
+    def get_queryset(self, request):
         """ The Admin needs to show all the Reactions. """
-        return Reaction.objects_with_deleted.all()
+        return self.model.objects_with_deleted.all()
 
 
 admin.site.register(Reaction, ReactionAdmin)

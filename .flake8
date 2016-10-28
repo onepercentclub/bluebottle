@@ -1,5 +1,4 @@
 [flake8]
-
 # Ignore lambda function assignment and inline imports (not at top of file)
 ignore = E731,E402
 

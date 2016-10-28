@@ -4,6 +4,10 @@ from django.db import connection
 from django.db.models.aggregates import Sum
 from django.core.cache import cache
 
+from moneyed.classes import Money
+
+from bluebottle.clients import properties
+from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.utils import StatusDefinition
 
 
@@ -53,7 +57,7 @@ class Statistics(object):
         fundraiser_owner_ids = Fundraiser.objects.order_by(
             'owner__id').distinct('owner').values_list('owner_id', flat=True)
         project_owner_ids = Project.objects.filter(status__slug__in=(
-            'campaign', 'done-complete', 'done-incomplete',)).order_by(
+            'voting', 'voting-done', 'to-be-continued', 'campaign', 'done-complete', 'done-incomplete',)).order_by(
             'owner__id').distinct('owner').values_list('owner_id', flat=True)
         task_member_ids = TaskMember.objects.order_by('member__id').distinct(
             'member').values_list('member_id', flat=True)
@@ -115,7 +119,7 @@ class Statistics(object):
         """ Count all running projects (status == campaign) """
         if self._get_cached('projects-online-total'):
             return self._get_cached('projects-online-total')
-        project_count = Project.objects.filter(status__slug='campaign').count()
+        project_count = Project.objects.filter(status__slug__in=('voting', 'campaign')).count()
         self._set_cached('projects-online-total', project_count)
 
         return project_count
@@ -127,9 +131,17 @@ class Statistics(object):
         """ Add all donation amounts for all donations ever """
         if self._get_cached('donations-total'):
             return self._get_cached('donations-total')
+
         donations = Donation.objects.filter(order__status__in=(
             StatusDefinition.PENDING, StatusDefinition.SUCCESS))
-        donated = int(donations.aggregate(sum=Sum('amount'))['sum'] or '000')
+        totals = donations.values('amount_currency').annotate(total=Sum('amount'))
+        amounts = [Money(total['total'], total['amount_currency']) for total in totals]
+
+        if totals:
+            donated = int(sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]).amount)
+        else:
+            donated = 0
+
         self._set_cached('donations-total', donated)
         return donated
 

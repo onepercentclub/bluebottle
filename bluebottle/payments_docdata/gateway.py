@@ -8,7 +8,6 @@ which is Apache licensed, copyright (c) 2013 Diederik van der Boor
 import logging
 import unicodedata
 
-from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import get_language
 
 from suds.client import Client
@@ -16,7 +15,6 @@ from suds import plugin
 from urllib import urlencode
 from urllib2 import URLError
 
-from bluebottle.clients import properties
 from bluebottle.payments_docdata.exceptions import DocdataPaymentException
 
 from .exceptions import DocdataPaymentStatusException
@@ -93,7 +91,7 @@ class DocdataClient(object):
     PAYMENT_METHOD_BANK_TRANSFER = 'BANK_TRANSFER'
     PAYMENT_METHOD_ELV = 'ELV'
 
-    def __init__(self, live_mode=False):
+    def __init__(self, credentials, live_mode=False):
         """
         Initialize the client.
         """
@@ -101,18 +99,12 @@ class DocdataClient(object):
         self.client = get_suds_client(live_mode)
         self.live_mode = live_mode
 
-        if not properties.DOCDATA_MERCHANT_NAME:
-            raise ImproperlyConfigured("Missing DOCDATA_MERCHANT_NAME setting!")
-        if not properties.DOCDATA_MERCHANT_PASSWORD:
-            raise ImproperlyConfigured(
-                "Missing DOCDATA_MERCHANT_PASSWORD setting!")
-
         # Create the merchant node which is passed to every request.
         # The _ notation is used to assign attributes to the XML node,
         # instead of child elements.
         self.merchant = self.client.factory.create('ns0:merchant')
-        self.merchant._name = properties.DOCDATA_MERCHANT_NAME
-        self.merchant._password = properties.DOCDATA_MERCHANT_PASSWORD
+        self.merchant._name = credentials['merchant_name']
+        self.merchant._password = credentials['merchant_password']
 
         # Create the integration info node which is passed to every request.
         self.integration_info = TechnicalIntegrationInfo()
@@ -310,7 +302,7 @@ class DocdataClient(object):
             raise NotImplementedError(
                 'Received unknown reply from DocData. No status processed from Docdata.')
 
-    def get_payment_menu_url(self, order_key, order_id, return_url=None,
+    def get_payment_menu_url(self, order_key, order_id, credentials, return_url=None,
                              client_language=None, **extra_url_args):
         """
         Return the URL to the payment menu,
@@ -340,7 +332,7 @@ class DocdataClient(object):
         args = {
             'command': 'show_payment_cluster',
             'payment_cluster_key': order_key,
-            'merchant_name': properties.DOCDATA_MERCHANT_NAME,
+            'merchant_name': credentials['merchant_name'],
             'return_url_success': "{0}/{1}/orders/{2}/success".format(
                 return_url, client_language, order_id),
             'return_url_pending': "{0}/{1}/orders/{2}/pending".format(

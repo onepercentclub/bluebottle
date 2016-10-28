@@ -5,7 +5,7 @@
         "fields": {
             "viewable": false,
             "slug": "plan-new",
-            "name": "Plan - New",
+            "name": "Plan - Draft",
             "sequence": 1,
             "editable": true,
             "active": true,
@@ -43,7 +43,7 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "name": "Voting",
+            "name": "Voting - Running",
             "slug": "voting",
             "sequence": 4,
             "editable": false,
@@ -63,14 +63,28 @@
             "active": true,
             "description": ""
         }
-    },    {
+    },
+    {
         "pk": 6,
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
             "slug": "campaign",
-            "name": "Campaign",
+            "name": "Project - Running",
             "sequence": 6,
+            "editable": false,
+            "active": true,
+            "description": ""
+        }
+    },
+    {
+        "pk": 7,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": true,
+            "slug": "to-be-continued",
+            "name": "Project - To be continued",
+            "sequence": 7,
             "editable": false,
             "active": true,
             "description": ""
@@ -81,7 +95,7 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "name": "Done - Complete",
+            "name": "Project - Realised",
             "slug": "done-complete",
             "sequence": 8,
             "editable": true,
@@ -94,7 +108,7 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "name": "Done - Incomplete",
+            "name": "Project - Done",
             "slug": "done-incomplete",
             "sequence": 9,
             "editable": false,
@@ -107,7 +121,7 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": false,
-            "name": "Closed",
+            "name": "Rejected / Cancelled",
             "slug": "closed",
             "sequence": 10,
             "editable": false,

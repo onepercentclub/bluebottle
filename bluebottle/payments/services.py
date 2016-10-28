@@ -4,11 +4,13 @@ import importlib
 from bluebottle.clients import properties
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
-from bluebottle.utils.utils import import_class
+from bluebottle.utils.utils import get_class
 
 
 def check_access_handler(handler, user):
-    allowed = False
+    if handler is None:
+        return True
+
     try:
         # try to call handler
         parts = handler.split('.')
@@ -16,53 +18,41 @@ def check_access_handler(handler, user):
         module = importlib.import_module(module_path)
         func = getattr(module, class_name)
 
-        # check if handler 
-        allowed = func(user)
+        # check if handler
+        return func(user)
 
     except (ImportError, AttributeError) as e:
         error_message = "Could not import '%s'. %s: %s." % (handler, e.__class__.__name__, e)
         raise Exception(error_message)
 
-    return allowed
 
-
-def get_payment_methods(country=None, amount=None, user=None):
+def get_payment_methods(country=None, amount=None, user=None, currency=None):
     """
-    Get all payment methods from settings.
+    Get payment methods from settings
     """
     # TODO: Add logic to filter methods based on amount
-    all_methods = getattr(properties, 'PAYMENT_METHODS', ())
-    if country == 'all':
-        return all_methods
+    methods = getattr(properties, 'PAYMENT_METHODS', ())
 
-    allowed_methods = []
+    # Filter on restricted countries if it is set
+    if country:
+        methods = [
+            method for method in methods
+            if country in method.get('restricted_countries', [country])
+        ]
 
-    for method in all_methods:
-        allowed = False
+    # Filter out methods that do not support the currency
+    if currency:
+        methods = [
+            method for method in methods
+            if currency in method.get('currencies', {}).keys()
+        ]
 
-        # Check country restrictions
-        try:
-            countries = method['restricted_countries']
-            if country in countries:
-                allowed = True
-        except KeyError:
-            allowed = True
-
-        # Check if the method has an access handler
-        try:
-            handler = method['method_access_handler']
-
-            if handler:
-                allowed = check_access_handler(handler, user)
-                method.pop('method_access_handler', None)
-
-        except KeyError:
-            pass
-
-        if allowed:
-            allowed_methods.append(method)
-
-    return allowed_methods
+    # Filter out methods that are resitrcted using an access handler function
+    return [
+        method for method in methods
+        if check_access_handler(
+            method.pop('method_access_handler', None), user)
+    ]
 
 
 class PaymentService(object):
@@ -92,7 +82,7 @@ class PaymentService(object):
         class_path = 'bluebottle.' + app_name + '.adapters.' + class_name
 
         try:
-            adapter_class = import_class(class_path)
+            adapter_class = get_class(class_path)
         except ImportError:
             raise PaymentException(
                 "Couldn't find an adapter for payment method '{0}'".format(

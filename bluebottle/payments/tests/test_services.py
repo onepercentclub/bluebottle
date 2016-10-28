@@ -1,6 +1,6 @@
 from django.test.utils import override_settings
 
-from bluebottle.payments.services import PaymentService, get_payment_methods
+from bluebottle.payments.services import get_payment_methods
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -8,6 +8,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 # test handler which grants access if the member is staff
 def method_access_handler(member, *args, **kwargs):
     return member.is_staff
+
 
 @override_settings(SKIP_IP_LOOKUP=False)
 @override_settings(PAYMENT_METHODS=(
@@ -50,12 +51,12 @@ class PaymentMethodHandlerTestCase(BluebottleTestCase):
         user = BlueBottleUserFactory.create()
 
         with self.assertRaises(Exception):
-            methods = get_payment_methods(country="nl", user=user)
+            get_payment_methods(country="nl", user=user)
 
 
 class PaymentMethodTestCase(BluebottleTestCase):
     def test_load_all_payment_methods(self):
-        methods = get_payment_methods(country="all")
+        methods = get_payment_methods(country=None)
         self.assertEqual(len(methods), 3)
 
     def test_load_netherlands_payment_methods(self):
@@ -65,3 +66,17 @@ class PaymentMethodTestCase(BluebottleTestCase):
     def test_load_non_netherlands_payment_methods(self):
         methods = get_payment_methods(country="Belgium")
         self.assertEqual(len(methods), 2)
+
+    def test_load_euro_payment_methods(self):
+        methods = get_payment_methods(currency="EUR")
+        self.assertEqual(len(methods), 2)
+
+        for method in methods:
+            self.assertTrue('EUR' in method['currencies'])
+
+    def test_load_non_dutch_euro_payment_methods(self):
+        methods = get_payment_methods(currency="EUR", country='Belgium')
+        self.assertEqual(len(methods), 1)
+
+        for method in methods:
+            self.assertTrue('EUR' in method['currencies'])

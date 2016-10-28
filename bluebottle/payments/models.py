@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models import options
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
@@ -135,7 +134,7 @@ class OrderPayment(models.Model, FSMTransition):
                                               "Bank & transaction fee, withheld by payment provider."))
 
     # Payment method used
-    payment_method = models.CharField(max_length=20, default='', blank=True)
+    payment_method = models.CharField(max_length=60, default='', blank=True)
     integration_data = JSONField(
         _("Integration data"), max_length=5000, blank=True)
     authorization_action = models.OneToOneField(
@@ -271,4 +270,4 @@ class Transaction(PolymorphicModel):
         ordering = ('-created', '-updated')
 
 
-import signals
+import signals  # noqa

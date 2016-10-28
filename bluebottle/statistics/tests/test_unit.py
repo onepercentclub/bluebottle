@@ -1,4 +1,4 @@
-from decimal import Decimal
+from moneyed.classes import Money
 
 from bluebottle.utils.utils import StatusDefinition
 
@@ -63,25 +63,67 @@ class StatisticsTest(BluebottleTestCase):
     def tearDown(self):
         self.stats.clear_cached()
 
-    def test_project_campaign_stats(self):
-        self.some_project.status = self.campaign_status
+    def _test_project_stats(self, status, online, involved):
+        self.some_project.status = status
         self.some_project.save()
 
-        self.assertEqual(self.stats.projects_online, 1)
+        self.assertEqual(self.stats.projects_online, online)
         # People involved:
         # - campaigner
-        self.assertEqual(self.stats.people_involved, 1)
+        self.assertEqual(self.stats.people_involved, involved)
+
+    def test_project_campaign_stats(self):
+        self._test_project_stats(
+            self.campaign_status,
+            online=1,
+            involved=1
+        )
 
     def test_project_complete_stats(self):
-        self.some_project.status = ProjectPhase.objects.get(
-            slug='done-complete')
-        self.some_project.save()
-
-        self.assertEqual(self.stats.projects_online, 0)
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='done-complete'
+            ),
+            online=0,
+            involved=1
+        )
         self.assertEqual(self.stats.projects_realized, 1)
-        # People involved:
-        # - campaigner
-        self.assertEqual(self.stats.people_involved, 1)
+
+    def test_project_voting_stats(self):
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='voting'
+            ),
+            online=1,
+            involved=1
+        )
+
+    def test_project_voting_done_stats(self):
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='voting-done'
+            ),
+            online=0,
+            involved=1
+        )
+
+    def test_project_to_be_continued_stats(self):
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='to-be-continued'
+            ),
+            online=0,
+            involved=1
+        )
+
+    def test_project_draft_stats(self):
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='plan-new'
+            ),
+            online=0,
+            involved=0
+        )
 
     def test_task_stats(self):
         self.assertEqual(self.stats.tasks_realized, 0)
@@ -108,7 +150,7 @@ class StatisticsTest(BluebottleTestCase):
 
         self.order = OrderFactory.create(user=self.another_user,
                                          status=StatusDefinition.SUCCESS)
-        self.donation = DonationFactory.create(amount=1000, order=self.order,
+        self.donation = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order,
                                                project=self.some_project,
                                                fundraiser=None)
 
@@ -124,13 +166,13 @@ class StatisticsTest(BluebottleTestCase):
 
         self.order1 = OrderFactory.create(user=self.another_user,
                                           status=StatusDefinition.SUCCESS)
-        self.donation1 = DonationFactory.create(amount=1000, order=self.order1,
+        self.donation1 = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order1,
                                                 project=self.some_project,
                                                 fundraiser=None)
 
         self.order2 = OrderFactory.create(user=None,
                                           status=StatusDefinition.SUCCESS)
-        self.donation2 = DonationFactory.create(amount=1000, order=self.order2,
+        self.donation2 = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order2,
                                                 project=self.some_project,
                                                 fundraiser=None)
 
@@ -140,6 +182,30 @@ class StatisticsTest(BluebottleTestCase):
         # - donator (another_user)
         # - donator (anon)
         self.assertEqual(self.stats.people_involved, 3)
+
+    def test_donation_total_stats_convert_currencies(self):
+        self.some_project.status = self.campaign_status
+        self.some_project.save()
+
+        self.order1 = OrderFactory.create(user=self.another_user,
+                                          status=StatusDefinition.SUCCESS)
+        self.donation1 = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order1,
+                                                project=self.some_project,
+                                                fundraiser=None)
+
+        self.order2 = OrderFactory.create(user=None,
+                                          status=StatusDefinition.SUCCESS)
+        self.donation2 = DonationFactory.create(amount=Money(1000, 'USD'), order=self.order2,
+                                                project=self.some_project,
+                                                fundraiser=None)
+
+        self.assertEqual(self.stats.donated_total, 2500)
+        # People involved:
+        # - campaigner
+        # - donator (another_user)
+        # - donator (anon)
+        self.assertEqual(self.stats.people_involved, 3)
+
 
     def test_votes_stats(self):
         VoteFactory.create(voter=self.some_user)

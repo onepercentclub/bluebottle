@@ -24,6 +24,7 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
     def setUp(self):
         super(HomepagePreviewProjectsTestCase, self).setUp()
         self.init_projects()
+
         self.user1 = BlueBottleUserFactory.create()
 
         self.phases = {}

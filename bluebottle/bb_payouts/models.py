@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils import timezone
+from django.utils.functional import lazy
 from django.utils.translation import ugettext as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
@@ -19,7 +20,7 @@ from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.models import OrderPayment
 from bluebottle.projects.models import Project
-from bluebottle.utils.fields import MoneyField, CURRENCY_CHOICES, DEFAULT_CURRENCY
+from bluebottle.utils.fields import MoneyField, get_default_currency, get_currency_choices
 from bluebottle.utils.utils import StatusDefinition
 
 from .utils import calculate_vat, calculate_vat_exclusive, date_timezone_aware
@@ -262,7 +263,9 @@ class BaseProjectPayout(PayoutBase):
         not_fully_funded = ChoiceItem('not_fully_funded',
                                       label=_("Not fully funded"))
 
-    currency = models.CharField(max_length=10, choices=CURRENCY_CHOICES, default=DEFAULT_CURRENCY)
+    currency = models.CharField(max_length=10,
+                                choices=lazy(get_currency_choices, tuple)(),
+                                default=lazy(get_default_currency, str)())
 
     project = models.ForeignKey('projects.Project')
 
@@ -322,7 +325,10 @@ class BaseProjectPayout(PayoutBase):
 
         raised_without_pledges = self.amount_raised - self.amount_pledged
 
-        return "{}%".format(round(((raised_without_pledges.amount - self.amount_payable.amount) / raised_without_pledges.amount) * 100,1))
+        return "{}%".format(
+            round(((raised_without_pledges - self.amount_payable).amount /
+                   raised_without_pledges.amount) * 100, 1)
+        )
 
     def get_payout_rule(self):
         """

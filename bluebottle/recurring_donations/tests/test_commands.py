@@ -11,7 +11,7 @@ from bluebottle.recurring_donations.tests.model_factory import \
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.projects.models import Project
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.recurring_donations.management.commands import process_monthly_donations
+from bluebottle.recurring_donations import tasks
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
@@ -103,14 +103,10 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         self.assertEqual(monthly_donations[2].amount, Money(33.34, 'EUR'))
         self.assertEqual(monthly_donations[2].project, self.projects[0])
 
-    @patch.object(process_monthly_donations, 'PAYMENT_METHOD', 'mock')
+    @patch.object(tasks, 'PAYMENT_METHOD', 'mock')
     def test_email(self):
         with patch.object(LocalTenant, '__new__') as mocked_init:
             # Clear the outbox before running monthly donations
             del mail.outbox[:]
             call_command('process_monthly_donations', tenant='test', process=True, prepare=True)
-
             self.assertEquals(len(mail.outbox), 2)
-            # LocalTenant should be called once to set the correct tenant properties
-            mocked_init.assert_called_once_with(LocalTenant, self.tenant,
-                                                clear_tenant=True)

@@ -14,13 +14,21 @@ class Command(BaseCommand):
     ]
 
     def handle(self, *args, **kwargs):
-        strings = []
-        for app, file in self.fixtures:
-            with open('bluebottle/{}/fixtures/{}'.format(app, file)) as fixture_file:
-                strings += [fixture['fields']['name'].encode('utf-8') for fixture in json.load(fixture_file)]
-
         with tempfile.NamedTemporaryFile(dir='bluebottle', suffix='.py') as temp:
-            temp.write('\n'.join(['gettext("{}")'.format(string) for string in strings]))
+            for app, file in self.fixtures:
+                with open('bluebottle/{}/fixtures/{}'.format(app, file)) as fixture_file:
+                    strings = [
+                        fixture['fields']['name'].encode('utf-8')
+                        for fixture
+                        in json.load(fixture_file)
+                    ]
+
+                    for string in strings:
+                        temp.write('gettext("{}")\n'.format(string))
+
+            for currency in get_currencies:
+                temp.write('gettext("{}")\n'.format(currency['name'])
+
             temp.flush()
 
             return super(Command, self).handle(*args, **kwargs)

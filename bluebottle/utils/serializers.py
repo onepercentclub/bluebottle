@@ -1,5 +1,9 @@
+import json
 from HTMLParser import HTMLParser
 import re
+
+from django.utils.translation import ugettext_lazy as _
+from django.core.validators import BaseValidator
 from moneyed import Money
 
 from rest_framework import serializers
@@ -8,22 +12,75 @@ from .validators import validate_postal_code
 from .models import Address, Language
 
 
-class MoneySerializer(serializers.DecimalField):
+class MaxAmountValidator(BaseValidator):
+    compare = lambda self, a, b: a.amount > b
+    message = _('Ensure this value is less than or equal to %(limit_value)s.')
+    code = 'max_amount'
 
-    def __init__(self,  max_digits=12, decimal_places=2, **kwargs):
+
+class MinAmountValidator(BaseValidator):
+    compare = lambda self, a, b: a.amount < b
+    message = _('Ensure this value is greater than or equal to %(limit_value)s.')
+    code = 'min_amount'
+
+
+class ProjectCurrencyValidator(object):
+    """
+    Validates that the currency of the field is the same as the projects currency
+    """
+    message = _('Currency does not match project any of the currencies')
+
+    def __init__(self, fields=None, message=None):
+        if fields is None:
+            fields = ['amount']
+
+        self.fields = fields
+        self.message = message or self.message
+
+    def __call__(self, data):
+        for field in self.fields:
+            if unicode(data[field].currency) not in data['project'].currencies:
+                raise serializers.ValidationError(
+                    _('Currency does not match project any of the currencies.')
+                )
+
+
+class MoneySerializer(serializers.DecimalField):
+    default_error_messages = {
+        'max_amount': _('Ensure this amount is less than or equal to {max_amount}.'),
+        'min_amount': _('Ensure this amount is greater than or equal to {min_amount}.'),
+    }
+
+    def __init__(self, max_digits=12, decimal_places=2, max_amount=None, min_amount=None, **kwargs):
         super(MoneySerializer, self).__init__(
             max_digits=max_digits,
             decimal_places=decimal_places,
             **kwargs
         )
+        if max_amount is not None:
+            message = self.error_messages['max_amount'].format(max_amount=max_amount)
+            self.validators.append(MaxAmountValidator(max_amount, message=message))
+
+        if min_amount is not None:
+            message = self.error_messages['min_amount'].format(min_amount=min_amount)
+            self.validators.append(MinAmountValidator(min_amount, message=message))
 
     def to_representation(self, instance):
-        return {'amount': instance.amount, 'currency': str(instance.currency)}
+        return {
+            'amount': instance.amount,
+            'currency': str(instance.currency)
+        }
 
     def to_internal_value(self, data):
         if not data:
             return data
-        return Money(data, 'EUR')
+        try:
+            return Money(float(data), 'EUR')
+        except ValueError:
+            data = json.loads(data)
+            return Money(data.get('amount', 0), data['currency'])
+        except TypeError:
+            return Money(data.get('amount', 0), data['currency'])
 
 
 class MoneyTotalSerializer(serializers.ListField):

@@ -1,8 +1,14 @@
-import django_filters
+from dateutil import parser
+from datetime import datetime
 
+import django_filters
 from django.db.models.query_utils import Q
-from rest_framework import generics, filters
+from django.utils import timezone
+
+from rest_framework import generics, filters, serializers
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
@@ -16,6 +22,31 @@ from bluebottle.tasks.serializers import (BaseTaskSerializer,
 from .permissions import IsMemberOrAuthorOrReadOnly
 
 from tenant_extras.drf_permissions import TenantConditionalOpenClose
+
+
+def day_start(date_str):
+    date_combined = datetime.combine(parser.parse(date_str), datetime.min.time())
+    return timezone.get_current_timezone().localize(date_combined)
+
+
+def day_end(date_str):
+    date_combined = datetime.combine(parser.parse(date_str), datetime.max.time())
+    return timezone.get_current_timezone().localize(date_combined)
+
+
+def get_dates_query(query, start_date, end_date):
+    # User searches for tasks on a specific day.
+    if start_date or end_date:
+        start = day_start(start_date)
+        if start_date and not end_date or (start_date and start_date is end_date):
+            end = day_end(start_date)
+        else:
+            end = day_end(end_date)
+
+        query = query.filter(Q(type='event', deadline__range=[start, end]) |
+                             Q(type='ongoing', deadline__gte=start))
+
+    return query
 
 
 class TaskPreviewPagination(BluebottlePagination):
@@ -41,15 +72,9 @@ class TaskPreviewFilter(filters.FilterSet):
         fields = ['status', 'skill', ]
 
 
-class TaskPreviewList(generics.ListAPIView):
-    queryset = Task.objects.all()
-    serializer_class = TaskPreviewSerializer
-    pagination_class = TaskPreviewPagination
-    filter_class = TaskPreviewFilter
+class FilterQSParams(object):
 
-    def get_queryset(self):
-        qs = super(TaskPreviewList, self).get_queryset()
-
+    def get_qs(self, qs):
         project_slug = self.request.query_params.get('project', None)
         if project_slug:
             qs = qs.filter(project__slug=project_slug)
@@ -59,22 +84,30 @@ class TaskPreviewList(generics.ListAPIView):
             qs = qs.filter(Q(title__icontains=text) |
                            Q(description__icontains=text))
 
+        status = self.request.query_params.get('status', None)
+        if status:
+            qs = qs.filter(status=status)
+        return qs
+
+
+class TaskPreviewList(generics.ListAPIView, FilterQSParams):
+    queryset = Task.objects.all()
+    serializer_class = TaskPreviewSerializer
+    pagination_class = TaskPreviewPagination
+    filter_class = TaskPreviewFilter
+
+    def get_queryset(self):
+        qs = super(TaskPreviewList, self).get_queryset()
+
+        qs = self.get_qs(qs)
+
         # Searching for tasks can mean 2 things:
         # 1) Search for tasks a specifc day
         # 2) Search for tasks that take place over a period of time
         start_date = self.request.query_params.get('start', None)
         end_date = self.request.query_params.get('end', None)
 
-        # User searches for tasks on a specific day.
-        if start_date and not end_date:
-            qs = qs.filter(Q(type='event', deadline=start_date) |
-                           Q(type='ongoing', deadline__gte=start_date))
-
-        # User searches for tasks in a specific range
-        if start_date and end_date:
-            qs = qs.filter(Q(type='event', deadline__range=[start_date, end_date]) |
-                           Q(type='ongoing', deadline__gte=start_date)
-                           )
+        qs = get_dates_query(qs, start_date, end_date)
 
         ordering = self.request.query_params.get('ordering', None)
 
@@ -86,24 +119,30 @@ class TaskPreviewList(generics.ListAPIView):
         return qs.filter(project__status__viewable=True)
 
 
-class TaskList(generics.ListCreateAPIView):
+class BaseTaskList(generics.ListCreateAPIView):
     queryset = Task.objects.all()
     pagination_class = TaskPreviewPagination
-    serializer_class = BaseTaskSerializer
     permission_classes = (TenantConditionalOpenClose, IsProjectOwnerOrReadOnly,)
+
+    def perform_create(self, serializer):
+        if serializer.validated_data['project'].status.slug in (
+                'closed', 'done-complete', 'done-incomplete', 'voting-done'):
+            raise serializers.ValidationError('It is not allowed to add tasks to closed projects')
+
+        deadline = serializer.validated_data['deadline']
+        deadline = timezone.get_current_timezone().localize(datetime.combine(deadline, datetime.max.time()))
+        serializer.validated_data['deadline'] = deadline
+        serializer.save(author=self.request.user)
+
+
+class TaskList(BaseTaskList, FilterQSParams):
+    serializer_class = BaseTaskSerializer
     filter_fields = ('status', 'author')
 
     def get_queryset(self):
         qs = super(TaskList, self).get_queryset()
 
-        project_slug = self.request.query_params.get('project', None)
-        if project_slug:
-            qs = qs.filter(project__slug=project_slug)
-
-        text = self.request.query_params.get('text', None)
-        if text:
-            qs = qs.filter(Q(title__icontains=text) |
-                           Q(description__icontains=text))
+        qs = self.get_qs(qs)
 
         # Searching for tasks can mean 2 things:
         # 1) Search for tasks a specifc day
@@ -111,16 +150,7 @@ class TaskList(generics.ListCreateAPIView):
         start_date = self.request.query_params.get('start', None)
         end_date = self.request.query_params.get('end', None)
 
-        # User searches for tasks on a specific day.
-        if start_date and not end_date:
-            qs = qs.filter(Q(type='event', deadline=start_date) |
-                           Q(type='ongoing', deadline__gte=start_date))
-
-        # User searches for tasks in a specific range
-        if start_date and end_date:
-            qs = qs.filter(Q(type='event', deadline__range=[start_date, end_date]) |
-                           Q(type='ongoing', deadline__gte=start_date)
-                           )
+        qs = get_dates_query(qs, start_date, end_date)
 
         ordering = self.request.query_params.get('ordering', None)
 
@@ -131,24 +161,15 @@ class TaskList(generics.ListCreateAPIView):
 
         return qs
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
 
-
-class MyTaskList(generics.ListCreateAPIView):
-    queryset = Task.objects.all()
-    pagination_class = TaskPreviewPagination
+class MyTaskList(BaseTaskList):
     filter_fields = ('author',)
-    permission_classes = (IsProjectOwnerOrReadOnly,)
     serializer_class = MyTasksSerializer
 
     def get_queryset(self):
         if self.request.user.is_authenticated():
             return Task.objects.filter(author=self.request.user)
         return Task.objects.none()
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
 
 
 class TaskDetail(generics.RetrieveUpdateAPIView):
@@ -172,7 +193,7 @@ class TaskMemberList(generics.ListCreateAPIView):
     pagination_class = TaskPagination
     filter_fields = ('task', 'status',)
     permission_classes = (TenantConditionalOpenClose,
-                          IsAuthenticatedOrReadOnly,)
+                          IsAuthenticatedOrReadOnly)
     queryset = TaskMember.objects.all()
 
     def perform_create(self, serializer):
@@ -185,13 +206,10 @@ class MyTaskMemberList(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = super(MyTaskMemberList, self).get_queryset()
-        # valid_statuses = [TaskMember.TaskMemberStatuses.accepted,
-        # TaskMember.TaskMemberStatuses.realized]
-        return queryset.filter(
-            member=self.request.user)  # , status__in=valid_statuses)
+        return queryset.filter(member=self.request.user)
 
 
-class TaskMemberDetail(generics.RetrieveUpdateDestroyAPIView):
+class TaskMemberDetail(generics.RetrieveUpdateAPIView):
     queryset = TaskMember.objects.all()
     serializer_class = BaseTaskMemberSerializer
 
@@ -219,7 +237,7 @@ class TaskFileDetail(generics.RetrieveUpdateAPIView):
 
 
 class SkillList(generics.ListAPIView):
-    queryset = Skill.objects.all()
+    queryset = Skill.objects.filter(disabled=False)
     serializer_class = SkillSerializer
 
 

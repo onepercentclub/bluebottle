@@ -4,7 +4,6 @@ from django.utils.html import format_html
 
 from bluebottle.projects.models import ProjectDocument
 
-# Widgets
 
 class UploadWidget(forms.FileInput):
     def render(self, name, value, attrs=None):

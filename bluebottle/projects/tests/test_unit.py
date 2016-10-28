@@ -3,6 +3,8 @@ from datetime import timedelta, time
 from django.db.models import Count
 from django.utils import timezone
 
+from moneyed.classes import Money
+
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.utils.utils import StatusDefinition
@@ -296,3 +298,50 @@ class TestProjectBulkActions(BluebottleTestCase):
 
         for project in Project.objects.all():
             self.assertEqual(project.status.slug, 'plan-new')
+
+
+class TestProjectUpdateAmounts(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectUpdateAmounts, self).setUp()
+        self.init_projects()
+
+        self.project = ProjectFactory.create(title='test')
+
+    def test_total_no_donations(self):
+        total = self.project.update_amounts()
+        self.assertEqual(self.project.amount_donated.amount, 0)
+        self.assertEqual(self.project.amount_needed, self.project.amount_asked)
+        self.assertEqual(self.project.amount_donated.currency, self.project.amount_asked.currency)
+
+    def test_total_multi_currency(self):
+        order1 = OrderFactory.create(status=StatusDefinition.SUCCESS)
+        order2 = OrderFactory.create(status=StatusDefinition.SUCCESS)
+
+        for i in range(100, 401, 100):
+            DonationFactory.create(
+                project=self.project,
+                order=order1,
+                amount=Money(i, 'EUR'),
+            )
+            DonationFactory.create(
+                project=self.project,
+                order=order2,
+                amount=Money(i, 'USD'),
+            )
+
+        total = self.project.update_amounts()
+        self.assertEqual(self.project.amount_donated.amount, 2500)
+        self.assertEqual(self.project.amount_needed.amount, self.project.amount_asked.amount - 2500)
+        self.assertEqual(self.project.amount_donated.currency, self.project.amount_asked.currency)
+
+    def test_change_amount_asked_currency(self):
+        new_amount = Money(1000, 'USD')
+        self.project.amount_asked = new_amount
+        self.project.save()
+
+        self.assertEqual(self.project.amount_asked.currency, new_amount.currency)
+        self.assertEqual(self.project.amount_extra.currency, new_amount.currency)
+        self.assertEqual(self.project.amount_donated.currency, new_amount.currency)
+
+
+

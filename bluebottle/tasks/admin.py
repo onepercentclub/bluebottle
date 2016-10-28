@@ -1,53 +1,56 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
-from django.forms import ModelForm
-from django.forms.models import ModelChoiceField
 
-from bluebottle.members.models import Member
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
-from bluebottle.clients import properties
-
 from bluebottle.utils.admin import export_as_csv_action
+
 
 # Bulk actions for Task
 def mark_as_open(modeladmin, request, queryset):
     queryset.update(status='open')
 mark_as_open.short_description = _("Mark selected Tasks as Open")
 
+
 def mark_as_in_progress(modeladmin, request, queryset):
     queryset.update(status='in progress')
-mark_as_in_progress.short_description = _("Mark selected Tasks as In Progress")
+mark_as_in_progress.short_description = _("Mark selected Tasks as Running")
+
 
 def mark_as_closed(modeladmin, request, queryset):
     queryset.update(status='closed')
-mark_as_closed.short_description = _("Mark selected Tasks as Closed")
+mark_as_closed.short_description = _("Mark selected Tasks as Done")
+
 
 def mark_as_realized(modeladmin, request, queryset):
     queryset.update(status='realized')
-mark_as_realized.short_description = _("Mark selected Tasks as Realized")
+mark_as_realized.short_description = _("Mark selected Tasks as Realised")
 
-#Bulk actions for Task Member
 
+# Bulk actions for Task Member
 def mark_as_applied(modeladmin, request, queryset):
     queryset.update(status='applied')
 mark_as_applied.short_description = _("Mark selected Task Members as Applied")
+
 
 def mark_as_accepted(modeladmin, request, queryset):
     queryset.update(status='accepted')
 mark_as_accepted.short_description = _("Mark selected Task Members as Accepted")
 
+
 def mark_as_rejected(modeladmin, request, queryset):
     queryset.update(status='rejected')
 mark_as_rejected.short_description = _("Mark selected Task Members as Rejected")
 
+
 def mark_as_stopped(modeladmin, request, queryset):
     queryset.update(status='stopped')
-mark_as_stopped.short_description = _("Mark selected Task Members as Stopped")
+mark_as_stopped.short_description = _("Mark selected Task Members as Withdrew")
+
 
 def mark_as_tm_realized(modeladmin, request, queryset):
     queryset.update(status='realized')
-mark_as_tm_realized.short_description = _("Mark selected Task Members as Realized")
+mark_as_tm_realized.short_description = _("Mark selected Task Members as Realised")
 
 
 class TaskMemberAdminInline(admin.StackedInline):
@@ -69,12 +72,13 @@ class TaskFileAdminInline(admin.StackedInline):
 
 
 class TaskAdmin(admin.ModelAdmin):
+
     date_hierarchy = 'created'
 
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
 
     raw_id_fields = ('author', 'project')
-    list_filter = ('status',)
+    list_filter = ('status', 'type')
     list_display = ('title', 'project', 'status', 'deadline')
 
     readonly_fields = ('date_status_change',)
@@ -86,6 +90,7 @@ class TaskAdmin(admin.ModelAdmin):
     export_fields = (
         ('title', 'title'),
         ('project', 'project'),
+        ('type', 'type'),
         ('status', 'status'),
         ('deadline', 'deadline'),
         ('skill', 'skill'),
@@ -100,7 +105,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     fields = ('title', 'description', 'skill', 'time_needed', 'status',
               'date_status_change', 'people_needed', 'project', 'author',
-              'deadline')
+              'type', 'deadline')
 
 
 admin.site.register(Task, TaskAdmin)
@@ -161,7 +166,6 @@ class TaskMemberAdmin(admin.ModelAdmin):
     member_email.admin_order_field = 'member__email'
     member_email.short_description = "Member Email"
 
-
     def lookup_allowed(self, key, value):
         if key in ('task__deadline__year',):
             return True
@@ -170,8 +174,6 @@ class TaskMemberAdmin(admin.ModelAdmin):
 
 
 admin.site.register(TaskMember, TaskMemberAdmin)
-
-from django.utils import translation
 
 
 class SkillAdmin(admin.ModelAdmin):

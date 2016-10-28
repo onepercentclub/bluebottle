@@ -1,3 +1,6 @@
+from bluebottle.wallposts.models import MediaWallpostPhoto
+from django.contrib.contenttypes.models import ContentType
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Count, Sum, options
 from django.template.defaultfilters import slugify
@@ -72,10 +75,11 @@ class ProjectPhase(models.Model):
         ordering = ['sequence']
 
     def __unicode__(self):
-        return u'{0} - {1}'.format(self.sequence, self.name)
+        return u'{0} - {1}'.format(self.sequence, _(self.name))
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
+        if not self.slug:
+            self.slug = slugify(self.name)
         super(ProjectPhase, self).save(*args, **kwargs)
 
 
@@ -231,22 +235,6 @@ class BaseProject(models.Model, GetTweetMixin):
 
     def __unicode__(self):
         return self.slug if not self.title else self.title
-
-    def update_amounts(self, save=True):
-        """
-        Update amount_donated and amount_needed
-        """
-        self.amount_donated = self.get_amount_total(
-            [StatusDefinition.SUCCESS, StatusDefinition.PENDING,
-             StatusDefinition.PLEDGED])
-        self.amount_needed = self.amount_asked - self.amount_donated
-
-        if self.amount_needed.amount < 0:
-            # Should never be less than zero
-            self.amount_needed.amount = 0
-
-        if save:
-            self.save()
 
     def get_amount_total(self, status_in=None):
         """

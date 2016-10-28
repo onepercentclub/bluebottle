@@ -1,13 +1,18 @@
+import logging
+
 from django.utils.translation import ugettext as _
 from django.db import connection
 
 from tenant_extras.utils import TenantLanguage
 
+from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
+from bluebottle.payments.models import Payment
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.payments.models import Payment
-from bluebottle.clients import properties
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_payment_method(donation):
@@ -64,7 +69,8 @@ def successful_donation_fundraiser_mail(instance):
         to=receiver,
         link=fundraiser_link,
         donation=donation,
-        pledged=pledged
+        pledged=pledged,
+        donor_name=donor_name
     )
 
 
@@ -88,7 +94,7 @@ def new_oneoff_donation(instance):
 
     try:
         admin_email = properties.TENANT_MAIL_PROPERTIES.get('address')
-    except AttributeError as e:
+    except AttributeError:
         logger.critical('No mail properties found for {0}'.format(connection.tenant.client_name))
 
     if donation.project.owner.email:

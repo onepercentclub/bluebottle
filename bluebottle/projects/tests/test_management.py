@@ -174,6 +174,43 @@ class TestStatusMC(BluebottleTestCase):
         project = Project.objects.get(title='test')
         self.assertEqual(project.status, self.complete)
 
+    def test_fully_funded_before_deadline(self):
+        """
+        Test that a campaign that is fully funded
+        and hits the deadline gets the status done-complete
+        """
+        now = timezone.now()
+
+        some_project = ProjectFactory.create(title='test',
+                                             amount_asked=500,
+                                             campaign_started=now - timezone.
+                                             timedelta(days=15),
+                                             deadline=now + timezone.
+                                             timedelta(days=5))
+
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=some_project,
+            order=order,
+            amount=500
+        )
+        donation.save()
+
+        # Set status of donation to paid
+        donation.order.locked()
+        donation.order.save()
+        donation.order.success()
+        donation.order.save()
+
+        some_project.status = self.campaign
+        some_project.save()
+
+        call_command('cron_status_realised', 'test')
+
+        project = Project.objects.get(title='test')
+        self.assertTrue(project.campaign_funded)
+
     def test_task_status_changed(self):
         """
         Test that tasks with (only) status 'in progress' and that are passed

@@ -14,6 +14,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL('SET CONSTRAINTS ALL IMMEDIATE',
+                          reverse_sql=migrations.RunSQL.noop),
+
         migrations.AlterField(
             model_name='project',
             name='amount_asked',

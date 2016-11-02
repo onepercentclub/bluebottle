@@ -110,6 +110,7 @@ class DonationAdmin(admin.ModelAdmin):
         ('project', 'project'),
         ('order__user', 'user'),
         ('order__user__remote_id', 'remote id'),
+        ('fundraiser', 'fundraiser'),
         ('amount', 'amount'),
         ('created', 'created'),
         ('updated', 'updated'),

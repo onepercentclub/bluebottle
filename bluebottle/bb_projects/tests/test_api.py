@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 
 from django.core.urlresolvers import reverse
 
@@ -348,7 +349,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         }
         response = self.client.post(reverse('project_manage_list'), post_data, token=self.user_token)
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data['amount_asked'], 0)
+        self.assertEqual(response.data['amount_asked'], {'currency': 'EUR', 'amount': Decimal('0')})
 
 
 class TestManageProjectDetail(ProjectEndpointTestCase):

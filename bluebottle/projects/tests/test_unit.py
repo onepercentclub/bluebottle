@@ -110,6 +110,25 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.complete)
 
+    def test_expired_more_with_extra(self):
+        """ Less donated than requested  + amount extra - status done complete """
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=self.expired_project,
+            order=order,
+            amount=4000
+        )
+        donation.save()
+
+        order.locked()
+        order.save()
+        order.success()
+        order.save()
+        self.expired_project.amount_extra = Money(3000, 'EUR')
+        self.expired_project.save()
+        self.assertEqual(self.expired_project.status, self.complete)
+
 
 class TestProjectPhaseLog(BluebottleTestCase):
     def setUp(self):

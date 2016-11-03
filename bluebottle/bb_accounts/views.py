@@ -130,27 +130,30 @@ class PasswordReset(views.APIView):
         serializer = PasswordResetSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'])
-        context = {
-            'email': user.email,
-            'site': tenant_url(),
-            'site_name': tenant_url(),
-            'uid': int_to_base36(user.pk),
-            'user': user,
-            'token': default_token_generator.make_token(user),
-        }
+        try:
+            user = USER_MODEL.objects.get(email__iexact=serializer.validated_data['email'])
+            context = {
+                'email': user.email,
+                'site': tenant_url(),
+                'site_name': tenant_url(),
+                'uid': int_to_base36(user.pk),
+                'user': user,
+                'token': default_token_generator.make_token(user),
+            }
 
-        with TenantLanguage(user.primary_language):
-            subject = loader.render_to_string('bb_accounts/password_reset_subject.txt', context)
-            # Email subject *must not* contain newlines
-            subject = ''.join(subject.splitlines())
+            with TenantLanguage(user.primary_language):
+                subject = loader.render_to_string('bb_accounts/password_reset_subject.txt', context)
+                # Email subject *must not* contain newlines
+                subject = ''.join(subject.splitlines())
 
-        send_mail(
-            template_name='bb_accounts/password_reset_email',
-            to=user,
-            subject=subject,
-            **context
-        )
+            send_mail(
+                template_name='bb_accounts/password_reset_email',
+                to=user,
+                subject=subject,
+                **context
+            )
+        except USER_MODEL.DoesNotExist:
+            pass
 
         return response.Response(status=status.HTTP_200_OK)
 

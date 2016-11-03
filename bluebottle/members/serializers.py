@@ -216,27 +216,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
                   'email', 'password', 'jwt_token', 'primary_language')
 
 
-def validate_reset_email(email):
-    try:
-        user = BB_USER_MODEL._default_manager.get(email__iexact=email)
-        if not user.is_active or user.password.startswith(UNUSABLE_PASSWORD_PREFIX):
-            raise serializers.ValidationError(
-                _("That email address doesn't have an associated "
-                  "user account. Are you sure you've registered?")
-            )
-    except BB_USER_MODEL.DoesNotExist:
-        raise serializers.ValidationError(
-            _("The user account associated with this email "
-              "address cannot reset the password.")
-        )
-
-
 class PasswordResetSerializer(serializers.Serializer):
     """
     Password reset request serializer that uses the email validation from the
     Django PasswordResetForm.
     """
-    email = serializers.EmailField(required=True, max_length=254, validators=[validate_reset_email])
+    email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
         fields = ('email',)

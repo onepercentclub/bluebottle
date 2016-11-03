@@ -147,7 +147,6 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
-    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.LockdownMiddleware',
@@ -156,6 +155,7 @@ MIDDLEWARE_CLASSES = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
+    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
 )
 
 REST_FRAMEWORK = {
@@ -604,6 +604,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('sourcing', 'Sourcing'),
                 ('amount_asked', 'Amount asked'),
                 ('task_count', 'Task Count'),
+                ('has_survey', 'Has Survey'),
                 ('realized_task_count', 'Realized Task Count'),
                 ('time_spent', 'Time Spent'),
                 ('from_suggestion', 'Submitted Suggestion'),
@@ -665,6 +666,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('member__id', 'User ID'),
                 ('member__remote_id', 'Remote ID'),
                 ('task__project__id', 'Project ID'),
+                ('task__project__location', 'Project Location'),
+                ('task__project__location__group', 'Project Region'),
                 ('task__id', 'Task ID'),
                 ('member__get_full_name', 'Name'),
                 ('member__email', 'Email'),
@@ -755,3 +758,5 @@ DJANGO_MONEY_RATES = {
     'OPENEXCHANGE_BASE_CURRENCY': 'USD',
 }
 AUTO_CONVERT_MONEY = False
+
+LOCKDOWN_URL_EXCEPTIONS = [r'^/payments_vitepay/status_update/']

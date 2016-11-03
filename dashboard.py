@@ -1,3 +1,4 @@
+from moneyed import Money
 from datetime import timedelta
 from datetime import datetime
 
@@ -19,10 +20,12 @@ from fluent_dashboard.dashboard import FluentIndexDashboard
 from bluebottle.projects.dashboard import SubmittedPlans, EndedProjects, StartedCampaigns
 from bluebottle.bb_tasks.dashboard import RecentTasks
 
+from bluebottle.clients import properties
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.members.models import Member
 from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
+from bluebottle.utils.exchange_rates import convert
 
 
 class Metrics():
@@ -90,7 +93,14 @@ class Metrics():
 
     def calculate_total_raised(self):
         """ Calculate the total amount raised by projects """
-        return Donation.objects.filter(order__status__in=['success', 'pending']).aggregate(sum=Sum('amount'))['sum']
+        totals = Donation.objects.filter(
+            order__status__in=['success', 'pending']
+        ).values(
+            'amount_currency'
+        ).annotate(total=Sum('amount')).order_by('-amount')
+        amounts = [Money(total['total'], total['amount_currency']) for total in totals]
+        amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
+        return sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
 
     def calculate_initiators(self):
         """ Return number of unique users that started a project, which now has a valid status """

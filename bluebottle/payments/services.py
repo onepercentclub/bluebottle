@@ -44,7 +44,7 @@ def get_payment_methods(country=None, amount=None, user=None, currency=None):
     if currency:
         methods = [
             method for method in methods
-            if currency in method.get('currencies', [])
+            if currency in method.get('currencies', {}).keys()
         ]
 
     # Filter out methods that are resitrcted using an access handler function

@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 
 from django.core.urlresolvers import reverse
 
@@ -336,17 +337,19 @@ class TestManageProjectList(ProjectEndpointTestCase):
         self.assertIn('country', data)
         self.assertIn('editable', data)
 
-
     def test_none_accepted_for_project_amount_asked(self):
+        """
+        Check that None is allowed for amount_asked, but it will convert it to 0.
+        """
         post_data = {
             'slug': 'test-project',
             'title': 'Testing Project POST request',
             'pitch': 'A new project to be used in unit tests',
-            'amount_asked': None,
-            'amount_donated': 0
+            'amount_asked': None
         }
         response = self.client.post(reverse('project_manage_list'), post_data, token=self.user_token)
         self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['amount_asked'], {'currency': 'EUR', 'amount': Decimal('0')})
 
 
 class TestManageProjectDetail(ProjectEndpointTestCase):

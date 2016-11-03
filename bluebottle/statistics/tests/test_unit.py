@@ -8,7 +8,6 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.rates import RateSourceFactory, RateFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 
 from bluebottle.statistics.views import Statistics
@@ -49,10 +48,6 @@ class StatisticsTest(BluebottleTestCase):
 
         # Required by Project model save method
         self.init_projects()
-
-        rate_source = RateSourceFactory.create(base_currency='USD')
-        RateFactory.create(source=rate_source, currency='USD', value=1)
-        RateFactory.create(source=rate_source, currency='EUR', value=1.5)
 
         self.some_user = BlueBottleUserFactory.create()
         self.another_user = BlueBottleUserFactory.create()

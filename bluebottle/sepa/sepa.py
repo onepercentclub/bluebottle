@@ -178,7 +178,7 @@ class SepaDocument(object):
         transfer = CreditTransfer()
 
         transfer.creditor_payment_id = kwargs['creditor_payment_id']
-        transfer.amount = decimal.Decimal(kwargs['amount'])
+        transfer.amount = decimal.Decimal(kwargs['amount'].amount)
         transfer.creditor = kwargs['creditor']
 
         transfer.end_to_end_id = str(self.message_identification) + '-' + str(

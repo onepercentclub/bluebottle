@@ -353,7 +353,9 @@ class Project(BaseProject, PreviousStatusMixin):
                                              "done-incomplete",
                                              "closed",
                                              "voting-done"]:
-            if self.amount_asked.amount > 0 and self.amount_donated.amount <= 20 \
+            if self.amount_donated + self.amount_extra >= self.amount_asked:
+                self.status = ProjectPhase.objects.get(slug="done-complete")
+            elif self.amount_asked.amount > 0 and self.amount_donated.amount <= 20 \
                     or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
             elif self.amount_asked.amount > 0 \
@@ -362,7 +364,6 @@ class Project(BaseProject, PreviousStatusMixin):
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             self.campaign_ended = self.deadline
-            self.deadline_reached()
 
         if self.status.slug in ["done-complete", "done-incomplete", "closed"] \
                 and not self.campaign_ended:

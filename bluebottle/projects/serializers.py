@@ -125,6 +125,8 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     has_voted = serializers.SerializerMethodField()
 
+    currencies = serializers.JSONField(read_only=True)
+
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
 
@@ -137,7 +139,8 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'description', 'owner', 'status', 'image',
                   'country', 'theme', 'categories', 'language',
                   'latitude', 'longitude', 'amount_asked', 'amount_donated',
-                  'amount_needed', 'amount_extra', 'allow_overfunding',
+                  'amount_needed', 'amount_extra',
+                  'allow_overfunding', 'currencies',
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count', 'celebrate_results',
@@ -207,6 +210,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     amount_asked = MoneySerializer(required=False, allow_null=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_needed = MoneySerializer(read_only=True)
+    currencies = serializers.JSONField(read_only=True)
 
     budget_lines = ProjectBudgetLineSerializer(many=True,
                                                source='projectbudgetline_set',
@@ -298,8 +302,8 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'account_holder_city', 'account_holder_country',
                   'account_number', 'account_bic', 'documents',
                   'account_bank_country', 'amount_asked',
-                  'amount_donated', 'amount_needed', 'video_url',
-                  'video_html', 'is_funding', 'story', 'tasks',
+                  'amount_donated', 'amount_needed', 'currencies',
+                  'video_url', 'video_html', 'is_funding', 'story', 'tasks',
                   'budget_lines', 'deadline', 'latitude', 'longitude',
                   'project_type')
 

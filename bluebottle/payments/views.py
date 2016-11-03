@@ -2,8 +2,7 @@ from ipware.ip import get_ip
 
 from rest_framework import status
 from rest_framework.exceptions import ParseError
-from rest_framework.generics import (RetrieveUpdateAPIView, ListCreateAPIView,
-                                     RetrieveAPIView)
+from rest_framework.generics import RetrieveUpdateAPIView, ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -20,18 +19,18 @@ from bluebottle.utils.utils import get_country_code_by_ip
 
 class PaymentMethodList(APIView):
     def get(self, request, *args, **kwargs):
-        if 'country' in request.GET:
-            country = request.GET['country']
-        else:
+        country = request.GET.get('country')
+
+        if not country and not getattr(settings, 'SKIP_IP_LOOKUP', False):
             ip = get_ip(request)
-            if getattr(settings, 'SKIP_IP_LOOKUP', False):
-                country = 'all'
-            else:
-                country = get_country_code_by_ip(ip)
+            country = get_country_code_by_ip(ip)
 
         # Payment methods are loaded from the settings so they
         # aren't translated at run time. We need to do it manually
-        methods = get_payment_methods(country, 500, request.user)
+        methods = get_payment_methods(
+            country=country, user=request.user, currency=request.GET.get('currency')
+        )
+
         for method in methods:
             method['name'] = _(method['name'])
 
@@ -56,6 +55,7 @@ class ManageOrderPaymentList(ListCreateAPIView):
 
     def perform_create(self, serializer):
         if self.request.user and self.request.user.is_authenticated():
+
             serializer.save(user=self.request.user)
 
             if not serializer.instance.order.user:

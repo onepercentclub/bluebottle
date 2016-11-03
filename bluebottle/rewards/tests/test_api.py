@@ -79,7 +79,9 @@ class RewardTestCase(BluebottleTestCase):
                                     dict(self.reward_data, amount=1),
                                     token=self.user_token)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.data['amount'], [u'Ensure this value is greater than or equal to 5.00 \u20ac.'])
+        self.assertEqual(
+            response.data['amount'], [u'Ensure this amount is greater than or equal to 5.0.']
+        )
 
 
     def test_reward_can_not_be_created_by_non_project_owner(self):
@@ -91,6 +93,23 @@ class RewardTestCase(BluebottleTestCase):
                                     self.reward_data,
                                     token=self.user2_token)
         self.assertEqual(response.status_code, 403)
+
+    def test_reward_cannot_have_different_currency_from_project(self):
+        """
+        Rewards have a minimum amount
+        """
+        amount = {'currency': 'USD', 'amount': 100}
+
+        response = self.client.post(self.reward_url,
+                                    dict(self.reward_data, amount=amount),
+                                    token=self.user_token)
+        self.assertEqual(response.status_code, 400)
+
+        self.assertEqual(
+            unicode(response.data['non_field_errors'][0]),
+            u'Currency does not match project any of the currencies.'
+        )
+
 
     def test_reward_can_be_deleted(self):
         """

@@ -1,31 +1,45 @@
+from babel.numbers import get_currency_name
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
 from django.conf import settings
+from django.utils.functional import lazy
 from django.utils.translation import ugettext as _
 
 import sorl.thumbnail
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 
 from bluebottle.clients import properties
+from bluebottle.clients.utils import get_currencies
 
 
-DEFAULT_CURRENCY = getattr(properties, 'DEFAULT_CURRENCY', 'EUR')
-CURRENCY_CHOICES = getattr(properties, 'CURRENCY_CHOICES', [('EUR', 'Euro')])
+def get_currency_choices():
+    currencies = []
+    for method in properties.PAYMENT_METHODS:
+        currencies += method['currencies'].keys()
+
+    return [(currency, get_currency_name(currency)) for currency in set(currencies)]
+
+
+def get_default_currency():
+    return getattr(properties, 'DEFAULT_CURRENCY')
 
 
 class MoneyField(DjangoMoneyField):
 
     def __init__(self, verbose_name=None, name=None,
                  max_digits=12, decimal_places=2, default=None,
-                 default_currency=DEFAULT_CURRENCY,
-                 currency_choices=CURRENCY_CHOICES, **kwargs):
+                 default_currency=lazy(get_default_currency, str)(),
+                 currency_choices=lazy(get_currency_choices, tuple)(),
+                 **kwargs):
         super(MoneyField, self).__init__(
             verbose_name=verbose_name, name=name,
             max_digits=max_digits, decimal_places=decimal_places, default=default,
             default_currency=default_currency,
-            currency_choices=currency_choices, **kwargs)
+            currency_choices=currency_choices,
+            **kwargs)
 
 
 # Validation references:

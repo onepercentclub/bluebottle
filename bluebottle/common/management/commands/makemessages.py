@@ -1,7 +1,9 @@
 import json
-import codecs
 import tempfile
+
 from django.core.management.commands.makemessages import Command as BaseCommand
+
+from bluebottle.clients.utils import get_currencies
 
 
 class Command(BaseCommand):
@@ -25,6 +27,9 @@ class Command(BaseCommand):
 
                     for string in strings:
                         temp.write('gettext("{}")\n'.format(string))
+
+            for currency in get_currencies():
+                temp.write('gettext("{}")\n'.format(currency['name']))
 
             temp.flush()
 

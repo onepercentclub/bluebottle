@@ -14,8 +14,15 @@ warnings.filterwarnings(
     r"DateTimeField .* received a naive datetime",
     RuntimeWarning, r'django\.db\.models\.fields')
 
-DOCDATA_MERCHANT_NAME = 'merchant_name'
-DOCDATA_MERCHANT_PASSWORD = 'merchant_password'
+
+MERCHANT_ACCOUNTS = [
+    {
+        'merchant': 'docdata',
+        'merchant_name': 'merchant_name',
+        'merchant_password': 'merchant_password',
+        'currency': 'EUR'
+    },
+]
 
 
 # Set up a proper testing email backend

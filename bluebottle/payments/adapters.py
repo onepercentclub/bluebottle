@@ -1,3 +1,7 @@
+import re
+
+from django.core.exceptions import ImproperlyConfigured
+
 from bluebottle.clients import properties
 from bluebottle.payments.models import Payment
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
@@ -36,6 +40,24 @@ class BasePaymentAdapter(object):
         # Finally if no payment found then create a new one
         if not self.payment:
             self.payment = self.create_payment()
+
+    @property
+    def currency(self):
+        return str(self.order_payment.amount.currency)
+
+    @property
+    def merchant(self):
+        return re.sub('([a-z]+)([A-Z][a-z]+)', r'\1',
+                      self.order_payment.payment_method)
+
+    @property
+    def credentials(self):
+        for account in properties.MERCHANT_ACCOUNTS:
+            if account['merchant'] == self.merchant and account['currency'] == self.currency:
+                return account
+        raise ImproperlyConfigured('No merchant account for {} {}'.format(
+            self.currency, self.merchant
+        ))
 
     def get_user_data(self):
         user = self.order_payment.order.user

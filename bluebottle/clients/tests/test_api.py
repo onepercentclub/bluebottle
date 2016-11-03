@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
@@ -40,3 +42,49 @@ class ClientSettingsTestCase(BluebottleTestCase):
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['readOnlyFields'], {'user': ['first_name']})
+
+
+    @override_settings(PAYMENT_METHODS=[{
+        'provider': 'docdata',
+        'id': 'docdata-ideal',
+        'profile': 'ideal',
+        'name': 'iDEAL',
+        'restricted_countries': ('NL', ),
+        'supports_recurring': False,
+        'currencies': {
+            'EUR': {'min_amount': 5, 'max_amount': 100}
+        }
+    }, {
+        'provider': 'docdata',
+        'id': 'docdata-directdebit',
+        'profile': 'directdebit',
+        'name': 'Direct Debit',
+        'restricted_countries': ('NL', 'BE', ),
+        'supports_recurring': True,
+        'currencies': {
+            'EUR': {'min_amount': 5, 'max_amount': 100}
+        }
+
+    }, {
+        'provider': 'docdata',
+        'id': 'docdata-creditcard',
+        'profile': 'creditcard',
+        'name': 'CreditCard',
+        'supports_recurring': False,
+        'currencies': {
+            'USD': {'min_amount': 5, 'max_amount': 100},
+            'NGN': {'min_amount': 5, 'max_amount': 100},
+            'XOF': {'min_amount': 5, 'max_amount': 100},
+        }
+    }])
+    def test_settings_currencies(self):
+        # Check that exposed property is in settings api, and other settings are not shown
+        response = self.client.get(self.settings_url)
+
+        self.assertEqual(
+            response.data['currencies'],
+            [{'symbol': u'CFA', 'code': 'XOF', 'name': u'West African CFA Franc', 'rate': Decimal(1000.0)},
+             {'symbol': u'\u20a6', 'code': 'NGN', 'name': u'Nigerian Naira', 'rate': Decimal(500.0)},
+             {'symbol': u'$', 'code': 'USD', 'name': u'US Dollar', 'rate': Decimal(1.0)},
+             {'symbol': u'\u20ac', 'code': 'EUR', 'name': u'Euro', 'rate': Decimal(1.5)}]
+        )

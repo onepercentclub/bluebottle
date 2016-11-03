@@ -4,6 +4,10 @@ from django.db import connection
 from django.db.models.aggregates import Sum
 from django.core.cache import cache
 
+from moneyed.classes import Money
+
+from bluebottle.clients import properties
+from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.utils import StatusDefinition
 
 
@@ -127,9 +131,17 @@ class Statistics(object):
         """ Add all donation amounts for all donations ever """
         if self._get_cached('donations-total'):
             return self._get_cached('donations-total')
+
         donations = Donation.objects.filter(order__status__in=(
             StatusDefinition.PENDING, StatusDefinition.SUCCESS))
-        donated = int(donations.aggregate(sum=Sum('amount'))['sum'] or '000')
+        totals = donations.values('amount_currency').annotate(total=Sum('amount'))
+        amounts = [Money(total['total'], total['amount_currency']) for total in totals]
+
+        if totals:
+            donated = int(sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]).amount)
+        else:
+            donated = 0
+
         self._set_cached('donations-total', donated)
         return donated
 

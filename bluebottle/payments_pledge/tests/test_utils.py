@@ -1,6 +1,6 @@
 from django.test.utils import override_settings
 
-from bluebottle.payments.services import PaymentService, get_payment_methods
+from bluebottle.payments.services import get_payment_methods
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 

@@ -1,4 +1,4 @@
-from decimal import Decimal
+from moneyed.classes import Money
 
 from bluebottle.utils.utils import StatusDefinition
 
@@ -150,7 +150,7 @@ class StatisticsTest(BluebottleTestCase):
 
         self.order = OrderFactory.create(user=self.another_user,
                                          status=StatusDefinition.SUCCESS)
-        self.donation = DonationFactory.create(amount=1000, order=self.order,
+        self.donation = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order,
                                                project=self.some_project,
                                                fundraiser=None)
 
@@ -166,13 +166,13 @@ class StatisticsTest(BluebottleTestCase):
 
         self.order1 = OrderFactory.create(user=self.another_user,
                                           status=StatusDefinition.SUCCESS)
-        self.donation1 = DonationFactory.create(amount=1000, order=self.order1,
+        self.donation1 = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order1,
                                                 project=self.some_project,
                                                 fundraiser=None)
 
         self.order2 = OrderFactory.create(user=None,
                                           status=StatusDefinition.SUCCESS)
-        self.donation2 = DonationFactory.create(amount=1000, order=self.order2,
+        self.donation2 = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order2,
                                                 project=self.some_project,
                                                 fundraiser=None)
 
@@ -182,6 +182,30 @@ class StatisticsTest(BluebottleTestCase):
         # - donator (another_user)
         # - donator (anon)
         self.assertEqual(self.stats.people_involved, 3)
+
+    def test_donation_total_stats_convert_currencies(self):
+        self.some_project.status = self.campaign_status
+        self.some_project.save()
+
+        self.order1 = OrderFactory.create(user=self.another_user,
+                                          status=StatusDefinition.SUCCESS)
+        self.donation1 = DonationFactory.create(amount=Money(1000, 'EUR'), order=self.order1,
+                                                project=self.some_project,
+                                                fundraiser=None)
+
+        self.order2 = OrderFactory.create(user=None,
+                                          status=StatusDefinition.SUCCESS)
+        self.donation2 = DonationFactory.create(amount=Money(1000, 'USD'), order=self.order2,
+                                                project=self.some_project,
+                                                fundraiser=None)
+
+        self.assertEqual(self.stats.donated_total, 2500)
+        # People involved:
+        # - campaigner
+        # - donator (another_user)
+        # - donator (anon)
+        self.assertEqual(self.stats.people_involved, 3)
+
 
     def test_votes_stats(self):
         VoteFactory.create(voter=self.some_user)

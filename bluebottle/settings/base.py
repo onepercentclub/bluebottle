@@ -196,7 +196,8 @@ JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 
 # List of paths to ignore for locale redirects
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
-                          '/payments_mock', '/media', '/surveys')
+                          '/payments_mock', '/payments_interswitch',
+                          '/payments_vitepay', '/media', '/surveys')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
@@ -254,7 +255,8 @@ SHARED_APPS = (
     'filetransfers',
     'rest_framework_swagger',
     'lockdown',
-    'corsheaders'
+    'corsheaders',
+    'djmoney_rates'
 
 )
 
@@ -317,6 +319,8 @@ TENANT_APPS = (
     'bluebottle.quotes',
     'bluebottle.payments',
     'bluebottle.payments_docdata',
+    'bluebottle.payments_interswitch',
+    'bluebottle.payments_vitepay',
     'bluebottle.payments_pledge',
     'bluebottle.payments_logger',
     'bluebottle.payments_voucher',
@@ -390,10 +394,10 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(asctime)s %(levelname)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '%(levelname)s %(message)s'
+            'format': '%(asctime)s %(levelname)s %(message)s'
         },
     },
     'filters': {
@@ -715,7 +719,14 @@ FLUENT_CONTENTS_CACHE_OUTPUT = False
 CACHE_MIDDLEWARE_SECONDS = 0
 
 # Amounts shown in donation modal
-DONATION_AMOUNTS = (25, 50, 75, 100);
+DONATION_AMOUNTS = {
+    'EUR': (25, 50, 75, 100),
+    'USD': (20, 50, 100, 200),
+    'NGN': (2000, 5000, 10000, 25000),
+    'XOF': (500, 1000, 2000, 5000),
+}
+
+DEFAULT_CURRENCY = 'EUR'
 
 # By default we do not show suggestion on the start-project page
 PROJECT_SUGGESTIONS = False
@@ -747,3 +758,12 @@ SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
 SURVEYGIZMO_API_TOKEN = ''
 SURVEYGIZMO_API_SECRET = ''
 
+DJANGO_MONEY_RATES = {
+    'DEFAULT_BACKEND': 'djmoney_rates.backends.OpenExchangeBackend',
+    'OPENEXCHANGE_URL': 'http://openexchangerates.org/api/latest.json',
+    'OPENEXCHANGE_APP_ID': '3e53678e72c140b4857dc5bb1deb59dc',
+    'OPENEXCHANGE_BASE_CURRENCY': 'USD',
+}
+AUTO_CONVERT_MONEY = False
+
+LOCKDOWN_URL_EXCEPTIONS = [r'^/payments_vitepay/status_update/']

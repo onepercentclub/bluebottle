@@ -29,7 +29,7 @@ before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
   | gunzip - > GeoIP.dat
 script:
-- python manage.py test
+- python manage.py test --parallel
 notifications:
   hipchat:
     rooms:

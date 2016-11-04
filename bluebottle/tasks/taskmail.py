@@ -133,7 +133,7 @@ class TaskMemberMailAdapter:
         TaskMember.TaskMemberStatuses.rejected: TaskMemberRejectMail,
         TaskMember.TaskMemberStatuses.accepted: TaskMemberAcceptedMail,
         TaskMember.TaskMemberStatuses.realized: TaskMemberRealizedMail,
-        'withdraw': TaskMemberWithdrawMail,
+        TaskMember.TaskMemberStatuses.withdrew: TaskMemberWithdrawMail,
     }
 
     mail_sender = None

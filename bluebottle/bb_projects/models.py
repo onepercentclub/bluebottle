@@ -1,3 +1,5 @@
+from moneyed.classes import Money
+
 from bluebottle.wallposts.models import MediaWallpostPhoto
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
@@ -15,7 +17,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, get_default_currency
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 
@@ -162,11 +164,10 @@ class BaseProject(models.Model, GetTweetMixin):
 
     # For convenience and performance we also store money donated and needed
     # here.
-    amount_asked = MoneyField(default=0, null=True)
-    amount_donated = MoneyField(default=0, null=True)
-    amount_needed = MoneyField(default=0, null=True)
-    amount_extra = MoneyField(default=0, null=True,
-                              help_text=_("Amount pledged by organisation (matching fund)."))
+    amount_asked = MoneyField()
+    amount_donated = MoneyField()
+    amount_needed = MoneyField()
+    amount_extra = MoneyField(help_text=_("Amount pledged by organisation (matching fund)."))
 
     # Bank detail data
 
@@ -235,22 +236,6 @@ class BaseProject(models.Model, GetTweetMixin):
 
     def __unicode__(self):
         return self.slug if not self.title else self.title
-
-    def update_amounts(self, save=True):
-        """
-        Update amount_donated and amount_needed
-        """
-        self.amount_donated = self.get_amount_total(
-            [StatusDefinition.SUCCESS, StatusDefinition.PENDING,
-             StatusDefinition.PLEDGED])
-        self.amount_needed = self.amount_asked - self.amount_donated
-
-        if self.amount_needed.amount < 0:
-            # Should never be less than zero
-            self.amount_needed.amount = 0
-
-        if save:
-            self.save()
 
     def get_amount_total(self, status_in=None):
         """

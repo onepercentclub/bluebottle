@@ -54,4 +54,4 @@ class TestAuthenticityHash(SimpleTestCase):
         adapter = VitepayPaymentAdapter(order_payment=order_payment)
 
         self.assertEqual(adapter._create_update_hash(),
-                         '64d7effd1c2540f0c9230dbb680c100dd2558d63')
+                         '64d7effd1c2540f0c9230dbb680c100dd2558d63'.upper())

@@ -1,4 +1,4 @@
-from moneyed.classes import Money
+from moneyed.classes import Money, Currency
 
 from bluebottle.members.models import Member
 from bluebottle.payouts.models import ProjectPayout
@@ -115,6 +115,35 @@ class JournalModelTests(BluebottleTestCase):
         donation_from_db.completed = timezone.now()
         donation_from_db.save()
         self.assertEqual(DonationJournal.objects.all().count(), 3)
+
+    def test_journal_multicurrency(self):
+        self.donation = DonationFactory.create(
+            amount=Money(100, 'EUR'),
+            project=self.project,
+            order__user=self.user
+        )
+
+        # We should now have one journal
+        self.assertEqual(DonationJournal.objects.count(), 1)
+
+        # Update the amount to USD
+        self.donation.amount=Money(100, 'USD')
+        self.donation.save()
+
+        # We should now have 2 journals
+        self.assertEqual(DonationJournal.objects.count(), 2)
+
+        # Update the amount to USD
+        self.donation.amount=Money(150, 'USD')
+        self.donation.save()
+
+        self.assertEqual(DonationJournal.objects.count(), 3)
+
+        for journal in DonationJournal.objects.all():
+            if journal.amount.currency == Currency('EUR'):
+                self.assertEqual(journal.get_journal_total(), Money(100, 'EUR'))
+            else:
+                self.assertEqual(journal.get_journal_total(), Money(150, 'USD'))
 
     def test_journal_created_when_project_project_payout_is_made(self):
         """

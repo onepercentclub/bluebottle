@@ -1,4 +1,5 @@
 from mock import patch
+from moneyed import Money
 from decimal import Decimal
 
 from bluebottle.test.utils import BluebottleTestCase
@@ -287,7 +288,7 @@ class TestOrderAnalytics(BluebottleTestCase):
             self.user = BlueBottleUserFactory.create()
 
     def test_tags_generation(self, queue_mock):
-        order = OrderFactory.create(total=Decimal('100.00'), user=self.user)
+        order = OrderFactory.create(total=Money(100, 'EUR'), user=self.user)
         expected_tags = {
             'type': 'order',
             'tenant': u'test',
@@ -306,8 +307,29 @@ class TestOrderAnalytics(BluebottleTestCase):
         self.assertEqual(kwargs['fields'], expected_fields)
         self.assertEqual(str(kwargs['fields']['total']), '100.0')
 
+    def test_tags_generation_usd(self, queue_mock):
+        order = OrderFactory.create(total=Money(100, 'USD'), user=self.user)
+        expected_tags = {
+            'type': 'order',
+            'tenant': u'test',
+            'status': u'created',
+            'total_currency': 'USD',
+            'anonymous': False
+        }
+        expected_fields = {
+            'total': 100.0,
+            'user_id': order.user.id,
+            'id': order.id
+        }
+
+        args, kwargs = queue_mock.call_args_list[0]
+        self.assertEqual(kwargs['tags'], expected_tags)
+        self.assertEqual(kwargs['fields'], expected_fields)
+        self.assertEqual(str(kwargs['fields']['total']), '100.0')
+
+
     def test_unchanged_status(self, queue_mock):
-        order = OrderFactory.create(total=100)
+        order = OrderFactory.create(total=Money(100, 'EUR'))
         previous_call_count = queue_mock.call_count
 
         # Update record without changing status

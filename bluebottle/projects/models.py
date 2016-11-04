@@ -36,7 +36,6 @@ from bluebottle.utils.fields import MoneyField, get_currency_choices, get_defaul
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     MediaWallpostPhoto, MediaWallpost, TextWallpost
@@ -209,7 +208,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     categories = models.ManyToManyField('categories.Category', blank=True)
 
-    currencies = SelectMultipleField(max_length=100, null=True,
+    currencies = SelectMultipleField(max_length=100, null=True, default=[],
                                      choices=lazy(get_currency_choices, tuple)())
 
     celebrate_results = models.BooleanField(
@@ -336,8 +335,16 @@ class Project(BaseProject, PreviousStatusMixin):
                                           datetime.time(23, 59, 59))
             )
 
-        if self.amount_asked:
+        if not self.amount_asked:
+            self.amount_asked = Money(0, get_default_currency())
+
+        if self.amount_asked.amount:
             self.update_amounts(False)
+
+        if self.amount_asked and self.amount_asked.currency != self.amount_extra.currency:
+            self.amount_extra = Money(
+                self.amount_extra.amount, self.amount_asked.currency
+            )
 
         # FIXME: Clean up this code, make it readable
         # Project is not ended, complete, funded or stopped and its deadline has expired.
@@ -386,11 +393,12 @@ class Project(BaseProject, PreviousStatusMixin):
         total = self.get_money_total([StatusDefinition.PENDING,
                                       StatusDefinition.SUCCESS,
                                       StatusDefinition.PLEDGED])
-        if isinstance(total, list):
-            DeprecationWarning('Cannot yet handle multiple currencies on one project!')
 
         self.amount_donated = total
+        self.amount_needed = self.amount_asked - self.amount_donated
+
         self.update_status_after_donation(False)
+
         if save:
             self.save()
 
@@ -411,8 +419,7 @@ class Project(BaseProject, PreviousStatusMixin):
         totals = donations.values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
 
-        if len(totals) > 1:
-            amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
+        amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
 
         return sum(amounts) or Money(0, self.amount_asked.currency)
 
@@ -424,6 +431,10 @@ class Project(BaseProject, PreviousStatusMixin):
     @property
     def is_funding(self):
         return self.amount_asked.amount > 0
+
+    @property
+    def has_survey(self):
+        return len(self.response_set.all()) > 0
 
     def supporter_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API

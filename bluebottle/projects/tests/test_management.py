@@ -206,7 +206,7 @@ class TestStatusMC(BluebottleTestCase):
         some_project.status = self.campaign
         some_project.save()
 
-        call_command('cron_status_realised', 'test')
+        call_command('cron_status_realised')
 
         project = Project.objects.get(title='test')
         self.assertTrue(project.campaign_funded)

@@ -117,10 +117,11 @@ class JournalModelTests(BluebottleTestCase):
         self.assertEqual(DonationJournal.objects.all().count(), 3)
 
     def test_journal_multicurrency(self):
-        self.donation = DonationFactory.create(user=self.user,
-                                               amount=Money(100, 'EUR'),
-                                               project=self.project,
-                                               order__user=self.user)
+        self.donation = DonationFactory.create(
+            amount=Money(100, 'EUR'),
+            project=self.project,
+            order__user=self.user
+        )
 
         # We should now have one journal
         self.assertEqual(DonationJournal.objects.count(), 1)

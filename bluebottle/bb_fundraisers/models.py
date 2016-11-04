@@ -8,6 +8,8 @@ from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
+
+from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import ImageField, MoneyField
 from bluebottle.utils.utils import GetTweetMixin, StatusDefinition
 
@@ -45,17 +47,15 @@ class BaseFundraiser(models.Model, GetTweetMixin):
             order__status__in=[StatusDefinition.SUCCESS,
                                StatusDefinition.PENDING,
                                StatusDefinition.PLEDGED])
+
         totals = [
             Money(data['amount__sum'], data['amount_currency']) for data in
             donations.values('amount_currency').annotate(Sum('amount')).order_by()
         ]
-        if len(totals) == 0:
-            totals = [Money(0, 'EUR')]
 
-        if len(totals) > 1:
-            FieldError('Cannot yet handle multiple currencies on one project!')
+        totals = [convert(amount, self.amount.currency) for amount in totals]
 
-        return totals[0]
+        return sum(totals) or Money(0, self.amount.currency)
 
     class Meta():
         abstract = True

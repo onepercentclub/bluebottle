@@ -1,3 +1,5 @@
+from babel.numbers import get_currency_name
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -10,14 +12,19 @@ import sorl.thumbnail
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 
 from bluebottle.clients import properties
+from bluebottle.clients.utils import get_currencies
 
 
 def get_currency_choices():
-    return [(currency['code'], currency['name']) for currency in properties.CURRENCIES_ENABLED]
+    currencies = []
+    for method in properties.PAYMENT_METHODS:
+        currencies += method['currencies'].keys()
+
+    return [(currency, get_currency_name(currency)) for currency in set(currencies)]
 
 
 def get_default_currency():
-    return properties.CURRENCIES_ENABLED[0]['code']
+    return getattr(properties, 'DEFAULT_CURRENCY')
 
 
 class MoneyField(DjangoMoneyField):

@@ -36,7 +36,6 @@ from bluebottle.utils.fields import MoneyField, get_currency_choices, get_defaul
 from bluebottle.clients import properties
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     MediaWallpostPhoto, MediaWallpost, TextWallpost
@@ -336,7 +335,10 @@ class Project(BaseProject, PreviousStatusMixin):
                                           datetime.time(23, 59, 59))
             )
 
-        if self.amount_asked:
+        if not self.amount_asked:
+            self.amount_asked = Money(0, get_default_currency())
+
+        if self.amount_asked.amount:
             self.update_amounts(False)
 
         if self.amount_asked and self.amount_asked.currency != self.amount_extra.currency:
@@ -448,6 +450,10 @@ class Project(BaseProject, PreviousStatusMixin):
     @property
     def is_funding(self):
         return self.amount_asked.amount > 0
+
+    @property
+    def has_survey(self):
+        return len(self.response_set.all()) > 0
 
     def supporter_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API

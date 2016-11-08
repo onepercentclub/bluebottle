@@ -17,6 +17,8 @@ class ProjectPayoutDetail(generics.RetrieveAPIView):
 
 
 class PaymentMethodList(APIView):
+    permission_classes = (IsFinancialMember,)
+
     def get(self, request, *args, **kwargs):
         methods = getattr(properties, 'PAYOUT_METHODS', ())
         return Response(methods, status=status.HTTP_200_OK)

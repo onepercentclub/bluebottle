@@ -4,11 +4,10 @@ from ..views import (
     ManageProjectDocumentList, ManageProjectDocumentDetail,
     ProjectPayoutList, ProjectPayoutDetail
 )
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
 
     url(r'^media/(?P<slug>[\w-]+)$',
         ProjectMediaDetail.as_view(),
@@ -37,4 +36,4 @@ urlpatterns = patterns(
     url(r'^payouts/(?P<pk>[\d]+)$',
         ProjectPayoutDetail.as_view(),
         name='project-payout-detail'),
-)
+]

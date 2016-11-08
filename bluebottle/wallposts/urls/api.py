@@ -1,12 +1,11 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from bluebottle.wallposts.views import MediaWallpostDetail, TextWallpostDetail
 from ..views import (
     WallpostDetail, TextWallpostList, MediaWallpostList, MediaWallpostPhotoList,
     MediaWallpostPhotoDetail, ReactionList, ReactionDetail, WallpostList)
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^$', WallpostList.as_view(), name='wallpost_list'),
     url(r'^(?P<pk>\d+)$', WallpostDetail.as_view(), name='wallpost_detail'),
 
@@ -28,4 +27,4 @@ urlpatterns = patterns(
     url(r'^reactions/$', ReactionList.as_view(), name='wallpost_reaction_list'),
     url(r'^reactions/(?P<pk>\d+)$', ReactionDetail.as_view(),
         name='wallpost_reaction_detail')
-)
+]

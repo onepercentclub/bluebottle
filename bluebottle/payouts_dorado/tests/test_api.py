@@ -1,5 +1,6 @@
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
+from django.utils.timezone import now
 
 from rest_framework import status
 
@@ -26,7 +27,7 @@ class TestPayoutApi(BluebottleTestCase):
         financial = Group.objects.get(name='Financial')
         financial.user_set.add(self.user2)
 
-        self.project = ProjectFactory.create()
+        self.project = ProjectFactory.create(campaign_ended=now())
 
         self.payout_url = reverse('project-payout-detail', kwargs={'pk': self.project.id})
 

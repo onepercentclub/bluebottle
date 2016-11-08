@@ -263,7 +263,6 @@ def _process_monthly_order(monthly_order, send_email=False):
                                                            monthly_order.donations.count()))
     for monthly_donation in monthly_order.donations.all():
         donation = Donation.objects.create(amount=monthly_donation.amount,
-                                           user=monthly_donation.user,
                                            project=monthly_donation.project,
                                            order=order)
         donation.save()

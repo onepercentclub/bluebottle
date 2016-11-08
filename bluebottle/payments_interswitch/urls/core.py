@@ -1,10 +1,9 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from ..views import PaymentResponseView
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^payment_response/(?P<order_payment_id>\d+)$',
         PaymentResponseView.as_view(),
         name='interswitch-payment-response'),
-)
+]

@@ -1,5 +1,4 @@
 import json
-import urllib
 
 from moneyed.classes import Money, XOF, EUR
 from mock import patch
@@ -12,7 +11,6 @@ from bluebottle.payments_vitepay.adapters import VitepayPaymentAdapter
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
-from bluebottle.test.factory_models.rates import RateSourceFactory, RateFactory
 
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -30,8 +28,10 @@ vitepay_settings = {
         }
     ]
 }
+
+
 @patch('bluebottle.payments_vitepay.adapters.get_current_host',
-        return_value='https://onepercentclub.com')
+       return_value='https://onepercentclub.com')
 @override_settings(**vitepay_settings)
 class VitepayPaymentAdapterTestCase(BluebottleTestCase):
     def setUp(self):
@@ -58,7 +58,6 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
                                                        amount=Money(3500, XOF))
             adapter = VitepayPaymentAdapter(order_payment)
             adapter.create_payment()
-
 
     @patch('bluebottle.payments_vitepay.adapters.VitepayPaymentAdapter._create_payment_hash',
            return_value='123123')
@@ -99,17 +98,12 @@ class VitepayPaymentAdapterTestCase(BluebottleTestCase):
 
         self.assertEqual(authorization_action['url'], 'https://vitepay.com/some-path-to-pay')
 
-
     def test_update_payment(self, get_current_host):
         """
         Play some posts that Vitepay might fire at us.
         """
-        # order = OrderFactory.create()
-        # DonationFactory.create(amount=Money(2000, XOF), order=order)
-        # order_payment = OrderPaymentFactory.create(payment_method='vitepayOrangemoney', order=order)
         order_payment = VitepayOrderPaymentFactory.create(amount=Money(2000, XOF))
         payment = VitepayPaymentFactory.create(order_id='opc-1', order_payment=order_payment)
-        # authenticity = sha1({order_id};{amount_100};{currency_code};{api_secret})
         authenticity = '69E78BC6C64D43DA76DEB90F911AF213DA9DE89D'
         update_view = reverse('vitepay-status-update')
         data = {

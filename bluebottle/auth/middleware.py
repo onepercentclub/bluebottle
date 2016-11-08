@@ -28,9 +28,8 @@ LAST_SEEN_DELTA = 10 # in minutes
 
 def isAdminRequest(request):
     admin_base = reverse('admin:index')
-    docs_base = reverse('django.swagger.base.view')
 
-    return request.path.startswith(admin_base) or request.path.startswith(docs_base)
+    return request.path.startswith(admin_base)
 
 
 class UserJwtTokenMiddleware:

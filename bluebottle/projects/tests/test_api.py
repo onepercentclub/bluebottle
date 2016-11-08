@@ -65,6 +65,7 @@ class ProjectEndpointTestCase(BluebottleTestCase):
                 project = ProjectFactory.create(title=char * 3, slug=char * 3,
                                                 status=self.campaign_phase,
                                                 amount_asked=0,
+                                                amount_needed=30,
                                                 organization=organization)
                 project.save()
             else:
@@ -120,15 +121,15 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(len(response.data['results']), 8)
 
         # Test that ordering works
-        response = self.client.get(self.projects_url + '?ordering=newest')
+        response = self.client.get(self.projects_preview_url + '?ordering=newest')
         self.assertEquals(response.status_code, 200)
-        response = self.client.get(self.projects_url + '?ordering=title')
+        response = self.client.get(self.projects_preview_url + '?ordering=title')
         self.assertEquals(response.status_code, 200)
-        response = self.client.get(self.projects_url + '?ordering=deadline')
+        response = self.client.get(self.projects_preview_url + '?ordering=deadline')
         self.assertEquals(response.status_code, 200)
-        response = self.client.get(self.projects_url + '?ordering=amount_needed')
+        response = self.client.get(self.projects_preview_url + '?ordering=amount_needed')
         self.assertEquals(response.status_code, 200)
-        response = self.client.get(self.projects_url + '?ordering=popularity')
+        response = self.client.get(self.projects_preview_url + '?ordering=popularity')
         self.assertEquals(response.status_code, 200)
 
         # Test that combination of arguments works
@@ -1250,7 +1251,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         self.assertTrue(project.campaign_ended is None)
         self.assertTrue(project.campaign_funded is None)
 
-        DonationFactory.create(user=self.user, project=project, amount=10000)
+        DonationFactory.create(project=project, amount=10000)
 
         Project.objects.get(pk=project.pk)
 
@@ -1269,7 +1270,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         self.assertTrue(project.campaign_ended is None)
         self.assertTrue(project.campaign_funded is None)
 
-        DonationFactory.create(user=self.user, project=project, amount=10000)
+        DonationFactory.create(project=project, amount=10000)
 
         loaded_project = Project.objects.get(pk=project.pk)
         self.assertTrue(loaded_project.campaign_ended is None)
@@ -1292,7 +1293,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         self.assertTrue(project.campaign_ended is None)
         self.assertTrue(project.campaign_funded is None)
 
-        DonationFactory.create(user=self.user, project=project, amount=99)
+        DonationFactory.create(project=project, amount=99)
 
         loaded_project = Project.objects.get(pk=project.pk)
         self.assertTrue(loaded_project.campaign_ended is None)

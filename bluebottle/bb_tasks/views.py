@@ -55,8 +55,8 @@ class TaskPreviewPagination(BluebottlePagination):
 
 
 class TaskPreviewFilter(filters.FilterSet):
-    after = django_filters.DateTimeFilter(name='deadline', lookup_type='gte')
-    before = django_filters.DateTimeFilter(name='deadline', lookup_type='lte')
+    after = django_filters.DateTimeFilter(name='deadline', lookup_expr='gte')
+    before = django_filters.DateTimeFilter(name='deadline', lookup_expr='lte')
     country = django_filters.NumberFilter(name='project__country')
     location = django_filters.NumberFilter(name='project__location')
     project = django_filters.CharFilter(name='project__slug')

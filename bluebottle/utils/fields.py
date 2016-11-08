@@ -24,7 +24,7 @@ def get_currency_choices():
 
 
 def get_default_currency():
-    return properties.DEFAULT_CURRENCY
+    return getattr(properties, 'DEFAULT_CURRENCY')
 
 
 class MoneyField(DjangoMoneyField):

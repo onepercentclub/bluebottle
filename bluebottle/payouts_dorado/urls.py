@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from .views import ProjectPayoutList, ProjectPayoutDetail
+from .views import ProjectPayoutDetail
 
 
 urlpatterns = [

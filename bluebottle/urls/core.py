@@ -112,7 +112,7 @@ urlpatterns = [
     url(r'^api/projects/',
        include('bluebottle.projects.urls.api')),
     url(r'^api/payouts/',
-       include('bluebottle.payouts.urls')),
+       include('bluebottle.payouts_dorado.urls')),
 ]
 
 

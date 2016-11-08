@@ -2,10 +2,10 @@ from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
-from fluent_contents.models import Placeholder
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -26,9 +26,9 @@ class TestPayoutApi(BluebottleTestCase):
         financial = Group.objects.get(name='Financial')
         financial.user_set.add(self.user2)
 
-        self.payout = ProjectPayoutFactory.create()
-        self.payout_url = reverse('payout_list')
+        self.project = ProjectFactory.create()
 
+        self.payout_url = reverse('project-payout-detail', kwargs={'pk': self.project.id})
 
     def test_payouts_api_access_denied_for_anonymous(self):
         """
@@ -40,7 +40,7 @@ class TestPayoutApi(BluebottleTestCase):
         """
         """
         response = self.client.get(self.payout_url, token=self.user1_token)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_payouts_api_access_granted_for_power_user(self):
         """

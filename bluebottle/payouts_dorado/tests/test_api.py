@@ -107,3 +107,5 @@ class TestPayoutMethodApi(BluebottleTestCase):
         """
         response = self.client.get(self.payoutmethods_url, token=self.user2_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['method'], 'duckbank')

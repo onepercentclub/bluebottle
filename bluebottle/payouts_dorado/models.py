@@ -23,6 +23,7 @@ class Payout(models.Model):
                               choices=PAYOUT_STATUSES,
                               default='new')
     amount = MoneyField()
+    remote_id = models.CharField(max_length=200, null=True)
     created = CreationDateTimeField(_("created"))
     updated = ModificationDateTimeField(_("updated"))
     settled = models.DateTimeField(null=True)

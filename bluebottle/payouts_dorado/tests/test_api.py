@@ -74,6 +74,11 @@ PAYOUT_METHODS = [
     }
 ]
 
+PAYOUT_SERVICE = {
+    'service': 'dorado',
+    'url': 'http://localhost:/8001'
+}
+
 @override_settings(PAYOUT_METHODS=PAYOUT_METHODS)
 class TestPayoutMethodApi(BluebottleTestCase):
     """

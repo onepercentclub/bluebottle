@@ -332,6 +332,7 @@ TENANT_APPS = (
     'bluebottle.accounting',
     'bluebottle.journals',
     'bluebottle.csvimport',
+    'bluebottle.payouts_dorado',
     'bluebottle.rewards',
 
     # Custom dashboard

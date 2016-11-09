@@ -23,7 +23,7 @@ env:
 install:
 - pip install --upgrade setuptools --use-mirrors
 - pip install -e .[test] --process-dependency-links --trusted-host github.com
-- pip install coverage
+- pip install --upgrade coverage
 - pip install coveralls
 - createdb bluebottle_test
 - echo `psql --version`

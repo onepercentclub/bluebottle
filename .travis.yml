@@ -23,6 +23,7 @@ env:
 install:
 - pip install --upgrade setuptools --use-mirrors
 - pip install -e .[test] --process-dependency-links --trusted-host github.com
+- pip install coverage
 - pip install coveralls
 - createdb bluebottle_test
 - echo `psql --version`
@@ -30,7 +31,6 @@ before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
   | gunzip - > GeoIP.dat
 script:
-- python manage.py test
 - coverage run --source=bluebottle manage.py test 
 notifications:
   hipchat:

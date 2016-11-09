@@ -50,36 +50,6 @@ class TestPayoutApi(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-PAYOUT_METHODS = [
-    {
-        'method': 'duckbank',
-        'payment_methods': [
-            'duck-directdebit',
-            'duck-creditcard',
-            'duck-ideal'
-        ],
-        'currencies': ['EUR'],
-        'account_name': "Dagobert Duck",
-        'account_bic': "DUCKNL2U",
-        'account_iban': "NL12DUCK0123456789"
-    },
-    {
-        'method': 'excel',
-        'payment_methods': [
-            'vitepay-orangemoney',
-            'interswitch-webpay',
-            'pledge-standard'
-        ],
-        'currencies': ['XOF', 'CFA', 'USD', 'EUR']
-    }
-]
-
-PAYOUT_SERVICE = {
-    'service': 'dorado',
-    'url': 'http://localhost:/8001'
-}
-
-@override_settings(PAYOUT_METHODS=PAYOUT_METHODS)
 class TestPayoutMethodApi(BluebottleTestCase):
     """
     Test Payout Methods API

@@ -12,12 +12,6 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
-PAYOUT_SERVICE = {
-    'service': 'dorado',
-    'url': 'https://dorada.do/'
-}
-
-@override_settings(PAYOUT_SERVICE=PAYOUT_SERVICE)
 @patch('bluebottle.payouts_dorado.adapters.requests.get',
        return_value=type('obj', (object,), {'status_code': 200, 'content': '{"status": "success"}'}))
 class TestPayoutAdapter(BluebottleTestCase):

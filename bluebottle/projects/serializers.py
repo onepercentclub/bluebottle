@@ -415,32 +415,3 @@ class PayoutDonationSerializer(serializers.ModelSerializer):
                   'confirmed', 'completed',
                   'payment_method')
 
-
-
-class ProjectPayoutSerializer(serializers.ModelSerializer):
-
-    amount_asked = MoneySerializer()
-    amount_donated = MoneyTotalSerializer(source='totals_donated')
-
-    receiver_account_name = serializers.CharField(source='account_holder_name')
-    receiver_account_number = serializers.CharField(source='account_number')
-    receiver_account_bic = serializers.CharField(source='account_bic')
-    receiver_account_city = serializers.CharField(source='account_holder_city')
-    receiver_account_country = serializers.CharField(source='account_holder_country.name')
-
-    donations = PayoutDonationSerializer(many=True)
-
-    class Meta:
-        model = Project
-        fields = ('id',
-                  'amount_asked',
-                  'amount_donated',
-                  'campaign_started',
-                  'campaign_ended',
-                  'receiver_account_number',
-                  'receiver_account_bic',
-                  'receiver_account_name',
-                  'receiver_account_city',
-                  'receiver_account_country',
-                  'donations'
-                  )

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from bluebottle.donations.models import Donation
+from bluebottle.payouts_dorado.models import Payout
 from bluebottle.projects.models import Project
 from bluebottle.utils.serializers import MoneySerializer, MoneyTotalSerializer
 
@@ -49,3 +50,12 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
                   'receiver_account_country',
                   'donations'
                   )
+
+
+class PayoutSerializer(serializers.ModelSerializer):
+
+    amount = MoneySerializer()
+
+    class Meta:
+        model = Payout
+        fields = ('id', 'amount', 'remote_id', 'status')

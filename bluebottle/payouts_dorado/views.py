@@ -5,9 +5,7 @@ from rest_framework.views import APIView
 from bluebottle.clients import properties
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.projects.models import Project
-from bluebottle.projects.serializers import (
-    ProjectPayoutSerializer
-)
+from bluebottle.projects.serializers import ProjectPayoutSerializer
 
 
 class ProjectPayoutDetail(generics.RetrieveAPIView):
@@ -17,6 +15,8 @@ class ProjectPayoutDetail(generics.RetrieveAPIView):
 
 
 class PaymentMethodList(APIView):
+    permission_classes = (IsFinancialMember,)
+
     def get(self, request, *args, **kwargs):
         methods = getattr(properties, 'PAYOUT_METHODS', ())
         return Response(methods, status=status.HTTP_200_OK)

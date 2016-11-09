@@ -119,7 +119,7 @@ class ProjectManager(models.Manager):
         elif ordering == 'amount_needed':
             # Add the percentage that is still needed to the query and sort on that.
             # This way we do not have to take currencies into account
-            queryset = queryset.annotate(percentage_needed=F('amount_needed') / F('amount_asked'))
+            queryset = queryset.annotate(percentage_needed=F('amount_needed') / (F('amount_asked') + 1))
             queryset = queryset.order_by('status', 'percentage_needed', 'id')
             queryset = queryset.filter(amount_needed__gt=0)
         elif ordering == 'newest':
@@ -353,7 +353,9 @@ class Project(BaseProject, PreviousStatusMixin):
                                              "done-incomplete",
                                              "closed",
                                              "voting-done"]:
-            if self.amount_asked.amount > 0 and self.amount_donated.amount <= 20 \
+            if self.amount_donated + self.amount_extra >= self.amount_asked:
+                self.status = ProjectPhase.objects.get(slug="done-complete")
+            elif self.amount_asked.amount > 0 and self.amount_donated.amount <= 20 \
                     or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
             elif self.amount_asked.amount > 0 \
@@ -649,7 +651,7 @@ class Project(BaseProject, PreviousStatusMixin):
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
         if self.is_funding:
-            if self.amount_donated >= self.amount_asked:
+            if self.amount_donated + self.amount_extra >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
             elif self.amount_donated.amount <= 20 or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")

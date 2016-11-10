@@ -9,14 +9,6 @@ from django.core.management import call_command
                    TENANT_MODEL='client.clients',
                    DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',))
 class ManagementCommandArgsTests(TestCase):
-    def test_tenant_domain(self):
-        from ..management.commands.tenant_domain import Command as TenantDomainCommand
-        cmd = TenantDomainCommand()
-
-        self.assertEqual(len(cmd.option_list), 2)
-        self.assertEqual(cmd.option_list[0].dest, 'tenant')
-        self.assertEqual(cmd.option_list[1].dest, 'domain')
-
     def test_new_tenant(self):
         from ..management.commands.new_tenant import Command as NewTenantCommand
         cmd = NewTenantCommand()
@@ -33,16 +25,6 @@ class ManagementCommandArgsTests(TestCase):
                    TENANT_MODEL='client.clients',
                    DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',))
 class ManagementCommandTests(TestCase):
-    def test_tenant_domain(self):
-        from ..management.commands.tenant_domain import Command as TenantDomainCommand
-        cmd = TenantDomainCommand()
-
-        with mock.patch('bluebottle.clients.management.commands.tenant_domain.Command.handle') as handle_mock:
-            call_command(cmd, tenant='test', domain='test.localhost')
-            args, kwargs = handle_mock.call_args_list[0]
-            self.assertEqual(kwargs['tenant'], 'test')
-            self.assertEqual(kwargs['domain'], 'test.localhost')
-
     def test_new_tenant(self):
         from ..management.commands.new_tenant import Command as NewTenantCommand
         cmd = NewTenantCommand()

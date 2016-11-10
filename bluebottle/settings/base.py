@@ -440,7 +440,7 @@ LOGGING = {
         },
         'bluebottle.auth.middleware': {
             'handlers': ['console'],
-            'propagate': True,
+            'propagate': False,
             'level': 'ERROR',
         },
         'bluebottle.recurring_donations': {

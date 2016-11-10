@@ -206,7 +206,6 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
         self.planned = self.__class__.get_next_planned_date()
 
 
-
 class PayoutLogBase(models.Model):
     """
     Abstract base class for logging state changes.
@@ -651,8 +650,7 @@ class BaseOrganizationPayout(PayoutBase):
             # Check for consistency before changing into 'progress'.
             old_status = self.__class__.objects.get(id=self.id).status
 
-            if (old_status == StatusDefinition.NEW and
-                        self.status == StatusDefinition.IN_PROGRESS):
+            if old_status == StatusDefinition.NEW and self.status == StatusDefinition.IN_PROGRESS:
                 # Old status: new
                 # New status: progress
 
@@ -700,6 +698,7 @@ class BaseOrganizationPayout(PayoutBase):
 class OrganizationPayoutLog(PayoutLogBase):
     payout = models.ForeignKey('payouts.OrganizationPayout',
                                related_name='payout_logs')
+
 
 # Connect signals after defining models
 # Ref:  http://stackoverflow.com/a/9851875

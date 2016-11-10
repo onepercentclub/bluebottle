@@ -1,7 +1,9 @@
 from django.conf.urls import url
 from ..views import (
-    DonationList, DonationDetail, ManageDonationDetail, ManageDonationList, ProjectDonationList,
-    LatestDonationsList, ProjectDonationDetail,  MyProjectDonationList, MyFundraiserDonationList
+    DonationList, DonationDetail, ManageDonationDetail,
+    ManageDonationList, ProjectDonationList,
+    LatestDonationsList, ProjectDonationDetail,
+    MyProjectDonationList, MyFundraiserDonationList
 )
 
 

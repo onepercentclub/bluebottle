@@ -51,6 +51,7 @@ class ProjectPreviewDetail(generics.RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectPreviewSerializer
     lookup_field = 'slug'
+
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
         return qs
@@ -186,6 +187,7 @@ class ProjectThemeDetail(generics.RetrieveAPIView):
 
 class ManageProjectDocumentPagination(BluebottlePagination):
     page_size = 20
+
 
 class ManageProjectDocumentList(generics.ListCreateAPIView):
     queryset = Project.objects.all()

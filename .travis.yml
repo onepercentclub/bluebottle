@@ -23,6 +23,8 @@ env:
 install:
 - pip install --upgrade setuptools --use-mirrors
 - pip install -e .[test] --process-dependency-links --trusted-host github.com
+- pip uninstall flake8 -y
+- pip install --upgrade flake8
 - pip install --upgrade coverage
 - pip install coveralls
 - pip install --upgrade flake8
@@ -30,6 +32,7 @@ install:
 - echo `psql --version`
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
+- flake8 .
 script:
 - coverage run --source=bluebottle manage.py test
 notifications:

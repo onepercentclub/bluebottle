@@ -285,7 +285,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         return response
 
 
-authorization_logger = logging.getLogger('authorization')
+authorization_logger = logging.getLogger(__name__)
 
 class LogAuthFailureMiddleWare:
     def process_request(self, request):

@@ -438,6 +438,11 @@ LOGGING = {
             'propagate': True,
             'level': 'INFO',
         },
+        'bluebottle.auth.middleware': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': 'ERROR',
+        },
         'bluebottle.recurring_donations': {
             'handlers': ['console'],
             'propagate': True,

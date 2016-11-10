@@ -10,8 +10,6 @@ exclude =
     bluebottle/accounting,
     bluebottle/analytics,
     bluebottle/auth,
-    bluebottle/bb_accounts,
-    bluebottle/bb_donations,
     bluebottle/bb_follow,
     bluebottle/bb_fundraisers,
     bluebottle/bb_organizations,

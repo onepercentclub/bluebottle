@@ -30,9 +30,9 @@ install:
 - echo `psql --version`
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
-- flake8 .
 script:
-- coverage run --source=bluebottle manage.py test 
+- flake8 .
+- coverage run --source=bluebottle manage.py test
 notifications:
   hipchat:
     rooms:

@@ -1,6 +1,6 @@
 from decimal import Decimal
 from django.conf import settings
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from django.contrib import admin
 from django.db.models.aggregates import Sum, Count
 from django.utils.http import urlencode
@@ -138,8 +138,7 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
         Extra urls to save manual entries.
         """
         urls = super(BankTransactionAdmin, self).get_urls()
-        action_urls = patterns(
-            '',
+        action_urls = [
             url(
                 r'^(?P<pk>\d+)/unknown_transaction/$',
                 self.admin_site.admin_view(UnknownTransactionView.as_view()),
@@ -165,7 +164,7 @@ class BankTransactionAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
                 self.admin_site.admin_view(RetryPayoutView.as_view()),
                 name='banktransaction-retry-payout'
             )
-        )
+        ]
         return action_urls + urls
 
 
@@ -335,14 +334,13 @@ class DocdataPaymentAdmin(IncrementalCSVImportMixin, admin.ModelAdmin):
         Extra urls to save manual entries.
         """
         urls = super(DocdataPaymentAdmin, self).get_urls()
-        action_urls = patterns(
-            '',
+        action_urls = [
             url(
                 r'^(?P<pk>\d+)/take_cut/$',
                 self.admin_site.admin_view(RDPTakeCutView.as_view()),
                 name='accounting_remotedocdatapayment_take_cut'
             ),
-        )
+        ]
         return action_urls + urls
 
 

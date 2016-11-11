@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from ..views import (
     ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
@@ -18,8 +18,7 @@ from ..views import (
 # User settings Detail (GET/PUT):  /users/settings/<pk>
 
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^$', UserCreate.as_view(), name='user-user-create'),
     url(r'^disable-account/(?P<user_id>\d+)/(?P<token>[0-9A-Za-z]+)/$',
         DisableAccount.as_view(), name='disable-account'),
@@ -34,4 +33,4 @@ urlpatterns = patterns(
         name='user-profile-detail'),
     url(r'^verification/$', UserVerification.as_view(),
         name='user-verification'),
-)
+]

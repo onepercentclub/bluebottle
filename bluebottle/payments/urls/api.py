@@ -1,9 +1,8 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 from ..views import PaymentMethodList
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^payment_methods/$', PaymentMethodList.as_view(),
         name='payment-method-list'),
-)
+]

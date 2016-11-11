@@ -1,5 +1,4 @@
 from datetime import timedelta
-from django.test.utils import override_settings
 from django.utils.timezone import now
 from mock import patch
 from moneyed.classes import Money

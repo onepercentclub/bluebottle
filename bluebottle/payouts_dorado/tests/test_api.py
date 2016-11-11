@@ -1,6 +1,5 @@
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
 from django.utils.timezone import now
 
 from rest_framework import status

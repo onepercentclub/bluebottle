@@ -31,7 +31,6 @@ install:
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
 script:
-- flake8 .
 - coverage run --source=bluebottle manage.py test
 notifications:
   hipchat:

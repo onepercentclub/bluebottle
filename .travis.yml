@@ -22,17 +22,16 @@ env:
   - secure: PUYWLPG0f1QTf1Q77/0ft636ZKQaIIjy0eHZCVpzVyRMW0XX9N5UXhbTPE1fPFt5aRNdNjGIWxOF/4SuIEhYEaZamGG3PBNqvXI530SkTNUbNVoeAcTleYbwcaVWeYdyK2P2k1YdNUt+BbRuYN2o9I8+2QmQvQsZEwugCG4+UH4=
 install:
 - pip install --upgrade setuptools --use-mirrors
-- pip install flake8
 - pip install -e .[test] --process-dependency-links --trusted-host github.com
 - pip install --upgrade coverage
 - pip install coveralls
+- pip install --upgrade flake8
 - createdb bluebottle_test
 - echo `psql --version`
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
-- flake8 .
 script:
-- coverage run --source=bluebottle manage.py test 
+- coverage run --source=bluebottle manage.py test
 notifications:
   hipchat:
     rooms:

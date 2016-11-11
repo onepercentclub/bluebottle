@@ -1,7 +1,7 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from ..views import StatusChangedNotificationView
 
-urlpatterns = patterns('',
-                       url(r'^$', StatusChangedNotificationView.as_view(),
-                           name='payment-logger-status-changed'),
-                       )
+urlpatterns = [
+    url(r'^$', StatusChangedNotificationView.as_view(),
+        name='payment-logger-status-changed'),
+]

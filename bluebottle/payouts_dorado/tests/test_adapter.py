@@ -4,7 +4,6 @@ from mock import patch
 from moneyed.classes import Money
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.payouts_dorado.models import Payout
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -27,7 +26,7 @@ class TestPayoutAdapter(BluebottleTestCase):
 
     def test_payouts_created_trigger_called(self, requests_mock):
         """
-        Make payouts are being created locally and that trigger to service is been called.
+        Check trigger to service is been called.
         """
         order = OrderFactory()
         DonationFactory.create_batch(7, project=self.project,
@@ -47,7 +46,4 @@ class TestPayoutAdapter(BluebottleTestCase):
         self.project.deadline = yesterday
         self.project.save()
 
-        payouts = Payout.objects.all()
         self.assertEqual(self.project.status.slug, 'done-complete')
-
-        self.assertEqual(len(payouts), 2)

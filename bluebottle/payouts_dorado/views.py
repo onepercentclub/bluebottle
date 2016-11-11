@@ -14,7 +14,7 @@ class ProjectPayoutDetail(generics.RetrieveAPIView):
     permission_classes = (IsFinancialMember,)
 
 
-class PaymentMethodList(APIView):
+class PayoutMethodList(APIView):
     permission_classes = (IsFinancialMember,)
 
     def get(self, request, *args, **kwargs):

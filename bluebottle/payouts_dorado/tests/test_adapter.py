@@ -5,7 +5,6 @@ from mock import patch
 from moneyed.classes import Money
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.payouts_dorado.models import Payout
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -48,7 +47,4 @@ class TestPayoutAdapter(BluebottleTestCase):
         self.project.deadline = yesterday
         self.project.save()
 
-        payouts = Payout.objects.all()
         self.assertEqual(self.project.status.slug, 'done-complete')
-
-        self.assertEqual(len(payouts), 2)

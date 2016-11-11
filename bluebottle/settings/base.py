@@ -381,6 +381,7 @@ THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85
 THUMBNAIL_DUMMY=True
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800 # 50MB
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

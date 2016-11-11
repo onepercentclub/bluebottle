@@ -217,6 +217,17 @@ class Project(BaseProject, PreviousStatusMixin):
         default=True
     )
 
+    PAYOUT_STATUS_CHOICES = (
+        (StatusDefinition.CREATED, _('Created')),
+        (StatusDefinition.IN_PROGRESS, _('In progress')),
+        (StatusDefinition.PARTIAL, _('Partial')),
+        (StatusDefinition.SUCCESS, _('Success')),
+        (StatusDefinition.FAILED, _('Failed'))
+    )
+
+    payout_status = models.CharField(max_length=50, null=True,
+                                     choices=PAYOUT_STATUS_CHOICES)
+
     objects = ProjectManager()
 
     def __unicode__(self):

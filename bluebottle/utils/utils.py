@@ -71,6 +71,7 @@ class StatusDefinition(object):
     PAID = 'paid'
     FAILED = 'failed'
     RETRY = 'retry'
+    PARTIAL = 'partial'
     UNKNOWN = 'unknown'
 
 

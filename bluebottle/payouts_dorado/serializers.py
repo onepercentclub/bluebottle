@@ -23,7 +23,6 @@ class PayoutDonationSerializer(serializers.ModelSerializer):
 
 
 class ProjectPayoutSerializer(serializers.ModelSerializer):
-
     amount_asked = MoneySerializer()
     amount_donated = MoneyTotalSerializer(source='totals_donated')
 
@@ -38,8 +37,9 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id',
-                  'amount_asked',
+                  'title',
                   'amount_donated',
+                  'amount_asked',
                   'campaign_started',
                   'campaign_ended',
                   'receiver_account_number',

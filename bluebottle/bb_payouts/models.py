@@ -701,6 +701,7 @@ class OrganizationPayoutLog(PayoutLogBase):
     payout = models.ForeignKey('payouts.OrganizationPayout',
                                related_name='payout_logs')
 
+
 # Connect signals after defining models
 # Ref:  http://stackoverflow.com/a/9851875
 # Note: for newer Django, put this in module initialization code

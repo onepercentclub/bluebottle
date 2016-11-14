@@ -17,13 +17,10 @@ class Command(BaseCommand):
     help = 'Post setup for create a tenant'
     base_url = "https://www.transifex.com/api/2/"
 
-    def __init__(self, *args, **kwargs):
-        super(Command, self).__init__(*args, **kwargs)
-        self.option_list = BaseCommand.option_list + (
-            make_option('--client-name',
-                        help='Specifies the client name for the tenant \
-                             (e.g. "new-tenant").'),
-        )
+    def add_arguments(self, parser):
+        parser.add_argument('--client-name',
+                    help='Specifies the client name for the tenant \
+                    (e.g. "new-tenant").')
 
     def handle(self, *args, **options):
         client_name = options.get('client_name', None)

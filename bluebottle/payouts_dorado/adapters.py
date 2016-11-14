@@ -26,5 +26,8 @@ class DoradoPayoutAdapter(object):
             response = requests.post(self.settings['url'], data)
             if response.content != '{"status": "success"}':
                 raise SystemError("Could not trigger payout")
+            #
+            self.project.payout_status = 'created'
+            self.project.save()
         except MissingSchema:
             raise ImproperlyConfigured("Incorrect Payout URL")

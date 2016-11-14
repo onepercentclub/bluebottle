@@ -9,5 +9,6 @@ urlpatterns = [
         name='project-payout-detail'),
     url(r'^methods/$',
         PaymentMethodList.as_view(),
-        name='payout-method-list'),
+        name='payout-method-list')
+
 ]

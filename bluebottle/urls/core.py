@@ -106,13 +106,12 @@ urlpatterns = [
         include('bluebottle.social.urls.api')),
 
     url(r'token/', include('token_auth.urls')),
-                       url(r'token/', include('token_auth.urls')),
 
     # urls for payout service
     url(r'^api/projects/',
-       include('bluebottle.projects.urls.api')),
+        include('bluebottle.projects.urls.api')),
     url(r'^api/payouts/',
-       include('bluebottle.payouts_dorado.urls')),
+        include('bluebottle.payouts_dorado.urls')),
 ]
 
 

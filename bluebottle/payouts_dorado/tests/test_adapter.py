@@ -26,7 +26,7 @@ class TestPayoutAdapter(BluebottleTestCase):
 
     def test_payouts_created_trigger_called(self, requests_mock):
         """
-        Make payouts are being created locally and that trigger to service is been called.
+        Check trigger to service is been called.
         """
         order = OrderFactory()
         DonationFactory.create_batch(7, project=self.project,

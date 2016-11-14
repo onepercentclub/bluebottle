@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from .views import ProjectPayoutDetail, PaymentMethodList
+from .views import ProjectPayoutDetail, PayoutMethodList
 
 
 urlpatterns = [
@@ -8,7 +8,6 @@ urlpatterns = [
         ProjectPayoutDetail.as_view(),
         name='project-payout-detail'),
     url(r'^methods/$',
-        PaymentMethodList.as_view(),
-        name='payout-method-list')
-
+        PayoutMethodList.as_view(),
+        name='payout-method-list'),
 ]

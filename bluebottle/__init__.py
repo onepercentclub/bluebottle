@@ -12,4 +12,5 @@ def get_version():
             version = '%s%s' % (version, VERSION[3][0])
     return version
 
+
 __version__ = get_version()

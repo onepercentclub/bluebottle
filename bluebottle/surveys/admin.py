@@ -43,6 +43,7 @@ class SurveyAdmin(admin.ModelAdmin):
         for survey in queryset:
             survey.synchronize()
 
+
 admin.site.register(Survey, SurveyAdmin)
 
 
@@ -76,6 +77,7 @@ class ResponseAdmin(admin.ModelAdmin):
     def answer_count(self, obj):
         return obj.answer_set.count()
 
+
 admin.site.register(Response, ResponseAdmin)
 
 
@@ -89,5 +91,6 @@ class AggregateAnswerAdmin(admin.ModelAdmin):
     def survey_question(self, obj):
         return u"<span title='{1}'>{0}</span>".format(unicode(obj.question)[:30], obj.question)
     survey_question.allow_tags = True
+
 
 admin.site.register(AggregateAnswer, AggregateAnswerAdmin)

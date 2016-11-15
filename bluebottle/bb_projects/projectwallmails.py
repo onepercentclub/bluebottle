@@ -117,5 +117,6 @@ class ProjectReactionObserver(ReactionObserver):
                     receiver=project_owner
                 )
 
+
 ObserversContainer().register(ProjectWallObserver)
 ObserversContainer().register(ProjectReactionObserver)

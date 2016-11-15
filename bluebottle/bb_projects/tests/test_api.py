@@ -244,6 +244,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
             self.assertIn('description', item)
             self.assertNotEquals(item['id'], disabled.id)
 
+
 class TestProjectThemeDetail(ProjectEndpointTestCase):
     """
     Test case for the ``ProjectThemeDetail`` API view.

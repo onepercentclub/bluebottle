@@ -10,7 +10,7 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
-@patch('bluebottle.payouts_dorado.adapters.requests.get',
+@patch('bluebottle.payouts_dorado.adapters.requests.post',
        return_value=type('obj', (object,), {'status_code': 200, 'content': '{"status": "success"}'}))
 class TestPayoutAdapter(BluebottleTestCase):
     """
@@ -47,3 +47,10 @@ class TestPayoutAdapter(BluebottleTestCase):
         self.project.save()
 
         self.assertEqual(self.project.status.slug, 'done-complete')
+        self.assertEqual(self.project.payout_status, 'needs_approval')
+
+        self.project.payout_status = 'approved'
+        self.project.save()
+
+        requests_mock.assert_called_once_with('test', {'project': self.project.id, 'tenant': u'test'})
+        self.assertEqual(self.project.payout_status, 'created')

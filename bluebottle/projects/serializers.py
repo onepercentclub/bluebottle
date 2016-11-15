@@ -419,20 +419,21 @@ class PayoutDonationSerializer(serializers.ModelSerializer):
 
 class ProjectPayoutSerializer(serializers.ModelSerializer):
 
-    amount_asked = MoneySerializer()
-    amount_donated = MoneyTotalSerializer(source='totals_donated')
+    amount_asked = MoneySerializer(read_only=True)
+    amount_donated = MoneyTotalSerializer(source='totals_donated', read_only=True)
 
-    receiver_account_name = serializers.CharField(source='account_holder_name')
-    receiver_account_number = serializers.CharField(source='account_number')
-    receiver_account_bic = serializers.CharField(source='account_bic')
-    receiver_account_city = serializers.CharField(source='account_holder_city')
-    receiver_account_country = serializers.CharField(source='account_holder_country.name')
+    receiver_account_name = serializers.CharField(source='account_holder_name', read_only=True)
+    receiver_account_number = serializers.CharField(source='account_number', read_only=True)
+    receiver_account_bic = serializers.CharField(source='account_bic', read_only=True)
+    receiver_account_city = serializers.CharField(source='account_holder_city', read_only=True)
+    receiver_account_country = serializers.CharField(source='account_holder_country.name', read_only=True)
 
-    donations = PayoutDonationSerializer(many=True)
+    donations = PayoutDonationSerializer(many=True, read_only=True)
 
     class Meta:
         model = Project
         fields = ('id',
+                  'payout_status',
                   'amount_asked',
                   'amount_donated',
                   'campaign_started',

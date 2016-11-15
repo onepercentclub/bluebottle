@@ -1,4 +1,3 @@
-from bluebottle.clients import properties
 from bluebottle.clients.utils import get_currencies
 from django import template
 

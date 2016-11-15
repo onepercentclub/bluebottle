@@ -93,12 +93,10 @@ class BaseOrder(models.Model, FSMTransition):
         self.confirmed = None
 
     def update_total(self, save=True):
-        donations = Donation.objects.filter(order=self, amount__gt=0)
-        total = [
-            Money(data['amount__sum'], data['amount_currency']) for data in
-                donations.values('amount_currency').annotate(Sum('amount')).order_by()
+        donations = Donation.objects.filter(order=self, amount__gt=0).\
+            values('amount_currency').annotate(Sum('amount')).order_by()
 
-        ]
+        total = [Money(data['amount__sum'], data['amount_currency']) for data in donations]
         if len(total) > 1:
             raise ValueError('Multiple currencies in one order')
         self.total = total[0]
@@ -126,4 +124,4 @@ class BaseOrder(models.Model, FSMTransition):
         abstract = True
 
 
-import signals
+import signals  # noqa

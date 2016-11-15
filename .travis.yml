@@ -23,13 +23,17 @@ env:
 install:
 - pip install --upgrade setuptools --use-mirrors
 - pip install -e .[test] --process-dependency-links --trusted-host github.com
+- pip install --upgrade -I flake8
+- pip install --upgrade coverage
+- pip install coveralls
+- pip install --upgrade flake8
 - createdb bluebottle_test
 - echo `psql --version`
 before_script:
-- curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
-  | gunzip - > GeoIP.dat
+- curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
+- flake8 .
 script:
-- python manage.py test
+- coverage run --source=bluebottle manage.py test
 notifications:
   hipchat:
     rooms:
@@ -38,3 +42,4 @@ notifications:
     - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
 after_success:
 - bash post_travis.sh
+- coveralls

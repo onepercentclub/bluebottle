@@ -39,10 +39,11 @@ def _order_status_post_transition(sender, instance, **kwargs):
         first_time_success = (
             kwargs['source'] not in [StatusDefinition.PLEDGED,
                                      StatusDefinition.SUCCESS,
-                                     StatusDefinition.PENDING]
-            and kwargs['target'] in [StatusDefinition.PLEDGED,
-                                     StatusDefinition.SUCCESS,
-                                     StatusDefinition.PENDING])
+                                     StatusDefinition.PENDING] and
+            kwargs['target'] in [StatusDefinition.PLEDGED,
+                                 StatusDefinition.SUCCESS,
+                                 StatusDefinition.PENDING]
+        )
 
         # Process each donation in the order
         for donation in instance.donations.all():

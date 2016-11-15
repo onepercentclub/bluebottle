@@ -108,6 +108,7 @@ urlpatterns = [
     url(r'token/', include('token_auth.urls')),
 ]
 
+
 # Nicely parse 500 errors so we get semantic messages in tests.
 def handler500(request):
     response = render_to_response('500.html', {},

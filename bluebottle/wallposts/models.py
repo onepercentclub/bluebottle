@@ -114,27 +114,16 @@ class MediaWallpost(Wallpost):
     title = models.CharField(max_length=60)
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True,
                             default='')
-    results_page = models.BooleanField(default=True)
     video_url = models.URLField(max_length=100, blank=True, default='')
 
     def __unicode__(self):
         return Truncator(self.text).words(10)
 
-        # FIXME: See how we can re-enable this
-        # def save(self, *args, **kwargs):
-        #     super(MediaWallpost, self).save(*args, **kwargs)
-        #
-        #     # Mark the photos as deleted when the MediaWallpost is deleted.
-        #     if self.deleted:
-        #         for photo in self.photos.all():
-        #             if not photo.deleted:
-        #                 photo.deleted = self.deleted
-        #                 photo.save()
-
 
 class MediaWallpostPhoto(models.Model):
     mediawallpost = models.ForeignKey(MediaWallpost, related_name='photos',
                                       null=True, blank=True)
+    results_page = models.BooleanField(default=True)
     photo = models.ImageField(upload_to='mediawallpostphotos')
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,

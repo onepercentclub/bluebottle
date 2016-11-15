@@ -18,16 +18,6 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.test.factory_models.projects import ProjectFactory
 
-from ..admin import ProjectPayoutAdmin
-
-
-class PayoutTestAdmin(BluebottleTestCase):
-    """ verify expected fields/behaviour is present """
-
-    def test_extra_listfields(self):
-        self.failUnless('amount_pending' in ProjectPayoutAdmin.list_display)
-        self.failUnless('amount_raised' in ProjectPayoutAdmin.list_display)
-
 
 class PayoutBaseTestCase(BluebottleTestCase):
     """ Base test case for Payouts. """

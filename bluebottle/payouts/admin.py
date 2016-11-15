@@ -282,7 +282,7 @@ class PayoutListFilter(admin.SimpleListFilter):
                 return None
 
         def _label(v, k):
-            return "{0}% ({1})".format(int(v * 100), k)
+            return "{0:.3g}% ({1})".format(v * 100, k)
 
         return tuple(sorted(((k, _label(v, k)) for k, v in rules.iteritems()),
                             key=lambda x: _value(x[1])))

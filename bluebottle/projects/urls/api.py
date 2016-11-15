@@ -1,7 +1,9 @@
-from bluebottle.projects.views import ProjectMediaDetail, ProjectSupportDetail
 from ..views import (
     ManageProjectBudgetLineDetail, ManageProjectBudgetLineList,
-    ManageProjectDocumentList, ManageProjectDocumentDetail)
+    ManageProjectDocumentList, ManageProjectDocumentDetail,
+    ProjectMediaDetail, ProjectSupportDetail,
+    ProjectMediaPhotoDetail
+)
 from django.conf.urls import url
 
 
@@ -10,6 +12,11 @@ urlpatterns = [
     url(r'^media/(?P<slug>[\w-]+)$',
         ProjectMediaDetail.as_view(),
         name='project-media-detail'),
+
+    url(r'^media/photo/(?P<pk>\d+)$',
+        ProjectMediaPhotoDetail.as_view(),
+        name='project-media-photo-detail'),
+
     url(r'^support/(?P<slug>[\w-]+)$',
         ProjectSupportDetail.as_view(),
         name='project-supporters-detail'),

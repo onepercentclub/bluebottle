@@ -114,6 +114,7 @@ class MediaWallpost(Wallpost):
     title = models.CharField(max_length=60)
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True,
                             default='')
+    results_page = models.BooleanField(default=True)
     video_url = models.URLField(max_length=100, blank=True, default='')
 
     def __unicode__(self):

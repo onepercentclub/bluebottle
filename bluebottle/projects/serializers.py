@@ -319,8 +319,9 @@ class ProjectDonationSerializer(serializers.ModelSerializer):
 
 
 class ProjectWallpostPhotoSerializer(serializers.ModelSerializer):
-    photo = ImageSerializer()
-    created = serializers.DateTimeField(source='mediawallpost.created')
+    photo = ImageSerializer(read_only=True)
+    created = serializers.DateTimeField(source='mediawallpost.created',
+                                        read_only=True)
 
     class Meta:
         model = MediaWallpostPhoto

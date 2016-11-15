@@ -1,17 +1,13 @@
-import datetime
-
 from django.utils import timezone
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.projects.models import Project, ProjectPhaseLog
+from bluebottle.projects.models import Project
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.projects import (ProjectFactory,
-                                                     ProjectPhaseFactory)
-from bluebottle.test.factory_models.tasks import TaskFactory, \
-    TaskMemberFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 
 
 class TestProjectTestCase(BluebottleTestCase):

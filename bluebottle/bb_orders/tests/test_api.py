@@ -1,6 +1,3 @@
-import json
-import unittest
-from bluebottle.test.factory_models.donations import DonationFactory
 from django.core.urlresolvers import reverse
 from bluebottle.test.utils import BluebottleTestCase
 from rest_framework import status
@@ -54,8 +51,6 @@ class TestCreateUpdateOrder(OrderApiTestCase):
         self.assertEqual(response.data['status'], StatusDefinition.CREATED)
         self.assertEqual(response.data['total']['amount'], 0.00)
         self.assertEqual(response.data['total']['currency'], 'EUR')
-
-        order_id = response.data['id']
 
         # Check that there's one order
         response = self.client.get(self.manage_order_list_url,
@@ -168,9 +163,9 @@ class TestStatusUpdates(BluebottleTestCase):
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='mock')
         self.service = PaymentService(order_payment=self.order_payment)
-        response = self.client.get(
-            reverse('manage-order-detail', kwargs={'pk': self.order.id}),
-            token=self.user1_token)
+        self.client.get(reverse('manage-order-detail',
+                                kwargs={'pk': self.order.id}),
+                        token=self.user1_token)
         self.assertEqual(mock_check_payment_status.called, True)
 
     @patch.object(MockPaymentAdapter, 'check_payment_status')
@@ -181,7 +176,7 @@ class TestStatusUpdates(BluebottleTestCase):
                                                         payment_method='mock',
                                                         status=StatusDefinition.AUTHORIZED)
 
-        response = self.client.get(
-            reverse('manage-order-detail', kwargs={'pk': self.order.id}),
-            token=self.user1_token)
+        self.client.get(reverse('manage-order-detail',
+                                kwargs={'pk': self.order.id}),
+                        token=self.user1_token)
         self.assertEqual(mock_check_payment_status.called, False)

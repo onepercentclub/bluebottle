@@ -12,7 +12,6 @@ from bluebottle.recurring_donations.tests.model_factory import \
     MonthlyDonorFactory, MonthlyDonorProjectFactory
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.projects.models import Project
-from bluebottle.clients.utils import LocalTenant
 from bluebottle.recurring_donations import tasks
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory

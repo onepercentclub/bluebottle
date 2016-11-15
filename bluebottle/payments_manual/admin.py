@@ -15,4 +15,5 @@ class ManualPaymentAdmin(admin.ModelAdmin):
         """
         return False
 
+
 admin.site.register(ManualPayment, ManualPaymentAdmin)

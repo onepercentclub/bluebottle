@@ -8,7 +8,7 @@ from bluebottle.projects.models import Project
 from bluebottle.payouts_dorado.serializers import ProjectPayoutSerializer
 
 
-class ProjectPayoutDetail(generics.RetrieveAPIView):
+class ProjectPayoutDetail(generics.RetrieveUpdateAPIView):
     queryset = Project.objects.filter(campaign_ended__isnull=False).all()
     serializer_class = ProjectPayoutSerializer
     permission_classes = (IsFinancialMember,)

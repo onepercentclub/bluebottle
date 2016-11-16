@@ -4,8 +4,10 @@ from decimal import InvalidOperation
 
 from django import forms
 from django.db.models import Count, Sum
+from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.http.response import HttpResponseRedirect
 from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
 
@@ -202,6 +204,31 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
+    readonly_fields = ('vote_count', 'amount_donated', 'payout_status',
+                       'amount_needed', 'popularity')
+
+    def get_urls(self):
+        urls = super(ProjectAdmin, self).get_urls()
+        process_urls = [
+            url(r'^approve_payout/(?P<pk>\d+)/$',
+                self.approve_payout,
+                name="projects_project_approve_payout"),
+        ]
+        return process_urls + urls
+
+    def approve_payouts(self, queryset):
+        queryset.filter(payout_status='needs-approval').update(payout_status='approved')
+    approve_payouts.short_description = _("Approve payouts for selected projects")
+
+    def approve_payout(self, request, pk=None):
+        project = Project.objects.get(pk=pk)
+        if project.payout_status == 'needs_approval':
+            project.payout_status = 'approved'
+            project.save()
+        project_url = reverse('admin:projects_project_change', args=(project.id,))
+        response = HttpResponseRedirect(project_url)
+        return response
+
     def get_list_filter(self, request):
         filters = ('status', 'is_campaign', ProjectThemeFilter, 'project_type')
 
@@ -214,7 +241,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_display(self, request):
         fields = ('get_title_display', 'get_owner_display', 'created',
-                  'status', 'is_campaign', 'deadline', 'donated_percentage')
+                  'status', 'payout_status',
+                  'deadline', 'donated_percentage')
         # Only show Location column if there are any
         if Location.objects.count():
             fields += ('location', )
@@ -226,15 +254,12 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def get_list_editable(self, request):
         return ('is_campaign', )
 
-    readonly_fields = ('vote_count', 'amount_donated',
-                       'amount_needed', 'popularity')
-
     export_fields = [
         ('title', 'title'),
         ('owner', 'owner'),
         ('owner__remote_id', 'remote id'),
         ('created', 'created'),
-        ('status', 'status'),
+        ('status', 'status', 'payout_status'),
         ('theme', 'theme'),
         ('location__group', 'region'),
         ('location', 'location'),
@@ -255,7 +280,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                mark_as_done_complete, mark_as_campaign,
                mark_as_voting_done, mark_as_voting,
                mark_as_plan_needs_work, mark_as_plan_submitted,
-               mark_as_plan_new]
+               mark_as_plan_new, approve_payouts]
 
     def get_actions(self, request):
         """Order the action in reverse (delete at the bottom)."""
@@ -264,7 +289,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization',
-                                'status', 'title', 'slug', 'project_type',
+                                'status', 'payout_status',
+                                'title', 'slug', 'project_type',
                                 'is_campaign', 'celebrate_results')}),
 
         (_('Story'), {'fields': ('pitch', 'story', 'reach')}),

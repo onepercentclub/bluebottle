@@ -58,9 +58,11 @@ class StatusDefinition(object):
     NEW = 'new'
     IN_PROGRESS = 'in_progress'
     PENDING = 'pending'
+    NEEDS_APPROVAL = 'needs_approval'
     CREATED = 'created'
     LOCKED = 'locked'
     PLEDGED = 'pledged'
+    APPROVED = 'approved'
     SUCCESS = 'success'
     STARTED = 'started'
     CANCELLED = 'cancelled'
@@ -71,6 +73,7 @@ class StatusDefinition(object):
     PAID = 'paid'
     FAILED = 'failed'
     RETRY = 'retry'
+    PARTIAL = 'partial'
     UNKNOWN = 'unknown'
 
 

@@ -48,6 +48,20 @@ class TestPayoutApi(BluebottleTestCase):
         response = self.client.get(self.payout_url, token=self.user2_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_payouts_api_update_payout_status(self):
+        """
+        Update payout status
+        """
+        payout_url = reverse('project-payout-detail', kwargs={'pk': self.project.id})
+
+        response = self.client.put(payout_url, {'payout_status': 'created'}, token=self.user2_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['payout_status'], 'created')
+
+        response = self.client.put(payout_url, {'payout_status': 'success'}, token=self.user2_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['payout_status'], 'success')
+
 
 class TestPayoutMethodApi(BluebottleTestCase):
     """

@@ -37,6 +37,7 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id',
+                  'payout_status',
                   'title',
                   'amount_donated',
                   'amount_asked',

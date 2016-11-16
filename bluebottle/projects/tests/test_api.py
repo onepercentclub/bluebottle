@@ -4,7 +4,6 @@ from random import randint
 
 from django.test import RequestFactory
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
 from django.utils import timezone
 from django.test.utils import override_settings
 
@@ -14,9 +13,7 @@ from rest_framework import status
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.tasks.models import Task
 from bluebottle.test.factory_models.categories import CategoryFactory
-from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
@@ -1377,14 +1374,21 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
                           ProjectPhase.objects.get(slug="done-incomplete"))
 
 
-class ProjectMediaApi(ProjectEndpointTestCase):
+class ProjectMediaApi(BluebottleTestCase):
     """
     Test that project media return media (pictures & videos) from wallposts.
     """
 
     def setUp(self):
+        super(ProjectMediaApi, self).setUp()
         self.init_projects()
-        self.project = ProjectFactory.create()
+
+        self.some_user = BlueBottleUserFactory.create()
+        self.another_user = BlueBottleUserFactory.create()
+        self.some_user_token = "JWT {0}".format(self.some_user.get_jwt_token())
+        self.another_user_token = "JWT {0}".format(self.another_user.get_jwt_token())
+        self.project = ProjectFactory.create(owner=self.some_user)
+
         mwp1 = MediaWallpostFactory.create(content_object=self.project,
                                            video_url='https://youtu.be/Bal2U5jxZDQ')
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
@@ -1408,6 +1412,31 @@ class ProjectMediaApi(ProjectEndpointTestCase):
 
         self.assertEqual(len(response.data['pictures']), 8)
         self.assertEqual(len(response.data['videos']), 2)
+
+    def test_project_hide_media_picture(self):
+        # Hide a picture from results media
+        response = self.client.get(self.project_media_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(len(response.data['pictures']), 8)
+
+        pic_id = response.data['pictures'][0]['id']
+        pic_data = {
+            'id': pic_id,
+            'results_page': False
+        }
+
+        # Only project owner can hide an image
+        picture_url = reverse('project-media-photo-detail', kwargs={'pk': pic_id})
+        response = self.client.put(picture_url, pic_data, token=self.another_user_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.client.put(picture_url, pic_data, token=self.some_user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Check the image is not listed anymore
+        response = self.client.get(self.project_media_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(len(response.data['pictures']), 7)
 
 
 class ProjectSupportersApi(ProjectEndpointTestCase):

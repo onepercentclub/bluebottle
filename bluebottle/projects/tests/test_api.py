@@ -4,7 +4,6 @@ from random import randint
 
 from django.test import RequestFactory
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
 from django.utils import timezone
 from django.test.utils import override_settings
 
@@ -14,9 +13,7 @@ from rest_framework import status
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.tasks.models import Task
 from bluebottle.test.factory_models.categories import CategoryFactory
-from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
@@ -1377,7 +1374,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
                           ProjectPhase.objects.get(slug="done-incomplete"))
 
 
-class ProjectMediaApi(ProjectEndpointTestCase):
+class ProjectMediaApi(BluebottleTestCase):
     """
     Test that project media return media (pictures & videos) from wallposts.
     """
@@ -1428,13 +1425,12 @@ class ProjectMediaApi(ProjectEndpointTestCase):
         }
 
         # Only project owner can hide an image
-        picture_url = reverse('project-media-photo-detail',
-                              kwargs={'pk': pic_id})
-        response = self.client.put(picture_url, picdata, token=self.another_user_token)
+        picture_url = reverse('project-media-photo-detail', kwargs={'pk': pic_id})
+        response = self.client.put(picture_url, pic_data, token=self.another_user_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-        response = self.client.put(picture_url, picdata, token=self.some_user_token)
-        self.assertEqual(response.status_code, status.HTTP_200)
+        response = self.client.put(picture_url, pic_data, token=self.some_user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Check the image is not listed anymore
         response = self.client.get(self.project_media_url)

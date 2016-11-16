@@ -325,7 +325,7 @@ class ProjectWallpostPhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MediaWallpostPhoto
-        fields = ('id', 'photo', 'created')
+        fields = ('id', 'photo', 'created', 'results_page')
 
 
 class ProjectWallpostVideoSerializer(serializers.ModelSerializer):

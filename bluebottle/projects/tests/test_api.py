@@ -1380,6 +1380,7 @@ class ProjectMediaApi(BluebottleTestCase):
     """
 
     def setUp(self):
+        super(ProjectMediaApi, self).setUp()
         self.init_projects()
 
         self.some_user = BlueBottleUserFactory.create()

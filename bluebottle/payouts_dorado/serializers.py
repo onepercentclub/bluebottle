@@ -39,11 +39,12 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
     receiver_account_country = serializers.CharField(source='account_holder_country.name', read_only=True)
 
     donations = PayoutDonationSerializer(many=True, read_only=True)
+    status = serializers.CharField(source='payout_status')
 
     class Meta:
         model = Project
         fields = ('id',
-                  'payout_status',
+                  'status',
                   'title',
                   'amount_donated',
                   'amount_asked',

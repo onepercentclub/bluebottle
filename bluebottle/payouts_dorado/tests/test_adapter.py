@@ -52,5 +52,5 @@ class TestPayoutAdapter(BluebottleTestCase):
         self.project.payout_status = 'approved'
         self.project.save()
 
-        requests_mock.assert_called_once_with('test', {'project': self.project.id, 'tenant': u'test'})
+        requests_mock.assert_called_once_with('test', {'project_id': self.project.id, 'tenant': u'test'})
         self.assertEqual(self.project.payout_status, 'created')

@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from bluebottle.clients import properties
 from bluebottle.payouts_dorado.permissions import IsFinancialMember
 from bluebottle.projects.models import Project
-from bluebottle.projects.serializers import ProjectPayoutSerializer
+from bluebottle.payouts_dorado.serializers import ProjectPayoutSerializer
 
 
 class ProjectPayoutDetail(generics.RetrieveUpdateAPIView):

@@ -6,7 +6,6 @@ from bluebottle.projects.models import ProjectBudgetLine, Project
 from bluebottle.projects.serializers import (
     ProjectBudgetLineSerializer,
     ProjectDocumentSerializer,
-    ProjectPayoutSerializer
 )
 from bluebottle.projects.permissions import IsProjectOwner
 from bluebottle.projects.serializers import (

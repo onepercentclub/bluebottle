@@ -279,10 +279,9 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         if not hasattr(form, 'show_form') or form.show_form():
             page_data['form'] = form
 
-        return render_to_response('lockdown/form.html', page_data, RequestContext(request))
+        response = render_to_response('lockdown/form.html', page_data)
         response.status_code = 401
         return response
-
 
 authorization_logger = logging.getLogger('authorization')
 

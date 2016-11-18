@@ -9,7 +9,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render_to_response
-from django.template import RequestContext
 from django.utils import timezone
 
 from rest_framework import exceptions
@@ -284,6 +283,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         return response
 
 authorization_logger = logging.getLogger('authorization')
+
 
 class LogAuthFailureMiddleWare:
     def process_request(self, request):

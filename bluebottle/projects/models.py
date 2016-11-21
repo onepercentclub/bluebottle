@@ -229,7 +229,7 @@ class Project(BaseProject, PreviousStatusMixin):
         (StatusDefinition.FAILED, _('Failed'))
     )
 
-    payout_status = models.CharField(max_length=50, null=True,
+    payout_status = models.CharField(max_length=50, null=True, blank=True, 
                                      choices=PAYOUT_STATUS_CHOICES)
 
     objects = ProjectManager()

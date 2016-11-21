@@ -204,7 +204,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
-    readonly_fields = ('vote_count', 'amount_donated', 'payout_status',
+    readonly_fields = ('vote_count', 'amount_donated',
+                       # 'payout_status',
                        'amount_needed', 'popularity')
 
     def get_urls(self):

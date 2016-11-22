@@ -62,7 +62,7 @@ class ClientSettingsTestCase(BluebottleTestCase):
         'restricted_countries': ('NL', 'BE', ),
         'supports_recurring': True,
         'currencies': {
-            'EUR': {'min_amount': 5, 'max_amount': 100}
+            'EUR': {'min_amount': 10, 'max_amount': 100}
         }
 
     }, {
@@ -73,8 +73,8 @@ class ClientSettingsTestCase(BluebottleTestCase):
         'supports_recurring': False,
         'currencies': {
             'USD': {'min_amount': 5, 'max_amount': 100},
-            'NGN': {'min_amount': 5, 'max_amount': 100},
-            'XOF': {'min_amount': 5, 'max_amount': 100},
+            'NGN': {'min_amount': 3000, 'max_amount': 100},
+            'XOF': {'min_amount': 5000, 'max_amount': 100},
         }
     }])
     def test_settings_currencies(self):
@@ -83,8 +83,8 @@ class ClientSettingsTestCase(BluebottleTestCase):
 
         self.assertEqual(
             response.data['currencies'],
-            [{'symbol': u'CFA', 'code': 'XOF', 'name': u'West African CFA Franc', 'rate': Decimal(1000.0)},
-             {'symbol': u'\u20a6', 'code': 'NGN', 'name': u'Nigerian Naira', 'rate': Decimal(500.0)},
-             {'symbol': u'$', 'code': 'USD', 'name': u'US Dollar', 'rate': Decimal(1.0)},
-             {'symbol': u'\u20ac', 'code': 'EUR', 'name': u'Euro', 'rate': Decimal(1.5)}]
+            [{'symbol': u'CFA', 'code': 'XOF', 'name': u'West African CFA Franc', 'rate': Decimal(1000.0), 'minAmount': 5000},
+             {'symbol': u'\u20a6', 'code': 'NGN', 'name': u'Nigerian Naira', 'rate': Decimal(500.0), 'minAmount': 3000},
+             {'symbol': u'$', 'code': 'USD', 'name': u'US Dollar', 'rate': Decimal(1.0), 'minAmount': 5},
+             {'symbol': u'\u20ac', 'code': 'EUR', 'name': u'Euro', 'rate': Decimal(1.5), 'minAmount': 5}]
         )

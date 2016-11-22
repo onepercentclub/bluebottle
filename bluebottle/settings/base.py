@@ -243,6 +243,7 @@ SHARED_APPS = (
     'django.contrib.staticfiles',
 
     # 3rd party apps
+    'lockdown',
     'django_extensions',
     'raven.contrib.django.raven_compat',
     'djcelery',
@@ -253,7 +254,6 @@ SHARED_APPS = (
     'tenant_extras',
     'localflavor',
     'filetransfers',
-    'lockdown',
     'corsheaders',
     'djmoney_rates'
 

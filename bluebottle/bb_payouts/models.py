@@ -465,7 +465,7 @@ class BaseProjectPayout(PayoutBase):
 
     def __unicode__(self):
         date = self.created.strftime('%d-%m-%Y')
-        return "{0} : {1} : {2} : {3} {4}".format(
+        return u"{0} : {1} : {2} : {3} {4}".format(
             self.invoice_reference,
             date,
             self.receiver_account_number,

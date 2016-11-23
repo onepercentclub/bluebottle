@@ -28,6 +28,7 @@ dependency_links = [
 install_requires = [
     'Babel==2.3.4',
     'Django==1.10.2',
+    'FeinCMS==1.13.0',
     'Pillow==3.2.0',
     'South==1.0.2',
     'Sphinx==1.4.1',
@@ -52,6 +53,7 @@ install_requires = [
     'django-lockdown==1.2',
     'django-loginas==0.1.9',
     'django-modeltranslation==0.11',
+    'django-mptt==0.8.6',
     'django_polymorphic==1.0.1',
     'django-money==0.10-pre',
     'django-rest-swagger==0.3.6',

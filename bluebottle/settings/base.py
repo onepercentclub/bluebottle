@@ -364,6 +364,13 @@ TENANT_APPS = (
     'django.contrib.humanize',
     'django_tools',
     'taggit',
+
+    # fein-cms
+    'feincms',
+    'mptt',
+    'feincms.module.page',
+    'feincms.module.medialibrary',
+    'bluebottle.cms',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]

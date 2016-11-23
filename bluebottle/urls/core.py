@@ -89,6 +89,9 @@ urlpatterns = [
     url(r'^api/surveys/',
         include('bluebottle.surveys.urls.api')),
 
+    url(r'^api/cms/',
+        include('bluebottle.cms.urls.api')),
+
 
     # Organization urls for private documents
     url(r'^documents/',
@@ -106,6 +109,7 @@ urlpatterns = [
         include('bluebottle.social.urls.api')),
 
     url(r'token/', include('token_auth.urls')),
+    url(r'/api/fein', include('feincms.urls')), #FIXME override absolute url on page model. so this is not needed
 ]
 
 

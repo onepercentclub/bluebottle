@@ -108,11 +108,11 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
             status_url, self.payment.product_id, self.payment.txn_ref, self.payment.amount
         )
         response = requests.get(url, headers={"Hash": self._get_status_hash()}).content
-        result = simplejson.loads(response)
-        self.payment.result = response
+        self.payment.response = response
 
         InterswitchPaymentStatusUpdate.objects.create(payment=self.payment, result=response)
 
+        result = simplejson.loads(response)
         if 'ResponseCode' in result and result['ResponseCode'] == '00':
             self.payment.status = StatusDefinition.SETTLED
         else:

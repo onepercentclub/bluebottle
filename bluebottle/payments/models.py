@@ -75,6 +75,14 @@ class Payment(PolymorphicModel):
             raise PaymentException("get_fee() not implemented for "
                                    "{0}".format(self.__class__.__name__))
 
+    @property
+    def status_code(self):
+        return ""
+
+    @property
+    def status_description(self):
+        return ""
+
     class Meta:
         ordering = ('-created', '-updated')
 
@@ -216,6 +224,14 @@ class OrderPayment(models.Model, FSMTransition):
 
         if save:
             self.save()
+
+    @property
+    def status_code(self):
+        return self.payment.status_code
+
+    @property
+    def status_description(self):
+        return self.payment.status_description
 
     @property
     def info_text(self):

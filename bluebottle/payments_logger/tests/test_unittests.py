@@ -2,7 +2,6 @@ from mock import patch
 
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
 from bluebottle.payments.services import PaymentService
-from bluebottle.payments_docdata.gateway import DocdataClient
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 from bluebottle.payments_logger.models import PaymentLogEntry
 from bluebottle.test.factory_models.orders import OrderFactory

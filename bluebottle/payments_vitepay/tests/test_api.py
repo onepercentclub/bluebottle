@@ -32,7 +32,7 @@ vitepay_settings = {
         'name': 'Orange Money',
         'currencies': {'XOF': {}},
         'supports_recurring': False,
-    },{
+    }, {
         'provider': 'mock',
         'id': 'mock-creditcard',
         'profile': 'creditcard',
@@ -119,6 +119,8 @@ class PaymentVitepayApiTests(BluebottleTestCase):
 
         expected = {
             'status': u'started',
+            'status_description': u'',
+            'status_code': u'',
             'payment_method': u'vitepayOrangemoney',
             'order': order_id,
             'amount': {'currency': 'XOF', 'amount': Decimal('2500.00')},

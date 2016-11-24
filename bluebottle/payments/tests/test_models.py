@@ -21,8 +21,8 @@ class PaymentTestCase(BluebottleTestCase):
         self.order_payment = OrderPaymentFactory.create(order=self.order)
 
     def test_status_details(self):
-        self.assertEqual(self.order_payment.payment.status_description, "")
-        self.assertEqual(self.order_payment.payment.status_code, "")
+        self.assertEqual(self.order_payment.status_description, "")
+        self.assertEqual(self.order_payment.status_code, "")
 
     def test_basic_order_payment_flow(self):
         self.assertEqual(self.order.status, StatusDefinition.LOCKED,

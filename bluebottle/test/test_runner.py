@@ -9,24 +9,35 @@ from bluebottle.test.utils import InitProjectDataMixin
 
 class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
     def setup_databases(self, *args, **kwargs):
-        result = super(MultiTenantRunner, self).setup_databases(*args, **kwargs)
+        parallel = self.parallel
+        self.parallel = 0
+        result = super(MultiTenantRunner, self).setup_databases(**kwargs)
+        self.par
 
-        # Create secondary tenant
         connection.set_schema_to_public()
-        tenant_domain = 'testserver2'
+
         tenant2, _created = get_tenant_model().objects.get_or_create(
-            domain_url=tenant_domain,
+            domain_url='testserver2',
             schema_name='test2',
             client_name='test2')
 
-        # Add basic data for tenant
-        connection.set_tenant(tenant2)
+        tenant, _created = get_tenant_model().objects.get_or_create(
+            domain_url='testserver',
+            schema_name='test',
+            client_name='test')
+
+        connection.set_tenant(tenant)
+
         self.init_projects()
 
-        # Create main tenant
-        connection.set_schema_to_public()
 
-        tenant_domain = 'testserver'
+        if parallel > 1:
+            for index in range(parallel):
+                connection.creation.clone_test_db(
+                    number=index + 1,
+                    verbosity=self.verbosity,
+                    keepdb=self.keepdb,
+                )
 
         try:
             rate_source = RateSourceFactory.create(base_currency='USD')
@@ -36,12 +47,5 @@ class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
             RateFactory.create(source=rate_source, currency='NGN', value=500)
         except IntegrityError:
             pass
-
-        tenant, _created = get_tenant_model().objects.get_or_create(
-            domain_url=tenant_domain,
-            schema_name='test',
-            client_name='test')
-
-        connection.set_tenant(tenant)
 
         return result

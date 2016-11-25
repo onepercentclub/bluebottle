@@ -114,6 +114,7 @@ tests_requires = [
     'nose==1.3.7',
     'pylint==1.5.5',
     'pyquery==1.2.13',
+    'tblib==1.3.0',
     'tdaemon==0.1.1',
     'WebTest==2.0.21'
 ]

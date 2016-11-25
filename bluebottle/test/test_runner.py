@@ -30,6 +30,14 @@ class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
 
         self.init_projects()
 
+        try:
+            rate_source = RateSourceFactory.create(base_currency='USD')
+            RateFactory.create(source=rate_source, currency='USD', value=1)
+            RateFactory.create(source=rate_source, currency='EUR', value=1.5)
+            RateFactory.create(source=rate_source, currency='XOF', value=1000)
+            RateFactory.create(source=rate_source, currency='NGN', value=500)
+        except IntegrityError:
+            pass
 
         if parallel > 1:
             for index in range(parallel):
@@ -39,13 +47,5 @@ class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
                     keepdb=self.keepdb,
                 )
 
-        try:
-            rate_source = RateSourceFactory.create(base_currency='USD')
-            RateFactory.create(source=rate_source, currency='USD', value=1)
-            RateFactory.create(source=rate_source, currency='EUR', value=1.5)
-            RateFactory.create(source=rate_source, currency='XOF', value=1000)
-            RateFactory.create(source=rate_source, currency='NGN', value=500)
-        except IntegrityError:
-            pass
 
         return result

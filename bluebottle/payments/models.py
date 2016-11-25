@@ -227,11 +227,17 @@ class OrderPayment(models.Model, FSMTransition):
 
     @property
     def status_code(self):
-        return self.payment.status_code
+        try:
+            return self.payment.status_code
+        except Payment.DoesNotExist:
+            return ""
 
     @property
     def status_description(self):
-        return self.payment.status_description
+        try:
+            return self.payment.status_description
+        except Payment.DoesNotExist:
+            return ""
 
     @property
     def info_text(self):

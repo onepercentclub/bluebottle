@@ -13,7 +13,7 @@ class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
         parallel = self.parallel
         self.parallel = 0
         result = super(MultiTenantRunner, self).setup_databases(**kwargs)
-        self.par
+        self.parallel = parallel
 
         connection.set_schema_to_public()
 

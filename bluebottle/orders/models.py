@@ -8,13 +8,14 @@ class Order(BaseOrder, PreviousStatusMixin):
         return False if self.user else True
 
     @property
-    def error(self):
+    def payment_message(self):
+        # TODO: Use this for other PSP messages/errors too.
         # Now this only returns codes on payment level and only
         # Interswitch is using that, but later we might expand this.
         if self.order_payment.status_code:
             return {
                 'code': self.order_payment.status_code,
-                'message': self.order_payment.status_description
+                'description': self.order_payment.status_description
             }
 
     class Analytics:

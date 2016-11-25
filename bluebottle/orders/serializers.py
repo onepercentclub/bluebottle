@@ -24,4 +24,4 @@ class ManageOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ('id', 'user', 'total', 'status',
-                  'donations', 'created', 'error')
+                  'donations', 'created', 'payment_message')

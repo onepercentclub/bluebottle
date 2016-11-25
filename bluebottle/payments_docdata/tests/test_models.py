@@ -33,12 +33,13 @@ def fake_create_payment(self):
 
 
 class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
-    @patch.object(DocdataClient, 'create')
-    def setUp(self, mock_client_create):
+    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
+    def setUp(self, mock_client):
         super(PaymentsDocdataTestCase, self).setUp()
 
         # Mock response to creating the payment at docdata
-        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+        instance = mock_client.return_value
+        instance.create.return_value = {'order_key': 123, 'order_id': 123}
 
         # Mock create payment
         patch.object(DocdataPaymentAdapter, 'create_payment',
@@ -448,9 +449,12 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
 
 
 class AdapterTestCase(BluebottleTestCase):
-    @patch.object(DocdataClient, 'create')
-    def test_incomplete_userdata(self, mock_client_create):
-        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
+    def test_incomplete_userdata(self, mock_client):
+        # Mock response to creating the payment at docdata
+        instance = mock_client.return_value
+        instance.create.return_value = {'order_key': 123, 'order_id': 123}
+
         patch.object(DocdataPaymentAdapter, 'create_payment',
                      fake_create_payment)
 
@@ -480,9 +484,12 @@ class AdapterTestCase(BluebottleTestCase):
         self.assertEqual(user_data['house_number_addition'], '')
         self.assertEqual(user_data['state'], '')
 
-    @patch.object(DocdataClient, 'create')
-    def test_normal_userdata(self, mock_client_create):
-        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
+    def test_normal_userdata(self, mock_client):
+        # Mock response to creating the payment at docdata
+        instance = mock_client.return_value
+        instance.create.return_value = {'order_key': 123, 'order_id': 123}
+
         patch.object(DocdataPaymentAdapter, 'create_payment',
                      fake_create_payment)
 
@@ -523,9 +530,12 @@ class AdapterTestCase(BluebottleTestCase):
         self.assertEqual(user_data['house_number_addition'], '')
         self.assertEqual(user_data['state'], '')
 
-    @patch.object(DocdataClient, 'create')
-    def test_abnormal_address_data(self, mock_client_create):
-        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
+    def test_abnormal_address_data(self, mock_client):
+        # Mock response to creating the payment at docdata
+        instance = mock_client.return_value
+        instance.create.return_value = {'order_key': 123, 'order_id': 123}
+
         patch.object(DocdataPaymentAdapter, 'create_payment',
                      fake_create_payment)
 

@@ -522,7 +522,9 @@ class Project(BaseProject, PreviousStatusMixin):
     def wallpost_photos(self):
         project_type = ContentType.objects.get_for_model(self)
         return MediaWallpostPhoto.objects.order_by('-mediawallpost__created').\
-            filter(mediawallpost__object_id=self.id, mediawallpost__content_type=project_type)
+            filter(mediawallpost__object_id=self.id,
+                   mediawallpost__content_type=project_type,
+                   results_page=True)
 
     @property
     def wallpost_videos(self):

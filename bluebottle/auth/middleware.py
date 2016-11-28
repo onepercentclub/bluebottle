@@ -282,7 +282,8 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         response.status_code = 401
         return response
 
-authorization_logger = logging.getLogger('authorization')
+
+authorization_logger = logging.getLogger(__name__)
 
 
 class LogAuthFailureMiddleWare:

@@ -45,6 +45,5 @@ exclude =
     bluebottle/settings,
     bluebottle/slides,
     bluebottle/social,
-    bluebottle/statistics,
     bluebottle/votes,
     bluebottle/wallposts

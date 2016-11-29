@@ -1,7 +1,3 @@
-import datetime
-from django.test.utils import override_settings
-from django.utils import timezone
-
 from moneyed.classes import Money
 
 from bluebottle.utils.utils import StatusDefinition
@@ -33,6 +29,9 @@ class InitialStatisticsTest(BluebottleTestCase):
         self.some_project = ProjectFactory.create(amount_asked=5000,
                                                   owner=self.some_user)
 
+    def tearDown(self):
+        self.stats.clear_cached()
+
     def test_initial_stats(self):
         self.assertEqual(self.stats.projects_online, 0)
         self.assertEqual(self.stats.projects_realized, 0)
@@ -41,13 +40,6 @@ class InitialStatisticsTest(BluebottleTestCase):
         self.assertEqual(self.stats.donated_total, 0)
 
 
-@override_settings(
-    CACHES={
-        'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-        }
-    }
-)
 class StatisticsTest(BluebottleTestCase):
     def setUp(self):
         super(StatisticsTest, self).setUp()
@@ -67,6 +59,9 @@ class StatisticsTest(BluebottleTestCase):
         self.task = None
         self.donation = None
         self.order = None
+
+    def tearDown(self):
+        self.stats.clear_cached()
 
     def _test_project_stats(self, status, online, involved):
         self.some_project.status = status
@@ -131,6 +126,8 @@ class StatisticsTest(BluebottleTestCase):
         )
 
     def test_task_stats(self):
+        self.assertEqual(self.stats.tasks_realized, 0)
+
         # project is in campaign phase
         self.some_project.status = self.campaign_status
         self.some_project.save()
@@ -146,22 +143,6 @@ class StatisticsTest(BluebottleTestCase):
         # - campaigner
         # - task member (another_user)
         self.assertEqual(self.stats.people_involved, 2)
-
-    def test_task_stats_user_both_owner_and_member(self):
-        # project is in campaign phase
-        self.some_project.status = self.campaign_status
-        self.some_project.save()
-
-        # Create a task and add other user as member
-        self.task = TaskFactory.create(author=self.some_user,
-                                       project=self.some_project,
-                                       status=Task.TaskStatuses.realized)
-        TaskMemberFactory.create(task=self.task, member=self.some_user)
-
-        self.assertEqual(self.stats.tasks_realized, 1)
-        # People involved:
-        # - campaigner as both owner and member
-        self.assertEqual(self.stats.people_involved, 1)
 
     def test_donation_stats(self):
         self.some_project.status = self.campaign_status
@@ -225,124 +206,10 @@ class StatisticsTest(BluebottleTestCase):
         # - donator (anon)
         self.assertEqual(self.stats.people_involved, 3)
 
+
     def test_votes_stats(self):
         VoteFactory.create(voter=self.some_user)
         VoteFactory.create(voter=self.some_user)
         VoteFactory.create(voter=self.another_user)
 
         self.assertEqual(self.stats.votes_cast, 3)
-
-
-@override_settings(
-    CACHES={
-        'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-        }
-    }
-)
-class StatisticsDateTest(BluebottleTestCase):
-    def setUp(self):
-        super(StatisticsDateTest, self).setUp()
-
-        self.init_projects()
-
-        new_user = BlueBottleUserFactory.create()
-        old_user = BlueBottleUserFactory.create()
-
-        status_realized = ProjectPhase.objects.get(slug='done-complete')
-        status_campaign = ProjectPhase.objects.get(slug='campaign')
-
-        now = timezone.now()
-        last_year = timezone.now() - datetime.timedelta(days=365)
-
-        new_project = ProjectFactory.create(
-            amount_asked=5000, status=status_realized, owner=old_user,
-            campaign_ended=now, campaign_started=now
-        )
-        ProjectFactory.create(
-            amount_asked=5000, status=status_campaign, owner=old_user,
-            campaign_started=now
-        )
-        old_project = ProjectFactory.create(
-            amount_asked=5000, status=status_realized, owner=old_user,
-            campaign_ended=last_year, campaign_started=last_year
-        )
-        ProjectFactory.create(
-            amount_asked=5000, status=status_campaign, owner=old_user,
-            campaign_started=last_year
-        )
-
-        VoteFactory.create(voter=old_user, created=now)
-        vote = VoteFactory.create(voter=old_user)
-        vote.created = last_year
-        vote.save()
-
-        old_task = TaskFactory.create(
-            author=old_user, project=old_project, status=Task.TaskStatuses.realized,
-            deadline=last_year
-        )
-        TaskMemberFactory.create(task=old_task, member=old_user)
-
-        new_task = TaskFactory.create(
-            author=old_user, project=new_project, status=Task.TaskStatuses.realized,
-            deadline=now
-        )
-        TaskMemberFactory.create(task=new_task, member=new_user)
-
-        order1 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS)
-        DonationFactory.create(
-            amount=Money(1000, 'EUR'), order=order1, project=old_project,
-            fundraiser=None, completed=now
-        )
-
-        order2 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS)
-        DonationFactory.create(
-            amount=Money(1000, 'EUR'), order=order2, project=old_project,
-            fundraiser=None, completed=last_year
-        )
-
-    def test_all(self):
-        stats = Statistics()
-
-        self.assertEqual(stats.people_involved, 2)
-        self.assertEqual(stats.donated_total, 2000)
-        self.assertEqual(stats.projects_online, 2)
-        self.assertEqual(stats.projects_realized, 2)
-        self.assertEqual(stats.tasks_realized, 2)
-        self.assertEqual(stats.votes_cast, 2)
-
-    def test_since_yesterday(self):
-        stats = Statistics(start=timezone.now() - datetime.timedelta(days=1))
-
-        self.assertEqual(stats.people_involved, 2)
-        self.assertEqual(stats.donated_total, 1000)
-        self.assertEqual(stats.projects_online, 1)
-        self.assertEqual(stats.projects_realized, 1)
-        self.assertEqual(stats.tasks_realized, 1)
-        self.assertEqual(stats.votes_cast, 1)
-
-    def test_last_year(self):
-        stats = Statistics(
-            start=timezone.now() - datetime.timedelta(days=2 * 365),
-            end=timezone.now() - datetime.timedelta(days=364),
-
-        )
-
-        self.assertEqual(stats.people_involved, 1)
-        self.assertEqual(stats.donated_total, 1000)
-        self.assertEqual(stats.projects_online, 1)
-        self.assertEqual(stats.projects_realized, 1)
-        self.assertEqual(stats.tasks_realized, 1)
-        self.assertEqual(stats.votes_cast, 1)
-
-    def test_since_last_year(self):
-        stats = Statistics(
-            start=timezone.now() - datetime.timedelta(days=366),
-        )
-
-        self.assertEqual(stats.people_involved, 2)
-        self.assertEqual(stats.donated_total, 2000)
-        self.assertEqual(stats.projects_online, 2)
-        self.assertEqual(stats.projects_realized, 2)
-        self.assertEqual(stats.tasks_realized, 2)
-        self.assertEqual(stats.votes_cast, 2)

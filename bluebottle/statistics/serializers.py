@@ -4,7 +4,8 @@ from bluebottle.statistics.models import Statistic
 
 
 class StatisticSerializer(serializers.ModelSerializer):
-    value = serializers.CharField(source='statistics.value')
+
+    value = serializers.CharField(source='calculated_value')
 
     class Meta:
         model = Statistic

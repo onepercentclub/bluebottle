@@ -39,5 +39,3 @@ class CategoriesTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEquals(len(data), 1)
         self.assertEquals(data[0]['title'], cat['title'])
-
-

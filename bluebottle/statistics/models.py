@@ -51,12 +51,14 @@ class Statistic(models.Model):
         return self.title
 
     @property
-    def statitistics(self):
+    def statistics(self):
         return Statistics()
 
     @property
     def calculated_value(self):
-        self.statistics.value
+        if self.value:
+            return self.value
+
         return getattr(self.statistics, self.type, 0)
 
     class Meta:

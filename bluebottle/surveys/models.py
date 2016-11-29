@@ -1,6 +1,6 @@
 import urllib
 import itertools
-from collections import Counter
+from collections import Counter, defaultdict
 
 import bleach
 
@@ -238,6 +238,16 @@ class Question(models.Model):
             except KeyError:
                 pass
         return super(Question, self).save(*args, **kwargs)
+
+    def get_platform_aggregate(self):
+        if self.type in ('number', 'slider', 'percent'):
+            return self.aggregateanswer_set.aggregate(value=models.Sum('value'))['value']
+        elif self.type in ('radio', 'checkbox', 'table-radio'):
+            values = defaultdict(list)
+            for answer in self.aggregateanswer_set.all():
+                [values[key].append(value) for key, value in answer.options.items()]
+
+            return dict((key, float(sum(value)) / len(value)) for key, value in values.items())
 
     def __unicode__(self):
         return bleach.clean(self.title, strip=True, tags=[])

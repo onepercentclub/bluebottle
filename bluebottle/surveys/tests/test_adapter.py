@@ -5,6 +5,7 @@ from httmock import HTTMock, urlmatch
 from django.test.utils import override_settings
 from django.utils import timezone
 
+from bluebottle.surveys.adapters import Question
 from bluebottle.surveys.adapters import SurveyGizmoAdapter
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -90,3 +91,26 @@ class TestSurveyGizmoAdapter(BluebottleTestCase):
         )
 
         self.assertTrue(self.survey.last_synced)
+
+    @override_settings(
+        SURVEYGIZMO_API_TOKEN='test-token',
+        SURVEYGIZMO_API_SECRET='test-secret'
+    )
+    def test_platform_answers(self):
+        expected_result = {
+            '14': 217.714285714286,
+            '8': 25.0,
+            '48': {u'Prior': 6.142857142857143, u'After': 8.428571428571429},
+            '28': 954.428571428571
+        }
+        adapter = SurveyGizmoAdapter()
+        with HTTMock(survey_mock, survey_question_mock, survey_response_mock(self.project, self.task)):
+            adapter.update_survey(self.survey)
+
+        for question in Question.objects.all():
+            aggregate = question.get_platform_aggregate()
+            if aggregate:
+                self.assertEqual(aggregate, expected_result[question.remote_id])
+
+
+

@@ -5,8 +5,6 @@ exclude =
     **/migrations/*,
     docs,
     build,
-    dashboard.py,
-    setup.py,
     bluebottle/accounting,
     bluebottle/analytics,
     bluebottle/auth,

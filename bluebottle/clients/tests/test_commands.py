@@ -7,7 +7,7 @@ from django.core.management import call_command
 
 @override_settings(TENANT_APPS=('django_nose',),
                    TENANT_MODEL='client.clients',
-                   DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter'))
+                   DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter', ))
 class ManagementCommandArgsTests(TestCase):
     def test_new_tenant(self):
         from ..management.commands.new_tenant import Command as NewTenantCommand

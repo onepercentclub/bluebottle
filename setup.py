@@ -51,6 +51,7 @@ install_requires = [
     'django-localflavor==1.2',
     'django-lockdown==1.2',
     'django-loginas==0.1.9',
+    'django-memoize==2.0.0',
     'django-modeltranslation==0.11',
     'django_polymorphic==1.0.1',
     'django-money==0.10-pre',

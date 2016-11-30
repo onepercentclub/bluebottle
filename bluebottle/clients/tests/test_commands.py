@@ -7,7 +7,7 @@ from django.core.management import call_command
 
 @override_settings(TENANT_APPS=('django_nose',),
                    TENANT_MODEL='client.clients',
-                   DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',))
+                   DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter', ))
 class ManagementCommandArgsTests(TestCase):
     def test_new_tenant(self):
         from ..management.commands.new_tenant import Command as NewTenantCommand
@@ -30,7 +30,9 @@ class ManagementCommandTests(TestCase):
         cmd = NewTenantCommand()
 
         with mock.patch('bluebottle.clients.management.commands.new_tenant.Command.handle') as handle_mock:
-            call_command(cmd, full_name='Test Client', schema_name='test_schema', domain_url='test.localhost', 
+            call_command(cmd, full_name='Test Client',
+                         schema_name='test_schema',
+                         domain_url='test.localhost',
                          client_name='test')
             args, kwargs = handle_mock.call_args_list[0]
             self.assertEqual(kwargs['full_name'], 'Test Client')

@@ -73,6 +73,7 @@ def get_min_amounts(methods):
 
     return dict((currency, min(amounts)) for currency, amounts in result.items())
 
+
 def get_currencies():
     properties = get_tenant_properties()
 
@@ -162,7 +163,7 @@ def get_public_properties(request):
     # Now load the tenant specific properties
     for item in props:
         try:
-            key = re.sub('_.',lambda x: x.group()[1].upper(), item)
+            key = re.sub('_.', lambda x: x.group()[1].upper(), item)
             # Use camelcase for setting keys (convert from snakecase)
             config[key] = getattr(properties, item.upper())
         except AttributeError:

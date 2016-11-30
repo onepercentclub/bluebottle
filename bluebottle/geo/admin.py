@@ -68,6 +68,7 @@ class LocationGroupAdmin(admin.ModelAdmin):
     list_display = ('name', )
     model = LocationGroup
 
+
 admin.site.register(LocationGroup, LocationGroupAdmin)
 
 
@@ -83,5 +84,6 @@ class LocationAdmin(admin.ModelAdmin):
 
     def get_actions(self, request):
         return dict([self.make_action(group) for group in LocationGroup.objects.all()])
+
 
 admin.site.register(Location, LocationAdmin)

@@ -1,3 +1,5 @@
+import datetime
+
 import json
 from urlparse import parse_qs
 
@@ -5,12 +7,15 @@ from httmock import HTTMock, urlmatch
 from django.test.utils import override_settings
 from django.utils import timezone
 
+from bluebottle.surveys.models import Question
 from bluebottle.surveys.adapters import SurveyGizmoAdapter
 from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.tasks import TaskFactory
-from bluebottle.test.factory_models.surveys import SurveyFactory
+from bluebottle.test.factory_models.surveys import (
+    SurveyFactory, QuestionFactory, AnswerFactory, ResponseFactory, SubQuestionFactory
+)
 
 
 @urlmatch(path=r'.*\/survey\/test-id$')
@@ -55,6 +60,10 @@ def survey_response_mock(project, task):
     return survey_response_mock
 
 
+@override_settings(
+    SURVEYGIZMO_API_TOKEN='test-token',
+    SURVEYGIZMO_API_SECRET='test-secret'
+)
 class TestSurveyGizmoAdapter(BluebottleTestCase):
     """
     """
@@ -70,10 +79,6 @@ class TestSurveyGizmoAdapter(BluebottleTestCase):
 
         self.survey = SurveyFactory(remote_id='test-id', last_synced=timezone.now())
 
-    @override_settings(
-        SURVEYGIZMO_API_TOKEN='test-token',
-        SURVEYGIZMO_API_SECRET='test-secret'
-    )
     def test_update(self):
         adapter = SurveyGizmoAdapter()
         with HTTMock(survey_mock, survey_question_mock, survey_response_mock(self.project, self.task)):
@@ -90,3 +95,87 @@ class TestSurveyGizmoAdapter(BluebottleTestCase):
         )
 
         self.assertTrue(self.survey.last_synced)
+
+
+@override_settings(
+    SURVEYGIZMO_API_TOKEN='test-token',
+    SURVEYGIZMO_API_SECRET='test-secret'
+)
+class PlatformAggregateTest(BluebottleTestCase):
+    def setUp(self):
+        super(PlatformAggregateTest, self).setUp()
+        now = timezone.now()
+        last_year = now - datetime.timedelta(days=365)
+
+        self.init_projects()
+
+        survey = SurveyFactory.create()
+
+        old_project = ProjectFactory.create(campaign_ended=last_year)
+        new_project = ProjectFactory.create(campaign_ended=now)
+
+        question1 = QuestionFactory.create(remote_id=1, type='number', survey=survey)
+        question2 = QuestionFactory.create(remote_id=2, type='table-radio', survey=survey)
+        SubQuestionFactory.create(question=question2, title='before')
+        SubQuestionFactory.create(question=question2, title='after')
+        question3 = QuestionFactory.create(remote_id=3, type='checkbox', survey=survey)
+        QuestionFactory.create(remote_id=4, type='something-else', survey=survey)
+
+        for answer1, answer2, answer3 in (
+            (4, {'before': 1, 'after': 3}, {'test': 3, 'tast': 4}),
+            (6, {'before': 3, 'after': 5}, {'test': 4, 'tast': 3}),
+            (8, {'before': 5, 'after': 5}, {'test': 5, 'tast': 5}),
+            (2, {'before': 7, 'after': 3}, {'test': 6, 'tast': 5})
+        ):
+            response = ResponseFactory(project=old_project, survey=survey)
+            AnswerFactory.create(question=question1, response=response, value=answer1)
+            AnswerFactory.create(question=question2, response=response, options=answer2)
+            AnswerFactory.create(question=question3, response=response, options=answer3)
+
+        for answer1, answer2, answer3 in (
+            (3, {'before': 0, 'after': 2}, {'test': 2, 'tast': 3}),
+            (5, {'before': 2, 'after': 4}, {'test': 4, 'tast': 2}),
+            (7, {'before': 5, 'after': 4}, {'test': 4, 'tast': 5}),
+            (1, {'before': 6, 'after': 2}, {'test': 5, 'tast': 4})
+        ):
+            response = ResponseFactory(project=new_project, survey=survey)
+            AnswerFactory.create(question=question1, response=response, value=answer1)
+            AnswerFactory.create(question=question2, response=response, options=answer2)
+            AnswerFactory.create(question=question3, response=response, options=answer3)
+
+        survey.aggregate()
+
+    def test_platform_answers(self):
+        expected_result = {
+            '1': 9.0,
+            '2': {'after': 3.5, 'before': 3.625},
+            '3': {u'test': 16.5, u'tast': 15.5},
+            '4': None
+        }
+        for question in Question.objects.all():
+            aggregate = question.get_platform_aggregate()
+            self.assertEqual(aggregate, expected_result[question.remote_id])
+
+    def test_platform_answers_since_yesterday(self):
+        yesterday = timezone.now() - datetime.timedelta(days=1)
+        expected_result = {
+            '1': 4.0,
+            '2': {'after': 3.0, 'before': 3.25},
+            '3': {u'test': 15.0, u'tast': 14.0},
+            '4': None
+        }
+        for question in Question.objects.all():
+            aggregate = question.get_platform_aggregate(start=yesterday)
+            self.assertEqual(aggregate, expected_result[question.remote_id])
+
+    def test_platform_answers_before_yesterday(self):
+        yesterday = timezone.now() - datetime.timedelta(days=1)
+        expected_result = {
+            '1': 5.0,
+            '2': {'after': 4.0, 'before': 4.0},
+            '3': {u'test': 18.0, u'tast': 17.0},
+            '4': None
+        }
+        for question in Question.objects.all():
+            aggregate = question.get_platform_aggregate(end=yesterday)
+            self.assertEqual(aggregate, expected_result[question.remote_id])

@@ -18,9 +18,8 @@ urlpatterns = [
         name='admin_password_reset'),
     url(r'^admin/password_reset/done/$',
         password_reset_done, name='password_reset_done'),
-
-    url(
-        r'^admin/password_reset/confirm/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
+    url(r'^admin/', include('loginas.urls')),
+    url(r'^admin/password_reset/confirm/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         password_reset_confirm,
         name='password_reset_confirm'),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

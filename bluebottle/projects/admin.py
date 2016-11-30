@@ -182,8 +182,16 @@ class ProjectBudgetLineInline(admin.TabularInline):
 
 
 class ProjectAdminForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            'currencies': forms.CheckboxSelectMultiple
+        }
     theme = forms.ModelChoiceField(
         queryset=ProjectTheme.objects.all().filter(disabled=False))
+
+    def __init__(self, *args, **kwargs):
+        super(ProjectAdminForm, self).__init__(*args, **kwargs)
+        self.fields['currencies'].required = False
 
 
 class ProjectAdmin(AdminImageMixin, ImprovedModelForm):

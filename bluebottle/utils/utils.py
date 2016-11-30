@@ -167,7 +167,7 @@ def clean_for_hashtag(text):
 
 
 # Get the class from dotted string
-def get_class(cl): 
+def get_class(cl):
     try:
         # try to call handler
         parts = cl.split('.')
@@ -242,6 +242,8 @@ def update_group_permissions(sender, group_perms=None):
     # Return early if there is no group permissions table. This will happen when running tests.
     if Group.objects.model._meta.db_table not in connection.introspection.table_names():
         return
+
+    return
 
     create_permissions(sender, verbosity=False)
     try:

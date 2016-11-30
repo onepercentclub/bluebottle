@@ -365,11 +365,6 @@ TENANT_APPS = (
     'django_tools',
     'taggit',
 
-    # fein-cms
-    'feincms',
-    'mptt',
-    'feincms.module.page',
-    'feincms.module.medialibrary',
     'bluebottle.cms',
 )
 

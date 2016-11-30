@@ -1,10 +1,6 @@
 from rest_framework import serializers
 
-from feincms.contents import RichTextContent
-from feincms.module.medialibrary.contents import MediaFileContent
-
-from bluebottle.cms.models import Page, ProjectContent
-from bluebottle.projects.serializers import ProjectPreviewSerializer
+from bluebottle.cms.models import Stat, StatsContent
 
 
 class ContentTypeSerializer(serializers.Serializer):
@@ -32,8 +28,15 @@ class MediaFileContentSerializer(ContentTypeSerializer):
         fields = ('url', 'type')
 
 
-class ProjectContentSerializer(ContentTypeSerializer):
-    project = ProjectPreviewSerializer()
+class StatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stat
+        fields = ('type', 'name')
+
+
+class StatsContentSerializer(ContentTypeSerializer):
+    title = serializers.CharField(source='stats.title')
+    stats = StatSerializer(source='stats.stat_set')
 
     class Meta:
         fields = ('project', 'type')
@@ -41,12 +44,8 @@ class ProjectContentSerializer(ContentTypeSerializer):
 
 class RegionSerializer(serializers.Serializer):
     def to_representation(self, obj):
-        if isinstance(obj, RichTextContent):
-            return RichTextContentSerializer(obj, context=self.context).to_representation(obj)
-        elif isinstance(obj, MediaFileContent):
-            return MediaFileContentSerializer(obj, context=self.context).to_representation(obj)
-        elif isinstance(obj, ProjectContent):
-            return ProjectContentSerializer(obj, context=self.context).to_representation(obj)
+        if isinstance(obj, StatsContent):
+            return StatsContentSerializer(obj, context=self.context).to_representation(obj)
 
     class Meta:
         fields = ('id')
@@ -58,4 +57,3 @@ class PageSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('id', 'title', 'slug', 'main')
-        model = Page

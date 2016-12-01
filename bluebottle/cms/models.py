@@ -5,6 +5,7 @@ from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from bluebottle.statistics.statistics import Statistics
+from bluebottle.surveys.models import Survey
 
 
 class ResultPage(models.Model):
@@ -64,18 +65,6 @@ class Quote(models.Model):
     quotes = models.ForeignKey(Quotes)
 
 
-class StatsContent(ContentItem):
-    type = 'statistics'
-    stats = models.ForeignKey(Stats)
-    preview_template = 'admin/cms/preview/stats.html'
-
-    class Meta:
-        verbose_name = 'Platform Statistics'
-
-    def __unicode__(self):
-        return 'Platform Statistics'
-
-
 class QuotesContent(ContentItem):
     type = 'quotes'
     quotes = models.ForeignKey(Quotes)
@@ -88,9 +77,29 @@ class QuotesContent(ContentItem):
         return 'Quotes'
 
 
+class StatsContent(ContentItem):
+    type = 'statistics'
+    stats = models.ForeignKey(Stats)
+    preview_template = 'admin/cms/preview/stats.html'
+
+    class Meta:
+        verbose_name = 'Platform Statistics'
+
+    def __unicode__(self):
+        return 'Platform Statistics'
+
+
 class ResultsContent(ContentItem):
     type = 'surveys'
     preview_template = 'admin/cms/preview/results.html'
+    survey = models.ForeignKey(Survey, null=True)
+
+    @property
+    def answers(self):
+        asnwers = []
+        for question in self.survey.questions.all():
+            if question.display:
+                asnwers.append(question.get_platform_aggregate())
 
     class Meta:
         verbose_name = 'Platform Results'

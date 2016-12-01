@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from bluebottle.cms.models import Stat, StatsContent, ResultPage, QuotesContent, ResultsContent, Quote
+from bluebottle.surveys.serializers import QuestionSerializer
 
 
 class ContentTypeSerializer(serializers.Serializer):
@@ -63,9 +64,14 @@ class QuotesContentSerializer(ContentTypeSerializer):
 
 
 class ResultsContentSerializer(ContentTypeSerializer):
+    answers = QuestionSerializer(many=True, source='survey.visable_questions')
+    response_count = serializers.SerializerMethodField()
+
+    def get_response_count(self, obj):
+        return 'unknown'
 
     class Meta:
-        fields = ('id', )
+        fields = ('id', 'response_count')
 
 
 class RegionSerializer(serializers.Serializer):

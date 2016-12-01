@@ -65,6 +65,7 @@ class Quote(models.Model):
 
 
 class StatsContent(ContentItem):
+    type = 'statistics'
     stats = models.ForeignKey(Stats)
     preview_template = 'admin/cms/preview/stats.html'
 
@@ -76,6 +77,7 @@ class StatsContent(ContentItem):
 
 
 class QuotesContent(ContentItem):
+    type = 'quotes'
     quotes = models.ForeignKey(Quotes)
     preview_template = 'admin/cms/preview/quotes.html'
 
@@ -87,6 +89,7 @@ class QuotesContent(ContentItem):
 
 
 class ResultsContent(ContentItem):
+    type = 'surveys'
     preview_template = 'admin/cms/preview/results.html'
 
     class Meta:

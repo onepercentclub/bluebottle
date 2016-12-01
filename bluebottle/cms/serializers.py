@@ -5,9 +5,13 @@ from bluebottle.cms.models import Stat, StatsContent, ResultPage, QuotesContent,
 
 class ContentTypeSerializer(serializers.Serializer):
     type = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
 
     def get_type(self, obj):
-        return obj.__class__.__name__
+        return obj.type
+
+    def get_id(self, obj):
+        return obj.id
 
 
 class RichTextContentSerializer(ContentTypeSerializer):
@@ -33,7 +37,7 @@ class StatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Stat
-        fields = ('type', 'name', 'value')
+        fields = ('id', 'type', 'name', 'value')
 
 
 class StatsContentSerializer(ContentTypeSerializer):
@@ -82,4 +86,4 @@ class ResultPageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultPage
-        fields = ('id', 'title', 'start_date', 'end_date', 'description', 'blocks')
+        fields = ('id', 'title', 'slug', 'start_date', 'end_date', 'description', 'blocks')

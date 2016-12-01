@@ -119,21 +119,11 @@ class MediaWallpost(Wallpost):
     def __unicode__(self):
         return Truncator(self.text).words(10)
 
-        # FIXME: See how we can re-enable this
-        # def save(self, *args, **kwargs):
-        #     super(MediaWallpost, self).save(*args, **kwargs)
-        #
-        #     # Mark the photos as deleted when the MediaWallpost is deleted.
-        #     if self.deleted:
-        #         for photo in self.photos.all():
-        #             if not photo.deleted:
-        #                 photo.deleted = self.deleted
-        #                 photo.save()
-
 
 class MediaWallpostPhoto(models.Model):
     mediawallpost = models.ForeignKey(MediaWallpost, related_name='photos',
                                       null=True, blank=True)
+    results_page = models.BooleanField(default=True)
     photo = models.ImageField(upload_to='mediawallpostphotos')
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,

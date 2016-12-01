@@ -4,6 +4,18 @@ from django.db import models
 from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
+from bluebottle.statistics.statistics import Statistics
+
+
+class ResultPage(models.Model):
+    title = models.CharField(_('Title'), max_length=200)
+    slug = models.SlugField(_('Slug'), max_length=200)
+    description = models.TextField(_('Description'), blank=True, null=True)
+
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    content = PlaceholderField('content')
+
 
 class Stats(models.Model):
     name = models.CharField(max_length=63)
@@ -13,11 +25,29 @@ class Stats(models.Model):
 
 
 class Stat(models.Model):
+    STAT_CHOICES = [
+        ('manual', _('Manual input')),
+        ('people_involved', _('People involved')),
+        ('projects_realized', _('Projects realised')),
+        ('tasks_realized', _('Tasks realised')),
+        ('donated_total', _('Donated total')),
+        ('votes_cast', _('Votes casts')),
+    ]
+
     type = models.CharField(
         max_length=40,
-        choices=(('People Involved', 'people_involved'), ('Projects Online', 'projects_online'))
+        choices=STAT_CHOICES
     )
     name = models.CharField(max_length=63)
+    value = models.CharField(max_length=63, null=True, blank=True,
+                             help_text=_("Use this for 'manual' input or the override the calculated value."))
+
+    @property
+    def calculated_value(self):
+        if self.value:
+            return self.value
+        return getattr(Statistics(), self.type, 0)
+
     stats = models.ForeignKey(Stats)
 
 
@@ -34,17 +64,8 @@ class Quote(models.Model):
     quotes = models.ForeignKey(Quotes)
 
 
-class ResultPage(models.Model):
-    title = models.CharField('Title', max_length=200)
-    start = models.DateField(null=True, blank=True)
-    end = models.DateField(null=True, blank=True)
-    content = PlaceholderField('content')
-
-
 class StatsContent(ContentItem):
-    title = models.CharField(max_length=63)
     stats = models.ForeignKey(Stats)
-
     preview_template = 'admin/cms/preview/stats.html'
 
     class Meta:
@@ -64,6 +85,7 @@ class QuotesContent(ContentItem):
     def __unicode__(self):
         return 'Quotes'
 
+
 class ResultsContent(ContentItem):
     preview_template = 'admin/cms/preview/results.html'
 
@@ -72,7 +94,6 @@ class ResultsContent(ContentItem):
 
     def __unicode__(self):
         return 'Result'
-
 
 
 @plugin_pool.register

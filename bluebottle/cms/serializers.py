@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from bluebottle.cms.models import Stat, StatsContent
+from bluebottle.cms.models import Stat, StatsContent, ResultPage, QuotesContent, ResultsContent, Quote
 
 
 class ContentTypeSerializer(serializers.Serializer):
@@ -29,31 +29,57 @@ class MediaFileContentSerializer(ContentTypeSerializer):
 
 
 class StatSerializer(serializers.ModelSerializer):
+    value = serializers.CharField(source='calculated_value')
+
     class Meta:
         model = Stat
-        fields = ('type', 'name')
+        fields = ('type', 'name', 'value')
 
 
 class StatsContentSerializer(ContentTypeSerializer):
-    title = serializers.CharField(source='stats.title')
-    stats = StatSerializer(source='stats.stat_set')
+    title = serializers.CharField(source='stats.name')
+    stats = StatSerializer(source='stats.stat_set', many=True)
 
     class Meta:
-        fields = ('project', 'type')
+        fields = ('stats', 'title')
+
+
+class QuoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quote
+        fields = ('name', 'quote')
+
+
+class QuotesContentSerializer(ContentTypeSerializer):
+    title = serializers.CharField(source='quotes.name')
+    quotes = QuoteSerializer(source='quotes.quote_set', many=True)
+
+    class Meta:
+        fields = ('quotes', 'title')
+
+
+class ResultsContentSerializer(ContentTypeSerializer):
+
+    class Meta:
+        fields = ('id', )
 
 
 class RegionSerializer(serializers.Serializer):
     def to_representation(self, obj):
         if isinstance(obj, StatsContent):
             return StatsContentSerializer(obj, context=self.context).to_representation(obj)
+        if isinstance(obj, QuotesContent):
+            return QuotesContentSerializer(obj, context=self.context).to_representation(obj)
+        if isinstance(obj, ResultsContent):
+            return ResultsContentSerializer(obj, context=self.context).to_representation(obj)
 
     class Meta:
         fields = ('id')
 
 
-class PageSerializer(serializers.ModelSerializer):
-    title = serializers.CharField()
-    main = RegionSerializer(source='content.main', many=True)
+class ResultPageSerializer(serializers.ModelSerializer):
+    blocks = RegionSerializer(source='content.contentitems', many=True)
 
     class Meta:
-        fields = ('id', 'title', 'slug', 'main')
+        model = ResultPage
+        fields = ('id', 'title', 'start_date', 'end_date', 'description', 'blocks')

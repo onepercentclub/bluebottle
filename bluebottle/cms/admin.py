@@ -24,7 +24,11 @@ class QuotesAdmin(ImprovedModelForm, admin.ModelAdmin):
 
 
 class ResultPageAdmin(PlaceholderFieldAdmin):
-    pass
+    prepopulated_fields = {'slug': ('title',), }
+
+    list_display = 'title', 'slug', 'start_date', 'end_date'
+    fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'content'
+
 
 admin.site.register(Stats, StatsAdmin)
 admin.site.register(Quotes, QuotesAdmin)

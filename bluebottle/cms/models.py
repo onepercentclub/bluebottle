@@ -41,7 +41,7 @@ class Stat(models.Model):
     )
     name = models.CharField(max_length=63)
     value = models.CharField(max_length=63, null=True, blank=True,
-                             help_text=_("Use this for 'manual' input or the override the calculated value."))
+                             help_text=_('Use this for \'manual\' input or the override the calculated value.'))
 
     @property
     def calculated_value(self):
@@ -71,10 +71,10 @@ class QuotesContent(ContentItem):
     preview_template = 'admin/cms/preview/quotes.html'
 
     class Meta:
-        verbose_name = 'Quotes'
+        verbose_name = _('Quotes')
 
     def __unicode__(self):
-        return 'Quotes'
+        return _('Quotes')
 
 
 class StatsContent(ContentItem):
@@ -83,29 +83,22 @@ class StatsContent(ContentItem):
     preview_template = 'admin/cms/preview/stats.html'
 
     class Meta:
-        verbose_name = 'Platform Statistics'
+        verbose_name = _('Platform Statistics')
 
     def __unicode__(self):
-        return 'Platform Statistics'
+        return _('Platform Statistics')
 
 
 class ResultsContent(ContentItem):
-    type = 'surveys'
+    type = 'survey'
     preview_template = 'admin/cms/preview/results.html'
     survey = models.ForeignKey(Survey, null=True)
 
-    @property
-    def answers(self):
-        asnwers = []
-        for question in self.survey.questions.all():
-            if question.display:
-                asnwers.append(question.get_platform_aggregate())
-
     class Meta:
-        verbose_name = 'Platform Results'
+        verbose_name = _('Platform Results')
 
     def __unicode__(self):
-        return 'Result'
+        return _('Result')
 
 
 @plugin_pool.register
@@ -113,7 +106,7 @@ class QuotesBlockPlugin(ContentPlugin):
     model = QuotesContent
     admin_form_template = 'admin/cms/content_item.html'
 
-    category = _("Results")
+    category = _('Results')
 
 
 @plugin_pool.register
@@ -121,7 +114,7 @@ class StatsBlockPlugin(ContentPlugin):
     model = StatsContent
     admin_form_template = 'admin/cms/content_item.html'
 
-    category = _("Results")
+    category = _('Results')
 
 
 @plugin_pool.register
@@ -129,4 +122,4 @@ class ResultsBlockPlugin(ContentPlugin):
     model = ResultsContent
     admin_form_template = 'admin/cms/content_item.html'
 
-    category = _("Results")
+    category = _('Results')

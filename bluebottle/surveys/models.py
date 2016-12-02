@@ -26,7 +26,7 @@ class Survey(models.Model):
         return self.question_set.order_by('id')
 
     @property
-    def visable_questions(self):
+    def visible_questions(self):
         return self.question_set.filter(display=True).order_by('id')
 
     @classmethod

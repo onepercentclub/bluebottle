@@ -23,11 +23,12 @@ class MediaFileContentSerializer(serializers.Serializer):
 
 
 class StatSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='name')
     value = serializers.CharField(source='calculated_value')
 
     class Meta:
         model = Stat
-        fields = ('id', 'type', 'name', 'value')
+        fields = ('id', 'type', 'title', 'value')
 
 
 class StatsContentSerializer(serializers.Serializer):
@@ -53,7 +54,7 @@ class QuotesContentSerializer(serializers.Serializer):
 
 
 class ResultsContentSerializer(serializers.Serializer):
-    answers = QuestionSerializer(many=True, source='survey.visable_questions')
+    answers = QuestionSerializer(many=True, source='survey.visible_questions')
     response_count = serializers.SerializerMethodField()
 
     def get_response_count(self, obj):
@@ -63,7 +64,7 @@ class ResultsContentSerializer(serializers.Serializer):
         fields = ('id', 'response_count')
 
 
-class RegionSerializer(serializers.Serializer):
+class BlockSerializer(serializers.Serializer):
 
     content = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
@@ -88,7 +89,7 @@ class RegionSerializer(serializers.Serializer):
 
 
 class ResultPageSerializer(serializers.ModelSerializer):
-    blocks = RegionSerializer(source='content.contentitems', many=True)
+    blocks = BlockSerializer(source='content.contentitems', many=True)
 
     class Meta:
         model = ResultPage

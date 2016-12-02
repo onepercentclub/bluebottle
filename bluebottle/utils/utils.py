@@ -243,8 +243,6 @@ def update_group_permissions(sender, group_perms=None):
     if Group.objects.model._meta.db_table not in connection.introspection.table_names():
         return
 
-    return
-
     create_permissions(sender, verbosity=False)
     try:
         if not group_perms:

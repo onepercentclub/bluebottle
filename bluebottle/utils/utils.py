@@ -167,7 +167,7 @@ def clean_for_hashtag(text):
 
 
 # Get the class from dotted string
-def get_class(cl): 
+def get_class(cl):
     try:
         # try to call handler
         parts = cl.split('.')

@@ -5,6 +5,7 @@ from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from bluebottle.statistics.statistics import Statistics
+from bluebottle.surveys.models import Survey
 
 
 class ResultPage(models.Model):
@@ -40,7 +41,7 @@ class Stat(models.Model):
     )
     name = models.CharField(max_length=63)
     value = models.CharField(max_length=63, null=True, blank=True,
-                             help_text=_("Use this for 'manual' input or the override the calculated value."))
+                             help_text=_('Use this for \'manual\' input or the override the calculated value.'))
 
     @property
     def calculated_value(self):
@@ -64,39 +65,40 @@ class Quote(models.Model):
     quotes = models.ForeignKey(Quotes)
 
 
-class StatsContent(ContentItem):
-    type = 'statistics'
-    stats = models.ForeignKey(Stats)
-    preview_template = 'admin/cms/preview/stats.html'
-
-    class Meta:
-        verbose_name = 'Platform Statistics'
-
-    def __unicode__(self):
-        return 'Platform Statistics'
-
-
 class QuotesContent(ContentItem):
     type = 'quotes'
     quotes = models.ForeignKey(Quotes)
     preview_template = 'admin/cms/preview/quotes.html'
 
     class Meta:
-        verbose_name = 'Quotes'
+        verbose_name = _('Quotes')
 
     def __unicode__(self):
-        return 'Quotes'
+        return _('Quotes')
+
+
+class StatsContent(ContentItem):
+    type = 'statistics'
+    stats = models.ForeignKey(Stats)
+    preview_template = 'admin/cms/preview/stats.html'
+
+    class Meta:
+        verbose_name = _('Platform Statistics')
+
+    def __unicode__(self):
+        return _('Platform Statistics')
 
 
 class ResultsContent(ContentItem):
-    type = 'surveys'
+    type = 'survey'
     preview_template = 'admin/cms/preview/results.html'
+    survey = models.ForeignKey(Survey, null=True)
 
     class Meta:
-        verbose_name = 'Platform Results'
+        verbose_name = _('Platform Results')
 
     def __unicode__(self):
-        return 'Result'
+        return _('Result')
 
 
 @plugin_pool.register
@@ -104,7 +106,7 @@ class QuotesBlockPlugin(ContentPlugin):
     model = QuotesContent
     admin_form_template = 'admin/cms/content_item.html'
 
-    category = _("Results")
+    category = _('Results')
 
 
 @plugin_pool.register
@@ -112,7 +114,7 @@ class StatsBlockPlugin(ContentPlugin):
     model = StatsContent
     admin_form_template = 'admin/cms/content_item.html'
 
-    category = _("Results")
+    category = _('Results')
 
 
 @plugin_pool.register
@@ -120,4 +122,4 @@ class ResultsBlockPlugin(ContentPlugin):
     model = ResultsContent
     admin_form_template = 'admin/cms/content_item.html'
 
-    category = _("Results")
+    category = _('Results')

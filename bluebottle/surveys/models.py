@@ -25,6 +25,10 @@ class Survey(models.Model):
     def questions(self):
         return self.question_set.order_by('id')
 
+    @property
+    def visible_questions(self):
+        return self.question_set.filter(display=True).order_by('id')
+
     @classmethod
     def url(cls, project_or_task, user_type='task_member'):
         try:

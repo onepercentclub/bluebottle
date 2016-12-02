@@ -1,27 +1,17 @@
 from rest_framework import serializers
 
 from bluebottle.cms.models import Stat, StatsContent, ResultPage, QuotesContent, ResultsContent, Quote
+from bluebottle.surveys.serializers import QuestionSerializer
 
 
-class ContentTypeSerializer(serializers.Serializer):
-    type = serializers.SerializerMethodField()
-    id = serializers.SerializerMethodField()
-
-    def get_type(self, obj):
-        return obj.type
-
-    def get_id(self, obj):
-        return obj.id
-
-
-class RichTextContentSerializer(ContentTypeSerializer):
+class RichTextContentSerializer(serializers.Serializer):
     text = serializers.CharField()
 
     class Meta:
         fields = ('text', 'type')
 
 
-class MediaFileContentSerializer(ContentTypeSerializer):
+class MediaFileContentSerializer(serializers.Serializer):
     url = serializers.CharField(source='mediafile.file.url')
     caption = serializers.CharField(source='mediafile.translation.caption')
 
@@ -33,14 +23,15 @@ class MediaFileContentSerializer(ContentTypeSerializer):
 
 
 class StatSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='name')
     value = serializers.CharField(source='calculated_value')
 
     class Meta:
         model = Stat
-        fields = ('id', 'type', 'name', 'value')
+        fields = ('id', 'type', 'title', 'value')
 
 
-class StatsContentSerializer(ContentTypeSerializer):
+class StatsContentSerializer(serializers.Serializer):
     title = serializers.CharField(source='stats.name')
     stats = StatSerializer(source='stats.stat_set', many=True)
 
@@ -54,7 +45,7 @@ class QuoteSerializer(serializers.ModelSerializer):
         fields = ('name', 'quote')
 
 
-class QuotesContentSerializer(ContentTypeSerializer):
+class QuotesContentSerializer(serializers.Serializer):
     title = serializers.CharField(source='quotes.name')
     quotes = QuoteSerializer(source='quotes.quote_set', many=True)
 
@@ -62,14 +53,30 @@ class QuotesContentSerializer(ContentTypeSerializer):
         fields = ('quotes', 'title')
 
 
-class ResultsContentSerializer(ContentTypeSerializer):
+class ResultsContentSerializer(serializers.Serializer):
+    answers = QuestionSerializer(many=True, source='survey.visible_questions')
+    response_count = serializers.SerializerMethodField()
+
+    def get_response_count(self, obj):
+        return 'unknown'
 
     class Meta:
-        fields = ('id', )
+        fields = ('id', 'response_count')
 
 
-class RegionSerializer(serializers.Serializer):
-    def to_representation(self, obj):
+class BlockSerializer(serializers.Serializer):
+
+    content = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
+
+    def get_type(self, obj):
+        return obj.type
+
+    def get_id(self, obj):
+        return obj.id
+
+    def get_content(self, obj):
         if isinstance(obj, StatsContent):
             return StatsContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, QuotesContent):
@@ -78,11 +85,11 @@ class RegionSerializer(serializers.Serializer):
             return ResultsContentSerializer(obj, context=self.context).to_representation(obj)
 
     class Meta:
-        fields = ('id')
+        fields = ('id', 'type', 'content')
 
 
 class ResultPageSerializer(serializers.ModelSerializer):
-    blocks = RegionSerializer(source='content.contentitems', many=True)
+    blocks = BlockSerializer(source='content.contentitems', many=True)
 
     class Meta:
         model = ResultPage

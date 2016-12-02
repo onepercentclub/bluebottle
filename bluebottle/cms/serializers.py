@@ -1,6 +1,10 @@
+from bluebottle.statistics.statistics import Statistics
 from rest_framework import serializers
 
-from bluebottle.cms.models import Stat, StatsContent, ResultPage, QuotesContent, ResultsContent, Quote
+from bluebottle.cms.models import (
+    Stat, StatsContent, ResultPage,
+    QuotesContent, ResultsContent, Quote
+)
 from bluebottle.surveys.serializers import QuestionSerializer
 
 
@@ -24,7 +28,13 @@ class MediaFileContentSerializer(serializers.Serializer):
 
 class StatSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source='name')
-    value = serializers.CharField(source='calculated_value')
+    value = serializers.SerializerMethodField()
+
+    def get_value(self, obj):
+        if obj.value:
+            return obj.value
+        return getattr(Statistics(start=self.context['start_date'],
+                                  end=self.context['end_date']), obj.type, 0)
 
     class Meta:
         model = Stat

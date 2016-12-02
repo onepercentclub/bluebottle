@@ -4,7 +4,6 @@ from django.db import models
 from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
-from bluebottle.statistics.statistics import Statistics
 from bluebottle.surveys.models import Survey
 
 
@@ -42,13 +41,6 @@ class Stat(models.Model):
     name = models.CharField(max_length=63)
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
-
-    @property
-    def calculated_value(self):
-        if self.value:
-            return self.value
-        return getattr(Statistics(), self.type, 0)
-
     stats = models.ForeignKey(Stats)
 
 

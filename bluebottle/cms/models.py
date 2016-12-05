@@ -74,7 +74,7 @@ class QuotesContent(ContentItem):
         verbose_name = _('Quotes')
 
     def __unicode__(self):
-        return _('Quotes')
+        return unicode(self.quotes)
 
 
 class StatsContent(ContentItem):
@@ -86,7 +86,7 @@ class StatsContent(ContentItem):
         verbose_name = _('Platform Statistics')
 
     def __unicode__(self):
-        return _('Platform Statistics')
+        return unicode(self.stats)
 
 
 class ResultsContent(ContentItem):
@@ -98,7 +98,7 @@ class ResultsContent(ContentItem):
         verbose_name = _('Platform Results')
 
     def __unicode__(self):
-        return _('Result')
+        return unicode(self.survey)
 
 
 @plugin_pool.register

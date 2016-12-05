@@ -114,43 +114,68 @@ class PlatformAggregateTest(BluebottleTestCase):
         old_project = ProjectFactory.create(campaign_ended=last_year)
         new_project = ProjectFactory.create(campaign_ended=now)
 
+        old_task1 = TaskFactory.create(project=old_project)
+        old_task2 = TaskFactory.create(project=new_project)
+
         question1 = QuestionFactory.create(remote_id=1, type='number', survey=survey)
         question2 = QuestionFactory.create(remote_id=2, type='table-radio', survey=survey)
         SubQuestionFactory.create(question=question2, title='before')
         SubQuestionFactory.create(question=question2, title='after')
         question3 = QuestionFactory.create(remote_id=3, type='checkbox', survey=survey)
-        QuestionFactory.create(remote_id=4, type='something-else', survey=survey)
+        question4 = QuestionFactory.create(remote_id=4, type='number', aggregation='average', survey=survey)
 
-        for answer1, answer2, answer3 in (
-            (4, {'before': 1, 'after': 3}, {'test': 3, 'tast': 4}),
-            (6, {'before': 3, 'after': 5}, {'test': 4, 'tast': 3}),
-            (8, {'before': 5, 'after': 5}, {'test': 5, 'tast': 5}),
-            (2, {'before': 7, 'after': 3}, {'test': 6, 'tast': 5})
+        for answer1, answer2, answer3, answer4 in (
+            (4, {'before': 1, 'after': 3}, {'test': 3, 'tast': 4}, 62),
+            (6, {'before': 3, 'after': 5}, {'test': 4, 'tast': 3}, 65),
+            (8, {'before': 5, 'after': 5}, {'test': 5, 'tast': 5}, 55),
+            (2, {'before': 7, 'after': 3}, {'test': 6, 'tast': 5}, 62)
         ):
             response = ResponseFactory(project=old_project, survey=survey)
             AnswerFactory.create(question=question1, response=response, value=answer1)
             AnswerFactory.create(question=question2, response=response, options=answer2)
             AnswerFactory.create(question=question3, response=response, options=answer3)
+            AnswerFactory.create(question=question4, response=response, value=answer4)
 
-        for answer1, answer2, answer3 in (
-            (3, {'before': 0, 'after': 2}, {'test': 2, 'tast': 3}),
-            (5, {'before': 2, 'after': 4}, {'test': 4, 'tast': 2}),
-            (7, {'before': 5, 'after': 4}, {'test': 4, 'tast': 5}),
-            (1, {'before': 6, 'after': 2}, {'test': 5, 'tast': 4})
+        for answer1, answer2, answer3, answer4 in (
+            (2, {'before': 6, 'after': 8}, {'test': 4, 'tast': 5}, 60),
+            (4, {'before': 2, 'after': 4}, {'test': 4, 'tast': 2}, 40),
+        ):
+            response = ResponseFactory(task=old_task1, survey=survey)
+            AnswerFactory.create(question=question1, response=response, value=answer1)
+            AnswerFactory.create(question=question2, response=response, options=answer2)
+            AnswerFactory.create(question=question3, response=response, options=answer3)
+            AnswerFactory.create(question=question4, response=response, value=answer4)
+
+        for answer1, answer2, answer3, answer4 in (
+            (11, {'before': 0, 'after': 2}, {'test': 2, 'tast': 3}, 12),
+            (9, {'before': 2, 'after': 4}, {'test': 4, 'tast': 2}, 16),
+        ):
+            response = ResponseFactory(task=old_task2, survey=survey)
+            AnswerFactory.create(question=question1, response=response, value=answer1)
+            AnswerFactory.create(question=question2, response=response, options=answer2)
+            AnswerFactory.create(question=question3, response=response, options=answer3)
+            AnswerFactory.create(question=question4, response=response, value=answer4)
+
+        for answer1, answer2, answer3, answer4 in (
+            (3, {'before': 0, 'after': 2}, {'test': 2, 'tast': 3}, 23),
+            (5, {'before': 2, 'after': 4}, {'test': 4, 'tast': 2}, 12),
+            (7, {'before': 5, 'after': 4}, {'test': 4, 'tast': 5}, 14),
+            (1, {'before': 6, 'after': 2}, {'test': 5, 'tast': 4}, 500)
         ):
             response = ResponseFactory(project=new_project, survey=survey)
             AnswerFactory.create(question=question1, response=response, value=answer1)
             AnswerFactory.create(question=question2, response=response, options=answer2)
             AnswerFactory.create(question=question3, response=response, options=answer3)
+            AnswerFactory.create(question=question4, response=response, value=answer4)
 
         survey.aggregate()
 
     def test_platform_answers(self):
         expected_result = {
-            '1': 9.0,
-            '2': {'after': 3.5, 'before': 3.625},
-            '3': {u'test': 16.5, u'tast': 15.5},
-            '4': None
+            '1': 13.0,
+            '2': {'after': 4.5, 'before': 2.5},
+            '3': {u'test': 7.0, u'tast': 6.0},
+            '4': 32.0
         }
         for question in Question.objects.all():
             aggregate = question.get_platform_aggregate()
@@ -159,10 +184,10 @@ class PlatformAggregateTest(BluebottleTestCase):
     def test_platform_answers_since_yesterday(self):
         yesterday = timezone.now() - datetime.timedelta(days=1)
         expected_result = {
-            '1': 4.0,
-            '2': {'after': 3.0, 'before': 3.25},
-            '3': {u'test': 15.0, u'tast': 14.0},
-            '4': None
+            '1': 10.0,
+            '2': {'after': 3.0, 'before': 1.0},
+            '3': {u'test': 6.0, u'tast': 5.0},
+            '4': 14.0
         }
         for question in Question.objects.all():
             aggregate = question.get_platform_aggregate(start=yesterday)
@@ -171,10 +196,10 @@ class PlatformAggregateTest(BluebottleTestCase):
     def test_platform_answers_before_yesterday(self):
         yesterday = timezone.now() - datetime.timedelta(days=1)
         expected_result = {
-            '1': 5.0,
-            '2': {'after': 4.0, 'before': 4.0},
-            '3': {u'test': 18.0, u'tast': 17.0},
-            '4': None
+            '1': 3.0,
+            '2': {'after': 6.0, 'before': 4.0},
+            '3': {u'test': 8.0, u'tast': 7.0},
+            '4': 50.0
         }
         for question in Question.objects.all():
             aggregate = question.get_platform_aggregate(end=yesterday)

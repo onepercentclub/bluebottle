@@ -244,7 +244,7 @@ class Question(models.Model):
         return super(Question, self).save(*args, **kwargs)
 
     def get_platform_aggregate(self, start=None, end=None):
-        answers = self.aggregateanswer_set.all()
+        answers = self.aggregateanswer_set.filter(aggregation_type='combined').all()
 
         if start:
             answers = answers.filter(project__campaign_ended__gte=start)
@@ -252,12 +252,14 @@ class Question(models.Model):
             answers = answers.filter(project__campaign_ended__lte=end)
 
         if self.type in ('number', 'slider', 'percent'):
-            return answers.aggregate(value=models.Sum('value'))['value']
+            if (self.aggregation == 'average'):
+                return answers.aggregate(value=models.Avg('value'))['value']
+            else:
+                return answers.aggregate(value=models.Sum('value'))['value']
         elif self.type in ('radio', 'checkbox', 'table-radio'):
             values = defaultdict(list)
             for answer in answers:
                 [values[key].append(value) for key, value in answer.options.items()]
-
             return dict((key, float(sum(value)) / len(value)) for key, value in values.items())
 
     def __unicode__(self):

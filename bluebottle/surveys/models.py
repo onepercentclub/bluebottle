@@ -221,6 +221,7 @@ class Question(models.Model):
     title = models.CharField(max_length=500, blank=True, null=True)
 
     display = models.BooleanField(default=True)
+    display_theme = models.CharField(max_length=50, blank=True, null=True)
     display_title = models.CharField(max_length=500, blank=True, null=True)
     display_style = models.CharField(max_length=500, blank=True, null=True)
     left_label = models.CharField(max_length=200, blank=True, null=True)

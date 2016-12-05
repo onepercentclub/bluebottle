@@ -18,10 +18,8 @@ class ResultPage(models.Model):
 
 
 class Stats(models.Model):
-    name = models.CharField(max_length=63)
-
     def __unicode__(self):
-        return self.name
+        return str(self.id)
 
 
 class Stat(models.Model):
@@ -38,17 +36,15 @@ class Stat(models.Model):
         max_length=40,
         choices=STAT_CHOICES
     )
-    name = models.CharField(max_length=63)
+    title = models.CharField(max_length=63)
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
     stats = models.ForeignKey(Stats)
 
 
 class Quotes(models.Model):
-    name = models.CharField(max_length=63)
-
     def __unicode__(self):
-        return self.name
+        return str(self.id)
 
 
 class Quote(models.Model):
@@ -62,6 +58,9 @@ class QuotesContent(ContentItem):
     quotes = models.ForeignKey(Quotes)
     preview_template = 'admin/cms/preview/quotes.html'
 
+    title = models.CharField(max_length=63, blank=True, null=True)
+    sub_title = models.CharField(max_length=100, blank=True, null=True)
+
     class Meta:
         verbose_name = _('Quotes')
 
@@ -73,6 +72,8 @@ class StatsContent(ContentItem):
     type = 'statistics'
     stats = models.ForeignKey(Stats)
     preview_template = 'admin/cms/preview/stats.html'
+    title = models.CharField(max_length=63, blank=True, null=True)
+    sub_title = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Platform Statistics')
@@ -85,6 +86,8 @@ class ResultsContent(ContentItem):
     type = 'survey'
     preview_template = 'admin/cms/preview/results.html'
     survey = models.ForeignKey(Survey, null=True)
+    title = models.CharField(max_length=63, blank=True, null=True)
+    sub_title = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Platform Results')

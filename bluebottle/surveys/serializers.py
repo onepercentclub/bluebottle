@@ -12,6 +12,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     title = serializers.CharField(source='display_title')
     style = serializers.CharField(source='display_style')
+    theme = serializers.CharField(source='display_theme')
 
     def get_aggregate_attribute(self, obj, attr):
         if obj.display:
@@ -53,7 +54,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = ('id', 'title', 'type', 'display',
-                  'value', 'list', 'options',
+                  'theme', 'value', 'list', 'options',
                   'left_label', 'right_label',
                   'response_count',
                   'properties', 'style')

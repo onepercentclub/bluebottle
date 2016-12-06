@@ -5,6 +5,7 @@ from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from bluebottle.surveys.models import Survey
+from bluebottle.projects.models import Project
 
 
 class ResultPage(models.Model):
@@ -29,6 +30,7 @@ class Stat(models.Model):
         ('projects_realized', _('Projects realised')),
         ('tasks_realized', _('Tasks realised')),
         ('donated_total', _('Donated total')),
+        ('projects_online', _('Projects Online')),
         ('votes_cast', _('Votes casts')),
     ]
 
@@ -82,7 +84,7 @@ class StatsContent(ContentItem):
         return unicode(self.stats)
 
 
-class ResultsContent(ContentItem):
+class SurveyContent(ContentItem):
     type = 'survey'
     preview_template = 'admin/cms/preview/results.html'
     survey = models.ForeignKey(Survey, null=True)
@@ -94,6 +96,29 @@ class ResultsContent(ContentItem):
 
     def __unicode__(self):
         return unicode(self.survey)
+
+
+class Projects(models.Model):
+    projects = models.ManyToManyField(Project)
+
+
+class ProjectsContent(ContentItem):
+    title = models.CharField(max_length=63, blank=True, null=True)
+    sub_title = models.CharField(max_length=100, blank=True, null=True)
+
+    action = models.CharField(max_length=255)
+    action_text = models.CharField(max_length=255)
+
+    projects = models.ForeignKey(Projects, null=True)
+
+    type = 'projects'
+    preview_template = 'admin/cms/preview/projects.html'
+
+    class Meta:
+        verbose_name = _('Projects')
+
+    def __unicode__(self):
+        return unicode(self.projects)
 
 
 class ProjectImagesContent(ContentItem):
@@ -117,28 +142,30 @@ class ProjectImagesContent(ContentItem):
         return 'Project images block'
 
 
+class ResultsContentPlugin(ContentPlugin):
+    admin_form_template = 'admin/cms/content_item.html'
+
+    category = _('Results')
+
+
 @plugin_pool.register
-class QuotesBlockPlugin(ContentPlugin):
+class QuotesBlockPlugin(ResultsContentPlugin):
     model = QuotesContent
-    admin_form_template = 'admin/cms/content_item.html'
-
-    category = _('Results')
 
 
 @plugin_pool.register
-class StatsBlockPlugin(ContentPlugin):
+class StatsBlockPlugin(ResultsContentPlugin):
     model = StatsContent
-    admin_form_template = 'admin/cms/content_item.html'
-
-    category = _('Results')
 
 
 @plugin_pool.register
-class ResultsBlockPlugin(ContentPlugin):
-    model = ResultsContent
-    admin_form_template = 'admin/cms/content_item.html'
+class SurveyBlockPlugin(ResultsContentPlugin):
+    model = SurveyContent
 
-    category = _('Results')
+
+@plugin_pool.register
+class ProjectsBlockPlugin(ResultsContentPlugin):
+    model = ProjectsContent
 
 
 @plugin_pool.register

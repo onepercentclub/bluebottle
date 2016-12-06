@@ -96,6 +96,27 @@ class ResultsContent(ContentItem):
         return unicode(self.survey)
 
 
+class ProjectImagesContent(ContentItem):
+    type = 'project_images'
+    preview_template = 'admin/cms/preview/project_images.html'
+
+    title = models.CharField(max_length=63, blank=True, null=True)
+    sub_title = models.CharField(max_length=100, blank=True, null=True)
+
+    description = models.TextField(blank=True, null=True)
+    action_text = models.CharField(max_length=100,
+                                   default=_('Check out our projects'),
+                                   blank=True, null=True)
+    action_link = models.CharField(max_length=100, default="/projects",
+                                   blank=True, null=True)
+
+    class Meta:
+        verbose_name = _('Project Images')
+
+    def __unicode__(self):
+        return 'Project images block'
+
+
 @plugin_pool.register
 class QuotesBlockPlugin(ContentPlugin):
     model = QuotesContent
@@ -115,6 +136,14 @@ class StatsBlockPlugin(ContentPlugin):
 @plugin_pool.register
 class ResultsBlockPlugin(ContentPlugin):
     model = ResultsContent
+    admin_form_template = 'admin/cms/content_item.html'
+
+    category = _('Results')
+
+
+@plugin_pool.register
+class ProjectImagesBlockPlugin(ContentPlugin):
+    model = ProjectImagesContent
     admin_form_template = 'admin/cms/content_item.html'
 
     category = _('Results')

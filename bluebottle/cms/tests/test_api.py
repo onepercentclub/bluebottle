@@ -1,11 +1,14 @@
+from datetime import timedelta
 from django.core.urlresolvers import reverse
+from django.utils.timezone import now
 
 from rest_framework import status
 from fluent_contents.models import Placeholder
 
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import (
-    StatsContent, QuotesContent, SurveyContent, ProjectsContent
-)
+    StatsContent, QuotesContent, SurveyContent, ProjectsContent,
+    ProjectImagesContent)
 
 from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -77,9 +80,28 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(response.data['title'], self.page.title)
         self.assertEqual(response.data['description'], self.page.description)
 
-        quotes = response.data['blocks'][0]
-        self.assertEqual(quotes['type'], 'projects')
-        self.assertEqual(quotes['content']['projects'][0]['title'], self.project.title)
+        projects = response.data['blocks'][0]
+        self.assertEqual(projects['type'], 'projects')
+        self.assertEqual(projects['content']['projects'][0]['title'], self.project.title)
+
+    def test_results_project_images(self):
+        yesterday = now() - timedelta(days=1)
+        done_complete = ProjectPhase.objects.get(slug='done-complete')
+        ProjectFactory(campaign_ended=yesterday, status=done_complete)
+        ProjectFactory(campaign_ended=yesterday, status=done_complete)
+
+        ProjectImagesContent.objects.create_for_placeholder(self.placeholder, title='Nice pics')
+
+        response = self.client.get(self.url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['title'], self.page.title)
+        self.assertEqual(response.data['description'], self.page.description)
+
+        images = response.data['blocks'][0]
+        self.assertEqual(images['type'], 'project_images')
+        self.assertEqual(images['content']['title'], 'Nice pics')
+        self.assertEqual(len(images['content']['images']), 2)
 
     def test_results_survey(self):
         survey = SurveyFactory.create()

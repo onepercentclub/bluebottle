@@ -29,7 +29,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.stats = StatsFactory()
         self.stat = StatFactory(stats=self.stats)
 
-        StatsContent.objects.create_for_placeholder(self.placeholder, stats=self.stats)
+        StatsContent.objects.create_for_placeholder(self.placeholder, stats=self.stats, title='Look at us!')
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -39,8 +39,8 @@ class ResultPageTestCase(BluebottleTestCase):
 
         stats = response.data['blocks'][0]
         self.assertEqual(stats['type'], 'statistics')
-        self.assertEqual(stats['content']['title'], self.stats.name)
-        self.assertEqual(stats['content']['stats'][0]['title'], self.stat.name)
+        self.assertEqual(stats['content']['title'], 'Look at us!')
+        self.assertEqual(stats['content']['stats'][0]['title'], self.stat.title)
         self.assertEqual(stats['content']['stats'][0]['value'], str(self.stat.value))
 
     def test_results_quotes(self):

@@ -23,14 +23,11 @@ class StatsFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Stats
 
-    name = factory.Sequence(lambda n: 'Stats {}'.format(n))
-
 
 class StatFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Stat
 
-    name = factory.Sequence(lambda n: 'Stat {}'.format(n))
     type = 'manual'
     value = 500
     stats = factory.SubFactory(Stats)

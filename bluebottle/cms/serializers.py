@@ -27,7 +27,6 @@ class MediaFileContentSerializer(serializers.Serializer):
 
 
 class StatSerializer(serializers.ModelSerializer):
-    title = serializers.CharField(source='name')
     value = serializers.SerializerMethodField()
 
     def get_value(self, obj):
@@ -42,11 +41,12 @@ class StatSerializer(serializers.ModelSerializer):
 
 
 class StatsContentSerializer(serializers.Serializer):
-    title = serializers.CharField(source='stats.name')
     stats = StatSerializer(source='stats.stat_set', many=True)
+    title = serializers.CharField()
+    sub_title = serializers.CharField()
 
     class Meta:
-        fields = ('stats', 'title')
+        fields = ('stats', 'title', 'sub_title')
 
 
 class QuoteSerializer(serializers.ModelSerializer):
@@ -56,22 +56,25 @@ class QuoteSerializer(serializers.ModelSerializer):
 
 
 class QuotesContentSerializer(serializers.Serializer):
-    title = serializers.CharField(source='quotes.name')
     quotes = QuoteSerializer(source='quotes.quote_set', many=True)
+    title = serializers.CharField()
+    sub_title = serializers.CharField()
 
     class Meta:
-        fields = ('quotes', 'title')
+        fields = ('quotes', 'title', 'sub_title')
 
 
 class ResultsContentSerializer(serializers.Serializer):
     answers = QuestionSerializer(many=True, source='survey.visible_questions')
     response_count = serializers.SerializerMethodField()
+    title = serializers.CharField()
+    sub_title = serializers.CharField()
 
     def get_response_count(self, obj):
         return 'unknown'
 
     class Meta:
-        fields = ('id', 'response_count')
+        fields = ('id', 'response_count', 'title', 'sub_title')
 
 
 class BlockSerializer(serializers.Serializer):
@@ -103,4 +106,5 @@ class ResultPageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultPage
-        fields = ('id', 'title', 'slug', 'start_date', 'end_date', 'description', 'blocks')
+        fields = ('id', 'title', 'slug', 'start_date',
+                  'end_date', 'description', 'blocks')

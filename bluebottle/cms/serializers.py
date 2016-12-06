@@ -92,10 +92,9 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
     images = serializers.SerializerMethodField()
 
     def get_images(self, obj):
-        projects = Project.objects.filter(campaign_ended__gte=self.context['start_date']).\
-            filter(campaign_ended__lte=self.context['end_date']).\
-            filter(status__slug__in=['done-complete', 'done-incomplete']).\
-            order_by('?')
+        projects = Project.objects.filter(campaign_ended__gte=self.context['start_date'],
+                                          campaign_ended__lte=self.context['end_date'],
+                                          status__slug__in=['done-complete', 'done-incomplete']).order_by('?')
         return ProjectImageSerializer(projects, many=True).to_representation(projects)
 
     class Meta:

@@ -28,7 +28,7 @@ class ResultPageTestCase(BluebottleTestCase):
         super(ResultPageTestCase, self).setUp()
         self.init_projects()
 
-        self.page = ResultPageFactory(start_date=now() - timedelta(days=300), end_date=now() + timedelta(days=65))
+        self.page = ResultPageFactory()
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('result-page-detail', kwargs={'pk': self.page.id})
 

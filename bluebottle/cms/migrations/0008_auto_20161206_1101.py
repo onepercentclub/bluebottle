@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('fluent_contents', '0001_initial'),
-        ('projects', '0015_auto_20161206_1043'),
         ('cms', '0007_auto_20161205_2018'),
     ]
 

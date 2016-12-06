@@ -3,12 +3,15 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 from fluent_contents.models import Placeholder
 
-from bluebottle.cms.models import StatsContent, QuotesContent, ResultsContent
+from bluebottle.cms.models import (
+    StatsContent, QuotesContent, SurveyContent, ProjectsContent
+)
 
 from bluebottle.test.factory_models.surveys import SurveyFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, StatFactory, StatsFactory,
-    QuotesFactory, QuoteFactory
+    QuotesFactory, QuoteFactory, ProjectsFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -20,6 +23,7 @@ class ResultPageTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(ResultPageTestCase, self).setUp()
+        self.init_projects()
 
         self.page = ResultPageFactory()
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
@@ -60,10 +64,27 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(quotes['content']['quotes'][0]['name'], self.quote.name)
         self.assertEqual(quotes['content']['quotes'][0]['quote'], self.quote.quote)
 
-    def test_results_results(self):
+    def test_results_projects(self):
+        self.project = ProjectFactory()
+        self.projects = ProjectsFactory()
+        self.projects.projects.add(self.project)
+
+        ProjectsContent.objects.create_for_placeholder(self.placeholder, projects=self.projects)
+
+        response = self.client.get(self.url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['title'], self.page.title)
+        self.assertEqual(response.data['description'], self.page.description)
+
+        quotes = response.data['blocks'][0]
+        self.assertEqual(quotes['type'], 'projects')
+        self.assertEqual(quotes['content']['projects'][0]['title'], self.project.title)
+
+    def test_results_survey(self):
         survey = SurveyFactory.create()
 
-        ResultsContent.objects.create_for_placeholder(self.placeholder, survey=survey)
+        SurveyContent.objects.create_for_placeholder(self.placeholder, survey=survey)
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -78,7 +99,7 @@ class ResultPageTestCase(BluebottleTestCase):
 
     def test_results_list(self):
         survey = SurveyFactory.create()
-        ResultsContent.objects.create_for_placeholder(self.placeholder, survey=survey)
+        SurveyContent.objects.create_for_placeholder(self.placeholder, survey=survey)
 
         self.quotes = QuotesFactory()
         self.quote = QuoteFactory(quotes=self.quotes)

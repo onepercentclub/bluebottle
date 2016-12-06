@@ -2,7 +2,7 @@ from django.contrib import admin
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 
 from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.cms.models import Stats, Stat, Quotes, Quote, ResultPage
+from bluebottle.cms.models import Stats, Stat, Quotes, Quote, ResultPage, Projects
 
 
 class StatInline(admin.StackedInline):
@@ -19,8 +19,19 @@ class QuoteInline(admin.StackedInline):
     extra = 1
 
 
+class ProjectInline(admin.StackedInline):
+    model = Projects.projects.through
+    raw_id_fields = ('project', )
+    extra = 1
+
+
 class QuotesAdmin(ImprovedModelForm, admin.ModelAdmin):
     inlines = [QuoteInline]
+
+
+class ProjectsAdmin(ImprovedModelForm, admin.ModelAdmin):
+    inlines = [ProjectInline]
+    exclude = ('projects', )
 
 
 class ResultPageAdmin(PlaceholderFieldAdmin):
@@ -32,4 +43,5 @@ class ResultPageAdmin(PlaceholderFieldAdmin):
 
 admin.site.register(Stats, StatsAdmin)
 admin.site.register(Quotes, QuotesAdmin)
+admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)

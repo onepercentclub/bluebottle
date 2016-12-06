@@ -4,7 +4,7 @@ import factory
 from django.utils.timezone import now
 
 from bluebottle.cms.models import (
-    ResultPage, StatsContent, Stats, Stat, Quotes, Quote, Projects
+    ResultPage, Stats, Stat, Quotes, Quote, Projects
 )
 
 

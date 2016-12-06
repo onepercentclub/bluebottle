@@ -1,9 +1,12 @@
+from bluebottle.bluebottle_drf2.serializers import ImageSerializer
+from bluebottle.projects.models import Project
 from bluebottle.statistics.statistics import Statistics
 from rest_framework import serializers
 
 from bluebottle.cms.models import (
-    Stat, StatsContent, ResultPage, QuotesContent, SurveyContent,
-    Quote, ProjectsContent
+    Stat, StatsContent, ResultPage,
+    QuotesContent, SurveyContent, Quote,
+    ProjectImagesContent, ProjectsContent
 )
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
@@ -47,6 +50,7 @@ class StatsContentSerializer(serializers.Serializer):
     sub_title = serializers.CharField()
 
     class Meta:
+        model = QuotesContent
         fields = ('stats', 'title', 'sub_title')
 
 
@@ -56,26 +60,48 @@ class QuoteSerializer(serializers.ModelSerializer):
         fields = ('name', 'quote')
 
 
-class QuotesContentSerializer(serializers.Serializer):
+class QuotesContentSerializer(serializers.ModelSerializer):
     quotes = QuoteSerializer(source='quotes.quote_set', many=True)
-    title = serializers.CharField()
-    sub_title = serializers.CharField()
 
     class Meta:
+        model = QuotesContent
         fields = ('quotes', 'title', 'sub_title')
 
 
-class SurveyContentSerializer(serializers.Serializer):
+class SurveyContentSerializer(serializers.ModelSerializer):
     answers = QuestionSerializer(many=True, source='survey.visible_questions')
     response_count = serializers.SerializerMethodField()
-    title = serializers.CharField()
-    sub_title = serializers.CharField()
 
     def get_response_count(self, obj):
         return 'unknown'
 
     class Meta:
-        fields = ('id', 'response_count', 'title', 'sub_title')
+        model = SurveyContent
+        fields = ('id', 'response_count', 'answers', 'title', 'sub_title')
+
+
+class ProjectImageSerializer(serializers.ModelSerializer):
+    photo = ImageSerializer(source='image')
+
+    class Meta:
+        model = Project
+        fields = ('photo', 'title', 'slug')
+
+
+class ProjectImagesContentSerializer(serializers.ModelSerializer):
+    images = serializers.SerializerMethodField()
+
+    def get_images(self, obj):
+        projects = Project.objects.filter(
+            campaign_ended__gte=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            campaign_ended__lte=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            status__slug__in=['done-complete', 'done-incomplete']).order_by('?')
+        return ProjectImageSerializer(projects, many=True).to_representation(projects)
+
+    class Meta:
+        model = ProjectImagesContent
+        fields = ('id', 'images', 'title', 'sub_title', 'description',
+                  'action_text', 'action_link')
 
 
 class ProjectContentSerializer(serializers.Serializer):
@@ -85,11 +111,8 @@ class ProjectContentSerializer(serializers.Serializer):
     action = serializers.CharField()
     action_text = serializers.CharField()
 
-    def get_response_count(self, obj):
-        return 'unknown'
-
     class Meta:
-        fields = ('id', 'response_count', 'title', 'sub_title')
+        fields = ('id', 'title', 'sub_title')
 
 
 class BlockSerializer(serializers.Serializer):
@@ -109,6 +132,8 @@ class BlockSerializer(serializers.Serializer):
             return StatsContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, QuotesContent):
             return QuotesContentSerializer(obj, context=self.context).to_representation(obj)
+        if isinstance(obj, ProjectImagesContent):
+            return ProjectImagesContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, SurveyContent):
             return SurveyContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, ProjectsContent):

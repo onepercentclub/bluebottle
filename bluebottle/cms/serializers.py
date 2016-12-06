@@ -2,9 +2,10 @@ from bluebottle.statistics.statistics import Statistics
 from rest_framework import serializers
 
 from bluebottle.cms.models import (
-    Stat, StatsContent, ResultPage,
-    QuotesContent, ResultsContent, Quote
+    Stat, StatsContent, ResultPage, QuotesContent, SurveyContent,
+    Quote, ProjectsContent
 )
+from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
 
 
@@ -64,11 +65,25 @@ class QuotesContentSerializer(serializers.Serializer):
         fields = ('quotes', 'title', 'sub_title')
 
 
-class ResultsContentSerializer(serializers.Serializer):
+class SurveyContentSerializer(serializers.Serializer):
     answers = QuestionSerializer(many=True, source='survey.visible_questions')
     response_count = serializers.SerializerMethodField()
     title = serializers.CharField()
     sub_title = serializers.CharField()
+
+    def get_response_count(self, obj):
+        return 'unknown'
+
+    class Meta:
+        fields = ('id', 'response_count', 'title', 'sub_title')
+
+
+class ProjectContentSerializer(serializers.Serializer):
+    projects = ProjectPreviewSerializer(many=True, source='projects.projects')
+    title = serializers.CharField()
+    sub_title = serializers.CharField()
+    action = serializers.CharField()
+    action_text = serializers.CharField()
 
     def get_response_count(self, obj):
         return 'unknown'
@@ -94,8 +109,10 @@ class BlockSerializer(serializers.Serializer):
             return StatsContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, QuotesContent):
             return QuotesContentSerializer(obj, context=self.context).to_representation(obj)
-        if isinstance(obj, ResultsContent):
-            return ResultsContentSerializer(obj, context=self.context).to_representation(obj)
+        if isinstance(obj, SurveyContent):
+            return SurveyContentSerializer(obj, context=self.context).to_representation(obj)
+        if isinstance(obj, ProjectsContent):
+            return ProjectContentSerializer(obj, context=self.context).to_representation(obj)
 
     class Meta:
         fields = ('id', 'type', 'content')

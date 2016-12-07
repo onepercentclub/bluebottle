@@ -171,8 +171,9 @@ class BlockSerializer(serializers.Serializer):
 
 class ResultPageSerializer(serializers.ModelSerializer):
     blocks = BlockSerializer(source='content.contentitems', many=True)
+    image = ImageSerializer()
 
     class Meta:
         model = ResultPage
-        fields = ('id', 'title', 'slug', 'start_date',
+        fields = ('id', 'title', 'slug', 'start_date', 'image',
                   'end_date', 'description', 'blocks')

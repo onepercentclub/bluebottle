@@ -1,4 +1,6 @@
 from datetime import timedelta
+
+from django.core.files.base import File
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now
 
@@ -28,10 +30,19 @@ class ResultPageTestCase(BluebottleTestCase):
     def setUp(self):
         super(ResultPageTestCase, self).setUp()
         self.init_projects()
-
-        self.page = ResultPageFactory()
+        image = File(open('./bluebottle/projects/test_images/upload.png'))
+        self.page = ResultPageFactory(title='Results last year', image=image)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('result-page-detail', kwargs={'pk': self.page.id})
+
+    def test_results_header(self):
+
+        response = self.client.get(self.url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        # Image should come in 4 sizes
+        self.assertEqual(len(response.data['image']), 4)
+        self.assertEqual(response.data['title'], self.page.title)
+        self.assertEqual(response.data['description'], self.page.description)
 
     def test_results_stats(self):
         self.stats = StatsFactory()
@@ -41,9 +52,6 @@ class ResultPageTestCase(BluebottleTestCase):
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(response.data['title'], self.page.title)
-        self.assertEqual(response.data['description'], self.page.description)
 
         stats = response.data['blocks'][0]
         self.assertEqual(stats['type'], 'statistics')

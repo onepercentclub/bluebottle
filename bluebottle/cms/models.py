@@ -142,6 +142,22 @@ class ProjectImagesContent(ContentItem):
         return 'Project images block'
 
 
+class ShareResultsContent(ContentItem):
+    type = 'share-results'
+    preview_template = 'admin/cms/preview/share_results.html'
+
+    title = models.CharField(max_length=63, blank=True, null=True)
+    sub_title = models.CharField(max_length=100, blank=True, null=True)
+
+    share_text = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = _('Share Results')
+
+    def __unicode__(self):
+        return 'Share results block'
+
+
 class ResultsContentPlugin(ContentPlugin):
     admin_form_template = 'admin/cms/content_item.html'
 
@@ -169,8 +185,10 @@ class ProjectsBlockPlugin(ResultsContentPlugin):
 
 
 @plugin_pool.register
-class ProjectImagesBlockPlugin(ContentPlugin):
+class ProjectImagesBlockPlugin(ResultsContentPlugin):
     model = ProjectImagesContent
-    admin_form_template = 'admin/cms/content_item.html'
 
-    category = _('Results')
+
+@plugin_pool.register
+class ShareResultsBlockPlugin(ResultsContentPlugin):
+    model = ShareResultsContent

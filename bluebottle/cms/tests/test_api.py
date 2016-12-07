@@ -8,7 +8,8 @@ from fluent_contents.models import Placeholder
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, SurveyContent, ProjectsContent,
-    ProjectImagesContent)
+    ProjectImagesContent, ShareResultsContent
+)
 
 from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -102,6 +103,26 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(images['type'], 'project_images')
         self.assertEqual(images['content']['title'], 'Nice pics')
         self.assertEqual(len(images['content']['images']), 2)
+
+    def test_results_share_results(self):
+        share_text = '{people} donated {donated} to {projects} projects'
+        ShareResultsContent.objects.create_for_placeholder(
+            self.placeholder, title='Share', share_text=share_text
+        )
+
+        response = self.client.get(self.url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['title'], self.page.title)
+        self.assertEqual(response.data['description'], self.page.description)
+
+        share = response.data['blocks'][0]
+        self.assertEqual(share['type'], 'share-results')
+        self.assertEqual(share['content']['title'], 'Share')
+        self.assertEqual(share['content']['share_text'], share_text)
+
+        for key in ['people', 'amount', 'hours', 'projects', 'votes']:
+            self.assertTrue(key in share['content']['statistics'])
 
     def test_results_survey(self):
         survey = SurveyFactory.create()

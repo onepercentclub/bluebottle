@@ -145,5 +145,14 @@ class Statistics(object):
     def votes_cast(self):
         return len(Vote.objects.filter(self.date_filter()))
 
+    @property
+    @memoize(timeout=300)
+    def time_spent(self):
+        return TaskMember.objects.filter(
+            self.date_filter('task__deadline'),
+            status='realized'
+        ).aggregate(time_spent=Sum('time_spent'))['time_spent']
+        return len(Vote.objects.filter(self.date_filter()))
+
     def __repr__(self):
         return 'Statistics'

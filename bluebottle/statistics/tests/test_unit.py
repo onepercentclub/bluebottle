@@ -139,9 +139,10 @@ class StatisticsTest(BluebottleTestCase):
         self.task = TaskFactory.create(author=self.some_user,
                                        project=self.some_project,
                                        status=Task.TaskStatuses.realized)
-        TaskMemberFactory.create(task=self.task, member=self.another_user)
+        TaskMemberFactory.create(task=self.task, member=self.another_user, status='realized')
 
         self.assertEqual(self.stats.tasks_realized, 1)
+        self.assertEqual(self.stats.time_spent, 4)
         # People involved:
         # - campaigner
         # - task member (another_user)
@@ -159,6 +160,7 @@ class StatisticsTest(BluebottleTestCase):
         TaskMemberFactory.create(task=self.task, member=self.some_user)
 
         self.assertEqual(self.stats.tasks_realized, 1)
+        self.assertEqual(self.stats.time_spent, 4)
         # People involved:
         # - campaigner as both owner and member
         self.assertEqual(self.stats.people_involved, 1)

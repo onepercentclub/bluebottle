@@ -291,16 +291,18 @@ class StatisticsDateTest(BluebottleTestCase):
         )
         TaskMemberFactory.create(task=new_task, member=new_user)
 
-        order1 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS)
+        order1 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS,
+                                     confirmed=now)
         DonationFactory.create(
             amount=Money(1000, 'EUR'), order=order1, project=old_project,
-            fundraiser=None, completed=now
+            fundraiser=None
         )
 
-        order2 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS)
+        order2 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS,
+                                     confirmed=last_year)
         DonationFactory.create(
             amount=Money(1000, 'EUR'), order=order2, project=old_project,
-            fundraiser=None, completed=last_year
+            fundraiser=None
         )
 
     def test_all(self):

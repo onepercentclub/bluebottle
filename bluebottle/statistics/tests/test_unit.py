@@ -157,7 +157,7 @@ class StatisticsTest(BluebottleTestCase):
         self.task = TaskFactory.create(author=self.some_user,
                                        project=self.some_project,
                                        status=Task.TaskStatuses.realized)
-        TaskMemberFactory.create(task=self.task, member=self.some_user)
+        TaskMemberFactory.create(task=self.task, member=self.some_user, status='realized')
 
         self.assertEqual(self.stats.tasks_realized, 1)
         self.assertEqual(self.stats.time_spent, 4)

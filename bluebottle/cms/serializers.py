@@ -6,7 +6,7 @@ from rest_framework import serializers
 from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage,
     QuotesContent, SurveyContent, Quote,
-    ProjectImagesContent, ProjectsContent
+    ProjectImagesContent, ProjectsContent, ShareResultsContent
 )
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
@@ -96,6 +96,7 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
             campaign_ended__gte=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
             campaign_ended__lte=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00'),
             status__slug__in=['done-complete', 'done-incomplete']).order_by('?')
+
         return ProjectImageSerializer(projects, many=True).to_representation(projects)
 
     class Meta:
@@ -111,6 +112,30 @@ class ProjectsContentSerializer(serializers.ModelSerializer):
         model = ProjectsContent
         fields = ('id', 'title', 'sub_title', 'projects',
                   'action_text', 'action_link')
+
+
+class ShareResultsContentSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    sub_title = serializers.CharField()
+    share_text = serializers.CharField()
+    statistics = serializers.SerializerMethodField()
+
+    def get_statistics(self, instance):
+        stats = Statistics(
+            start=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            end=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00')
+        )
+
+        return {
+            'people': stats.people_involved,
+            'amount': stats.donated_total,
+            'hours': stats.time_spent,
+            'projects': stats.projects_realized,
+            'votes': stats.votes_cast,
+        }
+
+    class Meta:
+        fields = ('id', 'response_count', 'title', 'sub_title', 'statistics')
 
 
 class BlockSerializer(serializers.Serializer):
@@ -136,6 +161,8 @@ class BlockSerializer(serializers.Serializer):
             return SurveyContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, ProjectsContent):
             return ProjectsContentSerializer(obj, context=self.context).to_representation(obj)
+        if isinstance(obj, ShareResultsContent):
+            return ShareResultsContentSerializer(obj, context=self.context).to_representation(obj)
 
     class Meta:
         fields = ('id', 'type', 'content')

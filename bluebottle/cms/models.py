@@ -4,19 +4,23 @@ from django.db import models
 from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
+from parler.models import TranslatableModel, TranslatedFields
+
 from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
 
 
-class ResultPage(models.Model):
-    title = models.CharField(_('Title'), max_length=200)
-    slug = models.SlugField(_('Slug'), max_length=200)
-    description = models.TextField(_('Description'), blank=True, null=True)
-    image = models.ImageField(_('Header image'), blank=True, null=True)
-
+class ResultPage(TranslatableModel):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     content = PlaceholderField('content')
+
+    image = models.ImageField(_('Header image'), blank=True, null=True)
+    translations = TranslatedFields(
+        title=models.CharField(_('Title'), max_length=40),
+        slug=models.SlugField(_('Slug'), max_length=40),
+        description=models.CharField(_('Description'), max_length=70, blank=True, null=True)
+    )
 
 
 class Stats(models.Model):
@@ -24,7 +28,7 @@ class Stats(models.Model):
         return u"List of statistics #{0}".format(self.id)
 
 
-class Stat(models.Model):
+class Stat(TranslatableModel):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
@@ -39,10 +43,13 @@ class Stat(models.Model):
         max_length=40,
         choices=STAT_CHOICES
     )
-    title = models.CharField(max_length=63)
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
     stats = models.ForeignKey(Stats)
+
+    translations = TranslatedFields(
+        title=models.CharField(max_length=63)
+    )
 
 
 class Quotes(models.Model):
@@ -50,10 +57,12 @@ class Quotes(models.Model):
         return u"List of quotes #{0}".format(self.id)
 
 
-class Quote(models.Model):
-    name = models.CharField(max_length=63)
-    quote = models.CharField(max_length=255)
+class Quote(TranslatableModel):
     quotes = models.ForeignKey(Quotes)
+    translations = TranslatedFields(
+        name=models.CharField(max_length=30),
+        quote=models.CharField(max_length=60)
+    )
 
 
 class QuotesContent(ContentItem):

@@ -255,7 +255,8 @@ SHARED_APPS = (
     'localflavor',
     'filetransfers',
     'corsheaders',
-    'djmoney_rates'
+    'djmoney_rates',
+    'parler'
 
 )
 

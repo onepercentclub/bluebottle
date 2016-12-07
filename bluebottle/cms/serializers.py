@@ -170,7 +170,7 @@ class BlockSerializer(serializers.Serializer):
 
 
 class ResultPageSerializer(serializers.ModelSerializer):
-    blocks = BlockSerializer(source='content.contentitems', many=True)
+    blocks = BlockSerializer(source='content.contentitems.all.translated', many=True)
     image = ImageSerializer()
 
     class Meta:

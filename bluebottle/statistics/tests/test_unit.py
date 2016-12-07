@@ -38,7 +38,7 @@ class InitialStatisticsTest(BluebottleTestCase):
         self.assertEqual(self.stats.projects_realized, 0)
         self.assertEqual(self.stats.tasks_realized, 0)
         self.assertEqual(self.stats.people_involved, 0)
-        self.assertEqual(self.stats.donated_total, 0)
+        self.assertEqual(self.stats.donated_total, Money(0, 'EUR'))
 
 
 @override_settings(
@@ -175,7 +175,7 @@ class StatisticsTest(BluebottleTestCase):
                                                project=self.some_project,
                                                fundraiser=None)
 
-        self.assertEqual(self.stats.donated_total, 1000)
+        self.assertEqual(self.stats.donated_total, Money(1000, 'EUR'))
         # People involved:
         # - campaigner
         # - donator (another_user)
@@ -197,7 +197,7 @@ class StatisticsTest(BluebottleTestCase):
                                                 project=self.some_project,
                                                 fundraiser=None)
 
-        self.assertEqual(self.stats.donated_total, 2000)
+        self.assertEqual(self.stats.donated_total, Money(2000, 'EUR'))
         # People involved:
         # - campaigner
         # - donator (another_user)
@@ -220,7 +220,7 @@ class StatisticsTest(BluebottleTestCase):
                                                 project=self.some_project,
                                                 fundraiser=None)
 
-        self.assertEqual(self.stats.donated_total, 2500)
+        self.assertEqual(self.stats.donated_total, Money(2500, 'EUR'))
         # People involved:
         # - campaigner
         # - donator (another_user)
@@ -307,7 +307,7 @@ class StatisticsDateTest(BluebottleTestCase):
         stats = Statistics()
 
         self.assertEqual(stats.people_involved, 2)
-        self.assertEqual(stats.donated_total, 2000)
+        self.assertEqual(stats.donated_total, Money(2000, 'EUR'))
         self.assertEqual(stats.projects_online, 2)
         self.assertEqual(stats.projects_realized, 2)
         self.assertEqual(stats.tasks_realized, 2)
@@ -317,7 +317,7 @@ class StatisticsDateTest(BluebottleTestCase):
         stats = Statistics(start=timezone.now() - datetime.timedelta(days=1))
 
         self.assertEqual(stats.people_involved, 2)
-        self.assertEqual(stats.donated_total, 1000)
+        self.assertEqual(stats.donated_total, Money(1000, 'EUR'))
         self.assertEqual(stats.projects_online, 1)
         self.assertEqual(stats.projects_realized, 1)
         self.assertEqual(stats.tasks_realized, 1)
@@ -331,7 +331,7 @@ class StatisticsDateTest(BluebottleTestCase):
         )
 
         self.assertEqual(stats.people_involved, 1)
-        self.assertEqual(stats.donated_total, 1000)
+        self.assertEqual(stats.donated_total, Money(1000, 'EUR'))
         self.assertEqual(stats.projects_online, 1)
         self.assertEqual(stats.projects_realized, 1)
         self.assertEqual(stats.tasks_realized, 1)
@@ -343,7 +343,7 @@ class StatisticsDateTest(BluebottleTestCase):
         )
 
         self.assertEqual(stats.people_involved, 2)
-        self.assertEqual(stats.donated_total, 2000)
+        self.assertEqual(stats.donated_total, Money(2000, 'EUR'))
         self.assertEqual(stats.projects_online, 2)
         self.assertEqual(stats.projects_realized, 2)
         self.assertEqual(stats.tasks_realized, 2)

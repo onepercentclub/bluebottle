@@ -4,7 +4,14 @@ from bluebottle.statistics.models import Statistic
 
 
 class StatisticSerializer(serializers.ModelSerializer):
-    value = serializers.CharField(source='calculated_value')
+    value = serializers.SerializerMethodField()
+
+    def get_value(self, obj):
+        value = obj.calculated_value
+        try:
+            return value.amount
+        except AttributeError:
+            return value
 
     class Meta:
         model = Statistic

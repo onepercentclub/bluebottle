@@ -121,7 +121,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(share['content']['title'], 'Share')
         self.assertEqual(share['content']['share_text'], share_text)
 
-        for key in ['people', 'amount', 'hours', 'projects', 'votes']:
+        for key in ['people', 'amount', 'hours', 'projects', 'tasks', 'votes']:
             self.assertTrue(key in share['content']['statistics'])
 
     def test_results_survey(self):

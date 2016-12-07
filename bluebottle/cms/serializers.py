@@ -131,6 +131,7 @@ class ShareResultsContentSerializer(serializers.Serializer):
             'amount': stats.donated_total,
             'hours': stats.time_spent,
             'projects': stats.projects_realized,
+            'tasks': stats.tasks_realized,
             'votes': stats.votes_cast,
         }
 

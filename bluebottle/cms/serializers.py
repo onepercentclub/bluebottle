@@ -104,15 +104,13 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
                   'action_text', 'action_link')
 
 
-class ProjectContentSerializer(serializers.Serializer):
+class ProjectsContentSerializer(serializers.ModelSerializer):
     projects = ProjectPreviewSerializer(many=True, source='projects.projects')
-    title = serializers.CharField()
-    sub_title = serializers.CharField()
-    action = serializers.CharField()
-    action_text = serializers.CharField()
 
     class Meta:
-        fields = ('id', 'title', 'sub_title')
+        model = ProjectsContent
+        fields = ('id', 'title', 'sub_title', 'projects',
+                  'action_text', 'action_link')
 
 
 class BlockSerializer(serializers.Serializer):
@@ -137,7 +135,7 @@ class BlockSerializer(serializers.Serializer):
         if isinstance(obj, SurveyContent):
             return SurveyContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, ProjectsContent):
-            return ProjectContentSerializer(obj, context=self.context).to_representation(obj)
+            return ProjectsContentSerializer(obj, context=self.context).to_representation(obj)
 
     class Meta:
         fields = ('id', 'type', 'content')

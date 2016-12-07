@@ -161,20 +161,6 @@ class ShareResultsContent(ContentItem):
         return 'Share results block'
 
 
-class ProjectsMapContent(ContentItem):
-    type = 'projects-map'
-    preview_template = 'admin/cms/preview/projects_map.html'
-
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
-
-    class Meta:
-        verbose_name = _('Projects Map')
-
-    def __unicode__(self):
-        return 'Projects Map'
-
-
 class ResultsContentPlugin(ContentPlugin):
     admin_form_template = 'admin/cms/content_item.html'
 
@@ -209,8 +195,3 @@ class ProjectImagesBlockPlugin(ResultsContentPlugin):
 @plugin_pool.register
 class ShareResultsBlockPlugin(ResultsContentPlugin):
     model = ShareResultsContent
-
-
-@plugin_pool.register
-class ProjectMapBlockPlugin(ResultsContentPlugin):
-    model = ProjectsMapContent

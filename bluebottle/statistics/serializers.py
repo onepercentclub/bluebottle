@@ -9,9 +9,9 @@ class StatisticSerializer(serializers.ModelSerializer):
     def get_value(self, obj):
         value = obj.calculated_value
         try:
-            return value.amount
+            return u"{0}".format(int(round(value.amount, 0)))
         except AttributeError:
-            return value
+            return u"{0}".format(value)
 
     class Meta:
         model = Statistic

@@ -4,11 +4,10 @@ from bluebottle.statistics.statistics import Statistics
 from rest_framework import serializers
 
 from bluebottle.cms.models import (
-    Stat, StatsContent, ResultPage,
-    QuotesContent, SurveyContent, Quote,
-    ProjectImagesContent, ProjectsContent, ShareResultsContent
+    Stat, StatsContent, ResultPage, QuotesContent, SurveyContent, Quote,
+    ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent
 )
-from bluebottle.projects.serializers import ProjectPreviewSerializer
+from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
 
 
@@ -105,6 +104,22 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
                   'action_text', 'action_link')
 
 
+class ProjectsMapContentSerializer(serializers.ModelSerializer):
+    projects = serializers.SerializerMethodField()
+
+    def get_projects(self, obj):
+        projects = Project.objects.filter(
+            campaign_ended__gte=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            campaign_ended__lte=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            status__slug__in=['done-complete', 'done-incomplete'])
+
+        return ProjectTinyPreviewSerializer(projects, many=True).to_representation(projects)
+
+    class Meta:
+        model = ProjectImagesContent
+        fields = ('id', 'title', 'sub_title', 'projects', )
+
+
 class ProjectsContentSerializer(serializers.ModelSerializer):
     projects = ProjectPreviewSerializer(many=True, source='projects.projects')
 
@@ -164,6 +179,9 @@ class BlockSerializer(serializers.Serializer):
             return ProjectsContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, ShareResultsContent):
             return ShareResultsContentSerializer(obj, context=self.context).to_representation(obj)
+        if isinstance(obj, ProjectsMapContent):
+            return ProjectsMapContentSerializer(obj, context=self.context).to_representation(obj)
+
 
     class Meta:
         fields = ('id', 'type', 'content')

@@ -106,8 +106,11 @@ class ProjectsContent(ContentItem):
     title = models.CharField(max_length=63, blank=True, null=True)
     sub_title = models.CharField(max_length=100, blank=True, null=True)
 
-    action = models.CharField(max_length=255)
-    action_text = models.CharField(max_length=255)
+    action_text = models.CharField(max_length=100,
+                                   default=_('Add your own project'),
+                                   blank=True, null=True)
+    action_link = models.CharField(max_length=100, default="/start-project",
+                                   blank=True, null=True)
 
     projects = models.ForeignKey(Projects, null=True)
 

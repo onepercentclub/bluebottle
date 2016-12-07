@@ -12,6 +12,7 @@ class ResultPage(models.Model):
     title = models.CharField(_('Title'), max_length=200)
     slug = models.SlugField(_('Slug'), max_length=200)
     description = models.TextField(_('Description'), blank=True, null=True)
+    image = models.ImageField(_('Header image'), blank=True, null=True)
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
@@ -20,7 +21,7 @@ class ResultPage(models.Model):
 
 class Stats(models.Model):
     def __unicode__(self):
-        return str(self.id)
+        return u"List of statistics #{0}".format(self.id)
 
 
 class Stat(models.Model):
@@ -46,7 +47,7 @@ class Stat(models.Model):
 
 class Quotes(models.Model):
     def __unicode__(self):
-        return str(self.id)
+        return u"List of quotes #{0}".format(self.id)
 
 
 class Quote(models.Model):
@@ -100,6 +101,9 @@ class SurveyContent(ContentItem):
 
 class Projects(models.Model):
     projects = models.ManyToManyField(Project)
+
+    def __unicode__(self):
+        return u"List of projects #{0}".format(self.id)
 
 
 class ProjectsContent(ContentItem):

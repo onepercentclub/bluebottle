@@ -80,7 +80,7 @@ class SurveyContentSerializer(serializers.ModelSerializer):
     response_count = serializers.SerializerMethodField()
 
     def get_response_count(self, obj):
-        return 'unknown'
+        return obj.survey.response_set.count()
 
     class Meta:
         model = SurveyContent

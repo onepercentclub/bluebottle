@@ -6,6 +6,8 @@ from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
+from adminsortable.models import SortableMixin
+from adminsortable.fields import SortableForeignKey
 
 
 class ResultPage(models.Model):
@@ -24,7 +26,7 @@ class Stats(models.Model):
         return u"List of statistics #{0}".format(self.id)
 
 
-class Stat(models.Model):
+class Stat(SortableMixin):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
@@ -42,7 +44,11 @@ class Stat(models.Model):
     title = models.CharField(max_length=63)
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
-    stats = models.ForeignKey(Stats)
+    stats = SortableForeignKey(Stats)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
 
 
 class Quotes(models.Model):

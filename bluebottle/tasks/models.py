@@ -57,7 +57,7 @@ class Task(models.Model, PreviousStatusMixin):
     date_status_change = models.DateTimeField(_('date status change'),
                                               blank=True, null=True)
 
-    deadline = models.DateTimeField(_('date'), help_text=_('Deadline or event date'))
+    deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
 
     objects = UpdateSignalsQuerySet.as_manager()
 

@@ -47,8 +47,8 @@ class ResultPageTestCase(BluebottleTestCase):
 
     def test_results_stats(self):
         self.stats = StatsFactory()
-        self.stat1 = StatFactory(stats=self.stats, type='donated_total', title='Donations', value=None)
-        self.stat2 = StatFactory(stats=self.stats, type='manual', title='Poffertjes', value=3500)
+        self.stat1 = StatFactory(stats=self.stats, type='manual', title='Poffertjes', value=3500)
+        self.stat2 = StatFactory(stats=self.stats, type='donated_total', title='Donations', value=None)
 
         StatsContent.objects.create_for_placeholder(self.placeholder, stats=self.stats, title='Look at us!')
 
@@ -58,10 +58,10 @@ class ResultPageTestCase(BluebottleTestCase):
         stats = response.data['blocks'][0]
         self.assertEqual(stats['type'], 'statistics')
         self.assertEqual(stats['content']['title'], 'Look at us!')
-        self.assertEqual(stats['content']['stats'][1]['title'], self.stat1.title)
+        self.assertEqual(stats['content']['stats'][0]['title'], self.stat1.title)
+        self.assertEqual(stats['content']['stats'][0]['value'], str(self.stat1.value))
+        self.assertEqual(stats['content']['stats'][1]['title'], self.stat2.title)
         self.assertEqual(stats['content']['stats'][1]['value'], {"amount": Decimal('0'), "currency": "EUR"})
-        self.assertEqual(stats['content']['stats'][0]['title'], self.stat2.title)
-        self.assertEqual(stats['content']['stats'][0]['value'], str(self.stat2.value))
 
     def test_results_quotes(self):
         self.quotes = QuotesFactory()

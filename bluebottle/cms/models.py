@@ -161,8 +161,7 @@ class ShareResultsContent(ContentItem):
 
     title = models.CharField(max_length=63, blank=True, null=True)
     sub_title = models.CharField(max_length=100, blank=True, null=True)
-
-    share_text = models.CharField(max_length=100)
+    share_text = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Share Results')

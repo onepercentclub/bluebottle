@@ -36,8 +36,15 @@ class StatSerializer(serializers.ModelSerializer):
     def get_value(self, obj):
         if obj.value:
             return obj.value
-        return getattr(Statistics(start=self.context['start_date'],
-                                  end=self.context['end_date']), obj.type, 0)
+        value = getattr(Statistics(start=self.context['start_date'],
+                                   end=self.context['end_date']), obj.type, 0)
+        try:
+            return {
+                'amount': value.amount,
+                'currency': str(value.currency)
+            }
+        except AttributeError:
+            return value
 
     class Meta:
         model = Stat
@@ -128,7 +135,10 @@ class ShareResultsContentSerializer(serializers.Serializer):
 
         return {
             'people': stats.people_involved,
-            'amount': stats.donated_total,
+            'amount': {
+                'amount': stats.donated_total.amount,
+                'currency': str(stats.donated_total.currency)
+            },
             'hours': stats.time_spent,
             'projects': stats.projects_realized,
             'tasks': stats.tasks_realized,

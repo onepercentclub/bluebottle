@@ -11,7 +11,6 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
-
 class ClientSettingsTestCase(BluebottleTestCase):
 
     def setUp(self):

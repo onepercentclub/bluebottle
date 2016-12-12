@@ -384,7 +384,6 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         # No new mails should be send
         self.assertEqual(len(mail.outbox), 1)
 
-
     def test_new_reaction_by_a_on_wallpost_a_on_project_by_a(self):
         """
         Project by A + Wallpost by A + Reaction by A => No mails.
@@ -562,7 +561,6 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
 
         # No new mails should be sent
         self.assertEqual(len(mail.outbox), 2)
-
 
     def test_new_wallpost_by_b_on_task_by_a(self):
         """

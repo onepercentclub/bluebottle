@@ -4,6 +4,21 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.db.models.deletion
+from django.conf import settings
+
+
+def forwards_func(apps, schema_editor):
+        ResultPage = apps.get_model('cms', 'ResultPage')
+        ResultPageTranslation = apps.get_model('cms', 'ResultPageTranslation')
+
+        for object in ResultPage.objects.all():
+            ResultPageTranslation.objects.create(
+                master_id=object.pk,
+                language_code=settings.LANGUAGE_CODE,
+                title=object.title,
+                slug=object.slug,
+                description=object.description
+            )
 
 
 class Migration(migrations.Migration):
@@ -30,6 +45,12 @@ class Migration(migrations.Migration):
                 'verbose_name': 'result page Translation',
             },
         ),
+        migrations.AddField(
+            model_name='resultpagetranslation',
+            name='master',
+            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='translations', to='cms.ResultPage'),
+        ),
+        migrations.RunPython(forwards_func),
         migrations.RemoveField(
             model_name='resultpage',
             name='description',
@@ -41,11 +62,6 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='resultpage',
             name='title',
-        ),
-        migrations.AddField(
-            model_name='resultpagetranslation',
-            name='master',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='translations', to='cms.ResultPage'),
         ),
         migrations.AlterUniqueTogether(
             name='resultpagetranslation',

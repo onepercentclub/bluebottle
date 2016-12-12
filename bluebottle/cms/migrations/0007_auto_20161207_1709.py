@@ -4,6 +4,20 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.db.models.deletion
+from django.conf import settings
+
+
+def forwards_func(apps, schema_editor):
+        Quote = apps.get_model('cms', 'Quote')
+        QuoteTranslation = apps.get_model('cms', 'QuoteTranslation')
+
+        for object in Quote.objects.all():
+            QuoteTranslation.objects.create(
+                master_id=object.pk,
+                language_code=settings.LANGUAGE_CODE,
+                quote=object.quote,
+                name=object.name
+            )
 
 
 class Migration(migrations.Migration):
@@ -29,6 +43,12 @@ class Migration(migrations.Migration):
                 'verbose_name': 'quote Translation',
             },
         ),
+        migrations.AddField(
+            model_name='quotetranslation',
+            name='master',
+            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='translations', to='cms.Quote'),
+        ),
+        migrations.RunPython(forwards_func),
         migrations.RemoveField(
             model_name='quote',
             name='name',
@@ -51,11 +71,6 @@ class Migration(migrations.Migration):
             model_name='resultpagetranslation',
             name='title',
             field=models.CharField(max_length=40, verbose_name='Title'),
-        ),
-        migrations.AddField(
-            model_name='quotetranslation',
-            name='master',
-            field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='translations', to='cms.Quote'),
         ),
         migrations.AlterUniqueTogether(
             name='quotetranslation',

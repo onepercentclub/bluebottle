@@ -4,6 +4,19 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.db.models.deletion
+from django.conf import settings
+
+
+def forwards_func(apps, schema_editor):
+        Stat = apps.get_model('cms', 'Stat')
+        StatTranslation = apps.get_model('cms', 'StatTranslation')
+
+        for object in Stat.objects.all():
+            StatTranslation.objects.create(
+                master_id=object.pk,
+                language_code=settings.LANGUAGE_CODE,
+                title=object.title
+            )
 
 
 class Migration(migrations.Migration):
@@ -28,14 +41,15 @@ class Migration(migrations.Migration):
                 'verbose_name': 'stat Translation',
             },
         ),
-        migrations.RemoveField(
-            model_name='stat',
-            name='title',
-        ),
         migrations.AddField(
             model_name='stattranslation',
             name='master',
             field=models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='translations', to='cms.Stat'),
+        ),
+        migrations.RunPython(forwards_func),
+        migrations.RemoveField(
+            model_name='stat',
+            name='title',
         ),
         migrations.AlterUniqueTogether(
             name='stattranslation',

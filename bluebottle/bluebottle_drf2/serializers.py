@@ -1,12 +1,8 @@
-import decimal
-import json
 import logging
 import os
+from os.path import isfile
 import re
 import sys
-import types
-
-from os.path import isfile
 from urllib2 import URLError
 
 from django.conf import settings

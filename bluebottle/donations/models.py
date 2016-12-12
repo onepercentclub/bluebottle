@@ -25,4 +25,4 @@ class Donation(BaseDonation):
             return '?'
         return order_payment.payment.method_name
 
-from .signals import *
+from .signals import *  # noqa

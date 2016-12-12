@@ -1,5 +1,4 @@
 from django import forms
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
@@ -162,14 +161,14 @@ class MemberAdmin(UserAdmin):
         ('username', 'username'),
         ('email', 'email'),
         ('remote_id', 'remote_id'),
-        ('first_name','first_name'),
-        ('last_name','last name'),
-        ('date_joined','date joined'),
-        ('is_initiator','is initiator'),
-        ('is_supporter','is supporter'),
-        ('amount_donated','amount donated'),
-        ('is_volunteer','is volunteer'),
-        ('time_spent','time spent'),
+        ('first_name', 'first_name'),
+        ('last_name', 'last name'),
+        ('date_joined', 'date joined'),
+        ('is_initiator', 'is initiator'),
+        ('is_supporter', 'is supporter'),
+        ('amount_donated', 'amount donated'),
+        ('is_volunteer', 'is volunteer'),
+        ('time_spent', 'time spent'),
     )
 
     actions = (export_as_csv_action(fields=export_fields),)
@@ -217,9 +216,7 @@ class MemberAdmin(UserAdmin):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = [
-            url(r'^login-as/(?P<user_id>\d+)/$',
-             self.admin_site.admin_view(
-                 self.login_as_redirect))
+            url(r'^login-as/(?P<user_id>\d+)/$', self.admin_site.admin_view(self.login_as_redirect))
         ]
         return extra_urls + urls
 

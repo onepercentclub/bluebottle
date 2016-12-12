@@ -3,7 +3,7 @@ from django.utils.safestring import mark_safe
 
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
+from bluebottle.bluebottle_drf2.serializers import SorlImageField
 from bluebottle.members.serializers import UserPreviewSerializer
 
 from .models import NewsItem

@@ -108,9 +108,8 @@ class Location(models.Model):
     city = models.CharField(_('city'), blank=True, null=True, max_length=255)
     country = models.ForeignKey('geo.Country', blank=True, null=True)
     description = models.TextField(_('description'), blank=True)
-    image = ImageField(
-        _('image'), max_length=255, null=True, blank=True, 
-        upload_to='location_images/', help_text=_('Location picture'))
+    image = ImageField(_('image'), max_length=255, null=True, blank=True,
+                       upload_to='location_images/', help_text=_('Location picture'))
 
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']

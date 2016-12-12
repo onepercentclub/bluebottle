@@ -1,21 +1,17 @@
-from decimal import Decimal
-
 from django.core.urlresolvers import reverse
 
-from bluebottle.test.factory_models.statistics import StatisticFactory
-from bluebottle.utils.utils import StatusDefinition
-from bluebottle.utils.models import Language
-
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.statistics.views import Statistics
+from bluebottle.tasks.models import Task
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-
-from bluebottle.statistics.views import Statistics
-from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.tasks.models import Task
+from bluebottle.test.factory_models.statistics import StatisticFactory
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.models import Language
 
 from ..models import HomePage
 
@@ -157,9 +153,9 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         for char in 'abcdefghij':
             # Put half of the projects in the campaign phase.
             if ord(char) % 2 == 1:
-                task = TaskMemberFactory.create(task=self.task)
+                TaskMemberFactory.create(task=self.task)
             else:
-                task = TaskMemberFactory.create(task=self.task)
+                TaskMemberFactory.create(task=self.task)
 
         """
         Create 10 Donations with half to fundraisers

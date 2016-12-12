@@ -20,6 +20,10 @@ class PaymentTestCase(BluebottleTestCase):
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(order=self.order)
 
+    def test_status_details(self):
+        self.assertEqual(self.order_payment.status_description, "")
+        self.assertEqual(self.order_payment.status_code, "")
+
     def test_basic_order_payment_flow(self):
         self.assertEqual(self.order.status, StatusDefinition.LOCKED,
                          'Creating an Order Payment should change Order to locked')

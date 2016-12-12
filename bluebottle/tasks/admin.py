@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 
+from daterange_filter.filter import DateRangeFilter
+
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -78,8 +80,8 @@ class TaskAdmin(admin.ModelAdmin):
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
 
     raw_id_fields = ('author', 'project')
-    list_filter = ('status', 'type')
-    list_display = ('title', 'project', 'status', 'deadline')
+    list_filter = ('status', 'type', 'deadline', ('deadline', DateRangeFilter))
+    list_display = ('title', 'project', 'status', 'created', 'deadline')
 
     readonly_fields = ('date_status_change',)
 

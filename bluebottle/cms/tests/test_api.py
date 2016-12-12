@@ -1,4 +1,7 @@
 from datetime import timedelta
+from decimal import Decimal
+
+from django.core.files.base import File
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now
 
@@ -28,28 +31,37 @@ class ResultPageTestCase(BluebottleTestCase):
     def setUp(self):
         super(ResultPageTestCase, self).setUp()
         self.init_projects()
-
-        self.page = ResultPageFactory()
+        image = File(open('./bluebottle/projects/test_images/upload.png'))
+        self.page = ResultPageFactory(title='Results last year', image=image)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('result-page-detail', kwargs={'pk': self.page.id})
 
+    def test_results_header(self):
+
+        response = self.client.get(self.url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        # Image should come in 4 sizes
+        self.assertEqual(len(response.data['image']), 4)
+        self.assertEqual(response.data['title'], self.page.title)
+        self.assertEqual(response.data['description'], self.page.description)
+
     def test_results_stats(self):
         self.stats = StatsFactory()
-        self.stat = StatFactory(stats=self.stats)
+        self.stat1 = StatFactory(stats=self.stats, type='manual', title='Poffertjes', value=3500)
+        self.stat2 = StatFactory(stats=self.stats, type='donated_total', title='Donations', value=None)
 
         StatsContent.objects.create_for_placeholder(self.placeholder, stats=self.stats, title='Look at us!')
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(response.data['title'], self.page.title)
-        self.assertEqual(response.data['description'], self.page.description)
-
         stats = response.data['blocks'][0]
         self.assertEqual(stats['type'], 'statistics')
         self.assertEqual(stats['content']['title'], 'Look at us!')
-        self.assertEqual(stats['content']['stats'][0]['title'], self.stat.title)
-        self.assertEqual(stats['content']['stats'][0]['value'], str(self.stat.value))
+        self.assertEqual(stats['content']['stats'][0]['title'], self.stat1.title)
+        self.assertEqual(stats['content']['stats'][0]['value'], str(self.stat1.value))
+        self.assertEqual(stats['content']['stats'][1]['title'], self.stat2.title)
+        self.assertEqual(stats['content']['stats'][1]['value'], {"amount": Decimal('0'), "currency": "EUR"})
 
     def test_results_quotes(self):
         self.quotes = QuotesFactory()

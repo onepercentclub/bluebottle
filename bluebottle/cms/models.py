@@ -6,12 +6,15 @@ from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
+from adminsortable.models import SortableMixin
+from adminsortable.fields import SortableForeignKey
 
 
 class ResultPage(models.Model):
     title = models.CharField(_('Title'), max_length=200)
     slug = models.SlugField(_('Slug'), max_length=200)
     description = models.TextField(_('Description'), blank=True, null=True)
+    image = models.ImageField(_('Header image'), blank=True, null=True)
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
@@ -20,10 +23,10 @@ class ResultPage(models.Model):
 
 class Stats(models.Model):
     def __unicode__(self):
-        return str(self.id)
+        return u"List of statistics #{0}".format(self.id)
 
 
-class Stat(models.Model):
+class Stat(SortableMixin):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
@@ -41,12 +44,16 @@ class Stat(models.Model):
     title = models.CharField(max_length=63)
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
-    stats = models.ForeignKey(Stats)
+    stats = SortableForeignKey(Stats)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
 
 
 class Quotes(models.Model):
     def __unicode__(self):
-        return str(self.id)
+        return u"List of quotes #{0}".format(self.id)
 
 
 class Quote(models.Model):
@@ -101,6 +108,9 @@ class SurveyContent(ContentItem):
 class Projects(models.Model):
     projects = models.ManyToManyField(Project)
 
+    def __unicode__(self):
+        return u"List of projects #{0}".format(self.id)
+
 
 class ProjectsContent(ContentItem):
     title = models.CharField(max_length=63, blank=True, null=True)
@@ -151,8 +161,7 @@ class ShareResultsContent(ContentItem):
 
     title = models.CharField(max_length=63, blank=True, null=True)
     sub_title = models.CharField(max_length=100, blank=True, null=True)
-
-    share_text = models.CharField(max_length=100)
+    share_text = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Share Results')

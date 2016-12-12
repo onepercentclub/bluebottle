@@ -46,7 +46,7 @@ class ResultPageTestCase(BluebottleTestCase):
 
     def test_results_stats(self):
         self.stats = StatsFactory()
-        self.stat = StatFactory(stats=self.stats)
+        self.stat = StatFactory(stats=self.stats, title='test')
 
         StatsContent.objects.create_for_placeholder(self.placeholder, stats=self.stats, title='Look at us!')
 

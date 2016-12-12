@@ -256,7 +256,7 @@ SHARED_APPS = (
     'filetransfers',
     'corsheaders',
     'djmoney_rates',
-    'parler'
+    'parler',
     'daterange_filter',
     'adminsortable'
 )

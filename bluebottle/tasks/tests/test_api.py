@@ -1,12 +1,14 @@
+import mock
+
 from django.core.urlresolvers import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
+
+from rest_framework import status
 
 from bluebottle.tasks.models import Task
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-
 from bluebottle.bb_projects.models import ProjectPhase
 
 
@@ -200,13 +202,13 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.post(self.task_member_url,
                                     task_member_data,
                                     HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member_id = response.data['id']
         task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'in progress')
 
@@ -214,7 +216,7 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.patch(task_member_url,
                                      {'status': 'rejected'},
                                      HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'open')
 
@@ -222,13 +224,13 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.post(self.task_member_url,
                                     task_member_data,
                                     HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member_id = response.data['id']
         task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'in progress')
 
@@ -239,7 +241,7 @@ class TaskApiTestcase(BluebottleTestCase):
                                        'task': task.id
                                    },
                                    HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'open')
 
@@ -247,13 +249,13 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.post(self.task_member_url,
                                     task_member_data,
                                     HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member_id = response.data['id']
         task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'in progress')
 
@@ -261,7 +263,7 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.patch(task_member_url,
                                      {'status': 'realized'},
                                      HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'in progress')
 
@@ -284,5 +286,49 @@ class TaskApiTestcase(BluebottleTestCase):
         # Task deadline time should changed be just before midnight after setting.
         response = self.client.post(self.tasks_url, task_data,
                                     HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['deadline'], '2016-08-09T23:59:59.999999+02:00')
+
+
+class TestProjectTaskAPIPermissions(BluebottleTestCase):
+    """ API endpoint test where endpoint has explicit
+        permission_classes, overriding the global default """
+
+    def setUp(self):
+        super(TestProjectTaskAPIPermissions, self).setUp()
+
+        self.init_projects()
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.some_project = ProjectFactory.create(owner=self.user)
+        self.projects_url = reverse('project_list')
+
+        self.tasks_url = reverse('task_list')
+        self.wallpost_url = reverse('wallpost_list')
+
+    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
+    def test_closed_api_readonly_permission_noauth(self):
+        """ an endpoint with an explicit *OrReadOnly permission
+            should still be closed """
+        response = self.client.get(self.tasks_url,
+                                   {'project': self.some_project.slug})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', False)
+    def test_open_api_readonly_permission_noauth(self):
+        """ an endpoint with an explicit *OrReadOnly permission
+            should still be closed """
+        response = self.client.get(self.tasks_url,
+                                   {'project': self.some_project.slug})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
+    def test_closed_api_readonly_permission_auth(self):
+        """ an endpoint with an explicit *OrReadOnly permission
+            should still be closed """
+        response = self.client.get(self.tasks_url,
+                                  {'project': self.some_project.slug},
+                                   token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

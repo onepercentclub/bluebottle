@@ -1,10 +1,12 @@
+import mock
+
 from django.utils.timezone import now
+from django.core.urlresolvers import reverse
+from django.core import mail
+
+from rest_framework import status
 
 from bluebottle.test.utils import BluebottleTestCase
-from django.core.urlresolvers import reverse
-
-from django.core import mail
-from rest_framework import status
 from bluebottle.utils.tests.test_unit import UserTestsMixin
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -579,3 +581,49 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
 
         self.assertEqual(m.to, [self.user_a.email])
         self.assertEqual(m.activated_language, self.user_a.primary_language)
+
+
+class TestWallpostAPIPermissions(BluebottleTestCase):
+    """ API endpoint test where endpoint (wallpost) has explicit
+        permission_classes, overriding the global default """
+
+    def setUp(self):
+        super(TestWallpostAPIPermissions, self).setUp()
+
+        self.init_projects()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.some_project = ProjectFactory.create(owner=self.user)
+        self.some_wallpost = TextWallpostFactory.create(
+                                content_object=self.some_project,
+                                author=self.user)
+        self.wallpost_url = reverse('wallpost_list')
+
+    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
+    def test_closed_api_readonly_permission_noauth(self):
+        """ an endpoint with an explicit *OrReadOnly permission
+            should still be closed """
+        response = self.client.get(self.wallpost_url,
+                                   {'project': self.some_project.slug,
+                                    'parent_type':'project'})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', False)
+    def test_open_api_readonly_permission_noauth(self):
+        """ an endpoint with an explicit *OrReadOnly permission
+            should still be closed """
+        response = self.client.get(self.wallpost_url,
+                                   {'project': self.some_project.slug,
+                                    'parent_type':'project'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
+    def test_closed_api_readonly_permission_auth(self):
+        """ an endpoint with an explicit *OrReadOnly permission
+            should still be closed """
+        response = self.client.get(self.wallpost_url,
+                                   {'project': self.some_project.slug,
+                                    'parent_type':'project'},
+                                   token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

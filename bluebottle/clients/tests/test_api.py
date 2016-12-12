@@ -1,3 +1,4 @@
+import mock
 from decimal import Decimal
 
 from django.core.urlresolvers import reverse
@@ -7,6 +8,8 @@ from rest_framework import status
 
 from bluebottle.clients import properties
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+
 
 
 class ClientSettingsTestCase(BluebottleTestCase):
@@ -113,3 +116,34 @@ class ClientSettingsTestCase(BluebottleTestCase):
                 }
             ]
         )
+
+
+class TestDefaultAPI(BluebottleTestCase):
+    """
+        Test the default API, open and closed, authenticated or not
+        with default permissions
+    """
+    def setUp(self):
+        super(TestDefaultAPI, self).setUp()
+
+        self.init_projects()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.projects_url = reverse('project_list')
+
+    def test_open_api(self):
+        """ request open api, expect projects """
+        response = self.client.get(self.projects_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
+    def test_closed_api_not_authenticated(self):
+        """ request closed api, expect 403 ? if not authenticated """
+        response = self.client.get(self.projects_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
+    def test_closed_api_authenticated(self):
+        """ request closed api, expect projects if authenticated """
+        response = self.client.get(self.projects_url, token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

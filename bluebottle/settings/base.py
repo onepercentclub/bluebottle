@@ -257,7 +257,8 @@ SHARED_APPS = (
     'corsheaders',
     'djmoney_rates',
     'parler'
-
+    'daterange_filter',
+    'adminsortable'
 )
 
 TENANT_APPS = (

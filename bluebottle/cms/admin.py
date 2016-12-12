@@ -1,19 +1,33 @@
 from django.contrib import admin
+from django.db import models
+from django.forms import Textarea
+
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
+<<<<<<< HEAD
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
+=======
+from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
+
+>>>>>>> release/platform-results
 
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.cms.models import Stats, Stat, Quotes, Quote, ResultPage, Projects
-from django.forms import Textarea
-from django.db import models
 
 
+<<<<<<< HEAD
 class StatInline(TranslatableStackedInline):
+=======
+class StatInline(SortableStackedInline):
+>>>>>>> release/platform-results
     model = Stat
     extra = 1
 
 
+<<<<<<< HEAD
 class StatsAdmin(ImprovedModelForm):
+=======
+class StatsAdmin(ImprovedModelForm, NonSortableParentAdmin):
+>>>>>>> release/platform-results
     inlines = [StatInline]
 
 

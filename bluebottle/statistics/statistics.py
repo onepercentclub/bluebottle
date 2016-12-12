@@ -117,7 +117,9 @@ class Statistics(object):
     @property
     @memoize(timeout=300)
     def projects_online(self):
-        """ Count all running projects (status == campaign) """
+        """
+        Count all running projects (status == campaign)
+        """
         return len(
             Project.objects.filter(self.date_filter('campaign_started'), status__slug__in=('voting', 'campaign'))
         )
@@ -127,16 +129,15 @@ class Statistics(object):
     def donated_total(self):
         """ Add all donation amounts for all donations ever """
         donations = Donation.objects.filter(
-            self.date_filter('completed'),
-            order__status__in=(StatusDefinition.PENDING, StatusDefinition.SUCCESS)
+            self.date_filter('order__confirmed'),
+            order__status__in=['pending', 'success']
         )
         totals = donations.values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
-
         if totals:
-            donated = int(sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]).amount)
+            donated = sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
         else:
-            donated = 0
+            donated = Money(0, properties.DEFAULT_CURRENCY)
 
         return donated
 
@@ -152,7 +153,6 @@ class Statistics(object):
             self.date_filter('task__deadline'),
             status='realized'
         ).aggregate(time_spent=Sum('time_spent'))['time_spent']
-        return len(Vote.objects.filter(self.date_filter()))
 
     def __repr__(self):
         return 'Statistics'

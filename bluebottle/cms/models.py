@@ -8,6 +8,8 @@ from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
+from adminsortable.models import SortableMixin
+from adminsortable.fields import SortableForeignKey
 
 
 class ResultPage(TranslatableModel):
@@ -28,7 +30,7 @@ class Stats(models.Model):
         return u"List of statistics #{0}".format(self.id)
 
 
-class Stat(TranslatableModel):
+class Stat(TranslatableModel, SortableMixin):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
@@ -45,7 +47,11 @@ class Stat(TranslatableModel):
     )
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
-    stats = models.ForeignKey(Stats)
+    stats = SortableForeignKey(Stats)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
 
     translations = TranslatedFields(
         title=models.CharField(max_length=63)

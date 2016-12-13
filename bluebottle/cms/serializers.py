@@ -52,23 +52,23 @@ class StatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Stat
-        fields = ('id', 'type', 'title', 'value')
+        fields = ('id', 'title', 'type', 'value')
 
 
-class StatsContentSerializer(serializers.Serializer):
+class StatsContentSerializer(serializers.ModelSerializer):
     stats = StatSerializer(source='stats.stat_set', many=True)
     title = serializers.CharField()
     sub_title = serializers.CharField()
 
     class Meta:
         model = QuotesContent
-        fields = ('stats', 'title', 'sub_title')
+        fields = ('id', 'type', 'stats', 'title', 'sub_title')
 
 
 class QuoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quote
-        fields = ('name', 'quote')
+        fields = ('id', 'name', 'quote')
 
 
 class QuotesContentSerializer(serializers.ModelSerializer):
@@ -76,7 +76,7 @@ class QuotesContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = QuotesContent
-        fields = ('quotes', 'title', 'sub_title')
+        fields = ('id', 'quotes', 'type', 'title', 'sub_title')
 
 
 class SurveyContentSerializer(serializers.ModelSerializer):
@@ -88,7 +88,7 @@ class SurveyContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SurveyContent
-        fields = ('id', 'response_count', 'answers', 'title', 'sub_title')
+        fields = ('id', 'type', 'response_count', 'answers', 'title', 'sub_title')
 
 
 class ProjectImageSerializer(serializers.ModelSerializer):
@@ -96,7 +96,7 @@ class ProjectImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ('photo', 'title', 'slug')
+        fields = ('id', 'photo', 'title', 'slug')
 
 
 class ProjectImagesContentSerializer(serializers.ModelSerializer):
@@ -112,7 +112,7 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectImagesContent
-        fields = ('id', 'images', 'title', 'sub_title', 'description',
+        fields = ('id', 'type', 'images', 'title', 'sub_title', 'description',
                   'action_text', 'action_link')
 
 
@@ -129,7 +129,7 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectImagesContent
-        fields = ('id', 'title', 'sub_title', 'projects', )
+        fields = ('id', 'type', 'title', 'sub_title', 'projects', )
 
 
 class ProjectsContentSerializer(serializers.ModelSerializer):
@@ -137,14 +137,11 @@ class ProjectsContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectsContent
-        fields = ('id', 'title', 'sub_title', 'projects',
+        fields = ('id', 'type', 'title', 'sub_title', 'projects',
                   'action_text', 'action_link')
 
 
-class ShareResultsContentSerializer(serializers.Serializer):
-    title = serializers.CharField()
-    sub_title = serializers.CharField()
-    share_text = serializers.CharField()
+class ShareResultsContentSerializer(serializers.ModelSerializer):
     statistics = serializers.SerializerMethodField()
 
     def get_statistics(self, instance):
@@ -166,22 +163,13 @@ class ShareResultsContentSerializer(serializers.Serializer):
         }
 
     class Meta:
-        fields = ('id', 'response_count', 'title', 'sub_title', 'statistics')
+        model = ShareResultsContent
+        fields = ('id', 'type', 'title', 'sub_title', 'statistics', 'share_text')
 
 
 class BlockSerializer(serializers.Serializer):
 
-    content = serializers.SerializerMethodField()
-    type = serializers.SerializerMethodField()
-    id = serializers.SerializerMethodField()
-
-    def get_type(self, obj):
-        return obj.type
-
-    def get_id(self, obj):
-        return obj.id
-
-    def get_content(self, obj):
+    def to_representation(self, obj):
         if isinstance(obj, StatsContent):
             return StatsContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, QuotesContent):
@@ -196,9 +184,6 @@ class BlockSerializer(serializers.Serializer):
             return ShareResultsContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, ProjectsMapContent):
             return ProjectsMapContentSerializer(obj, context=self.context).to_representation(obj)
-
-    class Meta:
-        fields = ('id', 'type', 'content')
 
 
 class ResultPageSerializer(serializers.ModelSerializer):

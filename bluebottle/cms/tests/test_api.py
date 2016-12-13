@@ -57,11 +57,11 @@ class ResultPageTestCase(BluebottleTestCase):
 
         stats = response.data['blocks'][0]
         self.assertEqual(stats['type'], 'statistics')
-        self.assertEqual(stats['content']['title'], 'Look at us!')
-        self.assertEqual(stats['content']['stats'][0]['title'], self.stat1.title)
-        self.assertEqual(stats['content']['stats'][0]['value'], str(self.stat1.value))
-        self.assertEqual(stats['content']['stats'][1]['title'], self.stat2.title)
-        self.assertEqual(stats['content']['stats'][1]['value'], {"amount": Decimal('0'), "currency": "EUR"})
+        self.assertEqual(stats['title'], 'Look at us!')
+        self.assertEqual(stats['stats'][0]['title'], self.stat1.title)
+        self.assertEqual(stats['stats'][0]['value'], str(self.stat1.value))
+        self.assertEqual(stats['stats'][1]['title'], self.stat2.title)
+        self.assertEqual(stats['stats'][1]['value'], {"amount": Decimal('0'), "currency": "EUR"})
 
     def test_results_quotes(self):
         self.quotes = QuotesFactory()
@@ -77,8 +77,8 @@ class ResultPageTestCase(BluebottleTestCase):
 
         quotes = response.data['blocks'][0]
         self.assertEqual(quotes['type'], 'quotes')
-        self.assertEqual(quotes['content']['quotes'][0]['name'], self.quote.name)
-        self.assertEqual(quotes['content']['quotes'][0]['quote'], self.quote.quote)
+        self.assertEqual(quotes['quotes'][0]['name'], self.quote.name)
+        self.assertEqual(quotes['quotes'][0]['quote'], self.quote.quote)
 
     def test_results_projects(self):
         self.project = ProjectFactory()
@@ -95,7 +95,7 @@ class ResultPageTestCase(BluebottleTestCase):
 
         projects = response.data['blocks'][0]
         self.assertEqual(projects['type'], 'projects')
-        self.assertEqual(projects['content']['projects'][0]['title'], self.project.title)
+        self.assertEqual(projects['projects'][0]['title'], self.project.title)
 
     def test_results_project_images(self):
         yesterday = now() - timedelta(days=1)
@@ -113,8 +113,8 @@ class ResultPageTestCase(BluebottleTestCase):
 
         images = response.data['blocks'][0]
         self.assertEqual(images['type'], 'project_images')
-        self.assertEqual(images['content']['title'], 'Nice pics')
-        self.assertEqual(len(images['content']['images']), 2)
+        self.assertEqual(images['title'], 'Nice pics')
+        self.assertEqual(len(images['images']), 2)
 
     def test_results_share_results(self):
         share_text = '{people} donated {donated} to {projects} projects'
@@ -130,11 +130,11 @@ class ResultPageTestCase(BluebottleTestCase):
 
         share = response.data['blocks'][0]
         self.assertEqual(share['type'], 'share-results')
-        self.assertEqual(share['content']['title'], 'Share')
-        self.assertEqual(share['content']['share_text'], share_text)
+        self.assertEqual(share['title'], 'Share')
+        self.assertEqual(share['share_text'], share_text)
 
         for key in ['people', 'amount', 'hours', 'projects', 'tasks', 'votes']:
-            self.assertTrue(key in share['content']['statistics'])
+            self.assertTrue(key in share['statistics'])
 
     def test_results_survey(self):
         survey = SurveyFactory.create()
@@ -149,8 +149,8 @@ class ResultPageTestCase(BluebottleTestCase):
 
         survey = response.data['blocks'][0]
         self.assertEqual(survey['type'], 'survey')
-        self.assertTrue('response_count' in survey['content'])
-        self.assertEqual(survey['content']['answers'], [])
+        self.assertTrue('response_count' in survey)
+        self.assertEqual(survey['answers'], [])
 
     def test_results_map(self):
         done_complete = ProjectPhase.objects.get(slug='done-complete')
@@ -167,9 +167,9 @@ class ResultPageTestCase(BluebottleTestCase):
 
         data = response.data['blocks'][0]
         self.assertEqual(data['type'], 'projects-map')
-        self.assertEqual(len(data['content']['projects']), 10)
+        self.assertEqual(len(data['projects']), 10)
 
-        project = data['content']['projects'][0]
+        project = data['projects'][0]
 
         for key in ('title', 'slug', 'status', 'image', 'latitude', 'longitude'):
             self.assertTrue(key in project)

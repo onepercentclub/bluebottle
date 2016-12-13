@@ -1,0 +1,7 @@
+<ul>
+{% for project in instance.projects.projects.all %}
+    <li>{{ project.title }}</li>
+{% endfor %}
+</ul>
+
+{{ instance.action }}

@@ -2,6 +2,7 @@ from collections import OrderedDict
 import logging
 from decimal import InvalidOperation
 
+from daterange_filter.filter import DateRangeFilter
 from django import forms
 from django.db.models import Count, Sum
 from django.contrib import admin
@@ -210,10 +211,10 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
-    list_filter =  ('country__subregion__region', )
+    list_filter =  ('country__subregion__region',)
 
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', ProjectThemeFilter, 'project_type')
+        filters = ('status', 'is_campaign', ProjectThemeFilter, 'project_type', ('deadline', DateRangeFilter))
 
         # Only show Location column if there are any
         if Location.objects.count():

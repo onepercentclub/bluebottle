@@ -87,4 +87,3 @@ class LatestDonationSerializer(serializers.ModelSerializer):
 
     def get_payment_method(self, obj):
         return obj.get_payment_method()
-

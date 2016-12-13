@@ -18,8 +18,7 @@ class UserTokenTestCase(BluebottleTestCase):
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
     def user_last_seen(self):
-        response = self.client.get(reverse('user-current'),
-                                    token=self.user_token)
+        self.client.get(reverse('user-current'), token=self.user_token)
         self.user.refresh_from_db()
         return self.user.last_seen
 
@@ -77,5 +76,3 @@ class UserTokenTestCase(BluebottleTestCase):
             self.assertTrue(
                 'Authorization failed: {} 127.0.0.1'.format(self.user.email) in error.call_args[0]
             )
-
-

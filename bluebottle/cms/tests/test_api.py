@@ -11,14 +11,14 @@ from fluent_contents.models import Placeholder
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, SurveyContent, ProjectsContent,
-    ProjectImagesContent, ShareResultsContent
+    ProjectImagesContent, ShareResultsContent, ProjectsMapContent
 )
 
 from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.cms import (
-    ResultPageFactory, StatFactory, StatsFactory,
-    QuotesFactory, QuoteFactory, ProjectsFactory
+    ResultPageFactory, StatFactory, StatsFactory, QuotesFactory, QuoteFactory,
+    ProjectsFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -151,6 +151,28 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(survey['type'], 'survey')
         self.assertTrue('response_count' in survey['content'])
         self.assertEqual(survey['content']['answers'], [])
+
+    def test_results_map(self):
+        done_complete = ProjectPhase.objects.get(slug='done-complete')
+        for _index in range(0, 10):
+            ProjectFactory.create(campaign_ended=now(), status=done_complete)
+
+        ProjectsMapContent.objects.create_for_placeholder(self.placeholder, title='Test title')
+
+        response = self.client.get(self.url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['title'], self.page.title)
+        self.assertEqual(response.data['description'], self.page.description)
+
+        data = response.data['blocks'][0]
+        self.assertEqual(data['type'], 'projects-map')
+        self.assertEqual(len(data['content']['projects']), 10)
+
+        project = data['content']['projects'][0]
+
+        for key in ('title', 'slug', 'status', 'image', 'latitude', 'longitude'):
+            self.assertTrue(key in project)
 
     def test_results_list(self):
         survey = SurveyFactory.create()

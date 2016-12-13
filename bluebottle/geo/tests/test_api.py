@@ -89,7 +89,7 @@ class LocationListTestCase(GeoTestCase):
         self.locations = []
         for i in range(0, self.count):
             self.locations.append(Location.objects.create(name="Name {}".format(i),
-                description="Description {}".format(i)))
+                                                          description="Description {}".format(i)))
 
     def test_api_country_list_endpoint(self):
         """

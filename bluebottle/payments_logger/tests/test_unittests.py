@@ -2,7 +2,6 @@ from mock import patch
 
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
 from bluebottle.payments.services import PaymentService
-from bluebottle.payments_docdata.gateway import DocdataClient
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 from bluebottle.payments_logger.models import PaymentLogEntry
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -11,11 +10,13 @@ from bluebottle.test.utils import BluebottleTestCase, FsmTestMixin
 
 
 class TestPaymentLogger(BluebottleTestCase, FsmTestMixin):
-    @patch.object(DocdataClient, 'create')
-    def setUp(self, mock_client_create):
+    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
+    def setUp(self, mock_client):
         super(TestPaymentLogger, self).setUp()
 
-        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+        # Mock response to creating the payment at docdata
+        instance = mock_client.return_value
+        instance.create.return_value = {'order_key': 123, 'order_id': 123}
 
         self.order = OrderFactory.create(total=35)
         self.order_payment = OrderPaymentFactory.create(
@@ -55,12 +56,13 @@ class TestPaymentLogger(BluebottleTestCase, FsmTestMixin):
 
 
 class TestPaymentLoggerAdapter(BluebottleTestCase):
-    @patch.object(DocdataClient, 'create')
-    def setUp(self, mock_client_create):
+    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
+    def setUp(self, mock_client):
         super(TestPaymentLoggerAdapter, self).setUp()
 
         # Mock response to creating the payment at docdata
-        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+        instance = mock_client.return_value
+        instance.create.return_value = {'order_key': 123, 'order_id': 123}
 
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(

@@ -64,8 +64,9 @@ ADDITIONAL_GROUP_PERMS = {
     }
 }
 
-import bluebottle.utils.monkey_patch_migration
-import bluebottle.utils.monkey_patch_corsheaders
+import bluebottle.utils.monkey_patch_migration  # noqa
+import bluebottle.utils.monkey_patch_corsheaders  # noqa
+import bluebottle.utils.monkey_patch_parler  # noqa
 
 @receiver(post_migrate)
 def _update_permissions(sender, **kwargs):

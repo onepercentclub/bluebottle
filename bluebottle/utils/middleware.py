@@ -1,6 +1,11 @@
+from importlib import import_module
+
 from django.contrib.sessions import middleware
 from django.conf import settings
-from importlib import import_module
+from django.utils import translation
+
+
+from bluebottle.clients import properties
 
 
 class SubDomainSessionMiddleware(middleware.SessionMiddleware):
@@ -12,3 +17,16 @@ class SubDomainSessionMiddleware(middleware.SessionMiddleware):
             session_key = request.COOKIES.get('sessionid', None)
 
         request.session = engine.SessionStore(session_key)
+
+
+class APILangueMiddleware(middleware.SessionMiddleware):
+    def process_request(self, request):
+        if request.path.startswith('/api'):
+            try:
+                language = request.META['headers']['Accept-Language']
+                if language not in [lang[0] for lang in properties.LANGUAGES]:
+                    language = properties.LANGUAGE_CODE
+            except KeyError:
+                language = properties.LANGUAGE_CODE
+
+            translation.activate(language)

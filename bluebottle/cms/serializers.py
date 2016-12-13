@@ -36,8 +36,13 @@ class StatSerializer(serializers.ModelSerializer):
     def get_value(self, obj):
         if obj.value:
             return obj.value
-        value = getattr(Statistics(start=self.context['start_date'],
-                                   end=self.context['end_date']), obj.type, 0)
+
+        statistics = Statistics(
+            start=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            end=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00'),
+        )
+
+        value = getattr(statistics, obj.type, 0)
         try:
             return {
                 'amount': value.amount,

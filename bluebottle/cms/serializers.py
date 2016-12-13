@@ -47,7 +47,7 @@ class StatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Stat
-        fields = ('id', 'title', 'value')
+        fields = ('id', 'title', 'type', 'value')
 
 
 class StatsContentSerializer(serializers.ModelSerializer):
@@ -63,7 +63,7 @@ class StatsContentSerializer(serializers.ModelSerializer):
 class QuoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quote
-        fields = ('name', 'quote')
+        fields = ('id', 'name', 'quote')
 
 
 class QuotesContentSerializer(serializers.ModelSerializer):
@@ -91,7 +91,7 @@ class ProjectImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ('photo', 'title', 'slug')
+        fields = ('id', 'photo', 'title', 'slug')
 
 
 class ProjectImagesContentSerializer(serializers.ModelSerializer):
@@ -158,7 +158,8 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
         }
 
     class Meta:
-        fields = ('id', 'type', 'response_count', 'title', 'sub_title', 'statistics')
+        model = ShareResultsContent
+        fields = ('id', 'type', 'title', 'sub_title', 'statistics', 'share_text')
 
 
 class BlockSerializer(serializers.Serializer):

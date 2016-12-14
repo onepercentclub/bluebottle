@@ -218,7 +218,9 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShareResultsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'supporters', 'co_financers')
+        fields = ('id', 'type',
+                  'title', 'sub_title', 'co_financer_title',
+                  'supporters', 'co_financers')
 
 
 class BlockSerializer(serializers.Serializer):

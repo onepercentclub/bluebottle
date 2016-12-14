@@ -199,17 +199,18 @@ class ProjectsMapContent(ContentItem):
 
 
 class SupporterTotalContent(ContentItem):
-    type = 'supporters'
+    type = 'supporter_total'
     preview_template = 'admin/cms/preview/supporter_total.html'
 
     title = models.CharField(max_length=63, blank=True, null=True)
     sub_title = models.CharField(max_length=100, blank=True, null=True)
+    co_financer_title = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        verbose_name = _('Supporters')
+        verbose_name = _('Supporter total')
 
     def __unicode__(self):
-        return 'Supporters'
+        return 'Supporter total'
 
 
 class ResultsContentPlugin(ContentPlugin):

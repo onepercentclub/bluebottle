@@ -29,8 +29,8 @@ class Statistics(object):
         Count all people who donated, fundraised, campaigned or was
         a task member. People should be unique across all categories.
         """
-        donator_ids = Order.objects.filter(
-            self.date_filter('completed'),
+        donor_ids = Order.objects.filter(
+            self.date_filter('confirmed'),
             user_id__isnull=False,
             status__in=(StatusDefinition.PENDING, StatusDefinition.SUCCESS)
         ).order_by(
@@ -66,7 +66,7 @@ class Statistics(object):
         ).values_list('author_id', flat=True)
 
         people_count = len(
-            set(donator_ids) | set(fundraiser_owner_ids) | set(project_owner_ids) |
+            set(donor_ids) | set(fundraiser_owner_ids) | set(project_owner_ids) |
             set(task_member_ids) | set(task_owner_ids)
         )
 

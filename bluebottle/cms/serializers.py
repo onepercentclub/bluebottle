@@ -204,7 +204,6 @@ class SupportersContentSerializer(serializers.ModelSerializer):
             start=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
             end=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00')
         )
-
         return stats.people_involved
 
     def get_co_financers(self, instance):

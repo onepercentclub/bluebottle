@@ -202,15 +202,15 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
 
     def get_supporters(self, instance):
         stats = Statistics(
-            start=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
-            end=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00')
+            start=self.context['start_date'],
+            end=self.context['end_date']
         )
         return stats.people_involved
 
     def get_co_financers(self, instance):
         totals = Order.objects. \
-            filter(confirmed__gte=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00')). \
-            filter(confirmed__lte=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00')). \
+            filter(confirmed__gte=self.context['start_date']). \
+            filter(confirmed__lte=self.context['end_date']). \
             filter(status__in=['pending', 'success']). \
             filter(user__is_co_financer=True). \
             values('user', 'total_currency'). \

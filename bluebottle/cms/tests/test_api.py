@@ -13,7 +13,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
-    SupportersContent)
+    SupporterTotalContent)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -208,7 +208,7 @@ class ResultPageTestCase(BluebottleTestCase):
         DonationFactory(order=order2, amount=Money(50, 'EUR'), project=project)
         DonationFactory(order=order3, amount=Money(50, 'EUR'), project=project)
 
-        SupportersContent.objects.create_for_placeholder(self.placeholder)
+        SupporterTotalContent.objects.create_for_placeholder(self.placeholder)
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)

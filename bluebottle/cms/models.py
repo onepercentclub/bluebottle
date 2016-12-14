@@ -198,9 +198,9 @@ class ProjectsMapContent(ContentItem):
         return 'Projects Map'
 
 
-class SupportersContent(ContentItem):
+class SupporterTotalContent(ContentItem):
     type = 'supporters'
-    preview_template = 'admin/cms/preview/supporters.html'
+    preview_template = 'admin/cms/preview/supporter_total.html'
 
     title = models.CharField(max_length=63, blank=True, null=True)
     sub_title = models.CharField(max_length=100, blank=True, null=True)
@@ -254,5 +254,5 @@ class ProjectMapBlockPlugin(ResultsContentPlugin):
 
 
 @plugin_pool.register
-class SupportersBlockPlugin(ResultsContentPlugin):
-    model = SupportersContent
+class SupporterTotalBlockPlugin(ResultsContentPlugin):
+    model = SupporterTotalContent

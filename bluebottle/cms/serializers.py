@@ -12,7 +12,7 @@ from rest_framework import serializers
 from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
-    SupportersContent)
+    SupporterTotalContent)
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
 
@@ -195,7 +195,7 @@ class CoFinancerSerializer(serializers.Serializer):
         fields = ('id', 'user', 'total')
 
 
-class SupportersContentSerializer(serializers.ModelSerializer):
+class SupporterTotalContentSerializer(serializers.ModelSerializer):
     supporters = serializers.SerializerMethodField()
     co_financers = serializers.SerializerMethodField()
 
@@ -237,8 +237,8 @@ class BlockSerializer(serializers.Serializer):
             return ShareResultsContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, ProjectsMapContent):
             return ProjectsMapContentSerializer(obj, context=self.context).to_representation(obj)
-        if isinstance(obj, SupportersContent):
-            return SupportersContentSerializer(obj, context=self.context).to_representation(obj)
+        if isinstance(obj, SupporterTotalContent):
+            return SupporterTotalContentSerializer(obj, context=self.context).to_representation(obj)
 
 
 class ResultPageSerializer(serializers.ModelSerializer):

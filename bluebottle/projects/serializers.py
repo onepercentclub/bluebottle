@@ -41,9 +41,9 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
 
 
 class StoryField(serializers.CharField):
-    TAGS=['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
-          'br', 'pre', 'blockquote']
-    ATTRIBUTES={'a': ['target', 'href']}
+    TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
+            'br', 'pre', 'blockquote']
+    ATTRIBUTES = {'a': ['target', 'href']}
 
     def to_representation(self, value):
         """ Reading / Loading the story field """
@@ -221,10 +221,10 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     is_funding = serializers.ReadOnlyField()
 
     tasks = ManageTaskSerializer(
-         many=True,
-         source='task_set',
-         read_only=True
-     )
+        many=True,
+        source='task_set',
+        read_only=True
+    )
 
     documents = ProjectDocumentSerializer(
         many=True, read_only=True)
@@ -242,7 +242,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
             # Expecting something like: NL18xxxxxxxxxx
             iban_validator = IBANValidator()
             if country_code in iban_validator.validation_countries.keys() and \
-               digits_regex.match(check_digits):
+                    digits_regex.match(check_digits):
                 iban_validator(value)
         return value
 

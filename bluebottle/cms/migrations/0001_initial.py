@@ -6,6 +6,8 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django.db.models.manager
 
+from fluent_contents.models.managers import ContentItemManager
+
 
 class Migration(migrations.Migration):
 
@@ -34,7 +36,7 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
                 ('base_objects', django.db.models.manager.Manager()),
             ],
         ),
@@ -61,7 +63,7 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
                 ('base_objects', django.db.models.manager.Manager()),
             ],
         ),
@@ -93,7 +95,7 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
                 ('base_objects', django.db.models.manager.Manager()),
             ],
         ),
@@ -137,7 +139,7 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
                 ('base_objects', django.db.models.manager.Manager()),
             ],
         ),
@@ -155,7 +157,7 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
                 ('base_objects', django.db.models.manager.Manager()),
             ],
         ),

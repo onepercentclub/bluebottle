@@ -170,7 +170,8 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShareResultsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'statistics', 'share_text')
+        fields = ('id', 'type', 'title', 'sub_title',
+                  'statistics', 'share_text')
 
 
 class CoFinancerSerializer(serializers.Serializer):
@@ -217,7 +218,7 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
         return CoFinancerSerializer(totals, many=True).to_representation(totals)
 
     class Meta:
-        model = ShareResultsContent
+        model = SupporterTotalContent
         fields = ('id', 'type',
                   'title', 'sub_title', 'co_financer_title',
                   'supporters', 'co_financers')

@@ -4,25 +4,21 @@ from django.db import models
 from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
-from parler.models import TranslatableModel, TranslatedFields
-
 from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
 from adminsortable.models import SortableMixin
 from adminsortable.fields import SortableForeignKey
 
 
-class ResultPage(TranslatableModel):
+class ResultPage(models.Model):
+    title = models.CharField(_('Title'), max_length=200)
+    slug = models.SlugField(_('Slug'), max_length=200)
+    description = models.TextField(_('Description'), blank=True, null=True)
+    image = models.ImageField(_('Header image'), blank=True, null=True)
+
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     content = PlaceholderField('content')
-
-    image = models.ImageField(_('Header image'), blank=True, null=True)
-    translations = TranslatedFields(
-        title=models.CharField(_('Title'), max_length=40),
-        slug=models.SlugField(_('Slug'), max_length=40),
-        description=models.CharField(_('Description'), max_length=70, blank=True, null=True)
-    )
 
 
 class Stats(models.Model):
@@ -30,7 +26,7 @@ class Stats(models.Model):
         return u"List of statistics #{0}".format(self.id)
 
 
-class Stat(TranslatableModel, SortableMixin):
+class Stat(SortableMixin):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
@@ -45,6 +41,7 @@ class Stat(TranslatableModel, SortableMixin):
         max_length=40,
         choices=STAT_CHOICES
     )
+    title = models.CharField(max_length=63)
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
     stats = SortableForeignKey(Stats)
@@ -53,22 +50,16 @@ class Stat(TranslatableModel, SortableMixin):
     class Meta:
         ordering = ['sequence']
 
-    translations = TranslatedFields(
-        title=models.CharField(max_length=63)
-    )
-
 
 class Quotes(models.Model):
     def __unicode__(self):
         return u"List of quotes #{0}".format(self.id)
 
 
-class Quote(TranslatableModel):
+class Quote(models.Model):
+    name = models.CharField(max_length=63)
+    quote = models.CharField(max_length=255)
     quotes = models.ForeignKey(Quotes)
-    translations = TranslatedFields(
-        name=models.CharField(max_length=30),
-        quote=models.CharField(max_length=60)
-    )
 
 
 class QuotesContent(ContentItem):
@@ -170,11 +161,7 @@ class ShareResultsContent(ContentItem):
 
     title = models.CharField(max_length=63, blank=True, null=True)
     sub_title = models.CharField(max_length=100, blank=True, null=True)
-
-    share_text = models.CharField(
-        max_length=100,
-        help_text="{amount}, {projects}, {tasks}, {hours}, {votes}, {people} will be replaced by live statistics"
-    )
+    share_text = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Share Results')

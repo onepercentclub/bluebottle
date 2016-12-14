@@ -1,6 +1,4 @@
 import datetime
-import mock
-from django.core.cache.backends.dummy import DummyCache
 from django.test.utils import override_settings
 from django.utils import timezone
 
@@ -41,35 +39,6 @@ class InitialStatisticsTest(BluebottleTestCase):
         self.assertEqual(self.stats.tasks_realized, 0)
         self.assertEqual(self.stats.people_involved, 0)
         self.assertEqual(self.stats.donated_total, Money(0, 'EUR'))
-
-
-@override_settings(
-    CACHES={
-        'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-        }
-    }
-)
-class StatisticsCacheTest(BluebottleTestCase):
-    def setUp(self):
-        super(StatisticsCacheTest, self).setUp()
-
-        # Required by Project model save method
-        self.init_projects()
-
-        self.some_user = BlueBottleUserFactory.create()
-
-        self.some_project = ProjectFactory.create(amount_asked=5000,
-                                                  owner=self.some_user)
-
-    def test_initial_stats(self):
-        with mock.patch.object(DummyCache, 'get') as get:
-            Statistics().projects_online
-            Statistics(start=datetime.datetime.now()).projects_online
-            self.assertNotEqual(
-                get.call_args_list[0][1]['key'],
-                get.call_args_list[1][1]['key']
-            )
 
 
 @override_settings(

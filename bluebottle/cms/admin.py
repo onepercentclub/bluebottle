@@ -3,14 +3,14 @@ from django.db import models
 from django.forms import Textarea
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
-from parler.admin import TranslatableAdmin, TranslatableStackedInline
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
+
 
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.cms.models import Stats, Stat, Quotes, Quote, ResultPage, Projects
 
 
-class StatInline(TranslatableStackedInline, SortableStackedInline):
+class StatInline(SortableStackedInline):
     model = Stat
     extra = 1
 
@@ -19,7 +19,7 @@ class StatsAdmin(ImprovedModelForm, NonSortableParentAdmin):
     inlines = [StatInline]
 
 
-class QuoteInline(TranslatableStackedInline):
+class QuoteInline(admin.StackedInline):
     model = Quote
     extra = 1
 
@@ -39,20 +39,14 @@ class ProjectsAdmin(ImprovedModelForm, admin.ModelAdmin):
     exclude = ('projects', )
 
 
-class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
+class ResultPageAdmin(PlaceholderFieldAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }
+    prepopulated_fields = {'slug': ('title',), }
 
-    def get_prepopulated_fields(self, request, obj=None):
-        # can't use `prepopulated_fields = ..` because it breaks the admin validation
-        # for translated fields. This is the official django-parler workaround.
-        return {
-            'slug': ('title',)
-        }
-
-    list_display = ('title', 'slug', 'start_date', 'end_date')
-    fields = ('title', 'slug', 'description', 'image', 'start_date', 'end_date', 'content')
+    list_display = 'title', 'slug', 'start_date', 'end_date'
+    fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
 admin.site.register(Stats, StatsAdmin)

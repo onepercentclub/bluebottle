@@ -35,13 +35,8 @@ class StatSerializer(serializers.ModelSerializer):
     def get_value(self, obj):
         if obj.value:
             return obj.value
-
-        statistics = Statistics(
-            start=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
-            end=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00'),
-        )
-
-        value = getattr(statistics, obj.type, 0)
+        value = getattr(Statistics(start=self.context['start_date'],
+                                   end=self.context['end_date']), obj.type, 0)
         try:
             return {
                 'amount': value.amount,
@@ -52,23 +47,23 @@ class StatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Stat
-        fields = ('id', 'title', 'type', 'value')
+        fields = ('id', 'type', 'title', 'value')
 
 
-class StatsContentSerializer(serializers.ModelSerializer):
+class StatsContentSerializer(serializers.Serializer):
     stats = StatSerializer(source='stats.stat_set', many=True)
     title = serializers.CharField()
     sub_title = serializers.CharField()
 
     class Meta:
         model = QuotesContent
-        fields = ('id', 'type', 'stats', 'title', 'sub_title')
+        fields = ('stats', 'title', 'sub_title')
 
 
 class QuoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quote
-        fields = ('id', 'name', 'quote')
+        fields = ('name', 'quote')
 
 
 class QuotesContentSerializer(serializers.ModelSerializer):
@@ -76,7 +71,7 @@ class QuotesContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = QuotesContent
-        fields = ('id', 'quotes', 'type', 'title', 'sub_title')
+        fields = ('quotes', 'title', 'sub_title')
 
 
 class SurveyContentSerializer(serializers.ModelSerializer):
@@ -88,7 +83,7 @@ class SurveyContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SurveyContent
-        fields = ('id', 'type', 'response_count', 'answers', 'title', 'sub_title')
+        fields = ('id', 'response_count', 'answers', 'title', 'sub_title')
 
 
 class ProjectImageSerializer(serializers.ModelSerializer):
@@ -96,7 +91,7 @@ class ProjectImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ('id', 'photo', 'title', 'slug')
+        fields = ('photo', 'title', 'slug')
 
 
 class ProjectImagesContentSerializer(serializers.ModelSerializer):
@@ -112,7 +107,7 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectImagesContent
-        fields = ('id', 'type', 'images', 'title', 'sub_title', 'description',
+        fields = ('id', 'images', 'title', 'sub_title', 'description',
                   'action_text', 'action_link')
 
 
@@ -129,7 +124,7 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectImagesContent
-        fields = ('id', 'type', 'title', 'sub_title', 'projects', )
+        fields = ('id', 'title', 'sub_title', 'projects', )
 
 
 class ProjectsContentSerializer(serializers.ModelSerializer):
@@ -137,11 +132,14 @@ class ProjectsContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'projects',
+        fields = ('id', 'title', 'sub_title', 'projects',
                   'action_text', 'action_link')
 
 
-class ShareResultsContentSerializer(serializers.ModelSerializer):
+class ShareResultsContentSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    sub_title = serializers.CharField()
+    share_text = serializers.CharField()
     statistics = serializers.SerializerMethodField()
 
     def get_statistics(self, instance):
@@ -163,13 +161,22 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
         }
 
     class Meta:
-        model = ShareResultsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'statistics', 'share_text')
+        fields = ('id', 'response_count', 'title', 'sub_title', 'statistics')
 
 
 class BlockSerializer(serializers.Serializer):
 
-    def to_representation(self, obj):
+    content = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
+
+    def get_type(self, obj):
+        return obj.type
+
+    def get_id(self, obj):
+        return obj.id
+
+    def get_content(self, obj):
         if isinstance(obj, StatsContent):
             return StatsContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, QuotesContent):
@@ -185,9 +192,12 @@ class BlockSerializer(serializers.Serializer):
         if isinstance(obj, ProjectsMapContent):
             return ProjectsMapContentSerializer(obj, context=self.context).to_representation(obj)
 
+    class Meta:
+        fields = ('id', 'type', 'content')
+
 
 class ResultPageSerializer(serializers.ModelSerializer):
-    blocks = BlockSerializer(source='content.contentitems.all.translated', many=True)
+    blocks = BlockSerializer(source='content.contentitems', many=True)
     image = ImageSerializer()
 
     class Meta:

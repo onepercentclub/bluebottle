@@ -1,5 +1,5 @@
-from django.utils.translation import ugettext_lazy as _
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
@@ -173,6 +173,7 @@ class ShareResultsContent(ContentItem):
 
     share_text = models.CharField(
         max_length=100,
+        default='',
         help_text="{amount}, {projects}, {tasks}, {hours}, {votes}, {people} will be replaced by live statistics"
     )
 
@@ -195,6 +196,20 @@ class ProjectsMapContent(ContentItem):
 
     def __unicode__(self):
         return 'Projects Map'
+
+
+class SupportersContent(ContentItem):
+    type = 'supporters'
+    preview_template = 'admin/cms/preview/supporters.html'
+
+    title = models.CharField(max_length=63, blank=True, null=True)
+    sub_title = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _('Supporters')
+
+    def __unicode__(self):
+        return 'Supporters'
 
 
 class ResultsContentPlugin(ContentPlugin):
@@ -236,3 +251,8 @@ class ShareResultsBlockPlugin(ResultsContentPlugin):
 @plugin_pool.register
 class ProjectMapBlockPlugin(ResultsContentPlugin):
     model = ProjectsMapContent
+
+
+@plugin_pool.register
+class SupportersBlockPlugin(ResultsContentPlugin):
+    model = SupportersContent

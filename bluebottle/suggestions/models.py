@@ -72,4 +72,4 @@ class Suggestion(models.Model):
             self.token = token
         super(Suggestion, self).save(*args, **kwargs)
 
-import signals
+import signals  # noqa

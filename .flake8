@@ -7,7 +7,6 @@ exclude =
     build,
     bluebottle/accounting,
     bluebottle/journals,
-    bluebottle/tasks,
     bluebottle/terms,
     bluebottle/test,
     bluebottle/utils,

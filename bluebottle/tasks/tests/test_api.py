@@ -1,13 +1,13 @@
 from django.core.urlresolvers import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
+
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-
-from bluebottle.bb_projects.models import ProjectPhase
 
 
 class TaskApiTestcase(BluebottleTestCase):

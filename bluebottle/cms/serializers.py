@@ -37,8 +37,8 @@ class StatSerializer(serializers.ModelSerializer):
             return obj.value
 
         statistics = Statistics(
-            start=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
-            end=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            start=self.context['start_date'],
+            end=self.context['end_date'],
         )
 
         value = getattr(statistics, obj.type, 0)
@@ -104,8 +104,8 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 
     def get_images(self, obj):
         projects = Project.objects.filter(
-            campaign_ended__gte=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
-            campaign_ended__lte=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            campaign_ended__gte=self.context['start_date'],
+            campaign_ended__lte=self.context['end_date'],
             status__slug__in=['done-complete', 'done-incomplete']).order_by('?')
 
         return ProjectImageSerializer(projects, many=True).to_representation(projects)
@@ -121,8 +121,8 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
     def get_projects(self, obj):
         projects = Project.objects.filter(
-            campaign_ended__gte=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
-            campaign_ended__lte=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            campaign_ended__gte=self.context['start_date'],
+            campaign_ended__lte=self.context['end_date'],
             status__slug__in=['done-complete', 'done-incomplete'])
 
         return ProjectTinyPreviewSerializer(projects, many=True).to_representation(projects)
@@ -146,8 +146,8 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
 
     def get_statistics(self, instance):
         stats = Statistics(
-            start=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
-            end=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00')
+            start=self.context['start_date'],
+            end=self.context['end_date']
         )
 
         return {

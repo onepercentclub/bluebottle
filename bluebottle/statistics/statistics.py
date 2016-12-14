@@ -169,4 +169,6 @@ class Statistics(object):
             return Money(0, properties.DEFAULT_CURRENCY)
 
     def __repr__(self):
-        return 'Statistics: {} - {}'.format(self.start, self.end)
+        start = self.start.strftime('%s') if self.start else 'none'
+        end = self.end.strftime('%s') if self.end else 'none'
+        return 'Statistics({},{})'.format(start, end)

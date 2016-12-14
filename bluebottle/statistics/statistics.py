@@ -155,4 +155,4 @@ class Statistics(object):
         ).aggregate(time_spent=Sum('time_spent'))['time_spent']
 
     def __repr__(self):
-        return 'Statistics: {} - {}'.format(self.start, self.end)
+        return 'Statistics({},{})'.format(self.start.strftime('%s'), self.end.strftime('%s'))

@@ -20,9 +20,11 @@ from fluent_contents.plugins.text.models import TextItem
 
 from moneyed import Money
 
+from bluebottle.clients import properties
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.utils.models import MetaDataModel
 from bluebottle.utils.utils import clean_for_hashtag
+from bluebottle.utils.monkey_patch_parler import TenantAwareParlerAppsettings
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from ..email_backend import send_mail, create_message
 
@@ -450,7 +452,6 @@ class MoneySerializerTestCase(BluebottleTestCase):
             Money(10.0, 'EUR')
         )
 
-
     def test_object_to_money(self):
         data = {'amount': 10, 'currency': 'USD'}
 
@@ -458,3 +459,28 @@ class MoneySerializerTestCase(BluebottleTestCase):
             self.serializer.to_internal_value(data),
             Money(10, 'USD')
         )
+
+
+class TestTenantAwareParlerAppsettings(BluebottleTestCase):
+    def setUp(self):
+        super(TestTenantAwareParlerAppsettings, self).setUp()
+        self.appsettings = TenantAwareParlerAppsettings()
+        languages = (
+            ('nl', 'Dutch'),
+            ('en', 'English'),
+        )
+
+        setattr(properties, 'LANGUAGES', languages)
+
+    def test_language_code(self):
+        self.assertEqual(self.appsettings.PARLER_DEFAULT_LANGUAGE_CODE, 'en')
+
+    def test_languages(self):
+        parler_languages = self.appsettings.PARLER_LANGUAGES
+        self.assertEqual(parler_languages['default']['code'], 'en')
+        self.assertEqual(parler_languages[1][0]['code'], 'nl')
+        self.assertEqual(parler_languages[1][1]['code'], 'en')
+
+    def test_default(self):
+        self.assertEqual(self.appsettings.PARLER_SHOW_EXCLUDED_LANGUAGE_TABS, False)
+        pass

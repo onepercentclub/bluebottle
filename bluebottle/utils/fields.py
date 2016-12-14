@@ -12,7 +12,6 @@ import sorl.thumbnail
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 
 from bluebottle.clients import properties
-from bluebottle.clients.utils import get_currencies
 
 
 def get_currency_choices():

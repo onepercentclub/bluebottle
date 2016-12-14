@@ -255,8 +255,10 @@ SHARED_APPS = (
     'localflavor',
     'filetransfers',
     'corsheaders',
-    'djmoney_rates'
-
+    'djmoney_rates',
+    'parler',
+    'daterange_filter',
+    'adminsortable'
 )
 
 TENANT_APPS = (
@@ -364,6 +366,8 @@ TENANT_APPS = (
     'django.contrib.humanize',
     'django_tools',
     'taggit',
+
+    'bluebottle.cms',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]

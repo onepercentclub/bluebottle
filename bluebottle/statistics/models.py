@@ -18,7 +18,6 @@ class Statistic(models.Model):
     """
     Statistics for homepage
     """
-
     class StatisticType(DjangoChoices):
         manual = ChoiceItem('manual', label=_("Manual"))
         donated_total = ChoiceItem('donated_total', label=_("Donated total"))
@@ -34,7 +33,10 @@ class Statistic(models.Model):
                             choices=StatisticType.choices,
                             default=StatisticType.manual, db_index=True)
     sequence = models.IntegerField()
-    value = models.CharField(null=True, blank=True, max_length=12, help_text=_('This overwrites the calculated value, if available'))
+    value = models.CharField(
+        null=True, blank=True, max_length=12,
+        help_text=_('This overwrites the calculated value, if available')
+    )
     active = models.BooleanField(help_text=_('Should this be shown or hidden.'))
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
@@ -49,10 +51,15 @@ class Statistic(models.Model):
         return self.title
 
     @property
+    def statistics(self):
+        return Statistics()
+
+    @property
     def calculated_value(self):
         if self.value:
             return self.value
-        return getattr(Statistics(), self.type, 0)
+
+        return getattr(self.statistics, self.type, 0)
 
     class Meta:
         ordering = ('sequence', )

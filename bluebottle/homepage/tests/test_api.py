@@ -1,4 +1,5 @@
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.statistics.views import Statistics
@@ -103,6 +104,13 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
         self.assertEquals(HomePage().get('en').projects, None)
 
 
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+)
 class HomepageEndpointTestCase(BluebottleTestCase):
     """
     Integration tests for the Statistics API.
@@ -183,9 +191,6 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         StatisticFactory.create(type='tasks_realized', title='Tasks realised', language='en')
         StatisticFactory.create(type='people_involved', title='Peeps', language='en')
         StatisticFactory.create(type='manual', title='Rating', value='9.3', language='en')
-
-    def tearDown(self):
-        self.stats.clear_cached()
 
     def test_homepage_stats(self):
         response = self.client.get(reverse('stats', kwargs={'language': 'en'}))

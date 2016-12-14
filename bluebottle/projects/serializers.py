@@ -3,7 +3,6 @@ import bleach
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
-from bs4 import BeautifulSoup
 from localflavor.generic.validators import IBANValidator
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -11,17 +10,16 @@ from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, SorlImageField, ImageSerializer,
     PrivateFileSerializer
 )
-from bluebottle.clients import properties
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer
-from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import Task, TaskMember, Skill
-from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
+from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.votes.models import Vote
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):

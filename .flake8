@@ -8,7 +8,6 @@ exclude =
     bluebottle/accounting,
     bluebottle/analytics,
     bluebottle/journals,
-    bluebottle/projects,
     bluebottle/quotes,
     bluebottle/recurring_donations,
     bluebottle/redirects,

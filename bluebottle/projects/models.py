@@ -4,7 +4,6 @@ import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import FieldError
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q, F
@@ -18,8 +17,7 @@ from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
+from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from moneyed.classes import Money
 from select_multiple_field.models import SelectMultipleField
 
@@ -376,9 +374,8 @@ class Project(BaseProject, PreviousStatusMixin):
 
     def update_status_after_donation(self, save=True):
         if not self.campaign_funded and not self.campaign_ended and \
-                        self.status not in ProjectPhase.objects.filter(
-                            Q(slug="done-complete") |
-                            Q(slug="done-incomplete")) and self.amount_needed.amount <= 0:
+                self.status.slug not in ["done-complete", "done-incomplete"] and \
+                self.amount_needed.amount <= 0:
             self.campaign_funded = timezone.now()
             if save:
                 self.save()
@@ -532,18 +529,18 @@ class Project(BaseProject, PreviousStatusMixin):
     @property
     def donors(self, limit=20):
         return self.donation_set. \
-                   filter(order__status__in=[StatusDefinition.PLEDGED,
-                                             StatusDefinition.PENDING,
-                                             StatusDefinition.SUCCESS],
-                          anonymous=False). \
-                   filter(order__user__isnull=False). \
-                   order_by('order__user', '-created').distinct('order__user')[:limit]
+            filter(order__status__in=[StatusDefinition.PLEDGED,
+                                      StatusDefinition.PENDING,
+                                      StatusDefinition.SUCCESS]). \
+            filter(anonymous=False). \
+            filter(order__user__isnull=False). \
+            order_by('order__user', '-created').distinct('order__user')[:limit]
 
     @property
     def task_members(self, limit=20):
         return TaskMember.objects. \
-                   filter(task__project=self, status__in=['accepted', 'realized']). \
-                   order_by('member', '-created').distinct('member')[:limit]
+            filter(task__project=self, status__in=['accepted', 'realized']). \
+            order_by('member', '-created').distinct('member')[:limit]
 
     @property
     def posters(self, limit=20):

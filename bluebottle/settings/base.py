@@ -1,12 +1,11 @@
-# Django settings for BlueBottle project.
-
-import os, datetime
+import os
+import datetime
 from collections import OrderedDict
 import rules
 from PIL import ImageFile
 
-from .payments import *
-from .admin_dashboard import *
+from .payments import *  # noqa
+from .admin_dashboard import *  # noqa
 
 BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
@@ -183,12 +182,11 @@ JWT_AUTH = {
 
     # Override the JWT token handlers, use tenant aware ones.
     'JWT_ENCODE_HANDLER':
-    'tenant_extras.jwt_utils.jwt_encode_handler',
+        'tenant_extras.jwt_utils.jwt_encode_handler',
 
     'JWT_DECODE_HANDLER':
-    'tenant_extras.jwt_utils.jwt_decode_handler',
+        'tenant_extras.jwt_utils.jwt_decode_handler',
 }
-
 
 # Time between attempts to refresh the jwt token automatically on standard request
 # TODO: move this setting into the JWT_AUTH settings.
@@ -289,7 +287,7 @@ TENANT_APPS = (
 
     'bb_salesforce',
 
-    #Widget
+    # Widget
     'bluebottle.widget',
 
     'rest_framework.authtoken',
@@ -380,12 +378,11 @@ TENANT_PROPERTIES = "bluebottle.clients.properties"
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
-
 THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85
-THUMBNAIL_DUMMY=True
+THUMBNAIL_DUMMY = True
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800 # 50MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -471,7 +468,6 @@ LOGGING = {
     }
 }
 
-
 # Custom User model
 AUTH_USER_MODEL = 'members.Member'
 
@@ -535,13 +531,12 @@ TENANT_JWT_SECRET = 'global-tenant-secret'
 
 # email properties
 TENANT_MAIL_PROPERTIES = {
-    'logo':'',
-    'address':'',
-    'sender':'',
-    'footer':'',
-    'website':'',
+    'logo': '',
+    'address': '',
+    'sender': '',
+    'footer': '',
+    'website': '',
 }
-
 
 CLOSED_SITE = False
 PARTNER_LOGIN = False
@@ -576,7 +571,7 @@ DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', )
+IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif',)
 
 EXPORTDB_EXPORT_CONF = {
     'models': OrderedDict([
@@ -752,9 +747,8 @@ REQUESTS_MAX_RETRIES = 0
 SF_LAZY_CONNECT = True
 
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
-    'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4
+    'fields': 'id,name,email,first_name,last_name,link',  # needed starting from protocol v2.4
 }
-
 
 SURVEYGIZMO_API_TOKEN = ''
 SURVEYGIZMO_API_SECRET = ''

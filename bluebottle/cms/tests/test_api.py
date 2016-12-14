@@ -217,4 +217,3 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(block['type'], 'supporters')
         self.assertEqual(len(block['co_financers']), 1)
         self.assertEqual(block['co_financers'][0]['total']['amount'], 100)
-        self.assertEqual(block['supporters'], 2)

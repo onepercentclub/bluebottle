@@ -6,5 +6,4 @@ exclude =
     docs,
     build,
     bluebottle/accounting,
-    bluebottle/journals,
-    bluebottle/wallposts
+    bluebottle/journals

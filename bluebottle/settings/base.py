@@ -143,6 +143,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
+    'bluebottle.utils.middleware.APILanguageMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',

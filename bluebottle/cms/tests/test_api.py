@@ -214,6 +214,6 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         block = response.data['blocks'][0]
-        self.assertEqual(block['type'], 'supporters')
+        self.assertEqual(block['type'], 'supporter_total')
         self.assertEqual(len(block['co_financers']), 1)
         self.assertEqual(block['co_financers'][0]['total']['amount'], 100)

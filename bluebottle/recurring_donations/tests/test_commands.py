@@ -105,7 +105,7 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
 
     @patch.object(tasks, 'PAYMENT_METHOD', 'mock')
     def test_email(self):
-        with patch.object(LocalTenant, '__new__') as mocked_init:
+        with patch.object(LocalTenant, '__new__'):
             # Clear the outbox before running monthly donations
             del mail.outbox[:]
             call_command('process_monthly_donations', tenant='test', process=True, prepare=True)

@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-from decimal import Decimal
 import math
 import logging
 from celery import shared_task

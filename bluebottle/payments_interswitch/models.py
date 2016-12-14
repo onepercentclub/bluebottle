@@ -74,6 +74,7 @@ class InterswitchPayment(Payment):
         except (TypeError, KeyError):
             return ""
 
+
 class InterswitchPaymentStatusUpdate(models.Model):
     payment = models.ForeignKey('payments_interswitch.InterswitchPayment')
     created = CreationDateTimeField()

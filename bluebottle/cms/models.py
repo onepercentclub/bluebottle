@@ -37,6 +37,7 @@ class Stat(TranslatableModel, SortableMixin):
         ('projects_realized', _('Projects realised')),
         ('tasks_realized', _('Tasks realised')),
         ('donated_total', _('Donated total')),
+        ('amount_matched', _('Amount matched')),
         ('projects_online', _('Projects Online')),
         ('votes_cast', _('Votes casts')),
     ]

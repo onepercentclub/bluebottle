@@ -154,5 +154,21 @@ class Statistics(object):
             status='realized'
         ).aggregate(time_spent=Sum('time_spent'))['time_spent']
 
+    @property
+    @memoize(timeout=300)
+    def amount_matched(self):
+        totals = Project.objects.filter(
+            self.date_filter('campaign_ended'), status__slug__in=('done-complete', 'done-incomplete',)
+        ).values('amount_extra_currency').annotate(total=Sum('amount_extra'))
+
+        amounts = [Money(total['total'], total['amount_extra_currency']) for total in totals]
+
+        if totals:
+            return sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
+        else:
+            return Money(0, properties.DEFAULT_CURRENCY)
+
     def __repr__(self):
-        return 'Statistics: {} - {}'.format(self.start, self.end)
+        start = self.start.strftime('%s') if self.start else 'none'
+        end = self.end.strftime('%s') if self.end else 'none'
+        return 'Statistics({},{})'.format(start, end)

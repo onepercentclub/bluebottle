@@ -338,8 +338,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         # |
         # +-- Wallpost by A (+)
 
-        post = TextWallpostFactory.create(
-            content_object=self.project_1, author=self.user_a)
+        TextWallpostFactory.create(content_object=self.project_1, author=self.user_a)
 
         # Mailbox should not contain anything.
         self.assertEqual(len(mail.outbox), 0)
@@ -352,8 +351,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         # |
         # +-- Wallpost by B (+)
 
-        post = TextWallpostFactory.create(
-            content_object=self.project_1, author=self.user_b)
+        TextWallpostFactory.create(content_object=self.project_1, author=self.user_b)
 
         # Mailbox should contain an email to project owner.
         self.assertEqual(len(mail.outbox), 1)
@@ -381,7 +379,6 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
 
         # No new mails should be send
         self.assertEqual(len(mail.outbox), 1)
-
 
     def test_new_reaction_by_a_on_wallpost_a_on_project_by_a(self):
         """
@@ -561,7 +558,6 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         # No new mails should be sent
         self.assertEqual(len(mail.outbox), 2)
 
-
     def test_new_wallpost_by_b_on_task_by_a(self):
         """
         Task by A + Wallpost by B => Mail to (task owner) A
@@ -570,8 +566,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         # |
         # +-- Wallpost by B (+)
 
-        post = TextWallpostFactory.create(
-            content_object=self.task_1, author=self.user_b)
+        TextWallpostFactory.create(content_object=self.task_1, author=self.user_b)
 
         # Mailbox should contain an email to project owner.
         self.assertEqual(len(mail.outbox), 1)

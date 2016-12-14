@@ -6,7 +6,6 @@ exclude =
     docs,
     build,
     bluebottle/accounting,
-    bluebottle/analytics,
     bluebottle/journals,
     bluebottle/recurring_donations,
     bluebottle/redirects,

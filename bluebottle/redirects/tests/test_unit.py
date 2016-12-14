@@ -138,7 +138,7 @@ class RedirectTests(BluebottleTestCase):
         self.assertEquals(response['location'], "https://example.com")
 
     @override_settings(LANGUAGE_CODE='nl',
-                       MIDDLEWARE_CLASSES=('bluebottle.redirects.middleware.RedirectFallbackMiddleware'))
+                       MIDDLEWARE_CLASSES=('bluebottle.redirects.middleware.RedirectFallbackMiddleware',))
     def test_redirect_language_code(self):
         translation.deactivate()
         Redirect.objects.create(old_path='/initial', new_path='/new_target')

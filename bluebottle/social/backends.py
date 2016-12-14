@@ -9,5 +9,3 @@ class NoStateFacebookOAuth2(FacebookAppOAuth2):
 
     def process_refresh_token_response(self, response, *args, **kwargs):
         return json.loads(response.content)
-
-

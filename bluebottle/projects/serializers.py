@@ -3,7 +3,6 @@ import bleach
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
-from bs4 import BeautifulSoup
 from localflavor.generic.validators import IBANValidator
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -11,17 +10,16 @@ from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, SorlImageField, ImageSerializer,
     PrivateFileSerializer
 )
-from bluebottle.clients import properties
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer
-from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import Task, TaskMember, Skill
-from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
+from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.votes.models import Vote
+from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
@@ -41,9 +39,9 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
 
 
 class StoryField(serializers.CharField):
-    TAGS=['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
-          'br', 'pre', 'blockquote']
-    ATTRIBUTES={'a': ['target', 'href']}
+    TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
+            'br', 'pre', 'blockquote']
+    ATTRIBUTES = {'a': ['target', 'href']}
 
     def to_representation(self, value):
         """ Reading / Loading the story field """
@@ -221,10 +219,10 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     is_funding = serializers.ReadOnlyField()
 
     tasks = ManageTaskSerializer(
-         many=True,
-         source='task_set',
-         read_only=True
-     )
+        many=True,
+        source='task_set',
+        read_only=True
+    )
 
     documents = ProjectDocumentSerializer(
         many=True, read_only=True)
@@ -242,7 +240,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
             # Expecting something like: NL18xxxxxxxxxx
             iban_validator = IBANValidator()
             if country_code in iban_validator.validation_countries.keys() and \
-               digits_regex.match(check_digits):
+                    digits_regex.match(check_digits):
                 iban_validator(value)
         return value
 

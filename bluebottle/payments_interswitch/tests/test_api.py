@@ -136,12 +136,6 @@ class PaymentInterswitchApiTests(BluebottleTestCase):
         }
         self.assertEqual(response.data['payment_method'], 'interswitchWebpay')
 
-        authorization_action = [
-            ('type', 'redirect'),
-            ('method', 'post'),
-            ('url', u'https://stageserv.interswitchng.com/test_paydirect/pay'),
-            ('payload', expected)]
-
         payload = ast.literal_eval(response.data['authorization_action']['payload'])
         self.assertEqual(payload['product_id'], expected['product_id'])
         self.assertEqual(payload['txn_ref'], expected['txn_ref'])

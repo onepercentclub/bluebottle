@@ -98,14 +98,6 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
     def tearDown(self):
         self.client.logout()
 
-    ## Commented for now because Booking and Bluebottle give different responses to this depending on their settings. Fixing
-    ## this issue by adapting settings would require rewriting a large set of tests
-    # def test_unauthenticated_user(self):
-    #     """ Test that unauthenticated users get a 403 forbidden response """
-    #     self.pass()
-    #     response = self.client.get(self.suggestion_list_url)
-    #     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
     def test_retrieve_suggestion_list_status(self):
         """
         Test the status when retrieving all suggestions
@@ -118,8 +110,8 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         """
         Test if all suggestions are retrieved that have a deadline today or later
         """
-        suggestion_2 = SuggestionFactory.create(deadline=date.today())
-        suggestion_3 = SuggestionFactory.create(deadline=date.today())
+        SuggestionFactory.create(deadline=date.today())
+        SuggestionFactory.create(deadline=date.today())
 
         response = self.client.get(self.suggestion_list_url,
                                    HTTP_AUTHORIZATION=self.user_1_token)
@@ -132,10 +124,8 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         """
         Test that no suggestions are returned if there deadline is 'lower' than today
         """
-        suggestion_2 = SuggestionFactory.create(
-            deadline=date.today() - timedelta(1))
-        suggestion_3 = SuggestionFactory.create(
-            deadline=date.today() - timedelta(1))
+        SuggestionFactory.create(deadline=date.today() - timedelta(1))
+        SuggestionFactory.create(deadline=date.today() - timedelta(1))
 
         response = self.client.get(self.suggestion_list_url,
                                    HTTP_AUTHORIZATION=self.user_1_token)
@@ -151,10 +141,8 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         """
         destination = 'amsterdam'
 
-        suggestion_amsterdam_1 = SuggestionFactory.create(
-            destination="Amsterdam")
-        suggestion_amsterdam_2 = SuggestionFactory.create(
-            destination="amsterdam")
+        SuggestionFactory.create(destination="Amsterdam")
+        SuggestionFactory.create(destination="amsterdam")
 
         response = self.client.get(self.suggestion_list_url,
                                    {'destination': destination},
@@ -170,27 +158,27 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         """
         Test the status filter on the API endpoint.
         """
-        status = 'accepted'
+        accepted = 'accepted'
 
-        suggestion_accepted_1 = SuggestionFactory.create(status=status)
-        suggestion_accepted_2 = SuggestionFactory.create(status=status)
-        suggestion_other = SuggestionFactory.create(status='other')
+        SuggestionFactory.create(status=accepted)
+        SuggestionFactory.create(status=accepted)
+        SuggestionFactory.create(status='other')
 
-        response = self.client.get(self.suggestion_list_url, {'status': status},
+        response = self.client.get(self.suggestion_list_url, {'status': accepted},
                                    HTTP_AUTHORIZATION=self.user_1_token)
 
         data = json.loads(response.content)
         self.assertEqual(len(data), 2)
 
-        self.assertEqual(data[0]['status'].lower(), status)
-        self.assertEqual(data[1]['status'].lower(), status)
+        self.assertEqual(data[0]['status'].lower(), accepted)
+        self.assertEqual(data[1]['status'].lower(), accepted)
 
     def test_retrieve_only_suggestions_with_project_slug(self):
         """
         Test the project slug filter on the API endpoint. Should return one suggestion
         """
         project = ProjectFactory.create()
-        suggestion_accepted_1 = SuggestionFactory.create(project=project)
+        SuggestionFactory.create(project=project)
 
         response = self.client.get(self.suggestion_list_url,
                                    {'project_slug': project.slug},
@@ -206,7 +194,7 @@ class SuggestionsListIntegrationTest(BluebottleTestCase):
         Test the project slug filter on the API endpoint. Shouldn't return any suggestions
         """
         project = ProjectFactory.create()
-        suggestion_accepted_1 = SuggestionFactory.create(project=project)
+        SuggestionFactory.create(project=project)
 
         response = self.client.get(self.suggestion_list_url,
                                    {'project_slug': "non-existing-slug"},
@@ -253,10 +241,9 @@ class AdoptTestCase(BluebottleTestCase):
 
         data['project'] = project.slug
 
-        r = self.client.put(reverse('suggestion_detail',
-                                    kwargs={'pk': data['id']}),
-                            HTTP_AUTHORIZATION=self.user_1_token,
-                            data=data)
+        self.client.put(reverse('suggestion_detail', kwargs={'pk': data['id']}),
+                        HTTP_AUTHORIZATION=self.user_1_token,
+                        data=data)
 
         suggestion = Suggestion.objects.get(pk=data['id'])
         self.assertEquals(Project.objects.get(pk=project.pk),

@@ -44,7 +44,7 @@ def update_exchange_rates():
     Simply loops over all the tenants, and updates the scores
     """
     logger.info("Retrieving up to date exchange rates")
-    #call_command('update_rates')
+    # call_command('update_rates')
 
     logger.info("Updating amounts of all running projects")
     for tenant in Client.objects.all():
@@ -52,4 +52,3 @@ def update_exchange_rates():
         with LocalTenant(tenant, clear_tenant=True):
             for project in Project.objects.filter(status__slug='campaign'):
                 project.update_amounts()
-

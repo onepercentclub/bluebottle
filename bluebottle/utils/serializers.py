@@ -154,4 +154,3 @@ class URLField(serializers.URLField):
         if not m:  # no scheme
             value = "http://%s" % value
         return value
-

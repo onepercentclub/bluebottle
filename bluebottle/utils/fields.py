@@ -12,7 +12,6 @@ import sorl.thumbnail
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 
 from bluebottle.clients import properties
-from bluebottle.clients.utils import get_currencies
 
 
 def get_currency_choices():
@@ -28,7 +27,6 @@ def get_default_currency():
 
 
 class MoneyField(DjangoMoneyField):
-
     def __init__(self, verbose_name=None, name=None,
                  max_digits=12, decimal_places=2, default=None,
                  default_currency=lazy(get_default_currency, str)(),
@@ -100,6 +98,7 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
         if data and data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
             raise forms.ValidationError(self.error_messages['invalid_image'])
         return super(RestrictedImageFormField, self).to_python(data)
+
 
 # If south is installed, ensure that DutchBankAccountField will be introspected just like a normal CharField
 try:

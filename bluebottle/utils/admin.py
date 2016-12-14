@@ -1,15 +1,14 @@
 from moneyed import Money
 
 from django.contrib import admin
-from django.utils.translation import ugettext as _
 from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
 from .models import Language
 import csv
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
-
 from django.http import HttpResponse
+from django.utils.translation import ugettext as _
 
 from bluebottle.clients import properties
 from bluebottle.bb_projects.models import ProjectPhase
@@ -40,7 +39,7 @@ def prep_field(request, obj, field, manyToManySep=';'):
 
     attr = getattr(obj, field)
 
-    if isinstance(attr, (FieldFile,) ):
+    if isinstance(attr, (FieldFile,)):
         attr = request.build_absolute_uri(attr.url)
 
     output = attr() if callable(attr) else attr
@@ -56,12 +55,15 @@ def mark_as_plan_new(modeladmin, request, queryset):
     except ProjectPhase.DoesNotExist:
         return
     queryset.update(status=status)
+
+
 mark_as_plan_new.short_description = _("Mark selected projects as status Plan New")
 
 
 def export_as_csv_action(description="Export as CSV", fields=None, exclude=None, header=True,
                          manyToManySep=';'):
     """ This function returns an export csv action. """
+
     def export_as_csv(modeladmin, request, queryset):
         """ Generic csv export admin action.
         Based on http://djangosnippets.org/snippets/2712/
@@ -83,8 +85,8 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=%s.csv' % (
-                unicode(opts).replace('.', '_')
-            )
+            unicode(opts).replace('.', '_')
+        )
 
         writer = csv.writer(response)
 
@@ -108,7 +110,8 @@ class TotalAmountAdminChangeList(ChangeList):
         total_column = self.model_admin.total_column or 'amount'
         currency_column = '{}_currency'.format(total_column)
 
-        totals = self.queryset.values(currency_column).annotate(total=Sum(total_column)).order_by('-{}'.format(total_column))
+        totals = self.queryset.values(currency_column).annotate(total=Sum(total_column)).order_by(
+            '-{}'.format(total_column))
         amounts = [Money(total['total'], total[currency_column]) for total in totals]
         amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)

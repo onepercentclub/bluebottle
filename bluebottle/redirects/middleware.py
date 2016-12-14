@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import urllib
 import regex
 
 from django import http
@@ -77,8 +76,7 @@ class RedirectFallbackMiddleware(object):
             if settings.APPEND_SLASH and not request.path.endswith('/'):
                 # Try appending a trailing slash.
                 path_len = len(request.path)
-                slashed_full_path = full_path[:path_len] + \
-                                    '/' + full_path[path_len:]
+                slashed_full_path = full_path[:path_len] + '/' + full_path[path_len:]
 
                 if redirect.old_path == slashed_full_path:
                     redirect.nr_times_visited += 1

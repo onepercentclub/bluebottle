@@ -26,9 +26,6 @@ urlpatterns = [
     url(r'^admin/exportdb/', include('exportdb.urls')),
     url(r'^admin/', include(admin.site.urls)),
 
-    # Other modules that need URLs exposed
-    url(r'^admin/accounting/', include('bluebottle.accounting.urls')),
-
     url(r'^admin/utils/tinymce/', include('tinymce.urls')),
     url(r'^admin/utils/admintools/', include('admin_tools.urls')),
 

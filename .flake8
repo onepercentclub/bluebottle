@@ -5,5 +5,3 @@ exclude =
     **/migrations/*,
     docs,
     build,
-    bluebottle/accounting,
-    bluebottle/journals

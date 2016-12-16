@@ -4,7 +4,8 @@ from __future__ import unicode_literals
 import datetime
 
 from django.db import migrations
-from django.conf import settings
+
+from bluebottle.clients import properties
 
 
 STATS = (
@@ -31,7 +32,7 @@ PAGE = {
 
 
 def create_default_result_pages(apps, schema_editor):
-    languages = [lang[0] for lang in settings.LANGUAGES]
+    languages = [lang[0] for lang in properties.LANGUAGES]
 
     Placeholder = apps.get_model('fluent_contents', 'Placeholder')
     ContentType = apps.get_model('contenttypes', 'ContentType')
@@ -45,6 +46,7 @@ def create_default_result_pages(apps, schema_editor):
     ProjectImagesContent = apps.get_model('cms', 'ProjectImagesContent')
     ShareResultsContent = apps.get_model('cms', 'ShareResultsContent')
     ProjectsMapContent = apps.get_model('cms', 'ProjectsMapContent')
+    SupporterTotalContent = apps.get_model('cms', 'SupporterTotalContent')
 
     # Create the page
     page = ResultPage.objects.create(
@@ -138,6 +140,20 @@ def create_default_result_pages(apps, schema_editor):
                 'sort_order': 5,
                 'title': 'We werkten in deze locaties'
             }
+        },
+        SupporterTotalContent: {
+            'en': {
+                'sort_order': 6,
+                'title': 'Thank you to all our supporters',
+                'sub_title': 'We couldn\'t have done it without you',
+                'co_financer_title': 'Special thanks to our co-funders'
+            },
+            'nl': {
+                'sort_order': 6,
+                'title': 'Bedankt voor al onze supporters',
+                'sub_title': 'Zonder jullie was het niet gelukt',
+                'co_financer_title': 'Extra bedankt voor onze co-funders'
+            }
         }
     }
 
@@ -158,9 +174,8 @@ def create_default_result_pages(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('cms', '0009_merge_20161213_1047'),
+        ('cms', '0013_merge_20161214_1637'),
     ]
 
     operations = [

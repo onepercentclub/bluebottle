@@ -127,7 +127,7 @@ class ProjectsContent(ContentItem):
     sub_title = models.CharField(max_length=100, blank=True, null=True)
 
     action_text = models.CharField(max_length=100,
-                                   default=_('Add your own project'),
+                                   default=_('Start your own project'),
                                    blank=True, null=True)
     action_link = models.CharField(max_length=100, default="/start-project",
                                    blank=True, null=True)

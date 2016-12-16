@@ -9,24 +9,24 @@ from bluebottle.clients import properties
 
 
 STATS = (
-    ('people_involved', {'en': {'title': 'participants'}, 'nl': {'title': 'deelnemers'}}),
-    ('projects_realized', {'en': {'title': 'projects realised'}, 'nl': {'title': 'project gerealiseerd'}}),
-    ('donated_total', {'en': {'title': 'crowdfunded'}, 'nl': {'title': 'gegrowdfund'}}),
-    ('tasks_realized', {'en': {'title': 'tasks'}, 'nl': {'title': 'taken'}}),
-    ('votes_cast', {'en': {'title': 'votes cast'}, 'nl': {'title': 'stemmen'}})
+    ('people_involved', {'en': {'title': 'Supporters'}, 'nl': {'title': 'Supporters'}}),
+    ('projects_realized', {'en': {'title': 'Projects realised'}, 'nl': {'title': 'Project gerealiseerd'}}),
+    ('donated_total', {'en': {'title': 'Crowdfunded'}, 'nl': {'title': 'Gecrowdfund'}}),
+    ('tasks_realized', {'en': {'title': 'Tasks'}, 'nl': {'title': 'Taken'}}),
+    ('votes_cast', {'en': {'title': 'Votes cast'}, 'nl': {'title': 'Stemmen opgehaald'}})
 )
 
 
 PAGE = {
     'en': {
-        'title': 'Let\'s make an impact together',
-        'description': 'This is our impact in 2016',
-        'slug': 'this-is-our-impact-in-2016'
+        'title': 'Let\'s do good together',
+        'description': 'Our results for 2016',
+        'slug': 'our-results-for-2016'
     },
     'nl': {
-        'title': 'Laten we samen impact maken',
-        'description': 'Dit is onze impact in 2016',
-        'slug': 'dit-is-onze-impact-in-2016'
+        'title': 'Samen maken we het verschil',
+        'description': 'Onze resultaten van 2016',
+        'slug': 'onze-resultaten-van-2016'
     }
 }
 
@@ -93,42 +93,45 @@ def create_default_result_pages(apps, schema_editor):
                 'stats': stats,
                 'sort_order': 1
             }
-
         },
         ProjectsContent: {
             'en': {
                 'sort_order': 2,
                 'title': "Projects that make us proud",
-                'sub_title': "These projects made a big impact",
+                'sub_title': "These projects are making a difference",
                 'projects': projects
             },
             'nl': {
                 'sort_order': 2,
-                'title': "Projecten waar we trots op zijn",
-                'sub_title': "Deze projecten maakten een grote impact",
+                'title': "Projecten waar we extra trots op zijn",
+                'sub_title': "Deze projecten maken het verschil",
+                'action_text': 'Start je eigen project',
                 'projects': projects
             }
         },
         ProjectImagesContent: {
             'en': {
                 'sort_order': 3,
-                'description': "Join our community and let's make an impact together",
+                'description': "Join our community and start doing good by supporting a project.",
             },
             'nl': {
                 'sort_order': 3,
-                'description': "Word lid van onze community en laten we samen impact maken",
+                'description': "Doe mee met onze community en draag zelf ook bij aan een project",
+                'action_text': "Bekijk de projecten|"
             }
         },
         ShareResultsContent: {
             'en': {
                 'sort_order': 4,
-                'title': "Share the impact!",
-                'share_text': "Together with {people} people, we realised {tasks} tasks in {hours} hours"
+                'title': "Inspire yout network",
+                "sub_title": "Share our results",
+                'share_text': "Together with {people} people, we realised {tasks} tasks in {hours} hours and raised {amount}"
             },
             'nl': {
                 'sort_order': 4,
-                'title': "Deel de impact!",
-                'share_text': "Samen met {people} people, hebben we {tasks} taken gerealiseserd in {hours} uren"
+                'title': "Inspireer je netwerk",
+                'sub_title': "Deel de resultaten",
+                'share_text': "Met {people} people, hebben we in {hours} uur {tasks} taken voltooid en {amount} opgehaald"
             }
         },
         ProjectsMapContent: {
@@ -138,21 +141,21 @@ def create_default_result_pages(apps, schema_editor):
             },
             'nl': {
                 'sort_order': 5,
-                'title': 'We werkten in deze locaties'
+                'title': 'We hebben op al deze locaties gewerkt'
             }
         },
         SupporterTotalContent: {
             'en': {
                 'sort_order': 6,
-                'title': 'Thank you to all our supporters',
-                'sub_title': 'We couldn\'t have done it without you',
+                'title': 'A big thanks to all our supporters',
+                'sub_title': 'Together we are changing the world!',
                 'co_financer_title': 'Special thanks to our co-funders'
             },
             'nl': {
                 'sort_order': 6,
-                'title': 'Bedankt voor al onze supporters',
-                'sub_title': 'Zonder jullie was het niet gelukt',
-                'co_financer_title': 'Extra bedankt voor onze co-funders'
+                'title': 'Dank aan alle deelnemers!',
+                'sub_title': 'Samen maken we een wereld van verschil',
+                'co_financer_title': 'En in het special bedanken we onze co-financiers'
             }
         }
     }

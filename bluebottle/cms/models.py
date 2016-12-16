@@ -1,5 +1,5 @@
-from django.utils.translation import ugettext_lazy as _
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
@@ -37,6 +37,7 @@ class Stat(TranslatableModel, SortableMixin):
         ('projects_realized', _('Projects realised')),
         ('tasks_realized', _('Tasks realised')),
         ('donated_total', _('Donated total')),
+        ('amount_matched', _('Amount matched')),
         ('projects_online', _('Projects Online')),
         ('votes_cast', _('Votes casts')),
     ]
@@ -173,6 +174,7 @@ class ShareResultsContent(ContentItem):
 
     share_text = models.CharField(
         max_length=100,
+        default='',
         help_text="{amount}, {projects}, {tasks}, {hours}, {votes}, {people} will be replaced by live statistics"
     )
 
@@ -195,6 +197,21 @@ class ProjectsMapContent(ContentItem):
 
     def __unicode__(self):
         return 'Projects Map'
+
+
+class SupporterTotalContent(ContentItem):
+    type = 'supporter_total'
+    preview_template = 'admin/cms/preview/supporter_total.html'
+
+    title = models.CharField(max_length=63, blank=True, null=True)
+    sub_title = models.CharField(max_length=100, blank=True, null=True)
+    co_financer_title = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _('Supporter total')
+
+    def __unicode__(self):
+        return 'Supporter total'
 
 
 class ResultsContentPlugin(ContentPlugin):
@@ -236,3 +253,8 @@ class ShareResultsBlockPlugin(ResultsContentPlugin):
 @plugin_pool.register
 class ProjectMapBlockPlugin(ResultsContentPlugin):
     model = ProjectsMapContent
+
+
+@plugin_pool.register
+class SupporterTotalBlockPlugin(ResultsContentPlugin):
+    model = SupporterTotalContent

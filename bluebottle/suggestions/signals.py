@@ -1,14 +1,13 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import ugettext as _
-from django.utils import translation
 
-from bluebottle.clients.utils import tenant_url
+from tenant_extras.utils import TenantLanguage
+
+from bluebottle.clients import properties
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.utils.email_backend import send_mail
 
-from bluebottle.clients import properties
-from tenant_extras.utils import TenantLanguage
 
 class User(dict):
     pass
@@ -30,8 +29,8 @@ def send_suggestion_confirmation_email(sender, instance,
             return
 
         tokenurl = '{0}/confirm-suggestion/{1}/{2}'.format(url,
-                                                       instance.token,
-                                                       instance.language)
+                                                           instance.token,
+                                                           instance.language)
 
         user = User()
         user['email'] = instance.org_email

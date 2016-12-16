@@ -68,7 +68,7 @@ class ProjectMediaPhotoDetail(generics.UpdateAPIView):
     queryset = MediaWallpostPhoto.objects.all()
     pagination_class = BluebottlePagination
     serializer_class = ProjectWallpostPhotoSerializer
-    permission_classes = (IsProjectWallOwner, )
+    permission_classes = (IsProjectWallOwner,)
 
 
 class ProjectSupportDetail(generics.RetrieveAPIView):

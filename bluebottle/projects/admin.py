@@ -43,46 +43,64 @@ def mark_as(slug, queryset):
 
 def mark_as_plan_new(modeladmin, request, queryset):
     mark_as('plan-new', queryset)
+
+
 mark_as_plan_new.short_description = _("Mark selected projects as status Plan - Draft")
 
 
 def mark_as_plan_submitted(modeladmin, request, queryset):
     mark_as('plan-submitted', queryset)
+
+
 mark_as_plan_submitted.short_description = _("Mark selected projects as status Plan - Submitted")
 
 
 def mark_as_plan_needs_work(modeladmin, request, queryset):
     mark_as('plan-needs-work', queryset)
+
+
 mark_as_plan_needs_work.short_description = _("Mark selected projects as status Plan - Needs Work")
 
 
 def mark_as_voting(modeladmin, request, queryset):
     mark_as('voting', queryset)
+
+
 mark_as_voting.short_description = _("Mark selected projects as status Voting - Running")
 
 
 def mark_as_voting_done(modeladmin, request, queryset):
     mark_as('voting-done', queryset)
+
+
 mark_as_voting_done.short_description = _("Mark selected projects as status Voting - Done")
 
 
 def mark_as_campaign(modeladmin, request, queryset):
     mark_as('campaign', queryset)
+
+
 mark_as_campaign.short_description = _("Mark selected projects as status Project - Running")
 
 
 def mark_as_done_complete(modeladmin, request, queryset):
     mark_as('done-complete', queryset)
+
+
 mark_as_done_complete.short_description = _("Mark selected projects as status Project - Realised")
 
 
 def mark_as_done_incomplete(modeladmin, request, queryset):
     mark_as('done-incomplete', queryset)
+
+
 mark_as_done_incomplete.short_description = _("Mark selected projects as status Project - Done")
 
 
 def mark_as_closed(modeladmin, request, queryset):
     mark_as('closed', queryset)
+
+
 mark_as_closed.short_description = _("Mark selected projects as status Rejected / Canceled")
 
 
@@ -135,9 +153,8 @@ class ProjectDocumentInline(admin.StackedInline):
 
 
 class RewardInlineAdmin(admin.TabularInline):
-
     model = Reward
-    readonly_fields = ('count', )
+    readonly_fields = ('count',)
     extra = 0
 
     def count(self, obj):
@@ -187,6 +204,7 @@ class ProjectAdminForm(forms.ModelForm):
         widgets = {
             'currencies': forms.CheckboxSelectMultiple
         }
+
     theme = forms.ModelChoiceField(
         queryset=ProjectTheme.objects.all().filter(disabled=False))
 
@@ -211,7 +229,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
-    list_filter =  ('country__subregion__region',)
+    list_filter = ('country__subregion__region',)
 
     def get_list_filter(self, request):
         filters = ('status', 'is_campaign', ProjectThemeFilter, 'project_type', ('deadline', DateRangeFilter))
@@ -220,7 +238,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         if Location.objects.count():
             filters += (LocationGroupFilter, LocationFilter)
         else:
-            filters += ('country__subregion__region', )
+            filters += ('country__subregion__region',)
         return filters
 
     def get_list_display(self, request):
@@ -228,14 +246,14 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                   'status', 'is_campaign', 'deadline', 'donated_percentage')
         # Only show Location column if there are any
         if Location.objects.count():
-            fields += ('location', )
+            fields += ('location',)
         # Only show Vote_count column if there are any votes
         if Vote.objects.count():
-            fields += ('vote_count', )
+            fields += ('vote_count',)
         return fields
 
     def get_list_editable(self, request):
-        return ('is_campaign', )
+        return ('is_campaign',)
 
     readonly_fields = ('vote_count', 'amount_donated',
                        'amount_needed', 'popularity')

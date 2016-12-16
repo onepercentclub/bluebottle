@@ -1,7 +1,14 @@
 import sys
-from django.conf import settings
 
 from django.db import models
+from django.db.models.signals import post_migrate
+from django.conf import settings
+from django.dispatch.dispatcher import receiver
+
+from bluebottle.utils.utils import update_group_permissions
+import bluebottle.utils.monkey_patch_migration  # noqa
+import bluebottle.utils.monkey_patch_corsheaders  # noqa
+import bluebottle.utils.monkey_patch_parler  # noqa
 
 
 class Language(models.Model):
@@ -37,12 +44,6 @@ class Address(models.Model):
         return self.line1[:80]
 
 
-from django.dispatch.dispatcher import receiver
-from django.db.models.signals import post_migrate, pre_migrate
-from django.conf import settings
-
-from bluebottle.utils.utils import update_group_permissions
-
 """
 Connecting signal handler here for populating permissions.
 This handler will work for any appname.models which defines
@@ -64,9 +65,6 @@ ADDITIONAL_GROUP_PERMS = {
     }
 }
 
-import bluebottle.utils.monkey_patch_migration  # noqa
-import bluebottle.utils.monkey_patch_corsheaders  # noqa
-import bluebottle.utils.monkey_patch_parler  # noqa
 
 @receiver(post_migrate)
 def _update_permissions(sender, **kwargs):
@@ -75,7 +73,6 @@ def _update_permissions(sender, **kwargs):
     # Load additional permissions after all models have been synced
     if sender.name == settings.INSTALLED_APPS[-1]:
         update_group_permissions(sender, ADDITIONAL_GROUP_PERMS)
-
 
 
 # Below is test-only stuff

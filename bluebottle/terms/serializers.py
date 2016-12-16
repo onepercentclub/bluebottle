@@ -1,8 +1,6 @@
-from bluebottle.terms.models import Terms, TermsAgreement
 from rest_framework import serializers
-from bluebottle.members.models import Member
-from bluebottle.terms.models import Terms
-\
+from bluebottle.terms.models import Terms, TermsAgreement
+
 
 class TermsSerializer(serializers.ModelSerializer):
     class Meta:

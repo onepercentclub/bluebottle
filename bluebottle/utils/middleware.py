@@ -19,11 +19,11 @@ class SubDomainSessionMiddleware(middleware.SessionMiddleware):
         request.session = engine.SessionStore(session_key)
 
 
-class APILangueMiddleware(middleware.SessionMiddleware):
+class APILanguageMiddleware(middleware.SessionMiddleware):
     def process_request(self, request):
         if request.path.startswith('/api'):
             try:
-                language = request.META['headers']['Accept-Language']
+                language = request.META['HTTP_X_APPLICATION_LANGUAGE']
                 if language not in [lang[0] for lang in properties.LANGUAGES]:
                     language = properties.LANGUAGE_CODE
             except KeyError:

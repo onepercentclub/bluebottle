@@ -1,12 +1,18 @@
+from django.db.models import Sum
+
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer
+from bluebottle.members.models import Member
+from bluebottle.members.serializers import UserPreviewSerializer
+from bluebottle.orders.models import Order
 from bluebottle.projects.models import Project
 from bluebottle.statistics.statistics import Statistics
+
 from rest_framework import serializers
 
 from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, QuotesContent, SurveyContent, Quote,
-    ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent
-)
+    ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
+    SupporterTotalContent)
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
 
@@ -37,8 +43,8 @@ class StatSerializer(serializers.ModelSerializer):
             return obj.value
 
         statistics = Statistics(
-            start=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
-            end=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            start=self.context['start_date'],
+            end=self.context['end_date'],
         )
 
         value = getattr(statistics, obj.type, 0)
@@ -104,8 +110,8 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 
     def get_images(self, obj):
         projects = Project.objects.filter(
-            campaign_ended__gte=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
-            campaign_ended__lte=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            campaign_ended__gte=self.context['start_date'],
+            campaign_ended__lte=self.context['end_date'],
             status__slug__in=['done-complete', 'done-incomplete']).order_by('?')
 
         return ProjectImageSerializer(projects, many=True).to_representation(projects)
@@ -121,15 +127,15 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
     def get_projects(self, obj):
         projects = Project.objects.filter(
-            campaign_ended__gte=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
-            campaign_ended__lte=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00'),
+            campaign_ended__gte=self.context['start_date'],
+            campaign_ended__lte=self.context['end_date'],
             status__slug__in=['done-complete', 'done-incomplete'])
 
         return ProjectTinyPreviewSerializer(projects, many=True).to_representation(projects)
 
     class Meta:
         model = ProjectImagesContent
-        fields = ('id', 'type', 'title', 'sub_title', 'projects', )
+        fields = ('id', 'type', 'title', 'sub_title', 'projects',)
 
 
 class ProjectsContentSerializer(serializers.ModelSerializer):
@@ -146,8 +152,8 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
 
     def get_statistics(self, instance):
         stats = Statistics(
-            start=self.context['start_date'].strftime('%Y-%m-%d 00:00+00:00'),
-            end=self.context['end_date'].strftime('%Y-%m-%d 00:00+00:00')
+            start=self.context['start_date'],
+            end=self.context['end_date']
         )
 
         return {
@@ -164,11 +170,61 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShareResultsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'statistics', 'share_text')
+        fields = ('id', 'type', 'title', 'sub_title',
+                  'statistics', 'share_text')
+
+
+class CoFinancerSerializer(serializers.Serializer):
+    total = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
+
+    def get_user(self, obj):
+        user = Member.objects.get(pk=obj['user'])
+        return UserPreviewSerializer(user).to_representation(user)
+
+    def get_id(self, obj):
+        return obj['user']
+
+    def get_total(self, obj):
+        return {
+            'amount': obj['total'],
+            'currency': obj['total_currency']
+        }
+
+    class Meta:
+        fields = ('id', 'user', 'total')
+
+
+class SupporterTotalContentSerializer(serializers.ModelSerializer):
+    supporters = serializers.SerializerMethodField()
+    co_financers = serializers.SerializerMethodField()
+
+    def get_supporters(self, instance):
+        stats = Statistics(
+            start=self.context['start_date'],
+            end=self.context['end_date']
+        )
+        return stats.people_involved
+
+    def get_co_financers(self, instance):
+        totals = Order.objects. \
+            filter(confirmed__gte=self.context['start_date']). \
+            filter(confirmed__lte=self.context['end_date']). \
+            filter(status__in=['pending', 'success']). \
+            filter(user__is_co_financer=True). \
+            values('user', 'total_currency'). \
+            annotate(total=Sum('total'))
+        return CoFinancerSerializer(totals, many=True).to_representation(totals)
+
+    class Meta:
+        model = SupporterTotalContent
+        fields = ('id', 'type',
+                  'title', 'sub_title', 'co_financer_title',
+                  'supporters', 'co_financers')
 
 
 class BlockSerializer(serializers.Serializer):
-
     def to_representation(self, obj):
         if isinstance(obj, StatsContent):
             return StatsContentSerializer(obj, context=self.context).to_representation(obj)
@@ -184,6 +240,8 @@ class BlockSerializer(serializers.Serializer):
             return ShareResultsContentSerializer(obj, context=self.context).to_representation(obj)
         if isinstance(obj, ProjectsMapContent):
             return ProjectsMapContentSerializer(obj, context=self.context).to_representation(obj)
+        if isinstance(obj, SupporterTotalContent):
+            return SupporterTotalContentSerializer(obj, context=self.context).to_representation(obj)
 
 
 class ResultPageSerializer(serializers.ModelSerializer):

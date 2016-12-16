@@ -27,7 +27,6 @@ class GenericForeignKeyManagerMixin(object):
         return self.get_queryset().filter(content_type=content_type)
 
 
-
 class UpdateSignalsQuerySet(QuerySet):
     """ Queryset that sends signals when calling update instead of updating models one by one.
     """

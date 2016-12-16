@@ -25,6 +25,7 @@ class Statistic(models.Model):
         projects_realized = ChoiceItem('projects_realized', label=_("Projects realized"))
         tasks_realized = ChoiceItem('tasks_realized', label=_("Tasks realized"))
         people_involved = ChoiceItem('people_involved', label=_("People involved"))
+        amount_matched = ChoiceItem('amount_matched', label=_("Amount Matched"))
         votes_cast = ChoiceItem('votes_cast', label=_("Number of votes cast"))
 
     title = models.CharField(_("Title"), max_length=100, blank=True)

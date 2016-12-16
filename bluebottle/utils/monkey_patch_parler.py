@@ -3,7 +3,6 @@ from parler.utils.conf import add_default_language_settings
 
 from bluebottle.clients import properties
 
-
 appsettings = parler.appsettings
 
 

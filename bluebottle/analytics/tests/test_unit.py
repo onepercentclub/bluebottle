@@ -10,7 +10,6 @@ from bluebottle.analytics.backends import InfluxExporter
 
 from .common import FakeInfluxDBClient, FakeModel, FakeModelTwo
 
-
 fake_client = FakeInfluxDBClient()
 
 

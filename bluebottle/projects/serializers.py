@@ -1,5 +1,4 @@
 import re
-import bleach
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -17,6 +16,7 @@ from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.fields import SafeField
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import Task, TaskMember, Skill
@@ -38,29 +38,6 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTheme
         fields = ('id', 'name', 'description')
-
-
-class StoryField(serializers.CharField):
-    TAGS=['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
-          'br', 'pre', 'blockquote']
-    ATTRIBUTES={'a': ['target', 'href']}
-
-    def to_representation(self, value):
-        """ Reading / Loading the story field """
-        return bleach.clean(value, tags=self.TAGS, attributes=self.ATTRIBUTES)
-
-    def to_internal_value(self, data):
-        """
-        Saving the story text
-
-        Convert &gt; and &lt; back to HTML tags so Beautiful Soup can clean
-        unwanted tags. Script tags are sent by redactor as
-        "&lt;;script&gt;;", Iframe tags have just one semicolon.
-        """
-        data = data.replace("&lt;;", "<").replace("&gt;;", ">")
-        data = data.replace("&lt;", "<").replace("&gt;", ">")
-        return unicode(bleach.clean(data, tags=self.TAGS, attributes=self.ATTRIBUTES))
-
 
 class ProjectCountrySerializer(CountrySerializer):
     subregion = serializers.CharField(source='subregion.name')
@@ -99,10 +76,11 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     owner = UserProfileSerializer()
+    title = SafeField()
+    story = SafeField()
     image = ImageSerializer(required=False)
     task_count = serializers.IntegerField()
     country = ProjectCountrySerializer()
-    story = StoryField()
     is_funding = serializers.ReadOnlyField()
     budget_lines = BasicProjectBudgetLineSerializer(
         many=True, source='projectbudgetline_set', read_only=True)
@@ -217,7 +195,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                                                read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
-    story = StoryField(required=False, allow_blank=True)
+    story = SafeField(required=False, allow_blank=True)
     is_funding = serializers.ReadOnlyField()
 
     tasks = ManageTaskSerializer(

@@ -1,4 +1,7 @@
+import bleach
 from babel.numbers import get_currency_name
+
+from rest_framework import serializers
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -108,3 +111,25 @@ try:
     add_introspection_rules([], ["^apps.fund\.fields\.DutchBankAccountField"])
 except ImportError:
     pass
+
+
+class SafeField(serializers.CharField):
+    TAGS=['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
+        'br', 'pre', 'blockquote']
+    ATTRIBUTES={'a': ['target', 'href']}
+
+    def to_representation(self, value):
+        """ Reading / Loading the story field """
+        return bleach.clean(value, tags=self.TAGS, attributes=self.ATTRIBUTES)
+
+    def to_internal_value(self, data):
+        """
+        Saving the story text
+
+        Convert &gt; and &lt; back to HTML tags so Beautiful Soup can clean
+        unwanted tags. Script tags are sent by redactor as
+        "&lt;;script&gt;;", Iframe tags have just one semicolon.
+        """
+        data = data.replace("&lt;;", "<").replace("&gt;;", ">")
+        data = data.replace("&lt;", "<").replace("&gt;", ">")
+        return unicode(bleach.clean(data, tags=self.TAGS, attributes=self.ATTRIBUTES))

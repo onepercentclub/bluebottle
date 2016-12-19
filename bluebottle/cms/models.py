@@ -21,7 +21,7 @@ class ResultPage(TranslatableModel):
     translations = TranslatedFields(
         title=models.CharField(_('Title'), max_length=40),
         slug=models.SlugField(_('Slug'), max_length=40),
-        description=models.CharField(_('Description'), max_length=70, blank=True, null=True)
+        description=models.CharField(_('Description'), max_length=45, blank=True, null=True)
     )
 
 
@@ -43,7 +43,7 @@ class Stat(TranslatableModel, SortableMixin):
     ]
 
     type = models.CharField(
-        max_length=40,
+        max_length=25,
         choices=STAT_CHOICES
     )
     value = models.CharField(max_length=63, null=True, blank=True,
@@ -72,13 +72,18 @@ class Quote(TranslatableModel):
     )
 
 
-class QuotesContent(ContentItem):
+class ResultsContent(ContentItem):
+    title = models.CharField(max_length=40, blank=True, null=True)
+    sub_title = models.CharField(max_length=70, blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class QuotesContent(ResultsContent):
     type = 'quotes'
     quotes = models.ForeignKey(Quotes)
     preview_template = 'admin/cms/preview/quotes.html'
-
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Quotes')
@@ -87,12 +92,10 @@ class QuotesContent(ContentItem):
         return unicode(self.quotes)
 
 
-class StatsContent(ContentItem):
+class StatsContent(ResultsContent):
     type = 'statistics'
     stats = models.ForeignKey(Stats)
     preview_template = 'admin/cms/preview/stats.html'
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Platform Statistics')
@@ -101,12 +104,10 @@ class StatsContent(ContentItem):
         return unicode(self.stats)
 
 
-class SurveyContent(ContentItem):
+class SurveyContent(ResultsContent):
     type = 'survey'
     preview_template = 'admin/cms/preview/results.html'
     survey = models.ForeignKey(Survey, null=True)
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Platform Results')
@@ -122,12 +123,9 @@ class Projects(models.Model):
         return u"List of projects #{0}".format(self.id)
 
 
-class ProjectsContent(ContentItem):
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
-
-    action_text = models.CharField(max_length=100,
-                                   default=_('Start your own project'),
+class ProjectsContent(ResultsContent):
+    action_text = models.CharField(max_length=40,
+                                   default=_('Startyour own project'),
                                    blank=True, null=True)
     action_link = models.CharField(max_length=100, default="/start-project",
                                    blank=True, null=True)
@@ -144,15 +142,12 @@ class ProjectsContent(ContentItem):
         return unicode(self.projects)
 
 
-class ProjectImagesContent(ContentItem):
+class ProjectImagesContent(ResultsContent):
     type = 'project_images'
     preview_template = 'admin/cms/preview/project_images.html'
 
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
-
-    description = models.TextField(blank=True, null=True)
-    action_text = models.CharField(max_length=100,
+    description = models.TextField(max_length=70, blank=True, null=True)
+    action_text = models.CharField(max_length=40,
                                    default=_('Check out our projects'),
                                    blank=True, null=True)
     action_link = models.CharField(max_length=100, default="/projects",
@@ -165,15 +160,12 @@ class ProjectImagesContent(ContentItem):
         return 'Project images block'
 
 
-class ShareResultsContent(ContentItem):
+class ShareResultsContent(ResultsContent):
     type = 'share-results'
     preview_template = 'admin/cms/preview/share_results.html'
 
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
-
     share_text = models.CharField(
-        max_length=100,
+        max_length=50,
         default='',
         help_text="{amount}, {projects}, {tasks}, {hours}, {votes}, {people} will be replaced by live statistics"
     )
@@ -185,12 +177,9 @@ class ShareResultsContent(ContentItem):
         return 'Share results block'
 
 
-class ProjectsMapContent(ContentItem):
+class ProjectsMapContent(ResultsContent):
     type = 'projects-map'
     preview_template = 'admin/cms/preview/projects_map.html'
-
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Projects Map')
@@ -199,13 +188,11 @@ class ProjectsMapContent(ContentItem):
         return 'Projects Map'
 
 
-class SupporterTotalContent(ContentItem):
+class SupporterTotalContent(ResultsContent):
     type = 'supporter_total'
     preview_template = 'admin/cms/preview/supporter_total.html'
 
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
-    co_financer_title = models.CharField(max_length=100, blank=True, null=True)
+    co_financer_title = models.CharField(max_length=70, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Supporter total')

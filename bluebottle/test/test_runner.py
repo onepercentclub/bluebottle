@@ -21,13 +21,17 @@ class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
             schema_name='test2',
             client_name='test2')
 
+        connection.set_tenant(tenant2)
+        self.init_projects()
+
+        connection.set_schema_to_public()
+
         tenant, _created = get_tenant_model().objects.get_or_create(
             domain_url='testserver',
             schema_name='test',
             client_name='test')
 
         connection.set_tenant(tenant)
-
         self.init_projects()
 
         try:

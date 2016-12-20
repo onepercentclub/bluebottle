@@ -1,9 +1,10 @@
 import socket
+import logging
 from importlib import import_module
+import bleach
+
 
 from django.db import connection
-from django_fsm import TransitionNotAllowed
-from django_tools.middlewares import ThreadLocal
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.utils.http import urlquote
@@ -11,10 +12,20 @@ from django.utils.translation import ugettext as _
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import Permission, Group
 
+from django_tools.middlewares import ThreadLocal
+from django_fsm import TransitionNotAllowed
+
 import pygeoip
-import logging
 
 from bluebottle.clients import properties
+
+TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
+        'br', 'pre', 'blockquote']
+ATTRIBUTES = {'a': ['target', 'href']}
+
+
+def clean_html(content):
+    return bleach.clean(content, tags=TAGS, attributes=ATTRIBUTES)
 
 
 def get_languages():

@@ -1,4 +1,3 @@
-import bleach
 from babel.numbers import get_currency_name
 
 from rest_framework import serializers
@@ -16,6 +15,8 @@ from djmoney.models.fields import MoneyField as DjangoMoneyField
 
 from bluebottle.clients import properties
 from bluebottle.clients.utils import get_currencies
+
+from .utils import clean_html
 
 
 def get_currency_choices():
@@ -114,13 +115,9 @@ except ImportError:
 
 
 class SafeField(serializers.CharField):
-    TAGS=['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
-        'br', 'pre', 'blockquote']
-    ATTRIBUTES={'a': ['target', 'href']}
-
     def to_representation(self, value):
         """ Reading / Loading the story field """
-        return bleach.clean(value, tags=self.TAGS, attributes=self.ATTRIBUTES)
+        return clean_html(value)
 
     def to_internal_value(self, data):
         """
@@ -132,4 +129,4 @@ class SafeField(serializers.CharField):
         """
         data = data.replace("&lt;;", "<").replace("&gt;;", ">")
         data = data.replace("&lt;", "<").replace("&gt;", ">")
-        return unicode(bleach.clean(data, tags=self.TAGS, attributes=self.ATTRIBUTES))
+        return unicode(clean_html(data))

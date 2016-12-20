@@ -125,7 +125,7 @@ class Projects(models.Model):
 
 class ProjectsContent(ResultsContent):
     action_text = models.CharField(max_length=40,
-                                   default=_('Add your own project'),
+                                   default=_('Start your own project'),
                                    blank=True, null=True)
     action_link = models.CharField(max_length=100, default="/start-project",
                                    blank=True, null=True)
@@ -165,7 +165,7 @@ class ShareResultsContent(ResultsContent):
     preview_template = 'admin/cms/preview/share_results.html'
 
     share_text = models.CharField(
-        max_length=50,
+        max_length=100,
         default='',
         help_text="{amount}, {projects}, {tasks}, {hours}, {votes}, {people} will be replaced by live statistics"
     )

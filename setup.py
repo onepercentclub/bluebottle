@@ -108,7 +108,7 @@ tests_requires = [
     'django-nose==1.4.3',
     'django-setuptest==0.2.1',
     'django-webtest==1.7.9',
-    'factory-boy==2.7.0',
+    'factory-boy==2.8.1',
     'httmock==1.2.5',
     'mock==2.0.0',
     'nose==1.3.7',

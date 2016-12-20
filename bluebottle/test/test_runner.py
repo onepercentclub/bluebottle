@@ -48,5 +48,4 @@ class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
                     keepdb=self.keepdb,
                 )
 
-
         return result

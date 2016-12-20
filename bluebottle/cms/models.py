@@ -165,7 +165,7 @@ class ShareResultsContent(ResultsContent):
     preview_template = 'admin/cms/preview/share_results.html'
 
     share_text = models.CharField(
-        max_length=50,
+        max_length=100,
         default='',
         help_text="{amount}, {projects}, {tasks}, {hours}, {votes}, {people} will be replaced by live statistics"
     )

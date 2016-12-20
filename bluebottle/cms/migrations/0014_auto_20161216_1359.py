@@ -134,7 +134,7 @@ def create_default_result_pages(apps, schema_editor):
         ShareResultsContent: {
             'en': {
                 'sort_order': 4,
-                'title': "Inspire yout network",
+                'title': "Inspire your network",
                 "sub_title": "Share our results",
                 'share_text': "With {people} people, we realised {tasks} tasks",
             },

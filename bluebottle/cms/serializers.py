@@ -48,7 +48,6 @@ class StatSerializer(serializers.ModelSerializer):
         )
 
         value = getattr(statistics, obj.type, 0)
-
         try:
             return {
                 'amount': value.amount,
@@ -59,16 +58,16 @@ class StatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Stat
-        fields = ('id', 'type', 'title', 'value')
+        fields = ('id', 'title', 'type', 'value')
 
 
-class StatsContentSerializer(serializers.Serializer):
+class StatsContentSerializer(serializers.ModelSerializer):
     stats = StatSerializer(source='stats.stat_set', many=True)
     title = serializers.CharField()
     sub_title = serializers.CharField()
 
     class Meta:
-        model = StatsContent
+        model = QuotesContent
         fields = ('id', 'type', 'stats', 'title', 'sub_title')
 
 
@@ -83,7 +82,7 @@ class QuotesContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = QuotesContent
-        fields = ('id', 'quotes', 'title', 'sub_title')
+        fields = ('id', 'quotes', 'type', 'title', 'sub_title')
 
 
 class SurveyContentSerializer(serializers.ModelSerializer):
@@ -136,7 +135,7 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectImagesContent
-        fields = ('id', 'type', 'title', 'sub_title', 'projects', )
+        fields = ('id', 'type', 'title', 'sub_title', 'projects',)
 
 
 class ProjectsContentSerializer(serializers.ModelSerializer):
@@ -148,10 +147,7 @@ class ProjectsContentSerializer(serializers.ModelSerializer):
                   'action_text', 'action_link')
 
 
-class ShareResultsContentSerializer(serializers.Serializer):
-    title = serializers.CharField()
-    sub_title = serializers.CharField()
-    share_text = serializers.CharField()
+class ShareResultsContentSerializer(serializers.ModelSerializer):
     statistics = serializers.SerializerMethodField()
 
     def get_statistics(self, instance):
@@ -249,7 +245,7 @@ class BlockSerializer(serializers.Serializer):
 
 
 class ResultPageSerializer(serializers.ModelSerializer):
-    blocks = BlockSerializer(source='content.contentitems', many=True)
+    blocks = BlockSerializer(source='content.contentitems.all.translated', many=True)
     image = ImageSerializer()
 
     class Meta:

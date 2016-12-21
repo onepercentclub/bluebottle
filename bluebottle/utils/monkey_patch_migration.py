@@ -2,8 +2,8 @@ import importlib
 
 from django.apps.registry import apps as global_apps
 from django.db import migrations
-
 from django.db.migrations.executor import MigrationExecutor
+
 migration = importlib.import_module('fluent_contents.plugins.text.migrations.0002_textitem_text_final')
 
 migration.Migration.initial = True
@@ -67,10 +67,8 @@ def detect_soft_applied(self, project_state, migration):
                     found_add_field_migration = True
                     continue
 
-            column_names = [
-                column.name for column in
-                self.connection.introspection.get_table_description(self.connection.cursor(), table)
-            ]
+            column_names = [column.name for column in
+                            self.connection.introspection.get_table_description(self.connection.cursor(), table)]
             if field.column not in column_names:
                 return False, project_state
             found_add_field_migration = True

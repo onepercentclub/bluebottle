@@ -23,8 +23,7 @@ class PaymentMock(TemplateView):
 
         result = {'return_url': reverse('payment-service-provider-handler'),
                   'order_payment_id': order_payment_id}
-        return render_to_response(self.template_name, result,
-                                  context_instance=RequestContext(request))
+        return render_to_response(self.template_name, result, RequestContext(request))
 
 
 class PaymentResponseMockHandler(TemplateView):

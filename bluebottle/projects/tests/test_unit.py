@@ -308,7 +308,7 @@ class TestProjectUpdateAmounts(BluebottleTestCase):
         self.project = ProjectFactory.create(title='test')
 
     def test_total_no_donations(self):
-        total = self.project.update_amounts()
+        self.project.update_amounts()
         self.assertEqual(self.project.amount_donated.amount, 0)
         self.assertEqual(self.project.amount_needed, self.project.amount_asked)
         self.assertEqual(self.project.amount_donated.currency, self.project.amount_asked.currency)
@@ -329,7 +329,7 @@ class TestProjectUpdateAmounts(BluebottleTestCase):
                 amount=Money(i, 'USD'),
             )
 
-        total = self.project.update_amounts()
+        self.project.update_amounts()
         self.assertEqual(self.project.amount_donated.amount, 2500)
         self.assertEqual(self.project.amount_needed.amount, self.project.amount_asked.amount - 2500)
         self.assertEqual(self.project.amount_donated.currency, self.project.amount_asked.currency)
@@ -342,6 +342,3 @@ class TestProjectUpdateAmounts(BluebottleTestCase):
         self.assertEqual(self.project.amount_asked.currency, new_amount.currency)
         self.assertEqual(self.project.amount_extra.currency, new_amount.currency)
         self.assertEqual(self.project.amount_donated.currency, new_amount.currency)
-
-
-

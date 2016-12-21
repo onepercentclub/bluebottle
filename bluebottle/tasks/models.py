@@ -25,7 +25,6 @@ GROUP_PERMS = {
 
 
 class Task(models.Model, PreviousStatusMixin):
-
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
         in_progress = ChoiceItem('in progress', label=_('Running'))
@@ -109,10 +108,12 @@ class Task(models.Model, PreviousStatusMixin):
         self.save()
 
     def task_member_realized(self):
-        # Called if a task member is realized. Now check if the other members 
-        # are also realized and the deadline has expired. If so, then the task 
-        # should also be realized. Members who are rejected, stopped, realized
-        # withdrew or applied can be ignored as these are not seen as active members.
+        """
+        Called if a task member is realized. Now check if the other members
+        are also realized and the deadline has expired. If so, then the task
+        should also be realized. Members who are rejected, stopped, realized
+        withdrew or applied can be ignored as these are not seen as active members.
+        """
         if self.status == self.TaskStatuses.realized or self.deadline > timezone.now():
             return
 
@@ -149,8 +150,10 @@ class Task(models.Model, PreviousStatusMixin):
     # model for the signal handling anyway. Eventually, tasks/bb_tasks will have to be
     # merged.
     def deadline_reached(self):
-        """ The task deadline has been reached. Set it to realised and notify the
-            owner """
+        """
+        The task deadline has been reached. Set it to realised and notify the
+        owner
+        """
         # send "The deadline of your task" - mail
 
         if self.status == 'in progress':
@@ -185,7 +188,6 @@ class Task(models.Model, PreviousStatusMixin):
             )
 
         if oldstate in ("in progress", "open") and newstate == "closed":
-
             with TenantLanguage(self.author.primary_language):
                 subject = _("The status of your task '{0}' is set to closed").format(self.title)
 

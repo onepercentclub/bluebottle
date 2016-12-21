@@ -3,12 +3,10 @@ from mock import patch
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
-from bluebottle.tasks.models import Task
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.analytics import signals
 from bluebottle.analytics.backends import InfluxExporter
 from .common import FakeInfluxDBClient
@@ -96,4 +94,3 @@ class MemberApiAnalyticsTest(BluebottleTestCase):
 
         self.assertEqual(queue_mock.call_count, 2,
                          'Analytics should trigger event = seen if outside LAST_SEEN_DELTA')
-

@@ -4,12 +4,12 @@ from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-from bluebottle.bb_projects.models import ProjectPhase
 
 
 class TaskApiTestcase(BluebottleTestCase):
@@ -329,6 +329,6 @@ class TestProjectTaskAPIPermissions(BluebottleTestCase):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
         response = self.client.get(self.tasks_url,
-                                  {'project': self.some_project.slug},
+                                   {'project': self.some_project.slug},
                                    token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

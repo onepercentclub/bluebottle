@@ -21,7 +21,7 @@ class MediaWallpostPhotoInline(admin.TabularInline):
     extra = 0
     raw_id_fields = ('author', 'editor')
 
-    readonly_fields = ('image_tag', )
+    readonly_fields = ('image_tag',)
 
     fields = ('image_tag', 'photo')
 
@@ -47,7 +47,7 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     fields = readonly_fields + ('text', 'author', 'editor')
     raw_id_fields = ('author', 'editor')
     list_display = ('created', 'view_online', 'get_text', 'thumbnail', 'author', 'deleted')
-    search_fields = ('text', 'author__first_name',  'author__last_name')
+    search_fields = ('text', 'author__first_name', 'author__last_name')
 
     extra_fields = ('gallery',)
 
@@ -126,7 +126,7 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 class TextWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = Wallpost
     readonly_fields = ('ip_address', 'deleted', 'posted_on', 'donation_link')
-    search_fields = ('text', 'author__first_name',  'author__last_name')
+    search_fields = ('text', 'author__first_name', 'author__last_name')
     list_display = ('created', 'author', 'content_type', 'text', 'deleted')
     raw_id_fields = ('author', 'editor', 'donation')
     fields = readonly_fields + ('text', 'author', 'editor')
@@ -147,7 +147,6 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
         return u'{0}: <a href="{1}">{2}</a>'.format(type, url, title)
 
     posted_on.allow_tags = True
-
 
     def donation_link(self, obj):
         if obj.donation:
@@ -175,6 +174,7 @@ class SystemWallpostAdmin(PolymorphicChildModelAdmin):
         if obj.donation:
             link = reverse('admin:projects_project_change', args=(obj.donation.project.id,))
             return "<a href='{0}'>{1}</a>".format(link, obj.donation.project.title)
+
     project_link.allow_tags = True
 
     def donation_link(self, obj):

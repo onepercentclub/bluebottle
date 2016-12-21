@@ -1,8 +1,10 @@
-from django.utils.translation import ugettext_lazy as _
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
+
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
@@ -10,15 +12,19 @@ from adminsortable.models import SortableMixin
 from adminsortable.fields import SortableForeignKey
 
 
-class ResultPage(models.Model):
-    title = models.CharField(_('Title'), max_length=200)
-    slug = models.SlugField(_('Slug'), max_length=200)
-    description = models.TextField(_('Description'), blank=True, null=True)
+class ResultPage(TranslatableModel):
     image = models.ImageField(_('Header image'), blank=True, null=True)
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     content = PlaceholderField('content')
+
+    image = models.ImageField(_('Header image'), blank=True, null=True)
+    translations = TranslatedFields(
+        title=models.CharField(_('Title'), max_length=40),
+        slug=models.SlugField(_('Slug'), max_length=40),
+        description=models.CharField(_('Description'), max_length=45, blank=True, null=True)
+    )
 
 
 class Stats(models.Model):
@@ -26,26 +32,30 @@ class Stats(models.Model):
         return u"List of statistics #{0}".format(self.id)
 
 
-class Stat(SortableMixin):
+class Stat(TranslatableModel, SortableMixin):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
         ('projects_realized', _('Projects realised')),
         ('tasks_realized', _('Tasks realised')),
         ('donated_total', _('Donated total')),
+        ('amount_matched', _('Amount matched')),
         ('projects_online', _('Projects Online')),
         ('votes_cast', _('Votes casts')),
     ]
 
     type = models.CharField(
-        max_length=40,
+        max_length=25,
         choices=STAT_CHOICES
     )
-    title = models.CharField(max_length=63)
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
     stats = SortableForeignKey(Stats)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    translations = TranslatedFields(
+        title=models.CharField(max_length=63)
+    )
 
     class Meta:
         ordering = ['sequence']
@@ -56,19 +66,26 @@ class Quotes(models.Model):
         return u"List of quotes #{0}".format(self.id)
 
 
-class Quote(models.Model):
-    name = models.CharField(max_length=63)
-    quote = models.CharField(max_length=255)
+class Quote(TranslatableModel):
     quotes = models.ForeignKey(Quotes)
+    translations = TranslatedFields(
+        name=models.CharField(max_length=30),
+        quote=models.CharField(max_length=60)
+    )
 
 
-class QuotesContent(ContentItem):
+class ResultsContent(ContentItem):
+    title = models.CharField(max_length=40, blank=True, null=True)
+    sub_title = models.CharField(max_length=70, blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class QuotesContent(ResultsContent):
     type = 'quotes'
     quotes = models.ForeignKey(Quotes)
     preview_template = 'admin/cms/preview/quotes.html'
-
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Quotes')
@@ -77,12 +94,10 @@ class QuotesContent(ContentItem):
         return unicode(self.quotes)
 
 
-class StatsContent(ContentItem):
+class StatsContent(ResultsContent):
     type = 'statistics'
     stats = models.ForeignKey(Stats)
     preview_template = 'admin/cms/preview/stats.html'
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Platform Statistics')
@@ -91,12 +106,10 @@ class StatsContent(ContentItem):
         return unicode(self.stats)
 
 
-class SurveyContent(ContentItem):
+class SurveyContent(ResultsContent):
     type = 'survey'
     preview_template = 'admin/cms/preview/results.html'
     survey = models.ForeignKey(Survey, null=True)
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Platform Results')
@@ -112,12 +125,9 @@ class Projects(models.Model):
         return u"List of projects #{0}".format(self.id)
 
 
-class ProjectsContent(ContentItem):
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
-
-    action_text = models.CharField(max_length=100,
-                                   default=_('Add your own project'),
+class ProjectsContent(ResultsContent):
+    action_text = models.CharField(max_length=40,
+                                   default=_('Start your own project'),
                                    blank=True, null=True)
     action_link = models.CharField(max_length=100, default="/start-project",
                                    blank=True, null=True)
@@ -134,15 +144,12 @@ class ProjectsContent(ContentItem):
         return unicode(self.projects)
 
 
-class ProjectImagesContent(ContentItem):
+class ProjectImagesContent(ResultsContent):
     type = 'project_images'
     preview_template = 'admin/cms/preview/project_images.html'
 
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
-
-    description = models.TextField(blank=True, null=True)
-    action_text = models.CharField(max_length=100,
+    description = models.TextField(max_length=70, blank=True, null=True)
+    action_text = models.CharField(max_length=40,
                                    default=_('Check out our projects'),
                                    blank=True, null=True)
     action_link = models.CharField(max_length=100, default="/projects",
@@ -155,13 +162,15 @@ class ProjectImagesContent(ContentItem):
         return 'Project images block'
 
 
-class ShareResultsContent(ContentItem):
+class ShareResultsContent(ResultsContent):
     type = 'share-results'
     preview_template = 'admin/cms/preview/share_results.html'
 
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
-    share_text = models.CharField(max_length=100, blank=True, null=True)
+    share_text = models.CharField(
+        max_length=100,
+        default='',
+        help_text="{amount}, {projects}, {tasks}, {hours}, {votes}, {people} will be replaced by live statistics"
+    )
 
     class Meta:
         verbose_name = _('Share Results')
@@ -170,18 +179,28 @@ class ShareResultsContent(ContentItem):
         return 'Share results block'
 
 
-class ProjectsMapContent(ContentItem):
+class ProjectsMapContent(ResultsContent):
     type = 'projects-map'
     preview_template = 'admin/cms/preview/projects_map.html'
-
-    title = models.CharField(max_length=63, blank=True, null=True)
-    sub_title = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = _('Projects Map')
 
     def __unicode__(self):
         return 'Projects Map'
+
+
+class SupporterTotalContent(ResultsContent):
+    type = 'supporter_total'
+    preview_template = 'admin/cms/preview/supporter_total.html'
+
+    co_financer_title = models.CharField(max_length=70, blank=True, null=True)
+
+    class Meta:
+        verbose_name = _('Supporter total')
+
+    def __unicode__(self):
+        return 'Supporter total'
 
 
 class ResultsContentPlugin(ContentPlugin):
@@ -223,3 +242,8 @@ class ShareResultsBlockPlugin(ResultsContentPlugin):
 @plugin_pool.register
 class ProjectMapBlockPlugin(ResultsContentPlugin):
     model = ProjectsMapContent
+
+
+@plugin_pool.register
+class SupporterTotalBlockPlugin(ResultsContentPlugin):
+    model = SupporterTotalContent

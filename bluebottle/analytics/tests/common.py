@@ -12,6 +12,7 @@ class FakeModel():
         tags = {}
         fields = {}
 
+
 class FakeModelTwo():
     class Analytics:
         tags = {}

@@ -4,13 +4,15 @@ from django.utils.translation import ugettext_lazy as _
 from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
+from parler.models import TranslatableModel, TranslatedFields
+
 from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
 from adminsortable.models import SortableMixin
 from adminsortable.fields import SortableForeignKey
 
 
-class ResultPage(models.Model):
+class ResultPage(TranslatableModel):
     image = models.ImageField(_('Header image'), blank=True, null=True)
 
     start_date = models.DateField(null=True, blank=True)
@@ -30,7 +32,7 @@ class Stats(models.Model):
         return u"List of statistics #{0}".format(self.id)
 
 
-class Stat(SortableMixin):
+class Stat(TranslatableModel, SortableMixin):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
@@ -46,11 +48,14 @@ class Stat(SortableMixin):
         max_length=25,
         choices=STAT_CHOICES
     )
-    title = models.CharField(max_length=63)
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
     stats = SortableForeignKey(Stats)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    translations = TranslatedFields(
+        title=models.CharField(max_length=63)
+    )
 
     class Meta:
         ordering = ['sequence']
@@ -61,10 +66,12 @@ class Quotes(models.Model):
         return u"List of quotes #{0}".format(self.id)
 
 
-class Quote(models.Model):
-    name = models.CharField(max_length=63)
-    quote = models.CharField(max_length=255)
+class Quote(TranslatableModel):
     quotes = models.ForeignKey(Quotes)
+    translations = TranslatedFields(
+        name=models.CharField(max_length=30),
+        quote=models.CharField(max_length=60)
+    )
 
 
 class ResultsContent(ContentItem):

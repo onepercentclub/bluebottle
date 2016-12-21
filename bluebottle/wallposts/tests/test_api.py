@@ -591,8 +591,8 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
 
         self.some_project = ProjectFactory.create(owner=self.user)
         self.some_wallpost = TextWallpostFactory.create(
-                                content_object=self.some_project,
-                                author=self.user)
+            content_object=self.some_project,
+            author=self.user)
         self.wallpost_url = reverse('wallpost_list')
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
@@ -601,7 +601,7 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
             should still be closed """
         response = self.client.get(self.wallpost_url,
                                    {'project': self.some_project.slug,
-                                    'parent_type':'project'})
+                                    'parent_type': 'project'})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', False)
@@ -610,7 +610,7 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
             should still be closed """
         response = self.client.get(self.wallpost_url,
                                    {'project': self.some_project.slug,
-                                    'parent_type':'project'})
+                                    'parent_type': 'project'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
@@ -619,6 +619,6 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
             should still be closed """
         response = self.client.get(self.wallpost_url,
                                    {'project': self.some_project.slug,
-                                    'parent_type':'project'},
+                                    'parent_type': 'project'},
                                    token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

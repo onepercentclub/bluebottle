@@ -52,7 +52,7 @@ def calculate_members_needed(sender, instance, **kwargs):
 
 
 # Check task status after member realized
-@receiver(post_save, weak=False, sender=TaskMember, 
+@receiver(post_save, weak=False, sender=TaskMember,
           dispatch_uid='bluebottle.tasks.signals.check_task_status')
 def check_task_status(sender, instance, **kwargs):
     if instance.status != instance._initial_status and instance.status == TaskMember.TaskMemberStatuses.realized:

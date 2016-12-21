@@ -11,47 +11,65 @@ from bluebottle.utils.admin import export_as_csv_action
 # Bulk actions for Task
 def mark_as_open(modeladmin, request, queryset):
     queryset.update(status='open')
+
+
 mark_as_open.short_description = _("Mark selected Tasks as Open")
 
 
 def mark_as_in_progress(modeladmin, request, queryset):
     queryset.update(status='in progress')
+
+
 mark_as_in_progress.short_description = _("Mark selected Tasks as Running")
 
 
 def mark_as_closed(modeladmin, request, queryset):
     queryset.update(status='closed')
+
+
 mark_as_closed.short_description = _("Mark selected Tasks as Done")
 
 
 def mark_as_realized(modeladmin, request, queryset):
     queryset.update(status='realized')
+
+
 mark_as_realized.short_description = _("Mark selected Tasks as Realised")
 
 
 # Bulk actions for Task Member
 def mark_as_applied(modeladmin, request, queryset):
     queryset.update(status='applied')
+
+
 mark_as_applied.short_description = _("Mark selected Task Members as Applied")
 
 
 def mark_as_accepted(modeladmin, request, queryset):
     queryset.update(status='accepted')
+
+
 mark_as_accepted.short_description = _("Mark selected Task Members as Accepted")
 
 
 def mark_as_rejected(modeladmin, request, queryset):
     queryset.update(status='rejected')
+
+
 mark_as_rejected.short_description = _("Mark selected Task Members as Rejected")
 
 
 def mark_as_stopped(modeladmin, request, queryset):
     queryset.update(status='stopped')
+
+
 mark_as_stopped.short_description = _("Mark selected Task Members as Withdrew")
 
 
 def mark_as_tm_realized(modeladmin, request, queryset):
     queryset.update(status='realized')
+
+
 mark_as_tm_realized.short_description = _("Mark selected Task Members as Realised")
 
 
@@ -74,7 +92,6 @@ class TaskFileAdminInline(admin.StackedInline):
 
 
 class TaskAdmin(admin.ModelAdmin):
-
     date_hierarchy = 'created'
 
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
@@ -117,7 +134,7 @@ class TaskAdminInline(admin.TabularInline):
     model = Task
     extra = 0
     fields = ('title', 'project', 'status', 'deadline', 'time_needed', 'task_admin_link')
-    readonly_fields = ('task_admin_link', )
+    readonly_fields = ('task_admin_link',)
 
     def task_admin_link(self, obj):
         object = obj
@@ -180,8 +197,8 @@ admin.site.register(TaskMember, TaskMemberAdmin)
 
 class SkillAdmin(admin.ModelAdmin):
     list_display = ('translated_name', 'disabled')
-    readonly_fields = ('translated_name', )
-    fields = readonly_fields + ('disabled', 'description', )
+    readonly_fields = ('translated_name',)
+    fields = readonly_fields + ('disabled', 'description',)
 
     def translated_name(self, obj):
         return _(obj.name)
@@ -193,5 +210,6 @@ class SkillAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
 
 admin.site.register(Skill, SkillAdmin)

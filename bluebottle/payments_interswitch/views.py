@@ -1,6 +1,4 @@
-from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
-from django.views.generic import View
 from django.views.generic.base import RedirectView
 
 from bluebottle.payments.models import OrderPayment

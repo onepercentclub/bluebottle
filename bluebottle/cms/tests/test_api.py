@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now
+from moneyed.classes import Money
 
 from rest_framework import status
 from fluent_contents.models import Placeholder
@@ -11,14 +12,16 @@ from fluent_contents.models import Placeholder
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, SurveyContent, ProjectsContent,
-    ProjectImagesContent, ShareResultsContent, ProjectsMapContent
-)
-
+    ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
+    SupporterTotalContent)
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, StatFactory, StatsFactory, QuotesFactory, QuoteFactory,
-    ProjectsFactory
+    ProjectsFactory,
 )
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -192,3 +195,25 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEquals(response.data['blocks'][0]['type'], 'survey')
         self.assertEquals(response.data['blocks'][1]['type'], 'quotes')
         self.assertEquals(response.data['blocks'][2]['type'], 'statistics')
+
+    def test_results_supporters(self):
+        yesterday = now() - timedelta(days=1)
+        co_financer = BlueBottleUserFactory(is_co_financer=True)
+        user = BlueBottleUserFactory(is_co_financer=False)
+        project = ProjectFactory(created=yesterday, owner=user)
+        order1 = OrderFactory(user=co_financer, confirmed=yesterday, status='success')
+        order2 = OrderFactory(user=co_financer, confirmed=yesterday, status='success')
+        order3 = OrderFactory(user=user, confirmed=yesterday, status='success')
+        DonationFactory(order=order1, amount=Money(50, 'EUR'), project=project)
+        DonationFactory(order=order2, amount=Money(50, 'EUR'), project=project)
+        DonationFactory(order=order3, amount=Money(50, 'EUR'), project=project)
+
+        SupporterTotalContent.objects.create_for_placeholder(self.placeholder)
+
+        response = self.client.get(self.url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        block = response.data['blocks'][0]
+        self.assertEqual(block['type'], 'supporter_total')
+        self.assertEqual(len(block['co_financers']), 1)
+        self.assertEqual(block['co_financers'][0]['total']['amount'], 100)

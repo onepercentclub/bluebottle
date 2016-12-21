@@ -340,8 +340,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         # |
         # +-- Wallpost by A (+)
 
-        post = TextWallpostFactory.create(
-            content_object=self.project_1, author=self.user_a)
+        TextWallpostFactory.create(content_object=self.project_1, author=self.user_a)
 
         # Mailbox should not contain anything.
         self.assertEqual(len(mail.outbox), 0)
@@ -354,8 +353,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         # |
         # +-- Wallpost by B (+)
 
-        post = TextWallpostFactory.create(
-            content_object=self.project_1, author=self.user_b)
+        TextWallpostFactory.create(content_object=self.project_1, author=self.user_b)
 
         # Mailbox should contain an email to project owner.
         self.assertEqual(len(mail.outbox), 1)
@@ -570,8 +568,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         # |
         # +-- Wallpost by B (+)
 
-        post = TextWallpostFactory.create(
-            content_object=self.task_1, author=self.user_b)
+        TextWallpostFactory.create(content_object=self.task_1, author=self.user_b)
 
         # Mailbox should contain an email to project owner.
         self.assertEqual(len(mail.outbox), 1)

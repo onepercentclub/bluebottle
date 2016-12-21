@@ -1,4 +1,3 @@
-from moneyed import Money
 from djmoney_rates.utils import convert_money
 
 

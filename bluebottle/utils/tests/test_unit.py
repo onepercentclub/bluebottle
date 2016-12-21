@@ -1,18 +1,17 @@
-import uuid
-import mock
 import dkim
-
+import mock
 import unittest
-from django.test import TestCase
+import uuid
 
-from django.contrib.auth import get_user_model
-from django.core.management import call_command
 from django.apps import apps
-from bluebottle.test.utils import BluebottleTestCase
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.exceptions import SuspiciousFileOperation
+from django.core.management import call_command
+from django.test import TestCase
 from django.test.client import Client
 from django.test.utils import override_settings
 from django.utils.encoding import force_bytes
-from django.conf import settings
 
 from fluent_contents.models import Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
@@ -21,12 +20,13 @@ from fluent_contents.plugins.text.models import TextItem
 from moneyed import Money
 
 from bluebottle.contentplugins.models import PictureItem
-from bluebottle.utils.models import MetaDataModel
-from bluebottle.utils.utils import clean_for_hashtag
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.models import MetaDataModel
+from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.utils import clean_for_hashtag
 from ..email_backend import send_mail, create_message
 
-from bluebottle.utils.serializers import MoneySerializer
 
 BB_USER_MODEL = get_user_model()
 
@@ -187,10 +187,6 @@ class UserTestsMixin(object):
         user.save()
 
         return user
-
-
-import mock
-from django.core.exceptions import SuspiciousFileOperation
 
 
 class TenantAwareStorageTest(unittest.TestCase):
@@ -394,12 +390,12 @@ class TestTenantAwareMailServer(unittest.TestCase):
 
             signed_msg = connection.sendmail.call_args[0][2]
             dkim_message = dkim.DKIM(message=to_bytes(signed_msg))
-            dkim_check = dkim_message.verify(dnsfunc=lambda name: b"".join([b"v=DKIM1; p=", _plain_key(DKIM_PUBLIC_KEY)]))
+            dkim_check = dkim_message.verify(dnsfunc=lambda name: b"".join([b"v=DKIM1; p=",
+                                                                            _plain_key(DKIM_PUBLIC_KEY)]))
 
             self.assertTrue(signed_msg.find("d=testserver") >= 0)
             self.assertTrue(signed_msg.find("s=key2") >= 0)
             self.assertTrue(dkim_check, "Email should be signed by tenant")
-
 
     @override_settings(
         EMAIL_BACKEND='bluebottle.utils.email_backend.DKIMBackend',
@@ -449,7 +445,6 @@ class MoneySerializerTestCase(BluebottleTestCase):
             self.serializer.to_internal_value(data),
             Money(10.0, 'EUR')
         )
-
 
     def test_object_to_money(self):
         data = {'amount': 10, 'currency': 'USD'}

@@ -227,6 +227,24 @@ class StatisticsTest(BluebottleTestCase):
         # - donator (anon)
         self.assertEqual(self.stats.people_involved, 3)
 
+    def test_matched_stats(self):
+        complete_status = ProjectPhase.objects.get(slug='done-complete')
+        ProjectFactory.create(
+            amount_asked=Money(1000, 'EUR'),
+            amount_extra=Money(100, 'EUR'),
+            owner=self.some_user,
+            status=complete_status
+        )
+
+        ProjectFactory.create(
+            amount_asked=Money(1000, 'USD'),
+            amount_extra=Money(100, 'USD'),
+            owner=self.some_user,
+            status=complete_status
+        )
+
+        self.assertEqual(self.stats.amount_matched, Money(250, 'EUR'))
+
     def test_votes_stats(self):
         VoteFactory.create(voter=self.some_user)
         VoteFactory.create(voter=self.some_user)

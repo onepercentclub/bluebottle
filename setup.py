@@ -105,12 +105,13 @@ tests_requires = [
     'django-nose==1.4.3',
     'django-setuptest==0.2.1',
     'django-webtest==1.7.9',
-    'factory-boy==2.7.0',
+    'factory-boy==2.8.1',
     'httmock==1.2.5',
     'mock==2.0.0',
     'nose==1.3.7',
     'pylint==1.5.5',
     'pyquery==1.2.13',
+    'tblib==1.3.0',
     'tdaemon==0.1.1',
     'WebTest==2.0.21'
 ]

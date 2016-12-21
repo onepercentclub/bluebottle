@@ -85,6 +85,7 @@ install_requires = [
     'regex==2016.4.25',
     'requests==2.5.1',
     'sorl-thumbnail==12.3-github',
+    'sorl-watermark-1.0.0',
     'South==1.0.2',
     'Sphinx==1.4.1',
     'suds-jurko==0.6',

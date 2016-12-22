@@ -35,8 +35,7 @@ class OrderPayment(object):
         self.amount = Money(2000, XOF)
 
 
-@patch('bluebottle.payments_vitepay.models.VitepayPayment.objects.get',
-        return_value=None)
+@patch('bluebottle.payments_vitepay.models.VitepayPayment.objects.get', return_value=None)
 @patch('bluebottle.payments_vitepay.adapters.VitepayPaymentAdapter.create_payment')
 @override_settings(**vitepay_settings)
 class TestAuthenticityHash(SimpleTestCase):

@@ -1,6 +1,5 @@
 from django.test.runner import DiscoverRunner
 from django.db import connection, IntegrityError
-from django.core import management
 
 from tenant_schemas.utils import get_tenant_model
 

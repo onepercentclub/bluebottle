@@ -12,14 +12,29 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     title = serializers.CharField(source='display_title')
     style = serializers.CharField(source='display_style')
+    theme = serializers.CharField(source='display_theme')
 
     def get_aggregate_attribute(self, obj, attr):
-        try:
-            aggregate = obj.aggregateanswer_set.get(project=self.context['project'],
-                                                    aggregation_type='combined')
-            return getattr(aggregate, attr)
-        except obj.aggregateanswer_set.model.DoesNotExist:
-            return None
+        if obj.display:
+            if 'project' in self.context:
+                try:
+                    aggregate = obj.aggregateanswer_set.get(project=self.context['project'],
+                                                            aggregation_type='combined')
+                    return getattr(aggregate, attr)
+                except obj.aggregateanswer_set.model.DoesNotExist:
+                    return None
+
+            if 'start_date' in self.context and 'end_date' in self.context:
+                if attr == 'value' and obj.type in ['number']:
+                    return obj.get_platform_aggregate(start=self.context['start_date'],
+                                                      end=self.context['end_date'])
+                if attr == 'options' and obj.type in ['table-radio']:
+                    return obj.get_platform_aggregate(start=self.context['start_date'],
+                                                      end=self.context['end_date'])
+                return None
+
+            raise AttributeError('Need a project or a start_date and end_date to aggregate')
+        return None
 
     def get_value(self, obj):
         return self.get_aggregate_attribute(obj, 'value')
@@ -39,7 +54,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = ('id', 'title', 'type', 'display',
-                  'value', 'list', 'options',
+                  'theme', 'value', 'list', 'options',
                   'left_label', 'right_label',
                   'response_count',
                   'properties', 'style')

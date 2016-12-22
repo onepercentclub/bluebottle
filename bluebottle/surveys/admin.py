@@ -8,7 +8,7 @@ class QuestionAdminInline(admin.StackedInline):
     model = Question
     readonly_fields = ('type', )
     fields = readonly_fields + ('display', 'display_title',
-                                'display_style',
+                                'display_style', 'display_theme',
                                 'left_label', 'right_label',
                                 'aggregation')
 

@@ -1,7 +1,6 @@
 import factory
 
 from bluebottle.payments.models import Payment, OrderPayment
-from bluebottle.payments_logger.models import PaymentLogEntry
 from .orders import OrderFactory
 
 

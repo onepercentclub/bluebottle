@@ -22,7 +22,7 @@ def _multi_getattr(obj, attr, **kw):
             if callable(obj):
                 obj = obj()
         except AttributeError:
-            if kw.has_key('default'):
+            if 'default' in kw:
                 return kw['default']
             else:
                 raise

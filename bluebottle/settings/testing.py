@@ -1,5 +1,4 @@
-import logging
-import sys
+# flake8: noqa
 
 SECRET_KEY = '1, 2, this is just a test!'
 
@@ -14,7 +13,6 @@ warnings.filterwarnings(
     r"DateTimeField .* received a naive datetime",
     RuntimeWarning, r'django\.db\.models\.fields')
 
-
 MERCHANT_ACCOUNTS = [
     {
         'merchant': 'docdata',
@@ -24,7 +22,6 @@ MERCHANT_ACCOUNTS = [
     },
 ]
 
-
 # Set up a proper testing email backend
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 COMPRESS_ENABLED = False
@@ -32,9 +29,7 @@ COMPRESS_ENABLED = False
 # Include the tests models
 INCLUDE_TEST_MODELS = True
 
-INSTALLED_APPS += (
-    'bluebottle.payments_mock',
-)
+INSTALLED_APPS += ('bluebottle.payments_mock',)
 
 # Yes, activate the South migrations. Otherwise, we'll never notice if our
 # code screwed up the database synchronization
@@ -70,8 +65,7 @@ TENANT_APPS += (
     'bluebottle.payments_mock',
 )
 
-from bluebottle.payments_mock.settings import (MOCK_PAYMENT_METHODS,
-                                               MOCK_FEES)
+from bluebottle.payments_mock.settings import MOCK_PAYMENT_METHODS
 
 PAYMENT_METHODS = MOCK_PAYMENT_METHODS
 MINIMAL_PAYOUT_AMOUNT = 10
@@ -90,6 +84,5 @@ RECURRING_DONATIONS_ENABLED = True
 
 SEND_WELCOME_MAIL = False
 SEND_MAIL = True
-
 
 TEST_RUNNER = 'bluebottle.test.test_runner.MultiTenantRunner'

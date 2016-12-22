@@ -1,6 +1,5 @@
 from mock import patch
 from moneyed import Money
-from decimal import Decimal
 
 from bluebottle.test.utils import BluebottleTestCase
 from django.test.utils import override_settings
@@ -77,7 +76,7 @@ class TestProjectAnalytics(BluebottleTestCase):
 
     def test_tags_generation(self, queue_mock):
         project = ProjectFactory.create(theme=self.theme, status=self.status,
-                              country=self.country)
+                                        country=self.country)
 
         self.expected_fields = {
             'id': project.id,
@@ -172,7 +171,7 @@ class TestTaskAnalytics(BluebottleTestCase):
                                            slug='cleaning-the-beach')
         project = ProjectFactory.create(theme=theme)
         user = BlueBottleUserFactory.create()
-        task = TaskFactory.create(author=user, project=project)
+        TaskFactory.create(author=user, project=project)
 
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags']['theme'], 'Cleaning the park')
@@ -248,7 +247,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         task_member.status = 'realized'
         task_member.save()
 
-        self.assertEqual(previous_call_count+1, queue_mock.call_count,
+        self.assertEqual(previous_call_count + 1, queue_mock.call_count,
                          'Analytics should be sent when task member status changes')
 
     @patch.object(signals, '_', fake_trans)
@@ -257,7 +256,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
                                            slug='cleaning-the-beach')
         project = ProjectFactory.create(theme=theme)
         task = TaskFactory.create(project=project)
-        task_member = TaskMemberFactory.create(task=task)
+        TaskMemberFactory.create(task=task)
 
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags']['theme'], 'Cleaning the park')
@@ -284,7 +283,7 @@ class TestOrderAnalytics(BluebottleTestCase):
         super(TestOrderAnalytics, self).setUp()
         self.init_projects()
 
-        with patch('bluebottle.analytics.signals.queue_analytics_record') as mock_queue:
+        with patch('bluebottle.analytics.signals.queue_analytics_record'):
             self.user = BlueBottleUserFactory.create()
 
     def test_tags_generation(self, queue_mock):
@@ -327,7 +326,6 @@ class TestOrderAnalytics(BluebottleTestCase):
         self.assertEqual(kwargs['fields'], expected_fields)
         self.assertEqual(str(kwargs['fields']['total']), '100.0')
 
-
     def test_unchanged_status(self, queue_mock):
         order = OrderFactory.create(total=Money(100, 'EUR'))
         previous_call_count = queue_mock.call_count
@@ -349,7 +347,7 @@ class TestVoteAnalytics(BluebottleTestCase):
         self.init_projects()
 
         self.location = LocationFactory.create()
-        with patch('bluebottle.analytics.signals.queue_analytics_record') as mock_queue:
+        with patch('bluebottle.analytics.signals.queue_analytics_record'):
             self.user = BlueBottleUserFactory.create()
             self.project = ProjectFactory.create(location=self.location)
 
@@ -387,7 +385,7 @@ class TestWallpostAnalytics(BluebottleTestCase):
 
     def test_tags_generation(self, queue_mock):
         project = ProjectFactory.create()
-        donation = DonationFactory.create(project=project)
+        DonationFactory.create(project=project)
 
         wallpost = TextWallpostFactory.create()
         expected_tags = {

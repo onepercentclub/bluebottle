@@ -42,6 +42,7 @@ class Stat(TranslatableModel, SortableMixin):
         ('amount_matched', _('Amount matched')),
         ('projects_online', _('Projects Online')),
         ('votes_cast', _('Votes casts')),
+        ('time_spent', _('Time spent')),
     ]
 
     type = models.CharField(

@@ -42,6 +42,7 @@ class Stat(TranslatableModel, SortableMixin):
         ('amount_matched', _('Amount matched')),
         ('projects_online', _('Projects Online')),
         ('votes_cast', _('Votes casts')),
+        ('time_spent', _('Time spent')),
     ]
 
     type = models.CharField(
@@ -212,6 +213,9 @@ class ResultsContentPlugin(ContentPlugin):
 @plugin_pool.register
 class QuotesBlockPlugin(ResultsContentPlugin):
     model = QuotesContent
+    fieldsets = (
+        (None, {'fields': ('quotes',), }),
+    )
 
 
 @plugin_pool.register

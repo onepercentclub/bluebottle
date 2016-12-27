@@ -258,6 +258,7 @@ SHARED_APPS = (
     'parler',
     'daterange_filter',
     'adminsortable'
+
 )
 
 TENANT_APPS = (

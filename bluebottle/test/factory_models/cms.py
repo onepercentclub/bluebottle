@@ -29,7 +29,6 @@ class StatFactory(factory.DjangoModelFactory):
         model = Stat
 
     type = 'manual'
-    title = factory.Sequence(lambda n: 'Result Page Title {0}'.format(n))
     value = 500
     stats = factory.SubFactory(Stats)
 

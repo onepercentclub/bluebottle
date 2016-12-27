@@ -6,6 +6,7 @@ from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
 
+
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.cms.models import Stats, Stat, Quotes, Quote, ResultPage, Projects
 
@@ -51,8 +52,8 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
             'slug': ('title',)
         }
 
-    list_display = ('title', 'slug', 'start_date', 'end_date')
-    fields = ('title', 'slug', 'description', 'image', 'start_date', 'end_date', 'content')
+    list_display = 'title', 'slug', 'start_date', 'end_date'
+    fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
 admin.site.register(Stats, StatsAdmin)

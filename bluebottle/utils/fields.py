@@ -1,5 +1,7 @@
 from babel.numbers import get_currency_name
 
+from rest_framework import serializers
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -12,6 +14,8 @@ import sorl.thumbnail
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 
 from bluebottle.clients import properties
+
+from .utils import clean_html
 
 
 def get_currency_choices():
@@ -107,3 +111,21 @@ try:
     add_introspection_rules([], ["^apps.fund\.fields\.DutchBankAccountField"])
 except ImportError:
     pass
+
+
+class SafeField(serializers.CharField):
+    def to_representation(self, value):
+        """ Reading / Loading the story field """
+        return clean_html(value)
+
+    def to_internal_value(self, data):
+        """
+        Saving the story text
+
+        Convert &gt; and &lt; back to HTML tags so Beautiful Soup can clean
+        unwanted tags. Script tags are sent by redactor as
+        "&lt;;script&gt;;", Iframe tags have just one semicolon.
+        """
+        data = data.replace("&lt;;", "<").replace("&gt;;", ">")
+        data = data.replace("&lt;", "<").replace("&gt;", ">")
+        return unicode(clean_html(data))

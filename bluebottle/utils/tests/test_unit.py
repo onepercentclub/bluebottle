@@ -1,6 +1,5 @@
 import dkim
 import mock
-from moneyed import Money
 import unittest
 import uuid
 
@@ -17,6 +16,8 @@ from django.utils.encoding import force_bytes
 from fluent_contents.models import Placeholder
 from fluent_contents.plugins.oembeditem.models import OEmbedItem
 from fluent_contents.plugins.text.models import TextItem
+
+from moneyed import Money
 
 from bluebottle.clients import properties
 from bluebottle.contentplugins.models import PictureItem

@@ -13,6 +13,8 @@ from adminsortable.fields import SortableForeignKey
 
 
 class ResultPage(TranslatableModel):
+    image = models.ImageField(_('Header image'), blank=True, null=True)
+
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     content = PlaceholderField('content')
@@ -40,6 +42,7 @@ class Stat(TranslatableModel, SortableMixin):
         ('amount_matched', _('Amount matched')),
         ('projects_online', _('Projects Online')),
         ('votes_cast', _('Votes casts')),
+        ('time_spent', _('Time spent')),
     ]
 
     type = models.CharField(
@@ -51,12 +54,12 @@ class Stat(TranslatableModel, SortableMixin):
     stats = SortableForeignKey(Stats)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
-    class Meta:
-        ordering = ['sequence']
-
     translations = TranslatedFields(
         title=models.CharField(max_length=63)
     )
+
+    class Meta:
+        ordering = ['sequence']
 
 
 class Quotes(models.Model):

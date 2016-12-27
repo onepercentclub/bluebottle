@@ -1,9 +1,7 @@
-from importlib import import_module
-
 from django.contrib.sessions import middleware
 from django.conf import settings
 from django.utils import translation
-
+from importlib import import_module
 
 from bluebottle.clients import properties
 

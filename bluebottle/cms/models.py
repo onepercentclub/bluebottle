@@ -213,6 +213,9 @@ class ResultsContentPlugin(ContentPlugin):
 @plugin_pool.register
 class QuotesBlockPlugin(ResultsContentPlugin):
     model = QuotesContent
+    fieldsets = (
+        (None, {'fields': ('quotes',), }),
+    )
 
 
 @plugin_pool.register

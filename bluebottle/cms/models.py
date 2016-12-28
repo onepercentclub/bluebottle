@@ -153,7 +153,7 @@ class ProjectImagesContent(ResultsContent):
     action_text = models.CharField(max_length=40,
                                    default=_('Check out our projects'),
                                    blank=True, null=True)
-    action_link = models.CharField(max_length=100, default="/projects",
+    action_link = models.CharField(max_length=100, default="/projects?status=campaign%2Cvoting ",
                                    blank=True, null=True)
 
     class Meta:
@@ -167,6 +167,7 @@ class ShareResultsContent(ResultsContent):
     type = 'share-results'
     preview_template = 'admin/cms/preview/share_results.html'
 
+    share_title = models.CharField(max_length=100, default='')
     share_text = models.CharField(
         max_length=100,
         default='',

@@ -171,7 +171,7 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShareResultsContent
         fields = ('id', 'type', 'title', 'sub_title',
-                  'statistics', 'share_text')
+                  'statistics', 'share_title', 'share_text')
 
 
 class CoFinancerSerializer(serializers.Serializer):

@@ -121,7 +121,7 @@ class MonthlyBatchAdmin(admin.ModelAdmin):
     def process_batch(self, request, pk=None):
         batch = MonthlyBatch.objects.get(pk=pk)
         tenant = connection.tenant
-        if getattr(settings, 'BROKER_URL', None):
+        if getattr(settings, 'CELERY_RESULT_BACKEND', None):
             process_monthly_batch.delay(tenant=tenant, monthly_batch=batch, send_email=True)
         else:
             process_monthly_batch(tenant=tenant, monthly_batch=batch, send_email=True)

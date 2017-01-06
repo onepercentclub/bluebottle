@@ -22,7 +22,7 @@ def _multi_getattr(obj, attr, **kw):
             if callable(obj):
                 obj = obj()
         except AttributeError:
-            if kw.has_key('default'):
+            if 'default' in kw:
                 return kw['default']
             else:
                 raise
@@ -119,9 +119,9 @@ def post_save_analytics(sender, instance, **kwargs):
     _merge_attrs(fields, analytics.fields)
 
     # If enabled, use celery to queue task
-    if not getattr(settings, 'CELERY_RESULT_BACKEND', None):
-        queue_analytics_record(timestamp=timezone.now(),
-                               tags=tags, fields=fields)
-    else:
+    if getattr(settings, 'CELERY_RESULT_BACKEND', None):
         queue_analytics_record.delay(timestamp=timezone.now(),
                                      tags=tags, fields=fields)
+    else:
+        queue_analytics_record(timestamp=timezone.now(),
+                               tags=tags, fields=fields)

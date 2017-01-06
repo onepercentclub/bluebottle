@@ -4,9 +4,9 @@ from django.utils.translation import ugettext_lazy as _
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_projects.models import BaseProject
-from bluebottle.wallposts.notifiers import (WallpostObserver,
-                                            ReactionObserver,
-                                            ObserversContainer)
+from bluebottle.wallposts.notifiers import (
+    WallpostObserver, ReactionObserver, ObserversContainer
+)
 from bluebottle.utils.email_backend import send_mail
 
 

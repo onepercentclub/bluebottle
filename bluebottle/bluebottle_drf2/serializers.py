@@ -1,12 +1,8 @@
-import decimal
-import json
 import logging
 import os
+from os.path import isfile
 import re
 import sys
-import types
-
-from os.path import isfile
 from urllib2 import URLError
 
 from django.conf import settings
@@ -39,10 +35,17 @@ class RestrictedImageField(serializers.ImageField):
 
 
 class SorlImageField(RestrictedImageField):
-    def __init__(self, geometry_string, crop='center', colorspace='RGB', **kwargs):
+    def __init__(self, geometry_string, crop='center',
+                 colorspace='RGB', watermark=None, watermark_pos=None,
+                 watermark_size=None, **kwargs):
         self.geometry_string = geometry_string
-        self.crop = crop
-        self.colorspace = colorspace
+        self.sorl_options = {
+            'crop': crop,
+            'colorspace': colorspace,
+            'watermark': watermark,
+            'watermark_pos': watermark_pos,
+            'watermark_size': watermark_size
+        }
         super(SorlImageField, self).__init__(**kwargs)
 
     def to_representation(self, value):
@@ -58,7 +61,7 @@ class SorlImageField(RestrictedImageField):
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         try:
-            thumbnail = unicode(get_thumbnail(value, self.geometry_string, crop=self.crop, colorspace=self.colorspace))
+            thumbnail = unicode(get_thumbnail(value, self.geometry_string, **self.sorl_options))
         except IOError:
             return ""
         except Exception:

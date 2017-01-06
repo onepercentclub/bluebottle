@@ -4,12 +4,10 @@ from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.tasks.models import Task
 from bluebottle.projects.models import Project
 
-
 from .models import MediaWallpost
 
 
 class CanEmailFollowers(permissions.BasePermission):
-
     def _get_owner_from_request(self, request):
         parent_id = request.data['parent_id']
         parent_type = request.data['parent_type']
@@ -43,7 +41,7 @@ class CanEmailFollowers(permissions.BasePermission):
             elif isinstance(parent_obj, Task):
                 return parent_obj.author == request.user
         else:
-          return True
+            return True
 
 
 # TODO: Add write permission for 1%CREW / Assistants.

@@ -2,10 +2,9 @@ from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
+
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
-from django.db.models import options
-
 from djchoices import DjangoChoices, ChoiceItem
 from taggit.managers import TaggableManager
 

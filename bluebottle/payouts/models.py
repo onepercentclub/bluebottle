@@ -225,6 +225,3 @@ class OrganizationPayout(BaseOrganizationPayout):
             )
 
         return sepa.as_xml()
-
-
-import signals

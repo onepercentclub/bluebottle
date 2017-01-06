@@ -1,18 +1,13 @@
 from rest_framework import generics
-from rest_framework.permissions import IsAdminUser
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.projects.models import ProjectBudgetLine, Project
-from bluebottle.projects.serializers import (
-    ProjectBudgetLineSerializer,
-    ProjectDocumentSerializer,
-)
-from bluebottle.projects.permissions import IsProjectOwner
+from bluebottle.projects.permissions import IsProjectOwner, IsProjectWallOwner
 from bluebottle.projects.serializers import (
     ProjectBudgetLineSerializer, ProjectDocumentSerializer,
     ProjectMediaSerializer,
-    ProjectSupportSerializer)
+    ProjectSupportSerializer, ProjectWallpostPhotoSerializer)
 from bluebottle.utils.utils import get_client_ip
+from bluebottle.wallposts.models import MediaWallpostPhoto
 
 from .models import ProjectDocument, ProjectBudgetLine, Project
 
@@ -66,6 +61,13 @@ class ProjectMediaDetail(generics.RetrieveAPIView):
     serializer_class = ProjectMediaSerializer
 
     lookup_field = 'slug'
+
+
+class ProjectMediaPhotoDetail(generics.UpdateAPIView):
+    queryset = MediaWallpostPhoto.objects.all()
+    pagination_class = BluebottlePagination
+    serializer_class = ProjectWallpostPhotoSerializer
+    permission_classes = (IsProjectWallOwner,)
 
 
 class ProjectSupportDetail(generics.RetrieveAPIView):

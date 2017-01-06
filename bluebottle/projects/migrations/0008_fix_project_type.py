@@ -8,6 +8,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('tasks', '0015_merge'),
         ('projects', '0007_auto_20160929_0817'),
     ]
 

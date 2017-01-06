@@ -2,13 +2,13 @@ from collections import OrderedDict
 import logging
 from decimal import InvalidOperation
 
+from daterange_filter.filter import DateRangeFilter
 from django import forms
 from django.db.models import Count, Sum
 from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
-from django.utils.html import escape
 from django.utils.translation import ugettext_lazy as _
 
 from sorl.thumbnail.admin import AdminImageMixin
@@ -21,10 +21,12 @@ from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
+from bluebottle.utils.utils import clean_html
 
 from .forms import ProjectDocumentForm
 from .models import (ProjectBudgetLine, Project,
                      ProjectDocument, ProjectPhaseLog)
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,46 +46,64 @@ def mark_as(slug, queryset):
 
 def mark_as_plan_new(modeladmin, request, queryset):
     mark_as('plan-new', queryset)
+
+
 mark_as_plan_new.short_description = _("Mark selected projects as status Plan - Draft")
 
 
 def mark_as_plan_submitted(modeladmin, request, queryset):
     mark_as('plan-submitted', queryset)
+
+
 mark_as_plan_submitted.short_description = _("Mark selected projects as status Plan - Submitted")
 
 
 def mark_as_plan_needs_work(modeladmin, request, queryset):
     mark_as('plan-needs-work', queryset)
+
+
 mark_as_plan_needs_work.short_description = _("Mark selected projects as status Plan - Needs Work")
 
 
 def mark_as_voting(modeladmin, request, queryset):
     mark_as('voting', queryset)
+
+
 mark_as_voting.short_description = _("Mark selected projects as status Voting - Running")
 
 
 def mark_as_voting_done(modeladmin, request, queryset):
     mark_as('voting-done', queryset)
+
+
 mark_as_voting_done.short_description = _("Mark selected projects as status Voting - Done")
 
 
 def mark_as_campaign(modeladmin, request, queryset):
     mark_as('campaign', queryset)
+
+
 mark_as_campaign.short_description = _("Mark selected projects as status Project - Running")
 
 
 def mark_as_done_complete(modeladmin, request, queryset):
     mark_as('done-complete', queryset)
+
+
 mark_as_done_complete.short_description = _("Mark selected projects as status Project - Realised")
 
 
 def mark_as_done_incomplete(modeladmin, request, queryset):
     mark_as('done-incomplete', queryset)
+
+
 mark_as_done_incomplete.short_description = _("Mark selected projects as status Project - Done")
 
 
 def mark_as_closed(modeladmin, request, queryset):
     mark_as('closed', queryset)
+
+
 mark_as_closed.short_description = _("Mark selected projects as status Rejected / Canceled")
 
 
@@ -136,9 +156,8 @@ class ProjectDocumentInline(admin.StackedInline):
 
 
 class RewardInlineAdmin(admin.TabularInline):
-
     model = Reward
-    readonly_fields = ('count', )
+    readonly_fields = ('count',)
     extra = 0
 
     def count(self, obj):
@@ -184,8 +203,17 @@ class ProjectBudgetLineInline(admin.TabularInline):
 
 
 class ProjectAdminForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            'currencies': forms.CheckboxSelectMultiple
+        }
+
     theme = forms.ModelChoiceField(
         queryset=ProjectTheme.objects.all().filter(disabled=False))
+
+    def __init__(self, *args, **kwargs):
+        super(ProjectAdminForm, self).__init__(*args, **kwargs)
+        self.fields['currencies'].required = False
 
 
 class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
@@ -230,14 +258,17 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         response = HttpResponseRedirect(project_url)
         return response
 
+    list_filter = ('country__subregion__region',)
+
     def get_list_filter(self, request):
-        filters = ('status', 'payout_status', 'is_campaign', ProjectThemeFilter, 'project_type')
+        filters = ('status', 'payout_status', 'is_campaign', ProjectThemeFilter,
+                   'project_type', ('deadline', DateRangeFilter))
 
         # Only show Location column if there are any
         if Location.objects.count():
             filters += (LocationGroupFilter, LocationFilter)
         else:
-            filters += ('country__subregion__region', )
+            filters += ('country__subregion__region',)
         return filters
 
     def get_list_display(self, request):
@@ -246,14 +277,14 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                   'deadline', 'donated_percentage')
         # Only show Location column if there are any
         if Location.objects.count():
-            fields += ('location', )
+            fields += ('location',)
         # Only show Vote_count column if there are any votes
         if Vote.objects.count():
-            fields += ('vote_count', )
+            fields += ('vote_count',)
         return fields
 
     def get_list_editable(self, request):
-        return ('is_campaign', )
+        return ('is_campaign',)
 
     export_fields = [
         ('title', 'title'),
@@ -353,7 +384,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def get_title_display(self, obj):
         if len(obj.title) > 35:
             return u'<span title="{title}">{short_title} &hellip;</span>' \
-                .format(title=escape(obj.title), short_title=obj.title[:45])
+                .format(title=clean_html(obj.title), short_title=clean_html(obj.title[:45]))
         return obj.title
 
     get_title_display.allow_tags = True

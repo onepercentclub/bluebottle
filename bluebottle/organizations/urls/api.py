@@ -1,5 +1,5 @@
 from ..views import ManageOrganizationList, ManageOrganizationDetail
-from django.conf.urls import url, include
+from django.conf.urls import url
 from surlex.dj import surl
 from ..views import OrganizationDetail, OrganizationList
 

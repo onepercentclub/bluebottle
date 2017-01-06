@@ -8,6 +8,7 @@ from .serializers import NewsItemSerializer, NewsItemPreviewSerializer
 class NewsItemPagination(BluebottlePagination):
     page_size = 5
 
+
 class NewsItemPreviewList(generics.ListAPIView):
     queryset = NewsItem.objects.all()
     serializer_class = NewsItemPreviewSerializer

@@ -23,19 +23,20 @@ from bluebottle.utils.utils import StatusDefinition
 
 
 @override_settings(
-PAYMENT_METHODS=[{
-        'provider': 'docdata',
-        'id': 'docdata-ideal',
-        'profile': 'ideal',
-        'name': 'iDEAL',
-        'restricted_countries': ('NL', ),
-        'supports_recurring': False,
-        'currencies': {
-            'EUR': {'min_amount': 5, 'max_amount': 100},
-            'USD': {'min_amount': 5, 'max_amount': 100},
-            'NGN': {'min_amount': 5, 'max_amount': 100},
-        }
-    }]
+    PAYMENT_METHODS=[
+        {
+            'provider': 'docdata',
+            'id': 'docdata-ideal',
+            'profile': 'ideal',
+            'name': 'iDEAL',
+            'restricted_countries': ('NL', ),
+            'supports_recurring': False,
+            'currencies': {
+                'EUR': {'min_amount': 5, 'max_amount': 100},
+                'USD': {'min_amount': 5, 'max_amount': 100},
+                'NGN': {'min_amount': 5, 'max_amount': 100},
+            }
+        }]
 )
 class DonationApiTestCase(BluebottleTestCase, SessionTestMixin):
     def setUp(self):

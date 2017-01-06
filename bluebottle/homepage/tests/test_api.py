@@ -1,21 +1,18 @@
-from decimal import Decimal
-
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 
-from bluebottle.test.factory_models.statistics import StatisticFactory
-from bluebottle.utils.utils import StatusDefinition
-from bluebottle.utils.models import Language
-
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.statistics.views import Statistics
+from bluebottle.tasks.models import Task
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-
-from bluebottle.statistics.views import Statistics
-from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.tasks.models import Task
+from bluebottle.test.factory_models.statistics import StatisticFactory
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.models import Language
 
 from ..models import HomePage
 
@@ -107,6 +104,13 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
         self.assertEquals(HomePage().get('en').projects, None)
 
 
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+)
 class HomepageEndpointTestCase(BluebottleTestCase):
     """
     Integration tests for the Statistics API.
@@ -157,9 +161,9 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         for char in 'abcdefghij':
             # Put half of the projects in the campaign phase.
             if ord(char) % 2 == 1:
-                task = TaskMemberFactory.create(task=self.task)
+                TaskMemberFactory.create(task=self.task)
             else:
-                task = TaskMemberFactory.create(task=self.task)
+                TaskMemberFactory.create(task=self.task)
 
         """
         Create 10 Donations with half to fundraisers
@@ -187,9 +191,6 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         StatisticFactory.create(type='tasks_realized', title='Tasks realised', language='en')
         StatisticFactory.create(type='people_involved', title='Peeps', language='en')
         StatisticFactory.create(type='manual', title='Rating', value='9.3', language='en')
-
-    def tearDown(self):
-        self.stats.clear_cached()
 
     def test_homepage_stats(self):
         response = self.client.get(reverse('stats', kwargs={'language': 'en'}))

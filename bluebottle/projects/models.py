@@ -4,7 +4,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import FieldError, ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q, F
@@ -18,25 +18,21 @@ from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
 
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
+from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from moneyed.classes import Money
 from select_multiple_field.models import SelectMultipleField
 
-from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
-from bluebottle.tasks.models import Task
-from bluebottle.utils.utils import StatusDefinition
-from bluebottle.utils.exchange_rates import convert
-
+from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectDocument
 )
-from bluebottle.utils.managers import UpdateSignalsQuerySet
-from bluebottle.clients.utils import LocalTenant
-from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.clients import properties
-from bluebottle.bb_metrics.utils import bb_track
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.tasks.models import Task, TaskMember
+from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
+from bluebottle.utils.exchange_rates import convert
+from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     MediaWallpostPhoto, MediaWallpost, TextWallpost
@@ -210,7 +206,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     categories = models.ManyToManyField('categories.Category', blank=True)
 
-    currencies = SelectMultipleField(max_length=100, null=True, default=[],
+    currencies = SelectMultipleField(max_length=100, default=[],
                                      choices=lazy(get_currency_choices, tuple)())
 
     celebrate_results = models.BooleanField(
@@ -229,7 +225,7 @@ class Project(BaseProject, PreviousStatusMixin):
         (StatusDefinition.FAILED, _('Failed'))
     )
 
-    payout_status = models.CharField(max_length=50, null=True, blank=True, 
+    payout_status = models.CharField(max_length=50, null=True, blank=True,
                                      choices=PAYOUT_STATUS_CHOICES)
 
     objects = ProjectManager()
@@ -314,7 +310,7 @@ class Project(BaseProject, PreviousStatusMixin):
                     self.project_type = properties.PROJECT_CREATE_TYPES[0]
                 except (AttributeError, KeyError):
                     logger.warning('Tenant has no PROJECT_CREATE_TYPES: %s', properties.tenant.name,
-                                                                             exc_info=1)
+                                   exc_info=1)
 
         if not self.status:
             self.status = ProjectPhase.objects.get(slug="plan-new")
@@ -396,9 +392,8 @@ class Project(BaseProject, PreviousStatusMixin):
 
     def update_status_after_donation(self, save=True):
         if not self.campaign_funded and not self.campaign_ended and \
-                self.status not in ProjectPhase.objects.filter(
-                    Q(slug="done-complete") |
-                    Q(slug="done-incomplete")) and self.amount_needed.amount <= 0:
+                self.status.slug not in ["done-complete", "done-incomplete"] and \
+                self.amount_needed.amount <= 0:
             self.campaign_funded = timezone.now()
             if save:
                 self.save()
@@ -439,14 +434,10 @@ class Project(BaseProject, PreviousStatusMixin):
         amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
 
         return sum(amounts) or Money(0, self.amount_asked.currency)
-        if len(totals) == 0:
-            totals = [Money(0, 'EUR')]
-
-        return totals
 
     @property
     def donations(self):
-        success = [StatusDefinition.PENDING,StatusDefinition.SUCCESS]
+        success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS]
         return self.donation_set.filter(order__status__in=success)
 
     @property
@@ -557,29 +548,31 @@ class Project(BaseProject, PreviousStatusMixin):
     @property
     def wallpost_photos(self):
         project_type = ContentType.objects.get_for_model(self)
-        return MediaWallpostPhoto.objects.order_by('-mediawallpost__created').\
-            filter(mediawallpost__object_id=self.id, mediawallpost__content_type=project_type)
+        return MediaWallpostPhoto.objects.order_by('-mediawallpost__created'). \
+            filter(mediawallpost__object_id=self.id,
+                   mediawallpost__content_type=project_type,
+                   results_page=True)
 
     @property
     def wallpost_videos(self):
         project_type = ContentType.objects.get_for_model(self)
-        return MediaWallpost.objects.order_by('-created').\
+        return MediaWallpost.objects.order_by('-created'). \
             filter(object_id=self.id, content_type=project_type, video_url__gt="")
 
     @property
     def donors(self, limit=20):
-        return self.donation_set.\
+        return self.donation_set. \
             filter(order__status__in=[StatusDefinition.PLEDGED,
                                       StatusDefinition.PENDING,
-                                      StatusDefinition.SUCCESS],
-                   anonymous=False).\
-            filter(order__user__isnull=False).\
+                                      StatusDefinition.SUCCESS]). \
+            filter(anonymous=False). \
+            filter(order__user__isnull=False). \
             order_by('order__user', '-created').distinct('order__user')[:limit]
 
     @property
     def task_members(self, limit=20):
-        return TaskMember.objects.\
-            filter(task__project=self, status__in=['accepted', 'realized']).\
+        return TaskMember.objects. \
+            filter(task__project=self, status__in=['accepted', 'realized']). \
             order_by('member', '-created').distinct('member')[:limit]
 
     @property
@@ -673,7 +666,6 @@ class Project(BaseProject, PreviousStatusMixin):
                                'campaign') and new_status.slug in ('done-complete',
                                                                    'done-incomplete',
                                                                    'closed'):
-
             bb_track("Project Completed", data)
 
     def check_task_status(self):

@@ -24,5 +24,3 @@ class Donation(BaseDonation):
         if not hasattr(order_payment, 'payment'):
             return '?'
         return order_payment.payment.method_name
-
-from .signals import *

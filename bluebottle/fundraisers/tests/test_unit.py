@@ -1,8 +1,3 @@
-from datetime import timedelta, time
-
-from django.db.models import Count
-from django.utils import timezone
-
 from moneyed.classes import Money
 
 from bluebottle.projects.models import ProjectPhase
@@ -68,5 +63,3 @@ class TestFundraiserAmountDonated(BluebottleTestCase):
             self.fundraiser.amount_donated,
             Money(250, 'EUR')
         )
-
-

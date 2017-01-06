@@ -1,3 +1,4 @@
+import json
 from decimal import Decimal
 
 from django.db import models
@@ -58,6 +59,20 @@ class InterswitchPayment(Payment):
         if fee > 2000:
             return 2000
         return fee
+
+    @property
+    def status_code(self):
+        try:
+            return json.loads(self.response)['ResponseCode']
+        except (TypeError, KeyError):
+            return ""
+
+    @property
+    def status_description(self):
+        try:
+            return json.loads(self.response)['ResponseDescription']
+        except (TypeError, KeyError):
+            return ""
 
 
 class InterswitchPaymentStatusUpdate(models.Model):

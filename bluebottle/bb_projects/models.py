@@ -1,10 +1,5 @@
-from moneyed.classes import Money
-
-from bluebottle.wallposts.models import MediaWallpostPhoto
-from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Count, Sum, options
+from django.db.models import Count, Sum
 from django.template.defaultfilters import slugify
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
@@ -17,7 +12,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
-from bluebottle.utils.fields import MoneyField, get_default_currency
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 
@@ -304,4 +299,4 @@ class BaseProject(models.Model, GetTweetMixin):
         return self.funding + self.sourcing
 
 
-from projectwallmails import *
+from projectwallmails import *  # noqa

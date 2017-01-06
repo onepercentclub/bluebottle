@@ -1,0 +1,6 @@
+<dl>
+{% for quote in instance.quotes.quote_set.all %}
+    <dt>{{ quote.name }}</dt>
+    <dd>{{ quote.quote }}<dd>
+{% endfor %}
+</dl>

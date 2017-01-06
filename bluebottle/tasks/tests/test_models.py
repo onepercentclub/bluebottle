@@ -38,7 +38,9 @@ class TestTaskMemberCase(BluebottleTestCase):
         self.assertEqual(task_member1.task.people_accepted, 2)
 
     def test_check_number_of_members_needed_with_externals_count(self):
-        """ Test that 'check_number_of_members_needed' returns the right count with externals"""
+        """
+        Test that 'check_number_of_members_needed' returns the right count with externals
+        """
         task = TaskFactory.create(status='open', people_needed=4)
 
         task_member1 = TaskMemberFactory.create(task=task, status='accepted',
@@ -51,8 +53,10 @@ class TestTaskMemberCase(BluebottleTestCase):
         self.assertEqual(task_member1.task.people_accepted, 5)
 
     def test_check_number_of_members_needed_set_in_progress(self):
-        """ Test that the task status changes when enough people are accepted for a task. It shouldn't update 
-            when insufficient people are accepted."""
+        """
+        Test that the task status changes when enough people are accepted for a task. It shouldn't update
+        when insufficient people are accepted.
+        """
         task = TaskFactory.create(status='open', people_needed=4)
 
         task_member1 = TaskMemberFactory.create(task=task, status='accepted',
@@ -75,34 +79,35 @@ class TestTaskCase(BluebottleTestCase):
         self.init_projects()
 
     def test_save_check_status_update_insufficent_accepted_members(self):
-        """ Check that the save method correctly sets the status of the task if not enough task members are 
-            accepted for the task and the save method is called """
+        """
+        Check that the save method correctly sets the status of the task if not enough task members are
+        accepted for the task and the save method is called
+        """
         task = TaskFactory.create(status='open', people_needed=4)
-        task_member1 = TaskMemberFactory.create(task=task, status='accepted',
-                                                externals=1)
+        TaskMemberFactory.create(task=task, status='accepted', externals=1)
         task.save()
 
         self.assertEqual(task.status, 'open')
 
-        task_member2 = TaskMemberFactory.create(task=task, status='accepted')
+        TaskMemberFactory.create(task=task, status='accepted')
         task.save()
 
         # Total of 3 out of 4 people. Task status should be open.
         self.assertEqual(task.status, 'open')
 
     def test_save_check_status_update_sufficent_accepted_members(self):
-        """ Check that the save method correctly sets the status of the task if enough task members are 
-            accepted for the task and the save method is called """
+        """
+        Check that the save method correctly sets the status of the task if enough task members are
+        accepted for the task and the save method is called
+        """
         task = TaskFactory.create(status='open', people_needed=2)
-        task_member1 = TaskMemberFactory.create(task=task, status='accepted',
-                                                externals=1)
+        TaskMemberFactory.create(task=task, status='accepted', externals=1)
         task.save()
 
         self.assertEqual(task.status, 'in progress')
 
 
 class TestTaskSearchDate(BluebottleTestCase):
-
     def test_day_start_method(self):
         from bluebottle.bb_tasks.views import day_start
 

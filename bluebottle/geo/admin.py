@@ -1,9 +1,9 @@
 from django.contrib import admin
+from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.geo.models import Location, LocationGroup
-
-from .models import Region, SubRegion, Country
+from bluebottle.geo.models import Location, LocationGroup, Region, SubRegion, Country
+from bluebottle.projects.models import Project
 
 
 class LocationFilter(admin.SimpleListFilter):
@@ -68,13 +68,22 @@ class LocationGroupAdmin(admin.ModelAdmin):
     list_display = ('name', )
     model = LocationGroup
 
+
 admin.site.register(LocationGroup, LocationGroupAdmin)
 
 
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'position', 'group')
+    list_display = ('name', 'position', 'group', 'projects')
     model = Location
     search_fields = ('name', 'description', 'city')
+
+    def projects(self, obj):
+        return '<a href="{}?location={}">{}</a>'.format(
+            reverse('admin:projects_project_changelist'),
+            obj.id,
+            len(Project.objects.filter(location=obj))
+        )
+    projects.allow_tags = True
 
     def make_action(self, group):
         name = 'select_%s' % group
@@ -83,5 +92,6 @@ class LocationAdmin(admin.ModelAdmin):
 
     def get_actions(self, request):
         return dict([self.make_action(group) for group in LocationGroup.objects.all()])
+
 
 admin.site.register(Location, LocationAdmin)

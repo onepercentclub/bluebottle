@@ -102,7 +102,7 @@ class TestProjectList(ProjectEndpointTestCase):
             self.assertIn('owner', item)
             self.assertIn('status', item)
 
-            #Ensure that non-viewable status are filtered out
+            # Ensure that non-viewable status are filtered out
             phase = ProjectPhase.objects.get(id=item['status'])
             self.assertTrue(phase.viewable, "Projects with non-viewable status were returned")
 
@@ -428,5 +428,3 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertTrue('permission' in response.content)
-
-

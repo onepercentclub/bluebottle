@@ -44,4 +44,5 @@ class FundraiserAdmin(admin.ModelAdmin):
     owner_link.allow_tags = True
     owner_link.short_description = 'initiator'
 
+
 admin.site.register(Fundraiser, FundraiserAdmin)

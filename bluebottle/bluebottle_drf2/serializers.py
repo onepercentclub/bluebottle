@@ -42,10 +42,13 @@ class SorlImageField(RestrictedImageField):
         self.sorl_options = {
             'crop': crop,
             'colorspace': colorspace,
-            'watermark': watermark,
-            'watermark_pos': watermark_pos,
-            'watermark_size': watermark_size
         }
+
+        if watermark:
+            self.sorl_options['watermark'] = watermark
+            self.sorl_options['watermark_pos'] = watermark_pos
+            self.sorl_options['watermark_size'] = watermark_size
+
         super(SorlImageField, self).__init__(**kwargs)
 
     def to_representation(self, value):

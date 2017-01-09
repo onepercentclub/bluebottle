@@ -41,6 +41,11 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
     donations = PayoutDonationSerializer(many=True, read_only=True)
     status = serializers.CharField(source='payout_status')
 
+    target_reached = serializers.SerializerMethodField()
+
+    def get_target_reached(self, obj):
+        return obj.status.slug == 'done-comeplete'
+
     class Meta:
         model = Project
         fields = ('id',
@@ -50,6 +55,7 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
                   'amount_asked',
                   'campaign_started',
                   'campaign_ended',
+                  'target_reached',
                   'receiver_account_number',
                   'receiver_account_bic',
                   'receiver_account_name',

@@ -7,7 +7,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 
-from bluebottle.analytics import signals
+from bluebottle.analytics import utils
 from bluebottle.analytics.backends import InfluxExporter
 from .common import FakeInfluxDBClient
 
@@ -15,7 +15,7 @@ fake_client = FakeInfluxDBClient()
 
 
 @override_settings(ANALYTICS_ENABLED=True)
-@patch.object(signals, 'queue_analytics_record')
+@patch.object(utils, 'queue_analytics_record')
 @patch.object(InfluxExporter, 'client', fake_client)
 class TaskMemberApiAnalyticsTest(BluebottleTestCase):
     def setUp(self):
@@ -53,7 +53,7 @@ class TaskMemberApiAnalyticsTest(BluebottleTestCase):
 
 
 @override_settings(ANALYTICS_ENABLED=True)
-@patch.object(signals, 'queue_analytics_record')
+@patch.object(utils, 'queue_analytics_record')
 @patch.object(InfluxExporter, 'client', fake_client)
 class MemberApiAnalyticsTest(BluebottleTestCase):
     def setUp(self):
@@ -62,7 +62,7 @@ class MemberApiAnalyticsTest(BluebottleTestCase):
         def do_nothing(**kwargs):
             pass
 
-        with patch('bluebottle.analytics.signals.queue_analytics_record') as mock_queue:
+        with patch('bluebottle.analytics.utils.queue_analytics_record') as mock_queue:
             mock_queue.side_effect = do_nothing
             self.user = BlueBottleUserFactory.create()
 

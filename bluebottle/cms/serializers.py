@@ -1,6 +1,7 @@
+from django.db import connection
 from django.db.models import Sum
 
-from bluebottle.bluebottle_drf2.serializers import ImageSerializer
+from bluebottle.bluebottle_drf2.serializers import ImageSerializer, SorlImageField
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.orders.models import Order
@@ -247,8 +248,13 @@ class BlockSerializer(serializers.Serializer):
 class ResultPageSerializer(serializers.ModelSerializer):
     blocks = BlockSerializer(source='content.contentitems.all.translated', many=True)
     image = ImageSerializer()
+    share_image = SorlImageField(
+        '1200x600', source='image', crop='center',
+        watermark='{}/logo-overlay.png'.format(connection.tenant.client_name),
+        watermark_pos='center', watermark_size='1200x600'
+    )
 
     class Meta:
         model = ResultPage
-        fields = ('id', 'title', 'slug', 'start_date', 'image',
+        fields = ('id', 'title', 'slug', 'start_date', 'image', 'share_image',
                   'end_date', 'description', 'blocks')

@@ -1363,7 +1363,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         project.save()
 
         loaded_project = Project.objects.get(pk=project.pk)
-        self.assertEquals(loaded_project.campaign_ended, project.deadline)
+        self.assertTrue(loaded_project.campaign_ended)
         self.assertTrue(loaded_project.campaign_funded is None)
         self.assertEquals(
             loaded_project.status, ProjectPhase.objects.get(slug="closed"))
@@ -1410,7 +1410,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         self.assertTrue(project.campaign_funded is None)
 
         loaded_project = Project.objects.get(pk=project.pk)
-        self.assertEquals(loaded_project.campaign_ended, project.deadline)
+        self.assertTrue(loaded_project.campaign_ended)
         self.assertTrue(loaded_project.campaign_funded is None)
         self.assertEquals(loaded_project.status,
                           ProjectPhase.objects.get(slug="done-incomplete"))

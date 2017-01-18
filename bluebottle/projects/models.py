@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q, F
 from django.db.models.aggregates import Count, Sum
-from django.db.models.signals import post_init, post_save
+from django.db.models.signals import post_init, post_save, pre_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
@@ -302,21 +302,6 @@ class Project(BaseProject, PreviousStatusMixin):
         if not self.currencies and self.amount_asked:
             self.currencies = [str(self.amount_asked.currency)]
 
-        # If the project status is moved to New or Needs Work, clear the
-        # date_submitted field
-        if self.status.slug in ["plan-new", "plan-needs-work"]:
-            self.date_submitted = None
-
-        # Set the submitted date
-        if self.status == ProjectPhase.objects.get(
-                slug="plan-submitted") and not self.date_submitted:
-            self.date_submitted = timezone.now()
-
-        # Set the campaign started date
-        if self.status == ProjectPhase.objects.get(
-                slug="campaign") and not self.campaign_started:
-            self.campaign_started = timezone.now()
-
         # Set a default deadline of 30 days
         if not self.deadline:
             self.deadline = timezone.now() + datetime.timedelta(days=30)
@@ -356,11 +341,6 @@ class Project(BaseProject, PreviousStatusMixin):
                 self.status = ProjectPhase.objects.get(slug="done-complete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
-            self.campaign_ended = self.deadline
-
-        if self.status.slug in ["done-complete", "done-incomplete", "closed"] \
-                and not self.campaign_ended:
-            self.campaign_ended = timezone.now()
 
         previous_status = None
         if self.pk:
@@ -739,3 +719,23 @@ def project_submitted_update_suggestion(sender, instance, **kwargs):
         if suggestion and suggestion.status == 'submitted':
             suggestion.status = 'in_progress'
             suggestion.save()
+
+
+@receiver(pre_save, sender=Project, dispatch_uid="updating_suggestion")
+def set_dates(sender, instance, **kwargs):
+    # If the project status is moved to New or Needs Work, clear the
+    # date_submitted field
+    if instance.status.slug in ["plan-new", "plan-needs-work"]:
+        instance.date_submitted = None
+
+    # Set the submitted date
+    if instance.status.slug == 'plan-submitted' and not instance.date_submitted:
+        instance.date_submitted = timezone.now()
+
+    # Set the campaign started date
+    if instance.status.slug == 'campaign' and not instance.campaign_started:
+        instance.campaign_started = timezone.now()
+
+    if instance.status.slug in ["done-complete", "done-incomplete", "closed"] \
+            and not instance.campaign_ended:
+        instance.campaign_ended = timezone.now()

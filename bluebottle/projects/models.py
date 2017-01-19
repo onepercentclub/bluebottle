@@ -342,15 +342,7 @@ class Project(BaseProject, PreviousStatusMixin):
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
 
-        previous_status = None
-        if self.pk:
-            previous_status = self.__class__.objects.get(pk=self.pk).status
         super(Project, self).save(*args, **kwargs)
-
-        # Only log project phase if the status has changed
-        if self is not None and previous_status != self.status:
-            ProjectPhaseLog.objects.create(
-                project=self, status=self.status)
 
     def update_status_after_donation(self, save=True):
         if not self.campaign_funded and not self.campaign_ended and \
@@ -719,6 +711,15 @@ def project_submitted_update_suggestion(sender, instance, **kwargs):
         if suggestion and suggestion.status == 'submitted':
             suggestion.status = 'in_progress'
             suggestion.save()
+
+
+@receiver(post_save, sender=Project)
+def create_phaselog(sender, instance, created, **kwargs):
+    # Only log project phase if the status has changed
+    if instance._original_status != instance.status or created:
+        ProjectPhaseLog.objects.create(
+            project=instance, status=instance.status
+        )
 
 
 @receiver(pre_save, sender=Project, dispatch_uid="updating_suggestion")

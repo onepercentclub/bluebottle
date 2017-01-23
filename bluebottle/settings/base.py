@@ -444,6 +444,11 @@ LOGGING = {
             'propagate': False,
             'level': 'ERROR',
         },
+        'bluebottle.analytics.tasks': {
+            'handlers': ['console'],
+            'propagate': False,
+            'level': 'ERROR',
+        },
         'bluebottle.recurring_donations': {
             'handlers': ['console'],
             'propagate': True,
@@ -490,6 +495,11 @@ ANALYTICS_BACKENDS = {
         'database': 'platform_v1',
         'measurement': 'saas',
         'ssl': True
+    },
+    'file': {
+        'handler_class': 'bluebottle.analytics.backends.FileExporter',
+        'base_dir': os.path.join(PROJECT_ROOT, 'analytics'),
+        'measurement': 'saas',
     }
 }
 

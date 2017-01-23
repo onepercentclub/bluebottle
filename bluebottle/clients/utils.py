@@ -85,7 +85,7 @@ def get_currencies():
     currencies = [{
         'code': code,
         'name': get_currency_name(code),
-        'symbol': get_currency_symbol(code)
+        'symbol': get_currency_symbol(code).replace('US$', '$')
     } for code in currencies]
 
     for currency in currencies:

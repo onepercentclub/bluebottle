@@ -211,22 +211,10 @@ class Task(models.Model, PreviousStatusMixin):
             bb_track("Task Completed", data)
 
     def save(self, *args, **kwargs):
-        previous_status = None
-        if self.pk:
-            try:
-                previous_status = self.__class__.objects.get(pk=self.pk).status
-            except self.__class__.DoesNotExist:
-                pass
-
         if not self.author_id:
             self.author = self.project.owner
 
         super(Task, self).save(*args, **kwargs)
-
-        # Only log task status if the status has changed
-        if self is not None and previous_status != self.status:
-            TaskStatusLog.objects.create(
-                task=self, status=self.status)
 
 
 class Skill(models.Model):
@@ -305,18 +293,6 @@ class TaskMember(models.Model, PreviousStatusMixin):
         def extra_fields(self, obj, created):
             # Force the time_spent to an int.
             return {'hours': int(obj.time_spent)}
-
-    def save(self, *args, **kwargs):
-        previous_status = None
-        if self.pk:
-            previous_status = self.__class__.objects.get(pk=self.pk).status
-
-        super(TaskMember, self).save(*args, **kwargs)
-
-        # Only log task member status if the status has changed
-        if self is not None and previous_status != self.status:
-            TaskMemberStatusLog.objects.create(
-                task_member=self, status=self.status)
 
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)

@@ -4,7 +4,6 @@ from decimal import InvalidOperation
 
 from daterange_filter.filter import DateRangeFilter
 from django import forms
-from django.db.models import Count, Sum
 from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
@@ -245,10 +244,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ]
         return process_urls + urls
 
-    def approve_payouts(self, queryset):
-        queryset.filter(payout_status='needs-approval').update(payout_status='approved')
-    approve_payouts.short_description = _("Approve payouts for selected projects")
-
     def approve_payout(self, request, pk=None):
         project = Project.objects.get(pk=pk)
         if project.payout_status == 'needs_approval':
@@ -312,7 +307,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                mark_as_done_complete, mark_as_campaign,
                mark_as_voting_done, mark_as_voting,
                mark_as_plan_needs_work, mark_as_plan_submitted,
-               mark_as_plan_new, approve_payouts]
+               mark_as_plan_new]
 
     def get_actions(self, request):
         """Order the action in reverse (delete at the bottom)."""
@@ -361,18 +356,18 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         except (AttributeError, InvalidOperation):
             return '-'
 
-    def get_queryset(self, request):
-        # Optimization: Select related fields that are used in admin specific
-        # display fields.
-        queryset = super(ProjectAdmin, self).get_queryset(request)
-        queryset = queryset.select_related(
-            'owner', 'organization'
-        ).annotate(
-            admin_vote_count=Count('vote', distinct=True),
-            time_spent=Sum('task__members__time_spent')
-        )
-
-        return queryset
+    # def get_queryset(self, request):
+    #     # Optimization: Select related fields that are used in admin specific
+    #     # display fields.
+    #     queryset = super(ProjectAdmin, self).get_queryset(request)
+    #     queryset = queryset.select_related(
+    #         'owner', 'organization'
+    #     ).annotate(
+    #         admin_vote_count=Count('vote', distinct=True),
+    #         time_spent=Sum('task__members__time_spent')
+    #     )
+    #
+    #     return queryset
 
     def num_votes(self, obj):
         self.queryset(None)

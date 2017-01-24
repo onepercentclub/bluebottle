@@ -249,6 +249,7 @@ class TestMultiTenant(BluebottleTestCase):
         self.project = ProjectFactory.create(
             status=ProjectPhase.objects.get(slug='campaign'),
             deadline=now - timezone.timedelta(days=5),
+            campaign_started=now - timezone.timedelta(days=5),
             amount_asked=0)
 
         # Create a second tenant
@@ -259,6 +260,7 @@ class TestMultiTenant(BluebottleTestCase):
         self.project2 = ProjectFactory.create(
             status=ProjectPhase.objects.get(slug='campaign'),
             deadline=now - timezone.timedelta(days=5),
+            campaign_started=now - timezone.timedelta(days=5),
             amount_asked=0)
 
     def test_realized_email_multiple_tenants(self):

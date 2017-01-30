@@ -170,6 +170,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
         ('member__remote_id', 'remote id'),
         ('task', 'task'),
         ('task__project', 'project'),
+        ('task__project__location__name', 'location'),
         ('status', 'status'),
         ('updated', 'updated'),
         ('time_spent', 'time spent'),

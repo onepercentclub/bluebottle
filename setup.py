@@ -86,6 +86,7 @@ install_requires = [
     'regex==2016.4.25',
     'requests==2.5.1',
     'sorl-thumbnail==12.3-github',
+    'sorl-watermark==1.0.0',
     'South==1.0.2',
     'Sphinx==1.4.1',
     'suds-jurko==0.6',
@@ -115,6 +116,7 @@ tests_requires = [
     'nose==1.3.7',
     'pylint==1.5.5',
     'pyquery==1.2.13',
+    'tblib==1.3.0',
     'tdaemon==0.1.1',
     'WebTest==2.0.21'
 ]

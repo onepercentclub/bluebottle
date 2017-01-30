@@ -317,11 +317,16 @@ class ProjectWallpostVideoSerializer(serializers.ModelSerializer):
 class ProjectMediaSerializer(serializers.ModelSerializer):
     pictures = ProjectWallpostPhotoSerializer(source='wallpost_photos', many=True)
     videos = ProjectWallpostVideoSerializer(source='wallpost_videos', many=True)
+    image = SorlImageField(
+        '1200x600', crop='center', watermark='images/completed.png',
+        watermark_pos='-40 40', watermark_size='213x255'
+    )
+
     id = serializers.CharField(source='slug')
 
     class Meta:
         model = Project
-        fields = ('id', 'title', 'pictures', 'videos')
+        fields = ('id', 'title', 'pictures', 'videos', 'image')
 
 
 class ProjectDonorSerializer(serializers.ModelSerializer):

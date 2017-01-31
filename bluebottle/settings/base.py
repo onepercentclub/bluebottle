@@ -617,6 +617,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('funding', 'Funding'),
                 ('sourcing', 'Sourcing'),
                 ('amount_asked', 'Amount asked'),
+                ('amount_donated', 'Amount raised'),
+                ('amount_extra', 'Amount matched'),
                 ('task_count', 'Task Count'),
                 ('has_survey', 'Has Survey'),
                 ('realized_task_count', 'Realized Task Count'),

@@ -231,9 +231,14 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
-    readonly_fields = ('vote_count', 'amount_donated',
-                       # 'payout_status',
-                       'amount_needed', 'popularity')
+    def get_readonly_fields(self, request, obj=None):
+        fields = ('vote_count',
+                  'amount_donated', 'amount_needed',
+                  'popularity', 'payout_status'
+                  )
+        if obj.payout_status and obj.payout_status != 'needs_approval':
+            fields += ('status', )
+        return fields
 
     def get_urls(self):
         urls = super(ProjectAdmin, self).get_urls()

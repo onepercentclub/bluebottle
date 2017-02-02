@@ -29,6 +29,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         #TODO: Add arguments to select export destination
+        #TODO: Add arguments to select specific tenant
         parser.add_argument('--start', metavar='YYYY-MM-DD', action='store', dest='start', required=True,
                             type=self._validate_date,
                             help="Start date (YYYY-MM-DD) for dump. UTC is the default time zone")

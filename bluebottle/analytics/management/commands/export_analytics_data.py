@@ -30,7 +30,6 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         # TODO: Add arguments to select export destination
-        # TODO: Add arguments to select specific tenant
         parser.add_argument('--start', metavar='YYYY-MM-DD', action='store', dest='start', required=True,
                             type=self._validate_date, help="Start date (YYYY-MM-DD) for dump. UTC is the default \
                             time zone")
@@ -39,21 +38,26 @@ class Command(BaseCommand):
                             type=self._validate_date,
                             help="End date (YYYY-MM-DD) for dump. UTC is the default time zone")
 
+        parser.add_argument('--tenants', metavar='tenants', action='store', dest='tenants', required=False, nargs='*',
+                            help="The names of the tenants to export")
+
     """ Dump analytics records for all tenants over a given date range """
     def handle(self, **options):
         start_date = dateparse.parse_datetime('{} 00:00:00+00:00'.format(options['start']))
         end_date = dateparse.parse_datetime('{} 23:59:59+00:00'.format(options['end']))
+        tenants = set(options['tenants']) if options['tenants'] else None
 
         for client in Client.objects.all():
-            connection.set_tenant(client)
+            if tenants is None or client.client_name in tenants:
+                connection.set_tenant(client)
 
-            with LocalTenant(client, clear_tenant=True):
-                logger.info('tenant:{}'.format(client.schema_name))
-                models = django.apps.apps.get_models()
+                with LocalTenant(client, clear_tenant=True):
+                    logger.info('tenant:{}'.format(client.schema_name))
+                    models = django.apps.apps.get_models()
 
-                for model in models:
-                    if hasattr(model, 'Analytics'):
-                        self._process(model, start_date, end_date)
+                    for model in models:
+                        if hasattr(model, 'Analytics'):
+                            self._process(model, start_date, end_date)
 
     @override_settings(ANALYTICS_ENABLED=True)
     def _process(self, cls, start_date, end_date):

@@ -236,7 +236,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                   'amount_donated', 'amount_needed',
                   'popularity', 'payout_status'
                   )
-        if obj.payout_status and obj.payout_status != 'needs_approval':
+        if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status', )
         return fields
 

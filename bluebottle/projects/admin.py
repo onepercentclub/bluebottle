@@ -231,9 +231,14 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
-    readonly_fields = ('vote_count', 'amount_donated',
-                       # 'payout_status',
-                       'amount_needed', 'popularity')
+    def get_readonly_fields(self, request, obj=None):
+        fields = ('vote_count',
+                  'amount_donated', 'amount_needed',
+                  'popularity', 'payout_status'
+                  )
+        if obj and obj.payout_status and obj.payout_status != 'needs_approval':
+            fields += ('status', )
+        return fields
 
     def get_urls(self):
         urls = super(ProjectAdmin, self).get_urls()
@@ -263,7 +268,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         if Location.objects.count():
             filters += (LocationGroupFilter, LocationFilter)
         else:
-            filters += ('country__subregion__region',)
+            filters += ('country__subregion__region', ('country', admin.RelatedOnlyFieldListFilter),)
         return filters
 
     def get_list_display(self, request):

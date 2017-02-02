@@ -40,9 +40,7 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
         instance.create.return_value = {'order_key': 123, 'order_id': 123}
 
         # Mock create payment
-        patch.object(DocdataPaymentAdapter, 'create_payment',
-                     fake_create_payment)
-
+        patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='docdataIdeal',

@@ -8,7 +8,6 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('projects', '0019_auto_20170118_1537'),
         ('projects', '0019_auto_20170106_1657'),
     ]
 

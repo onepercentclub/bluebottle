@@ -1,14 +1,12 @@
-from mock import patch
-
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
-
-from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from mock import patch
 
 from bluebottle.analytics import utils
 from bluebottle.analytics.backends import InfluxExporter
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.utils import BluebottleTestCase
 from .common import FakeInfluxDBClient
 
 fake_client = FakeInfluxDBClient()

@@ -4,11 +4,9 @@ from celery import shared_task
 from django.conf import settings
 
 from bluebottle.utils.utils import get_class
-
 from .exception import AnalyticsException
 
 logger = logging.getLogger(__name__)
-
 
 @shared_task
 def queue_analytics_record(timestamp, tags, fields):

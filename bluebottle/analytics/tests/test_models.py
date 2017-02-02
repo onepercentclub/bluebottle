@@ -116,7 +116,8 @@ class TestProjectAnalytics(BluebottleTestCase):
         previous_call_count = queue_mock.call_count
         Project.objects.update(status=self.status)
 
-        self.assertEqual(queue_mock.call_count, previous_call_count + len(Project.objects.all()),
+        # ProjectPhaseLog will also be created when projects are created
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Project.objects.all()) * 2,
                          'Analytics should be sent when update is called')
 
         args, kwargs = queue_mock.call_args
@@ -183,7 +184,8 @@ class TestTaskAnalytics(BluebottleTestCase):
         previous_call_count = queue_mock.call_count
         Task.objects.update(status='realized')
 
-        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()),
+        # TaskStatusLog will also be created when tasks are created
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()) * 2,
                          'Analytics should be sent when update is called')
 
         args, kwargs = queue_mock.call_args
@@ -247,7 +249,8 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         task_member.status = 'realized'
         task_member.save()
 
-        self.assertEqual(previous_call_count + 1, queue_mock.call_count,
+        # TaskMemberStatusLog will also be created when task status is updated
+        self.assertEqual(previous_call_count + 2, queue_mock.call_count,
                          'Analytics should be sent when task member status changes')
 
     @patch.object(utils, '_', fake_trans)
@@ -268,7 +271,8 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         previous_call_count = queue_mock.call_count
         TaskMember.objects.update(status='realized')
 
-        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()),
+        # TaskMemberStatusLog will also be created when TaskMember are created
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()) * 2,
                          'Analytics should be sent when update is called')
 
         args, kwargs = queue_mock.call_args

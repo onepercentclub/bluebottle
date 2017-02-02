@@ -499,7 +499,7 @@ DONATIONS_ENABLED = True
 # Analytics Service
 ANALYTICS_ENABLED = False
 ANALYTICS_BACKENDS = {
-    'default': {
+    'influxdb': {
         'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
         'host': 'localhost',
         'port': 8086,

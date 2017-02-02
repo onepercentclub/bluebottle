@@ -1,13 +1,12 @@
 import json
 import logging
 import os
-
 from datetime import datetime
 from numbers import Integral
-from pytz import UTC
 
 from influxdb import InfluxDBClient
 from influxdb.client import InfluxDBClientError
+from pytz import UTC
 
 from .exception import AnalyticsException
 

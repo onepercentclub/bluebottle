@@ -102,5 +102,5 @@ class FileExporter:
             with open(logname, 'ab') as log:
                 log.write(json.dumps(json_body) + '\n')
         except StandardError as err:
-            logger.exception('Failed to write to InfluxDB: %s', err.message,
+            logger.exception('Failed to write to InfluxDB log: %s', err.message,
                              exc_info=1)

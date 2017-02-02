@@ -14,6 +14,7 @@ from .tasks import queue_analytics_record
 
 logger = logging.getLogger(__name__)
 
+
 def _multi_getattr(obj, attr, **kw):
     attributes = attr.split(".")
     for i in attributes:
@@ -51,7 +52,7 @@ def process(instance, created, timestamp=None):
                 options = attr[new_attr]
                 attr = new_attr
             except AttributeError:
-                #TODO: Logging
+                # TODO: Logging
                 pass
 
             value = _multi_getattr(instance, attr, default='')

@@ -7,9 +7,9 @@ from collections import OrderedDict
 class DictFormatter(logging.Formatter):
     """Used for formatting log records into a dict."""
     default_regular_attrs = ["name", "message", "levelname", "module", "asctime"]
-    ignore_builtin_attrs = ["levelno", "pathname", "filename", "lineno", "funcName", "created", "msecs", "relativeCreated",
-                            "thread", "threadName", "process", "processName", "args", "msg", "exc_info", "exc_text",
-                            "stack_info"]
+    ignore_builtin_attrs = ["levelno", "pathname", "filename", "lineno", "funcName", "created", "msecs",
+                            "relativeCreated", "thread", "threadName", "process", "processName", "args", "msg",
+                            "exc_info", "exc_text", "stack_info"]
 
     def __init__(self, *args, **kwargs):
         """
@@ -94,13 +94,15 @@ class DictFormatter(logging.Formatter):
                     msg_proplist.append((attr_name, record_dict[attr_name]))
             return OrderedDict(msg_proplist)
 
+
 class JsonFormatter(DictFormatter):
     def formatException(self, exc_info):
         """
         Format an exception so that it prints on a single line.
         """
+
         result = super(JsonFormatter, self).formatException(exc_info)
-        return repr(result) # or format into one line however you want to
+        return repr(result)  # or format into one line however you want to
 
     def format(self, record):
         s = super(JsonFormatter, self).format(record)

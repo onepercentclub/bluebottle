@@ -341,7 +341,8 @@ class TaskStatusLog(models.Model):
         fields = {
             'id': 'id',
             'project_id': 'task.project.id',
-            'user_id': 'task.author.id'
+            'user_id': 'task.author.id',
+            'task_id': 'task.id'
         }
 
 
@@ -366,7 +367,8 @@ class TaskMemberStatusLog(models.Model):
         fields = {
             'id': 'id',
             'project_id': 'task_member.project.id',
-            'user_id': 'task_member.member.id'
+            'user_id': 'task_member.member.id',
+            'task_id': 'task_member.task.id'
         }
 
 

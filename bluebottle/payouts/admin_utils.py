@@ -1,6 +1,7 @@
 import urllib
 
 from django.core.urlresolvers import reverse
+from django.utils.html import format_html
 
 
 def link_to(value, url_name, view_args=(), view_kwargs={}, query={},
@@ -58,10 +59,10 @@ def link_to(value, url_name, view_args=(), view_kwargs={}, query={},
             new_value = (new_value[:truncate] + '...') if len(
                 new_value) > truncate else new_value
 
-        return u'<a href="{0}">{1}</a>'.format(url, new_value)
-
-    # Decorate function
-    prop.allow_tags = True
+        return format_html(
+            u'<a href="{}">{}</a>',
+            url, new_value
+        )
 
     if not short_description:
         # No short_description set, use property name

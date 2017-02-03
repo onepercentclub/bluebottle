@@ -1,6 +1,7 @@
 from django.contrib import admin
-from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
+from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 
 from daterange_filter.filter import DateRangeFilter
 
@@ -141,9 +142,10 @@ class TaskAdminInline(admin.TabularInline):
         url = reverse('admin:{0}_{1}_change'.format(
             object._meta.app_label, object._meta.model_name),
             args=[object.id])
-        return "<a href='{0}'>{1}</a>".format(str(url), obj.title.encode("utf8"))
-
-    task_admin_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url), obj.title.encode("utf8")
+        )
 
 
 class TaskMemberAdmin(admin.ModelAdmin):

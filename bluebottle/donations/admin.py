@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.admin.filters import SimpleListFilter
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.donations.models import Donation
@@ -147,34 +148,39 @@ class DonationAdmin(admin.ModelAdmin):
         return order_payment.payment.method_name
 
     related_payment_method.short_description = 'Payment method'
-    related_payment_method.allow_tags = True
 
     def order_link(self, obj):
         object = obj.order
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
                                                     object._meta.model_name),
                       args=[object.id])
-        return "<a href='{0}'>Order: {1}</a>".format(str(url), obj.id)
-
-    order_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>Order: {}</a>",
+            str(url),
+            obj.id
+        )
 
     def user_link(self, obj):
         user = obj.order.user
         url = reverse('admin:{0}_{1}_change'.format(user._meta.app_label,
                                                     user._meta.model_name),
                       args=[user.id])
-        return "<a href='{0}'>{1}</a>".format(str(url), user)
-
-    user_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url),
+            user
+        )
 
     def project_link(self, obj):
         project = obj.project
         url = reverse('admin:{0}_{1}_change'.format(project._meta.app_label,
                                                     project._meta.model_name),
                       args=[project.id])
-        return "<a href='{0}'>{1}</a>".format(str(url), project)
-
-    project_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url),
+            project
+        )
 
     def fundraiser_link(self, obj):
         fundraiser = obj.fundraiser
@@ -182,9 +188,11 @@ class DonationAdmin(admin.ModelAdmin):
             'admin:{0}_{1}_change'.format(fundraiser._meta.app_label,
                                           fundraiser._meta.model_name),
             args=[fundraiser.id])
-        return "<a href='{0}'>{1}</a>".format(str(url), fundraiser)
-
-    fundraiser_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url),
+            fundraiser
+        )
 
     def order_type(self, obj):
         return obj.order.order_type
@@ -218,6 +226,9 @@ class DonationInline(admin.TabularInline):
         object = obj
         url = reverse('admin:{0}_{1}_change'.format(
             object._meta.app_label, object._meta.model_name), args=[object.id])
-        return "<a href='{0}'>Donation: {1}</a>".format(str(url), obj.id)
 
-    donation_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>Donation: {}</a>",
+            str(url),
+            obj.id
+        )

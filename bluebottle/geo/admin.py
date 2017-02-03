@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.geo.models import Location, LocationGroup, Region, SubRegion, Country
@@ -78,12 +79,12 @@ class LocationAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description', 'city')
 
     def projects(self, obj):
-        return '<a href="{}?location={}">{}</a>'.format(
+        return format_html(
+            u'<a href="{}?location={}">{}</a>',
             reverse('admin:projects_project_changelist'),
             obj.id,
             len(Project.objects.filter(location=obj))
         )
-    projects.allow_tags = True
 
     def make_action(self, group):
         name = 'select_%s' % group

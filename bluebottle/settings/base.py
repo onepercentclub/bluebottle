@@ -393,10 +393,13 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s %(levelname)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(asctime)s %(levelname)s %(name) %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '%(asctime)s %(levelname)s %(message)s'
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s'
+        },
+        'json': {
+            '()': 'bluebottle.utils.formatters.JsonFormatter'
         },
     },
     'filters': {
@@ -426,7 +429,12 @@ LOGGING = {
         'payment_logs': {
             'level': 'INFO',
             'class': 'bluebottle.payments_logger.handlers.PaymentLogHandler',
-        }
+        },
+        'json': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'json'
+        },
     },
     'loggers': {
         'null': {
@@ -439,15 +447,20 @@ LOGGING = {
             'propagate': True,
             'level': 'INFO',
         },
+        'json': {
+            'handlers': ['json'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
         'bluebottle.auth.middleware': {
             'handlers': ['console'],
             'propagate': False,
             'level': 'ERROR',
         },
-        'bluebottle.analytics.tasks': {
+        'bluebottle.analytics': {
             'handlers': ['console'],
             'propagate': False,
-            'level': 'ERROR',
+            'level': 'INFO',
         },
         'bluebottle.recurring_donations': {
             'handlers': ['console'],
@@ -486,7 +499,7 @@ DONATIONS_ENABLED = True
 # Analytics Service
 ANALYTICS_ENABLED = False
 ANALYTICS_BACKENDS = {
-    'default': {
+    'influxdb': {
         'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
         'host': 'localhost',
         'port': 8086,

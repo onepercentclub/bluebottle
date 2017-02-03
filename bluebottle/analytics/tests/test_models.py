@@ -16,7 +16,7 @@ from bluebottle.test.factory_models.wallposts import TextWallpostFactory, System
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.analytics import signals
+from bluebottle.analytics import utils
 from bluebottle.analytics.backends import InfluxExporter
 
 from .common import FakeInfluxDBClient
@@ -32,7 +32,7 @@ fake_client = FakeInfluxDBClient()
 
 
 @override_settings(ANALYTICS_ENABLED=True)
-@patch.object(signals, 'queue_analytics_record')
+@patch.object(utils, 'queue_analytics_record')
 @patch.object(InfluxExporter, 'client', fake_client)
 class TestProjectAnalytics(BluebottleTestCase):
     def setUp(self):
@@ -87,7 +87,7 @@ class TestProjectAnalytics(BluebottleTestCase):
         self.assertEqual(kwargs['tags'], self.expected_tags)
         self.assertEqual(kwargs['fields'], self.expected_fields)
 
-    @patch.object(signals, '_', fake_trans)
+    @patch.object(utils, '_', fake_trans)
     def test_tags_translated(self, queue_mock):
         ProjectFactory.create(theme=self.theme, status=self.status,
                               country=self.country)
@@ -116,7 +116,8 @@ class TestProjectAnalytics(BluebottleTestCase):
         previous_call_count = queue_mock.call_count
         Project.objects.update(status=self.status)
 
-        self.assertEqual(queue_mock.call_count, previous_call_count + len(Project.objects.all()),
+        # ProjectPhaseLog will also be created when projects are created
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Project.objects.all()) * 2,
                          'Analytics should be sent when update is called')
 
         args, kwargs = queue_mock.call_args
@@ -124,7 +125,7 @@ class TestProjectAnalytics(BluebottleTestCase):
 
 
 @override_settings(ANALYTICS_ENABLED=True)
-@patch.object(signals, 'queue_analytics_record')
+@patch.object(utils, 'queue_analytics_record')
 @patch.object(InfluxExporter, 'client', fake_client)
 class TestTaskAnalytics(BluebottleTestCase):
     def setUp(self):
@@ -165,7 +166,7 @@ class TestTaskAnalytics(BluebottleTestCase):
         self.assertEqual(previous_call_count, queue_mock.call_count,
                          'Analytics should only be sent when status changes')
 
-    @patch.object(signals, '_', fake_trans)
+    @patch.object(utils, '_', fake_trans)
     def test_theme_translated(self, queue_mock):
         theme = ProjectThemeFactory.create(name='Cleaning the beach',
                                            slug='cleaning-the-beach')
@@ -183,7 +184,8 @@ class TestTaskAnalytics(BluebottleTestCase):
         previous_call_count = queue_mock.call_count
         Task.objects.update(status='realized')
 
-        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()),
+        # TaskStatusLog will also be created when tasks are created
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()) * 2,
                          'Analytics should be sent when update is called')
 
         args, kwargs = queue_mock.call_args
@@ -191,7 +193,7 @@ class TestTaskAnalytics(BluebottleTestCase):
 
 
 @override_settings(ANALYTICS_ENABLED=True)
-@patch.object(signals, 'queue_analytics_record')
+@patch.object(utils, 'queue_analytics_record')
 @patch.object(InfluxExporter, 'client', fake_client)
 class TestTaskMemberAnalytics(BluebottleTestCase):
     def setUp(self):
@@ -247,10 +249,11 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         task_member.status = 'realized'
         task_member.save()
 
-        self.assertEqual(previous_call_count + 1, queue_mock.call_count,
+        # TaskMemberStatusLog will also be created when task status is updated
+        self.assertEqual(previous_call_count + 2, queue_mock.call_count,
                          'Analytics should be sent when task member status changes')
 
-    @patch.object(signals, '_', fake_trans)
+    @patch.object(utils, '_', fake_trans)
     def test_theme_translated(self, queue_mock):
         theme = ProjectThemeFactory.create(name='Cleaning the beach',
                                            slug='cleaning-the-beach')
@@ -268,7 +271,8 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         previous_call_count = queue_mock.call_count
         TaskMember.objects.update(status='realized')
 
-        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()),
+        # TaskMemberStatusLog will also be created when TaskMember are created
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()) * 2,
                          'Analytics should be sent when update is called')
 
         args, kwargs = queue_mock.call_args
@@ -276,14 +280,14 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
 
 
 @override_settings(ANALYTICS_ENABLED=True)
-@patch.object(signals, 'queue_analytics_record')
+@patch.object(utils, 'queue_analytics_record')
 @patch.object(InfluxExporter, 'client', fake_client)
 class TestOrderAnalytics(BluebottleTestCase):
     def setUp(self):
         super(TestOrderAnalytics, self).setUp()
         self.init_projects()
 
-        with patch('bluebottle.analytics.signals.queue_analytics_record'):
+        with patch('bluebottle.analytics.utils.queue_analytics_record'):
             self.user = BlueBottleUserFactory.create()
 
     def test_tags_generation(self, queue_mock):
@@ -339,7 +343,7 @@ class TestOrderAnalytics(BluebottleTestCase):
 
 
 @override_settings(ANALYTICS_ENABLED=True)
-@patch.object(signals, 'queue_analytics_record')
+@patch.object(utils, 'queue_analytics_record')
 @patch.object(InfluxExporter, 'client', fake_client)
 class TestVoteAnalytics(BluebottleTestCase):
     def setUp(self):
@@ -347,7 +351,7 @@ class TestVoteAnalytics(BluebottleTestCase):
         self.init_projects()
 
         self.location = LocationFactory.create()
-        with patch('bluebottle.analytics.signals.queue_analytics_record'):
+        with patch('bluebottle.analytics.utils.queue_analytics_record'):
             self.user = BlueBottleUserFactory.create()
             self.project = ProjectFactory.create(location=self.location)
 
@@ -376,7 +380,7 @@ class TestVoteAnalytics(BluebottleTestCase):
 
 
 @override_settings(ANALYTICS_ENABLED=True)
-@patch.object(signals, 'queue_analytics_record')
+@patch.object(utils, 'queue_analytics_record')
 @patch.object(InfluxExporter, 'client', fake_client)
 class TestWallpostAnalytics(BluebottleTestCase):
     def setUp(self):
@@ -433,7 +437,7 @@ class TestWallpostAnalytics(BluebottleTestCase):
 
 
 @override_settings(ANALYTICS_ENABLED=True)
-@patch.object(signals, 'queue_analytics_record')
+@patch.object(utils, 'queue_analytics_record')
 @patch.object(InfluxExporter, 'client', fake_client)
 class TestMemberAnalytics(BluebottleTestCase):
     def test_tags_generation(self, queue_mock):
@@ -455,7 +459,7 @@ class TestMemberAnalytics(BluebottleTestCase):
         def do_nothing(**kwargs):
             pass
 
-        with patch('bluebottle.analytics.signals.queue_analytics_record') as mock_queue:
+        with patch('bluebottle.analytics.utils.queue_analytics_record') as mock_queue:
             mock_queue.side_effect = do_nothing
             member = BlueBottleUserFactory.create()
 

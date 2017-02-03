@@ -8,6 +8,7 @@ from polymorphic.admin import (PolymorphicParentModelAdmin,
 
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
+from bluebottle.payments_flutterwave.admin import FlutterwavePaymentAdmin
 from bluebottle.payments_interswitch.admin import InterswitchPaymentAdmin
 from bluebottle.payments_docdata.admin import (
     DocdataPaymentAdmin,
@@ -112,6 +113,7 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
             (admin.model, admin) for admin in (
                 DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin,
                 VoucherPaymentAdmin, InterswitchPaymentAdmin,
+                FlutterwavePaymentAdmin,
                 VitepayPaymentAdmin
             )
         )

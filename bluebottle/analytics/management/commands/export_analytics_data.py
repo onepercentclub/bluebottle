@@ -52,7 +52,7 @@ class Command(BaseCommand):
                 connection.set_tenant(client)
 
                 with LocalTenant(client, clear_tenant=True):
-                    logger.info('tenant:{}'.format(client.schema_name))
+                    logger.info('export tenant:{}'.format(client.schema_name))
                     models = django.apps.apps.get_models()
 
                     for model in models:

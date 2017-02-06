@@ -8,4 +8,4 @@ class FlutterwavePaymentAdmin(PolymorphicChildModelAdmin):
     base_model = Payment
     model = FlutterwavePayment
     raw_id_fields = ('order_payment', )
-    readonly_fields = ('response', )
+    readonly_fields = ('transaction_reference', 'response', 'update_response')

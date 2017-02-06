@@ -86,3 +86,16 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                 'text': response['data']['responsemessage']
             }
         }
+
+    def check_payment_status(self):
+        flw = Flutterwave(self.credentials['api_key'],
+                          self.credentials['merchant_key'],
+                          {"debug": True})
+
+        transactionRef = self.payment.transaction_reference
+        r = flw.card.verifyCharge(transactionRef=transactionRef, country='NG')
+        response = json.loads(r.text)
+        if response['data']['responsecode'] == u'00':
+            self.payment.status = 'settled'
+        self.payment.update_response = response
+        self.payment.save()

@@ -1,4 +1,5 @@
 from decimal import Decimal
+import json
 
 from django.db import models
 from django.utils.translation import ugettext as _
@@ -61,8 +62,13 @@ class FlutterwavePayment(Payment):
         null=True, blank=True,
         max_length=200)
     country = models.CharField(
-        help_text="Country code (NGN)",
-        default="NGN",
+        help_text="Country code (NG)",
+        default="NG",
+        null=True, blank=True,
+        max_length=200)
+
+    transaction_reference = models.CharField(
+        help_text="Flutterwave transaction reference",
         null=True, blank=True,
         max_length=200)
 
@@ -91,3 +97,11 @@ class FlutterwavePayment(Payment):
         if fee > 2000:
             return 2000
         return fee
+
+    def save(self, *args, **kwargs):
+        if not self.transaction_reference and self.response:
+            try:
+                self.transaction_reference = json.loads(self.response)['data']['transactionreference']
+            except KeyError:
+                pass
+        super(FlutterwavePayment, self).save(*args, **kwargs)

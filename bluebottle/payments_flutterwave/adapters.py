@@ -25,7 +25,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         elif 'bvn' in self.order_payment.integration_data:
             payment.auth_model = 'BVN'
         else:
-            payment.auth_model = 'NOAUTH'
+            payment.auth_model = 'VBVSECURECODE'
         payment.amount = str(self.order_payment.amount.amount)
         payment.currency = str(self.order_payment.amount.currency)
         payment.customer_id = str(self.order_payment.user or 1)
@@ -82,6 +82,18 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             self.payment.status = 'failed'
             self.payment.save()
             raise PaymentException('Error starting payment: {0}'.format(response['data']['responsemessage']))
+
+        if 'authurl' in response['data'] and response['data']['authurl']:
+            return {
+                'method': 'get',
+                'url': response['data']['authurl'],
+                'type': 'redirect',
+                'payload': {
+                    'method': 'flutterwave-otp',
+                    'text': response['data']['responsemessage'],
+
+                }
+            }
 
         return {
             'type': 'step2',

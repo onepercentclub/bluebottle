@@ -73,9 +73,9 @@ class FlutterwavePayment(Payment):
         max_length=200)
 
     response = models.CharField(help_text=_('Response from Flutterwave'),
-                                max_length=1000, null=True, blank=True)
+                                max_length=5000, null=True, blank=True)
     update_response = models.CharField(help_text=_('Result from Flutterware (status update)'),
-                                       max_length=1000, null=True, blank=True)
+                                       max_length=5000, null=True, blank=True)
 
     class Meta:
         ordering = ('-created', '-updated')

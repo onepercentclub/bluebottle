@@ -1,5 +1,7 @@
 # coding=utf-8
 import json
+
+from bluebottle.payments.exception import PaymentException
 from django.db import connection
 
 from flutterwave import Flutterwave
@@ -10,7 +12,6 @@ from bluebottle.utils.utils import get_current_host
 
 
 class FlutterwavePaymentAdapter(BasePaymentAdapter):
-
     MODEL_CLASSES = [FlutterwavePayment]
 
     def create_payment(self):
@@ -19,14 +20,12 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         """
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment,
                                         **self.order_payment.integration_data)
-        if getattr(self.order_payment.integration_data, 'pin', None):
+        if 'pin' in self.order_payment.integration_data:
             payment.auth_model = 'PIN'
-        elif getattr(self.order_payment.integration_data, 'bvn', None):
+        elif 'bvn' in self.order_payment.integration_data:
             payment.auth_model = 'BVN'
-        elif getattr(self.order_payment.integration_data, 'bvn', None):
-            payment.auth_model = 'NOAUTH'
         else:
-            payment.auth_model = 'RANDOM_DEBIT'
+            payment.auth_model = 'NOAUTH'
         payment.amount = str(self.order_payment.amount.amount)
         payment.currency = str(self.order_payment.amount.currency)
         payment.customer_id = str(self.order_payment.user or 1)
@@ -79,10 +78,15 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             self.payment.status = 'authorized'
             self.payment.save()
             return {'type': 'success'}
+        if response['data']['responsecode'] in [u'7', u'RR']:
+            self.payment.status = 'failed'
+            self.payment.save()
+            raise PaymentException('Error starting payment: {0}'.format(response['data']['responsemessage']))
 
         return {
             'type': 'step2',
             'payload': {
+                'method': 'flutterwave-otp',
                 'text': response['data']['responsemessage']
             }
         }
@@ -92,10 +96,27 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                           self.credentials['merchant_key'],
                           {"debug": True})
 
-        transactionRef = self.payment.transaction_reference
-        r = flw.card.verifyCharge(transactionRef=transactionRef, country='NG')
-        response = json.loads(r.text)
-        if response['data']['responsecode'] == u'00':
-            self.payment.status = 'settled'
+        transaction_reference = self.payment.transaction_reference
+        if 'otp' in self.order_payment.integration_data:
+            otp = self.order_payment.integration_data['otp']
+            data = {
+                "otp": otp,
+                "otpTransactionIdentifier": self.payment.transaction_reference,
+                "country": "NG"
+            }
+            r = flw.card.validate(data)
+            response = json.loads(r.text)
+            if response['data']['responsecode'] == u'00':
+                self.order_payment.set_authorization_action({'type': 'success'})
+                self.payment.status = 'settled'
+        else:
+            r = flw.card.verifyCharge(transactionRef=transaction_reference, country='NG')
+            response = json.loads(r.text)
+            if response['data']['responsecode'] == u'00':
+                self.payment.status = 'settled'
+            if response['data']['responsecode'] == u'7':
+                self.payment.status = 'failed'
+            if response['data']['responsemessage'] == u'Declined':
+                self.payment.status = 'failed'
         self.payment.update_response = response
         self.payment.save()

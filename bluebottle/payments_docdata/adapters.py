@@ -117,10 +117,10 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         if self.order_payment.payment_method == 'docdataDirectdebit':
             payment = DocdataDirectdebitPayment(
                 order_payment=self.order_payment,
-                **self.order_payment.integration_data)
+                **self.order_payment.card_data)
         else:
             payment = DocdataPayment(order_payment=self.order_payment,
-                                     **self.order_payment.integration_data)
+                                     **self.order_payment.card_data)
 
         payment.total_gross_amount = self.order_payment.amount.amount * 100
 

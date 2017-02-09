@@ -2,14 +2,16 @@ from collections import OrderedDict
 import logging
 from decimal import InvalidOperation
 
-from daterange_filter.filter import DateRangeFilter
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.db.models import Count, Sum
+from django.utils.html import format_html
 from django.http.response import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
 
+from daterange_filter.filter import DateRangeFilter
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -20,7 +22,6 @@ from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
-from bluebottle.utils.utils import clean_html
 
 from .forms import ProjectDocumentForm
 from .models import (ProjectBudgetLine, Project,
@@ -148,10 +149,11 @@ class ProjectDocumentInline(admin.StackedInline):
         url = obj.document_url
 
         if url is not None:
-            return "<a href='{0}'>{1}</a>".format(str(url), 'Download')
+            return format_html(
+                u"<a href='{}'>{}</a>",
+                str(url), 'Download'
+            )
         return '(None)'
-
-    download_url.allow_tags = True
 
 
 class RewardInlineAdmin(admin.TabularInline):
@@ -361,18 +363,18 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         except (AttributeError, InvalidOperation):
             return '-'
 
-    # def get_queryset(self, request):
-    #     # Optimization: Select related fields that are used in admin specific
-    #     # display fields.
-    #     queryset = super(ProjectAdmin, self).get_queryset(request)
-    #     queryset = queryset.select_related(
-    #         'owner', 'organization'
-    #     ).annotate(
-    #         admin_vote_count=Count('vote', distinct=True),
-    #         time_spent=Sum('task__members__time_spent')
-    #     )
-    #
-    #     return queryset
+    def get_queryset(self, request):
+        # Optimization: Select related fields that are used in admin specific
+        # display fields.
+        queryset = super(ProjectAdmin, self).get_queryset(request)
+        queryset = queryset.select_related(
+            'owner', 'organization'
+        ).annotate(
+            admin_vote_count=Count('vote', distinct=True),
+            time_spent=Sum('task__members__time_spent')
+        )
+
+        return queryset
 
     def num_votes(self, obj):
         self.queryset(None)
@@ -383,11 +385,12 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_title_display(self, obj):
         if len(obj.title) > 35:
-            return u'<span title="{title}">{short_title} &hellip;</span>' \
-                .format(title=clean_html(obj.title), short_title=clean_html(obj.title[:45]))
+            return format_html(
+                u'<span title="{}">{} &hellip;</span>',
+                obj.title, obj.title[:45]
+            )
         return obj.title
 
-    get_title_display.allow_tags = True
     get_title_display.admin_order_field = 'title'
     get_title_display.short_description = _('title')
 
@@ -404,10 +407,11 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         object = obj.owner
         url = reverse('admin:{0}_{1}_change'.format(
             object._meta.app_label, object._meta.model_name), args=[object.id])
-        return "<a href='{0}'>{1}</a>".format(
-            str(url), object.first_name + ' ' + object.last_name)
-
-    project_owner.allow_tags = True
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url),
+            object.first_name + ' ' + object.last_name
+        )
 
 
 admin.site.register(Project, ProjectAdmin)

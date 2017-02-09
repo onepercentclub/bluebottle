@@ -102,6 +102,6 @@ class FlutterwavePayment(Payment):
         if not self.transaction_reference and self.response:
             try:
                 self.transaction_reference = json.loads(self.response)['data']['transactionreference']
-            except KeyError:
+            except (TypeError, KeyError):
                 pass
         super(FlutterwavePayment, self).save(*args, **kwargs)

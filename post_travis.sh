@@ -8,7 +8,7 @@ if [[ $TRAVIS_BRANCH == 'master' ]]; then
     ENV='staging'
 fi
 
-if [[ $TRAVIS_BRANCH =~ ^release//* ]]; then
+if [[ $TRAVIS_BRANCH == release* ]]; then
     ENV='testing'
 fi
 

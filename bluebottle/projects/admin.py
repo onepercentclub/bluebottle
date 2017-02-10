@@ -236,10 +236,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def get_readonly_fields(self, request, obj=None):
         fields = ('vote_count',
                   'amount_donated', 'amount_needed',
-                  'popularity', 'payout_status'
+                  'popularity'
                   )
-        if obj and obj.payout_status and obj.payout_status != 'needs_approval':
-            fields += ('status', )
         return fields
 
     def get_urls(self):

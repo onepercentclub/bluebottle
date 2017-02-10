@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import admin
+from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from .models import Quote
@@ -39,8 +40,10 @@ class QuoteAdmin(admin.ModelAdmin):
                  rec[0] == status].pop()
         icon = self.STATUS_ICONS[status]
         admin = settings.STATIC_URL + 'admin/img/'
-        return u'<img src="{admin}{icon}" width="10" height="10" alt="{title}" title="{title}" />'.format(
-            admin=admin, icon=icon, title=title)
+        return format_html(
+            u'<img src="{}{}" width="10" height="10" alt="{}" title="{}" />',
+            admin, icon, title, title
+        )
 
     def save_model(self, request, obj, form, change):
         # Automatically store the user in the author field.
@@ -53,7 +56,6 @@ class QuoteAdmin(admin.ModelAdmin):
             obj.publication_date = now()
         obj.save()
 
-    status_column.allow_tags = True
     status_column.short_description = _('Status')
 
 

@@ -2,14 +2,16 @@ from collections import OrderedDict
 import logging
 from decimal import InvalidOperation
 
-from daterange_filter.filter import DateRangeFilter
 from django import forms
-from django.db.models import Count, Sum
+from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.db.models import Count, Sum
 from django.utils.html import format_html
+from django.http.response import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
 
+from daterange_filter.filter import DateRangeFilter
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -231,10 +233,36 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
+    def get_readonly_fields(self, request, obj=None):
+        fields = ('vote_count',
+                  'amount_donated', 'amount_needed',
+                  'popularity'
+                  )
+        return fields
+
+    def get_urls(self):
+        urls = super(ProjectAdmin, self).get_urls()
+        process_urls = [
+            url(r'^approve_payout/(?P<pk>\d+)/$',
+                self.approve_payout,
+                name="projects_project_approve_payout"),
+        ]
+        return process_urls + urls
+
+    def approve_payout(self, request, pk=None):
+        project = Project.objects.get(pk=pk)
+        if project.payout_status == 'needs_approval':
+            project.payout_status = 'approved'
+            project.save()
+        project_url = reverse('admin:projects_project_change', args=(project.id,))
+        response = HttpResponseRedirect(project_url)
+        return response
+
     list_filter = ('country__subregion__region',)
 
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', ProjectThemeFilter, 'project_type', ('deadline', DateRangeFilter))
+        filters = ('status', 'payout_status', 'is_campaign', ProjectThemeFilter,
+                   'project_type', ('deadline', DateRangeFilter))
 
         # Only show Location column if there are any
         if Location.objects.count():
@@ -245,7 +273,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_display(self, request):
         fields = ('get_title_display', 'get_owner_display', 'created',
-                  'status', 'is_campaign', 'deadline', 'donated_percentage')
+                  'status', 'payout_status',
+                  'deadline', 'donated_percentage')
         # Only show Location column if there are any
         if Location.objects.count():
             fields += ('location',)
@@ -257,15 +286,12 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def get_list_editable(self, request):
         return ('is_campaign',)
 
-    readonly_fields = ('vote_count', 'amount_donated',
-                       'amount_needed', 'popularity')
-
     export_fields = [
         ('title', 'title'),
         ('owner', 'owner'),
         ('owner__remote_id', 'remote id'),
         ('created', 'created'),
-        ('status', 'status'),
+        ('status', 'status', 'payout_status'),
         ('theme', 'theme'),
         ('location__group', 'region'),
         ('location', 'location'),
@@ -295,7 +321,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization',
-                                'status', 'title', 'slug', 'project_type',
+                                'status', 'payout_status',
+                                'title', 'slug', 'project_type',
                                 'is_campaign', 'celebrate_results')}),
 
         (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
@@ -328,8 +355,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return obj.vote_set.count()
 
     def donated_percentage(self, obj):
-        if not obj.amount_asked or not obj.amount_asked.amount:
-            return '-'
         try:
             percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
             return "{0} %".format(percentage)

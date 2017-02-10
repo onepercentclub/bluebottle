@@ -19,7 +19,7 @@ if [[ ($ENV && $TRAVIS_PULL_REQUEST == 'false') ]]; then
     do
         curl -H "Content-Type: application/json" \
              -X POST \
-             -d "{\"color\": \"green\", \"message_format\": \"html\", \"message\": \"$m\" }" \
+             -d "{\"color\": \"purple\", \"message_format\": \"html\", \"message\": \"$m\" }" \
              https://api.hipchat.com/v2/room/$GROUPNAME/notification?auth_token=$APIKEY
     done
 fi

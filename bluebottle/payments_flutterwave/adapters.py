@@ -14,16 +14,18 @@ from bluebottle.utils.utils import get_current_host
 class FlutterwavePaymentAdapter(BasePaymentAdapter):
     MODEL_CLASSES = [FlutterwavePayment]
 
+    card_data = {}
+
     def create_payment(self):
         """
         Create a new payment
         """
+        self.card_data = self.order_payment.card_data
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment,
-                                        **self.order_payment.integration_data)
-        if 'pin' in self.order_payment.integration_data:
+                                        card_number="**** **** **** " + self.card_data['card_number'][-4:]
+                                        )
+        if 'pin' in self.card_data:
             payment.auth_model = 'PIN'
-        elif 'bvn' in self.order_payment.integration_data:
-            payment.auth_model = 'BVN'
         else:
             payment.auth_model = 'VBVSECURECODE'
         payment.amount = str(self.order_payment.amount.amount)
@@ -51,29 +53,38 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         """
 
         flw = Flutterwave(self.credentials['api_key'],
-                          self.credentials['merchant_key'],
-                          {"debug": True})
+                          self.credentials['merchant_key'], {'debug': True})
 
+        card_data = self.card_data
+        pin = ''
+        cvv = ''
+        if 'pin' in card_data:
+            pin = card_data['pin']
+        if 'cvv' in card_data:
+            cvv = card_data['cvv']
         data = {
             "amount": self.payment.amount,
             "currency": self.payment.currency,
             "authModel": self.payment.auth_model,
-            "cardNumber": self.payment.card_number,
-            "cvv": self.payment.cvv,
-            "expiryMonth": self.payment.expiry_month,
-            "expiryYear": self.payment.expiry_year,
-            "bvn": self.payment.bvn or '',
-            "pin": self.payment.pin or '',
+            "cardNumber": card_data['card_number'],
+            "cvv": cvv,
+            "expiryMonth": card_data['expiry_month'],
+            "expiryYear": card_data['expiry_year'],
+            "pin": pin,
             "customerID": self.payment.customer_id,
             "narration": self.payment.narration,
             "responseUrl": self.payment.response_url,
             "country": self.payment.country
         }
 
+        print json.dumps(data)
+
         r = flw.card.charge(data)
         response = json.loads(r.text)
         self.payment.response = "{}".format(r.text)
         self.payment.save()
+        if response['status'] == u'error':
+            raise PaymentException('Flutterwave error: {0}'.format(response['data']))
         if response['data']['responsecode'] == u'00':
             self.payment.status = 'authorized'
             self.payment.save()
@@ -82,7 +93,6 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             self.payment.status = 'failed'
             self.payment.save()
             raise PaymentException('Error starting payment: {0}'.format(response['data']['responsemessage']))
-
         if 'authurl' in response['data'] and response['data']['authurl']:
             return {
                 'method': 'get',
@@ -105,12 +115,12 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
 
     def check_payment_status(self):
         flw = Flutterwave(self.credentials['api_key'],
-                          self.credentials['merchant_key'],
-                          {"debug": True})
+                          self.credentials['merchant_key'])
 
         transaction_reference = self.payment.transaction_reference
-        if 'otp' in self.order_payment.integration_data:
-            otp = self.order_payment.integration_data['otp']
+        card_data = self.order_payment.card_data
+        if 'otp' in card_data:
+            otp = card_data['otp']
             data = {
                 "otp": otp,
                 "otpTransactionIdentifier": self.payment.transaction_reference,

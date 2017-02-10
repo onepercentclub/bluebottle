@@ -6,6 +6,7 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.bb_accounts.models import UserAddress
@@ -186,10 +187,11 @@ class MemberAdmin(UserAdmin):
     ordering = ('-date_joined', 'email',)
 
     def login_as_user(self, obj):
-        return "<a href='/login/user/{0}'>{1}</a>".format(obj.id,
-                                                          'Login as user')
-
-    login_as_user.allow_tags = True
+        return format_html(
+            u"<a href='/login/user/{}'>{}</a>",
+            obj.id,
+            'Login as user'
+        )
 
     def change_view(self, request, *args, **kwargs):
         # for superuser
@@ -227,10 +229,10 @@ class MemberAdmin(UserAdmin):
         return HttpResponseRedirect(url)
 
     def login_as_link(self, obj):
-        return "<a target='_blank' href='{0}members/member/login-as/{1}/'>{2}</a>".format(
-            reverse('admin:index'), obj.pk, 'Login as user')
-
-    login_as_link.allow_tags = True
+        return format_html(
+            u"<a target='_blank' href='{}members/member/login-as/{}/'>{}</a>",
+            reverse('admin:index'), obj.pk, 'Login as user'
+        )
 
 
 admin.site.register(Member, MemberAdmin)

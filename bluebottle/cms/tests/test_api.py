@@ -1,6 +1,8 @@
 from datetime import timedelta
 from decimal import Decimal
 
+import mock
+
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now
@@ -24,6 +26,7 @@ from bluebottle.test.factory_models.cms import (
     ProjectsFactory,
 )
 from bluebottle.test.utils import BluebottleTestCase
+from sorl_watermarker.engines.pil_engine import Engine
 
 
 class ResultPageTestCase(BluebottleTestCase):
@@ -40,13 +43,17 @@ class ResultPageTestCase(BluebottleTestCase):
         self.url = reverse('result-page-detail', kwargs={'pk': self.page.id})
 
     def test_results_header(self):
+        def watermark(self, image, *args, **kwargs):
+            return image
 
-        response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        # Image should come in 4 sizes
-        self.assertEqual(len(response.data['image']), 4)
-        self.assertEqual(response.data['title'], self.page.title)
-        self.assertEqual(response.data['description'], self.page.description)
+        with mock.patch.object(Engine, 'watermark', side_effect=watermark) as watermark_mock:
+            response = self.client.get(self.url)
+            self.assertEquals(response.status_code, status.HTTP_200_OK)
+            # Image should come in 4 sizes
+            self.assertEqual(len(response.data['image']), 4)
+            self.assertEqual(response.data['title'], self.page.title)
+            self.assertEqual(response.data['description'], self.page.description)
+            self.assertEqual(watermark_mock.call_args[0][1]['watermark'], 'test/logo-overlay.png')
 
     def test_results_stats(self):
         self.stats = StatsFactory()

@@ -29,6 +29,7 @@ dependency_links = [
 install_requires = [
     'Babel==2.3.4',
     'Django==1.10.2',
+    'Flutterwave==1.0.7',
     'Pillow==3.2.0',
     'South==1.0.2',
     'Sphinx==1.4.1',

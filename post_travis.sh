@@ -1,10 +1,10 @@
 #!/bin/bash
 
-if [[ $TRAVIS_BRANCH == 'develop' ]]; then
+if [[ $TRAVIS_BRANCH == develop ]]; then
     ENV='development'
 fi
 
-if [[ $TRAVIS_BRANCH == 'master' ]]; then
+if [[ $TRAVIS_BRANCH == master ]]; then
     ENV='staging'
 fi
 

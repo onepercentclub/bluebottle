@@ -17,7 +17,11 @@ class PayoutDonationSerializer(serializers.ModelSerializer):
     payment_method = serializers.SerializerMethodField(source='order.order_payment.payment_method')
 
     def get_payment_method(self, instance):
-        return re.sub('([A-Z]+)', r'-\1', instance.order.order_payment.payment_method).lower()
+        if instance.order.order_type == 'recurring':
+            return 'docdata-directdebit'
+        if instance.order.order_payment:
+            return re.sub('([A-Z]+)', r'-\1', instance.order.order_payment.payment_method).lower()
+        return '-unknown-'
 
     class Meta:
         model = Donation

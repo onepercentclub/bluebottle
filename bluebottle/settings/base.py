@@ -432,9 +432,16 @@ LOGGING = {
             'class': 'bluebottle.payments_logger.handlers.PaymentLogHandler',
         },
         'json': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'json'
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api.log'),
+            'formatter': 'simple',
+            'when': 'midnight',
         },
     },
     'loggers': {
@@ -459,8 +466,8 @@ LOGGING = {
             'level': 'ERROR',
         },
         'bluebottle.analytics': {
-            'handlers': ['console'],
-            'propagate': False,
+            'handlers': ['file', 'console'],
+            'propagate': True,
             'level': 'INFO',
         },
         'bluebottle.recurring_donations': {
@@ -470,18 +477,18 @@ LOGGING = {
         },
         'bluebottle.salesforce': {
             'handlers': ['mail_admins'],
-            'level': 'ERROR',
             'propagate': True,
+            'level': 'ERROR',
         },
         'payments.payment': {
             'handlers': ['mail_admins', 'payment_logs', 'sentry'],
-            'level': 'INFO',
             'propagate': True,
+            'level': 'INFO',
         },
         'django.request': {
             'handlers': ['mail_admins'],
-            'level': 'ERROR',
             'propagate': True,
+            'level': 'ERROR',
         },
     }
 }

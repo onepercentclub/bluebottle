@@ -1,14 +1,16 @@
 # coding=utf-8
 import json
 
-from bluebottle.payments.exception import PaymentException
 from django.db import connection
 
 from flutterwave import Flutterwave
 
+from bluebottle.clients import properties
 from bluebottle.payments.adapters import BasePaymentAdapter
-from .models import FlutterwavePayment
+from bluebottle.payments.exception import PaymentException
 from bluebottle.utils.utils import get_current_host
+
+from .models import FlutterwavePayment
 
 
 class FlutterwavePaymentAdapter(BasePaymentAdapter):
@@ -51,9 +53,17 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         """
         Handle payment
         """
+        options = {'debug': True}
+
+        if properties.live_payments_enabled:
+            options = {
+                'debug': False,
+                'env': 'production'
+            }
 
         flw = Flutterwave(self.credentials['api_key'],
-                          self.credentials['merchant_key'], {'debug': True})
+                          self.credentials['merchant_key'],
+                          options)
 
         card_data = self.card_data
         pin = ''
@@ -114,8 +124,18 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         }
 
     def check_payment_status(self):
+
+        options = {'debug': True}
+
+        if properties.live_payments_enabled:
+            options = {
+                'debug': False,
+                'env': 'production'
+            }
+
         flw = Flutterwave(self.credentials['api_key'],
-                          self.credentials['merchant_key'])
+                          self.credentials['merchant_key'],
+                          options)
 
         transaction_reference = self.payment.transaction_reference
         card_data = self.order_payment.card_data

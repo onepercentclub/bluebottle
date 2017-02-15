@@ -55,7 +55,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         """
         options = {'debug': True}
 
-        if properties.live_payments_enabled:
+        if properties.LIVE_PAYMENTS_ENABLED:
             options = {
                 'debug': False,
                 'env': 'production'
@@ -127,7 +127,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
 
         options = {'debug': True}
 
-        if properties.live_payments_enabled:
+        if properties.LIVE_PAYMENTS_ENABLED:
             options = {
                 'debug': False,
                 'env': 'production'

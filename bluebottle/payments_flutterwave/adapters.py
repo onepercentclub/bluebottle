@@ -15,6 +15,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
     MODEL_CLASSES = [FlutterwavePayment]
 
     card_data = {}
+    live = False
 
     def create_payment(self):
         """
@@ -53,7 +54,8 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         """
 
         flw = Flutterwave(self.credentials['api_key'],
-                          self.credentials['merchant_key'], {'debug': True})
+                          self.credentials['merchant_key'],
+                          {'debug': self.debug})
 
         card_data = self.card_data
         pin = ''
@@ -115,7 +117,8 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
 
     def check_payment_status(self):
         flw = Flutterwave(self.credentials['api_key'],
-                          self.credentials['merchant_key'])
+                          self.credentials['merchant_key'],
+                          {'debug': self.debug})
 
         transaction_reference = self.payment.transaction_reference
         card_data = self.order_payment.card_data

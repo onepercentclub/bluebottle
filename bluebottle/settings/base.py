@@ -447,6 +447,11 @@ LOGGING = {
             'propagate': False,
             'level': 'ERROR',
         },
+        'suds.client': {
+            'handlers': ['console'],
+            'propagate': False,
+            'level': 'INFO'
+        },
         'bluebottle.analytics.tasks': {
             'handlers': ['console'],
             'propagate': False,

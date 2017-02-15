@@ -1,5 +1,8 @@
 import hashlib
 
+from django.utils import timezone
+
+import ipgetter
 from suds.client import Client
 from suds.plugin import MessagePlugin
 
@@ -7,9 +10,8 @@ from suds.plugin import MessagePlugin
 class NameSpacePlugin(MessagePlugin):
 
     def sending(self, context):
-        context.envelope = context.envelope.replace('ns0:', '')
         print context.envelope
-        return context.envelope
+        return context
 
 
 class TelesomClient(object):
@@ -24,27 +26,30 @@ class TelesomClient(object):
         Initialize the client.
         """
         self.client = Client(api_url + '?wsdl', plugins=[NameSpacePlugin()])
-        # self.client = Client(api_url + '?wsdl')
         self.merchant_id = merchant_id
         self.merchant_key = merchant_key
 
-    def create(self, account=None, amount=0, description=''):
+    def create(self, subscriber=None, amount=0, description=''):
         """
         Create the payment in Telesom.
         """
-        payment = self.client.factory.create('PaymentRequest')
-        payment.pMsisdn = account
-        payment.pAmount = amount
-        payment.Category = description
-        payment.MerchantID = self.merchant_id
-        ip = '213.127.165.114'
-        id = 'ne-1'
-        date = '13/02/2017'
-        # subscriber + amount + account + description + Password + IPAddress + UniqueKey + date
-        hashkey = hashlib.md5("{0}{1}{2}{3}{4}{5}{6}{7}".format(
-            account, amount, self.merchant_id, description, self.merchant_key, ip, id, date
-        ))
-        payment.hashkey = hashkey.hexdigest()
-
-        reply = self.client.service.PaymentRequest(payment)
+        ip = ipgetter.myip()
+        date = timezone.now().strftime('%d/%m/%Y')
+        # username = 'shadir'
+        password = 'ieu45fi33%334'
+        key = '334fr43453423d'
+        merchant = '400032'
+        # key = subscriber + amount + account + description + Password + IPAddress + UniqueKey + date
+        key = hashlib.md5("{0}{1}{2}{3}{4}{5}{6}{7}".format(
+            subscriber, amount, merchant, description, password, ip, key, date
+        )).hexdigest().upper()
+        print subscriber, amount, merchant, description, password, ip, key, date
+        reply = self.client.service.PaymentRequest(
+            pMsisdn=subscriber,
+            pAmount=amount,
+            Category=description,
+            MerchantID=self.merchant_id,
+            hashkey=key
+        )
+        print reply
         return reply

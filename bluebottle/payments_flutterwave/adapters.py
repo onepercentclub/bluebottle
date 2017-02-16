@@ -23,6 +23,9 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         Create a new payment
         """
         self.card_data = self.order_payment.card_data
+        if not {'card_number', 'expiry_month', 'expiry_year', 'cvv'}.issubset(self.card_data):
+            raise PaymentException('Card number, expiry month/year and cvv is required')
+
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment,
                                         card_number="**** **** **** " + self.card_data['card_number'][-4:]
                                         )
@@ -87,10 +90,11 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             "country": self.payment.country
         }
 
-        print json.dumps(data)
-
         r = flw.card.charge(data)
+        if r.status_code == 500:
+            raise PaymentException('Flutterwave could not confirm your card details, please try again.')
         response = json.loads(r.text)
+
         self.payment.response = "{}".format(r.text)
         self.payment.save()
         if response['status'] == u'error':

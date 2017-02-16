@@ -76,7 +76,8 @@ class PaymentFlutterwaveApiTests(BluebottleTestCase):
                                       status=campaign)
 
     @patch('flutterwave.card.Card.charge',
-           return_value=type('obj', (object,), {'text': json.dumps(success_response)}))
+           return_value=type('obj', (object,), {'status_code': 200,
+                                                'text': json.dumps(success_response)}))
     @patch('bluebottle.payments_flutterwave.adapters.get_current_host',
            return_value='https://bluebottle.ocean')
     def test_flutterwave_donation_api(self, current_host, charge):
@@ -136,9 +137,11 @@ class PaymentFlutterwaveApiTests(BluebottleTestCase):
         self.assertEqual(response.data['authorization_action']['type'], 'success')
 
     @patch('flutterwave.card.Card.charge',
-           return_value=type('obj', (object,), {'text': json.dumps(otp_required_response)}))
+           return_value=type('obj', (object,), {'status_code': 200,
+                                                'text': json.dumps(otp_required_response)}))
     @patch('flutterwave.card.Card.validate',
-           return_value=type('obj', (object,), {'text': json.dumps(success_response)}))
+           return_value=type('obj', (object,), {'status_code': 200,
+                                                'text': json.dumps(success_response)}))
     @patch('bluebottle.payments_flutterwave.adapters.get_current_host',
            return_value='https://bluebottle.ocean')
     def test_flutterwave_otp_donation_api(self, get_current_host, charge, validate):

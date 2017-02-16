@@ -104,8 +104,6 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             self.payment.save()
             return {'type': 'success'}
         if response['data']['responsecode'] in [u'7', u'RR']:
-            self.payment.status = 'failed'
-            self.payment.save()
             raise PaymentException('Error starting payment: {0}'.format(response['data']['responsemessage']))
         if 'authurl' in response['data'] and response['data']['authurl']:
             return {

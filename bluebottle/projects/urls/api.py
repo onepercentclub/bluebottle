@@ -1,10 +1,11 @@
+from django.conf.urls import url
+
 from ..views import (
     ManageProjectBudgetLineDetail, ManageProjectBudgetLineList,
     ManageProjectDocumentList, ManageProjectDocumentDetail,
     ProjectMediaDetail, ProjectSupportDetail,
-    ProjectMediaPhotoDetail
+    ProjectMediaPhotoDetail,
 )
-from django.conf.urls import url
 
 
 urlpatterns = [

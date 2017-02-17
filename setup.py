@@ -29,6 +29,7 @@ dependency_links = [
 install_requires = [
     'Babel==2.3.4',
     'Django==1.10.2',
+    'Flutterwave==1.0.7',
     'Pillow==3.2.0',
     'South==1.0.2',
     'Sphinx==1.4.1',
@@ -116,6 +117,7 @@ tests_requires = [
     'nose==1.3.7',
     'pylint==1.5.5',
     'pyquery==1.2.13',
+    'tblib==1.3.0',
     'tdaemon==0.1.1',
     'WebTest==2.0.21'
 ]

@@ -4,11 +4,12 @@ import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q, F
 from django.db.models.aggregates import Count, Sum
-from django.db.models.signals import post_init, post_save
+from django.db.models.signals import post_init, post_save, pre_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
@@ -27,6 +28,7 @@ from bluebottle.bb_projects.models import (
 )
 from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.exchange_rates import convert
@@ -197,7 +199,8 @@ class Project(BaseProject, PreviousStatusMixin):
                                           blank=True)
     campaign_funded = models.DateTimeField(_('Campaign Funded'), null=True,
                                            blank=True)
-
+    campaign_payed_out = models.DateTimeField(_('Campaign Payed Out'), null=True,
+                                              blank=True)
     voting_deadline = models.DateTimeField(_('Voting Deadline'), null=True,
                                            blank=True)
 
@@ -211,6 +214,19 @@ class Project(BaseProject, PreviousStatusMixin):
         help_text=_('Show celebration when project is complete'),
         default=True
     )
+
+    PAYOUT_STATUS_CHOICES = (
+        (StatusDefinition.NEEDS_APPROVAL, _('Needs approval')),
+        (StatusDefinition.APPROVED, _('Approved')),
+        (StatusDefinition.CREATED, _('Created')),
+        (StatusDefinition.IN_PROGRESS, _('In progress')),
+        (StatusDefinition.PARTIAL, _('Partial')),
+        (StatusDefinition.SUCCESS, _('Success')),
+        (StatusDefinition.FAILED, _('Failed'))
+    )
+
+    payout_status = models.CharField(max_length=50, null=True, blank=True,
+                                     choices=PAYOUT_STATUS_CHOICES)
 
     objects = ProjectManager()
 
@@ -302,21 +318,6 @@ class Project(BaseProject, PreviousStatusMixin):
         if not self.currencies and self.amount_asked:
             self.currencies = [str(self.amount_asked.currency)]
 
-        # If the project status is moved to New or Needs Work, clear the
-        # date_submitted field
-        if self.status.slug in ["plan-new", "plan-needs-work"]:
-            self.date_submitted = None
-
-        # Set the submitted date
-        if self.status == ProjectPhase.objects.get(
-                slug="plan-submitted") and not self.date_submitted:
-            self.date_submitted = timezone.now()
-
-        # Set the campaign started date
-        if self.status == ProjectPhase.objects.get(
-                slug="campaign") and not self.campaign_started:
-            self.campaign_started = timezone.now()
-
         # Set a default deadline of 30 days
         if not self.deadline:
             self.deadline = timezone.now() + datetime.timedelta(days=30)
@@ -354,23 +355,13 @@ class Project(BaseProject, PreviousStatusMixin):
             elif self.amount_asked.amount > 0 \
                     and self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
+                self.payout_status = 'needs_approval'
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
+                self.payout_status = 'needs_approval'
             self.campaign_ended = self.deadline
 
-        if self.status.slug in ["done-complete", "done-incomplete", "closed"] \
-                and not self.campaign_ended:
-            self.campaign_ended = timezone.now()
-
-        previous_status = None
-        if self.pk:
-            previous_status = self.__class__.objects.get(pk=self.pk).status
         super(Project, self).save(*args, **kwargs)
-
-        # Only log project phase if the status has changed
-        if self is not None and previous_status != self.status:
-            ProjectPhaseLog.objects.create(
-                project=self, status=self.status)
 
     def update_status_after_donation(self, save=True):
         if not self.campaign_funded and not self.campaign_ended and \
@@ -416,6 +407,21 @@ class Project(BaseProject, PreviousStatusMixin):
         amounts = [convert(amount, self.amount_asked.currency) for amount in amounts]
 
         return sum(amounts) or Money(0, self.amount_asked.currency)
+
+    @property
+    def donations(self):
+        success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+        return self.donation_set.filter(order__status__in=success)
+
+    @property
+    def totals_donated(self):
+        confirmed = [StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+        donations = self.donation_set.filter(order__status__in=confirmed)
+        totals = [
+            Money(data['amount__sum'], data['amount_currency']) for data in
+            donations.values('amount_currency').annotate(Sum('amount')).order_by()
+        ]
+        return totals
 
     @property
     def is_realised(self):
@@ -646,10 +652,12 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.is_funding:
             if self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
+                self.payout_status = 'needs_approval'
             elif self.amount_donated.amount <= 20 or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
+                self.payout_status = 'needs_approval'
         else:
             if self.task_set.filter(
                     status__in=[Task.TaskStatuses.in_progress,
@@ -706,6 +714,14 @@ def project_post_init(sender, instance, **kwargs):
 @receiver(post_save, sender=Project,
           dispatch_uid="bluebottle.projects.Project.post_save")
 def project_post_save(sender, instance, **kwargs):
+
+    if instance.payout_status == 'approved':
+        adapter = DoradoPayoutAdapter(instance)
+        try:
+            adapter.trigger_payout()
+        except ImproperlyConfigured:
+            pass
+
     try:
         init_status, current_status = None, None
 
@@ -739,3 +755,32 @@ def project_submitted_update_suggestion(sender, instance, **kwargs):
         if suggestion and suggestion.status == 'submitted':
             suggestion.status = 'in_progress'
             suggestion.save()
+
+
+@receiver(post_save, sender=Project)
+def create_phaselog(sender, instance, created, **kwargs):
+    # Only log project phase if the status has changed
+    if instance._original_status != instance.status or created:
+        ProjectPhaseLog.objects.create(
+            project=instance, status=instance.status
+        )
+
+
+@receiver(pre_save, sender=Project, dispatch_uid="updating_suggestion")
+def set_dates(sender, instance, **kwargs):
+    # If the project status is moved to New or Needs Work, clear the
+    # date_submitted field
+    if instance.status.slug in ["plan-new", "plan-needs-work"]:
+        instance.date_submitted = None
+
+    # Set the submitted date
+    if instance.status.slug == 'plan-submitted' and not instance.date_submitted:
+        instance.date_submitted = timezone.now()
+
+    # Set the campaign started date
+    if instance.status.slug == 'campaign' and not instance.campaign_started:
+        instance.campaign_started = timezone.now()
+
+    if instance.status.slug in ["done-complete", "done-incomplete", "closed"] \
+            and not instance.campaign_ended:
+        instance.campaign_ended = timezone.now()

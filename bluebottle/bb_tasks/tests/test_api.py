@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 
 from bluebottle.projects.models import Project, ProjectPhase
-from bluebottle.tasks.models import Task
+from bluebottle.tasks.models import Task, Skill
 from bluebottle.test.utils import BluebottleTestCase
 from django.utils import timezone
 
@@ -551,19 +551,16 @@ class SkillListApiTests(BluebottleTestCase):
 
     def setUp(self):
         super(SkillListApiTests, self).setUp()
-
-        self.skill1 = SkillFactory.create()
-        self.skill2 = SkillFactory.create()
-        self.skill3 = SkillFactory.create()
-        self.skill4 = SkillFactory.create(disabled=True)
+        # Disable 3 skills
+        Skill.objects.filter(id__in=[4, 5, 6]).update(disabled=True)
+        self.skill_count = Skill.objects.count()
 
         self.skills_url = '/api/bb_tasks/skills/'
 
     def test_get_list(self):
         """
-        Test that the list of tasks contains all the not disabled tasks.
+        Test that the list of skills contains all but disabled skills.
         """
         response = self.client.get(self.skills_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK,
-                         response.data)
-        self.assertEquals(len(response.data), 3)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), self.skill_count - 3)

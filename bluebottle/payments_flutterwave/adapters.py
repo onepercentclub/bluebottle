@@ -75,6 +75,10 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             pin = card_data['pin']
         if 'cvv' in card_data:
             cvv = card_data['cvv']
+
+        if not {'card_number', 'expiry_month', 'expiry_year', 'cvv'}.issubset(self.card_data):
+            raise PaymentException('Card number, expiry month/year and cvv is required')
+
         data = {
             "amount": self.payment.amount,
             "currency": self.payment.currency,

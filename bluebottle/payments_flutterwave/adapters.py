@@ -44,7 +44,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         payment.site_name = str(tenant.domain_url)
         try:
             payment.cust_id = self.order_payment.user.id
-            payment.cust_name = str(self.order_payment.user.full_name)
+            payment.cust_name = unicode(self.order_payment.user.full_name)
         except AttributeError:
             # Anonymous order
             pass

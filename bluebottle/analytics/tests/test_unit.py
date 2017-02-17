@@ -48,7 +48,7 @@ class TestAnalyticsQueue(SimpleTestCase):
 @override_settings(ANALYTICS_BACKENDS={
     'file': {
         'handler_class': 'bluebottle.analytics.backends.FileExporter',
-        'base_dir': os.path.join(settings.PROJECT_ROOT, 'analytics'),
+        'base_dir': os.path.join(settings.PROJECT_ROOT, 'logs', 'analytics'),
         'measurement': 'saas',
     }
 })
@@ -65,7 +65,7 @@ class TestFileAnalyticsQueue(SimpleTestCase):
             'amount': 100
         }
 
-        base_dir = os.path.join(settings.PROJECT_ROOT, 'analytics')
+        base_dir = os.path.join(settings.PROJECT_ROOT, 'logs', 'analytics')
         self.log_dir = os.path.join(base_dir, self.tags['tenant'])
 
     @patch.object(FileExporter, 'process')

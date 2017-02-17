@@ -52,6 +52,7 @@ def update_exchange_rates():
             for project in Project.objects.filter(status__slug='campaign'):
                 project.update_amounts()
 
+
 @shared_task
 def update_project_status_daily_stats():
     """ Calculates the no. of projects per status for a tenant

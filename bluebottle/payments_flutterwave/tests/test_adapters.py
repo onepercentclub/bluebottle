@@ -9,7 +9,6 @@ from django.test.utils import override_settings
 from bluebottle.payments_flutterwave.adapters import FlutterwavePaymentAdapter
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.utils import BluebottleTestCase

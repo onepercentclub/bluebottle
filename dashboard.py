@@ -1,10 +1,8 @@
 from moneyed import Money
-from datetime import timedelta
 from datetime import datetime
 
 from django.db.models.aggregates import Sum
-from django.db.models import F, Count
-from django.utils.timezone import now
+from django.db.models import Count
 
 from django.core.urlresolvers import reverse_lazy
 
@@ -21,7 +19,6 @@ from bluebottle.bb_tasks.dashboard import RecentTasks
 
 from bluebottle.clients import properties
 from bluebottle.suggestions.models import Suggestion
-from bluebottle.members.models import Member
 from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
 from bluebottle.utils.exchange_rates import convert

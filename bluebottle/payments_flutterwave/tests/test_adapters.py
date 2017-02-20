@@ -7,6 +7,7 @@ from mock import patch
 from django.test.utils import override_settings
 
 from bluebottle.payments_flutterwave.adapters import FlutterwavePaymentAdapter
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
@@ -102,9 +103,11 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         """
         self.init_projects()
         order = OrderFactory.create()
+        user = BlueBottleUserFactory(first_name=u'T\xc3\xabst user')
         DonationFactory.create(amount=Money(20000, NGN), order=order)
         order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
                                                    order=order,
+                                                   user=user,
                                                    integration_data=integration_data)
         adapter = FlutterwavePaymentAdapter(order_payment)
         authorization_action = adapter.get_authorization_action()

@@ -21,8 +21,8 @@ CELERYBEAT_SCHEDULE = {
         'task': 'bluebottle.projects.tasks.update_exchange_rates',
         'schedule': crontab(minute=1, hour=3),
     },
-    'update_project_status_daily_stats': {
-        'task': 'bluebottle.projects.tasks.update_project_status_daily_stats',
+    'update_project_status_stats': {
+        'task': 'bluebottle.projects.tasks.update_project_status_stats',
         'schedule': crontab(hour=0, minute=0, day_of_week='monday'),
     },
     'sync_surveys': {

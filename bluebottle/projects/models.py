@@ -293,7 +293,7 @@ class Project(BaseProject, PreviousStatusMixin):
                 self.objects.filter(pk=project.pk).update(popularity=popularity)
 
     @classmethod
-    def update_status_daily_stats(cls, tenant):
+    def update_status_stats(cls, tenant):
         logger.info('Updating Project Status Stats: {}'.format(tenant.name))
         timestamp = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         for status in ProjectPhase.objects.all():

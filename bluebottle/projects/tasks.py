@@ -54,10 +54,10 @@ def update_exchange_rates():
 
 
 @shared_task
-def update_project_status_daily_stats():
+def update_project_status_stats():
     """ Calculates the no. of projects per status for a tenant
     """
     for tenant in Client.objects.all():
         connection.set_tenant(tenant)
         with LocalTenant(tenant, clear_tenant=True):
-            Project.update_status_daily_stats(tenant=tenant)
+            Project.update_status_stats(tenant=tenant)

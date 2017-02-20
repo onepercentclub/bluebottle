@@ -514,6 +514,7 @@ ANALYTICS_BACKENDS = {
         'measurement': 'saas',
     }
 }
+ANALYTICS_FRONTEND = 'https://analytics.onepercentclub.com'
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'

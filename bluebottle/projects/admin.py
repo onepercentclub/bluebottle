@@ -261,7 +261,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     list_filter = ('country__subregion__region',)
 
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', ProjectThemeFilter,
+        filters = ('status', 'payout_status', 'is_campaign', ProjectThemeFilter,
                    'project_type', ('deadline', DateRangeFilter))
 
         # Only show Location column if there are any
@@ -273,7 +273,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_display(self, request):
         fields = ('get_title_display', 'get_owner_display', 'created',
-                  'status', 'deadline', 'donated_percentage')
+                  'status', 'payout_status',
+                  'deadline', 'donated_percentage')
         # Only show Location column if there are any
         if Location.objects.count():
             fields += ('location',)
@@ -290,7 +291,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('owner', 'owner'),
         ('owner__remote_id', 'remote id'),
         ('created', 'created'),
-        ('status', 'status'),
+        ('status', 'status', 'payout_status'),
         ('theme', 'theme'),
         ('location__group', 'region'),
         ('location', 'location'),
@@ -320,7 +321,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     fieldsets = (
         (_('Main'), {'fields': ('owner', 'organization',
-                                'status', 'title', 'slug', 'project_type',
+                                'status', 'payout_status',
+                                'title', 'slug', 'project_type',
                                 'is_campaign', 'celebrate_results')}),
 
         (_('Story'), {'fields': ('pitch', 'story', 'reach')}),

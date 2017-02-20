@@ -83,6 +83,7 @@ class EndedProjects(DashboardModule):
 
 class Analytics(LinkList):
     title = _('Analytics')
+
     def __init__(self, title=None, **kwargs):
         self.children = ({'title': _('Analytics'),
                           'url': getattr(settings, 'ANALYTICS_FRONTEND', ''),

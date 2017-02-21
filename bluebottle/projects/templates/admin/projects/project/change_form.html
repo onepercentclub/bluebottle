@@ -3,7 +3,7 @@
 
 {% block object-tools-items %}
     <li>
-        {% if original.payout_status == 'needs_approval' %}
+        {% if perms.projects.approve_payout and original.payout_status == 'needs_approval' %}
             <a href="{% url 'admin:projects_project_approve_payout' object_id %}" style="background-color: darkgreen">
                 {% trans  "Approve payout" %}
             </a>

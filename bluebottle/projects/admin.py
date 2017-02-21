@@ -234,10 +234,10 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                ProjectPhaseLogInline)
 
     def get_readonly_fields(self, request, obj=None):
-        fields = ('vote_count',
+        fields = ['vote_count',
                   'amount_donated', 'amount_needed',
-                  'popularity'
-                  )
+                  'popularity', 'payout_status']
+
         return fields
 
     def get_urls(self):
@@ -251,7 +251,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def approve_payout(self, request, pk=None):
         project = Project.objects.get(pk=pk)
-        if project.payout_status == 'needs_approval':
+        if request.user.has_perm('projects.approve_payout') and project.payout_status == 'needs_approval':
             project.payout_status = 'approved'
             project.save()
         project_url = reverse('admin:projects_project_change', args=(project.id,))
@@ -261,20 +261,26 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     list_filter = ('country__subregion__region',)
 
     def get_list_filter(self, request):
-        filters = ('status', 'payout_status', 'is_campaign', ProjectThemeFilter,
-                   'project_type', ('deadline', DateRangeFilter))
+        filters = ['status', 'is_campaign', ProjectThemeFilter,
+                   'project_type', ('deadline', DateRangeFilter)]
+
+        if request.user.has_perm('projects.approve_payout'):
+            filters.insert(1, 'payout_status')
 
         # Only show Location column if there are any
         if Location.objects.count():
-            filters += (LocationGroupFilter, LocationFilter)
+            filters += [LocationGroupFilter, LocationFilter]
         else:
-            filters += ('country__subregion__region', ('country', admin.RelatedOnlyFieldListFilter),)
+            filters += ['country__subregion__region', ('country', admin.RelatedOnlyFieldListFilter), ]
         return filters
 
     def get_list_display(self, request):
-        fields = ('get_title_display', 'get_owner_display', 'created',
-                  'status', 'payout_status',
-                  'deadline', 'donated_percentage')
+        fields = ['get_title_display', 'get_owner_display', 'created',
+                  'status', 'deadline', 'donated_percentage']
+
+        if request.user.has_perm('projects.approve_payout'):
+            fields.insert(4, 'payout_status')
+
         # Only show Location column if there are any
         if Location.objects.count():
             fields += ('location',)
@@ -319,37 +325,42 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         actions = super(ProjectAdmin, self).get_actions(request)
         return OrderedDict(reversed(actions.items()))
 
-    fieldsets = (
-        (_('Main'), {'fields': ('owner', 'organization',
-                                'status', 'payout_status',
-                                'title', 'slug', 'project_type',
-                                'is_campaign', 'celebrate_results')}),
+    def get_fieldsets(self, request, obj=None):
+        main = {'fields': ['owner', 'organization',
+                           'status', 'title', 'slug', 'project_type',
+                           'is_campaign', 'celebrate_results']}
 
-        (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
+        if request.user.has_perm('projects.approve_payout'):
+            main['fields'].insert(3, 'payout_status')
 
-        (_('Details'), {'fields': ('language', 'theme', 'categories', 'image',
-                                   'video_url', 'country',
-                                   'latitude', 'longitude',
-                                   'location', 'place')}),
+        return (
+            (_('Main'), main),
 
-        (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
-                                'amount_donated', 'amount_needed',
-                                'currencies',
-                                'popularity', 'vote_count')}),
+            (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
 
-        (_('Dates'), {'fields': ('voting_deadline', 'deadline',
-                                 'date_submitted', 'campaign_started',
-                                 'campaign_ended', 'campaign_funded')}),
+            (_('Details'), {'fields': ('language', 'theme', 'categories', 'image',
+                                       'video_url', 'country',
+                                       'latitude', 'longitude',
+                                       'location', 'place')}),
 
-        (_('Bank details'), {'fields': ('account_holder_name',
-                                        'account_holder_address',
-                                        'account_holder_postal_code',
-                                        'account_holder_city',
-                                        'account_holder_country',
-                                        'account_number',
-                                        'account_bic',
-                                        'account_bank_country')})
-    )
+            (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
+                                    'amount_donated', 'amount_needed',
+                                    'currencies',
+                                    'popularity', 'vote_count')}),
+
+            (_('Dates'), {'fields': ('voting_deadline', 'deadline',
+                                     'date_submitted', 'campaign_started',
+                                     'campaign_ended', 'campaign_funded')}),
+
+            (_('Bank details'), {'fields': ('account_holder_name',
+                                            'account_holder_address',
+                                            'account_holder_postal_code',
+                                            'account_holder_city',
+                                            'account_holder_country',
+                                            'account_number',
+                                            'account_bic',
+                                            'account_bank_country')})
+        )
 
     def vote_count(self, obj):
         return obj.vote_set.count()

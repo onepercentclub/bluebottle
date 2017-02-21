@@ -594,6 +594,7 @@ class Project(BaseProject, PreviousStatusMixin):
         return tweet
 
     class Meta(BaseProject.Meta):
+        permissions = (('approve_payout', 'Can approve payouts for projects'), )
         ordering = ['title']
 
     class Analytics:

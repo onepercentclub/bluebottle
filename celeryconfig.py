@@ -23,7 +23,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'update_project_status_stats': {
         'task': 'bluebottle.projects.tasks.update_project_status_stats',
-        'schedule': crontab(hour=0, minute=0, day_of_week='monday'),
+        'schedule': crontab(hour=0, minute=7),
     },
     'sync_surveys': {
         'task': 'bluebottle.surveys.tasks.sync_surveys',

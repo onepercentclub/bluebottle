@@ -271,7 +271,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         if Location.objects.count():
             filters += [LocationGroupFilter, LocationFilter]
         else:
-            filters += ['country__subregion__region', ('country', admin.RelatedOnlyFieldListFilter),]
+            filters += ['country__subregion__region', ('country', admin.RelatedOnlyFieldListFilter), ]
         return filters
 
     def get_list_display(self, request):

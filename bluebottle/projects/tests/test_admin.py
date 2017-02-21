@@ -80,7 +80,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
         project = ProjectFactory.create(payout_status='needs_approval')
 
-        response = self.project_admin.approve_payout(request, project.id)
+        self.project_admin.approve_payout(request, project.id)
         self.assertEqual(
             Project.objects.get(id=project.id).payout_status, 'approved'
         )
@@ -91,7 +91,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
         project = ProjectFactory.create(payout_status='needs_approval')
 
-        response = self.project_admin.approve_payout(request, project.id)
+        self.project_admin.approve_payout(request, project.id)
         self.assertEqual(
             Project.objects.get(id=project.id).payout_status, 'needs_approval'
         )
@@ -102,10 +102,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
         project = ProjectFactory.create(payout_status='done')
 
-        response = self.project_admin.approve_payout(request, project.id)
+        self.project_admin.approve_payout(request, project.id)
         self.assertEqual(
             Project.objects.get(id=project.id).payout_status, 'done'
         )
-
-
-

@@ -79,8 +79,6 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             "country": self.payment.country
         }
 
-        print json.dumps(data)
-
         r = flw.card.charge(data)
         response = json.loads(r.text)
         self.payment.response = "{}".format(r.text)

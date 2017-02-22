@@ -1,5 +1,4 @@
 from decimal import Decimal
-import json
 
 from django.db import models
 from django.utils.translation import ugettext as _
@@ -15,47 +14,37 @@ class TelesomPayment(Payment):
         max_length=200)
     currency = models.CharField(
         help_text="Transaction currency",
-        default="NGN",
+        default="USD",
         null=True, blank=True,
         max_length=200)
-    subscriber = models.CharField(
-        help_text="Telesom valid mobile number of format 63XXXXXXX",
+    mobile = models.CharField(
+        help_text="Mobile Number",
         null=True, blank=True,
         max_length=200)
-    description = models.TextField(
-        help_text="description about this transaction"
-                  "",
+    transaction_reference = models.CharField(
+        help_text="Transaction reference for tracking transaction",
+        null=True, blank=True,
+        max_length=100)
+    description = models.CharField(
+        help_text="Description",
         null=True, blank=True,
         max_length=200)
 
     response = models.TextField(help_text=_('Response from Telesom'), null=True, blank=True)
-    update_response = models.TextField(help_text=_('Response from Telesom (status update)'), null=True, blank=True)
+    update_response = models.TextField(help_text=_('Result from Telesom (status update)'), null=True, blank=True)
 
     class Meta:
         ordering = ('-created', '-updated')
+        verbose_name = "Telesom/Zaad Payment"
+        verbose_name_plural = "Telesom/Zaad Payments"
 
     def get_method_name(self):
-        """
-        Return the payment method name.
-        """
-        return 'zaad'
+        """ Return the payment method name."""
+        return 'telesom'
 
     def get_fee(self):
         """
-        a fee of 1.5% of the value of the transaction subject to a cap
-        of N2,000 is charged. (i.e. for transactions below N133,333, a
-        fee of 1.5% applies), and N2,000 flat fee (for transactions above N133,333).
+        Not sure about the fee yet.
         """
-        fee = round(self.order_payment.amount * Decimal(0.015), 2)
-        fee += 50
-        if fee > 2000:
-            return 2000
+        fee = round(self.order_payment.amount * Decimal(0.05), 2)
         return fee
-
-    def save(self, *args, **kwargs):
-        if not self.transaction_reference and self.response:
-            try:
-                self.transaction_reference = json.loads(self.response)['data']['transactionreference']
-            except (TypeError, KeyError):
-                pass
-        super(TelesomPayment, self).save(*args, **kwargs)

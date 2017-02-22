@@ -130,7 +130,7 @@ class Statistics(object):
         """ Add all donation amounts for all donations ever """
         donations = Donation.objects.filter(
             self.date_filter('order__confirmed'),
-            order__status__in=['pending', 'success']
+            order__status__in=['pending', 'success', 'pledged']
         )
         totals = donations.values('amount_currency').annotate(total=Sum('amount'))
         amounts = [Money(total['total'], total['amount_currency']) for total in totals]
@@ -167,6 +167,60 @@ class Statistics(object):
             return sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
         else:
             return Money(0, properties.DEFAULT_CURRENCY)
+
+    @property
+    @memoize(timeout=300)
+    def projects_complete(self):
+        return len(Project.objects.filter(
+            self.date_filter('campaign_ended'),
+            status__slug='done-complete'
+        ))
+
+    @property
+    @memoize(timeout=300)
+    def task_members(self):
+        return len(TaskMember.objects.filter(
+            self.date_filter('task__deadline'),
+            status='realized'
+        ))
+
+    @property
+    @memoize(timeout=300)
+    def participants(self):
+        project_owner_ids = Project.objects.filter(
+            self.date_filter('created'),
+            status__slug__in=(
+                'voting', 'voting-done', 'to-be-continued', 'campaign', 'done-complete', 'done-incomplete'
+            )
+        ).order_by(
+            'owner__id'
+        ).distinct('owner').values_list('owner_id', flat=True)
+
+        task_member_ids = TaskMember.objects.filter(
+            self.date_filter('task__deadline'),
+            status='realized'
+        ).order_by('member__id').distinct(
+            'member'
+        ).values_list('member_id', flat=True)
+
+        return len(set(task_member_ids) | set(project_owner_ids))
+
+    @property
+    @memoize(timeout=300)
+    def pledged_total(self):
+        """ Add all donation amounts for all donations ever """
+        donations = Donation.objects.filter(
+            self.date_filter('order__confirmed'),
+            order__status='pledged'
+        )
+        totals = donations.values('amount_currency').annotate(total=Sum('amount'))
+        amounts = [Money(total['total'], total['amount_currency']) for total in totals]
+        if totals:
+            donated = sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
+        else:
+            donated = Money(0, properties.DEFAULT_CURRENCY)
+
+        return donated
 
     def __repr__(self):
         start = self.start.strftime('%s') if self.start else 'none'

@@ -29,7 +29,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment,
                                         card_number="**** **** **** " + self.card_data['card_number'][-4:]
                                         )
-        if 'pin' in self.card_data:
+        if 'pin' in self.card_data and self.card_data['pin']:
             payment.auth_model = 'PIN'
         else:
             payment.auth_model = 'VBVSECURECODE'

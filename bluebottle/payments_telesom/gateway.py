@@ -21,11 +21,11 @@ class TelesomClient(object):
     This is a wrapper around the SOAP service methods,
     providing more Python-friendly wrappers.
     """
-    def __init__(self, merchant_id, merchant_key, username, password, api_url):
+    def __init__(self, merchant_id, merchant_key, username, password, api_domain):
         """
         Initialize the client.
         """
-        self.client = Client(api_url + '?WSDL', plugins=[NameSpacePlugin()])
+        self.client = Client(api_domain + '?WSDL', plugins=[NameSpacePlugin()])
         self.merchant_id = merchant_id
         self.merchant_key = merchant_key
         self.username = username
@@ -64,4 +64,5 @@ class TelesomClient(object):
         if res[0] == '2001':
             return res[2]
         else:
-            raise PaymentException(res[1])
+            raise PaymentException(hash)
+            raise PaymentException("Could not start Telesom/Zaad transaction.")

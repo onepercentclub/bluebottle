@@ -17,13 +17,14 @@ class TelesomPaymentAdapter(BasePaymentAdapter):
         """
         Create a new payment
         """
+        self.card_data = self.order_payment.card_data
 
         if 'mobile' not in self.card_data:
             raise PaymentException('Mobile is required')
 
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment,
                                         mobile=self.card_data['mobile'])
-        payment.amount = str(self.order_payment.amount.amount)
+        payment.amount = int(self.order_payment.amount.amount)
         if str(self.order_payment.amount.currency) != 'USD':
             raise PaymentException('You should pick USD as a currency to use Telesom/Zaad')
 
@@ -35,7 +36,7 @@ class TelesomPaymentAdapter(BasePaymentAdapter):
             merchant_key=self.credentials['merchant_key'],
             username=self.credentials['username'],
             password=self.credentials['password'],
-            api_url=self.credentials['api_url']
+            api_domain=self.credentials['api_domain']
         )
         tenant = connection.tenant
         payment.description = '{0}-{1}'.format(tenant.name, self.order_payment.id)

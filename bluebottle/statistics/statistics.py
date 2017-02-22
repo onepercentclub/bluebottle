@@ -26,8 +26,8 @@ class Statistics(object):
     @memoize(timeout=300)
     def people_involved(self):
         """
-        Count all people who donated, fundraised, campaigned or was
-        a task member. People should be unique across all categories.
+        The (unique) total number of people that donated, fundraised, campaigned, or was a
+        task owner or  member.
         """
         donor_ids = Order.objects.filter(
             self.date_filter('confirmed'),
@@ -102,14 +102,13 @@ class Statistics(object):
     @property
     @memoize(timeout=300)
     def tasks_realized(self):
-        """ Count all realized tasks (status == realized) """
+        """ Total number of realized tasks """
         return len(Task.objects.filter(self.date_filter('deadline'), status='realized'))
 
     @property
     @memoize(timeout=300)
     def projects_realized(self):
-        """ Count all realized projects (status in done-complete
-            or done-incomplete) """
+        """ Total number of realized (complete and incomplete) projects """
         return len(Project.objects.filter(
             self.date_filter('campaign_ended'), status__slug__in=('done-complete', 'done-incomplete',)
         ))
@@ -117,9 +116,7 @@ class Statistics(object):
     @property
     @memoize(timeout=300)
     def projects_online(self):
-        """
-        Count all running projects (status == campaign)
-        """
+        """ Total number of projects that have been in campaign mode"""
         return len(
             Project.objects.filter(self.date_filter('campaign_started'), status__slug__in=('voting', 'campaign'))
         )
@@ -127,7 +124,7 @@ class Statistics(object):
     @property
     @memoize(timeout=300)
     def donated_total(self):
-        """ Add all donation amounts for all donations ever """
+        """ Total amount donated to all projects"""
         donations = Donation.objects.filter(
             self.date_filter('order__confirmed'),
             order__status__in=['pending', 'success', 'pledged']
@@ -149,6 +146,7 @@ class Statistics(object):
     @property
     @memoize(timeout=300)
     def time_spent(self):
+        """ Total amount of time spent on realized tasks """
         return TaskMember.objects.filter(
             self.date_filter('task__deadline'),
             status='realized'
@@ -157,6 +155,7 @@ class Statistics(object):
     @property
     @memoize(timeout=300)
     def amount_matched(self):
+        """ Total amount matched on realized (done and incomplete) projects """
         totals = Project.objects.filter(
             self.date_filter('campaign_ended'), status__slug__in=('done-complete', 'done-incomplete',)
         ).values('amount_extra_currency').annotate(total=Sum('amount_extra'))
@@ -171,6 +170,7 @@ class Statistics(object):
     @property
     @memoize(timeout=300)
     def projects_complete(self):
+        """ Total number of projects with the status complete """
         return len(Project.objects.filter(
             self.date_filter('campaign_ended'),
             status__slug='done-complete'
@@ -179,6 +179,7 @@ class Statistics(object):
     @property
     @memoize(timeout=300)
     def task_members(self):
+        """ Total number of realized task members """
         return len(TaskMember.objects.filter(
             self.date_filter('task__deadline'),
             status='realized'
@@ -187,6 +188,7 @@ class Statistics(object):
     @property
     @memoize(timeout=300)
     def participants(self):
+        """ Total numbers of participants (members that started a project, or where a realized task member) """
         project_owner_ids = Project.objects.filter(
             self.date_filter('created'),
             status__slug__in=(
@@ -208,7 +210,7 @@ class Statistics(object):
     @property
     @memoize(timeout=300)
     def pledged_total(self):
-        """ Add all donation amounts for all donations ever """
+        """ Total amount of pledged donations """
         donations = Donation.objects.filter(
             self.date_filter('order__confirmed'),
             order__status='pledged'

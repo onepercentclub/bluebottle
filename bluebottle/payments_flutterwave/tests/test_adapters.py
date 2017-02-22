@@ -1,10 +1,13 @@
 import json
+
+from bluebottle.payments.exception import PaymentException
 from moneyed.classes import Money, NGN
 from mock import patch
 
 from django.test.utils import override_settings
 
 from bluebottle.payments_flutterwave.adapters import FlutterwavePaymentAdapter
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
@@ -62,7 +65,8 @@ integration_data = {
 @override_settings(**flutterwave_settings)
 class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
     @patch('flutterwave.card.Card.charge',
-           return_value=type('obj', (object,), {'text': json.dumps(success_response)}))
+           return_value=type('obj', (object,), {'status_code': 200,
+                                                'text': json.dumps(success_response)}))
     @patch('bluebottle.payments_flutterwave.adapters.get_current_host',
            return_value='https://bluebottle.ocean')
     def test_create_success_payment(self, charge, get_current_host):
@@ -86,9 +90,11 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         })
 
     @patch('flutterwave.card.Card.charge',
-           return_value=type('obj', (object,), {'text': json.dumps(otp_required_response)}))
+           return_value=type('obj', (object,), {'status_code': 200,
+                                                'text': json.dumps(otp_required_response)}))
     @patch('flutterwave.card.Card.validate',
-           return_value=type('obj', (object,), {'text': json.dumps(success_response)}))
+           return_value=type('obj', (object,), {'status_code': 200,
+                                                'text': json.dumps(success_response)}))
     @patch('bluebottle.payments_flutterwave.adapters.get_current_host',
            return_value='https://bluebottle.ocean')
     def test_create_otp_payment(self, charge, validate, get_current_host):
@@ -97,9 +103,11 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         """
         self.init_projects()
         order = OrderFactory.create()
+        user = BlueBottleUserFactory(first_name=u'T\xc3\xabst user')
         DonationFactory.create(amount=Money(20000, NGN), order=order)
         order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
                                                    order=order,
+                                                   user=user,
                                                    integration_data=integration_data)
         adapter = FlutterwavePaymentAdapter(order_payment)
         authorization_action = adapter.get_authorization_action()
@@ -121,3 +129,40 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         adapter = FlutterwavePaymentAdapter(order_payment)
         adapter.check_payment_status()
         self.assertEqual(adapter.payment.status, 'settled')
+
+    @patch('flutterwave.card.Card.charge',
+           return_value=type('obj', (object,), {'status_code': 500,
+                                                'text': 'This is crazy business man'}))
+    @patch('bluebottle.payments_flutterwave.adapters.get_current_host',
+           return_value='https://bluebottle.ocean')
+    def test_create_payment_incomplete(self, charge, get_current_host):
+        """
+        Test Flutterwave payment throws an error when incomplete data is sent
+        """
+        self.init_projects()
+        order = OrderFactory.create()
+        DonationFactory.create(amount=Money(150000, NGN), order=order)
+        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
+                                                   order=order,
+                                                   integration_data={'card_number': '123blabla'})
+        with self.assertRaises(PaymentException):
+            FlutterwavePaymentAdapter(order_payment)
+
+    @patch('flutterwave.card.Card.charge',
+           return_value=type('obj', (object,), {'status_code': 500,
+                                                'text': 'This is crazy business man'}))
+    @patch('bluebottle.payments_flutterwave.adapters.get_current_host',
+           return_value='https://bluebottle.ocean')
+    def test_create_payment_flutter_fail(self, charge, get_current_host):
+        """
+        Make sure we catch errors from Flutterwave
+        """
+        self.init_projects()
+        order = OrderFactory.create()
+        DonationFactory.create(amount=Money(150000, NGN), order=order)
+        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
+                                                   order=order,
+                                                   integration_data=integration_data)
+        adapter = FlutterwavePaymentAdapter(order_payment)
+        with self.assertRaises(PaymentException):
+            adapter.get_authorization_action()

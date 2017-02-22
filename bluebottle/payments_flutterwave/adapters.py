@@ -1,14 +1,16 @@
 # coding=utf-8
 import json
 
-from bluebottle.payments.exception import PaymentException
 from django.db import connection
 
 from flutterwave import Flutterwave
 
+from bluebottle.clients import properties
 from bluebottle.payments.adapters import BasePaymentAdapter
-from .models import FlutterwavePayment
+from bluebottle.payments.exception import PaymentException
 from bluebottle.utils.utils import get_current_host
+
+from .models import FlutterwavePayment
 
 
 class FlutterwavePaymentAdapter(BasePaymentAdapter):
@@ -22,6 +24,9 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         Create a new payment
         """
         self.card_data = self.order_payment.card_data
+        if not {'card_number', 'expiry_month', 'expiry_year', 'cvv'}.issubset(self.card_data):
+            raise PaymentException('Card number, expiry month/year and cvv is required')
+
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment,
                                         card_number="**** **** **** " + self.card_data['card_number'][-4:]
                                         )
@@ -40,7 +45,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         payment.site_name = str(tenant.domain_url)
         try:
             payment.cust_id = self.order_payment.user.id
-            payment.cust_name = str(self.order_payment.user.full_name)
+            payment.cust_name = unicode(self.order_payment.user.full_name)
         except AttributeError:
             # Anonymous order
             pass
@@ -52,10 +57,17 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         """
         Handle payment
         """
+        options = {'debug': True}
+
+        if properties.LIVE_PAYMENTS_ENABLED:
+            options = {
+                'debug': False,
+                'env': 'production'
+            }
 
         flw = Flutterwave(self.credentials['api_key'],
                           self.credentials['merchant_key'],
-                          {'debug': self.debug})
+                          options)
 
         card_data = self.card_data
         pin = ''
@@ -64,6 +76,10 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             pin = card_data['pin']
         if 'cvv' in card_data:
             cvv = card_data['cvv']
+
+        if not {'card_number', 'expiry_month', 'expiry_year', 'cvv'}.issubset(self.card_data):
+            raise PaymentException('Card number, expiry month/year and cvv is required')
+
         data = {
             "amount": self.payment.amount,
             "currency": self.payment.currency,
@@ -80,7 +96,10 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         }
 
         r = flw.card.charge(data)
+        if r.status_code == 500:
+            raise PaymentException('Flutterwave could not confirm your card details, please try again.')
         response = json.loads(r.text)
+
         self.payment.response = "{}".format(r.text)
         self.payment.save()
         if response['status'] == u'error':
@@ -90,8 +109,6 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             self.payment.save()
             return {'type': 'success'}
         if response['data']['responsecode'] in [u'7', u'RR']:
-            self.payment.status = 'failed'
-            self.payment.save()
             raise PaymentException('Error starting payment: {0}'.format(response['data']['responsemessage']))
         if 'authurl' in response['data'] and response['data']['authurl']:
             return {
@@ -114,9 +131,18 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         }
 
     def check_payment_status(self):
+
+        options = {'debug': True}
+
+        if properties.LIVE_PAYMENTS_ENABLED:
+            options = {
+                'debug': False,
+                'env': 'production'
+            }
+
         flw = Flutterwave(self.credentials['api_key'],
                           self.credentials['merchant_key'],
-                          {'debug': self.debug})
+                          options)
 
         transaction_reference = self.payment.transaction_reference
         card_data = self.order_payment.card_data

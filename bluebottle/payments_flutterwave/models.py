@@ -27,28 +27,6 @@ class FlutterwavePayment(Payment):
         help_text="Card Number",
         null=True, blank=True,
         max_length=200)
-    cvv = models.CharField(
-        help_text="Card CVV",
-        null=True, blank=True,
-        max_length=200)
-    expiry_month = models.CharField(
-        help_text="Card expiry month",
-        null=True, blank=True,
-        max_length=4)
-    expiry_year = models.CharField(
-        help_text="Card expiry year",
-        null=True, blank=True,
-        max_length=4)
-    bvn = models.CharField(
-        help_text="User BVN, required only for authModel=BVN",
-        default='',
-        null=True, blank=True,
-        max_length=200)
-    pin = models.CharField(
-        help_text="User PIN, required only for authModel=PIN",
-        default='',
-        null=True, blank=True,
-        max_length=200)
     customer_id = models.CharField(
         help_text="Customer ID for tracking charge transaction",
         null=True, blank=True,

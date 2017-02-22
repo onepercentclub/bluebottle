@@ -2,24 +2,23 @@ from datetime import timedelta, time
 
 from django.db.models import Count
 from django.utils import timezone
-
 from moneyed.classes import Money
 
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
-from bluebottle.utils.utils import StatusDefinition
-from bluebottle.projects.models import Project, ProjectPhaseLog
-from bluebottle.projects.admin import mark_as_plan_new
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
-from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.votes import VoteFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.suggestions import SuggestionFactory
+from bluebottle.projects.admin import mark_as_plan_new
+from bluebottle.projects.models import Project, ProjectPhaseLog
 from bluebottle.suggestions.models import Suggestion
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
+from bluebottle.test.factory_models.suggestions import SuggestionFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.votes import VoteFactory
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import StatusDefinition
 
 
 class TestProjectStatusUpdate(BluebottleTestCase):

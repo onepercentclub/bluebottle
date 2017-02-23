@@ -29,7 +29,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment,
                                         card_number="**** **** **** " + self.card_data['card_number'][-4:]
                                         )
-        if 'pin' in self.card_data and self.card_data['pin']:
+        if len(self.card_data['card_number'].replace(' ', '')) == 19:
             payment.auth_model = 'PIN'
         else:
             payment.auth_model = 'VBVSECURECODE'
@@ -107,7 +107,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             self.payment.status = 'authorized'
             self.payment.save()
             return {'type': 'success'}
-        if response['data']['responsecode'] in [u'7', u'RR']:
+        if response['data']['responsecode'] in [u'7', u'RR', u'RR-RR']:
             raise PaymentException('Error starting payment: {0}'.format(response['data']['responsemessage']))
         if 'authurl' in response['data'] and response['data']['authurl']:
             return {

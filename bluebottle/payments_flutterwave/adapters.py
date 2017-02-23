@@ -64,8 +64,8 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         payment.save()
         self.payment_logger.log(payment,
                                 'info',
-                                'payment_tracer: {}, event: payment.flutterwave.create_payment.success'
-                                .format(self.payment_tracer))
+                                'payment_tracer: {}, '
+                                'event: payment.flutterwave.create_payment.success'.format(self.payment_tracer))
         return payment
 
     def get_authorization_action(self):

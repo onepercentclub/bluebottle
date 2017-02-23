@@ -1,5 +1,4 @@
 import re
-import uuid
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -16,7 +15,7 @@ class BasePaymentAdapter(object):
     MODEL_CLASSES = [Payment]
 
     def __init__(self, order_payment):
-        self.payment_tracer = str(uuid.uuid4())
+        self.payment_tracer = order_payment.id
         self.payment_logger = PaymentLogAdapter()
         self.order_payment = order_payment
         self.payment = None

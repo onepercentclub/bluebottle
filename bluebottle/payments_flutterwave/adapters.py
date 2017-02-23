@@ -228,7 +228,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                           options)
 
         transaction_reference = self.payment.transaction_reference
-        card_data = self.order_payment.card_data
+        card_data = self.order_payment.card_data or {}
         if 'otp' in card_data:
             otp = card_data['otp']
             data = {

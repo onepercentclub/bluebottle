@@ -11,7 +11,6 @@ from bluebottle.payments.exception import PaymentException
 from bluebottle.utils.utils import get_current_host
 from .models import FlutterwavePayment
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -31,13 +30,12 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                         'card_number: {}, '
                         'expiry_month: {}, '
                         'expiry_year: {}, '
-                        'cvv: {}'.format(
-                self.payment_tracer,
-                getattr(self.card_data, 'card_number', None),
-                getattr(self.card_data, 'expiry_month', None),
-                getattr(self.card_data, 'expiry_year', None),
-                getattr(self.card_data, 'cvv', None)
-            ))
+                        'cvv: {}'.format(self.payment_tracer,
+                                         getattr(self.card_data, 'card_number', None),
+                                         getattr(self.card_data, 'expiry_month', None),
+                                         getattr(self.card_data, 'expiry_year', None),
+                                         getattr(self.card_data, 'cvv', None)
+                                         ))
             raise PaymentException('Card number, expiry month/year and cvv is required')
 
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment,
@@ -64,9 +62,10 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             pass
         payment.txn_ref = '{0}-{1}'.format(tenant.name, self.order_payment.id)
         payment.save()
-        self.payment_logger.log(payment, 'info', 'payment_tracer: {}, '
-                                                 'event: payment.flutterwave.create_payment.success'.format(
-            self.payment_tracer))
+        self.payment_logger.log(payment,
+                                'info',
+                                'payment_tracer: {}, event: payment.flutterwave.create_payment.success'
+                                .format(self.payment_tracer))
         return payment
 
     def get_authorization_action(self):
@@ -99,13 +98,12 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                         'card_number: {}, '
                         'expiry_month: {}, '
                         'expiry_year: {}, '
-                        'cvv: {}'.format(
-                self.payment_tracer,
-                getattr(self.card_data, 'card_number', None),
-                getattr(self.card_data, 'expiry_month', None),
-                getattr(self.card_data, 'expiry_year', None),
-                getattr(self.card_data, 'cvv', None)
-            ))
+                        'cvv: {}'.format(self.payment_tracer,
+                                         getattr(self.card_data, 'card_number', None),
+                                         getattr(self.card_data, 'expiry_month', None),
+                                         getattr(self.card_data, 'expiry_year', None),
+                                         getattr(self.card_data, 'cvv', None)
+                                         ))
             raise PaymentException('Card number, expiry month/year and cvv is required')
 
         data = {
@@ -136,28 +134,26 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                     'customerId: {}, '
                     'narration: {}, '
                     'responseUrl: {}, '
-                    'country: {}'.format(
-            self.payment_tracer,
-            self.payment.amount,
-            self.payment.auth_model,
-            card_data['card_number'][-4:],
-            cvv,
-            card_data['expiry_month'],
-            card_data['expiry_year'],
-            pin,
-            self.payment.customer_id,
-            self.payment.narration,
-            self.payment.response_url,
-            self.payment.country)
-        )
+                    'country: {}'.format(self.payment_tracer,
+                                         self.payment.amount,
+                                         self.payment.auth_model,
+                                         card_data['card_number'][-4:],
+                                         cvv,
+                                         card_data['expiry_month'],
+                                         card_data['expiry_year'],
+                                         pin,
+                                         self.payment.customer_id,
+                                         self.payment.narration,
+                                         self.payment.response_url,
+                                         self.payment.country)
+                    )
         r = flw.card.charge(data)
         if r.status_code == 500:
             logger.warn('payment_tracer: {}, '
                         'event: payment.flutterwave.error.500, '
-                        'flutterwave_response: {}'.format(
-                self.payment_tracer,
-                r.text)
-            )
+                        'flutterwave_response: {}'.format(self.payment_tracer,
+                                                          r.text)
+                        )
             raise PaymentException('Flutterwave could not confirm your card details, please try again.')
         response = json.loads(r.text)
 
@@ -166,18 +162,16 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
 
         logger.info('payment_tracer: {}, '
                     'event: payment.flutterwave.get_authorization_action.response, '
-                    'flutterwave_response: {}'.format(
-            self.payment_tracer,
-            r.text
-        ))
+                    'flutterwave_response: {}'.format(self.payment_tracer,
+                                                      r.text
+                                                      ))
 
         if response['status'] == u'error':
             logger.warn('payment_tracer: {}, '
                         'event: payment.flutterwave.get_authorization_action.error, '
-                        'flutterwave_response: {}'.format(
-                self.payment_tracer,
-                response['data']
-            ))
+                        'flutterwave_response: {}'.format(self.payment_tracer,
+                                                          response['data']
+                                                          ))
             raise PaymentException('Flutterwave error: {0}'.format(response['data']))
 
         if response['data']['responsecode'] == u'00':
@@ -185,19 +179,17 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             self.payment.save()
             logger.info('payment_tracer: {}, '
                         'event: payment.flutterwave.get_authorization_action.authorized, '
-                        'response: {}'.format(
-                self.payment_tracer,
-                response['data']
-            ))
+                        'response: {}'.format(self.payment_tracer,
+                                              response['data']
+                                              ))
             return {'type': 'success'}
 
         if response['data']['responsecode'] in [u'7', u'RR', u'RR-RR']:
             logger.warn('payment_tracer: {}, '
                         'event: payment.flutterwave.get_authorization_action.error.start_payment '
-                        'flutterwave_response: {}'.format(
-                self.payment_tracer,
-                response['data']
-            ))
+                        'flutterwave_response: {}'.format(self.payment_tracer,
+                                                          response['data']
+                                                          ))
             raise PaymentException('Error starting payment: {0}'.format(response['data']['responsemessage']))
 
         if 'authurl' in response['data'] and response['data']['authurl']:
@@ -245,10 +237,9 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             }
             logger.info('payment_tracer: {}, '
                         'event: payment.flutterwave.payment_status.otp_validate.request, '
-                        'flutterwave_request: {}'.format(
-                self.payment_tracer,
-                data
-            ))
+                        'flutterwave_request: {}'.format(self.payment_tracer,
+                                                         data
+                                                         ))
             r = flw.card.validate(data)
             response = json.loads(r.text)
             if response['data']['responsecode'] == u'00':
@@ -267,11 +258,9 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         logger.info('payment_tracer: {}, '
                     'transaction_reference: {}, '
                     'event: payment.flutterwave.payment_status, '
-                    'flutterwave_response: {}'.format(
-            self.payment_tracer,
-            transaction_reference,
-            response['data']
-        ))
+                    'flutterwave_response: {}'.format(self.payment_tracer,
+                                                      transaction_reference,
+                                                      response['data']
+                                                      ))
         self.payment.update_response = response
         self.payment.save()
-

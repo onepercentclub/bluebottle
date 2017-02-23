@@ -136,6 +136,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                     'responseUrl: {}, '
                     'country: {}'.format(self.payment_tracer,
                                          self.payment.amount,
+                                         self.payment.currency,
                                          self.payment.auth_model,
                                          card_data['card_number'][-4:],
                                          cvv,

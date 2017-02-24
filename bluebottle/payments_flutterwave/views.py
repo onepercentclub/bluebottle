@@ -21,4 +21,3 @@ class PaymentResponseView(RedirectView):
             return "{0}/orders/{1}/success".format(get_current_host(), order_payment.order.id)
         except PaymentException:
             return "{0}/orders/{1}/failed".format(get_current_host(), order_payment.order.id)
-

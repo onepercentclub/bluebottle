@@ -131,6 +131,48 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         self.assertEqual(adapter.payment.status, 'settled')
 
     @patch('flutterwave.card.Card.charge',
+           return_value=type('obj', (object,), {'status_code': 200,
+                                                'text': json.dumps(otp_required_response)}))
+    @patch('flutterwave.card.Card.validate',
+           return_value=type('obj', (object,), {'status_code': 200,
+                                                'text': json.dumps(failure_response)}))
+    @patch('bluebottle.payments_flutterwave.adapters.get_current_host',
+           return_value='https://bluebottle.ocean')
+    def test_create_otp_payment_failure(self, charge, validate, get_current_host):
+        """
+        Test Flutterwave payment that needs a otp (one time pin)
+        """
+        self.init_projects()
+        order = OrderFactory.create()
+        user = BlueBottleUserFactory(first_name=u'T\xc3\xabst user')
+        DonationFactory.create(amount=Money(20000, NGN), order=order)
+        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
+                                                   order=order,
+                                                   user=user,
+                                                   integration_data=integration_data)
+        adapter = FlutterwavePaymentAdapter(order_payment)
+        authorization_action = adapter.get_authorization_action()
+
+        self.assertEqual(adapter.payment.amount, '20000.00')
+        self.assertEqual(adapter.payment.status, 'started')
+        self.assertEqual(adapter.payment.transaction_reference, 'FLW004')
+        self.assertEqual(authorization_action, {
+            "type": "step2",
+            "payload": {
+                "method": "flutterwave-otp",
+                "text": "Kindly enter the OTP sent to 234803***9051 and henry***********ture.com."
+            }
+        })
+
+        # Now set the otp
+        order_payment.integration_data = {'otp': '123456'}
+        order_payment.save()
+        adapter = FlutterwavePaymentAdapter(order_payment)
+        with self.assertRaises(PaymentException):
+            adapter.check_payment_status()
+            self.assertEqual(adapter.payment.status, 'failed')
+
+    @patch('flutterwave.card.Card.charge',
            return_value=type('obj', (object,), {'status_code': 500,
                                                 'text': 'This is crazy business man'}))
     @patch('bluebottle.payments_flutterwave.adapters.get_current_host',

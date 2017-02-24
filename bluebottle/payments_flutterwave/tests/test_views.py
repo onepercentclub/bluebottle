@@ -59,7 +59,6 @@ another_failure_response = {
 }
 
 
-
 @patch('bluebottle.payments_flutterwave.adapters.get_current_host',
        return_value='https://onepercentclub.com')
 @override_settings(**flutterwave_settings)

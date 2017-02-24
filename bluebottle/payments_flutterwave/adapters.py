@@ -256,9 +256,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             response = json.loads(r.text)
             if response['data']['responsecode'] in SUCCESS_RESPONSECODES:
                 self.payment.status = 'settled'
-            if response['data']['responsecode'] == u'7':
-                self.payment.status = 'failed'
-            if response['data']['responsemessage'] == u'Declined':
+            else:
                 self.payment.status = 'failed'
 
         logger.info('payment_tracer: {}, '

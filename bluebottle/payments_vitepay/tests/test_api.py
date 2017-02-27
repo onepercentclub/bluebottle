@@ -131,7 +131,7 @@ class PaymentVitepayApiTests(BluebottleTestCase):
                 ('url', u'https://vitepay.com/some-path-to-pay'),
                 ('payload', u'')
             ]),
-            'integration_data': {u'payment_method': u'orangemoney'},
+            'integration_data': {},
             'id': order_payment.id
         }
         self.assertEqual(response.data, expected)

@@ -321,6 +321,7 @@ TENANT_APPS = (
     'bluebottle.payments',
     'bluebottle.payments_docdata',
     'bluebottle.payments_interswitch',
+    'bluebottle.payments_flutterwave',
     'bluebottle.payments_vitepay',
     'bluebottle.payments_pledge',
     'bluebottle.payments_logger',
@@ -431,15 +432,20 @@ LOGGING = {
             'level': 'INFO',
             'class': 'bluebottle.payments_logger.handlers.PaymentLogHandler',
         },
-        'json': {
-            'level': 'DEBUG',
+        'default': {
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'json'
-        },
+            'formatter': 'verbose'
+        }
     },
     'loggers': {
         'null': {
             'handlers': ['null'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'bluebottle': {
+            'handlers': ['default'],
             'propagate': True,
             'level': 'INFO',
         },

@@ -130,7 +130,10 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
         projects = Project.objects.filter(
             campaign_ended__gte=self.context['start_date'],
             campaign_ended__lte=self.context['end_date'],
-            status__slug__in=['done-complete', 'done-incomplete'])
+            status__slug__in=['done-complete', 'done-incomplete']
+        ).order_by(
+            'campaign_ended'
+        )
 
         return ProjectTinyPreviewSerializer(projects, many=True).to_representation(projects)
 

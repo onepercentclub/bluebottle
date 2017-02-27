@@ -8,7 +8,7 @@ from django.conf import settings
 from django.test.utils import override_settings
 from django.test import SimpleTestCase
 
-from bluebottle.analytics import signals
+from bluebottle.analytics import signals, utils
 from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.analytics.backends import InfluxExporter, FileExporter, _convert_timestamp
 
@@ -100,7 +100,7 @@ class TestFileAnalyticsQueue(SimpleTestCase):
 @override_settings(ANALYTICS_ENABLED=True,
                    CELERY_RESULT_BACKEND='amqp')
 class TestAnalyticsSignalWithCelery(SimpleTestCase):
-    @patch.object(signals.connection, 'schema_name', 'test')
+    @patch.object(utils.connection, 'schema_name', 'test')
     def test_delay_called(self):
         tags = {
             'tenant': 'test',
@@ -118,14 +118,14 @@ class TestAnalyticsSignalWithCelery(SimpleTestCase):
 
 @override_settings(ANALYTICS_ENABLED=True)
 class TestAnalyticsPostSave(SimpleTestCase):
-    @patch.object(signals.connection, 'schema_name', 'test')
+    @patch.object(utils.connection, 'schema_name', 'test')
     def test_metric_type(self):
         tags = {
             'tenant': 'test',
             'type': 'fake_model_two'
         }
 
-        with patch('bluebottle.analytics.signals.queue_analytics_record') as mock_queue:
+        with patch('bluebottle.analytics.utils.queue_analytics_record') as mock_queue:
             mock_queue.side_effect = do_nothing
             signals.post_save_analytics(None, FakeModelTwo(), **{'created': True})
 

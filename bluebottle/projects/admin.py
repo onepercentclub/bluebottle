@@ -304,6 +304,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('time_spent', 'time spent'),
         ('amount_asked', 'amount asked'),
         ('amount_donated', 'amount donated'),
+        ('amount_extra', 'amount matched'),
     ]
 
     actions = [export_as_csv_action(fields=export_fields),

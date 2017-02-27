@@ -395,10 +395,13 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s %(levelname)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(asctime)s %(levelname)s %(name) %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '%(asctime)s %(levelname)s %(message)s'
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s'
+        },
+        'json': {
+            '()': 'bluebottle.utils.formatters.JsonFormatter'
         },
     },
     'filters': {
@@ -451,15 +454,20 @@ LOGGING = {
             'propagate': True,
             'level': 'INFO',
         },
+        'json': {
+            'handlers': ['json'],
+            'propagate': True,
+            'level': 'DEBUG',
+        },
         'bluebottle.auth.middleware': {
             'handlers': ['console'],
             'propagate': False,
             'level': 'ERROR',
         },
-        'bluebottle.analytics.tasks': {
+        'bluebottle.analytics': {
             'handlers': ['console'],
             'propagate': False,
-            'level': 'ERROR',
+            'level': 'INFO',
         },
         'bluebottle.recurring_donations': {
             'handlers': ['console'],
@@ -498,7 +506,7 @@ DONATIONS_ENABLED = True
 # Analytics Service
 ANALYTICS_ENABLED = False
 ANALYTICS_BACKENDS = {
-    'default': {
+    'influxdb': {
         'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
         'host': 'localhost',
         'port': 8086,
@@ -514,6 +522,7 @@ ANALYTICS_BACKENDS = {
         'measurement': 'saas',
     }
 }
+ANALYTICS_FRONTEND = 'https://analytics.onepercentclub.com'
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'
@@ -629,6 +638,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('funding', 'Funding'),
                 ('sourcing', 'Sourcing'),
                 ('amount_asked', 'Amount asked'),
+                ('amount_donated', 'Amount raised'),
+                ('amount_extra', 'Amount matched'),
                 ('task_count', 'Task Count'),
                 ('has_survey', 'Has Survey'),
                 ('realized_task_count', 'Realized Task Count'),

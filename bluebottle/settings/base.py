@@ -406,6 +406,9 @@ LOGGING = {
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue'
         }
     },
     'handlers': {
@@ -415,6 +418,7 @@ LOGGING = {
         },
         'console': {
             'level': 'DEBUG',
+            'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
@@ -432,56 +436,40 @@ LOGGING = {
             'class': 'bluebottle.payments_logger.handlers.PaymentLogHandler',
         },
         'json': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'json'
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api-json.log'),
+            'formatter': 'json',
+            'when': 'midnight',
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api.log'),
+            'formatter': 'simple',
+            'when': 'midnight',
         },
     },
     'loggers': {
-        'null': {
-            'handlers': ['null'],
+        'django.request': {
+            'handlers': ['mail_admins'],
             'propagate': True,
-            'level': 'INFO',
-        },
-        'console': {
-            'handlers': ['console'],
-            'propagate': True,
-            'level': 'INFO',
-        },
-        'json': {
-            'handlers': ['json'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
-        'bluebottle.auth.middleware': {
-            'handlers': ['console'],
-            'propagate': False,
             'level': 'ERROR',
         },
-        'bluebottle.analytics': {
-            'handlers': ['console'],
-            'propagate': False,
-            'level': 'INFO',
-        },
-        'bluebottle.recurring_donations': {
-            'handlers': ['console'],
+        'bluebottle': {
+            'handlers': ['console', 'file'],
             'propagate': True,
             'level': 'INFO',
         },
         'bluebottle.salesforce': {
             'handlers': ['mail_admins'],
-            'level': 'ERROR',
             'propagate': True,
+            'level': 'ERROR',
         },
         'payments.payment': {
             'handlers': ['mail_admins', 'payment_logs', 'sentry'],
+            'propagate': True,
             'level': 'INFO',
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
         },
     }
 }

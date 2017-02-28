@@ -38,7 +38,7 @@ install_requires = [
     'celery==3.1.23',
     'django-admin-sortable==2.0.21',
     'django-admin-tools==0.8.0',
-    'django-celery==3.1.17',
+    'django-celery==3.2.1',
     'django-choices==1.4.2',
     'django-cors-headers==1.1.0',
     'django-daterange-filter==1.3.0',

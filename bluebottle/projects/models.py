@@ -297,14 +297,14 @@ class Project(BaseProject, PreviousStatusMixin):
         logger.info('Updating Project Status Stats: {}'.format(tenant.name))
         timestamp = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         for status in ProjectPhase.objects.all():
-            # TODO: Should we count only where the status is active?
+            # TODO: Should we count statuses only where the project phase status is active?
             count = Project.objects.filter(status=status).count()
             logger.info('status: {}, count: {}'.format(status.name, count))
             tags = {
                 'type': 'project_status_daily',
                 'status': status.name,
                 'status_slug': status.slug,
-                'tenant': tenant.name,
+                'tenant': tenant.client_name,
             }
             fields = {
                 'total': count,

@@ -1,25 +1,25 @@
+from django.test.utils import override_settings
 from mock import patch
 from moneyed import Money
 
-from bluebottle.test.utils import BluebottleTestCase
-from django.test.utils import override_settings
-
-from bluebottle.projects.models import Project
-from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.votes import VoteFactory
-from bluebottle.test.factory_models.wallposts import TextWallpostFactory, SystemWallpostFactory, ReactionFactory
-from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
-
-from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.analytics import utils
 from bluebottle.analytics.backends import InfluxExporter
-
+from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.projects import models
+from bluebottle.projects.models import Project
+from bluebottle.tasks.models import Task, TaskMember
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory, ProjectPhaseFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.votes import VoteFactory
+from bluebottle.test.factory_models.wallposts import TextWallpostFactory, SystemWallpostFactory, ReactionFactory
+from bluebottle.test.utils import BluebottleTestCase
 from .common import FakeInfluxDBClient
+
+fake_client = FakeInfluxDBClient()
 
 
 def fake_trans(str):
@@ -27,8 +27,39 @@ def fake_trans(str):
         return 'Cleaning the park'
     return str
 
+@override_settings(ANALYTICS_ENABLED=True)
+@patch.object(models, 'queue_analytics_record')
+@patch.object(InfluxExporter, 'client', fake_client)
+class TestProjectStatusUpdateStatGeneration(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectStatusUpdateStatGeneration, self).setUp()
 
-fake_client = FakeInfluxDBClient()
+        self.tenant = self.client.tenant
+
+        self.init_projects()
+        with patch('bluebottle.analytics.utils.queue_analytics_record'):
+            self.theme = ProjectThemeFactory.create(name='Cleaning the beach', slug='cleaning-the-beach')
+            self.country = CountryFactory.create()
+            self.status = ProjectPhaseFactory.create(slug='realised')
+            self.project = ProjectFactory.create(theme=self.theme, status=self.status, country=self.country)
+            self.count = ProjectPhase.objects.all().count()
+
+    def test_status_stat_generation(self, queue_mock):
+        expected_tags = {'type': 'project_status_daily',
+                         'status': self.status.name,
+                         'status_slug': self.status.slug,
+                         'tenant': self.tenant.client_name,
+                         }
+        expected_fields = {'total': 1,}
+
+        self.project.update_status_stats(self.tenant)
+
+        for _, kwargs in queue_mock.call_args_list:
+            if kwargs['tags']['status_slug'] == 'realised':
+                self.assertEqual(kwargs['tags'], expected_tags)
+                self.assertEqual(kwargs['fields'], expected_fields)
+
+        self.assertEqual(self.count, queue_mock.call_count)
 
 
 @override_settings(ANALYTICS_ENABLED=True)

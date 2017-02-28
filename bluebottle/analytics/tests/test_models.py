@@ -27,6 +27,7 @@ def fake_trans(str):
         return 'Cleaning the park'
     return str
 
+
 @override_settings(ANALYTICS_ENABLED=True)
 @patch.object(models, 'queue_analytics_record')
 @patch.object(InfluxExporter, 'client', fake_client)
@@ -45,12 +46,13 @@ class TestProjectStatusUpdateStatGeneration(BluebottleTestCase):
             self.count = ProjectPhase.objects.all().count()
 
     def test_status_stat_generation(self, queue_mock):
-        expected_tags = {'type': 'project_status_daily',
-                         'status': self.status.name,
-                         'status_slug': self.status.slug,
-                         'tenant': self.tenant.client_name,
-                         }
-        expected_fields = {'total': 1,}
+        expected_tags = {
+            'type': 'project_status_daily',
+            'status': self.status.name,
+            'status_slug': self.status.slug,
+            'tenant': self.tenant.client_name,
+        }
+        expected_fields = {'total': 1, }
 
         self.project.update_status_stats(self.tenant)
 

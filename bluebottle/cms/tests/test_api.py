@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+import random
 
 import mock
 
@@ -16,6 +17,7 @@ from bluebottle.cms.models import (
     StatsContent, QuotesContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent)
+from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -165,7 +167,10 @@ class ResultPageTestCase(BluebottleTestCase):
     def test_results_map(self):
         done_complete = ProjectPhase.objects.get(slug='done-complete')
         for _index in range(0, 10):
-            ProjectFactory.create(campaign_ended=now(), status=done_complete)
+            ProjectFactory.create(
+                status=done_complete,
+                campaign_ended=now() - timedelta(days=random.choice(range(0, 30)))
+            )
 
         ProjectsMapContent.objects.create_for_placeholder(self.placeholder, title='Test title')
 
@@ -183,6 +188,9 @@ class ResultPageTestCase(BluebottleTestCase):
 
         for key in ('title', 'slug', 'status', 'image', 'latitude', 'longitude'):
             self.assertTrue(key in project)
+
+        dates = [Project.objects.get(pk=item['id']).campaign_ended for item in data['projects']]
+        self.assertEqual(dates, sorted(dates))
 
     def test_results_list(self):
         survey = SurveyFactory.create()

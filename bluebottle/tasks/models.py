@@ -291,8 +291,24 @@ class TaskMember(models.Model, PreviousStatusMixin):
         }
 
         def extra_fields(self, obj, created):
+            fields = {}
+
+            # Also set the hours since the task was realized if the task member
+            # status is now realized.
+            if (obj._original_status != obj.TaskMemberStatuses.realized and
+               obj.status == obj.TaskMemberStatuses.realized and
+               obj.task.status == obj.task.TaskStatuses.realized):
+                # Use the last realized start time recorded in the task status logs as the base
+                task_log = TaskStatusLog.objects.filter(task=obj.task, status=obj.task.TaskStatuses.realized).last()
+                delta = obj.updated - task_log.start
+
+                # add the hours since task realized
+                fields['realized_duration'] = int(delta.total_seconds() / 60 / 60)
+
             # Force the time_spent to an int.
-            return {'hours': int(obj.time_spent)}
+            fields['hours'] = int(obj.time_spent)
+
+            return fields
 
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)

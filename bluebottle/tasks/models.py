@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, connection
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -10,9 +10,9 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
-from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
+
 
 GROUP_PERMS = {
     'Staff': {
@@ -177,14 +177,19 @@ class Task(models.Model, PreviousStatusMixin):
 
             with TenantLanguage(self.author.primary_language):
                 subject = _("The status of your task '{0}' is set to realized").format(self.title)
+                second_subject = _("(Don't forget to) confirm the participants of your task!")
+                third_subject = _("Last chance to confirm the participants of your task")
 
-            send_mail(
-                template_name="tasks/mails/task_status_realized.mail",
-                subject=subject,
-                title=self.title,
-                to=self.author,
-                site=tenant_url(),
-                link='/go/tasks/{0}'.format(self.id)
+            # Immediately send email about realized task
+            send_task_realized_mail(self, 'task_status_realized', subject, connection.tenant)
+            #  And schedule two more mails (in  3 and 6 days)
+            send_task_realized_mail.apply_async(
+                [self, 'task_status_realized_reminder', second_subject, connection.tenant],
+                eta=now() + timedelta(days=3)
+            )
+            send_task_realized_mail.apply_async(
+                [self, 'task_status_realized_second_reminder', third_subject, connection.tenant],
+                eta=now() + timedelta(days=6)
             )
 
         if oldstate in ("in progress", "open") and newstate == "closed":

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from bluebottle.organizations.models import OrganizationMember, Organization
+from bluebottle.organizations.models import Organization
 from bluebottle.projects.models import Project
 from bluebottle.utils.admin import export_as_csv_action
 

@@ -28,6 +28,23 @@ class Organization(BaseOrganization):
     def __unicode__(self):
         return self.name
 
+    def merge(self, organizations):
+        """ Merge `organizations` into the current organization.
+        Makes sure that all foreign keys point to `this`.
+
+        Deletes all organization models in `organization` after merging.
+        """
+        for organization in organizations:
+            for member in organization.members.all():
+                member.organization = self
+                member.save()
+
+            for project in organization.projects.all():
+                project.organization = self
+                project.save()
+
+            organization.delete()
+
     class Meta:
         ordering = ['name']
         verbose_name = _("organization")

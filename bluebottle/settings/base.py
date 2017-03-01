@@ -642,6 +642,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('campaign_started', 'Campaign Started'),
                 ('campaign_ended', 'Campaign Ended'),
                 ('campaign_funded', 'Campaign Funded'),
+                ('organization__name', 'organization'),
             ),
             'resource_class': 'bluebottle.exports.resources.ProjectResource',
             'title': 'Projects',

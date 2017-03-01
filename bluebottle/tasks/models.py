@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.db import models, connection
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -12,6 +14,7 @@ from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
+from bluebottle.utils.email_backend import send_mail
 
 
 GROUP_PERMS = {
@@ -185,11 +188,11 @@ class Task(models.Model, PreviousStatusMixin):
             #  And schedule two more mails (in  3 and 6 days)
             send_task_realized_mail.apply_async(
                 [self, 'task_status_realized_reminder', second_subject, connection.tenant],
-                eta=now() + timedelta(days=3)
+                eta=timezone.now() + timedelta(days=3)
             )
             send_task_realized_mail.apply_async(
                 [self, 'task_status_realized_second_reminder', third_subject, connection.tenant],
-                eta=now() + timedelta(days=6)
+                eta=timezone.now() + timedelta(days=6)
             )
 
         if oldstate in ("in progress", "open") and newstate == "closed":
@@ -393,6 +396,6 @@ class TaskMemberStatusLog(models.Model):
         }
 
 
-from .taskmail import *  # noqa
+from .taskmail import send_task_realized_mail  # noqa
 from .taskwallmails import *  # noqa
 from .signals import *  # noqa

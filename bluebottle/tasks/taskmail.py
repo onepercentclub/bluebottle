@@ -1,4 +1,3 @@
-from datetime import timedelta
 from celery import shared_task
 
 from django.dispatch import receiver
@@ -6,7 +5,6 @@ from django.db import connection
 from django.db.models.signals import post_save, pre_delete
 from django.utils import translation
 from django.utils.translation import ugettext as _
-from django.utils.timezone import now
 from django.utils.safestring import mark_safe
 
 from tenant_extras.utils import TenantLanguage

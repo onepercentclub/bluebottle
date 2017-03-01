@@ -119,7 +119,7 @@ class BaseProject(models.Model, GetTweetMixin):
     reviewer = models.ForeignKey(
         'members.Member', verbose_name=_('reviewer'),
         help_text=_('Project Reviewer'), related_name='reviewer',
-        null=True
+        null=True, blank=True
     )
 
     organization = models.ForeignKey(

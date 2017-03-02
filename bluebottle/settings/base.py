@@ -445,6 +445,10 @@ LOGGING = {
         },
         'file': {
             'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api.log'),
+            'formatter': 'simple',
+            'when': 'midnight',
         },
         'default': {
             'level': 'INFO',

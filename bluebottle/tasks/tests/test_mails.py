@@ -107,6 +107,7 @@ class TestTaskMemberMail(TaskMailTestBase):
         self.assertTrue(survey.url(self.task) in email.body)
 
 
+@override_settings(CELERY_RESULT_BACKEND='amqp')
 class TestTaskStatusMail(TaskMailTestBase):
     def test_status_realized_mail(self):
         """
@@ -141,7 +142,7 @@ class TestTaskStatusMail(TaskMailTestBase):
             now() + timedelta(days=6) - kwargs2['eta'] < timedelta(minutes=1)
         )
 
-    def test_status_realized_mail_allready_confirmed(self):
+    def test_status_realized_mail_already_confirmed(self):
         """
         Setting status to realized should trigger no email if there is already somebody realized
         """
@@ -156,8 +157,9 @@ class TestTaskStatusMail(TaskMailTestBase):
         self.assertEquals(len(mail.outbox), 1)
         self.assertTrue('You realised a task' in mail.outbox[0].subject)
 
-        self.task.status = "realized"
-        self.task.save()
+        with patch('bluebottle.tasks.taskmail.send_task_realized_mail.apply_async'):
+            self.task.status = "realized"
+            self.task.save()
 
         self.assertEquals(len(mail.outbox), 1)
 
@@ -165,8 +167,10 @@ class TestTaskStatusMail(TaskMailTestBase):
         """
         A state change from realized to in progress should not trigger a mail
         """
-        self.task.status = "realized"
-        self.task.save()
+        with patch('bluebottle.tasks.taskmail.send_task_realized_mail.apply_async'):
+            self.task.status = "realized"
+            self.task.save()
+
         mail.outbox[:] = []
 
         self.task.status = "in progress"

@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.db import models, connection
+from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -185,15 +186,17 @@ class Task(models.Model, PreviousStatusMixin):
 
             # Immediately send email about realized task
             send_task_realized_mail(self, 'task_status_realized', subject, connection.tenant)
-            #  And schedule two more mails (in  3 and 6 days)
-            send_task_realized_mail.apply_async(
-                [self, 'task_status_realized_reminder', second_subject, connection.tenant],
-                eta=timezone.now() + timedelta(days=3)
-            )
-            send_task_realized_mail.apply_async(
-                [self, 'task_status_realized_second_reminder', third_subject, connection.tenant],
-                eta=timezone.now() + timedelta(days=6)
-            )
+
+            if getattr(settings, 'CELERY_RESULT_BACKEND', None):
+                #  And schedule two more mails (in  3 and 6 days)
+                send_task_realized_mail.apply_async(
+                    [self, 'task_status_realized_reminder', second_subject, connection.tenant],
+                    eta=timezone.now() + timedelta(days=3)
+                )
+                send_task_realized_mail.apply_async(
+                    [self, 'task_status_realized_second_reminder', third_subject, connection.tenant],
+                    eta=timezone.now() + timedelta(days=6)
+                )
 
         if oldstate in ("in progress", "open") and newstate == "closed":
             with TenantLanguage(self.author.primary_language):

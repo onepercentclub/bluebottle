@@ -126,7 +126,7 @@ class BaseProject(models.Model, GetTweetMixin):
         'organizations.Organization', verbose_name=_(
             'organization'),
         help_text=_('Project organization'),
-        related_name='organization', null=True, blank=True)
+        related_name='project', null=True, blank=True)
 
     project_type = models.CharField(_('Project type'), max_length=50,
                                     choices=Type.choices, null=True, blank=True)

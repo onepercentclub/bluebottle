@@ -321,6 +321,7 @@ TENANT_APPS = (
     'bluebottle.payments',
     'bluebottle.payments_docdata',
     'bluebottle.payments_interswitch',
+    'bluebottle.payments_flutterwave',
     'bluebottle.payments_vitepay',
     'bluebottle.payments_pledge',
     'bluebottle.payments_logger',
@@ -449,6 +450,11 @@ LOGGING = {
             'formatter': 'simple',
             'when': 'midnight',
         },
+        'default': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        }
     },
     'loggers': {
         'django.request': {
@@ -635,6 +641,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('campaign_started', 'Campaign Started'),
                 ('campaign_ended', 'Campaign Ended'),
                 ('campaign_funded', 'Campaign Funded'),
+                ('organization__name', 'organization'),
             ),
             'resource_class': 'bluebottle.exports.resources.ProjectResource',
             'title': 'Projects',

@@ -15,7 +15,16 @@ class LocationFilter(admin.SimpleListFilter):
         locations = [obj.location for obj in model_admin.model.objects.order_by(
             'location__name').distinct('location__name').exclude(
             location__isnull=True).all()]
-        return [(loc.id, loc.name) for loc in locations]
+        lookups = [(loc.id, loc.name) for loc in locations]
+
+        try:
+            lookups.insert(
+                0, (request.user.location.id, _('My location ({})').format(request.user.location))
+            )
+        except AttributeError:
+            pass
+
+        return lookups
 
     def queryset(self, request, queryset):
         if self.value():

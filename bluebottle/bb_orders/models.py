@@ -58,7 +58,8 @@ class BaseOrder(models.Model, FSMTransition):
     total = MoneyField(_("Amount"), )
 
     @transition(field=status,
-                source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED],
+                source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED,
+                        StatusDefinition.FAILED],
                 target=StatusDefinition.LOCKED)
     def locked(self):
         pass
@@ -115,14 +116,14 @@ class BaseOrder(models.Model, FSMTransition):
     def __unicode__(self):
         return "{0} : {1}".format(self.id, self.created)
 
-    @property
-    def order_payment(self):
-        return self.get_latest_order_payment()
-
     def get_latest_order_payment(self):
         if self.order_payments.count():
             return self.order_payments.order_by('-created').all()[0]
         return None
+
+    @property
+    def order_payment(self):
+        return self.get_latest_order_payment()
 
     class Meta:
         abstract = True

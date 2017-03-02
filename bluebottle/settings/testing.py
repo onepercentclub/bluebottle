@@ -85,4 +85,35 @@ RECURRING_DONATIONS_ENABLED = True
 SEND_WELCOME_MAIL = False
 SEND_MAIL = True
 
+
+PAYOUT_METHODS = [
+    {
+        'method': 'duckbank',
+        'payment_methods': [
+            'duck-directdebit',
+            'duck-creditcard',
+            'duck-ideal'
+        ],
+        'currencies': ['EUR'],
+        'account_name': "Dagobert Duck",
+        'account_bic': "DUCKNL2U",
+        'account_iban': "NL12DUCK0123456789"
+    },
+    {
+        'method': 'excel',
+        'payment_methods': [
+            'vitepay-orangemoney',
+            'interswitch-webpay',
+            'pledge-standard'
+        ],
+        'currencies': ['XOF', 'CFA', 'USD', 'EUR']
+    }
+]
+
+PAYOUT_SERVICE = {
+    'service': 'dorado',
+    'url': 'test'
+}
+
+
 TEST_RUNNER = 'bluebottle.test.test_runner.MultiTenantRunner'

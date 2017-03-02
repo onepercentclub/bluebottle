@@ -9,6 +9,7 @@ from polymorphic.admin import (PolymorphicParentModelAdmin,
 
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
+from bluebottle.payments_flutterwave.admin import FlutterwavePaymentAdmin
 from bluebottle.payments_interswitch.admin import InterswitchPaymentAdmin
 from bluebottle.payments_docdata.admin import (
     DocdataPaymentAdmin,
@@ -60,7 +61,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
                                                     object._meta.model_name),
                       args=[object.id])
-        format_html(
+        return format_html(
             u"<a href='{}'>Order: {}</a>",
             str(url), object.id
         )
@@ -70,7 +71,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
                                                     object._meta.model_name),
                       args=[object.id])
-        format_html(
+        return format_html(
             u"<a href='{}'>{}: {}</a>",
             str(url),
             object.polymorphic_ctype,
@@ -95,7 +96,7 @@ class OrderPaymentInline(admin.TabularInline):
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
                                                     object._meta.model_name),
                       args=[object.id])
-        return "<a href='{0}'>OrderPayment {1}</a>".format(str(url), obj.id)
+        return format_html("<a href='{0}'>OrderPayment {1}</a>", str(url), obj.id)
 
     def has_add_permission(self, request):
         return False
@@ -113,6 +114,7 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
             (admin.model, admin) for admin in (
                 DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin,
                 VoucherPaymentAdmin, InterswitchPaymentAdmin,
+                FlutterwavePaymentAdmin,
                 VitepayPaymentAdmin
             )
         )

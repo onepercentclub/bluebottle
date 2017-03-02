@@ -2,14 +2,16 @@ from collections import OrderedDict
 import logging
 from decimal import InvalidOperation
 
-from daterange_filter.filter import DateRangeFilter
 from django import forms
-from django.db.models import Count, Sum
+from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.db.models import Count, Sum
 from django.utils.html import format_html
+from django.http.response import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
 
+from daterange_filter.filter import DateRangeFilter
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -130,7 +132,23 @@ class ProjectThemeFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(theme__id__exact=self.value())
+            return queryset.filter(reviewer=self.value())
+        else:
+            return queryset
+
+
+class ProjectReviewerFilter(admin.SimpleListFilter):
+    title = _('Reviewer')
+    parameter_name = 'reviewer'
+
+    def lookups(self, request, model_admin):
+        return ((True, _('My projects')), )
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(
+                reviewer=request.user
+            )
         else:
             return queryset
 
@@ -201,6 +219,13 @@ class ProjectBudgetLineInline(admin.TabularInline):
     extra = 0
 
 
+class ReviewerWidget(admin.widgets.ForeignKeyRawIdWidget):
+    def url_parameters(self):
+        parameters = super(ReviewerWidget, self).url_parameters()
+        parameters['is_staff'] = True
+        return parameters
+
+
 class ProjectAdminForm(forms.ModelForm):
     class Meta:
         widgets = {
@@ -214,6 +239,11 @@ class ProjectAdminForm(forms.ModelForm):
         super(ProjectAdminForm, self).__init__(*args, **kwargs)
         self.fields['currencies'].required = False
 
+        self.fields['reviewer'].widget = ReviewerWidget(
+            rel=Project._meta.get_field('reviewer').rel,
+            admin_site=admin.sites.site
+        )
+
 
 class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     form = ProjectAdminForm
@@ -224,17 +254,43 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     search_fields = ('title', 'owner__first_name', 'owner__last_name',
                      'organization__name')
 
-    raw_id_fields = ('owner', 'organization',)
+    raw_id_fields = ('owner', 'reviewer', 'organization',)
 
     prepopulated_fields = {'slug': ('title',)}
 
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
+    def get_readonly_fields(self, request, obj=None):
+        fields = ('vote_count',
+                  'amount_donated', 'amount_needed',
+                  'popularity'
+                  )
+        return fields
+
+    def get_urls(self):
+        urls = super(ProjectAdmin, self).get_urls()
+        process_urls = [
+            url(r'^approve_payout/(?P<pk>\d+)/$',
+                self.approve_payout,
+                name="projects_project_approve_payout"),
+        ]
+        return process_urls + urls
+
+    def approve_payout(self, request, pk=None):
+        project = Project.objects.get(pk=pk)
+        if project.payout_status == 'needs_approval':
+            project.payout_status = 'approved'
+            project.save()
+        project_url = reverse('admin:projects_project_change', args=(project.id,))
+        response = HttpResponseRedirect(project_url)
+        return response
+
     list_filter = ('country__subregion__region',)
 
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', ProjectThemeFilter, 'project_type', ('deadline', DateRangeFilter))
+        filters = ('status', 'is_campaign', ProjectThemeFilter, ProjectReviewerFilter,
+                   'project_type', ('deadline', DateRangeFilter),)
 
         # Only show Location column if there are any
         if Location.objects.count():
@@ -245,7 +301,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_display(self, request):
         fields = ('get_title_display', 'get_owner_display', 'created',
-                  'status', 'is_campaign', 'deadline', 'donated_percentage')
+                  'status', 'deadline', 'donated_percentage')
         # Only show Location column if there are any
         if Location.objects.count():
             fields += ('location',)
@@ -256,9 +312,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_editable(self, request):
         return ('is_campaign',)
-
-    readonly_fields = ('vote_count', 'amount_donated',
-                       'amount_needed', 'popularity')
 
     export_fields = [
         ('title', 'title'),
@@ -279,6 +332,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('time_spent', 'time spent'),
         ('amount_asked', 'amount asked'),
         ('amount_donated', 'amount donated'),
+        ('organization__name', 'organization'),
         ('amount_extra', 'amount matched'),
     ]
 
@@ -295,7 +349,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return OrderedDict(reversed(actions.items()))
 
     fieldsets = (
-        (_('Main'), {'fields': ('owner', 'organization',
+        (_('Main'), {'fields': ('owner', 'reviewer', 'organization',
                                 'status', 'title', 'slug', 'project_type',
                                 'is_campaign', 'celebrate_results')}),
 
@@ -329,8 +383,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return obj.vote_set.count()
 
     def donated_percentage(self, obj):
-        if not obj.amount_asked or not obj.amount_asked.amount:
-            return '-'
         try:
             percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
             return "{0} %".format(percentage)

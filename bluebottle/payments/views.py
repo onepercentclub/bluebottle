@@ -46,6 +46,13 @@ class ManageOrderPaymentDetail(RetrieveUpdateAPIView):
 
     def perform_update(self, serializer):
         serializer.save(amount=serializer.validated_data['order'].total)
+        # store integration_data in non-persisted card_data field
+        serializer.instance.card_data = serializer.validated_data['integration_data']
+        service = PaymentService(serializer.instance)
+        try:
+            service.check_payment_status()
+        except PaymentException as error:
+            raise ParseError(detail=str(error))
 
 
 class ManageOrderPaymentList(ListCreateAPIView):

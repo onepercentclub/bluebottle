@@ -1,7 +1,7 @@
 from datetime import timedelta
 from mock import patch
 
-from django.db import models, connection
+from django.db import connection
 from django.core import mail
 from django.test.utils import override_settings
 from django.utils.timezone import now

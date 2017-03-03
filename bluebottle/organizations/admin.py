@@ -6,6 +6,7 @@ from django.utils.translation import ugettext as _
 
 from bluebottle.organizations.models import Organization
 from bluebottle.projects.models import Project
+from bluebottle.utils.admin import export_as_csv_action
 
 
 def merge(modeladmin, request, queryset):

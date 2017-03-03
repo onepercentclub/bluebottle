@@ -177,7 +177,7 @@ class TestTaskStatusMail(TaskMailTestBase):
         email = mail.outbox[0]
         self.assertEqual(email.subject, 'test subject')
         self.assertTrue(
-            'Hopefully your task was a great success' in email.body
+            'Hopefully your task "{}" was a great success'.format(self.task.title) in email.body
         )
         self.assertTrue(
             'https://testserver/go/tasks/{}'.format(self.task.pk) in email.body

@@ -54,7 +54,7 @@ class OrganizationProjectInline(admin.TabularInline):
 class OrganizationAdmin(admin.ModelAdmin):
     inlines = (OrganizationProjectInline, )
 
-    list_display = ('name', 'website', 'phone_number', 'created')
+    list_display = ('name', 'email', 'website', 'phone_number', 'created')
     list_filter = (
         ('projects__theme', admin.RelatedOnlyFieldListFilter),
         ('projects__location', admin.RelatedOnlyFieldListFilter),

@@ -1,11 +1,13 @@
 from datetime import timedelta
 from mock import patch
 
+from django.db import models, connection
 from django.core import mail
 from django.test.utils import override_settings
 from django.utils.timezone import now
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.tasks.taskmail import send_task_realized_mail
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.surveys import SurveyFactory
@@ -162,6 +164,42 @@ class TestTaskStatusMail(TaskMailTestBase):
             self.task.save()
 
         self.assertEquals(len(mail.outbox), 1)
+
+    def test_status_realized_reminder(self):
+        send_task_realized_mail(
+            self.task,
+            'task_status_realized_reminder',
+            'test subject',
+            connection.tenant
+        )
+
+        self.assertEquals(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.subject, 'test subject')
+        self.assertTrue(
+            'Hopefully your task was a great success' in email.body
+        )
+        self.assertTrue(
+            'https://testserver/go/tasks/{}'.format(self.task.pk) in email.body
+        )
+
+    def test_status_realized_second_reminder(self):
+        send_task_realized_mail(
+            self.task,
+            'task_status_realized_second_reminder',
+            'test subject',
+            connection.tenant
+        )
+
+        self.assertEquals(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.subject, 'test subject')
+        self.assertTrue(
+            'In case it slipped your mind' in email.body
+        )
+        self.assertTrue(
+            'https://testserver/go/tasks/{}'.format(self.task.pk) in email.body
+        )
 
     def test_status_realized_to_ip(self):
         """

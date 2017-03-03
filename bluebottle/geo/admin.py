@@ -17,13 +17,6 @@ class LocationFilter(admin.SimpleListFilter):
             location__isnull=True).all()]
         lookups = [(loc.id, loc.name) for loc in locations]
 
-        try:
-            lookups.insert(
-                0, (request.user.location.id, _('My location ({})').format(request.user.location))
-            )
-        except AttributeError:
-            pass
-
         return lookups
 
     def queryset(self, request, queryset):

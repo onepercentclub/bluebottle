@@ -1,11 +1,13 @@
 from datetime import datetime
+from datetime import timedelta
 
 from admin_tools.dashboard import modules
 from admin_tools.dashboard.models import DashboardModule
 from admin_tools.dashboard.modules import LinkList
 from django.core.urlresolvers import reverse_lazy
-from django.db.models import Count
+from django.db.models import F, Count
 from django.db.models.aggregates import Sum
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from fluent_dashboard.dashboard import FluentIndexDashboard
 from moneyed import Money

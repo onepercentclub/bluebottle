@@ -15,13 +15,13 @@ from moneyed import Money
 from bluebottle.bb_tasks.dashboard import RecentTasks
 from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
+from bluebottle.members.models import Member
 from bluebottle.projects.dashboard import Analytics
 from bluebottle.projects.dashboard import SubmittedPlans, EndedProjects, StartedCampaigns
 from bluebottle.projects.models import Project
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
-
 
 class Metrics():
     task_member_allowed_statuses = ['accepted', 'realized']
@@ -350,17 +350,6 @@ class MetricsModule(DashboardModule):
              'url': suggestion_url + "?isexpired=expired"},
         )
         super(MetricsModule, self).__init__(**kwargs)
-
-        if context['request'].user.has_perm('sites.export'):
-            self.children.append(modules.LinkList(
-                _('Export Metrics'),
-                children=[
-                    {
-                        'title': _('Export metrics'),
-                        'url': reverse_lazy('exportdb_export'),
-                    }
-                ]
-            ))
 
 
 class WallpostModule(DashboardModule):

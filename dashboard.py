@@ -1,9 +1,9 @@
 from datetime import datetime
 from datetime import timedelta
 
-from admin_tools.dashboard import modules
 from admin_tools.dashboard.models import DashboardModule
 from admin_tools.dashboard.modules import LinkList
+from django.conf import settings
 from django.core.urlresolvers import reverse_lazy
 from django.db.models import F, Count
 from django.db.models.aggregates import Sum
@@ -22,6 +22,7 @@ from bluebottle.projects.models import Project
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
+
 
 class Metrics():
     task_member_allowed_statuses = ['accepted', 'realized']
@@ -137,10 +138,10 @@ class CustomIndexDashboard(FluentIndexDashboard):
                     }
                 ]
             ))
-
-        self.children.append(MetricsModule(
-            title=_("Metrics"),
-        ))
+        if getattr(settings, 'ANALYTICS_BACKOFFICE_ENABLED', True):
+            self.children.append(MetricsModule(
+                title=_("Metrics"),
+            ))
 
 
 class MetricsModule(DashboardModule):

@@ -511,6 +511,7 @@ ANALYTICS_BACKENDS = {
     }
 }
 ANALYTICS_FRONTEND = 'https://analytics.onepercentclub.com'
+ANALYTICS_BACKOFFICE_ENABLED = True
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'

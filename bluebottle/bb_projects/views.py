@@ -167,7 +167,6 @@ class ManageProjectDetail(generics.RetrieveUpdateAPIView):
 
 
 class ProjectThemeList(generics.ListAPIView):
-    queryset = ProjectTheme.objects.all()
     serializer_class = ProjectThemeSerializer
     queryset = ProjectTheme.objects.all().filter(disabled=False)
 

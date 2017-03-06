@@ -18,8 +18,8 @@ from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Proje
 from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.fields import SafeField
-from bluebottle.votes.models import Vote
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
+from bluebottle.votes.models import Vote
 
 
 class ProjectPhaseLogSerializer(serializers.ModelSerializer):
@@ -289,6 +289,7 @@ class ProjectDonationSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer(source='user')
     date_donated = serializers.DateTimeField(source='ready')
     amount = MoneySerializer()
+    siblings = serializers.IntegerField()
 
     class Meta:
         model = Donation

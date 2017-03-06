@@ -99,6 +99,7 @@ COMPRESS_OUTPUT_DIR = 'compressed'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'tenant_extras.staticfiles_finders.TenantStaticFilesFinder'
 )
 
 # List of callables that know how to import templates from various sources.
@@ -320,6 +321,7 @@ TENANT_APPS = (
     'bluebottle.payments',
     'bluebottle.payments_docdata',
     'bluebottle.payments_interswitch',
+    'bluebottle.payments_flutterwave',
     'bluebottle.payments_vitepay',
     'bluebottle.payments_pledge',
     'bluebottle.payments_logger',
@@ -435,10 +437,20 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'json'
         },
+        'default': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        }
     },
     'loggers': {
         'null': {
             'handlers': ['null'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'bluebottle': {
+            'handlers': ['default'],
             'propagate': True,
             'level': 'INFO',
         },
@@ -515,6 +527,8 @@ ANALYTICS_BACKENDS = {
         'measurement': 'saas',
     }
 }
+ANALYTICS_FRONTEND = 'https://analytics.onepercentclub.com'
+ANALYTICS_BACKOFFICE_ENABLED = True
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'
@@ -645,6 +659,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('campaign_started', 'Campaign Started'),
                 ('campaign_ended', 'Campaign Ended'),
                 ('campaign_funded', 'Campaign Funded'),
+                ('organization__name', 'organization'),
             ),
             'resource_class': 'bluebottle.exports.resources.ProjectResource',
             'title': 'Projects',

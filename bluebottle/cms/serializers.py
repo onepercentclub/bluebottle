@@ -1,6 +1,7 @@
+from django.db import connection
 from django.db.models import Sum
 
-from bluebottle.bluebottle_drf2.serializers import ImageSerializer
+from bluebottle.bluebottle_drf2.serializers import ImageSerializer, SorlImageField
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.orders.models import Order
@@ -129,7 +130,10 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
         projects = Project.objects.filter(
             campaign_ended__gte=self.context['start_date'],
             campaign_ended__lte=self.context['end_date'],
-            status__slug__in=['done-complete', 'done-incomplete'])
+            status__slug__in=['done-complete', 'done-incomplete']
+        ).order_by(
+            'campaign_ended'
+        )
 
         return ProjectTinyPreviewSerializer(projects, many=True).to_representation(projects)
 
@@ -244,11 +248,20 @@ class BlockSerializer(serializers.Serializer):
             return SupporterTotalContentSerializer(obj, context=self.context).to_representation(obj)
 
 
+def watermark():
+    return '{}/logo-overlay.png'.format(connection.tenant.client_name)
+
+
 class ResultPageSerializer(serializers.ModelSerializer):
     blocks = BlockSerializer(source='content.contentitems.all.translated', many=True)
     image = ImageSerializer()
+    share_image = SorlImageField(
+        '1200x600', source='image', crop='center',
+        watermark=watermark,
+        watermark_pos='center', watermark_size='1200x600'
+    )
 
     class Meta:
         model = ResultPage
-        fields = ('id', 'title', 'slug', 'start_date', 'image',
+        fields = ('id', 'title', 'slug', 'start_date', 'image', 'share_image',
                   'end_date', 'description', 'blocks')

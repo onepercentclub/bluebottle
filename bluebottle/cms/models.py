@@ -36,9 +36,13 @@ class Stat(TranslatableModel, SortableMixin):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
+        ('participants', _('Participants')),
         ('projects_realized', _('Projects realised')),
+        ('projects_complete', _('Projects complete')),
         ('tasks_realized', _('Tasks realised')),
+        ('task_members', _('Taskmembers')),
         ('donated_total', _('Donated total')),
+        ('pledged_total', _('Pledged total')),
         ('amount_matched', _('Amount matched')),
         ('projects_online', _('Projects Online')),
         ('votes_cast', _('Votes casts')),

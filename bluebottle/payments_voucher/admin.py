@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.utils.html import format_html
 
 from polymorphic.admin import PolymorphicChildModelAdmin
 
@@ -20,19 +21,21 @@ class VoucherPaymentAdmin(PolymorphicChildModelAdmin):
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
                                                     object._meta.model_name),
                       args=[object.id])
-        return "<a href='{0}'>Order Payment: {1}</a>".format(str(url),
-                                                             object.id)
-
-    order_payment_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>Order Payment: {}</a>",
+            str(url),
+            object.id
+        )
 
     def voucher_link(self, obj):
         object = obj.voucher
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
                                                     object._meta.model_name),
                       args=[object.id])
-        return "<a href='{0}'>Voucher: {1}</a>".format(str(url), object.code)
-
-    voucher_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>Voucher: {}</a>",
+            str(url), object.code
+        )
 
 
 class VoucherAdmin(admin.ModelAdmin):
@@ -48,21 +51,22 @@ class VoucherAdmin(admin.ModelAdmin):
                                 'sender_name', 'message',)
 
     def view_order(self, obj):
-
         url = reverse('admin:%s_%s_change' % (obj.order._meta.app_label,
                                               obj.order._meta.model_name),
                       args=[obj.order.id])
-        return "<a href='%s'>View Buy Order</a>" % (str(url))
-
-    view_order.allow_tags = True
+        return format_html(
+            u"<a href='{}'>View Buy Order</a>",
+            str(url)
+        )
 
     def payment_link(self, obj):
         url = reverse('admin:%s_%s_change' % (obj.payment._meta.app_label,
                                               obj.payment._meta.model_name),
                       args=[obj.payment.id])
-        return "<a href='%s'>Cash Voucher Payment</a>" % (str(url))
-
-    payment_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>Cash Voucher Payment</a>",
+            str(url)
+        )
 
 
 admin.site.register(Voucher, VoucherAdmin)

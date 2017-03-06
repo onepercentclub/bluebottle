@@ -1,7 +1,6 @@
 from rest_framework import generics
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.projects.models import ProjectBudgetLine, Project
 from bluebottle.projects.permissions import IsProjectOwner, IsProjectWallOwner
 from bluebottle.projects.serializers import (
     ProjectBudgetLineSerializer, ProjectDocumentSerializer,
@@ -10,7 +9,7 @@ from bluebottle.projects.serializers import (
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.wallposts.models import MediaWallpostPhoto
 
-from .models import ProjectDocument
+from .models import ProjectDocument, ProjectBudgetLine, Project
 
 
 class BudgetLinePagination(BluebottlePagination):

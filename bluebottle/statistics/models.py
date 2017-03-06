@@ -21,10 +21,14 @@ class Statistic(models.Model):
     class StatisticType(DjangoChoices):
         manual = ChoiceItem('manual', label=_("Manual"))
         donated_total = ChoiceItem('donated_total', label=_("Donated total"))
+        pledged_total = ChoiceItem('pledged_total', label=_("Pledged total"))
         projects_online = ChoiceItem('projects_online', label=_("Projects online"))
         projects_realized = ChoiceItem('projects_realized', label=_("Projects realized"))
+        projects_complete = ChoiceItem('projects_complete', label=_("Projects complete"))
         tasks_realized = ChoiceItem('tasks_realized', label=_("Tasks realized"))
+        task_members = ChoiceItem('task_members', label=_("Taskmembers"))
         people_involved = ChoiceItem('people_involved', label=_("People involved"))
+        participants = ChoiceItem('participants', label=_("Participants"))
         amount_matched = ChoiceItem('amount_matched', label=_("Amount Matched"))
         votes_cast = ChoiceItem('votes_cast', label=_("Number of votes cast"))
 

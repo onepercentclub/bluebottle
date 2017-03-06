@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, time
 from pytz import timezone
 
 from django.conf import settings
@@ -15,10 +15,15 @@ class ResultPageDetail(generics.RetrieveAPIView):
     def get_serializer_context(self):
         context = super(ResultPageDetail, self).get_serializer_context()
         obj = self.get_object()
-        context['start_date'] = datetime.datetime(
-            *obj.start_date.timetuple()[:6], tzinfo=timezone(settings.TIME_ZONE)
+        tz = timezone(settings.TIME_ZONE)
+
+        context['start_date'] = tz.localize(
+            datetime(*obj.start_date.timetuple()[:3])
         )
-        context['end_date'] = datetime.datetime(
-            *obj.end_date.timetuple()[:6], tzinfo=timezone(settings.TIME_ZONE)
+        context['end_date'] = tz.localize(
+            datetime.combine(
+                datetime(*obj.end_date.timetuple()[:3]),
+                time.max,
+            )
         )
         return context

@@ -1,6 +1,7 @@
 import datetime
 
 from django.utils import timezone
+from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
@@ -47,6 +48,7 @@ class TestDeadline(TaskUnitTestBase):
         self.assertEqual(self.task.status, Task.TaskStatuses.closed)
 
 
+@override_settings(CELERY_RESULT_BACKEND=None)
 class TestTaskRealised(TaskUnitTestBase):
     """
     Test the status of a project when a task is realised

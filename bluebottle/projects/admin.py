@@ -132,7 +132,7 @@ class ProjectThemeFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(reviewer=self.value())
+            return queryset.filter(theme=self.value())
         else:
             return queryset
 
@@ -239,11 +239,6 @@ class ProjectAdminForm(forms.ModelForm):
         super(ProjectAdminForm, self).__init__(*args, **kwargs)
         self.fields['currencies'].required = False
 
-        self.fields['reviewer'].widget = ReviewerWidget(
-            rel=Project._meta.get_field('reviewer').rel,
-            admin_site=admin.sites.site
-        )
-
 
 class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     form = ProjectAdminForm
@@ -289,7 +284,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     list_filter = ('country__subregion__region',)
 
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', ProjectThemeFilter, ProjectReviewerFilter,
+        filters = ('status', 'is_campaign', ProjectThemeFilter,
                    'project_type', ('deadline', DateRangeFilter),)
 
         # Only show Location column if there are any
@@ -349,7 +344,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return OrderedDict(reversed(actions.items()))
 
     fieldsets = (
-        (_('Main'), {'fields': ('owner', 'reviewer', 'organization',
+        (_('Main'), {'fields': ('owner', 'organization',
                                 'status', 'title', 'slug', 'project_type',
                                 'is_campaign', 'celebrate_results')}),
 

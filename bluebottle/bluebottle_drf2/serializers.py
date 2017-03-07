@@ -62,7 +62,10 @@ class SorlImageField(RestrictedImageField):
             return ""
 
         if 'watermark' in self.sorl_options:
-            self.sorl_options['watermark'] = self.sorl_options['watermark']()
+            try:
+                self.sorl_options['watermark'] = self.sorl_options['watermark']()
+            except TypeError:
+                pass
 
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.

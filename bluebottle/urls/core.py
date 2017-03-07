@@ -77,6 +77,8 @@ urlpatterns = [
         include('bluebottle.payments_interswitch.urls.core')),
     url(r'^payments_vitepay/',
         include('bluebottle.payments_vitepay.urls.core')),
+    url(r'^payments_flutterwave/',
+        include('bluebottle.payments_flutterwave.urls.core')),
 
     url(r'^surveys/',
         include('bluebottle.surveys.urls.core')),
@@ -108,6 +110,12 @@ urlpatterns = [
         include('bluebottle.social.urls.api')),
 
     url(r'token/', include('token_auth.urls')),
+
+    # urls for payout service
+    url(r'^api/projects/',
+        include('bluebottle.projects.urls.api')),
+    url(r'^api/payouts/',
+        include('bluebottle.payouts_dorado.urls')),
 ]
 
 

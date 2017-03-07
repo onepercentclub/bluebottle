@@ -9,11 +9,17 @@ from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
 
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.cms.models import Stats, Stat, Quotes, Quote, ResultPage, Projects
+from bluebottle.statistics.statistics import Statistics
 
 
 class StatInline(TranslatableStackedInline, SortableStackedInline):
     model = Stat
     extra = 1
+
+    readonly_fields = ['definition']
+
+    def definition(self, obj):
+        return getattr(Statistics, obj.type).__doc__
 
 
 class StatsAdmin(ImprovedModelForm, NonSortableParentAdmin):

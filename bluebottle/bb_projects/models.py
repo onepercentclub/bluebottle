@@ -116,11 +116,17 @@ class BaseProject(models.Model, GetTweetMixin):
         'members.Member', verbose_name=_('initiator'),
         help_text=_('Project owner'), related_name='owner')
 
+    reviewer = models.ForeignKey(
+        'members.Member', verbose_name=_('reviewer'),
+        help_text=_('Project Reviewer'), related_name='reviewer',
+        null=True, blank=True
+    )
+
     organization = models.ForeignKey(
         'organizations.Organization', verbose_name=_(
             'organization'),
         help_text=_('Project organization'),
-        related_name='organization', null=True, blank=True)
+        related_name='projects', null=True, blank=True)
 
     project_type = models.CharField(_('Project type'), max_length=50,
                                     choices=Type.choices, null=True, blank=True)

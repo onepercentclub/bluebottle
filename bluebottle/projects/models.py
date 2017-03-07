@@ -57,6 +57,24 @@ class ProjectPhaseLog(models.Model):
         _('created'), help_text=_('When this project entered in this status.')
     )
 
+    class Analytics:
+        type = 'project_phase_update'
+        tags = {
+            'status': 'status.name',
+            'status_slug': 'status.slug',
+            'theme': {
+                'project.theme.name': {'translate': True}
+            },
+            'theme_slug': 'project.theme.slug',
+            'location': 'project.location.name',
+            'location_group': 'project.location.group.name',
+            'country': 'project.country_name'
+        }
+        fields = {
+            'id': 'id',
+            'project_id': 'project.id'
+        }
+
 
 class ProjectManager(models.Manager):
     def get_queryset(self):

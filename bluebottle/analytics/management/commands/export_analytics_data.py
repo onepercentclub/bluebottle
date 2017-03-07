@@ -69,9 +69,9 @@ class Command(BaseCommand):
                 process(result, True, result.date_joined)
             logger.info('record_type:{} records_written:{}'.format(cls_name, results.count()))
         elif cls_name in ['Project', 'Task', 'TaskMember', 'Wallpost', 'Reaction', 'Order', 'Vote']:
-            results = cls.objects.all().filter(created__gte=start_date, created__lte=end_date)
+            results = cls.objects.all().filter(updated__gte=start_date, updated__lte=end_date)
             for result in results:
-                process(result, True, result.created)
+                process(result, True, result.updated)
             logger.info('record_type:{} records_written:{}'.format(cls_name, results.count()))
         elif cls_name in ['ProjectPhaseLog', 'TaskStatusLog', 'TaskMemberStatusLog']:
             results = cls.objects.all().filter(start__gte=start_date, start__lte=end_date)

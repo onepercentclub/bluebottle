@@ -44,6 +44,16 @@ otp_required_response = {
     "status": "success"
 }
 
+redirect_response = {
+    "data": {
+        "responsecode": "02",
+        "authurl": "https://prod1flutterwave.co:8181/pwc/xfaO8bIrrXUKpuU.html",
+        "responsemessage": "Pending Validation",
+        "transactionreference": "FLW005"
+    },
+    "status": "success"
+}
+
 failure_response = {
     "data": {
         "responsecode": "7",
@@ -91,6 +101,37 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
 
     @patch('flutterwave.card.Card.charge',
            return_value=type('obj', (object,), {'status_code': 200,
+                                                'text': json.dumps(redirect_response)}))
+    @patch('bluebottle.payments_flutterwave.adapters.get_current_host',
+           return_value='https://bluebottle.ocean')
+    def test_create_payment_redirect(self, charge, get_current_host):
+        """
+        Test Flutterwave payment that turns to success without otp (one time pin)
+        """
+        self.init_projects()
+        order = OrderFactory.create()
+        DonationFactory.create(amount=Money(150000, NGN), order=order)
+        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
+                                                   order=order,
+                                                   integration_data=integration_data)
+        adapter = FlutterwavePaymentAdapter(order_payment)
+        authorization_action = adapter.get_authorization_action()
+
+        self.assertEqual(adapter.payment.amount, '150000.00')
+        self.assertEqual(adapter.payment.status, 'started')
+        self.assertEqual(adapter.payment.transaction_reference, 'FLW005')
+        self.assertEqual(authorization_action, {
+            'method': 'get',
+            'payload': {
+                'method': 'flutterwave-otp',
+                'text': redirect_response['data']['responsemessage']
+            },
+            'type': 'redirect',
+            'url': redirect_response['data']['authurl']
+        })
+
+    @patch('flutterwave.card.Card.charge',
+           return_value=type('obj', (object,), {'status_code': 200,
                                                 'text': json.dumps(otp_required_response)}))
     @patch('flutterwave.card.Card.validate',
            return_value=type('obj', (object,), {'status_code': 200,
@@ -129,6 +170,48 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         adapter = FlutterwavePaymentAdapter(order_payment)
         adapter.check_payment_status()
         self.assertEqual(adapter.payment.status, 'settled')
+
+    @patch('flutterwave.card.Card.charge',
+           return_value=type('obj', (object,), {'status_code': 200,
+                                                'text': json.dumps(otp_required_response)}))
+    @patch('flutterwave.card.Card.validate',
+           return_value=type('obj', (object,), {'status_code': 200,
+                                                'text': json.dumps(failure_response)}))
+    @patch('bluebottle.payments_flutterwave.adapters.get_current_host',
+           return_value='https://bluebottle.ocean')
+    def test_create_otp_payment_failure(self, charge, validate, get_current_host):
+        """
+        Test Flutterwave payment that needs a otp (one time pin)
+        """
+        self.init_projects()
+        order = OrderFactory.create()
+        user = BlueBottleUserFactory(first_name=u'T\xc3\xabst user')
+        DonationFactory.create(amount=Money(20000, NGN), order=order)
+        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
+                                                   order=order,
+                                                   user=user,
+                                                   integration_data=integration_data)
+        adapter = FlutterwavePaymentAdapter(order_payment)
+        authorization_action = adapter.get_authorization_action()
+
+        self.assertEqual(adapter.payment.amount, '20000.00')
+        self.assertEqual(adapter.payment.status, 'started')
+        self.assertEqual(adapter.payment.transaction_reference, 'FLW004')
+        self.assertEqual(authorization_action, {
+            "type": "step2",
+            "payload": {
+                "method": "flutterwave-otp",
+                "text": "Kindly enter the OTP sent to 234803***9051 and henry***********ture.com."
+            }
+        })
+
+        # Now set the otp
+        order_payment.integration_data = {'otp': '123456'}
+        order_payment.save()
+        adapter = FlutterwavePaymentAdapter(order_payment)
+        with self.assertRaises(PaymentException):
+            adapter.check_payment_status()
+            self.assertEqual(adapter.payment.status, 'failed')
 
     @patch('flutterwave.card.Card.charge',
            return_value=type('obj', (object,), {'status_code': 500,

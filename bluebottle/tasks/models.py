@@ -326,12 +326,50 @@ class TaskStatusLog(models.Model):
     start = CreationDateTimeField(
         _('created'), help_text=_('When this task entered in this status.'))
 
+    class Analytics:
+        type = 'task_status_update'
+        tags = {
+            'status': 'status',
+            'theme': {
+                'task.project.theme.name': {'translate': True}
+            },
+            'theme_slug': 'task.project.theme.slug',
+            'location': 'task.project.location.name',
+            'location_group': 'task.project.location.group.name',
+            'country': 'task.project.country_name'
+        }
+        fields = {
+            'id': 'id',
+            'project_id': 'task.project.id',
+            'user_id': 'task.author.id',
+            'task_id': 'task.id'
+        }
+
 
 class TaskMemberStatusLog(models.Model):
     task_member = models.ForeignKey('tasks.TaskMember')
     status = models.CharField(_('status'), max_length=20)
     start = CreationDateTimeField(
         _('created'), help_text=_('When this task member entered in this status.'))
+
+    class Analytics:
+        type = 'task_member_status_update'
+        tags = {
+            'status': 'status',
+            'theme': {
+                'task_member.project.theme.name': {'translate': True}
+            },
+            'theme_slug': 'task_member.project.theme.slug',
+            'location': 'task_member.project.location.name',
+            'location_group': 'task_member.project.location.group.name',
+            'country': 'task_member.project.country_name'
+        }
+        fields = {
+            'id': 'id',
+            'project_id': 'task_member.project.id',
+            'user_id': 'task_member.member.id',
+            'task_id': 'task_member.task.id'
+        }
 
 
 from .taskmail import *  # noqa

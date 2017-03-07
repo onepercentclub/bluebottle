@@ -14,6 +14,9 @@ from .models import FlutterwavePayment
 logger = logging.getLogger(__name__)
 
 
+SUCCESS_RESPONSECODES = ['0', '00']
+
+
 class FlutterwavePaymentAdapter(BasePaymentAdapter):
     MODEL_CLASSES = [FlutterwavePayment]
 
@@ -41,7 +44,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         payment = self.MODEL_CLASSES[0](order_payment=self.order_payment,
                                         card_number="**** **** **** " + self.card_data['card_number'][-4:]
                                         )
-        if len(self.card_data['card_number'].replace(' ', '')) == 19:
+        if 'pin' in self.card_data and self.card_data['pin']:
             payment.auth_model = 'PIN'
         else:
             payment.auth_model = 'VBVSECURECODE'
@@ -175,7 +178,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                                                           ))
             raise PaymentException('Flutterwave error: {0}'.format(response['data']))
 
-        if response['data']['responsecode'] == u'00':
+        if response['data']['responsecode'] in SUCCESS_RESPONSECODES:
             self.payment.status = 'authorized'
             self.payment.save()
             logger.info('payment_tracer: {}, '
@@ -185,33 +188,33 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                                               ))
             return {'type': 'success'}
 
-        if response['data']['responsecode'] in [u'7', u'RR', u'RR-RR']:
-            logger.warn('payment_tracer: {}, '
-                        'event: payment.flutterwave.get_authorization_action.error.start_payment '
-                        'flutterwave_response: {}'.format(self.payment_tracer,
-                                                          response['data']
-                                                          ))
-            raise PaymentException('Error starting payment: {0}'.format(response['data']['responsemessage']))
+        if response['data']['responsecode'] == '02':
+            if 'authurl' in response['data'] and response['data']['authurl']:
+                return {
+                    'method': 'get',
+                    'url': response['data']['authurl'],
+                    'type': 'redirect',
+                    'payload': {
+                        'method': 'flutterwave-otp',
+                        'text': response['data']['responsemessage'],
 
-        if 'authurl' in response['data'] and response['data']['authurl']:
-            return {
-                'method': 'get',
-                'url': response['data']['authurl'],
-                'type': 'redirect',
-                'payload': {
-                    'method': 'flutterwave-otp',
-                    'text': response['data']['responsemessage'],
-
+                    }
                 }
-            }
+            else:
+                return {
+                    'type': 'step2',
+                    'payload': {
+                        'method': 'flutterwave-otp',
+                        'text': response['data']['responsemessage']
+                    }
+                }
 
-        return {
-            'type': 'step2',
-            'payload': {
-                'method': 'flutterwave-otp',
-                'text': response['data']['responsemessage']
-            }
-        }
+        logger.warn('payment_tracer: {}, '
+                    'event: payment.flutterwave.get_authorization_action.error.start_payment '
+                    'flutterwave_response: {}'.format(self.payment_tracer,
+                                                      response['data']
+                                                      ))
+        raise PaymentException('Error starting payment: {0}'.format(response['data']['responsemessage']))
 
     def check_payment_status(self):
 
@@ -243,17 +246,17 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                                                          ))
             r = flw.card.validate(data)
             response = json.loads(r.text)
-            if response['data']['responsecode'] == u'00':
+            if response['data']['responsecode'] in SUCCESS_RESPONSECODES:
                 self.order_payment.set_authorization_action({'type': 'success'})
                 self.payment.status = 'settled'
+            else:
+                self.payment.status = 'failed'
         else:
             r = flw.card.verifyCharge(transactionRef=transaction_reference, country='NG')
             response = json.loads(r.text)
-            if response['data']['responsecode'] == u'00':
+            if response['data']['responsecode'] in SUCCESS_RESPONSECODES:
                 self.payment.status = 'settled'
-            if response['data']['responsecode'] == u'7':
-                self.payment.status = 'failed'
-            if response['data']['responsemessage'] == u'Declined':
+            else:
                 self.payment.status = 'failed'
 
         logger.info('payment_tracer: {}, '
@@ -265,3 +268,6 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                                                       ))
         self.payment.update_response = response
         self.payment.save()
+
+        if self.payment.status == 'failed':
+            raise PaymentException(response['data']['responsemessage'])

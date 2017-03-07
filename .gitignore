@@ -97,3 +97,6 @@ GeoIP.dat
 
 #locale
 locale/en/
+
+# Analytics Testing
+analytics/*

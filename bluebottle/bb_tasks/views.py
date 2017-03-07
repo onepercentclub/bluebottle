@@ -47,6 +47,10 @@ def get_dates_query(query, start_date, end_date):
     return query
 
 
+def get_midnight_datetime(dt):
+    return timezone.get_current_timezone().localize(dt.combine(dt, dt.max.time()))
+
+
 class TaskPreviewPagination(BluebottlePagination):
     page_size_query_param = 'page_size'
     page_size = 8
@@ -127,9 +131,7 @@ class BaseTaskList(generics.ListCreateAPIView):
                 'closed', 'done-complete', 'done-incomplete', 'voting-done'):
             raise serializers.ValidationError('It is not allowed to add tasks to closed projects')
 
-        deadline = serializer.validated_data['deadline']
-        deadline = timezone.get_current_timezone().localize(datetime.combine(deadline, datetime.max.time()))
-        serializer.validated_data['deadline'] = deadline
+        serializer.validated_data['deadline'] = get_midnight_datetime(serializer.validated_data['deadline'])
         serializer.save(author=self.request.user)
 
 
@@ -180,6 +182,10 @@ class MyTaskDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
     serializer_class = MyTasksSerializer
+
+    def perform_update(self, serializer):
+        serializer.validated_data['deadline'] = get_midnight_datetime(serializer.validated_data['deadline'])
+        serializer.save()
 
 
 class TaskPagination(BluebottlePagination):

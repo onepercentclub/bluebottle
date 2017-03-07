@@ -454,6 +454,7 @@ class TestMemberAnalytics(BluebottleTestCase):
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
+        self.assertEqual(kwargs['timestamp'], member.date_joined)
 
     def test_member_update(self, queue_mock):
         def do_nothing(**kwargs):

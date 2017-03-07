@@ -429,11 +429,21 @@ LOGGING = {
         'payment_logs': {
             'level': 'INFO',
             'class': 'bluebottle.payments_logger.handlers.PaymentLogHandler',
+        },
+        'default': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
         }
     },
     'loggers': {
         'null': {
             'handlers': ['null'],
+            'propagate': True,
+            'level': 'INFO',
+        },
+        'bluebottle': {
+            'handlers': ['default'],
             'propagate': True,
             'level': 'INFO',
         },

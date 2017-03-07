@@ -40,13 +40,13 @@ class TelesomClient(object):
         date = timezone.now().strftime('%d/%m/%Y')
         username = self.username
         password = self.password
-        uniquekey = self.merchant_id
-        account = self.merchant_key
+        account = self.merchant_id
+        unique_key = self.merchant_key
 
         # From PHP:
         # $msg = $username.$password."::1".$merchant.$uniquekey. $dates.$mobile.$amount.$description;
         hash = "{0}{1}{2}{3}{4}{5}{6}{7}{8}".format(
-            username, password, ip, account, uniquekey, date, mobile, amount, description
+            username, password, ip, account, unique_key, date, mobile, amount, description
         )
         key = hashlib.md5(hash).hexdigest()
         reply = self.client.service.PaymentRequest(
@@ -64,5 +64,4 @@ class TelesomClient(object):
         if res[0] == '2001':
             return res[2]
         else:
-            raise PaymentException(hash)
-            raise PaymentException("Could not start Telesom/Zaad transaction.")
+            raise PaymentException("Could not start Telesom/Zaad transaction. {0}".format(reply))

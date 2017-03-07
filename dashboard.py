@@ -116,7 +116,6 @@ class Metrics():
             aggregate(Count('task', distinct=True))['task__count']
 
 
-
 class CustomIndexDashboard(FluentIndexDashboard):
     """
     Custom Dashboard for Bluebottle.

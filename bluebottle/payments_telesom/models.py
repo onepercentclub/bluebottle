@@ -29,9 +29,12 @@ class TelesomPayment(Payment):
         help_text="Description",
         null=True, blank=True,
         max_length=200)
-
-    response = models.TextField(help_text=_('Response from Telesom'), null=True, blank=True)
-    update_response = models.TextField(help_text=_('Result from Telesom (status update)'), null=True, blank=True)
+    response = models.TextField(
+        help_text=_('Response from Telesom'),
+        null=True, blank=True)
+    update_response = models.TextField(
+        help_text=_('Result from Telesom (status update)'),
+        null=True, blank=True)
 
     class Meta:
         ordering = ('-created', '-updated')

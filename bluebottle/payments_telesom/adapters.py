@@ -41,20 +41,42 @@ class TelesomPaymentAdapter(BasePaymentAdapter):
         tenant = connection.tenant
         payment.description = '{0}-{1}'.format(tenant.name, self.order_payment.id)
 
-        transaction_reference = gateway.create(
+        response = gateway.create(
             mobile=payment.mobile,
             amount=payment.amount,
             description=payment.description
         )
-        payment.transaction_reference = transaction_reference
+        payment.transaction_reference = response['payment_id']
+        payment.status = response['status']
+        payment.response = response['response']
         payment.save()
+
+        self.payment = payment
+        # Check status right away so the payment gets processed
+        self.check_payment_status()
         return payment
 
     def get_authorization_action(self):
         """
         Handle payment
         """
-        return {'type': 'success'}
+        if self.payment.status == 'settled':
+            return {'type': 'success'}
+        else:
+            return {}
 
     def check_payment_status(self):
-        pass
+        if self.payment.status == 'settled':
+            return
+        gateway = TelesomClient(
+            merchant_id=self.credentials['merchant_id'],
+            merchant_key=self.credentials['merchant_key'],
+            username=self.credentials['username'],
+            password=self.credentials['password'],
+            api_domain=self.credentials['api_domain']
+        )
+        response = gateway.check_status(self.payment.transaction_reference)
+
+        self.payment.status = response['status']
+        self.payment.update_response = response['response']
+        self.payment.save()

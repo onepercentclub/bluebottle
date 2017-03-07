@@ -62,6 +62,50 @@ class TelesomClient(object):
 
         res = reply.split('!')
         if res[0] == '2001':
-            return res[2]
+            return {
+                'response': reply,
+                'status': 'started',
+                'payment_id': res[2]
+            }
         else:
             raise PaymentException("Could not start Telesom/Zaad transaction. {0}".format(reply))
+
+    def check_status(self, payment_id):
+
+        # We should not use actual IP address.
+        ip = '::1'
+        date = timezone.now().strftime('%d/%m/%Y')
+        username = self.username
+        password = self.password
+        account = self.merchant_id
+        unique_key = self.merchant_key
+
+        # From PHP:
+        # $msg =  $username.$password."::1".$merchant.$uniquekey.$dates.$paymentid;
+        hash = "{0}{1}{2}{3}{4}{5}{6}".format(
+            username, password, ip, account, unique_key, date, payment_id
+        )
+        key = hashlib.md5(hash).hexdigest()
+
+        reply = self.client.service.ProcessPayment(
+            MerchantID=self.merchant_id,
+            Paymentid=payment_id,
+            hashkey=key
+        )
+
+        # 5001! Invalid Username/Password/Hashkey Try Again!-1
+        # 5002!Error Occured Cannot Proccess Payment!-1  --> (e.g. payment id not found)
+        # 2001! Your account was Credited with $10.0000 Charge fee $ 0
+        # 5003! General Error Occured Cannot, Proccess Payment
+        # 4005! This payment was processed !-1
+
+        res = reply.split('!')
+        if res[0] == '2001':
+            status = 'settled'
+        else:
+            status = 'failed'
+        return {
+            'response': reply,
+            'status': status,
+            'message': res[1]
+        }

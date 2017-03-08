@@ -48,7 +48,7 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
     target_reached = serializers.SerializerMethodField()
 
     def get_target_reached(self, obj):
-        return obj.status.slug == 'done-comeplete'
+        return obj.status.slug == 'done-complete'
 
     class Meta:
         model = Project

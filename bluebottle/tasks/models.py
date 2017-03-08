@@ -371,6 +371,10 @@ class TaskMemberStatusLog(models.Model):
             'task_id': 'task_member.task.id'
         }
 
+        def extra_fields(self, obj, created):
+            # Force the time_spent to an int.
+            return {'hours': int(obj.task_member.time_spent)}
+
 
 from .taskmail import *  # noqa
 from .taskwallmails import *  # noqa

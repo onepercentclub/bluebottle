@@ -61,6 +61,7 @@ class ProjectPhaseLog(models.Model):
         type = 'project_phase_update'
         tags = {
             'status': 'status.name',
+            'sub_type': 'project.project_type',
             'status_slug': 'status.slug',
             'theme': {
                 'project.theme.name': {'translate': True}

@@ -29,11 +29,20 @@ class Order(BaseOrder, PreviousStatusMixin):
             'user_id': 'user.id'
         }
 
-        def extra_tags(self, obj, created):
+        @staticmethod
+        def extra_tags(obj, created):
             return {'total_currency': str(obj.total.currency)}
 
-        def extra_fields(self, obj, created):
+        @staticmethod
+        def extra_fields(obj, created):
             return {'total': float(obj.total)}
+
+        @staticmethod
+        def timestamp(obj, created):
+            if created:
+                return obj.created
+            else:
+                return obj.updated
 
 
 import signals  # noqa

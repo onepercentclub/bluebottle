@@ -96,6 +96,13 @@ class Task(models.Model, PreviousStatusMixin):
             'user_id': 'author.id'
         }
 
+        @staticmethod
+        def timestamp(obj, created):
+            if created:
+                return obj.created
+            else:
+                return obj.updated
+
     def __unicode__(self):
         return self.title
 
@@ -290,9 +297,17 @@ class TaskMember(models.Model, PreviousStatusMixin):
             'user_id': 'member.id'
         }
 
-        def extra_fields(self, obj, created):
+        @staticmethod
+        def extra_fields(obj, created):
             # Force the time_spent to an int.
             return {'hours': int(obj.time_spent)}
+
+        @staticmethod
+        def timestamp(obj, created):
+            if created:
+                return obj.created
+            else:
+                return obj.updated
 
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
@@ -345,6 +360,10 @@ class TaskStatusLog(models.Model):
             'task_id': 'task.id'
         }
 
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.start
+
 
 class TaskMemberStatusLog(models.Model):
     task_member = models.ForeignKey('tasks.TaskMember')
@@ -371,9 +390,14 @@ class TaskMemberStatusLog(models.Model):
             'task_id': 'task_member.task.id'
         }
 
-        def extra_fields(self, obj, created):
+        @staticmethod
+        def extra_fields(obj, created):
             # Force the time_spent to an int.
             return {'hours': int(obj.task_member.time_spent)}
+
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.start
 
 
 from .taskmail import *  # noqa

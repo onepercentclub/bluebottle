@@ -76,6 +76,10 @@ class ProjectPhaseLog(models.Model):
             'project_id': 'project.id'
         }
 
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.start
+
 
 class ProjectManager(models.Manager):
     def get_queryset(self):
@@ -633,6 +637,13 @@ class Project(BaseProject, PreviousStatusMixin):
             'id': 'id',
             'user_id': 'owner.id'
         }
+
+        @staticmethod
+        def timestamp(obj, created):
+            if created:
+                return obj.created
+            else:
+                return obj.updated
 
     def status_changed(self, old_status, new_status):
         status_complete = ProjectPhase.objects.get(slug="done-complete")

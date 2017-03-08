@@ -61,26 +61,42 @@ class Command(BaseCommand):
 
     @override_settings(ANALYTICS_ENABLED=True)
     def _process(self, cls, start_date, end_date):
+        '''
+        Timestamps:
+        Wallpost                created         updated
+        Reaction                created         updated
+        TaskMember              created         updated
+        Task                    created         updated
+        Project                 created         updated
+        Order                   created         updated
+        Member                  date_joined     updated
+        Vote                    created
+        TaskMemberStatusLog     start
+        TaskStatusLog           start
+        ProjectPhaseLog         start
+        '''
         cls_name = cls.__name__
-        # TODO: Come up with a better way of generically getting the timestamp for influxdb log entry
         if cls_name == 'Member':
-            results = cls.objects.all().filter(date_joined__gte=start_date,
-                                               date_joined__lte=end_date)
+            results = cls.objects.all().filter(date_joined__gte=start_date, date_joined__lte=end_date)
             for result in results:
-                process(result, True, result.date_joined)
-            logger.info('record_type:{} records_written:{}'.format(cls_name, results.count()))
-        elif cls_name in ['Wallpost', 'Reaction', 'Order']:
-            results = cls.objects.all().filter(updated__gte=start_date, updated__lte=end_date)
+                process(result, True)
+                if not result.date_joined == result.updated:
+                    process(result, False)
+            logger.info('record_type:{}'.format(cls_name))
+        elif cls_name in ['Project', 'Task', 'TaskMember', 'Wallpost', 'Reaction', 'Order']:
+            results = cls.objects.all().filter(created__gte=start_date, created__lte=end_date)
             for result in results:
-                process(result, True, result.updated)
-            logger.info('record_type:{} records_written:{}'.format(cls_name, results.count()))
+                process(result, True)
+                if result.updated and result.created != result.updated:
+                    process(result, False)
+            logger.info('record_type:{}'.format(cls_name))
         elif cls_name in ['Vote']:
             results = cls.objects.all().filter(created__gte=start_date, created__lte=end_date)
             for result in results:
-                process(result, True, result.created)
-            logger.info('record_type:{} records_written:{}'.format(cls_name, results.count()))
+                process(result, True)
+            logger.info('record_type:{}'.format(cls_name))
         elif cls_name in ['ProjectPhaseLog', 'TaskStatusLog', 'TaskMemberStatusLog']:
             results = cls.objects.all().filter(start__gte=start_date, start__lte=end_date)
             for result in results:
-                process(result, True, result.start)
-            logger.info('record_type:{} records_written:{}'.format(cls_name, results.count()))
+                process(result, True)
+            logger.info('record_type:{}'.format(cls_name))

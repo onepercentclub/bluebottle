@@ -30,7 +30,7 @@ def _multi_getattr(obj, attr, **kw):
     return obj
 
 
-def process(instance, created, timestamp=None):
+def process(instance, created):
     instance_name = instance.__class__.__name__
 
     # _merge_attrs combines the base and instance tag or field values with
@@ -105,13 +105,10 @@ def process(instance, created, timestamp=None):
     except AttributeError:
         pass
 
-    if not timestamp:
-        try:
-            timestamp = analytics.timestamp(instance)
-        except AttributeError:
-            timestamp = timezone.now()
-    else:
-        timestamp = timestamp or timezone.now()
+    try:
+        timestamp = analytics.timestamp(instance, created)
+    except AttributeError:
+        timestamp = timezone.now()
 
     # Check for instance specific tags
     try:

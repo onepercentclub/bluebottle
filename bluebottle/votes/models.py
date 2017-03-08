@@ -34,7 +34,7 @@ class Vote(models.Model):
         }
 
         @staticmethod
-        def timestamp(obj):
+        def timestamp(obj, created):
             return obj.created
 
     class Meta:

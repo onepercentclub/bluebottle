@@ -69,12 +69,12 @@ class Command(BaseCommand):
             for result in results:
                 process(result, True, result.date_joined)
             logger.info('record_type:{} records_written:{}'.format(cls_name, results.count()))
-        elif cls_name in ['Wallpost', 'Reaction', 'Order',]:
+        elif cls_name in ['Wallpost', 'Reaction', 'Order']:
             results = cls.objects.all().filter(updated__gte=start_date, updated__lte=end_date)
             for result in results:
                 process(result, True, result.updated)
             logger.info('record_type:{} records_written:{}'.format(cls_name, results.count()))
-        elif cls_name in ['Vote',]:
+        elif cls_name in ['Vote']:
             results = cls.objects.all().filter(created__gte=start_date, created__lte=end_date)
             for result in results:
                 process(result, True, result.created)

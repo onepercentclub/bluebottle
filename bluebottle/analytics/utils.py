@@ -32,7 +32,6 @@ def _multi_getattr(obj, attr, **kw):
 
 def process(instance, created, timestamp=None):
     instance_name = instance.__class__.__name__
-    timestamp = timestamp or timezone.now()
 
     # _merge_attrs combines the base and instance tag or field values with
     # the class values. It also handles translateable attrs.
@@ -96,14 +95,23 @@ def process(instance, created, timestamp=None):
     except AttributeError:
         return
 
+    analytics = analytics_cls()
+
     # Check if the analytics class for the instance has a skip
     # method and return if skip return true, otherwise continue
-    analytics = analytics_cls()
     try:
         if analytics.skip(instance, created):
             return
     except AttributeError:
         pass
+
+    if not timestamp:
+        try:
+            timestamp = analytics.timestamp(instance)
+        except AttributeError:
+            timestamp = timezone.now()
+    else:
+        timestamp = timestamp or timezone.now()
 
     # Check for instance specific tags
     try:

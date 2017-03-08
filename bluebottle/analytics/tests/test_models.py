@@ -57,7 +57,7 @@ class TestProjectAnalytics(BluebottleTestCase):
         }
 
     def test_country_tag(self, queue_mock):
-        ProjectFactory.create(theme=self.theme, status=self.status,
+        project = ProjectFactory.create(theme=self.theme, status=self.status,
                               country=self.country, location=None)
 
         args, kwargs = queue_mock.call_args
@@ -377,6 +377,7 @@ class TestVoteAnalytics(BluebottleTestCase):
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
+        self.assertEqual(kwargs['timestamp'], vote.created)
 
 
 @override_settings(ANALYTICS_ENABLED=True)

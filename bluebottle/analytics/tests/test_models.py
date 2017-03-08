@@ -377,6 +377,7 @@ class TestVoteAnalytics(BluebottleTestCase):
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
+        self.assertEqual(kwargs['timestamp'], vote.created)
 
 
 @override_settings(ANALYTICS_ENABLED=True)

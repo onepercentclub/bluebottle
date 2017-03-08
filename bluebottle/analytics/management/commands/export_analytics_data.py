@@ -62,16 +62,22 @@ class Command(BaseCommand):
     @override_settings(ANALYTICS_ENABLED=True)
     def _process(self, cls, start_date, end_date):
         cls_name = cls.__name__
+        # TODO: Come up with a better way of generically getting the timestamp for influxdb log entry
         if cls_name == 'Member':
             results = cls.objects.all().filter(date_joined__gte=start_date,
                                                date_joined__lte=end_date)
             for result in results:
                 process(result, True, result.date_joined)
             logger.info('record_type:{} records_written:{}'.format(cls_name, results.count()))
-        elif cls_name in ['Wallpost', 'Reaction', 'Order', 'Vote']:
+        elif cls_name in ['Wallpost', 'Reaction', 'Order']:
             results = cls.objects.all().filter(updated__gte=start_date, updated__lte=end_date)
             for result in results:
                 process(result, True, result.updated)
+            logger.info('record_type:{} records_written:{}'.format(cls_name, results.count()))
+        elif cls_name in ['Vote']:
+            results = cls.objects.all().filter(created__gte=start_date, created__lte=end_date)
+            for result in results:
+                process(result, True, result.created)
             logger.info('record_type:{} records_written:{}'.format(cls_name, results.count()))
         elif cls_name in ['ProjectPhaseLog', 'TaskStatusLog', 'TaskMemberStatusLog']:
             results = cls.objects.all().filter(start__gte=start_date, start__lte=end_date)

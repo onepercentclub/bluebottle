@@ -58,10 +58,13 @@ class Member(BlueBottleBaseUser):
             return False if created or obj.last_seen != obj._previous_last_seen else True
 
         @staticmethod
-        def timestamp(obj):
+        def timestamp(obj, created):
             # This only serves the purpose when we record the member created logs
             # We need to modify this if we ever record member deleted
-            return obj.date_joined
+            if created:
+                return obj.date_joined
+            else:
+                return obj.updated
 
     def get_tasks_qs(self):
         return TaskMember.objects.filter(

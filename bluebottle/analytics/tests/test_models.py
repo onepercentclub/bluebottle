@@ -57,11 +57,11 @@ class TestProjectAnalytics(BluebottleTestCase):
         }
 
     def test_country_tag(self, queue_mock):
-        ProjectFactory.create(theme=self.theme, status=self.status,
-                              country=self.country, location=None)
+        project = ProjectFactory.create(theme=self.theme, status=self.status, country=self.country, location=None)
 
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], self.expected_tags)
+        self.assertEqual(kwargs['timestamp'], project.created)
 
     def test_location_country_tag(self, queue_mock):
         location = LocationFactory.create()
@@ -153,6 +153,7 @@ class TestTaskAnalytics(BluebottleTestCase):
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
+        self.assertEqual(kwargs['timestamp'], task.created)
 
     def test_unchanged_status(self, queue_mock):
         user = BlueBottleUserFactory.create()
@@ -226,6 +227,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
+        self.assertEqual(kwargs['timestamp'], task_member.created)
 
     def test_unchanged_status(self, queue_mock):
         user = BlueBottleUserFactory.create()
@@ -309,6 +311,7 @@ class TestOrderAnalytics(BluebottleTestCase):
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
         self.assertEqual(str(kwargs['fields']['total']), '100.0')
+        self.assertEqual(kwargs['timestamp'], order.created)
 
     def test_tags_generation_usd(self, queue_mock):
         order = OrderFactory.create(total=Money(100, 'USD'), user=self.user)
@@ -405,6 +408,7 @@ class TestWallpostAnalytics(BluebottleTestCase):
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
+        self.assertEqual(kwargs['timestamp'], wallpost.created)
 
     def test_system_wallpost(self, queue_mock):
         project = ProjectFactory.create()

@@ -138,6 +138,7 @@ class CustomIndexDashboard(FluentIndexDashboard):
                     }
                 ]
             ))
+
         if getattr(settings, 'ANALYTICS_BACKOFFICE_ENABLED', True):
             self.children.append(MetricsModule(
                 title=_("Metrics"),

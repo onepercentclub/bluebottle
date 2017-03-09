@@ -12,9 +12,7 @@ from bluebottle.analytics import signals, utils
 from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.analytics.backends import InfluxExporter, FileExporter, _convert_timestamp
 
-from .common import FakeInfluxDBClient, FakeModel, FakeModelTwo
-
-fake_client = FakeInfluxDBClient()
+from .common import FakeModel, FakeModelTwo
 
 
 def do_nothing(**kwargs):
@@ -22,7 +20,6 @@ def do_nothing(**kwargs):
 
 
 @override_settings(ANALYTICS_ENABLED=True)
-@patch.object(InfluxExporter, 'client', fake_client)
 class TestAnalyticsQueue(SimpleTestCase):
     @patch.object(InfluxExporter, 'process')
     def test_tags_generation(self, mock_process):
@@ -48,7 +45,7 @@ class TestAnalyticsQueue(SimpleTestCase):
 @override_settings(ANALYTICS_BACKENDS={
     'file': {
         'handler_class': 'bluebottle.analytics.backends.FileExporter',
-        'base_dir': os.path.join(settings.PROJECT_ROOT, 'analytics'),
+        'base_dir': os.path.join(settings.PROJECT_ROOT, 'logs', 'analytics'),
         'measurement': 'saas',
     }
 })
@@ -65,7 +62,7 @@ class TestFileAnalyticsQueue(SimpleTestCase):
             'amount': 100
         }
 
-        base_dir = os.path.join(settings.PROJECT_ROOT, 'analytics')
+        base_dir = os.path.join(settings.PROJECT_ROOT, 'logs', 'analytics')
         self.log_dir = os.path.join(base_dir, self.tags['tenant'])
 
     @patch.object(FileExporter, 'process')
@@ -97,8 +94,7 @@ class TestFileAnalyticsQueue(SimpleTestCase):
         self.assertEqual(log['measurement'], 'saas')
 
 
-@override_settings(ANALYTICS_ENABLED=True,
-                   CELERY_RESULT_BACKEND='amqp')
+@override_settings(ANALYTICS_ENABLED=True, CELERY_RESULT_BACKEND='amqp')
 class TestAnalyticsSignalWithCelery(SimpleTestCase):
     @patch.object(utils.connection, 'schema_name', 'test')
     def test_delay_called(self):

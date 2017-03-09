@@ -65,9 +65,6 @@ class Command(BaseCommand):
         Timestamps:
         Wallpost                created         updated
         Reaction                created         updated
-        TaskMember              created         updated
-        Task                    created         updated
-        Project                 created         updated
         Order                   created         updated
         Member                  date_joined     updated
         Vote                    created
@@ -83,7 +80,7 @@ class Command(BaseCommand):
                 if not result.date_joined == result.updated:
                     process(result, False)
             logger.info('record_type:{}'.format(cls_name))
-        elif cls_name in ['Project', 'Task', 'TaskMember', 'Wallpost', 'Reaction', 'Order']:
+        elif cls_name in ['Wallpost', 'Reaction', 'Order']:
             results = cls.objects.all().filter(created__gte=start_date, created__lte=end_date)
             for result in results:
                 process(result, True)

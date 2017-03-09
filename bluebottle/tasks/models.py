@@ -330,6 +330,7 @@ class TaskMemberStatusLog(models.Model):
         }
         fields = {
             'id': 'task_member.id',
+            'task_id': 'task_member.task.id',
             'project_id': 'task_member.project.id',
             'user_id': 'task_member.member.id',
         }

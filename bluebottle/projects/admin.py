@@ -237,7 +237,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         fields = ['vote_count',
                   'amount_donated', 'amount_needed',
                   'popularity', 'payout_status']
-
+        if obj and obj.payout_status and obj.payout_status != 'needs_approval':
+            fields += ('status', )
         return fields
 
     def get_urls(self):

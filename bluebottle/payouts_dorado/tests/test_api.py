@@ -1,3 +1,4 @@
+from bluebottle.projects.models import Project
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now
@@ -53,15 +54,19 @@ class TestPayoutApi(BluebottleTestCase):
         """
         Update payout status
         """
+        # Possible statuses from Dorado
+        statuses = ['needs_approval', 'scheduled', 're_scheduled',
+                    'in_progress', 'partial',
+                    'success', 'confirmed', 'failed']
+
         payout_url = reverse('project-payout-detail', kwargs={'pk': self.project.id})
 
-        response = self.client.put(payout_url, {'status': 'created'}, token=self.user2_token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'created')
-
-        response = self.client.put(payout_url, {'status': 'success'}, token=self.user2_token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'success')
+        for st in statuses:
+            response = self.client.put(payout_url, {'status': st}, token=self.user2_token)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.data['status'], st)
+            project = Project.objects.get(pk=self.project.id)
+            self.assertEqual(project.payout_status, st)
 
 
 class TestPayoutProjectApi(BluebottleTestCase):

@@ -57,7 +57,7 @@ class TestProjectAnalytics(BluebottleTestCase):
         }
 
     def test_country_tag(self, queue_mock):
-        project = ProjectFactory.create(theme=self.theme, status=self.status, country=self.country, location=None)
+        ProjectFactory.create(theme=self.theme, status=self.status, country=self.country, location=None)
 
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], self.expected_tags)

@@ -183,7 +183,6 @@ class TestTaskAnalytics(BluebottleTestCase):
         previous_call_count = queue_mock.call_count
         Task.objects.update(status='realized')
 
-        # TaskStatusLog will also be created when tasks are created
         self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()),
                          'Analytics should be sent when update is called')
 

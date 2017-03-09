@@ -219,9 +219,12 @@ class Project(BaseProject, PreviousStatusMixin):
         (StatusDefinition.NEEDS_APPROVAL, _('Needs approval')),
         (StatusDefinition.APPROVED, _('Approved')),
         (StatusDefinition.CREATED, _('Created')),
+        (StatusDefinition.SCHEDULED, _('Scheduled')),
+        (StatusDefinition.RE_SCHEDULED, _('Re-scheduled')),
         (StatusDefinition.IN_PROGRESS, _('In progress')),
         (StatusDefinition.PARTIAL, _('Partial')),
         (StatusDefinition.SUCCESS, _('Success')),
+        (StatusDefinition.CONFIRMED, _('Confirmed')),
         (StatusDefinition.FAILED, _('Failed'))
     )
 

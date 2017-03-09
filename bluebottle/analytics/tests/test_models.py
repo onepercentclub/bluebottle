@@ -216,6 +216,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         }
         expected_fields = {
             'id': task_member.id,
+            'task_id': task_member.task.id,
             'project_id': project.id,
             'user_id': user.id,
             'hours': int(task_member.time_spent)

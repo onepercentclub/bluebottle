@@ -332,7 +332,6 @@ class TaskMemberStatusLog(models.Model):
             'id': 'task_member.id',
             'project_id': 'task_member.project.id',
             'user_id': 'task_member.member.id',
-            'task_id': 'task_member.task.id'
         }
 
         @staticmethod

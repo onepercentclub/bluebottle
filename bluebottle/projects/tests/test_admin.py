@@ -1,3 +1,5 @@
+from mock import patch
+
 from django.contrib.admin.sites import AdminSite
 
 from bluebottle.projects.admin import ProjectAdmin
@@ -74,7 +76,9 @@ class TestProjectAdmin(BluebottleTestCase):
             'payout_status' not in self.project_admin.get_list_display(request)
         )
 
-    def test_mark_payout_as_approved(self):
+    @patch('bluebottle.payouts_dorado.adapters.requests.post',
+           return_value=type('obj', (object,), {'status_code': 200, 'content': '{"status": "success"}'}))
+    def test_mark_payout_as_approved(self, mock_post):
         request = MockRequest()
         request.user = MockUser(['projects.approve_payout'])
 
@@ -82,7 +86,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
         self.project_admin.approve_payout(request, project.id)
         self.assertEqual(
-            Project.objects.get(id=project.id).payout_status, 'approved'
+            Project.objects.get(id=project.id).payout_status, 'created'
         )
 
     def test_mark_payout_as_approved_no_permissions(self):
@@ -105,4 +109,27 @@ class TestProjectAdmin(BluebottleTestCase):
         self.project_admin.approve_payout(request, project.id)
         self.assertEqual(
             Project.objects.get(id=project.id).payout_status, 'done'
+        )
+
+    @patch('bluebottle.payouts_dorado.adapters.requests.post',
+           return_value=type('obj', (object,), {'status_code': 200, 'content': '{"status": "success"}'}))
+    def test_read_only_status_after_payout_approved(self, mock_post):
+        request = MockRequest()
+        request.user = MockUser(['projects.approve_payout'])
+
+        project = ProjectFactory.create(payout_status='needs_approval')
+
+        # Project status should be editable
+        self.assertFalse(
+            'status' in self.project_admin.get_readonly_fields(request, obj=project)
+        )
+
+        self.project_admin.approve_payout(request, project.id)
+
+        project = Project.objects.get(id=project.id)
+        self.assertEqual(project.payout_status, 'created')
+
+        # Project status should be readonly after payout has been approved
+        self.assertTrue(
+            'status' in self.project_admin.get_readonly_fields(request, obj=project)
         )

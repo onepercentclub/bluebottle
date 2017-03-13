@@ -83,8 +83,6 @@ urlpatterns = [
     url(r'^surveys/',
         include('bluebottle.surveys.urls.core')),
 
-    url(r'^api/organizations/',
-        include('bluebottle.organizations.urls.api')),
     url(r'^api/suggestions/',
         include('bluebottle.suggestions.urls.api')),
 

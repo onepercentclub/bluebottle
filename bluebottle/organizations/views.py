@@ -1,56 +1,14 @@
+import os
+
 from django.http.response import HttpResponseForbidden
 from django.views.generic.detail import DetailView
 
-from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.organizations.models import Organization, OrganizationMember
-from bluebottle.organizations.permissions import IsOrganizationMember
-from bluebottle.organizations.serializers import (OrganizationSerializer,
-                                                  ManageOrganizationSerializer)
+from bluebottle.organizations.models import Organization
 
 from filetransfers.api import serve_file
-from rest_framework import generics
-import os
-
-
-class OrganizationList(generics.ListAPIView):
-    queryset = Organization.objects.all()
-    serializer_class = OrganizationSerializer
-    pagination_class = BluebottlePagination
-
-
-class OrganizationDetail(generics.RetrieveAPIView):
-    queryset = Organization.objects.all()
-    serializer_class = OrganizationSerializer
-
-
-class ManageOrganizationList(generics.ListCreateAPIView):
-    queryset = Organization.objects.all()
-    serializer_class = ManageOrganizationSerializer
-    pagination_class = BluebottlePagination
-
-    # Limit the view to only the organizations the current user is member of
-    def get_queryset(self):
-        org_ids = OrganizationMember.objects.filter(
-            user=self.request.user).values_list('organization_id',
-                                                flat=True).all()
-        queryset = super(ManageOrganizationList, self).get_queryset()
-        queryset = queryset.filter(id__in=org_ids)
-        return queryset
-
-    def perform_create(self, serializer):
-        organization = serializer.save()
-        member = OrganizationMember(organization=organization, user=self.request.user)
-        member.save()
-
-
-class ManageOrganizationDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Organization.objects.all()
-    serializer_class = ManageOrganizationSerializer
-    permission_classes = (IsOrganizationMember,)
 
 
 # Non API views
-
 # Download private documents
 
 class RegistrationDocumentDownloadView(DetailView):

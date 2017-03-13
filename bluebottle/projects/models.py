@@ -724,7 +724,8 @@ def project_post_save(sender, instance, **kwargs):
         try:
             adapter.trigger_payout()
         except ImproperlyConfigured:
-            pass
+            logger.warning('Dorado not configured when project payout approved',
+                           exc_info=1)
 
     try:
         init_status, current_status = None, None

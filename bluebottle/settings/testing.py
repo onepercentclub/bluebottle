@@ -117,3 +117,10 @@ PAYOUT_SERVICE = {
 
 
 TEST_RUNNER = 'bluebottle.test.test_runner.MultiTenantRunner'
+
+# Optional local override for test settings
+try:
+    from _testing import *
+except ImportError:
+    pass
+

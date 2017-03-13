@@ -10,7 +10,7 @@ from bluebottle.clients import properties
 class DoradoPayoutAdapter(object):
 
     def __init__(self, project):
-        self.settings = getattr(properties, 'PAYOUT_SERVICE', {})
+        self.settings = getattr(properties, 'PAYOUT_SERVICE', None)
         self.project = project
         self.tenant = connection.tenant
 
@@ -30,3 +30,5 @@ class DoradoPayoutAdapter(object):
             self.project.save()
         except MissingSchema:
             raise ImproperlyConfigured("Incorrect Payout URL")
+        except TypeError:
+            raise ImproperlyConfigured("Invalid Payout settings")

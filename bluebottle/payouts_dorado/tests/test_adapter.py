@@ -1,7 +1,9 @@
 from datetime import timedelta
-from django.utils.timezone import now
 from mock import patch
 from moneyed.classes import Money
+
+from django.utils.timezone import now
+from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -24,10 +26,6 @@ class TestPayoutAdapter(BluebottleTestCase):
         self.project = ProjectFactory.create(status=campaign,
                                              amount_asked=Money(500, 'EUR'))
 
-    def test_payouts_created_trigger_called(self, requests_mock):
-        """
-        Check trigger to service is been called.
-        """
         order = OrderFactory()
         DonationFactory.create_batch(7, project=self.project,
                                      amount=Money(100, 'EUR'), order=order)
@@ -46,6 +44,11 @@ class TestPayoutAdapter(BluebottleTestCase):
         self.project.deadline = yesterday
         self.project.save()
 
+    def test_payouts_created_trigger_called(self, requests_mock):
+        """
+        Check trigger to service is been called.
+        """
+
         self.assertEqual(self.project.status.slug, 'done-complete')
         self.assertEqual(self.project.payout_status, 'needs_approval')
 
@@ -54,3 +57,17 @@ class TestPayoutAdapter(BluebottleTestCase):
 
         requests_mock.assert_called_once_with('test', {'project_id': self.project.id, 'tenant': u'test'})
         self.assertEqual(self.project.payout_status, 'created')
+
+    @patch('bluebottle.projects.models.logger')
+    @override_settings(PAYOUT_SERVICE=None)
+    def test_payouts_settings_missing(self, mock_logger, requests_mock):
+        """
+        Message logged if payout status changed without service settings.
+        """
+        self.assertEqual(self.project.status.slug, 'done-complete')
+        self.assertEqual(self.project.payout_status, 'needs_approval')
+
+        self.project.payout_status = 'approved'
+        self.project.save()
+
+        mock_logger.warning.assert_called_with('Dorado not configured when project payout approved', exc_info=1)

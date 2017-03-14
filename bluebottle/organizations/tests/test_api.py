@@ -30,7 +30,7 @@ class OrganizationsEndpointTestCase(BluebottleTestCase):
 
         self.user_2 = BlueBottleUserFactory.create()
 
-        self.organization_1 = OrganizationFactory.create(name='Evil empire')
+        self.organization_1 = OrganizationFactory.create(name='Evil Knight')
         self.organization_2 = OrganizationFactory.create(name='Evel Knievel')
         self.organization_3 = OrganizationFactory.create(name='Hanson Kids')
 
@@ -65,11 +65,10 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         Tests that the list of organizations can be obtained from its
         endpoint.
         """
-        # Search for organizations with "ev" in their name.
-        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'ev'}))
+        # Search for organizations with "evil" in their name.
+        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'Evil Knievel'}))
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-
         # Expect two organizations with 'ev'
         data = json.loads(response.content)
         self.assertEqual(data['count'], 2)

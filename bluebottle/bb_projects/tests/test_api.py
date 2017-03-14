@@ -428,3 +428,26 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertTrue('permission' in response.content)
+
+
+class TestTinyProjectList(ProjectEndpointTestCase):
+    """
+    Test case for the ``TinyProjectList`` API view.
+    """
+
+    def setUp(self):
+        self.init_projects()
+        campaign = ProjectPhase.objects.get(slug='campaign')
+        incomplete = ProjectPhase.objects.get(slug='done-incomplete')
+        complete = ProjectPhase.objects.get(slug='done-complete')
+        self.project1 = ProjectFactory(status=complete)
+        self.project2 = ProjectFactory(status=campaign)
+        self.project3 = ProjectFactory(status=incomplete)
+
+    def test_tiny_project_list(self):
+        response = self.client.get(reverse('project_tiny_preview_list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(int(data['results'][0]['id']), self.project2.id)
+        self.assertEqual(int(data['results'][1]['id']), self.project1.id)
+        self.assertEqual(int(data['results'][2]['id']), self.project3.id)

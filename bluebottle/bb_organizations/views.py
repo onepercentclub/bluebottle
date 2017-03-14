@@ -4,7 +4,7 @@ from django.http import HttpResponseForbidden
 from django.views.generic.detail import DetailView
 
 from filetransfers.api import serve_file
-from rest_framework import generics
+from rest_framework import generics, filters
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.organizations.serializers import OrganizationSerializer, \
@@ -18,6 +18,8 @@ class OrganizationList(generics.ListAPIView):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     pagination_class = BluebottlePagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
 
 
 class OrganizationDetail(generics.RetrieveAPIView):

@@ -1,7 +1,9 @@
 import json
+import urllib
 
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
+
 
 from bluebottle.organizations.models import Organization, OrganizationMember
 from bluebottle.test.utils import BluebottleTestCase
@@ -28,9 +30,9 @@ class OrganizationsEndpointTestCase(BluebottleTestCase):
 
         self.user_2 = BlueBottleUserFactory.create()
 
-        self.organization_1 = OrganizationFactory.create()
-        self.organization_2 = OrganizationFactory.create()
-        self.organization_3 = OrganizationFactory.create()
+        self.organization_1 = OrganizationFactory.create(name='Evil empire')
+        self.organization_2 = OrganizationFactory.create(name='Evel Knievel')
+        self.organization_3 = OrganizationFactory.create(name='Hanson Kids')
 
         self.member_1 = OrganizationMemberFactory.create(
             user=self.user_1, organization=self.organization_1)
@@ -57,6 +59,20 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         # We received the three organizations created.
         data = json.loads(response.content)
         self.assertEqual(data['count'], 3)
+
+    def test_api_organizations_search(self):
+        """
+        Tests that the list of organizations can be obtained from its
+        endpoint.
+        """
+        # Search for organizations with "ev" in their name.
+        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'ev'}))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        # Expect two organizations with 'ev'
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 2)
 
 
 class OrganizationDetailTestCase(OrganizationsEndpointTestCase):

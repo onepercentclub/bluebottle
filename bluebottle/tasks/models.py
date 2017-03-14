@@ -191,11 +191,11 @@ class Task(models.Model, PreviousStatusMixin):
                 #  And schedule two more mails (in  3 and 6 days)
                 send_task_realized_mail.apply_async(
                     [self, 'task_status_realized_reminder', second_subject, connection.tenant],
-                    eta=timezone.now() + timedelta(days=3)
+                    eta=timezone.now() + timedelta(minutes=settings.REMINDER_MAIL_DELAY)
                 )
                 send_task_realized_mail.apply_async(
                     [self, 'task_status_realized_second_reminder', third_subject, connection.tenant],
-                    eta=timezone.now() + timedelta(days=6)
+                    eta=timezone.now() + timedelta(minutes=2 * settings.REMINDER_MAIL_DELAY)
                 )
 
         if oldstate in ("in progress", "open") and newstate == "closed":

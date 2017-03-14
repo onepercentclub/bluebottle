@@ -4,7 +4,8 @@ from django.template.response import TemplateResponse
 from django.http.response import HttpResponseRedirect
 from django.utils.translation import ugettext as _
 
-from bluebottle.organizations.models import Organization, OrganizationMember
+from bluebottle.organizations.models import (Organization, OrganizationMember,
+                                             OrganizationContact)
 from bluebottle.projects.models import Project
 
 
@@ -55,9 +56,14 @@ class OrganizationMemberInline(admin.StackedInline):
     raw_id_fields = ('user',)
 
 
+class OrganizationContactInline(admin.StackedInline):
+    model = OrganizationContact
+    raw_id_fields = ('owner',)
+
+
 class OrganizationAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
-    inlines = (OrganizationMemberInline,)
+    inlines = (OrganizationMemberInline, OrganizationContactInline,)
 
     list_display = ('name', 'created')
 

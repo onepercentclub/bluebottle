@@ -317,6 +317,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('title', 'title'),
         ('owner', 'owner'),
         ('owner__remote_id', 'remote id'),
+        ('reviewer', 'reviewer'),
         ('created', 'created'),
         ('status', 'status'),
         ('theme', 'theme'),

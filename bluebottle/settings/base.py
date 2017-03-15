@@ -615,6 +615,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('id', 'Project ID'),
                 ('owner__id', 'User ID'),
                 ('owner__remote_id', 'Remote ID'),
+                ('reviewer__id', 'Reviewer ID'),
                 ('status__name', 'Status'),
                 ('title', 'Title'),
                 ('owner__email', 'Email'),

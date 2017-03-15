@@ -41,7 +41,6 @@ class DoradoPayoutAdapter(object):
                 raise PayoutValidationError(json.loads(response.content))
             except ValueError:
                 raise PayoutCreationError(response.content)
-
         except MissingSchema:
             raise ImproperlyConfigured("Incorrect Payout URL")
         except TypeError:

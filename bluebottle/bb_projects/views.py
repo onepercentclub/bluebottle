@@ -33,7 +33,7 @@ class ProjectTinyPreviewList(generics.ListAPIView):
     def get_queryset(self):
         query = self.request.query_params
         qs = Project.objects.search(query=query)
-        qs = qs.order_by('status__sequence', '-created')
+        qs = qs.order_by('-status__sequence', 'campaign_ended', 'created')
         return qs.filter(status__viewable=True)
 
 

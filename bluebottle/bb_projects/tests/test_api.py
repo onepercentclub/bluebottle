@@ -448,6 +448,6 @@ class TestTinyProjectList(ProjectEndpointTestCase):
         response = self.client.get(reverse('project_tiny_preview_list'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = json.loads(response.content)
-        self.assertEqual(int(data['results'][0]['id']), self.project2.id)
+        self.assertEqual(int(data['results'][0]['id']), self.project3.id)
         self.assertEqual(int(data['results'][1]['id']), self.project1.id)
-        self.assertEqual(int(data['results'][2]['id']), self.project3.id)
+        self.assertEqual(int(data['results'][2]['id']), self.project2.id)

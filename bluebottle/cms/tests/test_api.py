@@ -193,8 +193,8 @@ class ResultPageTestCase(BluebottleTestCase):
 
         # The last project in the list should be the completed (status == done-complete) one
         # that has most recent campaign ended timestamp.
-        highlighted = Project.objects.filter(status__slug='done-complete').order_by('campaign_ended')
-        self.assertEqual(highlighted.id, project[9]['id'])
+        highlighted = Project.objects.filter(status__slug='done-complete').order_by('-campaign_ended')[0]
+        self.assertEqual(highlighted.id, int(data['projects'][9]['id']))
 
     def test_results_map_end_date_inclusive(self):
         self.page.end_date = date(2016, 12, 31)

@@ -126,6 +126,7 @@ class TestTaskStatusMail(TaskMailTestBase):
         # There should be one email send immediately
         self.assertEquals(len(mail.outbox), 1)
         self.assertTrue('set to realized' in mail.outbox[0].subject)
+        self.assertTrue('Hello {}'.format(self.task.author.short_name) in mail.outbox[0].body)
 
         # And there should be 2 scheduled
 
@@ -200,6 +201,7 @@ class TestTaskStatusMail(TaskMailTestBase):
         self.assertEquals(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.subject, 'test subject')
+        self.assertTrue('Hello {}'.format(self.task.author.short_name) in mail.outbox[0].body)
         self.assertTrue(
             'Hopefully your task "{}" was a great success'.format(self.task.title) in email.body
         )
@@ -221,6 +223,7 @@ class TestTaskStatusMail(TaskMailTestBase):
         self.assertTrue(
             'In case it slipped your mind' in email.body
         )
+        self.assertTrue('Hello {}'.format(self.task.author.short_name) in mail.outbox[0].body)
         self.assertTrue(
             'https://testserver/go/tasks/{}'.format(self.task.pk) in email.body
         )

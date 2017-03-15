@@ -132,9 +132,8 @@ class BaseProject(models.Model, GetTweetMixin):
                                     choices=Type.choices, null=True, blank=True)
 
     # Basics
-    created = CreationDateTimeField(
-        _('created'), help_text=_('When this project was created.'))
-    updated = ModificationDateTimeField(_('updated'))
+    created = models.DateTimeField(_('created'), help_text=_('When this project was created.'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
     title = models.CharField(_('title'), max_length=255, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     pitch = models.TextField(

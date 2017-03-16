@@ -1,16 +1,13 @@
+from django.test.utils import override_settings
 from mock import patch
 from moneyed import Money
-from datetime import timedelta
-
-from django.test.utils import override_settings
-from django.utils import timezone
 
 from bluebottle.analytics import utils
 from bluebottle.analytics.backends import InfluxExporter
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.projects import models
 from bluebottle.projects.models import Project
-from bluebottle.tasks.models import Task, TaskMember, TaskStatusLog
+from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
@@ -284,23 +281,6 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         task_member.save()
 
         self.assertEqual(previous_call_count + 1, queue_mock.call_count)
-
-    def test_realized_status(self, queue_mock):
-        user = BlueBottleUserFactory.create()
-        task = TaskFactory.create(author=user, people_needed=2, status='realized')
-        task_member = TaskMemberFactory.create(member=user, task=task, status='approved')
-
-        # update task status realized log to be 10 hours ago
-        task_log = TaskStatusLog.objects.filter(task=task, status=task.TaskStatuses.realized).last()
-        task_log.start = timezone.now() - timedelta(hours=10)
-        task_log.save()
-
-        # Set task member as realized
-        task_member.status = task_member.TaskMemberStatuses.realized
-        task_member.save()
-
-        args, kwargs = queue_mock.call_args
-        self.assertEqual(kwargs['fields']['realized_duration'], 10)
 
     @patch.object(utils, '_', fake_trans)
     def test_theme_translated(self, queue_mock):

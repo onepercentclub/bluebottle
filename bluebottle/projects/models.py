@@ -57,8 +57,9 @@ class ProjectPhaseLog(models.Model):
     )
 
     class Analytics:
-        type = 'project_phase_update'
+        type = 'project'
         tags = {
+            'sub_type': 'project.project_type',
             'status': 'status.name',
             'status_slug': 'status.slug',
             'theme': {
@@ -70,9 +71,13 @@ class ProjectPhaseLog(models.Model):
             'country': 'project.country_name'
         }
         fields = {
-            'id': 'id',
-            'project_id': 'project.id'
+            'id': 'project.id',
+            'user_id': 'project.owner.id'
         }
+
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.start
 
 
 class ProjectManager(models.Manager):
@@ -634,25 +639,6 @@ class Project(BaseProject, PreviousStatusMixin):
 
     class Meta(BaseProject.Meta):
         ordering = ['title']
-
-    class Analytics:
-        type = 'project'
-        tags = {
-            'sub_type': 'project_type',
-            'status': 'status.name',
-            'status_slug': 'status.slug',
-            'theme': {
-                'theme.name': {'translate': True}
-            },
-            'theme_slug': 'theme.slug',
-            'location': 'location.name',
-            'location_group': 'location.group.name',
-            'country': 'country_name'
-        }
-        fields = {
-            'id': 'id',
-            'user_id': 'owner.id'
-        }
 
     def status_changed(self, old_status, new_status):
         status_complete = ProjectPhase.objects.get(slug="done-complete")

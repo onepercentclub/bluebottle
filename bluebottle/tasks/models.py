@@ -83,23 +83,6 @@ class Task(models.Model, PreviousStatusMixin):
 
         ordering = ['-created']
 
-    class Analytics:
-        type = 'task'
-        tags = {
-            'status': 'status',
-            'location': 'project.location.name',
-            'location_group': 'project.location.group.name',
-            'country': 'task.project.country_name',
-            'theme': {
-                'project.theme.name': {'translate': True}
-            },
-            'theme_slug': 'project.theme.slug'
-        }
-        fields = {
-            'id': 'id',
-            'user_id': 'author.id'
-        }
-
     def __unicode__(self):
         return self.title
 
@@ -283,44 +266,6 @@ class TaskMember(models.Model, PreviousStatusMixin):
         verbose_name = _(u'task member')
         verbose_name_plural = _(u'task members')
 
-    class Analytics:
-        type = 'task_member'
-        tags = {
-            'status': 'status',
-            'location': 'task.project.location.name',
-            'location_group': 'task.project.location.group.name',
-            'country': 'task.project.country_name',
-            'theme': {
-                'task.project.theme.name': {'translate': True}
-            },
-            'theme_slug': 'task.project.theme.slug'
-        }
-        fields = {
-            'id': 'id',
-            'task_id': 'task.id',
-            'user_id': 'member.id'
-        }
-
-        def extra_fields(self, obj, created):
-            fields = {}
-
-            # Also set the hours since the task was realized if the task member
-            # status is now realized.
-            if (obj._original_status != obj.TaskMemberStatuses.realized and
-               obj.status == obj.TaskMemberStatuses.realized and
-               obj.task.status == obj.task.TaskStatuses.realized):
-                # Use the last realized start time recorded in the task status logs as the base
-                task_log = TaskStatusLog.objects.filter(task=obj.task, status=obj.task.TaskStatuses.realized).last()
-                delta = obj.updated - task_log.start
-
-                # add the hours since task realized
-                fields['realized_duration'] = int(delta.total_seconds() / 60 / 60)
-
-            # Force the time_spent to an int.
-            fields['hours'] = int(obj.time_spent)
-
-            return fields
-
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
 
@@ -354,7 +299,7 @@ class TaskStatusLog(models.Model):
         _('created'), help_text=_('When this task entered in this status.'))
 
     class Analytics:
-        type = 'task_status_update'
+        type = 'task'
         tags = {
             'status': 'status',
             'theme': {
@@ -366,11 +311,14 @@ class TaskStatusLog(models.Model):
             'country': 'task.project.country_name'
         }
         fields = {
-            'id': 'id',
+            'id': 'task.id',
             'project_id': 'task.project.id',
             'user_id': 'task.author.id',
-            'task_id': 'task.id'
         }
+
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.start
 
 
 class TaskMemberStatusLog(models.Model):
@@ -380,23 +328,32 @@ class TaskMemberStatusLog(models.Model):
         _('created'), help_text=_('When this task member entered in this status.'))
 
     class Analytics:
-        type = 'task_member_status_update'
+        type = 'task_member'
         tags = {
             'status': 'status',
+            'location': 'task_member.project.location.name',
+            'location_group': 'task_member.project.location.group.name',
+            'country': 'task_member.project.country_name',
             'theme': {
                 'task_member.project.theme.name': {'translate': True}
             },
             'theme_slug': 'task_member.project.theme.slug',
-            'location': 'task_member.project.location.name',
-            'location_group': 'task_member.project.location.group.name',
-            'country': 'task_member.project.country_name'
         }
         fields = {
-            'id': 'id',
+            'id': 'task_member.id',
+            'task_id': 'task_member.task.id',
             'project_id': 'task_member.project.id',
             'user_id': 'task_member.member.id',
-            'task_id': 'task_member.task.id'
         }
+
+        @staticmethod
+        def extra_fields(obj, created):
+            # Force the time_spent to an int.
+            return {'hours': int(obj.task_member.time_spent)}
+
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.start
 
 
 from .taskmail import send_task_realized_mail  # noqa

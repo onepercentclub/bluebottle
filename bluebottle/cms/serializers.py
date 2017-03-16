@@ -132,6 +132,7 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
             campaign_ended__lte=self.context['end_date'],
             status__slug__in=['done-complete', 'done-incomplete']
         ).order_by(
+            '-status__sequence',
             'campaign_ended'
         )
 

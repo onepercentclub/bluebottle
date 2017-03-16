@@ -183,6 +183,8 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     image = ImageSerializer(required=False, allow_null=True)
     pitch = serializers.CharField(required=False, allow_null=True)
     slug = serializers.CharField(read_only=True)
+    people_registered = serializers.IntegerField(read_only=True)
+    people_requested = serializers.IntegerField(read_only=True)
 
     amount_asked = MoneySerializer(required=False, allow_null=True)
     amount_donated = MoneySerializer(read_only=True)
@@ -280,6 +282,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'account_number', 'account_bic', 'documents',
                   'account_bank_country', 'amount_asked',
                   'amount_donated', 'amount_needed', 'currencies',
+                  'people_requested', 'people_registered',
                   'video_url', 'video_html', 'is_funding', 'story', 'tasks',
                   'budget_lines', 'deadline', 'latitude', 'longitude',
                   'project_type')

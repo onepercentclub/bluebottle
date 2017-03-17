@@ -1,22 +1,19 @@
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 from decimal import InvalidOperation
 
+from daterange_filter.filter import DateRangeFilter
 from django import forms
 from django.conf.urls import url
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.core.urlresolvers import reverse
 from django.db.models import Count, Sum
-from django.utils.html import format_html
 from django.http.response import HttpResponseRedirect
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-
-from daterange_filter.filter import DateRangeFilter
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.rewards.models import Reward
-from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location

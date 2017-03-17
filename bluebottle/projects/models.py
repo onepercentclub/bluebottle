@@ -17,7 +17,6 @@ from django.utils.functional import lazy
 from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
-
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from moneyed.classes import Money
 from select_multiple_field.models import SelectMultipleField
@@ -37,7 +36,6 @@ from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     MediaWallpostPhoto, MediaWallpost, TextWallpost
 )
-
 from .mails import (
     mail_project_funded_internal, mail_project_complete,
     mail_project_incomplete
@@ -358,10 +356,10 @@ class Project(BaseProject, PreviousStatusMixin):
             elif self.amount_asked.amount > 0 \
                     and self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
-                self.payout_status = 'needs_approval'
+                self.payout_status = StatusDefinition.NEEDS_APPROVAL
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                self.payout_status = 'needs_approval'
+                self.payout_status = StatusDefinition.NEEDS_APPROVAL
             self.campaign_ended = self.deadline
 
         super(Project, self).save(*args, **kwargs)
@@ -656,12 +654,12 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.is_funding:
             if self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
-                self.payout_status = 'needs_approval'
+                self.payout_status = StatusDefinition.NEEDS_APPROVAL
             elif self.amount_donated.amount <= 20 or not self.campaign_started:
                 self.status = ProjectPhase.objects.get(slug="closed")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                self.payout_status = 'needs_approval'
+                self.payout_status = StatusDefinition.NEEDS_APPROVAL
         else:
             if self.task_set.filter(
                     status__in=[Task.TaskStatuses.in_progress,
@@ -719,13 +717,12 @@ def project_post_init(sender, instance, **kwargs):
           dispatch_uid="bluebottle.projects.Project.post_save")
 def project_post_save(sender, instance, **kwargs):
 
-    if instance.payout_status == 'approved':
+    if instance.payout_status == StatusDefinition.APPROVED:
         adapter = DoradoPayoutAdapter(instance)
         try:
             adapter.trigger_payout()
         except ImproperlyConfigured:
-            logger.warning('Dorado not configured when project payout approved',
-                           exc_info=1)
+            logger.warning('Dorado not configured when project payout approved', exc_info=1)
 
     try:
         init_status, current_status = None, None

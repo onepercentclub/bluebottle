@@ -20,13 +20,15 @@ from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
+from bluebottle.payouts_dorado.exceptions import PayoutException
+from bluebottle.rewards.models import Reward
+from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.utils import StatusDefinition
 from bluebottle.votes.models import Vote
-
 from .forms import ProjectDocumentForm
 from .models import (ProjectBudgetLine, Project,
                      ProjectDocument, ProjectPhaseLog)
-
 
 logger = logging.getLogger(__name__)
 
@@ -252,9 +254,15 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def approve_payout(self, request, pk=None):
         project = Project.objects.get(pk=pk)
-        if request.user.has_perm('projects.approve_payout') and project.payout_status == 'needs_approval':
-            project.payout_status = 'approved'
-            project.save()
+        if request.user.has_perm('projects.approve_payout') and \
+                project.payout_status == StatusDefinition.NEEDS_APPROVAL:
+            project.payout_status = StatusDefinition.APPROVED
+            try:
+                project.save()
+            except PayoutException:
+                messages.error(request, 'There was an error approving the payout')
+                project.payout_status = StatusDefinition.NEEDS_APPROVAL
+                project.save()
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         response = HttpResponseRedirect(project_url)
         return response

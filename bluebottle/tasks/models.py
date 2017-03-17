@@ -164,7 +164,7 @@ class Task(models.Model, PreviousStatusMixin):
 
             with TenantLanguage(self.author.primary_language):
                 subject = _("The status of your task '{0}' is set to realized").format(self.title)
-                second_subject = _("(Don't forget to) confirm the participants of your task!")
+                second_subject = _("Don't forget to confirm the participants of your task!")
                 third_subject = _("Last chance to confirm the participants of your task")
 
             # Immediately send email about realized task

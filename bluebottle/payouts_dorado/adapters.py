@@ -1,10 +1,10 @@
 import requests
-
 from django.core.exceptions import ImproperlyConfigured
 from django.db import connection
 from requests.exceptions import MissingSchema
 
 from bluebottle.clients import properties
+from bluebottle.payouts_dorado.exceptions import PayoutException
 
 
 class DoradoPayoutAdapter(object):
@@ -24,8 +24,8 @@ class DoradoPayoutAdapter(object):
         try:
             response = requests.post(self.settings['url'], data)
             if response.content != '{"status": "success"}':
-                raise SystemError("Could not trigger payout")
-            #
+                raise PayoutException(response.content)
+
             self.project.payout_status = 'created'
             self.project.save()
         except MissingSchema:

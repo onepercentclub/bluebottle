@@ -1,32 +1,31 @@
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
 from decimal import InvalidOperation
 
+from daterange_filter.filter import DateRangeFilter
 from django import forms
 from django.conf.urls import url
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.core.urlresolvers import reverse
 from django.db.models import Count, Sum
-from django.utils.html import format_html
 from django.http.response import HttpResponseRedirect
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-
-from daterange_filter.filter import DateRangeFilter
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.rewards.models import Reward
-from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
+from bluebottle.payouts_dorado.exceptions import PayoutException
+from bluebottle.rewards.models import Reward
+from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.utils import StatusDefinition
 from bluebottle.votes.models import Vote
-
 from .forms import ProjectDocumentForm
 from .models import (ProjectBudgetLine, Project,
                      ProjectDocument, ProjectPhaseLog)
-
 
 logger = logging.getLogger(__name__)
 
@@ -252,9 +251,15 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def approve_payout(self, request, pk=None):
         project = Project.objects.get(pk=pk)
-        if request.user.has_perm('projects.approve_payout') and project.payout_status == 'needs_approval':
-            project.payout_status = 'approved'
-            project.save()
+        if request.user.has_perm('projects.approve_payout') and \
+                project.payout_status == StatusDefinition.NEEDS_APPROVAL:
+            project.payout_status = StatusDefinition.APPROVED
+            try:
+                project.save()
+            except PayoutException:
+                messages.error(request, 'There was an error approving the payout')
+                project.payout_status = StatusDefinition.NEEDS_APPROVAL
+                project.save()
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         response = HttpResponseRedirect(project_url)
         return response

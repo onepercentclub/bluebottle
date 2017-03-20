@@ -263,7 +263,10 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             try:
                 adapter.trigger_payout()
             except ImproperlyConfigured:
-                pass
+                logger.warning(
+                    'Dorado not configured when project payout approved',
+                    exc_info=1
+                )
             except PayoutValidationError, e:
                 for field, errors in e.message['errors'].items():
                     for error in errors:

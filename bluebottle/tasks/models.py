@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.db import models, connection
 from django.conf import settings
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
@@ -163,9 +163,9 @@ class Task(models.Model, PreviousStatusMixin):
             self.project.check_task_status()
 
             with TenantLanguage(self.author.primary_language):
-                subject = _("The status of your task '{0}' is set to realized").format(self.title)
-                second_subject = _("Don't forget to confirm the participants of your task!")
-                third_subject = _("Last chance to confirm the participants of your task")
+                subject = ugettext("The status of your task '{0}' is set to realized").format(self.title)
+                second_subject = ugettext("Don't forget to confirm the participants of your task!")
+                third_subject = ugettext("Last chance to confirm the participants of your task")
 
             # Immediately send email about realized task
             send_task_realized_mail(self, 'task_status_realized', subject, connection.tenant)

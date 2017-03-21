@@ -1,22 +1,22 @@
 import factory
-from moneyed.classes import Money, NGN
+from moneyed.classes import Money, USD
 
 from bluebottle.test.factory_models.payments import OrderPaymentFactory, OrderFactory
 
-from ..models import FlutterwavePayment
+from ..models import TelesomPayment
 
 
-class FlutterwaveOrderFactory(OrderFactory):
-    total = Money(2000, NGN)
+class TelesomOrderFactory(OrderFactory):
+    total = Money(10, USD)
 
 
-class FlutterwaveOrderPaymentFactory(OrderPaymentFactory):
-    payment_method = 'flutterwaveVerve'
-    order = factory.SubFactory(FlutterwaveOrderFactory)
-    amount = Money(2000, NGN)
+class TelesomOrderPaymentFactory(OrderPaymentFactory):
+    payment_method = 'telesomZaad'
+    order = factory.SubFactory(TelesomOrderFactory)
+    amount = Money(2000, USD)
 
 
-class FlutterwavePaymentFactory(factory.DjangoModelFactory):
+class TelesomPaymentFactory(factory.DjangoModelFactory):
     class Meta(object):
-        model = FlutterwavePayment
-    order_payment = factory.SubFactory(FlutterwaveOrderPaymentFactory)
+        model = TelesomPayment
+    order_payment = factory.SubFactory(TelesomOrderPaymentFactory)

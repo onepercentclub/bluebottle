@@ -100,6 +100,9 @@ class TelesomPaymentAdapter(BasePaymentAdapter):
             self.payment.status = 'started'
             self.payment.update_response = response['response']
             self.payment.save()
+        else:
+            self.payment.status = 'started'
+            self.payment.save()
 
         if self.order_payment.authorization_action:
             self.order_payment.authorization_action.delete()

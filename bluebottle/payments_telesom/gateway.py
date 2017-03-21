@@ -21,6 +21,7 @@ class TelesomClient(object):
     This is a wrapper around the SOAP service methods,
     providing more Python-friendly wrappers.
     """
+
     def __init__(self, merchant_id, merchant_key, username, password, api_domain):
         """
         Initialize the client.

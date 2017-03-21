@@ -87,6 +87,18 @@ class TelesomPaymentAdapter(BasePaymentAdapter):
         )
         response = gateway.check_status(self.payment.transaction_reference)
 
-        self.payment.status = response['status']
-        self.payment.update_response = response['response']
-        self.payment.save()
+        status = response['status']
+
+        # To properly test the live flow against the testing server we have to make sure
+        # the payment doesn't get 'settled' on the first check. There for set it 'started'
+        # first so the user has to confirm again after which it wil get 'settled'
+        if self.payment.status == 'started' and status == 'settled':
+            self.payment.status = 'settled'
+            # self.order_payment.status = 'settled'
+            self.payment.update_response = response['response']
+            self.payment.save()
+        elif self.payment.status == 'created' and status == 'settled':
+            self.payment.status = 'started'
+            # self.order_payment.status = 'started'
+            self.payment.update_response = response['response']
+            self.payment.save()

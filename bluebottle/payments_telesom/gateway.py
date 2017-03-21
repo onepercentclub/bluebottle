@@ -126,7 +126,7 @@ class TelesomClient(object):
         # 4005! This payment is not yet Approved
 
         res = reply.split('!')
-        if res[0] == '2001':
+        if res[0] == '2001' or res[1] == ' This payment was processed ':
             status = 'settled'
         elif res[0] == '4005':
             status = 'started'

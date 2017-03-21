@@ -64,3 +64,4 @@ easy to add BlueBottle to your Django project.
 test\n
 test\n
 test\n
+test\n

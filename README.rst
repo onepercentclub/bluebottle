@@ -61,3 +61,5 @@ easy to add BlueBottle to your Django project.
 #. Install the latest development version::
 
     $ pip install -e git://github.com/onepercentclub/bluebottle.git#egg=bluebottle
+test\n
+test\n

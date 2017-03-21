@@ -89,7 +89,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     vote_count = serializers.IntegerField()
     supporter_count = serializers.IntegerField()
 
-    people_requested = serializers.ReadOnlyField()
+    people_needed = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
 
     amount_asked = MoneySerializer()
@@ -121,7 +121,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count', 'celebrate_results',
-                  'supporter_count', 'people_requested', 'people_registered',
+                  'supporter_count', 'people_needed', 'people_registered',
                   'voting_deadline', 'latitude', 'longitude', 'video_url', 'has_voted',
                   'video_html', 'location', 'project_type')
 

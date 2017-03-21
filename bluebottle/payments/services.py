@@ -103,9 +103,3 @@ class PaymentService(object):
 
     def check_payment_status(self, **integration_details):
         self.adapter.check_payment_status()
-
-        if self.order_payment.authorization_action:
-            self.order_payment.authorization_action.delete()
-
-        action = self.adapter.get_authorization_action()
-        self.order_payment.set_authorization_action(action)

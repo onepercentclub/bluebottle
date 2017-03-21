@@ -94,11 +94,16 @@ class TelesomPaymentAdapter(BasePaymentAdapter):
         # first so the user has to confirm again after which it wil get 'settled'
         if self.payment.status == 'started' and status == 'settled':
             self.payment.status = 'settled'
-            # self.order_payment.status = 'settled'
             self.payment.update_response = response['response']
             self.payment.save()
         elif self.payment.status == 'created' and status == 'settled':
             self.payment.status = 'started'
-            # self.order_payment.status = 'started'
             self.payment.update_response = response['response']
             self.payment.save()
+
+        if self.order_payment.authorization_action:
+            self.order_payment.authorization_action.delete()
+
+        action = self.get_authorization_action()
+        self.order_payment.set_authorization_action(action)
+        self.order_payment.save()

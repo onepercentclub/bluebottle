@@ -4,7 +4,6 @@ import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q, F
@@ -28,7 +27,6 @@ from bluebottle.bb_projects.models import (
 )
 from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.exchange_rates import convert
@@ -718,15 +716,6 @@ def project_post_init(sender, instance, **kwargs):
 @receiver(post_save, sender=Project,
           dispatch_uid="bluebottle.projects.Project.post_save")
 def project_post_save(sender, instance, **kwargs):
-
-    if instance.payout_status == 'approved':
-        adapter = DoradoPayoutAdapter(instance)
-        try:
-            adapter.trigger_payout()
-        except ImproperlyConfigured:
-            logger.warning('Dorado not configured when project payout approved',
-                           exc_info=1)
-
     try:
         init_status, current_status = None, None
 

@@ -4,17 +4,19 @@ from decimal import InvalidOperation
 
 from django import forms
 from django.conf.urls import url
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.db.models import Count, Sum
 from django.utils.html import format_html
-from django.http.response import HttpResponseRedirect
+from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.utils.translation import ugettext_lazy as _
 
 from daterange_filter.filter import DateRangeFilter
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
+from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter, PayoutValidationError
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
@@ -252,12 +254,30 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def approve_payout(self, request, pk=None):
         project = Project.objects.get(pk=pk)
-        if request.user.has_perm('projects.approve_payout') and project.payout_status == 'needs_approval':
-            project.payout_status = 'approved'
-            project.save()
+        if not request.user.has_perm('projects.approve_payout'):
+            return HttpResponseForbidden('Missing permission: projects.approve_payout')
+        elif project.payout_status != 'needs_approval':
+            self.message_user(request, 'The payout does not have the status "needs approval"')
+        else:
+            adapter = DoradoPayoutAdapter(project)
+            try:
+                adapter.trigger_payout()
+            except ImproperlyConfigured:
+                logger.warning(
+                    'Dorado not configured when project payout approved',
+                    exc_info=1
+                )
+            except PayoutValidationError, e:
+                for field, errors in e.message['errors'].items():
+                    for error in errors:
+                        self.message_user(
+                            request,
+                            'Account details: {}, {}.'.format(field, error.lower()),
+                            level=messages.ERROR
+                        )
+
         project_url = reverse('admin:projects_project_change', args=(project.id,))
-        response = HttpResponseRedirect(project_url)
-        return response
+        return HttpResponseRedirect(project_url)
 
     list_filter = ('country__subregion__region',)
 

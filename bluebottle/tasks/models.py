@@ -1,6 +1,9 @@
-from django.db import models
+from datetime import timedelta
+
+from django.db import models, connection
+from django.conf import settings
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
@@ -10,9 +13,10 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
-from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
+from bluebottle.utils.email_backend import send_mail
+
 
 GROUP_PERMS = {
     'Staff': {
@@ -159,16 +163,23 @@ class Task(models.Model, PreviousStatusMixin):
             self.project.check_task_status()
 
             with TenantLanguage(self.author.primary_language):
-                subject = _("The status of your task '{0}' is set to realized").format(self.title)
+                subject = ugettext("The status of your task '{0}' is set to realized").format(self.title)
+                second_subject = ugettext("Don't forget to confirm the participants of your task!")
+                third_subject = ugettext("Last chance to confirm the participants of your task")
 
-            send_mail(
-                template_name="tasks/mails/task_status_realized.mail",
-                subject=subject,
-                title=self.title,
-                to=self.author,
-                site=tenant_url(),
-                link='/go/tasks/{0}'.format(self.id)
-            )
+            # Immediately send email about realized task
+            send_task_realized_mail(self, 'task_status_realized', subject, connection.tenant)
+
+            if getattr(settings, 'CELERY_RESULT_BACKEND', None):
+                #  And schedule two more mails (in  3 and 6 days)
+                send_task_realized_mail.apply_async(
+                    [self, 'task_status_realized_reminder', second_subject, connection.tenant],
+                    eta=timezone.now() + timedelta(minutes=settings.REMINDER_MAIL_DELAY)
+                )
+                send_task_realized_mail.apply_async(
+                    [self, 'task_status_realized_second_reminder', third_subject, connection.tenant],
+                    eta=timezone.now() + timedelta(minutes=2 * settings.REMINDER_MAIL_DELAY)
+                )
 
         if oldstate in ("in progress", "open") and newstate == "closed":
             with TenantLanguage(self.author.primary_language):
@@ -345,6 +356,6 @@ class TaskMemberStatusLog(models.Model):
             return obj.start
 
 
-from .taskmail import *  # noqa
+from .taskmail import send_task_realized_mail  # noqa
 from .taskwallmails import *  # noqa
 from .signals import *  # noqa

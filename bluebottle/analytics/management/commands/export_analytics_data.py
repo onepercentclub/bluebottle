@@ -13,7 +13,7 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 
 
-logger = logging.getLogger('console')
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):

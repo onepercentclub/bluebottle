@@ -4,9 +4,9 @@ from django.template.response import TemplateResponse
 from django.http.response import HttpResponseRedirect
 from django.utils.translation import ugettext as _
 
-from bluebottle.organizations.models import (Organization, OrganizationMember,
-                                             OrganizationContact)
+from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.projects.models import Project
+from bluebottle.utils.admin import export_as_csv_action
 
 
 def merge(modeladmin, request, queryset):
@@ -51,31 +51,30 @@ class OrganizationProjectInline(admin.TabularInline):
         return False
 
 
-class OrganizationMemberInline(admin.StackedInline):
-    model = OrganizationMember
-    raw_id_fields = ('user',)
-
-
 class OrganizationContactInline(admin.StackedInline):
     model = OrganizationContact
     raw_id_fields = ('owner',)
 
 
 class OrganizationAdmin(admin.ModelAdmin):
-    prepopulated_fields = {'slug': ('name',)}
-    inlines = (OrganizationMemberInline, OrganizationContactInline,)
+    inlines = (OrganizationProjectInline, OrganizationContactInline,)
 
-    list_display = ('name', 'created')
+    list_display = ('name', 'email', 'website', 'phone_number', 'created')
+    list_filter = (
+        ('projects__theme', admin.RelatedOnlyFieldListFilter),
+        ('projects__location', admin.RelatedOnlyFieldListFilter),
+    )
+    fields = ('name', 'email', 'phone_number', 'website')
 
     search_fields = ('name',)
+    export_fields = [
+        ('name', 'name'),
+        ('website', 'website'),
+        ('phone_number', 'phone_number'),
+        ('created', 'created'),
+    ]
+
+    actions = (export_as_csv_action(fields=export_fields), merge)
 
 
-class OrganizationMemberAdmin(admin.ModelAdmin):
-    list_display = ('user', 'function')
-    list_filter = ('function',)
-    raw_id_fields = ('user',)
-    search_fields = ('user__first_name', 'user__last_name', 'user__username')
-
-
-admin.site.register(OrganizationMember, OrganizationMemberAdmin)
 admin.site.register(Organization, OrganizationAdmin)

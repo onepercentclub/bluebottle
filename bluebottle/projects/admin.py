@@ -239,6 +239,11 @@ class ProjectAdminForm(forms.ModelForm):
         super(ProjectAdminForm, self).__init__(*args, **kwargs)
         self.fields['currencies'].required = False
 
+        self.fields['reviewer'].widget = ReviewerWidget(
+            rel=Project._meta.get_field('reviewer').rel,
+            admin_site=admin.sites.site
+        )
+
 
 class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     form = ProjectAdminForm
@@ -284,7 +289,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     list_filter = ('country__subregion__region',)
 
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', ProjectThemeFilter,
+        filters = ('status', 'is_campaign', ProjectThemeFilter, ProjectReviewerFilter,
                    'project_type', ('deadline', DateRangeFilter),)
 
         # Only show Location column if there are any
@@ -312,6 +317,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('title', 'title'),
         ('owner', 'owner'),
         ('owner__remote_id', 'remote id'),
+        ('reviewer', 'reviewer'),
         ('created', 'created'),
         ('status', 'status'),
         ('theme', 'theme'),
@@ -327,8 +333,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('time_spent', 'time spent'),
         ('amount_asked', 'amount asked'),
         ('amount_donated', 'amount donated'),
+        ('organization__name', 'organization'),
         ('amount_extra', 'amount matched'),
-        ('organization__name', 'organization')
     ]
 
     actions = [export_as_csv_action(fields=export_fields),
@@ -344,7 +350,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return OrderedDict(reversed(actions.items()))
 
     fieldsets = (
-        (_('Main'), {'fields': ('owner', 'organization',
+        (_('Main'), {'fields': ('owner', 'reviewer', 'organization',
                                 'status', 'title', 'slug', 'project_type',
                                 'is_campaign', 'celebrate_results')}),
 

@@ -27,7 +27,7 @@ started:
 
 #. Install the project::
 
-    $ python setup.py setup
+    $ pip install -e .[test] --process-dependency-links --trusted-host github.com
     $ python manage.py sync_schemas --shared --settings=bluebottle.settings.testing
     $ python manage.py migrate_schemas --shared --settings=bluebottle.settings.testing
     $ ... createtenant

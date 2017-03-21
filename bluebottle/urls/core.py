@@ -96,6 +96,9 @@ urlpatterns = [
     url(r'^documents/',
         include('bluebottle.organizations.urls.documents')),
 
+    url(r'^api/organizations/',
+        include('bluebottle.organizations.urls.api')),
+
     url(r'^embed/', include('bluebottle.widget.urls.core')),
 
     # JSON Web Token based authentication for Django REST framework

@@ -52,7 +52,7 @@ class Command(BaseCommand):
                         'name': tenant.client_name,
                         'domain': 'https://{}'.format(tenant.domain_url),
                         'fees': {
-                            'under_target': properties.PROJECT_PAYOUT_FEES.get('not_full_funded', 0),
+                            'under_target': properties.PROJECT_PAYOUT_FEES.get('not_fully_funded', 0),
                             'over_target': properties.PROJECT_PAYOUT_FEES.get('fully_funded', 0)
                         }
                     } for token in

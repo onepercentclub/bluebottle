@@ -33,6 +33,8 @@ class ExportKeysTest(TestCase):
             self.assertTrue(token['api_key'])
             self.assertTrue(token['name'])
             self.assertTrue('fees' in token)
+            self.assertEqual(token['fees']['over_target'], 0.05)
+            self.assertEqual(token['fees']['under_target'], 0.05)
 
     def test_tenant(self):
         out = StringIO()
@@ -48,4 +50,5 @@ class ExportKeysTest(TestCase):
             self.assertTrue(token['domain'])
             self.assertTrue(token['api_key'])
             self.assertTrue(token['name'])
-            self.assertTrue('fees' in token)
+            self.assertEqual(token['fees']['over_target'], 0.05)
+            self.assertEqual(token['fees']['under_target'], 0.05)

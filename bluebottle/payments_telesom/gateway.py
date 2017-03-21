@@ -57,14 +57,28 @@ class TelesomClient(object):
             hashkey=key
         )
 
+        # Requests (including typos, please leave as is)
+        # ------------------
+        # 2001! Success, Waiting Confirmation !100
+        # 400!Error: connect ECONNREFUSED!
+        # 400!Error: connect Unknown system errno 10056!
+        # 4005! Insufficient Payer Account funds.!
+        # 4005! Invalid Payee Account Info. !
+        # 4005! Invalid Payee Account relation. !
+        # 4005! OOPS ! , Sorry your request could not be complete this time !!
+        # 4005! There is somthing got wrong, please try again !
+        # 4005!!
+        # 4005!Payer Account Does not Exist.!
+        # 5000!Account Locked, You can Try again after 24 Hours!-1
         # 5001! Invalid Username/Password/Hashkey Try Again!-1
-        # 2001! Success, Waiting Confirmation !265
+        # 5002!Error Occured Cannot Proccess Payment!-1
+        # 5004!Authentication Error!-1
 
         res = reply.split('!')
         if res[0] == '2001':
             return {
                 'response': reply,
-                'status': 'started',
+                'status': 'created',
                 'payment_id': res[2]
             }
         else:
@@ -93,15 +107,29 @@ class TelesomClient(object):
             hashkey=key
         )
 
-        # 5001! Invalid Username/Password/Hashkey Try Again!-1
-        # 5002!Error Occured Cannot Proccess Payment!-1  --> (e.g. payment id not found)
-        # 2001! Your account was Credited with $10.0000 Charge fee $ 0
-        # 5003! General Error Occured Cannot, Proccess Payment
-        # 4005! This payment was processed !-1
+        # Responses (including typos, please leave as is)
+        # ----------------
+        # 2001! Your account was Credited with $5.0000 Charge fee $ 0
+        # 5004!Authentication Error!-1
+        # 4005! Thi payment was processed
+        # 6001! This payment is Rejected
+        # 4005! This payment is Rejected
+        # 5001! Invalid Transaction fee configuration.
+        # 4005!Oops! Operation could not be completed, if this is permanent please contact support.
+        # 5002!Error Occured Cannot Proccess Payment
+        # 400!Error: connect Unknown system errno 10056
+        # 3011! Thi payment was processed
+        # 4005! Invalid Payment Claim
+        # 4005! Invalid Transaction fee configuration.
+        # 6002! This payment is not yet Approved
+        # 4005! Invalid Payment Request Id
+        # 4005! This payment is not yet Approved
 
         res = reply.split('!')
         if res[0] == '2001':
             status = 'settled'
+        elif res[0] == '4005':
+            status = 'started'
         else:
             status = 'failed'
         return {

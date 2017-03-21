@@ -60,10 +60,20 @@ class TelesomPaymentAdapter(BasePaymentAdapter):
         """
         Handle payment
         """
+
         if self.payment.status == 'settled':
             return {'type': 'success'}
+        elif self.payment.status == 'started':
+            return {
+                'type': 'step2',
+                'payload': {
+                    'method': 'telesom-sms',
+                    'text': 'Confirm the payment by SMS'
+                }
+            }
         else:
-            return {}
+            reply = self.payment.update_response
+            raise PaymentException("Error processing Telesom/Zaad transaction. {0}".format(reply))
 
     def check_payment_status(self):
         if self.payment.status == 'settled':

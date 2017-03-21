@@ -60,7 +60,7 @@ class OrganizationContact(models.Model):
     name = models.TextField(_('name'), max_length=100)
     email = models.EmailField(_('email'), max_length=254)
     phone = models.TextField(_('phone'), max_length=40)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('user'))
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('creator'))
     organization = models.ForeignKey('organizations.Organization',
                                      related_name="contacts")
     created = CreationDateTimeField(

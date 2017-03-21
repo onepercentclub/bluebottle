@@ -141,7 +141,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'theme', 'categories', 'owner', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'deadline', 'latitude',
                   'longitude', 'task_count', 'allow_overfunding', 'is_campaign',
-                  'is_funding', 'people_requested', 'celebrate_results',
+                  'is_funding', 'people_needed', 'celebrate_results',
                   'people_registered', 'location', 'vote_count',
                   'voting_deadline', 'project_type')
 
@@ -184,7 +184,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     pitch = serializers.CharField(required=False, allow_null=True)
     slug = serializers.CharField(read_only=True)
     people_registered = serializers.IntegerField(read_only=True)
-    people_requested = serializers.IntegerField(read_only=True)
+    people_needed = serializers.IntegerField(read_only=True)
 
     amount_asked = MoneySerializer(required=False, allow_null=True)
     amount_donated = MoneySerializer(read_only=True)
@@ -282,7 +282,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'account_number', 'account_bic', 'documents',
                   'account_bank_country', 'amount_asked',
                   'amount_donated', 'amount_needed', 'currencies',
-                  'people_requested', 'people_registered',
+                  'people_needed', 'people_registered',
                   'video_url', 'video_html', 'is_funding', 'story', 'tasks',
                   'budget_lines', 'deadline', 'latitude', 'longitude',
                   'project_type')

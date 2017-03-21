@@ -17,7 +17,7 @@ from tenant_extras.utils import get_tenant_properties
 
 import logging
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class LocalTenant(object):

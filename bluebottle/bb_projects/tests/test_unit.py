@@ -74,26 +74,26 @@ class TestProjectPeopleCount(BluebottleTestCase):
         self.other_task = TaskFactory.create(
             project=self.project, people_needed=10, status='open')
 
-    def test_people_requested(self):
-        self.assertEqual(self.project.people_requested, 20)
+    def test_people_needed(self):
+        self.assertEqual(self.project.people_needed, 20)
 
-    def test_people_requested_closed_task(self):
+    def test_people_needed_closed_task(self):
         self.task.status = 'closed'
         self.task.save()
 
-        self.assertEqual(self.project.people_requested, 10)
+        self.assertEqual(self.project.people_needed, 10)
 
-    def test_people_requested_expired(self):
+    def test_people_needed_expired(self):
         self.task.deadline = timezone.now() - timezone.timedelta(days=1)
         self.task.save()
 
-        self.assertEqual(self.project.people_requested, 10)
+        self.assertEqual(self.project.people_needed, 10)
 
-    def test_people_requested_realized_task(self):
+    def test_people_needed_realized_task(self):
         self.task.status = 'realized'
         self.task.save()
 
-        self.assertEqual(self.project.people_requested, 10)
+        self.assertEqual(self.project.people_needed, 10)
 
     def test_people_registered_none(self):
         self.assertEqual(self.project.people_registered, 0)
@@ -127,7 +127,7 @@ class TestProjectPeopleCount(BluebottleTestCase):
         TaskMemberFactory.create(member=self.user,
                                  task=self.task)
 
-        self.assertEqual(self.project.people_registered, 0)
+        self.assertEqual(self.project.people_registered, 1)
 
     def test_people_registered_not_accepted(self):
         TaskMemberFactory.create(member=self.user,

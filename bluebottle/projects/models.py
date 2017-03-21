@@ -1,7 +1,7 @@
 import datetime
-import pytz
 import logging
 
+import pytz
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
@@ -17,11 +17,11 @@ from django.utils.functional import lazy
 from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext as _
-
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from moneyed.classes import Money
 from select_multiple_field.models import SelectMultipleField
 
+from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectDocument
@@ -30,14 +30,13 @@ from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.exchange_rates import convert
+from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     MediaWallpostPhoto, MediaWallpost, TextWallpost
 )
-
 from .mails import (
     mail_project_funded_internal, mail_project_complete,
     mail_project_incomplete
@@ -58,8 +57,9 @@ class ProjectPhaseLog(models.Model):
     )
 
     class Analytics:
-        type = 'project_phase_update'
+        type = 'project'
         tags = {
+            'sub_type': 'project.project_type',
             'status': 'status.name',
             'status_slug': 'status.slug',
             'theme': {
@@ -71,9 +71,13 @@ class ProjectPhaseLog(models.Model):
             'country': 'project.country_name'
         }
         fields = {
-            'id': 'id',
-            'project_id': 'project.id'
+            'id': 'project.id',
+            'user_id': 'project.owner.id'
         }
+
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.start
 
 
 class ProjectManager(models.Manager):
@@ -308,6 +312,28 @@ class Project(BaseProject, PreviousStatusMixin):
                 # Save the new value to the db, but skip .save
                 # this way we will not trigger signals and hit the save method
                 self.objects.filter(pk=project.pk).update(popularity=popularity)
+
+    @classmethod
+    def update_status_stats(cls, tenant):
+        logger.info('Updating Project Status Stats: {}'.format(tenant.name))
+        timestamp = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+        for status in ProjectPhase.objects.all():
+            # TODO: Should we count statuses only where the project phase status is active?
+            count = Project.objects.filter(status=status).count()
+            logger.info('status: {}, count: {}'.format(status.name, count))
+            tags = {
+                'type': 'project_status_daily',
+                'status': status.name,
+                'status_slug': status.slug,
+                'tenant': tenant.client_name,
+            }
+            fields = {
+                'total': count,
+            }
+            if getattr(settings, 'CELERY_RESULT_BACKEND', None):
+                queue_analytics_record.delay(timestamp=timestamp, tags=tags, fields=fields)
+            else:
+                queue_analytics_record(timestamp=timestamp, tags=tags, fields=fields)
 
     def save(self, *args, **kwargs):
         # Set valid slug
@@ -613,25 +639,6 @@ class Project(BaseProject, PreviousStatusMixin):
 
     class Meta(BaseProject.Meta):
         ordering = ['title']
-
-    class Analytics:
-        type = 'project'
-        tags = {
-            'sub_type': 'project_type',
-            'status': 'status.name',
-            'status_slug': 'status.slug',
-            'theme': {
-                'theme.name': {'translate': True}
-            },
-            'theme_slug': 'theme.slug',
-            'location': 'location.name',
-            'location_group': 'location.group.name',
-            'country': 'country_name'
-        }
-        fields = {
-            'id': 'id',
-            'user_id': 'owner.id'
-        }
 
     def status_changed(self, old_status, new_status):
         status_complete = ProjectPhase.objects.get(slug="done-complete")

@@ -408,6 +408,9 @@ LOGGING = {
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue'
         }
     },
     'handlers': {
@@ -417,6 +420,7 @@ LOGGING = {
         },
         'console': {
             'level': 'DEBUG',
+            'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
@@ -434,9 +438,18 @@ LOGGING = {
             'class': 'bluebottle.payments_logger.handlers.PaymentLogHandler',
         },
         'json': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'json'
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api-json.log'),
+            'formatter': 'json',
+            'when': 'midnight',
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api.log'),
+            'formatter': 'simple',
+            'when': 'midnight',
         },
         'default': {
             'level': 'INFO',
@@ -445,60 +458,25 @@ LOGGING = {
         }
     },
     'loggers': {
-        'null': {
-            'handlers': ['null'],
+        'django.request': {
+            'handlers': ['mail_admins'],
             'propagate': True,
-            'level': 'INFO',
-        },
-        'bluebottle': {
-            'handlers': ['default'],
-            'propagate': True,
-            'level': 'INFO',
-        },
-        'console': {
-            'handlers': ['console'],
-            'propagate': True,
-            'level': 'INFO',
-        },
-        'json': {
-            'handlers': ['json'],
-            'propagate': True,
-            'level': 'DEBUG',
-        },
-        'bluebottle.auth.middleware': {
-            'handlers': ['console'],
-            'propagate': False,
             'level': 'ERROR',
         },
-        'suds.client': {
-            'handlers': ['console'],
-            'propagate': False,
-            'level': 'INFO'
-        },
-        'bluebottle.analytics': {
-            'handlers': ['console'],
-            'propagate': False,
-            'level': 'INFO',
-        },
-        'bluebottle.recurring_donations': {
-            'handlers': ['console'],
+        'bluebottle': {
+            'handlers': ['console', 'file'],
             'propagate': True,
             'level': 'INFO',
         },
         'bluebottle.salesforce': {
             'handlers': ['mail_admins'],
-            'level': 'ERROR',
             'propagate': True,
+            'level': 'ERROR',
         },
         'payments.payment': {
             'handlers': ['mail_admins', 'payment_logs', 'sentry'],
+            'propagate': True,
             'level': 'INFO',
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
         },
     }
 }
@@ -533,7 +511,8 @@ ANALYTICS_BACKENDS = {
         'measurement': 'saas',
     }
 }
-ANALYTICS_FRONTEND = 'https://analytics.onepercentclub.com'
+
+ANALYTICS_FRONTEND = ''
 ANALYTICS_BACKOFFICE_ENABLED = True
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
@@ -639,6 +618,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('id', 'Project ID'),
                 ('owner__id', 'User ID'),
                 ('owner__remote_id', 'Remote ID'),
+                ('reviewer__id', 'Reviewer ID'),
                 ('status__name', 'Status'),
                 ('title', 'Title'),
                 ('owner__email', 'Email'),
@@ -811,3 +791,5 @@ AUTO_CONVERT_MONEY = False
 LOCKDOWN_URL_EXCEPTIONS = [r'^/payments_vitepay/status_update/']
 THUMBNAIL_ENGINE = 'sorl_watermarker.engines.pil_engine.Engine'
 THUMBNAIL_WATERMARK_ALWAYS = False
+
+REMINDER_MAIL_DELAY = 60 * 24 * 3  # Three days

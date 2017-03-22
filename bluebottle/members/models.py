@@ -42,7 +42,8 @@ class Member(BlueBottleBaseUser):
             'user_id': 'id'
         }
 
-        def extra_tags(self, obj, created):
+        @staticmethod
+        def extra_tags(obj, created):
             if created:
                 return {'event': 'signup'}
             else:
@@ -50,10 +51,20 @@ class Member(BlueBottleBaseUser):
                 # triggered if the last_seen field has changed.
                 return {'event': 'seen'}
 
-        def skip(self, obj, created):
+        @staticmethod
+        def skip(obj, created):
             # Currently only the signup (created) event is being recorded
             # and when the last_seen changes.
             return False if created or obj.last_seen != obj._previous_last_seen else True
+
+        @staticmethod
+        def timestamp(obj, created):
+            # This only serves the purpose when we record the member created logs
+            # We need to modify this if we ever record member deleted
+            if created:
+                return obj.date_joined
+            else:
+                return obj.updated
 
     def get_tasks_qs(self):
         return TaskMember.objects.filter(

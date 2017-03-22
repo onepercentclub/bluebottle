@@ -39,7 +39,7 @@ install_requires = [
     'celery==3.1.23',
     'django-admin-sortable==2.0.21',
     'django-admin-tools==0.8.0',
-    'django-celery==3.1.17',
+    'django-celery==3.2.1',
     'django-choices==1.4.2',
     'django-cors-headers==1.1.0',
     'django-daterange-filter==1.3.0',
@@ -49,7 +49,7 @@ install_requires = [
     'django-filter==0.13.0',
     'django-geoposition==0.3.0',
     'django-dynamic-fixture==1.8.5',
-    'django-fluent-dashboard==0.6.1',
+    'django-fluent-dashboard==1.0a1',
     'django-fsm==2.4.0',
     'django-ipware==1.1.5',
     'django-localflavor==1.2',
@@ -97,7 +97,7 @@ install_requires = [
     'wheel==0.29.0',
 
     # Github requirements
-    'django-fluent-contents==1.1.7',
+    'django-fluent-contents==1.1.11',
     'django-tenant-extras==2.0.11',
     'django-bb-salesforce==1.2.2',
     'django-cors-headers==1.1.0',

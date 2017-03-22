@@ -1,29 +1,26 @@
-from moneyed import Money
-from datetime import timedelta
 from datetime import datetime
-
-from django.db.models.aggregates import Sum
-from django.db.models import F, Count
-from django.utils.timezone import now
-
-from django.core.urlresolvers import reverse_lazy
+from datetime import timedelta
 
 from admin_tools.dashboard.models import DashboardModule
-
-from bluebottle.tasks.models import Task, TaskMember
-
-from admin_tools.dashboard import modules
+from admin_tools.dashboard.modules import LinkList
+from django.conf import settings
+from django.core.urlresolvers import reverse_lazy
+from django.db.models import F, Count
+from django.db.models.aggregates import Sum
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-
 from fluent_dashboard.dashboard import FluentIndexDashboard
-from bluebottle.projects.dashboard import SubmittedPlans, EndedProjects, StartedCampaigns
-from bluebottle.bb_tasks.dashboard import RecentTasks
+from moneyed import Money
 
+from bluebottle.bb_tasks.dashboard import RecentTasks
 from bluebottle.clients import properties
-from bluebottle.suggestions.models import Suggestion
-from bluebottle.members.models import Member
-from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
+from bluebottle.members.models import Member
+from bluebottle.projects.dashboard import Analytics
+from bluebottle.projects.dashboard import SubmittedPlans, EndedProjects, StartedCampaigns
+from bluebottle.projects.models import Project
+from bluebottle.suggestions.models import Suggestion
+from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
 
 
@@ -126,13 +123,13 @@ class CustomIndexDashboard(FluentIndexDashboard):
     columns = 3
 
     def init_with_context(self, context):
+        self.children.append(Analytics())
         self.children.append(SubmittedPlans())
         self.children.append(StartedCampaigns())
         self.children.append(EndedProjects())
         self.children.append(RecentTasks())
-
         if context['request'].user.has_perm('sites.export'):
-            self.children.append(modules.LinkList(
+            self.children.append(LinkList(
                 _('Export Metrics'),
                 children=[
                     {
@@ -141,10 +138,10 @@ class CustomIndexDashboard(FluentIndexDashboard):
                     }
                 ]
             ))
-
-        self.children.append(MetricsModule(
-            title=_("Metrics"),
-        ))
+        if getattr(settings, 'ANALYTICS_BACKOFFICE_ENABLED', True):
+            self.children.append(MetricsModule(
+                title=_("Metrics"),
+            ))
 
 
 class MetricsModule(DashboardModule):

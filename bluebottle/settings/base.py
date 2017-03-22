@@ -396,15 +396,21 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s %(levelname)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(asctime)s %(levelname)s %(name) %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '%(asctime)s %(levelname)s %(message)s'
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s'
+        },
+        'json': {
+            '()': 'bluebottle.utils.formatters.JsonFormatter'
         },
     },
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue'
         }
     },
     'handlers': {
@@ -414,6 +420,7 @@ LOGGING = {
         },
         'console': {
             'level': 'DEBUG',
+            'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
@@ -429,48 +436,47 @@ LOGGING = {
         'payment_logs': {
             'level': 'INFO',
             'class': 'bluebottle.payments_logger.handlers.PaymentLogHandler',
+        },
+        'json': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api-json.log'),
+            'formatter': 'json',
+            'when': 'midnight',
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api.log'),
+            'formatter': 'simple',
+            'when': 'midnight',
+        },
+        'default': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
         }
     },
     'loggers': {
-        'null': {
-            'handlers': ['null'],
+        'django.request': {
+            'handlers': ['mail_admins'],
             'propagate': True,
-            'level': 'INFO',
-        },
-        'console': {
-            'handlers': ['console'],
-            'propagate': True,
-            'level': 'INFO',
-        },
-        'bluebottle.auth.middleware': {
-            'handlers': ['console'],
-            'propagate': False,
             'level': 'ERROR',
         },
-        'bluebottle.analytics.tasks': {
-            'handlers': ['console'],
-            'propagate': False,
-            'level': 'ERROR',
-        },
-        'bluebottle.recurring_donations': {
-            'handlers': ['console'],
+        'bluebottle': {
+            'handlers': ['console', 'file'],
             'propagate': True,
             'level': 'INFO',
         },
         'bluebottle.salesforce': {
             'handlers': ['mail_admins'],
-            'level': 'ERROR',
             'propagate': True,
+            'level': 'ERROR',
         },
         'payments.payment': {
             'handlers': ['mail_admins', 'payment_logs', 'sentry'],
+            'propagate': True,
             'level': 'INFO',
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
         },
     }
 }
@@ -489,7 +495,7 @@ DONATIONS_ENABLED = True
 # Analytics Service
 ANALYTICS_ENABLED = False
 ANALYTICS_BACKENDS = {
-    'default': {
+    'influxdb': {
         'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
         'host': 'localhost',
         'port': 8086,
@@ -505,6 +511,9 @@ ANALYTICS_BACKENDS = {
         'measurement': 'saas',
     }
 }
+
+ANALYTICS_FRONTEND = ''
+ANALYTICS_BACKOFFICE_ENABLED = True
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'
@@ -609,6 +618,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('id', 'Project ID'),
                 ('owner__id', 'User ID'),
                 ('owner__remote_id', 'Remote ID'),
+                ('reviewer__id', 'Reviewer ID'),
                 ('status__name', 'Status'),
                 ('title', 'Title'),
                 ('owner__email', 'Email'),
@@ -620,6 +630,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('funding', 'Funding'),
                 ('sourcing', 'Sourcing'),
                 ('amount_asked', 'Amount asked'),
+                ('amount_donated', 'Amount raised'),
+                ('amount_extra', 'Amount matched'),
                 ('task_count', 'Task Count'),
                 ('has_survey', 'Has Survey'),
                 ('realized_task_count', 'Realized Task Count'),
@@ -633,6 +645,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('campaign_started', 'Campaign Started'),
                 ('campaign_ended', 'Campaign Ended'),
                 ('campaign_funded', 'Campaign Funded'),
+                ('organization__name', 'organization'),
             ),
             'resource_class': 'bluebottle.exports.resources.ProjectResource',
             'title': 'Projects',
@@ -778,3 +791,5 @@ AUTO_CONVERT_MONEY = False
 LOCKDOWN_URL_EXCEPTIONS = [r'^/payments_vitepay/status_update/']
 THUMBNAIL_ENGINE = 'sorl_watermarker.engines.pil_engine.Engine'
 THUMBNAIL_WATERMARK_ALWAYS = False
+
+REMINDER_MAIL_DELAY = 60 * 24 * 3  # Three days

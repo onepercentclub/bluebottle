@@ -58,7 +58,8 @@ class BaseOrder(models.Model, FSMTransition):
     total = MoneyField(_("Amount"), )
 
     @transition(field=status,
-                source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED],
+                source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED,
+                        StatusDefinition.FAILED],
                 target=StatusDefinition.LOCKED)
     def locked(self):
         pass

@@ -1,12 +1,15 @@
+from celery import shared_task
+
 from django.dispatch import receiver
+from django.db import connection
 from django.db.models.signals import post_save, pre_delete
-from django.utils.translation import ugettext as _
 from django.utils import translation
+from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.clients.utils import tenant_url
+from bluebottle.clients.utils import tenant_url, LocalTenant
 from bluebottle.tasks.models import TaskMember
 from bluebottle.surveys.models import Survey
 from bluebottle.utils.email_backend import send_mail
@@ -148,6 +151,28 @@ class TaskMemberMailAdapter:
     def send_mail(self):
         if self.mail_sender:
             self.mail_sender.send()
+
+
+@shared_task
+def send_task_realized_mail(task, template, subject, tenant):
+    """ Send an email to the task owner with the request to confirm
+    the task participants.
+    """
+    connection.set_tenant(tenant)
+
+    with LocalTenant(tenant, clear_tenant=True):
+        if len(task.members.filter(status=TaskMember.TaskMemberStatuses.realized)):
+            # There is already a confirmed task member: Do not bother the owner
+            return
+
+        send_mail(
+            template_name='tasks/mails/{}.mail'.format(template),
+            subject=subject,
+            title=task.title,
+            to=task.author,
+            site=tenant_url(),
+            link='/go/tasks/{0}'.format(task.id)
+        )
 
 
 @receiver(post_save, weak=False, sender=TaskMember)

@@ -134,7 +134,23 @@ class ProjectThemeFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(theme__id__exact=self.value())
+            return queryset.filter(theme=self.value())
+        else:
+            return queryset
+
+
+class ProjectReviewerFilter(admin.SimpleListFilter):
+    title = _('Reviewer')
+    parameter_name = 'reviewer'
+
+    def lookups(self, request, model_admin):
+        return ((True, _('My projects')), )
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(
+                reviewer=request.user
+            )
         else:
             return queryset
 
@@ -205,6 +221,13 @@ class ProjectBudgetLineInline(admin.TabularInline):
     extra = 0
 
 
+class ReviewerWidget(admin.widgets.ForeignKeyRawIdWidget):
+    def url_parameters(self):
+        parameters = super(ReviewerWidget, self).url_parameters()
+        parameters['is_staff'] = True
+        return parameters
+
+
 class ProjectAdminForm(forms.ModelForm):
     class Meta:
         widgets = {
@@ -218,6 +241,11 @@ class ProjectAdminForm(forms.ModelForm):
         super(ProjectAdminForm, self).__init__(*args, **kwargs)
         self.fields['currencies'].required = False
 
+        self.fields['reviewer'].widget = ReviewerWidget(
+            rel=Project._meta.get_field('reviewer').rel,
+            admin_site=admin.sites.site
+        )
+
 
 class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     form = ProjectAdminForm
@@ -228,7 +256,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     search_fields = ('title', 'owner__first_name', 'owner__last_name',
                      'organization__name')
 
-    raw_id_fields = ('owner', 'organization',)
+    raw_id_fields = ('owner', 'reviewer', 'organization',)
 
     prepopulated_fields = {'slug': ('title',)}
 
@@ -282,8 +310,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     list_filter = ('country__subregion__region',)
 
     def get_list_filter(self, request):
-        filters = ['status', 'is_campaign', ProjectThemeFilter,
-                   'project_type', ('deadline', DateRangeFilter)]
+        filters = ['status', 'is_campaign', ProjectThemeFilter, ProjectReviewerFilter,
+                   'project_type', ('deadline', DateRangeFilter),]
 
         if request.user.has_perm('projects.approve_payout'):
             filters.insert(1, 'payout_status')
@@ -317,6 +345,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('title', 'title'),
         ('owner', 'owner'),
         ('owner__remote_id', 'remote id'),
+        ('reviewer', 'reviewer'),
         ('created', 'created'),
         ('status', 'status', 'payout_status'),
         ('theme', 'theme'),
@@ -332,6 +361,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('time_spent', 'time spent'),
         ('amount_asked', 'amount asked'),
         ('amount_donated', 'amount donated'),
+        ('organization__name', 'organization'),
+        ('amount_extra', 'amount matched'),
     ]
 
     actions = [export_as_csv_action(fields=export_fields),
@@ -347,7 +378,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return OrderedDict(reversed(actions.items()))
 
     def get_fieldsets(self, request, obj=None):
-        main = {'fields': ['owner', 'organization',
+        main = {'fields': ['owner', 'reviewer', 'organization',
                            'status', 'title', 'slug', 'project_type',
                            'is_campaign', 'celebrate_results']}
 

@@ -10,6 +10,7 @@ from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.organizations.serializers import OrganizationSerializer, \
     ManageOrganizationSerializer
 from bluebottle.organizations.models import Organization, OrganizationMember
+from bluebottle.utils.filters import TrigramFilter
 
 from .permissions import IsOrganizationMember
 
@@ -18,6 +19,8 @@ class OrganizationList(generics.ListAPIView):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     pagination_class = BluebottlePagination
+    filter_backends = (TrigramFilter,)
+    search_fields = ('name',)
 
 
 class OrganizationDetail(generics.RetrieveAPIView):

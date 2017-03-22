@@ -1,16 +1,8 @@
-from ..views import ManageOrganizationList, ManageOrganizationDetail
 from django.conf.urls import url
-from surlex.dj import surl
-from ..views import OrganizationDetail, OrganizationList
+
+from ..views import ManageOrganizationContactList
 
 urlpatterns = [
-    url(r'^$', OrganizationList.as_view(),
-        name='organization-list'),
-    surl(r'^<pk:#>$', OrganizationDetail.as_view(),
-         name='organization-detail'),
-    surl(r'^manage/$', ManageOrganizationList.as_view(),
-         name='manage-organization-list'),
-    surl(r'^manage/<pk:#>$',
-         ManageOrganizationDetail.as_view(),
-         name='manage-organization-detail'),
+    url(r'^contacts', ManageOrganizationContactList.as_view(),
+        name='manage_organization_contact_list')
 ]

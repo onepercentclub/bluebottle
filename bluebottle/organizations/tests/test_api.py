@@ -1,7 +1,9 @@
 import json
+import urllib
 
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
+
 
 from bluebottle.organizations.models import Organization, OrganizationMember
 from bluebottle.test.utils import BluebottleTestCase
@@ -9,7 +11,7 @@ from rest_framework import status
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
-    OrganizationFactory, OrganizationMemberFactory)
+    OrganizationContactFactory, OrganizationFactory, OrganizationMemberFactory)
 
 
 class OrganizationsEndpointTestCase(BluebottleTestCase):
@@ -28,9 +30,9 @@ class OrganizationsEndpointTestCase(BluebottleTestCase):
 
         self.user_2 = BlueBottleUserFactory.create()
 
-        self.organization_1 = OrganizationFactory.create()
-        self.organization_2 = OrganizationFactory.create()
-        self.organization_3 = OrganizationFactory.create()
+        self.organization_1 = OrganizationFactory.create(name='Evil Knight')
+        self.organization_2 = OrganizationFactory.create(name='Evel Knievel')
+        self.organization_3 = OrganizationFactory.create(name='Hanson Kids')
 
         self.member_1 = OrganizationMemberFactory.create(
             user=self.user_1, organization=self.organization_1)
@@ -57,6 +59,19 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         # We received the three organizations created.
         data = json.loads(response.content)
         self.assertEqual(data['count'], 3)
+
+    def test_api_organizations_search(self):
+        """
+        Tests that the list of organizations can be obtained from its
+        endpoint.
+        """
+        # Search for organizations with "evil" in their name.
+        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'Evil Knievel'}))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        # Expect two organizations with 'ev'
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 2)
 
 
 class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
@@ -156,6 +171,80 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(OrganizationMember.objects.filter(user=self.user_1,
                                                            organization_id=response.data['id']
                                                            ).count(), 1)
+
+
+class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
+    """
+    Test case for ``OrganizationContact`` API
+
+    Endpoint: /api/organizations/contacts
+    """
+
+    def test_create_contact(self):
+        post_data = {
+            'name': 'Brian Brown',
+            'email': 'brian@brown.com',
+            'phone': '555-1243',
+            'organization': self.organization_1.pk
+        }
+
+        response = self.client.post(
+            reverse('manage_organization_contact_list'),
+            post_data,
+            token=self.user_1_token)
+
+        data = json.loads(response.content)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(data['owner'], self.user_1.pk)
+        self.assertEqual(data['name'], post_data['name'])
+        self.assertEqual(data['phone'], post_data['phone'])
+        self.assertEqual(data['email'], post_data['email'])
+        self.assertEqual(data['organization'], self.organization_1.pk)
+
+    def test_organization_contact(self):
+        contact = OrganizationContactFactory.create(owner=self.user_1, organization=self.organization_1)
+
+        response = self.client.get(
+            reverse('manage_organization_detail',
+                    kwargs={'pk': self.organization_1.pk}),
+            token=self.user_1_token)
+
+        data = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('contacts' in data)
+
+        contact_data = data['contacts'][0]
+        self.assertEqual(contact_data['name'], contact.name)
+        self.assertEqual(contact_data['phone'], contact.phone)
+        self.assertEqual(contact_data['email'], contact.email)
+
+    def test_organization_without_contact(self):
+        # create contact for user_2
+        OrganizationContactFactory.create(owner=self.user_2, organization=self.organization_2)
+
+        # request organization as user_1
+        response = self.client.get(
+            reverse('manage_organization_detail',
+                    kwargs={'pk': self.organization_2.pk}),
+            token=self.user_1_token)
+
+        data = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(data['contacts']), 0)
+
+    def test_organization_contacts_ordering(self):
+        for name in ['one', 'two', 'three']:
+            OrganizationContactFactory.create(name=name, owner=self.user_1, organization=self.organization_1)
+
+        response = self.client.get(
+            reverse('manage_organization_detail',
+                    kwargs={'pk': self.organization_1.pk}),
+            token=self.user_1_token)
+
+        data = json.loads(response.content)
+        contacts = data['contacts']
+        self.assertEqual(len(contacts), 3)
+        self.assertEqual(contacts[0]['name'], 'three')
 
 
 class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):

@@ -83,8 +83,6 @@ urlpatterns = [
     url(r'^surveys/',
         include('bluebottle.surveys.urls.core')),
 
-    url(r'^api/organizations/',
-        include('bluebottle.organizations.urls.api')),
     url(r'^api/suggestions/',
         include('bluebottle.suggestions.urls.api')),
 
@@ -97,6 +95,9 @@ urlpatterns = [
     # Organization urls for private documents
     url(r'^documents/',
         include('bluebottle.organizations.urls.documents')),
+
+    url(r'^api/organizations/',
+        include('bluebottle.organizations.urls.api')),
 
     url(r'^embed/', include('bluebottle.widget.urls.core')),
 

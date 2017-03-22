@@ -4,7 +4,6 @@ import logging
 import pytz
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q, F
@@ -28,7 +27,6 @@ from bluebottle.bb_projects.models import (
 )
 from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
@@ -241,9 +239,12 @@ class Project(BaseProject, PreviousStatusMixin):
         (StatusDefinition.NEEDS_APPROVAL, _('Needs approval')),
         (StatusDefinition.APPROVED, _('Approved')),
         (StatusDefinition.CREATED, _('Created')),
+        (StatusDefinition.SCHEDULED, _('Scheduled')),
+        (StatusDefinition.RE_SCHEDULED, _('Re-scheduled')),
         (StatusDefinition.IN_PROGRESS, _('In progress')),
         (StatusDefinition.PARTIAL, _('Partial')),
         (StatusDefinition.SUCCESS, _('Success')),
+        (StatusDefinition.CONFIRMED, _('Confirmed')),
         (StatusDefinition.FAILED, _('Failed'))
     )
 
@@ -638,6 +639,7 @@ class Project(BaseProject, PreviousStatusMixin):
         return tweet
 
     class Meta(BaseProject.Meta):
+        permissions = (('approve_payout', 'Can approve payouts for projects'), )
         ordering = ['title']
 
     def status_changed(self, old_status, new_status):
@@ -739,14 +741,6 @@ def project_post_init(sender, instance, **kwargs):
 @receiver(post_save, sender=Project,
           dispatch_uid="bluebottle.projects.Project.post_save")
 def project_post_save(sender, instance, **kwargs):
-
-    if instance.payout_status == 'approved':
-        adapter = DoradoPayoutAdapter(instance)
-        try:
-            adapter.trigger_payout()
-        except ImproperlyConfigured:
-            pass
-
     try:
         init_status, current_status = None, None
 

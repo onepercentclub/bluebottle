@@ -25,6 +25,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def _validate_date(date_string):
+
         try:
             datetime.strptime(date_string, '%Y-%m-%d')
             return date_string
@@ -33,6 +34,7 @@ class Command(BaseCommand):
             raise argparse.ArgumentTypeError(msg)
 
     def add_arguments(self, parser):
+
         # TODO: Add arguments to select export destination
         # TODO: Make tenant selection interactive
         # TODO: Validate user entered tenant names
@@ -87,7 +89,7 @@ class Command(BaseCommand):
 
         if score == 0:
             return 'not engaged'
-        elif score <= 4:
+        elif 0 < score <= 4:
             return 'little engaged'
         elif 4 < score <= 8:
             return 'engaged'
@@ -96,6 +98,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def get_engagement_score(entry):
+
         return entry['comments'] * 1 + entry['votes'] * 2 + entry['donations'] * 4 + \
             entry['tasks'] + entry['fundraisers'] * 10 + entry['projects'] * 12
 
@@ -118,20 +121,22 @@ class Command(BaseCommand):
                 aggregated_data['engagement_score_not_engaged'] += 1
             elif engagement_rating == 'little engaged':
                 aggregated_data['engagement_score_little_engaged'] += 1
-            elif engagement_rating == ' engaged':
-                aggregated_data['engagement_score_very_engaged'] += 1
+            elif engagement_rating == 'engaged':
+                aggregated_data['engagement_score_engaged'] += 1
             elif engagement_rating == 'very engaged':
                 aggregated_data['engagement_score_very_engaged'] += 1
 
         return aggregated_data
 
     def generate_engagement_raw_scores(self, data):
+
         for _, entry in data.iteritems():
             entry['engagement_score'] = self.get_engagement_score(entry)
         return data
 
     @staticmethod
     def has_active_members(start_date, end_date):
+
         return True if Member.objects.filter(last_login__gte=start_date, last_login__lte=end_date).count() else False
 
     @staticmethod
@@ -145,6 +150,7 @@ class Command(BaseCommand):
 
     """ Dump engagement records for all tenants over a given date range """
     def handle(self, **options):
+
         start_date = dateparse.parse_datetime('{} 00:00:00+00:00'.format(options['start']))
         end_date = dateparse.parse_datetime('{} 23:59:59+00:00'.format(options['end']))
         tenants = set(options['tenants']) if options['tenants'] else None

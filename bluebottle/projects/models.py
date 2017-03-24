@@ -237,6 +237,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     PAYOUT_STATUS_CHOICES = (
         (StatusDefinition.NEEDS_APPROVAL, _('Needs approval')),
+        (StatusDefinition.APPROVED, _('Approved')),
         (StatusDefinition.SCHEDULED, _('Scheduled')),
         (StatusDefinition.RE_SCHEDULED, _('Re-scheduled')),
         (StatusDefinition.IN_PROGRESS, _('In progress')),

@@ -16,7 +16,9 @@ from daterange_filter.filter import DateRangeFilter
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter, PayoutValidationError
+from bluebottle.payouts_dorado.adapters import (
+    DoradoPayoutAdapter, PayoutValidationError, PayoutCreationError
+)
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
@@ -290,11 +292,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             adapter = DoradoPayoutAdapter(project)
             try:
                 adapter.trigger_payout()
-            except ImproperlyConfigured:
-                logger.warning(
-                    'Dorado not configured when project payout approved',
-                    exc_info=1
-                )
             except PayoutValidationError, e:
                 for field, errors in e.message['errors'].items():
                     for error in errors:
@@ -303,6 +300,17 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                             'Account details: {}, {}.'.format(field, error.lower()),
                             level=messages.ERROR
                         )
+            except (PayoutCreationError, ImproperlyConfigured), e:
+                logger.warning(
+                    'Error approving payout: {}'.format(e),
+                    exc_info=1
+                )
+
+                self.message_user(
+                    request,
+                    'Failed to approve payout: {}'.format(e),
+                    level=messages.ERROR
+                )
 
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)

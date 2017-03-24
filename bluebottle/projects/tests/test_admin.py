@@ -134,6 +134,46 @@ class TestProjectAdmin(BluebottleTestCase):
             request, 'Account details: name, this field is required.', level=messages.ERROR
         )
 
+    def test_mark_payout_as_approved_internal_server_error(self):
+        request = self.request_factory.post('/')
+        request.user = MockUser(['projects.approve_payout'])
+
+        project = ProjectFactory.create(payout_status='needs_approval')
+
+        self.mock_response.status_code = 500
+        self.mock_response._content = 'Internal Server Error'
+
+        with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
+            with mock.patch.object(self.project_admin, 'message_user') as message_mock:
+                self.project_admin.approve_payout(request, project.id)
+
+        request_mock.assert_called_with(
+            PAYOUT_URL, {'project_id': project.id, 'tenant': 'test'}
+        )
+
+        message_mock.assert_called_with(
+            request, 'Failed to approve payout: Internal Server Error', level=messages.ERROR
+        )
+
+    def test_mark_payout_as_approved_connection_error(self):
+        request = self.request_factory.post('/')
+        request.user = MockUser(['projects.approve_payout'])
+
+        project = ProjectFactory.create(payout_status='needs_approval')
+        exception = requests.ConnectionError('Host not found')
+
+        with mock.patch('requests.post', side_effect=exception) as request_mock:
+            with mock.patch.object(self.project_admin, 'message_user') as message_mock:
+                self.project_admin.approve_payout(request, project.id)
+
+        request_mock.assert_called_with(
+            PAYOUT_URL, {'project_id': project.id, 'tenant': 'test'}
+        )
+
+        message_mock.assert_called_with(
+            request, 'Failed to approve payout: Host not found', level=messages.ERROR
+        )
+
     def test_mark_payout_as_approved_no_permissions(self):
         request = self.request_factory.post('/')
         request.user = MockUser()

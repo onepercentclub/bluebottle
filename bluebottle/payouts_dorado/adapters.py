@@ -43,5 +43,7 @@ class DoradoPayoutAdapter(object):
                 raise PayoutCreationError(response.content)
         except MissingSchema:
             raise ImproperlyConfigured("Incorrect Payout URL")
+        except IOError, e:
+            raise PayoutCreationError(unicode(e))
         except TypeError:
             raise ImproperlyConfigured("Invalid Payout settings")

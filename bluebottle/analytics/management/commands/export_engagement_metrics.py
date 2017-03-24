@@ -11,6 +11,8 @@ from django.utils import dateparse
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.members.models import Member
+from bluebottle.projects.models import Project
+from bluebottle.orders.models import Order
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +65,9 @@ class Command(BaseCommand):
         worksheet.write(self.row_counter_engagement_aggregated_data, 6, data['engagement_score_very_engaged'])
         worksheet.write(self.row_counter_engagement_aggregated_data, 7, total_engaged)
         worksheet.write(self.row_counter_engagement_aggregated_data, 8, total_engaged_percentage)
+        worksheet.write(self.row_counter_engagement_aggregated_data, 9, data['projects_realised'])
+        worksheet.write(self.row_counter_engagement_aggregated_data, 10, data['projects_done'])
+        worksheet.write(self.row_counter_engagement_aggregated_data, 11, data['donations_anonymous'])
 
         self.row_counter_engagement_aggregated_data += 1
 
@@ -173,7 +178,10 @@ class Command(BaseCommand):
                                                   'engaged members (engagement score: 4-8)',
                                                   'very engaged members (engagement score: >8)',
                                                   'total engaged members (engagement score: >4)',
-                                                  '% total engaged members (engagement score: >4)'
+                                                  '% total engaged members (engagement score: >4)',
+                                                  'Projects Realised',
+                                                  'Projects Done',
+                                                  'Guest Donations'
                                                   )
 
             worksheet_engagement_raw_data = self.initialize_worksheet(workbook, 'Engagement Raw Data',
@@ -245,13 +253,16 @@ class Command(BaseCommand):
 
                             # TODO: Fix the project numbers to be correct
                             projects = Member.objects\
-                                .filter(owner__created__gte=start_date, owner__created__lte=end_date)\
+                                .filter(owner__created__gte=start_date,
+                                        owner__created__lte=end_date,
+                                        owner__status__slug__in=['voting', 'voting-done', 'campaign',
+                                                                 'to-be-continued', 'done-complete',
+                                                                 'done-incomplete'])\
                                 .annotate(total=Count('owner'))\
                                 .values('id', 'total')
 
                             for project in projects:
-                                # print(project)
-                                pass
+                                raw_data[project['id']]['projects'] = project['total']
 
                             tasks = Member.objects\
                                 .filter(tasks_taskmember_related__created__gte=start_date,
@@ -269,7 +280,21 @@ class Command(BaseCommand):
 
                             self.write_raw_data(client.client_name, worksheet_engagement_raw_data, raw_data)
 
+                            # Aggregated data
+                            projects_realised = Project.objects.filter(status__slug='done-complete',
+                                                                       created__gte=start_date,
+                                                                       created__lte=end_date).count()
+                            projects_done = Project.objects.filter(status__slug='done-incomplete',
+                                                                   created__gte=start_date,
+                                                                   created__lte=end_date).count()
+                            donations_anonymous = Order.objects.filter(created__gte=start_date,
+                                                                       created__lte=end_date,
+                                                                       status='success',
+                                                                       user__isnull=True).count()
                             aggregated_data = self.generate_engagement_aggregate_score(raw_data)
                             aggregated_data['total_members'] = members.count()
+                            aggregated_data['projects_realised'] = projects_realised
+                            aggregated_data['projects_done'] = projects_done
+                            aggregated_data['donations_anonymous'] = donations_anonymous
                             self.write_aggregated_data(client.client_name, worksheet_engagement_aggregated_data,
                                                        aggregated_data)

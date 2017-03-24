@@ -380,7 +380,7 @@ class TestTaskSearchCase(BluebottleTestCase):
         """Setup reusable data."""
         self.init_projects()
 
-        self.now = datetime.combine(timezone.now(), datetime.max.time())
+        self.now = datetime.combine(timezone.now(), datetime.min.time())
         self.now = timezone.get_current_timezone().localize(self.now)
         self.tomorrow = self.now + timezone.timedelta(days=1)
         self.week = self.now + timezone.timedelta(days=7)
@@ -534,13 +534,13 @@ class TestTaskSearchCase(BluebottleTestCase):
             'end': str(task.deadline.date())
         }
 
-        response = self.client.get(self.task_url, search_date,
-                                   token=self.some_token)
+        response = self.client.get(self.task_url, search_date, token=self.some_token)
 
         # Search should return task, ongoing_task_1, and ongoing_task_3
         # Task2 and Task3 should NOT be returned
         ids = [task.id, self.ongoing_task_1.id, self.ongoing_task_3.id]
         self.assertEqual(response.data['count'], 3)
+
         self.assertIn(response.data['results'][0]['id'], ids)
         self.assertIn(response.data['results'][1]['id'], ids)
         self.assertIn(response.data['results'][2]['id'], ids)
@@ -554,7 +554,6 @@ class SkillListApiTests(BluebottleTestCase):
         # Disable 3 skills
         Skill.objects.filter(id__in=[4, 5, 6]).update(disabled=True)
         self.skill_count = Skill.objects.count()
-
         self.skills_url = '/api/bb_tasks/skills/'
 
     def test_get_list(self):

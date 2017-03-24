@@ -57,6 +57,9 @@ DATABASES = {
     }
 }
 
+# used in migrations to indicate that db extensions should be created
+CREATE_DB_EXTENSIONS = True
+
 DATABASE_ROUTERS = (
     'tenant_schemas.routers.TenantSyncRouter',
 )

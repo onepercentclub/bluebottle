@@ -4,14 +4,19 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 from django.contrib.postgres.operations import TrigramExtension, UnaccentExtension
+from django.conf import settings
+
 
 class Migration(migrations.Migration):
+    # Install the postgres extensions in dev only
+    if settings.DEBUG or getattr(settings, 'CREATE_DB_EXTENSIONS', False):
+        dependencies = [
+            ('organizations', '0002_auto_20160610_1554'),
+        ]
 
-    dependencies = [
-        ('organizations', '0002_auto_20160610_1554'),
-    ]
-
-    operations = [
-        UnaccentExtension(),
-        TrigramExtension()
-    ]
+        operations = [
+            UnaccentExtension(),
+            TrigramExtension()
+        ]
+    else:
+        print 'Skipping postgresql \'unaccent\' and \'trigram\' extension installation'

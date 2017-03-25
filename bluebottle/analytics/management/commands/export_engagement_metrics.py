@@ -1,5 +1,6 @@
 import argparse
 import logging
+from collections import defaultdict
 from datetime import datetime
 
 import xlsxwriter
@@ -11,8 +12,8 @@ from django.utils import dateparse
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.members.models import Member
-from bluebottle.projects.models import Project
 from bluebottle.orders.models import Order
+from bluebottle.projects.models import Project
 
 logger = logging.getLogger(__name__)
 
@@ -46,14 +47,10 @@ class Command(BaseCommand):
         return True if Member.objects.filter(last_login__gte=start_date, last_login__lte=end_date).count() else False
 
     @staticmethod
-    def initialize_worksheet(workbook, name, headers):
+    def get_engagement_score(entry):
 
-        worksheet = workbook.add_worksheet(name)
-        # TODO: Maybe use worksheet.write_row() here
-        for i, label in enumerate(headers):
-            worksheet.write(0, i, label)
-
-        return worksheet
+        return entry['comments'] * 1 + entry['votes'] * 2 + entry['donations'] * 4 + \
+            entry['tasks'] + entry['fundraisers'] * 10 + entry['projects'] * 12
 
     @staticmethod
     def get_engagement_rating(score):
@@ -68,10 +65,12 @@ class Command(BaseCommand):
             return 'very engaged'
 
     @staticmethod
-    def get_engagement_score(entry):
-
-        return entry['comments'] * 1 + entry['votes'] * 2 + entry['donations'] * 4 + \
-            entry['tasks'] + entry['fundraisers'] * 10 + entry['projects'] * 12
+    def initialize_work_sheet(workbook, name, headers):
+        worksheet = workbook.get_worksheet_by_name(name)
+        if not worksheet:
+            worksheet = workbook.add_worksheet(name)
+            worksheet.write_row(0, 0, headers)
+        return worksheet
 
     def add_arguments(self, parser):
 
@@ -115,6 +114,42 @@ class Command(BaseCommand):
                             raw_data = self.generate_raw_data_worksheet(workbook, client.client_name)
                             self.generate_aggregated_data_worksheet(workbook, client.client_name, raw_data)
 
+    def initialize_raw_data_worksheet(self, workbook):
+        name = 'Engagement Raw Data'
+        headers = ('organisation', 'member id', 'comments', 'votes', 'donations', 'fundraisers', 'projects', 'tasks',
+                   'year_last_seen', 'engagement_score', 'engagement_rating')
+
+        return self.initialize_work_sheet(workbook, name, headers)
+
+    def generate_raw_data_worksheet(self, workbook, organisation):
+        worksheet_raw_data = self.initialize_raw_data_worksheet(workbook)
+        raw_data = {}
+        members = Member.objects.all()
+
+        for member in members:
+            raw_data[member.id] = {
+                'year_last_seen': getattr(member.last_seen, 'year', ''),
+                'comments': 0,
+                'votes': 0,
+                'donations': 0,
+                'fundraisers': 0,
+                'projects': 0,
+                'tasks': 0,
+                'engagement_score': 0
+            }
+
+        raw_data = self.generate_comments_raw_data(raw_data)
+        raw_data = self.generate_votes_raw_data(raw_data)
+        raw_data = self.generate_donations_raw_data(raw_data)
+        raw_data = self.generate_fundraisers_raw_data(raw_data)
+        raw_data = self.generate_projects_raw_data(raw_data)
+        raw_data = self.generate_tasks_raw_data(raw_data)
+        raw_data = self.generate_raw_scores(raw_data)
+
+        self.write_raw_data(organisation, worksheet_raw_data, raw_data)
+
+        return raw_data
+
     def write_aggregated_data(self, organisation, worksheet, data):
 
         total_engaged = data['engagement_score_engaged'] + data['engagement_score_very_engaged']
@@ -137,12 +172,7 @@ class Command(BaseCommand):
 
     def generate_aggregate_score(self, data):
 
-        aggregated_data = {
-            'engagement_score_not_engaged': 0,
-            'engagement_score_little_engaged': 0,
-            'engagement_score_engaged': 0,
-            'engagement_score_very_engaged': 0
-        }
+        aggregated_data = defaultdict(int)
 
         # TODO: Do we need to really iterate twice to get engagement aggregate score
         # TODO: Maybe try a different data structure integrated into raw_data
@@ -264,73 +294,23 @@ class Command(BaseCommand):
 
         return raw_data
 
-    def initialize_raw_data_worksheet(self, workbook):
-        name = 'Engagement Raw Data'
-        worksheet = workbook.get_worksheet_by_name(name)
-
-        if not worksheet:
-            columns_headers_raw_data = (
-                'organisation', 'member id', 'comments', 'votes', 'donations', 'fundraisers', 'projects', 'tasks',
-                'year_last_seen', 'engagement_score', 'engagement_rating')
-
-            return self.initialize_worksheet(workbook, name, columns_headers_raw_data)
-
-        return worksheet
-
-    def generate_raw_data_worksheet(self, workbook, organisation):
-        worksheet_raw_data = self.initialize_raw_data_worksheet(workbook)
-
-        raw_data = {}
-
-        members = Member.objects.all()
-
-        for member in members:
-            raw_data[member.id] = {
-                'year_last_seen': getattr(member.last_seen, 'year', ''),
-                'comments': 0,
-                'votes': 0,
-                'donations': 0,
-                'fundraisers': 0,
-                'projects': 0,
-                'tasks': 0,
-                'engagement_score': 0
-            }
-
-        raw_data = self.generate_comments_raw_data(raw_data)
-        raw_data = self.generate_votes_raw_data(raw_data)
-        raw_data = self.generate_donations_raw_data(raw_data)
-        raw_data = self.generate_fundraisers_raw_data(raw_data)
-        raw_data = self.generate_projects_raw_data(raw_data)
-        raw_data = self.generate_tasks_raw_data(raw_data)
-        raw_data = self.generate_raw_scores(raw_data)
-
-        self.write_raw_data(organisation, worksheet_raw_data, raw_data)
-
-        return raw_data
-
     def initialize_aggregated_data_worksheet(self, workbook):
-
         name = 'Engagement Aggregated Data'
-        worksheet = workbook.get_worksheet_by_name(name)
+        headers = ('organisation',
+                   'total no. of platforms',
+                   'total members',
+                   'not engaged members (engagement score: 0)',
+                   'little engaged members (engagement score: 1-3)',
+                   'engaged members (engagement score: 4-8)',
+                   'very engaged members (engagement score: >8)',
+                   'total engaged members (engagement score: >4)',
+                   '% total engaged members (engagement score: >4)',
+                   'Projects Realised',
+                   'Projects Done',
+                   'Guest Donations'
+                   )
 
-        if not worksheet:
-            columns_headers_aggregated_data = ('organisation',
-                                               'total no. of platforms',
-                                               'total members',
-                                               'not engaged members (engagement score: 0)',
-                                               'little engaged members (engagement score: 1-3)',
-                                               'engaged members (engagement score: 4-8)',
-                                               'very engaged members (engagement score: >8)',
-                                               'total engaged members (engagement score: >4)',
-                                               '% total engaged members (engagement score: >4)',
-                                               'Projects Realised',
-                                               'Projects Done',
-                                               'Guest Donations'
-                                               )
-
-            return self.initialize_worksheet(workbook, name, columns_headers_aggregated_data)
-
-        return worksheet
+        return self.initialize_work_sheet(workbook, name, headers)
 
     def generate_aggregated_data_worksheet(self, workbook, organisation, raw_data):
         worksheet_aggregated_data = self.initialize_aggregated_data_worksheet(workbook)
@@ -338,17 +318,17 @@ class Command(BaseCommand):
         aggregated_data = self.generate_aggregate_score(raw_data)
         aggregated_data['total_members'] = Member.objects.all().count()
 
-        projects_realised = Project.objects.filter(status__slug='done-complete',
-                                                   created__gte=self.start_date,
-                                                   created__lte=self.end_date).count()
-        projects_done = Project.objects.filter(status__slug='done-incomplete',
-                                               created__gte=self.start_date,
-                                               created__lte=self.end_date).count()
-        donations_anonymous = Order.objects.filter(created__gte=self.start_date,
-                                                   created__lte=self.end_date,
-                                                   status='success',
-                                                   user__isnull=True).count()
-        aggregated_data['projects_realised'] = projects_realised
-        aggregated_data['projects_done'] = projects_done
-        aggregated_data['donations_anonymous'] = donations_anonymous
+        projects_realised_count = Project.objects.filter(status__slug='done-complete',
+                                                         created__gte=self.start_date,
+                                                         created__lte=self.end_date).count()
+        projects_done_count = Project.objects.filter(status__slug='done-incomplete',
+                                                     created__gte=self.start_date,
+                                                     created__lte=self.end_date).count()
+        donations_anonymous_count = Order.objects.filter(created__gte=self.start_date,
+                                                         created__lte=self.end_date,
+                                                         status='success',
+                                                         user__isnull=True).count()
+        aggregated_data['projects_realised'] = projects_realised_count
+        aggregated_data['projects_done'] = projects_done_count
+        aggregated_data['donations_anonymous'] = donations_anonymous_count
         self.write_aggregated_data(organisation, worksheet_aggregated_data, aggregated_data)

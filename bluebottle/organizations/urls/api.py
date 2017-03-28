@@ -1,8 +1,14 @@
 from django.conf.urls import url
 
-from ..views import ManageOrganizationContactList
+from bluebottle.organizations.views import (OrganizationList, OrganizationDetail,
+                                            OrganizationContactList, OrganizationContactDetail)
 
 urlpatterns = [
-    url(r'^contacts', ManageOrganizationContactList.as_view(),
-        name='manage_organization_contact_list')
+    url(r'^$', OrganizationList.as_view(), name='organization_list'),
+    url(r'^(?P<pk>\d+)$', OrganizationDetail.as_view(),
+        name='organization_detail'),
+    url(r'^contacts', OrganizationContactList.as_view(),
+        name='organization_contact_list'),
+    url(r'^contacts/(?P<pk>\d+)$', OrganizationContactDetail.as_view(),
+        name='organization_contact_detail')
 ]

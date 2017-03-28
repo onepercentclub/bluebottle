@@ -9,7 +9,7 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.utils import BluebottleTestCase
 
-flutterwave_settings = {
+telesom_settings = {
     'MERCHANT_ACCOUNTS': [
         {
             'merchant': 'telesom',
@@ -24,7 +24,7 @@ flutterwave_settings = {
 }
 
 
-@override_settings(**flutterwave_settings)
+@override_settings(**telesom_settings)
 class TelesomPaymentAdapterTestCase(BluebottleTestCase):
 
     @patch('bluebottle.payments_telesom.gateway.Client')

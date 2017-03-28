@@ -47,18 +47,28 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
     Test case for ``OrganizationsList`` API view.
     """
 
-    def test_api_organizations_list_endpoint(self):
+    def test_unauth_api_organizations_list_endpoint(self):
         """
-        Tests that the list of organizations can be obtained from its
-        endpoint.
+        Tests that the list of organizations can not be accessed if
+        not authenticated.
         """
         response = self.client.get(reverse('organization_list'))
 
+        self.assertEqual(response.status_code, 401)
+
+    def test_auth_api_organizations_list_endpoint(self):
+        """
+        Tests that the list of organizations can be queried if authenticated
+        but it will not return results unless a search term is supplied.
+        """
+        response = self.client.get(reverse('organization_list'),
+                                   token=self.user_1_token)
+
         self.assertEqual(response.status_code, 200)
 
-        # We received the three organizations created.
+        # Fetching organizations is only possible via a search term
         data = json.loads(response.content)
-        self.assertEqual(data['count'], 3)
+        self.assertEqual(data['count'], 0)
 
     def test_api_organizations_search(self):
         """
@@ -67,7 +77,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         """
         # Search for organizations with "evil" in their name.
         url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'Evil Knievel'}))
-        response = self.client.get(url)
+        response = self.client.get(url, token=self.user_1_token)
         self.assertEqual(response.status_code, 200)
         # Expect two organizations with 'ev'
         data = json.loads(response.content)
@@ -78,22 +88,22 @@ class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
     """
     Test case for ``OrganizationsList`` API view.
 
-    Endpoint: /api/bb_organizations/{pk}
+    Endpoint: /api/organizations/{pk}
     """
 
-    def test_api_organizations_detail_endpoint(self):
+    def test_unauth_api_organizations_detail_endpoint(self):
         response = self.client.get(
             reverse('organization_detail',
                     kwargs={'pk': self.organization_1.pk}))
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 401)
 
 
 class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
     """
     Test case for ``ManageOrganizationsList`` API view.
 
-    Endpoint: /api/bb_organizations/manage/
+    Endpoint: /api/organizations/manage/
     """
 
     def setUp(self):
@@ -114,17 +124,15 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
 
     def test_api_manage_organizations_list_user_filter(self):
         """
-        Tests that the organizations returned are those which belongs to the
-        logged-in user.
+        Tests that no organizations are returned if there is not a search term supplied.
         """
         response = self.client.get(
-            reverse('manage_organization_list'), token=self.user_1_token)
+            reverse('organization_list'), token=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)
 
-        # The user ``user_1`` only have membership for two organizations now.
         data = json.loads(response.content)
-        self.assertEqual(data['count'], 2)
+        self.assertEqual(data['count'], 0)
 
     def test_api_manage_organizations_list_post(self):
         """
@@ -133,7 +141,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         post_data = self.post_data
 
         response = self.client.post(
-            reverse('manage_organization_list'),
+            reverse('organization_list'),
             post_data,
             token=self.user_1_token)
 
@@ -163,7 +171,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         post_data = self.post_data
 
         response = self.client.post(
-            reverse('manage_organization_list'),
+            reverse('organization_list'),
             post_data,
             token=self.user_1_token)
 
@@ -189,7 +197,7 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
         }
 
         response = self.client.post(
-            reverse('manage_organization_contact_list'),
+            reverse('organization_contact_list'),
             post_data,
             token=self.user_1_token)
 
@@ -205,7 +213,7 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
         contact = OrganizationContactFactory.create(owner=self.user_1, organization=self.organization_1)
 
         response = self.client.get(
-            reverse('manage_organization_detail',
+            reverse('organization_detail',
                     kwargs={'pk': self.organization_1.pk}),
             token=self.user_1_token)
 
@@ -224,7 +232,7 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
 
         # request organization as user_1
         response = self.client.get(
-            reverse('manage_organization_detail',
+            reverse('organization_detail',
                     kwargs={'pk': self.organization_2.pk}),
             token=self.user_1_token)
 
@@ -237,7 +245,7 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
             OrganizationContactFactory.create(name=name, owner=self.user_1, organization=self.organization_1)
 
         response = self.client.get(
-            reverse('manage_organization_detail',
+            reverse('organization_detail',
                     kwargs={'pk': self.organization_1.pk}),
             token=self.user_1_token)
 
@@ -251,7 +259,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
     """
     Test case for ``OrganizationsList`` API view.
 
-    Endpoint: /api/bb_organizations/manage/{pk}
+    Endpoint: /api/organizations/manage/{pk}
     """
 
     def test_manage_organizations_detail_login_required(self):
@@ -260,7 +268,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         """
         # Making the request without logging in...
         response = self.client.get(
-            reverse('manage_organization_detail',
+            reverse('organization_detail',
                     kwargs={'pk': self.organization_1.pk}))
         self.assertEqual(
             response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
@@ -272,7 +280,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         """
         # Requesting an organization for which the user have no membership...
         response = self.client.get(
-            reverse('manage_organization_detail',
+            reverse('organization_detail',
                     kwargs={'pk': self.organization_3.pk}),
             token=self.user_1_token)
 
@@ -283,48 +291,9 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         """
         Tests a successful GET request over the endpoint.
         """
-        response = self.client.get(reverse('manage_organization_detail',
+        response = self.client.get(reverse('organization_detail',
                                            kwargs={
                                                'pk': self.organization_1.pk}),
                                    token=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)
-
-    def test_manage_organizations_detail_put_success(self):
-        """
-        Tests a successful PUT request over the endpoint.
-        """
-        put_data = {
-            'name': 'New name',
-            'address_line1': 'new address',
-            'address_line2': 'new address (2)',
-            'city': 'Utrecht',
-            'state': 'Utrecht',
-            'country': self.organization_1.country.pk,
-            'postal_code': '3581WJ',
-            'phone_number': '(+31) 20 123 4567',
-            'website': 'http://www.utrecht.nl',
-            'email': 'info@utrecht.nl',
-        }
-
-        response = self.client.put(
-            reverse('manage_organization_detail',
-                    kwargs={'pk': self.organization_1.pk}),
-            put_data, token=self.user_1_token)
-
-        self.assertEqual(response.status_code, 200)
-
-        # Check the data.
-        organization = Organization.objects.get(
-            pk=self.organization_1.pk)
-        self.assertEqual(organization.name, put_data['name'])
-        self.assertEqual(organization.slug, self.organization_1.slug)
-        self.assertEqual(organization.address_line1, put_data['address_line1'])
-        self.assertEqual(organization.address_line2, put_data['address_line2'])
-        self.assertEqual(organization.city, put_data['city'])
-        self.assertEqual(organization.state, put_data['state'])
-        self.assertEqual(organization.country.pk, put_data['country'])
-        self.assertEqual(organization.postal_code, put_data['postal_code'])
-        self.assertEqual(organization.phone_number, put_data['phone_number'])
-        self.assertEqual(organization.website, put_data['website'])
-        self.assertEqual(organization.email, put_data['email'])

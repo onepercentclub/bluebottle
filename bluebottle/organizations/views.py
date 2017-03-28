@@ -6,30 +6,72 @@ from django.views.generic.detail import DetailView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics
 
-from bluebottle.organizations.models import Organization
-from bluebottle.organizations.serializers import ManageOrganizationContactSerializer
+from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
+from bluebottle.organizations.serializers import (OrganizationSerializer,
+                                                  OrganizationContactSerializer)
+from bluebottle.organizations.models import Organization, OrganizationMember
+from bluebottle.utils.filters import TrigramFilter
+from .permissions import IsOrganizationMember, IsContactOwner
 
 from filetransfers.api import serve_file
 
 
+class OrganizationContactList(generics.CreateAPIView):
+    serializer_class = OrganizationContactSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class OrganizationContactDetail(generics.UpdateAPIView):
+    serializer_class = OrganizationContactSerializer
+    permission_classes = (IsContactOwner,)
+
+
+class OrganizationDetail(generics.RetrieveAPIView):
+    queryset = Organization.objects.all()
+    serializer_class = OrganizationSerializer
+    permission_classes = (IsOrganizationMember,)
+
+
+class OrganizationList(generics.ListCreateAPIView):
+    serializer_class = OrganizationSerializer
+    pagination_class = BluebottlePagination
+    filter_backends = (TrigramFilter,)
+    permission_classes = (IsAuthenticated,)
+    search_fields = ('name',)
+
+    def get_queryset(self):
+        q = self.request.query_params
+
+        # Only allow query if a search term is provided
+        if ('search' in q and q['search'] != ''):
+            return Organization.objects.all()
+
+        return Organization.objects.none()
+
+    def perform_create(self, serializer):
+        organization = serializer.save()
+        member = OrganizationMember(organization=organization, user=self.request.user)
+        member.save()
+
+
+#
 # Non API views
+#
+
 # Download private documents
 
 class RegistrationDocumentDownloadView(DetailView):
     queryset = Organization.objects.all()
 
-    def get(self, request, pk):
+    def get(self, request, *args, **kwargs):
         obj = self.get_object()
         if request.user.is_staff:
             f = obj.registration.file
             file_name = os.path.basename(f.name)
+
             return serve_file(request, f, save_as=file_name)
+
         return HttpResponseForbidden()
-
-
-class ManageOrganizationContactList(generics.CreateAPIView):
-    serializer_class = ManageOrganizationContactSerializer
-    permission_classes = (IsAuthenticated, )
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)

@@ -103,7 +103,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
     """
     Test case for ``ManageOrganizationsList`` API view.
 
-    Endpoint: /api/organizations/manage/
+    Endpoint: /api/organizations
     """
 
     def setUp(self):
@@ -259,7 +259,7 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
     """
     Test case for ``OrganizationsList`` API view.
 
-    Endpoint: /api/organizations/manage/{pk}
+    Endpoint: /api/organizations/{pk}
     """
 
     def test_manage_organizations_detail_login_required(self):

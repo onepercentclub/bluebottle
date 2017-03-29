@@ -13,7 +13,7 @@ from bluebottle.organizations.models import (
     Organization, OrganizationMember, OrganizationContact
 )
 from bluebottle.utils.filters import TrigramFilter
-from .permissions import IsOrganizationMember, IsContactOwner
+from .permissions import IsContactOwner
 
 from filetransfers.api import serve_file
 

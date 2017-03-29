@@ -68,6 +68,34 @@ class TestPayoutApi(BluebottleTestCase):
             project = Project.objects.get(pk=self.project.id)
             self.assertEqual(project.payout_status, st)
 
+    def test_payouts_api_payout_date(self):
+        """
+        Update payout status
+        """
+
+        payout_url = reverse('project-payout-detail', kwargs={'pk': self.project.id})
+
+        response = self.client.put(payout_url, {'status': 'scheduled'}, token=self.user2_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'scheduled')
+        project = Project.objects.get(pk=self.project.id)
+        self.assertEqual(project.payout_status, 'scheduled')
+        self.assertIsNone(project.campaign_payed_out)
+
+        response = self.client.put(payout_url, {'status': 'success'}, token=self.user2_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'success')
+        project = Project.objects.get(pk=self.project.id)
+        self.assertEqual(project.payout_status, 'success')
+        self.assertIsNotNone(project.campaign_payed_out)
+
+        response = self.client.put(payout_url, {'status': 're_scheduled'}, token=self.user2_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 're_scheduled')
+        project = Project.objects.get(pk=self.project.id)
+        self.assertEqual(project.payout_status, 're_scheduled')
+        self.assertIsNone(project.campaign_payed_out)
+
 
 class TestPayoutProjectApi(BluebottleTestCase):
     """

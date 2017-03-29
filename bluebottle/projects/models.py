@@ -404,6 +404,12 @@ class Project(BaseProject, PreviousStatusMixin):
                 self.payout_status = 'needs_approval'
             self.campaign_ended = self.deadline
 
+        if self.payout_status == 'success' and not self.campaign_payed_out:
+            self.campaign_payed_out = now()
+
+        if self.payout_status == 're_scheduled' and self.campaign_payed_out:
+            self.campaign_payed_out = None
+
         super(Project, self).save(*args, **kwargs)
 
     def update_status_after_donation(self, save=True):

@@ -273,20 +273,6 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(
             response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
 
-    def test_manage_organizations_detail_user_restricted(self):
-        """
-        Tests that the endpoint restricts the access to the users who have
-        membership for the requested organization.
-        """
-        # Requesting an organization for which the user have no membership...
-        response = self.client.get(
-            reverse('organization_detail',
-                    kwargs={'pk': self.organization_3.pk}),
-            token=self.user_1_token)
-
-        # ...it fails.
-        self.assertEqual(response.status_code, 403)
-
     def test_manage_organizations_detail_get_success(self):
         """
         Tests a successful GET request over the endpoint.

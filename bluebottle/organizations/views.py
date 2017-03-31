@@ -9,14 +9,17 @@ from rest_framework import generics
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.organizations.serializers import (OrganizationSerializer,
                                                   OrganizationContactSerializer)
-from bluebottle.organizations.models import Organization, OrganizationMember
+from bluebottle.organizations.models import (
+    Organization, OrganizationMember, OrganizationContact
+)
 from bluebottle.utils.filters import TrigramFilter
-from .permissions import IsOrganizationMember, IsContactOwner
+from .permissions import IsContactOwner
 
 from filetransfers.api import serve_file
 
 
 class OrganizationContactList(generics.CreateAPIView):
+    queryset = OrganizationContact
     serializer_class = OrganizationContactSerializer
     permission_classes = (IsAuthenticated, )
 
@@ -25,6 +28,7 @@ class OrganizationContactList(generics.CreateAPIView):
 
 
 class OrganizationContactDetail(generics.UpdateAPIView):
+    queryset = OrganizationContact
     serializer_class = OrganizationContactSerializer
     permission_classes = (IsContactOwner,)
 
@@ -32,7 +36,7 @@ class OrganizationContactDetail(generics.UpdateAPIView):
 class OrganizationDetail(generics.RetrieveAPIView):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-    permission_classes = (IsOrganizationMember,)
+    permission_classes = (IsAuthenticated,)
 
 
 class OrganizationList(generics.ListCreateAPIView):

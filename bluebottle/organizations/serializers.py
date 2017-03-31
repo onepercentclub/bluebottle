@@ -38,4 +38,4 @@ class OrganizationContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrganizationContact
-        fields = ('name', 'email', 'phone', 'owner', 'organization')
+        fields = ('name', 'email', 'phone', 'owner', 'organization', 'id')

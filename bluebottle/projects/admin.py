@@ -293,13 +293,21 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             try:
                 adapter.trigger_payout()
             except PayoutValidationError, e:
-                for field, errors in e.message['errors'].items():
-                    for error in errors:
-                        self.message_user(
-                            request,
-                            'Account details: {}, {}.'.format(field, error.lower()),
-                            level=messages.ERROR
-                        )
+                errors = e.message['errors']
+                if type(errors) == unicode:
+                    self.message_user(
+                        request,
+                        'Account details: {}.'.format(errors),
+                        level=messages.ERROR
+                    )
+                else:
+                    for field, errors in errors.items():
+                        for error in errors:
+                            self.message_user(
+                                request,
+                                'Account details: {}, {}.'.format(field, error.lower()),
+                                level=messages.ERROR
+                            )
             except (PayoutCreationError, ImproperlyConfigured), e:
                 logger.warning(
                     'Error approving payout: {}'.format(e),

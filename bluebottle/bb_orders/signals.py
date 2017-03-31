@@ -24,8 +24,11 @@ def update_order_amount_post_save(sender, instance, **kwargs):
 def update_order_amount(sender, instance, **kwargs):
     # If we're deleting order and donations do nothing.
     # If we're just deleting a donation then we should update the order total.
-    if getattr(instance, 'order', None):
+    from bluebottle.orders.models import Order
+    try:
         instance.order.update_total()
+    except Order.DoesNotExist:
+        pass
 
 
 @receiver(post_transition, sender=OrderPayment)

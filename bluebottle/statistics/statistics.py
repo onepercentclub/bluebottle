@@ -156,12 +156,9 @@ class Statistics(object):
     @memoize(timeout=60 * 60)
     def amount_matched(self):
         """ Total amount matched on realized (done and incomplete) projects """
-        totals = Project.objects.filter(
-            self.date_filter('campaign_ended'), status__slug__in=('done-complete', 'done-incomplete',)
-        ).values('amount_extra_currency').annotate(total=Sum('amount_extra'))
+        totals = Project.objects.values('amount_extra_currency').annotate(total=Sum('amount_extra'))
 
         amounts = [Money(total['total'], total['amount_extra_currency']) for total in totals]
-
         if totals:
             return sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
         else:

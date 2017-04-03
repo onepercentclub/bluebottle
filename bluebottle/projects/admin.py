@@ -323,7 +323,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)
 
-    list_filter = ('country__subregion__region',)
+    list_filter = ('country__subregion__region', )
 
     def get_list_filter(self, request):
         filters = ['status', 'is_campaign', ProjectThemeFilter, ProjectReviewerFilter,
@@ -341,7 +341,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_display(self, request):
         fields = ['get_title_display', 'get_owner_display', 'created',
-                  'status', 'deadline', 'donated_percentage']
+                  'status', 'deadline', 'donated_percentage', 'amount_extra']
 
         if request.user.has_perm('projects.approve_payout'):
             fields.insert(4, 'payout_status')

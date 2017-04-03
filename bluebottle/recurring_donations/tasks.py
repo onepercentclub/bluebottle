@@ -49,10 +49,12 @@ def process_monthly_batch(tenant, monthly_batch, send_email):
         if monthly_batch.status != 'new':
             raise MethodNotAllowed("Can only process monthlys batch with status 'New'")
         else:
+            results = []
             monthly_batch.status = 'processing'
             monthly_batch.save()
             for monthly_order in monthly_batch.orders.all():
-                _process_monthly_order(monthly_order, send_email)
+                result = _process_monthly_order(monthly_order, send_email)
+                results.append(result)
             monthly_batch.status = 'done'
             monthly_batch.save()
 
@@ -233,7 +235,10 @@ def _process_monthly_order(monthly_order, send_email=False):
     if monthly_order.processed:
         logger.info(
             "Order for {0} already processed".format(monthly_order.user))
-        return False
+        return {
+            'order_payment_id': None,
+            'processed': True
+        }
 
     ten_days_ago = timezone.now() + timezone.timedelta(days=-10)
     recent_orders = Order.objects.filter(user=monthly_order.user,
@@ -250,7 +255,10 @@ def _process_monthly_order(monthly_order, send_email=False):
         # Set an error on this monthly order
         monthly_order.error = message
         monthly_order.save()
-        return False
+        return {
+            'order_payment_id': None,
+            'processed': False
+        }
 
     order = Order.objects.create(status=StatusDefinition.LOCKED,
                                  user=monthly_order.user,
@@ -286,9 +294,10 @@ def _process_monthly_order(monthly_order, send_email=False):
         monthly_order.error = "{0}".format(e.message)
         monthly_order.save()
         logger.error(error_message)
-        order_payment.delete()
-        order.delete()
-        return False
+        return {
+            'order_payment_id': order_payment.id,
+            'processed': False
+        }
 
     logger.debug("Payment for '{0}' started.".format(monthly_order))
 
@@ -303,7 +312,10 @@ def _process_monthly_order(monthly_order, send_email=False):
     if send_email:
         mail_monthly_donation_processed_notification(monthly_order)
 
-    return True
+    return {
+        'order_payment_id': order_payment.id,
+        'processed': True
+    }
 
 
 def process_single_monthly_order(email, batch=None, send_email=False):

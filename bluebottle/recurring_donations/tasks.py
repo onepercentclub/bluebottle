@@ -240,9 +240,11 @@ def _process_monthly_order(monthly_order, send_email=False):
             'processed': True
         }
 
+    order_success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS]
     ten_days_ago = timezone.now() + timezone.timedelta(days=-10)
     recent_orders = Order.objects.filter(user=monthly_order.user,
                                          order_type='recurring',
+                                         status__in=order_success,
                                          updated__gt=ten_days_ago)
 
     if recent_orders.count() > 0:

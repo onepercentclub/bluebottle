@@ -4,7 +4,6 @@ import logging
 import pytz
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q, F
@@ -28,7 +27,6 @@ from bluebottle.bb_projects.models import (
 )
 from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.payouts_dorado.adapters import DoradoPayoutAdapter
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
@@ -57,8 +55,9 @@ class ProjectPhaseLog(models.Model):
     )
 
     class Analytics:
-        type = 'project_phase_update'
+        type = 'project'
         tags = {
+            'sub_type': 'project.project_type',
             'status': 'status.name',
             'status_slug': 'status.slug',
             'theme': {
@@ -70,9 +69,13 @@ class ProjectPhaseLog(models.Model):
             'country': 'project.country_name'
         }
         fields = {
-            'id': 'id',
-            'project_id': 'project.id'
+            'id': 'project.id',
+            'user_id': 'project.owner.id'
         }
+
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.start
 
 
 class ProjectManager(models.Manager):
@@ -235,9 +238,10 @@ class Project(BaseProject, PreviousStatusMixin):
     PAYOUT_STATUS_CHOICES = (
         (StatusDefinition.NEEDS_APPROVAL, _('Needs approval')),
         (StatusDefinition.APPROVED, _('Approved')),
-        (StatusDefinition.CREATED, _('Created')),
+        (StatusDefinition.SCHEDULED, _('Scheduled')),
+        (StatusDefinition.RE_SCHEDULED, _('Re-scheduled')),
         (StatusDefinition.IN_PROGRESS, _('In progress')),
-        (StatusDefinition.PARTIAL, _('Partial')),
+        (StatusDefinition.PARTIAL, _('Partially paid')),
         (StatusDefinition.SUCCESS, _('Success')),
         (StatusDefinition.FAILED, _('Failed'))
     )
@@ -399,6 +403,12 @@ class Project(BaseProject, PreviousStatusMixin):
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
                 self.payout_status = 'needs_approval'
             self.campaign_ended = self.deadline
+
+        if self.payout_status == 'success' and not self.campaign_payed_out:
+            self.campaign_payed_out = now()
+
+        if self.payout_status == 're_scheduled' and self.campaign_payed_out:
+            self.campaign_payed_out = None
 
         super(Project, self).save(*args, **kwargs)
 
@@ -633,26 +643,8 @@ class Project(BaseProject, PreviousStatusMixin):
         return tweet
 
     class Meta(BaseProject.Meta):
+        permissions = (('approve_payout', 'Can approve payouts for projects'), )
         ordering = ['title']
-
-    class Analytics:
-        type = 'project'
-        tags = {
-            'sub_type': 'project_type',
-            'status': 'status.name',
-            'status_slug': 'status.slug',
-            'theme': {
-                'theme.name': {'translate': True}
-            },
-            'theme_slug': 'theme.slug',
-            'location': 'location.name',
-            'location_group': 'location.group.name',
-            'country': 'country_name'
-        }
-        fields = {
-            'id': 'id',
-            'user_id': 'owner.id'
-        }
 
     def status_changed(self, old_status, new_status):
         status_complete = ProjectPhase.objects.get(slug="done-complete")
@@ -753,14 +745,6 @@ def project_post_init(sender, instance, **kwargs):
 @receiver(post_save, sender=Project,
           dispatch_uid="bluebottle.projects.Project.post_save")
 def project_post_save(sender, instance, **kwargs):
-
-    if instance.payout_status == 'approved':
-        adapter = DoradoPayoutAdapter(instance)
-        try:
-            adapter.trigger_payout()
-        except ImproperlyConfigured:
-            pass
-
     try:
         init_status, current_status = None, None
 

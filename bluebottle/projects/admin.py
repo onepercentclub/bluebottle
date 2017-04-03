@@ -286,7 +286,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         response = HttpResponseRedirect(project_url)
         return response
 
-    list_filter = ('country__subregion__region',)
+    list_filter = ('country__subregion__region', )
 
     def get_list_filter(self, request):
         filters = ('status', 'is_campaign', ProjectThemeFilter, ProjectReviewerFilter,
@@ -301,7 +301,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_display(self, request):
         fields = ('get_title_display', 'get_owner_display', 'created',
-                  'status', 'deadline', 'donated_percentage')
+                  'status', 'deadline', 'donated_percentage', 'amount_extra')
         # Only show Location column if there are any
         if Location.objects.count():
             fields += ('location',)

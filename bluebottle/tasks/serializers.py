@@ -50,7 +50,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             # The date has not changed: Do not validate
             return data
 
-        if (not data['deadline'] or data['deadline'] > data['project'].deadline):
+        if not data['deadline'] or data['deadline'] > data['project'].deadline:
             raise serializers.ValidationError(
                 {'deadline': [_("The deadline must be before the project deadline.")]}
             )

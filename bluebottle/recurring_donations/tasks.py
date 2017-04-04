@@ -9,6 +9,8 @@ from django.db import connection
 from django.utils.timezone import now
 from django.utils import timezone
 
+from django_fsm import TransitionNotAllowed
+
 from rest_framework.exceptions import MethodNotAllowed
 
 from bluebottle.clients.utils import LocalTenant
@@ -57,6 +59,21 @@ def process_monthly_batch(tenant, monthly_batch, send_email):
                 results.append(result)
             monthly_batch.status = 'done'
             monthly_batch.save()
+
+        # post process the results
+        for result in results:
+            if 'order_payment_id' in result and not result['processed']:
+                order_payment = OrderPayment.objects.get(id=result['order_payment_id'])
+
+                # set the order payment to failed
+                try:
+                    order_payment.failed()
+                except TransitionNotAllowed:
+                    if order_payment.status == StatusDefinition.CREATED:
+                        order_payment.started()
+                        order_payment.failed()
+
+                order_payment.save()
 
 
 def prepare_monthly_batch():

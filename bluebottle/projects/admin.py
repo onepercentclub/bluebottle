@@ -372,7 +372,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('campaign_started', 'campaign started'),
         ('campaign_ended', 'campaign ended'),
         ('campaign_funded', 'campaign funded'),
-        ('campaign_payed_out', 'campaign_payed_out'),
+        ('campaign_paid_out', 'campaign paid out'),
         ('task_count', 'task count'),
         ('supporters', 'supporters'),
         ('time_spent', 'time spent'),
@@ -419,7 +419,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
             (_('Dates'), {'fields': ('voting_deadline', 'deadline',
                                      'date_submitted', 'campaign_started',
-                                     'campaign_ended', 'campaign_funded', 'campaign_payed_out')}),
+                                     'campaign_ended', 'campaign_funded', 'campaign_paid_out')}),
 
             (_('Bank details'), {'fields': ('account_holder_name',
                                             'account_holder_address',

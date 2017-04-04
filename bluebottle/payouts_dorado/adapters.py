@@ -31,11 +31,11 @@ class DoradoPayoutAdapter(object):
         }
 
         try:
-            response = requests.post(self.settings['url'], data)
-            response.raise_for_status()
-
             self.project.payout_status = 'created'
             self.project.save()
+
+            response = requests.post(self.settings['url'], data)
+            response.raise_for_status()
         except requests.HTTPError:
             try:
                 raise PayoutValidationError(json.loads(response.content))

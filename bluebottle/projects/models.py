@@ -219,8 +219,8 @@ class Project(BaseProject, PreviousStatusMixin):
                                           blank=True)
     campaign_funded = models.DateTimeField(_('Campaign Funded'), null=True,
                                            blank=True)
-    campaign_payed_out = models.DateTimeField(_('Campaign Payed Out'), null=True,
-                                              blank=True)
+    campaign_paid_out = models.DateTimeField(_('Campaign Paid Out'), null=True,
+                                             blank=True)
     voting_deadline = models.DateTimeField(_('Voting Deadline'), null=True,
                                            blank=True)
 
@@ -404,11 +404,11 @@ class Project(BaseProject, PreviousStatusMixin):
                 self.payout_status = 'needs_approval'
             self.campaign_ended = self.deadline
 
-        if self.payout_status == 'success' and not self.campaign_payed_out:
-            self.campaign_payed_out = now()
+        if self.payout_status == 'success' and not self.campaign_paid_out:
+            self.campaign_paid_out = now()
 
-        if self.payout_status == 're_scheduled' and self.campaign_payed_out:
-            self.campaign_payed_out = None
+        if self.payout_status == 're_scheduled' and self.campaign_paid_out:
+            self.campaign_paid_out = None
 
         super(Project, self).save(*args, **kwargs)
 

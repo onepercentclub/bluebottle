@@ -31,7 +31,6 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.projects.*',
             'bluebottle.bb_projects.*',
             'bluebottle.fundraisers.*',
-            'bluebottle.organizations.*',
             'bluebottle.categories.*',
             'bluebottle.organizations.*',
             'bluebottle.votes.*',

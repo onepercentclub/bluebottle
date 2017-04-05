@@ -21,7 +21,7 @@ def merge(modeladmin, request, queryset):
         master = queryset.get(pk=request.POST['master'])
         master.merge(queryset.exclude(pk=master.pk))
         return HttpResponseRedirect(
-            reverse('admin:organizations_organization_changelist')
+            reverse('admin:organizations_organization_change', args=(master.pk, ))
         )
     else:
         return TemplateResponse(

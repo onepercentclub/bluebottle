@@ -55,7 +55,10 @@ class AdminMergeOrganizationsTest(BluebottleTestCase):
             format='multipart'
         )
 
-        self.assertRedirects(response, self.admin_url)
+        self.assertRedirects(
+            response,
+            reverse('admin:organizations_organization_change', args=(master.pk, ))
+        )
 
         merged = Organization.objects.get()
         self.assertEqual(merged.pk, master.pk)

@@ -19,6 +19,7 @@ class OrganizationModelTest(BluebottleTestCase):
                 organization=organization
             )
             OrganizationMemberFactory.create(organization=organization)
+            OrganizationContactFactory.create(organization=organization)
 
     def test_merge(self):
         master = Organization.objects.get(name='test')
@@ -30,10 +31,12 @@ class OrganizationModelTest(BluebottleTestCase):
         self.assertEqual(len(Organization.objects.all()), 2)
         self.assertEqual(len(master.projects.all()), 3)
         self.assertEqual(len(master.members.all()), 3)
+        self.assertEqual(len(master.contacts.all()), 3)
 
         not_merged = Organization.objects.get(name='tust')
         self.assertEqual(len(not_merged.projects.all()), 1)
         self.assertEqual(len(not_merged.members.all()), 1)
+        self.assertEqual(len(master.contacts.all()), 3)
 
 
 class OrganizationContactTest(BluebottleTestCase):

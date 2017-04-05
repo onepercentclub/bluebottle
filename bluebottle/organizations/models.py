@@ -83,6 +83,10 @@ class Organization(models.Model):
                 project.organization = self
                 project.save()
 
+            for contact in organization.contacts.all():
+                contact.organization = self
+                contact.save()
+
             organization.delete()
 
     def __unicode__(self):

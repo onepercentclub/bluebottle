@@ -49,6 +49,15 @@ class Command(BaseCommand):
 
     @staticmethod
     def get_engagement_score(entry):
+        """
+        Engaged member is someone who initiated project, wrote a comment, voted, made donation or did task
+        Comment	            1 point
+        Vote	            2 points
+        Donation            4 points
+        Task	            Each hour 1 point
+        Fundraiser	        10 points
+        Project Initiated	12 points
+        """
 
         return entry['comments'] * 1 + entry['votes'] * 2 + entry['donations'] * 4 + \
             entry['tasks'] + entry['fundraisers'] * 10 + entry['projects'] * 12
@@ -111,10 +120,9 @@ class Command(BaseCommand):
                     connection.set_tenant(client)
                     with LocalTenant(client, clear_tenant=True):
                         logger.info('export tenant:{}'.format(client.client_name))
-                        if self.has_active_members(self.start_date, self.end_date):
-                            raw_data = self.generate_raw_data()
-                            self.generate_raw_data_worksheet(workbook, client.client_name, raw_data)
-                            self.generate_aggregated_data_worksheet(workbook, client.client_name, raw_data)
+                        raw_data = self.generate_raw_data()
+                        self.generate_raw_data_worksheet(workbook, client.client_name, raw_data)
+                        self.generate_aggregated_data_worksheet(workbook, client.client_name, raw_data)
 
     def generate_raw_data(self):
         raw_data = {}

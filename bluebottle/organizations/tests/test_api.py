@@ -33,6 +33,8 @@ class OrganizationsEndpointTestCase(BluebottleTestCase):
         self.organization_1 = OrganizationFactory.create(name='Evil Knight')
         self.organization_2 = OrganizationFactory.create(name='Evel Knievel')
         self.organization_3 = OrganizationFactory.create(name='Hanson Kids')
+        self.organization_4 = OrganizationFactory.create(name='Knight Rider')
+        self.organization_5 = OrganizationFactory.create(name='Kids Club')
 
         self.member_1 = OrganizationMemberFactory.create(
             user=self.user_1, organization=self.organization_1)
@@ -72,14 +74,36 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
 
     def test_api_organizations_search(self):
         """
-        Tests that the list of organizations can be obtained from its
-        endpoint.
+        Tests that the organizations search is not intelligent.
         """
         # Search for organizations with "evil" in their name.
         url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'Evil Knievel'}))
         response = self.client.get(url, token=self.user_1_token)
         self.assertEqual(response.status_code, 200)
         # Expect two organizations with 'ev'
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 0)
+
+    def test_api_organizations_search_extended(self):
+        """
+        Tests that the list of organizations can be obtained from its
+        endpoint with different order.
+        """
+        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'Knight'}))
+        response = self.client.get(url, token=self.user_1_token)
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 2)
+
+    def test_api_organizations_search_case_insensitve(self):
+        """
+        Tests that the organizations search is case insensitive.
+        """
+        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'kids'}))
+        response = self.client.get(url, token=self.user_1_token)
+        self.assertEqual(response.status_code, 200)
+
         data = json.loads(response.content)
         self.assertEqual(data['count'], 2)
 

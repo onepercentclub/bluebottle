@@ -5,6 +5,7 @@ from django.views.generic.detail import DetailView
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics
+from rest_framework import filters
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.organizations.serializers import (OrganizationSerializer,
@@ -12,7 +13,6 @@ from bluebottle.organizations.serializers import (OrganizationSerializer,
 from bluebottle.organizations.models import (
     Organization, OrganizationMember, OrganizationContact
 )
-from bluebottle.utils.filters import TrigramFilter
 from .permissions import IsContactOwner
 
 from filetransfers.api import serve_file
@@ -42,7 +42,7 @@ class OrganizationDetail(generics.RetrieveAPIView):
 class OrganizationList(generics.ListCreateAPIView):
     serializer_class = OrganizationSerializer
     pagination_class = BluebottlePagination
-    filter_backends = (TrigramFilter,)
+    filter_backends = (filters.SearchFilter,)
     permission_classes = (IsAuthenticated,)
     search_fields = ('name',)
 

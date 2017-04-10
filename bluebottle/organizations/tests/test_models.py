@@ -1,8 +1,9 @@
 from bluebottle.organizations.models import Organization
 
 from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
-    OrganizationFactory, OrganizationMemberFactory
+    OrganizationFactory, OrganizationMemberFactory, OrganizationContactFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -33,3 +34,18 @@ class OrganizationModelTest(BluebottleTestCase):
         not_merged = Organization.objects.get(name='tust')
         self.assertEqual(len(not_merged.projects.all()), 1)
         self.assertEqual(len(not_merged.members.all()), 1)
+
+
+class OrganizationContactTest(BluebottleTestCase):
+    def setUp(self):
+        super(OrganizationContactTest, self).setUp()
+
+        self.user = BlueBottleUserFactory.create()
+        self.organization = OrganizationFactory.create()
+        self.contact = OrganizationContactFactory.create(organization=self.organization,
+                                                         owner=self.user)
+
+    def test_organization_reference(self):
+        contacts = self.organization.contacts
+        self.assertEqual(contacts.count(), 1)
+        self.assertEqual(contacts.all()[0].id, self.contact.id)

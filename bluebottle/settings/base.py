@@ -241,6 +241,7 @@ SHARED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
 
     # 3rd party apps
     'lockdown',
@@ -304,6 +305,7 @@ TENANT_APPS = (
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
+    'bluebottle.payouts_dorado',
     'bluebottle.surveys',
 
     # Plain Bluebottle apps
@@ -341,7 +343,6 @@ TENANT_APPS = (
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
-    'bluebottle.bb_organizations',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
     'bluebottle.bb_fundraisers',

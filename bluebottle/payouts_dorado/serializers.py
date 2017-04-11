@@ -40,6 +40,7 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
     receiver_account_number = serializers.CharField(source='account_number', read_only=True)
     receiver_account_bic = serializers.CharField(source='account_bic', read_only=True)
     receiver_account_city = serializers.CharField(source='account_holder_city', read_only=True)
+    receiver_account_address = serializers.CharField(source='account_holder_address', read_only=True)
     receiver_account_country = serializers.CharField(source='account_holder_country.name', read_only=True)
 
     donations = PayoutDonationSerializer(many=True, read_only=True)
@@ -48,7 +49,7 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
     target_reached = serializers.SerializerMethodField()
 
     def get_target_reached(self, obj):
-        return obj.status.slug == 'done-comeplete'
+        return obj.status.slug == 'done-complete'
 
     class Meta:
         model = Project
@@ -64,6 +65,7 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
                   'receiver_account_bic',
                   'receiver_account_name',
                   'receiver_account_city',
+                  'receiver_account_address',
                   'receiver_account_country',
                   'donations'
                   )

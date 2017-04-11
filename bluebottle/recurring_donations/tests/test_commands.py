@@ -15,6 +15,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.projects.models import Project
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.recurring_donations import tasks
+from bluebottle.utils.utils import StatusDefinition
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
@@ -30,8 +31,13 @@ class mock_payment_service(object):
 
     def start_payment(self):
         # Throw some errors
-        if self.order_payment.id % 2:
+        op = self.order_payment
+        if op.id % 2:
             raise PaymentException('The horror, the horror')
+        else:
+            op.started()
+            op.settled()
+            op.save()
         return True
 
     def check_payment_status(self):
@@ -55,7 +61,7 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
                                       status=self.phase_campaign))
 
         # Some donations to get the popularity going
-        # Top 3 after this should be projects 4, 3, 0
+        # Top 3 after this should be projects 3, 4, 0
         order = OrderFactory()
         DonationFactory(order=order, project=self.projects[3], amount=10)
         DonationFactory(order=order, project=self.projects[3], amount=100)
@@ -127,8 +133,13 @@ class MonthlyDonationCommandsTest(BluebottleTestCase):
         self.assertEqual(Order.objects.count(), 1)
         call_command('process_monthly_donations', process=True, tenant='test')
 
-        # One of the monthly orders should have failed, so we should have 2 orders
-        self.assertEqual(Order.objects.count(), 2)
+        # One of the monthly orders should have succeeded according to the mocked payment service
+        self.assertEqual(Order.objects.filter(order_type='recurring',
+                                              status__in=[StatusDefinition.SUCCESS]).count(), 1)
+
+        # One of the monthly orders has failed based on the setup of the mock payment service
+        self.assertEqual(Order.objects.filter(order_type='recurring',
+                                              status__in=[StatusDefinition.FAILED]).count(), 1)
 
     @patch.object(tasks, 'PAYMENT_METHOD', 'mock')
     def test_email(self):

@@ -26,7 +26,6 @@ install:
 - pip install -e .[test] --process-dependency-links --trusted-host github.com
 - pip install --upgrade coverage
 - pip install coveralls
-- createdb bluebottle_test
 - echo `psql --version`
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat

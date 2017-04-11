@@ -41,8 +41,15 @@ from .mails import (
 )
 from .signals import project_funded
 
-GROUP_PERMS = {'Staff': {'perms': ('add_project', 'change_project',
-                                   'delete_project')}}
+GROUP_PERMS = {
+    'Staff': {
+        'perms': (
+            'add_project', 'change_project', 'delete_project',
+            'add_projectdocument', 'change_projectdocument', 'delete_projectdocument',
+            'add_projectbudgetline', 'change_projectbudgetline', 'delete_projectbudgetline',
+        )
+    }
+}
 
 logger = logging.getLogger(__name__)
 

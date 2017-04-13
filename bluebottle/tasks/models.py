@@ -23,6 +23,8 @@ GROUP_PERMS = {
         'perms': (
             'add_task', 'change_task', 'delete_task',
             'add_taskmember', 'change_taskmember', 'delete_taskmember',
+            'add_taskfile', 'change_taskfile', 'delete_taskfile',
+            'add_skill', 'change_skill', 'delete_skill',
         )
     }
 }

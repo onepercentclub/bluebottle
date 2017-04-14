@@ -74,18 +74,18 @@ class TestProjectAnalytics(BluebottleTestCase):
 
         self.theme = ProjectThemeFactory.create(name='Cleaning the beach',
                                                 slug='cleaning-the-beach')
-        self.country = CountryFactory.create()
+        self.country = CountryFactory.create(name='Beachville')
         self.status = ProjectPhase.objects.get(slug='campaign')
         self.expected_tags = {
             'status': self.status.name,
             'theme_slug': u'cleaning-the-beach',
             'status_slug': self.status.slug,
-            'country': self.country.name,
+            'country': u'Beachville',
             'theme': u'Cleaning the beach',
             'location': '',
             'location_group': '',
             'type': 'project',
-            'sub_type': 'funding',
+            'sub_type': u'funding',
             'tenant': u'test',
         }
 
@@ -153,6 +153,10 @@ class TestProjectAnalytics(BluebottleTestCase):
         self.assertEqual(queue_mock.call_count, previous_call_count + len(Project.objects.all()),
                          'Analytics should be sent when update is called')
 
+        # Get the last updated project as this will be the last project to
+        # trigger the analytics queue task
+        project = Project.objects.latest('updated')
+        self.expected_tags['id'] = project.id
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], self.expected_tags)
 

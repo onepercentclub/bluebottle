@@ -21,6 +21,7 @@ class Order(BaseOrder, PreviousStatusMixin):
     class Analytics:
         type = 'order'
         tags = {
+            'id': 'id',
             'status': 'status',
             'anonymous': 'anonymous'
         }

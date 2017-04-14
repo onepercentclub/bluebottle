@@ -64,6 +64,7 @@ class ProjectPhaseLog(models.Model):
     class Analytics:
         type = 'project'
         tags = {
+            'id': 'project.id',
             'sub_type': 'project.project_type',
             'status': 'status.name',
             'status_slug': 'status.slug',

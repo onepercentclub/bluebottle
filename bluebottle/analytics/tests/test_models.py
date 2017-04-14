@@ -100,7 +100,7 @@ class TestProjectAnalytics(BluebottleTestCase):
     def test_location_country_tag(self, queue_mock):
         location = LocationFactory.create()
         project = ProjectFactory.create(theme=self.theme, status=self.status,
-                              location=location, country=None)
+                                        location=location, country=None)
         self.expected_tags['id'] = project.id
         self.expected_tags['country'] = location.country.name
         self.expected_tags['location'] = location.name
@@ -124,7 +124,7 @@ class TestProjectAnalytics(BluebottleTestCase):
     @patch.object(utils, '_', fake_trans)
     def test_tags_translated(self, queue_mock):
         project = ProjectFactory.create(theme=self.theme, status=self.status,
-                              country=self.country)
+                                        country=self.country)
         self.expected_tags['id'] = project.id
         # Simple translation added via fake_trans method above
         self.expected_tags['theme'] = 'Cleaning the park'
@@ -148,7 +148,7 @@ class TestProjectAnalytics(BluebottleTestCase):
             ProjectFactory.create(theme=self.theme, country=self.country)
 
         previous_call_count = queue_mock.call_count
-        project = Project.objects.update(status=self.status)
+        Project.objects.update(status=self.status)
 
         self.assertEqual(queue_mock.call_count, previous_call_count + len(Project.objects.all()),
                          'Analytics should be sent when update is called')

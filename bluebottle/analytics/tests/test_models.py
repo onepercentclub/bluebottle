@@ -90,16 +90,18 @@ class TestProjectAnalytics(BluebottleTestCase):
         }
 
     def test_country_tag(self, queue_mock):
-        ProjectFactory.create(theme=self.theme, status=self.status, country=self.country, location=None)
+        project = ProjectFactory.create(theme=self.theme, status=self.status, country=self.country, location=None)
+
+        self.expected_tags['id'] = project.id
 
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], self.expected_tags)
 
     def test_location_country_tag(self, queue_mock):
         location = LocationFactory.create()
-        ProjectFactory.create(theme=self.theme, status=self.status,
+        project = ProjectFactory.create(theme=self.theme, status=self.status,
                               location=location, country=None)
-
+        self.expected_tags['id'] = project.id
         self.expected_tags['country'] = location.country.name
         self.expected_tags['location'] = location.name
         self.expected_tags['location_group'] = location.group.name
@@ -109,7 +111,7 @@ class TestProjectAnalytics(BluebottleTestCase):
     def test_tags_generation(self, queue_mock):
         project = ProjectFactory.create(theme=self.theme, status=self.status,
                                         country=self.country)
-
+        self.expected_tags['id'] = project.id
         self.expected_fields = {
             'id': project.id,
             'user_id': project.owner.id
@@ -121,9 +123,9 @@ class TestProjectAnalytics(BluebottleTestCase):
 
     @patch.object(utils, '_', fake_trans)
     def test_tags_translated(self, queue_mock):
-        ProjectFactory.create(theme=self.theme, status=self.status,
+        project = ProjectFactory.create(theme=self.theme, status=self.status,
                               country=self.country)
-
+        self.expected_tags['id'] = project.id
         # Simple translation added via fake_trans method above
         self.expected_tags['theme'] = 'Cleaning the park'
         args, kwargs = queue_mock.call_args
@@ -146,7 +148,7 @@ class TestProjectAnalytics(BluebottleTestCase):
             ProjectFactory.create(theme=self.theme, country=self.country)
 
         previous_call_count = queue_mock.call_count
-        Project.objects.update(status=self.status)
+        project = Project.objects.update(status=self.status)
 
         self.assertEqual(queue_mock.call_count, previous_call_count + len(Project.objects.all()),
                          'Analytics should be sent when update is called')
@@ -168,6 +170,7 @@ class TestTaskAnalytics(BluebottleTestCase):
         task = TaskFactory.create(author=user)
         project = task.project
         expected_tags = {
+            'id': task.id,
             'type': 'task',
             'tenant': u'test',
             'status': 'open',
@@ -238,6 +241,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
 
         project = task.project
         expected_tags = {
+            'id': task_member.id,
             'type': 'task_member',
             'tenant': u'test',
             'status': 'applied',
@@ -321,6 +325,7 @@ class TestOrderAnalytics(BluebottleTestCase):
     def test_tags_generation(self, queue_mock):
         order = OrderFactory.create(total=Money(100, 'EUR'), user=self.user)
         expected_tags = {
+            'id': order.id,
             'type': 'order',
             'tenant': u'test',
             'status': u'created',
@@ -342,6 +347,7 @@ class TestOrderAnalytics(BluebottleTestCase):
     def test_tags_generation_usd(self, queue_mock):
         order = OrderFactory.create(total=Money(100, 'USD'), user=self.user)
         expected_tags = {
+            'id': order.id,
             'type': 'order',
             'tenant': u'test',
             'status': u'created',

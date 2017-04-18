@@ -1,5 +1,5 @@
 from bluebottle.tasks.models import Task, TaskMember, TaskStatusLog, TaskMemberStatusLog
-from django.db.models.signals import post_init, post_save, pre_save
+from django.db.models.signals import post_init, post_save
 from django.dispatch import receiver
 
 

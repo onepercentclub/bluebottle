@@ -21,7 +21,7 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskMember
         fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
-                  'externals')
+                  'externals', 'time_spent')
 
 
 class TaskFileSerializer(serializers.ModelSerializer):

@@ -20,6 +20,7 @@ def task_post_save(sender, instance, **kwargs):
     except AttributeError:
         pass
 
+
 # post save members needed
 @receiver(post_save, sender=TaskMember,
           dispatch_uid="bluebottle.tasks.TaskMember.post_save")

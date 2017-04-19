@@ -60,8 +60,8 @@ class BaseTaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = ('id', 'members', 'files', 'project', 'skill',
                   'author', 'status', 'description', 'type',
-                  'location', 'deadline', 'time_needed', 'title',
-                  'people_needed')
+                  'location', 'deadline', 'deadline_to_apply',
+                  'time_needed', 'title', 'people_needed')
 
 
 class MyTaskPreviewSerializer(serializers.ModelSerializer):
@@ -87,8 +87,8 @@ class MyTasksSerializer(BaseTaskSerializer):
     class Meta:
         model = Task
         fields = ('id', 'title', 'skill', 'project', 'time_needed',
-                  'people_needed', 'status', 'deadline', 'description',
-                  'location', 'type')
+                  'people_needed', 'status', 'deadline', 'deadline_to_apply',
+                  'description', 'location', 'type')
 
 
 # Task Wallpost serializers

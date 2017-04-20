@@ -7,8 +7,9 @@ import xlsxwriter
 from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.models import Count, Sum
-from django.utils import dateparse
+from django.utils import dateparse, timezone
 
+from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.members.models import Member
@@ -50,8 +51,11 @@ class Command(BaseCommand):
                             type=self._validate_date,
                             help="End date (YYYY-MM-DD) for dump. UTC is the default time zone")
 
-        parser.add_argument('--tenants', metavar='tenants', action='store', dest='tenants', required=False, nargs='*',
+        parser.add_argument('--tenants', metavar='TENANTS', action='store', dest='tenants', required=False, nargs='*',
                             choices=self.tenants, help="The names of the tenants to export")
+
+        parser.add_argument('--export-to', action='store', dest='export_to', required=True, choices=['xls', 'influxdb'],
+                            help="The export destination")
 
     @staticmethod
     def _validate_date(date_string):
@@ -69,7 +73,60 @@ class Command(BaseCommand):
         self.end_date = dateparse.parse_datetime('{} 23:59:59+00:00'.format(options['end']))
         tenants = set(options['tenants']) if options['tenants'] else None
 
-        self.generate_engagement_data(tenants)
+        if options['export_to'] == 'xls':
+            self.generate_engagement_xls(tenants)
+        elif options['export_to'] == 'influxdb':
+            self.generate_engagement_influxdb(tenants)
+
+    def generate_engagement_influxdb(self, tenants):
+        aggregated_data = {}
+
+        for client in Client.objects.all():
+            if tenants is None or client.client_name in tenants:
+                connection.set_tenant(client)
+                with LocalTenant(client, clear_tenant=True):
+                    logger.info('export tenant:{}'.format(client.client_name))
+                    client_raw_data = self.generate_raw_data()
+                    client_aggregated_data = self.generate_aggregated_data(client_raw_data)
+                    aggregated_data[client.client_name] = client_aggregated_data
+
+        items = ['total_members', 'projects_done', 'projects_realised', 'donations_anonymous',
+                 'engagement_score_not_engaged', 'engagement_score_little_engaged', 'engagement_score_very_engaged',
+                 'engagement_score_engaged', 'total_engaged', 'total_engaged_percentage']
+
+        combined_aggregated_data = self.store_engagement_tenant_data(items, aggregated_data)
+        self.store_engagement_aggregated_data(items, combined_aggregated_data)
+
+    def store_engagement_tenant_data(self, items, aggregated_data):
+        combined_aggregated_data = defaultdict(int)
+
+        for client_name, data in aggregated_data.iteritems():
+            tags = {'type': 'engagement_tenant', 'tenant': client_name}
+            fields = {'start_date': self.start_date.isoformat(),
+                      'end_date': self.end_date.isoformat()
+                      }
+            for item in items:
+                fields[item] = data[item]
+                combined_aggregated_data[item] += data[item]
+
+            queue_analytics_record(timestamp=timezone.now(), tags=tags, fields=fields)
+
+        return combined_aggregated_data
+
+    def store_engagement_aggregated_data(self, items, combined_aggregated_data):
+        aggregated_tags = {'type': 'engagement_aggregate'}
+
+        aggregated_fields = {'start_date': self.start_date.isoformat(),
+                             'end_date': self.end_date.isoformat()
+                             }
+
+        for item in items:
+            aggregated_fields[item] = combined_aggregated_data[item]
+
+        aggregated_fields['engagement_number'] = combined_aggregated_data['total_engaged'] + \
+            combined_aggregated_data['donations_anonymous']
+
+        queue_analytics_record(timestamp=timezone.now(), tags=aggregated_tags, fields=aggregated_fields)
 
     @staticmethod
     def get_engagement_score(entry):
@@ -88,15 +145,18 @@ class Command(BaseCommand):
 
     @staticmethod
     def get_engagement_rating(score):
-
-        if score == 0:
-            return 'not engaged'
-        elif 0 < score <= 4:
-            return 'little engaged'
-        elif 4 < score <= 8:
-            return 'engaged'
-        elif score > 8:
-            return 'very engaged'
+        try:
+            score = int(score)
+            if score == 0:
+                return 'not engaged'
+            elif 0 < score <= 4:
+                return 'little engaged'
+            elif 4 < score <= 8:
+                return 'engaged'
+            elif score > 8:
+                return 'very engaged'
+        except (ValueError, TypeError):
+            return 'invalid engagement score: {}'.format(score)
 
     @staticmethod
     def initialize_work_sheet(workbook, name, headers):
@@ -106,7 +166,7 @@ class Command(BaseCommand):
             worksheet.write_row(0, 0, headers)
         return worksheet
 
-    def generate_engagement_data(self, tenants):
+    def generate_engagement_xls(self, tenants):
 
         file_name = 'engagement_report_{}_{}_generated_{}.xlsx'.format(self.start_date.strftime("%Y%m%d"),
                                                                        self.end_date.strftime("%Y%m%d"),

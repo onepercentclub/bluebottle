@@ -23,6 +23,8 @@ GROUP_PERMS = {
         'perms': (
             'add_task', 'change_task', 'delete_task',
             'add_taskmember', 'change_taskmember', 'delete_taskmember',
+            'add_taskfile', 'change_taskfile', 'delete_taskfile',
+            'add_skill', 'change_skill', 'delete_skill',
         )
     }
 }
@@ -61,6 +63,7 @@ class Task(models.Model, PreviousStatusMixin):
                                               blank=True, null=True)
 
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
+    deadline_to_apply = models.FloatField(_('deadline_to_apply'), help_text=_('Deadline to apply'), null=True)
 
     objects = UpdateSignalsQuerySet.as_manager()
 
@@ -301,6 +304,7 @@ class TaskStatusLog(models.Model):
     class Analytics:
         type = 'task'
         tags = {
+            'id': 'task.id',
             'status': 'status',
             'theme': {
                 'task.project.theme.name': {'translate': True}
@@ -330,6 +334,7 @@ class TaskMemberStatusLog(models.Model):
     class Analytics:
         type = 'task_member'
         tags = {
+            'id': 'task_member.id',
             'status': 'status',
             'location': 'task_member.project.location.name',
             'location_group': 'task_member.project.location.group.name',

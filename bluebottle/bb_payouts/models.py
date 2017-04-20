@@ -250,7 +250,7 @@ class PayoutLogBase(models.Model):
 
 class BaseProjectPayout(PayoutBase):
     """
-    A projects is payed after the campaign deadline is hit..
+    A projects is paid after the campaign deadline is hit..
     Project payouts are checked manually.
     """
 

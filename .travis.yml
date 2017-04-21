@@ -30,7 +30,7 @@ before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
 - flake8 .
 script:
-- coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8
+- coverage run --concurrency=multiprocessing --parallel-mode --source=bluebottle manage.py test --parallel=8
 notifications:
   hipchat:
     rooms:
@@ -41,4 +41,4 @@ notifications:
     secure: TOveMBh9HePYKWuGTrWF+hTXzxGZvbVsa3KU0sB1yv6qkcixb5/ggvmkTeRddYEd/zyWyMenicFsrXVBgsP0SmbNgke6kq5+EN0U5oJWse998lvCVCpwmJQMdwDHvYsOtbFEOppQrbRK4vmH8qibx3x2YVg+u+61ePHvWYF9z6U=
 after_success:
 - bash post_travis.sh
-- coveralls
+- coverage combine; coveralls

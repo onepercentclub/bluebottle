@@ -116,7 +116,7 @@ class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
     """
 
     def test_unauth_api_organizations_detail_endpoint(self):
-        response = self.client.get(
+        response = self.client.put(
             reverse('organization_detail',
                     kwargs={'pk': self.organization_1.pk}))
 
@@ -285,13 +285,24 @@ class ManageOrganizationDetailTestCase(OrganizationsEndpointTestCase):
 
     Endpoint: /api/organizations/{pk}
     """
-
-    def test_manage_organizations_detail_login_required(self):
+    def test_read_organizations_detail_login_required(self):
         """
         Tests that the endpoint first restricts results to logged-in users.
         """
         # Making the request without logging in...
         response = self.client.get(
+            reverse('organization_detail',
+                    kwargs={'pk': self.organization_1.pk}))
+        self.assertEqual(
+            response.status_code, status.HTTP_200_OK
+        )
+
+    def test_update_organizations_detail_login_required(self):
+        """
+        Tests that the endpoint first restricts results to logged-in users.
+        """
+        # Making the request without logging in...
+        response = self.client.put(
             reverse('organization_detail',
                     kwargs={'pk': self.organization_1.pk}))
         self.assertEqual(

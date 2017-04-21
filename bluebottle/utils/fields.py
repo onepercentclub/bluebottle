@@ -21,7 +21,12 @@ from .utils import clean_html
 def get_currency_choices():
     currencies = []
     for method in properties.PAYMENT_METHODS:
-        currencies += method['currencies'].keys()
+        # Handle KeyError when tenant (usually FakeTenant) has
+        # no currencies key in PAYMENT_METHODS
+        try:
+            currencies += method['currencies'].keys()
+        except KeyError:
+            pass
 
     return [(currency, get_currency_name(currency)) for currency in set(currencies)]
 

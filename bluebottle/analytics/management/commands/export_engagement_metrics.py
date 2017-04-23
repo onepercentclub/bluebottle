@@ -92,7 +92,7 @@ class Command(BaseCommand):
 
         items = ['total_members', 'projects_done', 'projects_realised', 'donations_anonymous',
                  'engagement_score_not_engaged', 'engagement_score_little_engaged', 'engagement_score_very_engaged',
-                 'engagement_score_engaged', 'total_engaged', 'total_engaged_percentage']
+                 'engagement_score_engaged', 'total_engaged']
 
         combined_aggregated_data = self.store_engagement_tenant_data(items, aggregated_data)
         self.store_engagement_aggregated_data(items, combined_aggregated_data)
@@ -166,11 +166,16 @@ class Command(BaseCommand):
             worksheet.write_row(0, 0, headers)
         return worksheet
 
+    @staticmethod
+    def get_xls_file_name(start_date, end_date):
+
+        return 'engagement_report_{}_{}_generated_{}.xlsx'.format(start_date.strftime("%Y%m%d"),
+                                                                  end_date.strftime("%Y%m%d"),
+                                                                  datetime.now().strftime("%Y%m%d-%H%M%S"))
+
     def generate_engagement_xls(self, tenants):
 
-        file_name = 'engagement_report_{}_{}_generated_{}.xlsx'.format(self.start_date.strftime("%Y%m%d"),
-                                                                       self.end_date.strftime("%Y%m%d"),
-                                                                       datetime.now().strftime("%Y%m%d-%H%M%S"))
+        file_name = self.get_xls_file_name(self.start_date, self.end_date)
 
         with xlsxwriter.Workbook(file_name) as workbook:
             for client in Client.objects.all():

@@ -26,19 +26,23 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = 'Export the engagement metrics'
 
-    start_date = ''
-    end_date = ''
-
-    row_counter_engagement_raw_data = 1
-    row_counter_engagement_aggregated_data = 1
-
-    tenants = []
-
     def __init__(self, **kwargs):
+        super(Command, self).__init__(**kwargs)
+
+        self.tenants = []
+
         for client in Client.objects.all():
             self.tenants.append(client.client_name)
 
-        super(Command, self).__init__(**kwargs)
+        self.start_date = ''
+        self.end_date = ''
+
+        self.row_counter_engagement_raw_data = 1
+        self.row_counter_engagement_aggregated_data = 1
+
+        self.engagement_parameters = ['total_members', 'projects_done', 'projects_realised', 'donations_anonymous',
+                                      'engagement_score_not_engaged', 'engagement_score_little_engaged',
+                                      'engagement_score_very_engaged', 'engagement_score_engaged', 'total_engaged']
 
     def add_arguments(self, parser):
 
@@ -71,60 +75,57 @@ class Command(BaseCommand):
 
         self.start_date = dateparse.parse_datetime('{} 00:00:00+00:00'.format(options['start']))
         self.end_date = dateparse.parse_datetime('{} 23:59:59+00:00'.format(options['end']))
-        tenants = set(options['tenants']) if options['tenants'] else None
+        self.tenants = set(options['tenants']) if options['tenants'] else None
 
         if options['export_to'] == 'xls':
-            self.generate_engagement_xls(tenants)
+            self.generate_engagement_xls()
         elif options['export_to'] == 'influxdb':
-            self.generate_engagement_influxdb(tenants)
+            aggregated_engagement_data = self.store_engagement_tenant_data()
+            self.store_engagement_aggregated_data(aggregated_engagement_data)
 
-    def generate_engagement_influxdb(self, tenants):
-        aggregated_data = {}
+    def generate_engagement_data(self):
+        engagement_data = {}
 
         for client in Client.objects.all():
-            if tenants is None or client.client_name in tenants:
+            if self.tenants is None or client.client_name in self.tenants:
                 connection.set_tenant(client)
                 with LocalTenant(client, clear_tenant=True):
                     logger.info('export tenant:{}'.format(client.client_name))
                     client_raw_data = self.generate_raw_data()
                     client_aggregated_data = self.generate_aggregated_data(client_raw_data)
-                    aggregated_data[client.client_name] = client_aggregated_data
+                    engagement_data[client.client_name] = client_aggregated_data
 
-        items = ['total_members', 'projects_done', 'projects_realised', 'donations_anonymous',
-                 'engagement_score_not_engaged', 'engagement_score_little_engaged', 'engagement_score_very_engaged',
-                 'engagement_score_engaged', 'total_engaged']
+        return engagement_data
 
-        combined_aggregated_data = self.store_engagement_tenant_data(items, aggregated_data)
-        self.store_engagement_aggregated_data(items, combined_aggregated_data)
+    def store_engagement_tenant_data(self):
+        engagement_data = self.generate_engagement_data()
+        aggregated_engagement_data = defaultdict(int)
 
-    def store_engagement_tenant_data(self, items, aggregated_data):
-        combined_aggregated_data = defaultdict(int)
-
-        for client_name, data in aggregated_data.iteritems():
+        for client_name, data in engagement_data.iteritems():
             tags = {'type': 'engagement_tenant', 'tenant': client_name}
             fields = {'start_date': self.start_date.isoformat(),
                       'end_date': self.end_date.isoformat()
                       }
-            for item in items:
+            for item in self.engagement_parameters:
                 fields[item] = data[item]
-                combined_aggregated_data[item] += data[item]
+                aggregated_engagement_data[item] += data[item]
 
             queue_analytics_record(timestamp=timezone.now(), tags=tags, fields=fields)
 
-        return combined_aggregated_data
+        return aggregated_engagement_data
 
-    def store_engagement_aggregated_data(self, items, combined_aggregated_data):
+    def store_engagement_aggregated_data(self, aggregated_engagement_data):
         aggregated_tags = {'type': 'engagement_aggregate'}
 
         aggregated_fields = {'start_date': self.start_date.isoformat(),
                              'end_date': self.end_date.isoformat()
                              }
 
-        for item in items:
-            aggregated_fields[item] = combined_aggregated_data[item]
+        for item in self.engagement_parameters:
+            aggregated_fields[item] = aggregated_engagement_data[item]
 
-        aggregated_fields['engagement_number'] = combined_aggregated_data['total_engaged'] + \
-            combined_aggregated_data['donations_anonymous']
+        aggregated_fields['engagement_number'] = aggregated_engagement_data['total_engaged'] + \
+            aggregated_engagement_data['donations_anonymous']
 
         queue_analytics_record(timestamp=timezone.now(), tags=aggregated_tags, fields=aggregated_fields)
 
@@ -173,13 +174,12 @@ class Command(BaseCommand):
                                                                   end_date.strftime("%Y%m%d"),
                                                                   datetime.now().strftime("%Y%m%d-%H%M%S"))
 
-    def generate_engagement_xls(self, tenants):
-
+    def generate_engagement_xls(self):
         file_name = self.get_xls_file_name(self.start_date, self.end_date)
 
         with xlsxwriter.Workbook(file_name) as workbook:
             for client in Client.objects.all():
-                if tenants is None or client.client_name in tenants:
+                if self.tenants is None or client.client_name in self.tenants:
                     connection.set_tenant(client)
                     with LocalTenant(client, clear_tenant=True):
                         logger.info('export tenant:{}'.format(client.client_name))

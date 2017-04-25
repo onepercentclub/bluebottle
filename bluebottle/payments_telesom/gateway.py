@@ -31,6 +31,9 @@ class TelesomClient(object):
         self.merchant_key = merchant_key
         self.username = username
         self.password = password
+        self.testing = True
+        if 'http://epayment.mytelesom.com/' in api_domain:
+            self.testing = False
 
     def create(self, mobile='', amount=0, description=''):
         """
@@ -50,13 +53,23 @@ class TelesomClient(object):
             username, password, ip, account, unique_key, date, mobile, amount, description
         )
         key = hashlib.md5(hash).hexdigest()
-        reply = self.client.service.PaymentRequest(
-            pMsisdn=mobile,
-            pAmount=amount,
-            Category=description,
-            MerchantID=self.merchant_id,
-            hashkey=key
-        )
+
+        if self.testing:
+            reply = self.client.service.PaymentRequest(
+                pMsisdn=mobile,
+                pAmount=amount,
+                Category=description,
+                MerchantID=self.merchant_id,
+                hashkey=key
+            )
+        else:
+            reply = self.client.service.PaymentRequest(
+                Subscriber=mobile,
+                Amount=amount,
+                Account=self.merchant_id,
+                Description=description,
+                Key=key
+            )
 
         # Requests (including typos, please leave as is)
         # ------------------
@@ -102,11 +115,18 @@ class TelesomClient(object):
         )
         key = hashlib.md5(hash).hexdigest()
 
-        reply = self.client.service.ProcessPayment(
-            MerchantID=self.merchant_id,
-            Paymentid=payment_id,
-            hashkey=key
-        )
+        if self.testing:
+            reply = self.client.service.ProcessPayment(
+                MerchantID=self.merchant_id,
+                Paymentid=payment_id,
+                hashkey=key
+            )
+        else:
+            reply = self.client.service.ProcessPayment(
+                Account=self.merchant_id,
+                PaymentNo=payment_id,
+                Key=key
+            )
 
         # Responses (including typos, please leave as is)
         # ----------------

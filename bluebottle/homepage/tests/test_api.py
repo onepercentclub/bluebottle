@@ -38,7 +38,7 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               is_campaign=True,
                               language=self.en,
                               status=self.phases['plan-new'])
-        self.assertEquals(HomePage().get('en').projects, None)
+        self.assertEquals(len(HomePage().get('en').projects), 0)
 
     def test_plan_submitted(self):
         """ plan_submitted shouldn't be visible """
@@ -47,7 +47,7 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               slug="plan-submitted",
                               language=self.en,
                               status=self.phases['plan-submitted'])
-        self.assertEquals(HomePage().get('en').projects, None)
+        self.assertEquals(len(HomePage().get('en').projects), 0)
 
     def test_plan_needs_work(self):
         """ plan_needs_work shouldn't be visible """
@@ -56,7 +56,7 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               slug="plan-needs-work",
                               language=self.en,
                               status=self.phases['plan-needs-work'])
-        self.assertEquals(HomePage().get('en').projects, None)
+        self.assertEquals(len(HomePage().get('en').projects), 0)
 
     def test_closed(self):
         """ done_incomplete shouldn't be visible """
@@ -65,7 +65,7 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               slug="closed",
                               language=self.en,
                               status=self.phases['closed'])
-        self.assertEquals(HomePage().get('en').projects, None)
+        self.assertEquals(len(HomePage().get('en').projects), 0)
 
     def test_campaign(self):
         """ plan_new should be visible """
@@ -101,7 +101,7 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               slug="done-complete",
                               language=self.en,
                               status=self.phases['done-complete'])
-        self.assertEquals(HomePage().get('en').projects, None)
+        self.assertEquals(len(HomePage().get('en').projects), 0)
 
 
 @override_settings(

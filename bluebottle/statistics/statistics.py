@@ -13,7 +13,7 @@ from bluebottle.donations.models import Donation
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.orders.models import Order
 from bluebottle.projects.models import Project, ProjectPhaseLog
-from bluebottle.tasks.models import Task, TaskMember, TaskStatusLog
+from bluebottle.tasks.models import Task, TaskMember, TaskStatusLog, TaskMemberStatusLog
 from bluebottle.votes.models import Vote
 
 
@@ -127,7 +127,7 @@ class Statistics(object):
     @property
     @memoize(timeout=60 * 60)
     def projects_realized(self):
-        """ Total number of realized (done-complete) projects """
+        """ Total number of realized (done-complete and incomplete) projects """
         """
         Reference:
         SELECT DISTINCT ON ("projects_projectphaselog"."project_id") "projects_projectphaselog"."id",
@@ -147,7 +147,7 @@ class Statistics(object):
 
         count = 0
         for log in phase_logs:
-            if log.status.slug == 'done-complete':
+            if log.status.slug in ['done-complete', 'done-incomplete']:
                 count += 1
         return count
 
@@ -184,10 +184,17 @@ class Statistics(object):
     @memoize(timeout=60 * 60)
     def time_spent(self):
         """ Total amount of time spent on realized tasks """
-        return TaskMember.objects.filter(
-            self.date_filter('updated'),
-            status='realized'
-        ).aggregate(time_spent=Sum('time_spent'))['time_spent']
+        logs = TaskMemberStatusLog.objects\
+            .filter(self.date_filter('start')) \
+            .distinct('task_member__id') \
+            .order_by('-task_member__id', '-start') \
+
+        count = 0
+        for log in logs:
+            if log.status == 'realized':
+                count += log.task_member.time_spent
+
+        return count
 
     @property
     @memoize(timeout=60 * 60)
@@ -214,10 +221,16 @@ class Statistics(object):
     @memoize(timeout=300)
     def task_members(self):
         """ Total number of realized task members """
-        return len(TaskMember.objects.filter(
-            self.date_filter('task__deadline'),
-            status='realized'
-        ))
+        logs = TaskMemberStatusLog.objects \
+            .filter(self.date_filter('start')) \
+            .distinct('task_member__id') \
+            .order_by('-task_member__id', '-start')
+
+        count = 0
+        for log in logs:
+            if log.status == 'realized':
+                count += 1
+        return count
 
     @property
     @memoize(timeout=300)

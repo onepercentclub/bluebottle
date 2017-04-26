@@ -113,13 +113,13 @@ class Statistics(object):
             WHERE "tasks_taskstatuslog"."start" BETWEEN '2017-01-01 00:00:00' AND '2017-12-31 23:59:59'
             ORDER BY "tasks_taskstatuslog"."task_id" DESC, "tasks_taskstatuslog"."start" DESC
         """
-        task_logs = TaskStatusLog.objects\
+        logs = TaskStatusLog.objects\
             .filter(self.date_filter('start'))\
             .distinct('task__id')\
             .order_by('-task__id', '-start')
 
         count = 0
-        for log in task_logs:
+        for log in logs:
             if log.status == 'realized':
                 count += 1
         return count
@@ -212,10 +212,16 @@ class Statistics(object):
     @memoize(timeout=300)
     def projects_complete(self):
         """ Total number of projects with the status complete """
-        return len(Project.objects.filter(
-            self.date_filter('campaign_ended'),
-            status__slug='done-complete'
-        ))
+        logs = ProjectPhaseLog.objects\
+            .filter(self.date_filter('start'))\
+            .distinct('project__id')\
+            .order_by('-project__id', '-start')
+
+        count = 0
+        for log in logs:
+            if log.status.slug == 'done-complete':
+                count += 1
+        return count
 
     @property
     @memoize(timeout=300)

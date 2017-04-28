@@ -103,7 +103,7 @@ class StatisticsTest(BluebottleTestCase):
             online=0,
             involved=1
         )
-        self.assertEqual(self.stats.projects_realized, 0)
+        self.assertEqual(self.stats.projects_realized, 1)
         self.assertEqual(self.stats.projects_complete, 0)
 
     def test_project_voting_stats(self):

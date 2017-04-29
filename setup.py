@@ -96,7 +96,7 @@ install_requires = [
     'unicodecsv==0.14.1',
     'wheel==0.29.0',
     'xlsxwriter==0.9.6',
-    'openpyxl==2.4.7'
+    'openpyxl==2.4.7',
 
     # Github requirements
     'django-fluent-contents==1.1.11',

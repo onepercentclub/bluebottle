@@ -8,6 +8,7 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.models import Count, Sum
 from django.utils import dateparse, timezone
+from django.conf import settings
 
 from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.clients.models import Client
@@ -110,24 +111,32 @@ class Command(BaseCommand):
                 fields[item] = data[item]
                 aggregated_engagement_data[item] += data[item]
 
-            queue_analytics_record(timestamp=timezone.now(), tags=tags, fields=fields)
+            fields['engagement_number'] = data['total_engaged'] + data['donations_anonymous']
+
+            if getattr(settings, 'CELERY_RESULT_BACKEND', None):
+                queue_analytics_record.delay(timestamp=timezone.now(), tags=tags, fields=fields)
+            else:
+                queue_analytics_record(timestamp=timezone.now(), tags=tags, fields=fields)
 
         return aggregated_engagement_data
 
     def store_engagement_aggregated_data(self, aggregated_engagement_data):
-        aggregated_tags = {'type': 'engagement_aggregate'}
+        tags = {'type': 'engagement_aggregate'}
 
-        aggregated_fields = {'start_date': self.start_date.isoformat(),
-                             'end_date': self.end_date.isoformat()
-                             }
+        fields = {'start_date': self.start_date.isoformat(),
+                  'end_date': self.end_date.isoformat()
+                  }
 
         for item in self.engagement_parameters:
-            aggregated_fields[item] = aggregated_engagement_data[item]
+            fields[item] = aggregated_engagement_data[item]
 
-        aggregated_fields['engagement_number'] = aggregated_engagement_data['total_engaged'] + \
+        fields['engagement_number'] = aggregated_engagement_data['total_engaged'] + \
             aggregated_engagement_data['donations_anonymous']
 
-        queue_analytics_record(timestamp=timezone.now(), tags=aggregated_tags, fields=aggregated_fields)
+        if getattr(settings, 'CELERY_RESULT_BACKEND', None):
+            queue_analytics_record.delay(timestamp=timezone.now(), tags=tags, fields=fields)
+        else:
+            queue_analytics_record(timestamp=timezone.now(), tags=tags, fields=fields)
 
     @staticmethod
     def get_engagement_score(entry):

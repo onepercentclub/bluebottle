@@ -211,7 +211,12 @@ class TestProjectAdmin(BluebottleTestCase):
             'status' in self.project_admin.get_readonly_fields(request, obj=project)
         )
 
-        with mock.patch('requests.post', return_value=self.mock_response):
+        def side_effect(*args, **kwargs):
+            project.payout_status = 'approved'
+            project.save()
+            return self.mock_response
+
+        with mock.patch('requests.post', side_effect=side_effect):
             self.project_admin.approve_payout(request, project.id)
 
         project = Project.objects.get(id=project.id)

@@ -103,7 +103,7 @@ class Command(BaseCommand):
         aggregated_engagement_data = defaultdict(int)
 
         for client_name, data in engagement_data.iteritems():
-            tags = {'type': 'engagement_tenant', 'tenant': client_name}
+            tags = {'type': 'engagement_number_tenant', 'tenant': client_name}
             fields = {'start_date': self.start_date.isoformat(),
                       'end_date': self.end_date.isoformat()
                       }
@@ -121,7 +121,7 @@ class Command(BaseCommand):
         return aggregated_engagement_data
 
     def store_engagement_aggregated_data(self, aggregated_engagement_data):
-        tags = {'type': 'engagement_aggregate'}
+        tags = {'type': 'engagement_number_aggregate'}
 
         fields = {'start_date': self.start_date.isoformat(),
                   'end_date': self.end_date.isoformat()

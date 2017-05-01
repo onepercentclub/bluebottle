@@ -9,6 +9,10 @@ CELERY_ANNOTATIONS = {
 }
 
 CELERYBEAT_SCHEDULE = {
+    'generate_engagement_metrics': {
+        'task': 'bluebottle.analytics.tasks.generate_engagement_metrics',
+        'schedule': crontab(minute=15, hour=0)
+    },
     'set_status_realised': {
         'task': 'bluebottle.projects.tasks.set_status_realised',
         'schedule': crontab(minute=0, hour=0)

@@ -7,7 +7,7 @@ from django.db import migrations
 
 def correct_needs_approval_status(apps, schema_editor):
     Project = apps.get_model('projects', 'Project')
-    ProjectPayout = apps.get_model('projects', 'ProjectPayout')
+    ProjectPayout = apps.get_model('payouts', 'ProjectPayout')
 
     for project in Project.objects.filter(payout_status='needs_approval'):
         try:

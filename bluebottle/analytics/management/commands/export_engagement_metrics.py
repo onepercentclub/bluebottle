@@ -75,7 +75,7 @@ class Command(BaseCommand):
     def handle(self, **options):
 
         self.start_date = dateparse.parse_datetime('{} 00:00:00+00:00'.format(options['start']))
-        self.end_date = dateparse.parse_datetime('{} 23:59:59+00:00'.format(options['end']))
+        self.end_date = dateparse.parse_datetime('{} 00:00:00+00:00'.format(options['end']))
         self.tenants = set(options['tenants']) if options['tenants'] else None
 
         if options['export_to'] == 'xls':
@@ -225,7 +225,7 @@ class Command(BaseCommand):
     def generate_comments_raw_data(self, raw_data):
         members = Member.objects \
             .filter(wallpost_wallpost__created__gte=self.start_date,
-                    wallpost_wallpost__created__lte=self.end_date) \
+                    wallpost_wallpost__created__lt=self.end_date) \
             .annotate(comments_total=Count('wallpost_wallpost')) \
             .values('id', 'comments_total')
 
@@ -236,7 +236,7 @@ class Command(BaseCommand):
 
     def generate_votes_raw_data(self, raw_data):
         members = Member.objects \
-            .filter(vote__created__gte=self.start_date, vote__created__lte=self.end_date) \
+            .filter(vote__created__gte=self.start_date, vote__created__lt=self.end_date) \
             .annotate(votes_total=Count('vote')) \
             .values('id', 'votes_total')
 
@@ -247,7 +247,7 @@ class Command(BaseCommand):
 
     def generate_donations_raw_data(self, raw_data):
         members = Member.objects \
-            .filter(order__created__gte=self.start_date, order__created__lte=self.end_date,
+            .filter(order__created__gte=self.start_date, order__created__lt=self.end_date,
                     order__status="success", id__isnull=False) \
             .annotate(donations_total=Count('order')) \
             .values('id', 'donations_total')
@@ -259,7 +259,7 @@ class Command(BaseCommand):
 
     def generate_fundraisers_raw_data(self, raw_data):
         members = Member.objects \
-            .filter(fundraiser__created__gte=self.start_date, fundraiser__created__lte=self.end_date) \
+            .filter(fundraiser__created__gte=self.start_date, fundraiser__created__lt=self.end_date) \
             .annotate(fundraisers_total=Count('fundraiser')) \
             .values('id', 'fundraisers_total')
 
@@ -271,7 +271,7 @@ class Command(BaseCommand):
     def generate_projects_raw_data(self, raw_data):
         members = Member.objects \
             .filter(owner__created__gte=self.start_date,
-                    owner__created__lte=self.end_date,
+                    owner__created__lt=self.end_date,
                     owner__status__slug__in=['voting', 'voting-done', 'campaign',
                                              'to-be-continued', 'done-complete',
                                              'done-incomplete']) \
@@ -286,7 +286,7 @@ class Command(BaseCommand):
     def generate_tasks_raw_data(self, raw_data):
         members = Member.objects \
             .filter(tasks_taskmember_related__created__gte=self.start_date,
-                    tasks_taskmember_related__created__lte=self.end_date,
+                    tasks_taskmember_related__created__lt=self.end_date,
                     tasks_taskmember_related__status='realized',
                     tasks_taskmember_related__time_spent__gt=0) \
             .annotate(tasks_total=Sum('tasks_taskmember_related__time_spent')) \
@@ -386,12 +386,12 @@ class Command(BaseCommand):
 
         aggregated_data['projects_realised'] = Project.objects.filter(status__slug='done-complete',
                                                                       created__gte=self.start_date,
-                                                                      created__lte=self.end_date).count()
+                                                                      created__lt=self.end_date).count()
         aggregated_data['projects_done'] = Project.objects.filter(status__slug='done-incomplete',
                                                                   created__gte=self.start_date,
-                                                                  created__lte=self.end_date).count()
+                                                                  created__lt=self.end_date).count()
         aggregated_data['donations_anonymous'] = Order.objects.filter(created__gte=self.start_date,
-                                                                      created__lte=self.end_date,
+                                                                      created__lt=self.end_date,
                                                                       status='success',
                                                                       user__isnull=True).count()
 

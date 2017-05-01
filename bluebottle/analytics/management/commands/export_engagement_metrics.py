@@ -1,13 +1,13 @@
 import argparse
 import logging
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import xlsxwriter
 from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.models import Count, Sum
-from django.utils import dateparse, timezone
+from django.utils import dateparse
 from django.conf import settings
 
 from bluebottle.analytics.tasks import queue_analytics_record
@@ -73,16 +73,24 @@ class Command(BaseCommand):
             raise argparse.ArgumentTypeError(msg)
 
     def handle(self, **options):
+        self.tenants = set(options['tenants']) if options['tenants'] else None
 
         self.start_date = dateparse.parse_datetime('{} 00:00:00+00:00'.format(options['start']))
         self.end_date = dateparse.parse_datetime('{} 00:00:00+00:00'.format(options['end']))
-        self.tenants = set(options['tenants']) if options['tenants'] else None
 
         if options['export_to'] == 'xls':
             self.generate_engagement_xls()
         elif options['export_to'] == 'influxdb':
-            aggregated_engagement_data = self.store_engagement_tenant_data()
-            self.store_engagement_aggregated_data(aggregated_engagement_data)
+            end_date = self.end_date
+            current_end_date = self.start_date + timedelta(days=1)
+            while current_end_date <= end_date:
+                self.end_date = current_end_date
+                aggregated_engagement_data = self.store_engagement_tenant_data()
+                self.store_engagement_aggregated_data(aggregated_engagement_data)
+
+                # increment start date and end date by one day
+                self.start_date = self.start_date + timedelta(days=1)
+                current_end_date = current_end_date + timedelta(days=1)
 
     def generate_engagement_data(self):
         engagement_data = {}
@@ -91,7 +99,10 @@ class Command(BaseCommand):
             if self.tenants is None or client.client_name in self.tenants:
                 connection.set_tenant(client)
                 with LocalTenant(client, clear_tenant=True):
-                    logger.info('export tenant:{}'.format(client.client_name))
+                    logger.info('export tenant:{} start_date:{} end_date:{}'
+                                .format(client.client_name,
+                                        self.start_date.strftime('%Y-%m-%d %H:%M:%S'),
+                                        self.end_date.strftime('%Y-%m-%d %H:%M:%S')))
                     client_raw_data = self.generate_raw_data()
                     client_aggregated_data = self.generate_aggregated_data(client_raw_data)
                     engagement_data[client.client_name] = client_aggregated_data
@@ -114,9 +125,9 @@ class Command(BaseCommand):
             fields['engagement_number'] = data['total_engaged'] + data['donations_anonymous']
 
             if getattr(settings, 'CELERY_RESULT_BACKEND', None):
-                queue_analytics_record.delay(timestamp=timezone.now(), tags=tags, fields=fields)
+                queue_analytics_record.delay(timestamp=self.end_date, tags=tags, fields=fields)
             else:
-                queue_analytics_record(timestamp=timezone.now(), tags=tags, fields=fields)
+                queue_analytics_record(timestamp=self.end_date, tags=tags, fields=fields)
 
         return aggregated_engagement_data
 
@@ -134,9 +145,9 @@ class Command(BaseCommand):
             aggregated_engagement_data['donations_anonymous']
 
         if getattr(settings, 'CELERY_RESULT_BACKEND', None):
-            queue_analytics_record.delay(timestamp=timezone.now(), tags=tags, fields=fields)
+            queue_analytics_record.delay(timestamp=self.end_date, tags=tags, fields=fields)
         else:
-            queue_analytics_record(timestamp=timezone.now(), tags=tags, fields=fields)
+            queue_analytics_record(timestamp=self.end_date, tags=tags, fields=fields)
 
     @staticmethod
     def get_engagement_score(entry):

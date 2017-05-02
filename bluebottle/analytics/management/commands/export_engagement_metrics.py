@@ -1,13 +1,13 @@
 import argparse
 import logging
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import xlsxwriter
 from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.models import Count, Sum
-from django.utils import dateparse, timezone
+from django.utils import dateparse
 from django.conf import settings
 
 from bluebottle.analytics.tasks import queue_analytics_record
@@ -73,16 +73,24 @@ class Command(BaseCommand):
             raise argparse.ArgumentTypeError(msg)
 
     def handle(self, **options):
+        self.tenants = set(options['tenants']) if options['tenants'] else None
 
         self.start_date = dateparse.parse_datetime('{} 00:00:00+00:00'.format(options['start']))
-        self.end_date = dateparse.parse_datetime('{} 23:59:59+00:00'.format(options['end']))
-        self.tenants = set(options['tenants']) if options['tenants'] else None
+        self.end_date = dateparse.parse_datetime('{} 00:00:00+00:00'.format(options['end']))
 
         if options['export_to'] == 'xls':
             self.generate_engagement_xls()
         elif options['export_to'] == 'influxdb':
-            aggregated_engagement_data = self.store_engagement_tenant_data()
-            self.store_engagement_aggregated_data(aggregated_engagement_data)
+            end_date = self.end_date
+            current_end_date = self.start_date + timedelta(days=1)
+            while current_end_date <= end_date:
+                self.end_date = current_end_date
+                aggregated_engagement_data = self.store_engagement_tenant_data()
+                self.store_engagement_aggregated_data(aggregated_engagement_data)
+
+                # increment start date and end date by one day
+                self.start_date = self.start_date + timedelta(days=1)
+                current_end_date = current_end_date + timedelta(days=1)
 
     def generate_engagement_data(self):
         engagement_data = {}
@@ -91,7 +99,10 @@ class Command(BaseCommand):
             if self.tenants is None or client.client_name in self.tenants:
                 connection.set_tenant(client)
                 with LocalTenant(client, clear_tenant=True):
-                    logger.info('export tenant:{}'.format(client.client_name))
+                    logger.info('export tenant:{} start_date:{} end_date:{}'
+                                .format(client.client_name,
+                                        self.start_date.strftime('%Y-%m-%d %H:%M:%S'),
+                                        self.end_date.strftime('%Y-%m-%d %H:%M:%S')))
                     client_raw_data = self.generate_raw_data()
                     client_aggregated_data = self.generate_aggregated_data(client_raw_data)
                     engagement_data[client.client_name] = client_aggregated_data
@@ -114,9 +125,9 @@ class Command(BaseCommand):
             fields['engagement_number'] = data['total_engaged'] + data['donations_anonymous']
 
             if getattr(settings, 'CELERY_RESULT_BACKEND', None):
-                queue_analytics_record.delay(timestamp=timezone.now(), tags=tags, fields=fields)
+                queue_analytics_record.delay(timestamp=self.end_date, tags=tags, fields=fields)
             else:
-                queue_analytics_record(timestamp=timezone.now(), tags=tags, fields=fields)
+                queue_analytics_record(timestamp=self.end_date, tags=tags, fields=fields)
 
         return aggregated_engagement_data
 
@@ -134,9 +145,9 @@ class Command(BaseCommand):
             aggregated_engagement_data['donations_anonymous']
 
         if getattr(settings, 'CELERY_RESULT_BACKEND', None):
-            queue_analytics_record.delay(timestamp=timezone.now(), tags=tags, fields=fields)
+            queue_analytics_record.delay(timestamp=self.end_date, tags=tags, fields=fields)
         else:
-            queue_analytics_record(timestamp=timezone.now(), tags=tags, fields=fields)
+            queue_analytics_record(timestamp=self.end_date, tags=tags, fields=fields)
 
     @staticmethod
     def get_engagement_score(entry):
@@ -225,7 +236,7 @@ class Command(BaseCommand):
     def generate_comments_raw_data(self, raw_data):
         members = Member.objects \
             .filter(wallpost_wallpost__created__gte=self.start_date,
-                    wallpost_wallpost__created__lte=self.end_date) \
+                    wallpost_wallpost__created__lt=self.end_date) \
             .annotate(comments_total=Count('wallpost_wallpost')) \
             .values('id', 'comments_total')
 
@@ -236,7 +247,7 @@ class Command(BaseCommand):
 
     def generate_votes_raw_data(self, raw_data):
         members = Member.objects \
-            .filter(vote__created__gte=self.start_date, vote__created__lte=self.end_date) \
+            .filter(vote__created__gte=self.start_date, vote__created__lt=self.end_date) \
             .annotate(votes_total=Count('vote')) \
             .values('id', 'votes_total')
 
@@ -247,7 +258,7 @@ class Command(BaseCommand):
 
     def generate_donations_raw_data(self, raw_data):
         members = Member.objects \
-            .filter(order__created__gte=self.start_date, order__created__lte=self.end_date,
+            .filter(order__created__gte=self.start_date, order__created__lt=self.end_date,
                     order__status="success", id__isnull=False) \
             .annotate(donations_total=Count('order')) \
             .values('id', 'donations_total')
@@ -259,7 +270,7 @@ class Command(BaseCommand):
 
     def generate_fundraisers_raw_data(self, raw_data):
         members = Member.objects \
-            .filter(fundraiser__created__gte=self.start_date, fundraiser__created__lte=self.end_date) \
+            .filter(fundraiser__created__gte=self.start_date, fundraiser__created__lt=self.end_date) \
             .annotate(fundraisers_total=Count('fundraiser')) \
             .values('id', 'fundraisers_total')
 
@@ -271,7 +282,7 @@ class Command(BaseCommand):
     def generate_projects_raw_data(self, raw_data):
         members = Member.objects \
             .filter(owner__created__gte=self.start_date,
-                    owner__created__lte=self.end_date,
+                    owner__created__lt=self.end_date,
                     owner__status__slug__in=['voting', 'voting-done', 'campaign',
                                              'to-be-continued', 'done-complete',
                                              'done-incomplete']) \
@@ -286,7 +297,7 @@ class Command(BaseCommand):
     def generate_tasks_raw_data(self, raw_data):
         members = Member.objects \
             .filter(tasks_taskmember_related__created__gte=self.start_date,
-                    tasks_taskmember_related__created__lte=self.end_date,
+                    tasks_taskmember_related__created__lt=self.end_date,
                     tasks_taskmember_related__status='realized',
                     tasks_taskmember_related__time_spent__gt=0) \
             .annotate(tasks_total=Sum('tasks_taskmember_related__time_spent')) \
@@ -386,12 +397,12 @@ class Command(BaseCommand):
 
         aggregated_data['projects_realised'] = Project.objects.filter(status__slug='done-complete',
                                                                       created__gte=self.start_date,
-                                                                      created__lte=self.end_date).count()
+                                                                      created__lt=self.end_date).count()
         aggregated_data['projects_done'] = Project.objects.filter(status__slug='done-incomplete',
                                                                   created__gte=self.start_date,
-                                                                  created__lte=self.end_date).count()
+                                                                  created__lt=self.end_date).count()
         aggregated_data['donations_anonymous'] = Order.objects.filter(created__gte=self.start_date,
-                                                                      created__lte=self.end_date,
+                                                                      created__lt=self.end_date,
                                                                       status='success',
                                                                       user__isnull=True).count()
 

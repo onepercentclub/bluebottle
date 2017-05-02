@@ -1,5 +1,5 @@
 import logging
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 
 from celery import shared_task
 from django.conf import settings
@@ -41,7 +41,7 @@ def _process_handler(backend, timestamp, tags, fields):
 
 @shared_task
 def generate_engagement_metrics():
-    today = date.today()
+    today = datetime.utcnow().date()
     yesterday = today - timedelta(days=1)
     logger.info("Generating Engagement Metrics: start date: {} end date: {}".format(yesterday, today))
     call_command('export_engagement_metrics', ' --start', yesterday.strftime('%Y-%m-%d'),

@@ -33,6 +33,7 @@ GROUP_PERMS = {
 class Task(models.Model, PreviousStatusMixin):
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
+        full = ChoiceItem('full', label=_('Full'))
         in_progress = ChoiceItem('in progress', label=_('Running'))
         realized = ChoiceItem('realized', label=_('Realised'))
         closed = ChoiceItem('closed', label=_('Closed'))
@@ -63,7 +64,9 @@ class Task(models.Model, PreviousStatusMixin):
                                               blank=True, null=True)
 
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
-    deadline_to_apply = models.FloatField(_('deadline_to_apply'), help_text=_('Deadline to apply'), null=True)
+    deadline_to_apply = models.DateTimeField(
+        _('deadline_to_apply'), help_text=_('Deadline to apply')
+    )
 
     objects = UpdateSignalsQuerySet.as_manager()
 
@@ -93,32 +96,29 @@ class Task(models.Model, PreviousStatusMixin):
         self.status = self.TaskStatuses.in_progress
         self.save()
 
+    def set_full(self):
+        self.status = self.TaskStatuses.full
+        self.save()
+
     def set_open(self):
         self.status = self.TaskStatuses.open
         self.save()
 
-    def task_member_realized(self):
-        """
-        Called if a task member is realized. Now check if the other members
-        are also realized and the deadline has expired. If so, then the task
-        should also be realized. Members who are rejected, stopped, realized
-        withdrew or applied can be ignored as these are not seen as active members.
-        """
-        if self.status == self.TaskStatuses.realized or self.deadline > timezone.now():
-            return
-
-        accepted_count = TaskMember.objects.filter(
-            task=self,
-            status__in=('accepted',)
-        ).count()
-
-        if accepted_count == 0:
-            self.status = self.TaskStatuses.realized
-            self.save()
-
     @property
     def members_applied(self):
         return self.members.exclude(status__in=['stopped', 'withdrew'])
+
+    @property
+    def members_realized(self):
+        return self.members.filter(status=self.TaskStatuses.realized)
+
+    @property
+    def externals_applied(self):
+        total_externals = 0
+
+        for member in self.members_applied:
+            total_externals += member.externals
+        return total_externals
 
     @property
     def people_applied(self):
@@ -136,27 +136,50 @@ class Task(models.Model, PreviousStatusMixin):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
 
-    # This could also belong to bb_tasks.models but we need the actual, non-abstract
-    # model for the signal handling anyway. Eventually, tasks/bb_tasks will have to be
-    # merged.
-    def deadline_reached(self):
-        """
-        The task deadline has been reached. Set it to realised and notify the
-        owner
-        """
-        # send "The deadline of your task" - mail
+    def deadline_to_apply_reached(self):
+        if self.status == self.TaskStatuses.open:
+            if self.people_applied:
+                if self.people_applied + self.externals_applied < self.people_needed:
+                    self.people_needed = self.people_applied
 
-        if self.status == 'in progress':
+                if self.type == self.TaskTypes.ongoing:
+                    self.set_in_progress()
+                else:
+                    self.set_full()
+            else:
+                self.status = 'closed'
+
+            self.save()
+
+    def deadline_reached(self):
+        if self.people_accepted:
             self.status = 'realized'
         else:
             self.status = 'closed'
         self.save()
 
-        data = {
-            "Task": self.title,
-            "Author": self.author.username
-        }
-        bb_track("Task Deadline Reached", data)
+    def members_changed(self):
+        people_accepted = self.people_accepted
+
+        if (self.status == self.TaskStatuses.open and
+                self.people_needed <= people_accepted):
+            if self.type == self.TaskTypes.ongoing:
+                self.set_in_progress()
+            else:
+                self.set_full()
+
+        if (self.status in (self.TaskStatuses.in_progress, self.TaskStatuses.full) and
+                self.people_needed > people_accepted and
+                self.deadline_to_apply > timezone.now()):
+            self.set_open()
+
+        if self.status == self.TaskStatuses.closed and self.members_realized:
+            self.status = self.TaskStatuses.realized
+
+        if self.status == self.TaskStatuses.realized and not self.members_realized:
+            self.status = self.TaskStatuses.closed
+
+        self.save()
 
     def status_changed(self, oldstate, newstate):
         """ called by post_save signal handler, if status changed """

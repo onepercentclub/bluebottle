@@ -274,6 +274,7 @@ class TaskApiTestcase(BluebottleTestCase):
         task_data = {
             'people_needed': 1,
             'deadline': '2016-08-09T12:45:14.134756',
+            'deadline_to_apply': '2016-08-04T12:45:14.134756',
             'project': self.some_project.slug,
             'title': 'Help me',
             'description': 'I need help',

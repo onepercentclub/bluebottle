@@ -210,12 +210,12 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         """
         Ensure we can filter task list by status
         """
-        self.task1 = TaskFactory.create(
+        TaskFactory.create(
             status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
         )
-        self.task2 = TaskFactory.create(
+        TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
@@ -247,13 +247,13 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.another_project.save()
 
         # create tasks for projects
-        self.task1 = TaskFactory.create(
+        task1 = TaskFactory.create(
             status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
             deadline=timezone.datetime(2010, 05, 05, tzinfo=timezone.get_current_timezone())
         )
-        self.task2 = TaskFactory.create(
+        TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
@@ -284,20 +284,20 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
         self.assertEqual(response.data['count'], 0)
 
-        skill = self.task1.skill
+        skill = task1.skill
         response = self.client.get(api_url, {'skill': skill.id},
                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['id'], self.task1.id)
+        self.assertEqual(response.data['results'][0]['id'], task1.id)
 
         response = self.client.get(api_url, {'before': '2011-01-01'},
                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['id'], self.task1.id)
+        self.assertEqual(response.data['results'][0]['id'], task1.id)
 
         response = self.client.get(api_url, {'after': '2011-01-01'},
                                    token=self.some_token)

@@ -363,11 +363,22 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                                    token=self.some_token)
 
         # Fields as defined in the serializer
-        serializer_fields = (
-            'id', 'members', 'files', 'project', 'skill', 'author', 'status',
-            'description', 'location', 'deadline', 'time_needed', 'title',
-            'people_needed'
-        )
+        serializer_fields = ('id', 'members', 'files', 'project', 'skill', 'author', 'status', 'description',
+                             'location', 'deadline', 'time_needed', 'title', 'people_needed')
+
+        for field in serializer_fields:
+            self.assertTrue(field in response.data)
+
+    def test_get_correct_base_task_member_fields(self):
+        """ Test that the fields defined in the BaseTaskMember serializer are returned in the response """
+
+        task = TaskFactory.create()
+        task_member = TaskMemberFactory.create(member=self.another_user, task=task)
+
+        response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id), token=self.some_token)
+
+        # Fields as defined in the serializer
+        serializer_fields = ('id', 'member', 'status', 'created', 'motivation', 'task', 'externals', 'time_spent')
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)

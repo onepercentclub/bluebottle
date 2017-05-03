@@ -129,7 +129,8 @@ class PaymentVitepayApiTests(BluebottleTestCase):
                 ('type', 'redirect'),
                 ('method', 'get'),
                 ('url', u'https://vitepay.com/some-path-to-pay'),
-                ('payload', u'')
+                ('payload', u''),
+                ('data', u'')
             ]),
             'integration_data': {},
             'id': order_payment.id

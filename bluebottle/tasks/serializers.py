@@ -21,7 +21,7 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskMember
         fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
-                  'externals')
+                  'externals', 'time_spent')
 
 
 class TaskFileSerializer(serializers.ModelSerializer):
@@ -76,9 +76,6 @@ class MyTaskPreviewSerializer(serializers.ModelSerializer):
 class MyTaskMemberSerializer(BaseTaskMemberSerializer):
     task = MyTaskPreviewSerializer()
     member = serializers.PrimaryKeyRelatedField(queryset=Member.objects)
-
-    class Meta(BaseTaskMemberSerializer.Meta):
-        fields = BaseTaskMemberSerializer.Meta.fields + ('time_spent',)
 
 
 class MyTasksSerializer(BaseTaskSerializer):

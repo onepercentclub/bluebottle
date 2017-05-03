@@ -223,7 +223,7 @@ class TestStatusMC(BluebottleTestCase):
         task2 = TaskFactory.create(title='task2', people_needed=2,
                                    deadline=now - timezone.timedelta(days=5))
 
-        TaskMemberFactory.create(task=task, status='applied')
+        TaskMemberFactory.create(task=task, status='accepted')
 
         call_command('cron_status_realised')
 

@@ -39,7 +39,7 @@ class TestDeadline(TaskUnitTestBase):
         self.task.people_needed = 2
         self.task.save()
 
-        TaskMemberFactory.create(task=self.task, status='applied')
+        TaskMemberFactory.create(task=self.task, status='accepted')
 
         self.task.deadline_reached()
 

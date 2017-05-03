@@ -133,6 +133,7 @@ class FlutterwaveMpesaUpdateTest(BluebottleTestCase):
            return_value=type('obj', (object,), {'status_code': 200,
                                                 'text': json.dumps(success_response)}))
     def test_valid_redirect(self, validate):
+        mpesa_update_request['billrefnumber'] = self.order_payment.id
         response = self.client.post(self.mpesa_update_url, mpesa_update_request)
 
         self.payment.refresh_from_db()

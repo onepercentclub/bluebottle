@@ -24,6 +24,7 @@ flutterwave_settings = {
         {
             'merchant': 'flutterwave',
             'currency': 'KES',
+            'business_number': '123545',
             'merchant_key': '123456789',
             'api_key': '123456789123456789',
             'api_url': 'http://staging1flutterwave.co:8080/'
@@ -287,7 +288,17 @@ class PaymentFlutterwaveApiTests(BluebottleTestCase):
         }
         response = self.client.post(reverse('manage-order-payment-list'), data,
                                     token=self.user_token)
+
+        # Response should return payment details and type 'process'
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['status'], 'started')
         self.assertEqual(response.data['payment_method'], 'flutterwaveMpesa')
-        self.assertEqual(response.data['authorization_action']['type'], 'success')
+        self.assertEqual(response.data['authorization_action']['type'], 'process')
+
+        order_payment_id = response.data['id']
+        expected_data = {
+            'amount': 2500,
+            'account_number': order_payment_id,
+            'business_number': '123545'
+        }
+        self.assertEqual(response.data['authorization_action']['data'], expected_data)

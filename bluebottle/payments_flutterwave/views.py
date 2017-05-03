@@ -7,8 +7,9 @@ from django.views.generic.base import RedirectView, View
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.services import PaymentService
-from bluebottle.payments_flutterwave.models import FlutterwavePayment
 from bluebottle.utils.utils import get_current_host
+
+from .models import FlutterwaveMpesaPayment
 
 
 class PaymentResponseView(RedirectView):
@@ -32,8 +33,8 @@ class MpesaPaymentUpdateView(View):
     def post(self, request, *args, **kwargs):
         payload = json.loads(request.body)
         try:
-            payment = FlutterwavePayment.objects.get(bill_ref_number=payload['billrefnumber'])
-        except FlutterwavePayment.DoesNotExist:
+            payment = FlutterwaveMpesaPayment.objects.get(account_number=payload['billrefnumber'])
+        except FlutterwaveMpesaPayment.DoesNotExist:
             raise Http404('No payment found with this billrefnumber.')
         service = PaymentService(payment.order_payment)
         service.check_payment_status()

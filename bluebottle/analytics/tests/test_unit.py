@@ -75,7 +75,7 @@ class TestFileAnalyticsQueue(SimpleTestCase):
         timestamp = datetime(2016, 12, 31, 23, 59, 59, 123456)
         queue_analytics_record(timestamp=timestamp, tags=self.tags, fields=self.fields)
 
-        log_path = os.path.join(self.log_dir, '{}.log'.format(timestamp.strftime('%Y-%m')))
+        log_path = os.path.join(self.log_dir, '{}.log'.format(timestamp.strftime('%Y-%m-%d')))
         self.assertTrue(os.path.exists(log_path))
 
         # Get last line from log

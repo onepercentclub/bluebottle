@@ -75,8 +75,6 @@ class FlutterwavePayment(Payment):
         return fee
 
     def save(self, *args, **kwargs):
-        if not self.bill_ref_number:
-            self.bill_ref_number = self.order_payment.id
         if not self.transaction_reference and self.response:
             try:
                 self.transaction_reference = json.loads(self.response)['data']['transactionreference']
@@ -156,3 +154,8 @@ class FlutterwaveMpesaPayment(Payment):
         ordering = ('-created', '-updated')
         verbose_name = "Flutterwave Mpesa Payment"
         verbose_name_plural = "Flutterwave Mpesa Payments"
+
+    def save(self, *args, **kwargs):
+        if not self.account_number:
+            self.account_number = self.order_payment.id
+        super(FlutterwaveMpesaPayment, self).save(*args, **kwargs)

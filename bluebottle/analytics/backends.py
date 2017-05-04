@@ -90,7 +90,7 @@ class FileExporter:
 
     def process(self, timestamp, tags, fields):
         json_body = to_influx_json(self.measurement, timestamp, tags, fields)
-        batch = timestamp.strftime('%Y-%m')
+        batch = timestamp.strftime('%Y-%m-%d')
 
         tenant_dir = os.path.join(self.base_dir, tags.get('tenant', 'common'))
         if not os.path.exists(tenant_dir):

@@ -1,5 +1,8 @@
 *.py[co]
 
+# Ignore engagement analysis excel reports
+*.xlsx
+
 .ruby-*
 
 # Packages

@@ -24,11 +24,10 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
+        self.some_project = ProjectFactory.create(owner=self.some_user)
 
         self.another_user = BlueBottleUserFactory.create()
         self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
-
-        self.some_project = ProjectFactory.create(owner=self.some_user)
         self.another_project = ProjectFactory.create(owner=self.another_user)
 
         self.skill1 = SkillFactory.create()
@@ -355,23 +354,33 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
 
     def test_task_member_set_time_spent(self):
+        task_user = BlueBottleUserFactory.create()
+        task_user_token = "JWT {0}".format(task_user.get_jwt_token())
         task = TaskFactory.create(status=Task.TaskStatuses.open,
                                   project=self.some_project,
-                                  author=self.some_project.owner)
-        task_member = TaskMemberFactory.create(member=self.some_user, task=task)
+                                  author=task_user)
 
-        # Only task owner can set the time spent
+        task_member_user = BlueBottleUserFactory.create()
+        task_member_user_token = "JWT {0}".format(task_member_user.get_jwt_token())
+        task_member = TaskMemberFactory.create(member=task_member_user, task=task)
+
+        # Only task author can set the time spent
         response1 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
                                     {'time_spent': 42, 'task': task.id},
-                                    token=self.some_token)
-
+                                    token=task_user_token)
         self.assertEqual(response1.status_code, status.HTTP_200_OK, response1.data)
 
+        # Task Member cannot update his/her own time_spent
         response2 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
                                     {'time_spent': 5, 'task': task.id},
-                                    token=self.another_token)
-
+                                    token=task_member_user_token)
         self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN, response2.data)
+
+        # Project owner cannot update the time_spent
+        response3 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
+                                    {'time_spent': 5, 'task': task.id},
+                                    token=self.some_token)
+        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN, response3.data)
 
     def test_get_correct_base_task_fields(self):
         """ Test that the fields defined in the BaseTask serializer are returned in the response """

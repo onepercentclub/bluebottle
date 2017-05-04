@@ -44,5 +44,5 @@ def generate_engagement_metrics():
     today = datetime.utcnow().date()
     yesterday = today - timedelta(days=1)
     logger.info("Generating Engagement Metrics: start date: {} end date: {}".format(yesterday, today))
-    call_command('export_engagement_metrics', ' --start', yesterday.strftime('%Y-%m-%d'),
+    call_command('export_engagement_metrics', '--start', yesterday.strftime('%Y-%m-%d'),
                  '--end', today.strftime('%Y-%m-%d'), '--export-to', 'influxdb')

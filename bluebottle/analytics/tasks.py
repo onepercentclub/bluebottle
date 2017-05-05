@@ -41,8 +41,13 @@ def _process_handler(backend, timestamp, tags, fields):
 
 @shared_task
 def generate_engagement_metrics():
+    # Generate metrics for the today till current time. The timestamp will be of the end date and hence in the future.
+    # A point is uniquely identified by the measurement name, tag set, and timestamp. If you submit Line Protocol with
+    # the same measurement, tag set, and timestamp, but with a different field set, the field set becomes the union of
+    # the old field set and the new field set, where any conflicts favor the new field set.
+    # https://docs.influxdata.com/influxdb/v1.2/write_protocols/line_protocol_tutorial/#duplicate-points
     today = datetime.utcnow().date()
-    yesterday = today - timedelta(days=1)
-    logger.info("Generating Engagement Metrics: start date: {} end date: {}".format(yesterday, today))
-    call_command('export_engagement_metrics', '--start', yesterday.strftime('%Y-%m-%d'),
-                 '--end', today.strftime('%Y-%m-%d'), '--export-to', 'influxdb')
+    tomorrow = today + timedelta(days=1)
+    logger.info("Generating Engagement Metrics: start date: {} end date: {}".format(today, tomorrow))
+    call_command('export_engagement_metrics', '--start', today.strftime('%Y-%m-%d'),
+                 '--end', tomorrow.strftime('%Y-%m-%d'), '--export-to', 'influxdb')

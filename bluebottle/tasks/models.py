@@ -12,10 +12,8 @@ from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
-from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
-from bluebottle.utils.email_backend import send_mail
 
 
 GROUP_PERMS = {
@@ -137,6 +135,13 @@ class Task(models.Model, PreviousStatusMixin):
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
 
     def deadline_to_apply_reached(self):
+        with TenantLanguage(self.author.primary_language):
+            subject = ugettext(
+                "The deadline to apply for your task '{0}' has passed"
+            ).format(self.title)
+
+        send_deadline_to_apply_passed_mail(self, subject, connection.tenant)
+
         if self.status == self.TaskStatuses.open:
             if self.people_applied:
                 if self.people_applied + self.externals_applied < self.people_needed:
@@ -206,19 +211,6 @@ class Task(models.Model, PreviousStatusMixin):
                     [self, 'task_status_realized_second_reminder', third_subject, connection.tenant],
                     eta=timezone.now() + timedelta(minutes=2 * settings.REMINDER_MAIL_DELAY)
                 )
-
-        if oldstate in ("in progress", "open") and newstate == "closed":
-            with TenantLanguage(self.author.primary_language):
-                subject = _("The status of your task '{0}' is set to closed").format(self.title)
-
-            send_mail(
-                template_name="tasks/mails/task_status_closed.mail",
-                subject=subject,
-                title=self.title,
-                to=self.author,
-                site=tenant_url(),
-                link='/go/tasks/{0}'.format(self.id)
-            )
 
         if oldstate in ("in progress", "open") and newstate in ("realized", "closed"):
             data = {
@@ -384,6 +376,6 @@ class TaskMemberStatusLog(models.Model):
             return obj.start
 
 
-from .taskmail import send_task_realized_mail  # noqa
+from .taskmail import send_task_realized_mail, send_deadline_to_apply_passed_mail  # noqa
 from .taskwallmails import *  # noqa
 from .signals import *  # noqa

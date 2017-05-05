@@ -5,6 +5,10 @@ from bluebottle.payments.models import Payment
 class PledgeStandardPayment(Payment):
     """ Pledge payment class."""
 
+    @property
+    def transaction_reference(self):
+        return self.id
+
     def get_method_name(self):
         return 'Pledge'
 

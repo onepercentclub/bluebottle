@@ -29,6 +29,7 @@ class Command(BaseCommand):
                 for order in orders:
                     results.append({
                         'id': order.id,
+                        'transaction_reference': order.payment.transaction_reference,
                         'tenant': client.client_name,
                         'status': order.status,
                         'created': order.created.strftime('%Y-%m-%d'),

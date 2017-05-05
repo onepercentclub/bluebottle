@@ -55,6 +55,10 @@ class VitepayPayment(Payment):
         verbose_name = "Vitepay Payment"
         verbose_name_plural = "Vitepay Payments"
 
+    @property
+    def transaction_reference(self):
+        return self.order_id
+
     def get_method_name(self):
         """ Return the payment method name."""
         return 'vitepay'

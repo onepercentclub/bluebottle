@@ -15,7 +15,7 @@ from django.utils import timezone
 from django.utils.functional import lazy
 from django.utils.http import urlquote
 from django.utils.timezone import now
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from moneyed.classes import Money
 from select_multiple_field.models import SelectMultipleField

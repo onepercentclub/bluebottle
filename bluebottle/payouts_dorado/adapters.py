@@ -27,13 +27,10 @@ class DoradoPayoutAdapter(object):
         # Send the signal to Dorado
         data = {
             'project_id': self.project.id,
-            'tenant': self.tenant.schema_name
+            'tenant': self.tenant.client_name
         }
 
         try:
-            self.project.payout_status = 'created'
-            self.project.save()
-
             response = requests.post(self.settings['url'], data)
             response.raise_for_status()
         except requests.HTTPError:

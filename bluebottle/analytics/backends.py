@@ -92,8 +92,7 @@ class FileExporter:
         json_body = to_influx_json(self.measurement, timestamp, tags, fields)
         batch = timestamp.strftime('%Y-%m-%d')
 
-        # NOTE: assuming tags has the tenant included.
-        tenant_dir = os.path.join(self.base_dir, tags['tenant'])
+        tenant_dir = os.path.join(self.base_dir, tags.get('tenant', 'common'))
         if not os.path.exists(tenant_dir):
             os.makedirs(tenant_dir)
         logname = os.path.join(tenant_dir, '{}.log'.format(batch))

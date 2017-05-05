@@ -41,7 +41,7 @@ def _process_handler(backend, timestamp, tags, fields):
 
 @shared_task
 def generate_engagement_metrics():
-    # Generate metrics every 30 mins. The timestamp will be of the end date and hence in the future.
+    # Generate metrics for the today till current time. The timestamp will be of the end date and hence in the future.
     # A point is uniquely identified by the measurement name, tag set, and timestamp. If you submit Line Protocol with
     # the same measurement, tag set, and timestamp, but with a different field set, the field set becomes the union of
     # the old field set and the new field set, where any conflicts favor the new field set.

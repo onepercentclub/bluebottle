@@ -9,14 +9,23 @@ from moneyed.classes import XOF, Money, KES
 from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.payments_flutterwave.tests.factory_models import (
-    FlutterwaveOrderPaymentFactory, FlutterwavePaymentFactory
-)
+    FlutterwaveOrderPaymentFactory, FlutterwavePaymentFactory,
+    FlutterwaveMpesaPaymentFactory,
+    FlutterwaveMpesaOrderPaymentFactory)
 
 flutterwave_settings = {
     'MERCHANT_ACCOUNTS': [
         {
             'merchant': 'flutterwave',
             'currency': 'NGN',
+            'merchant_key': '123456789',
+            'api_key': '123456789123456789',
+            'api_url': 'http://staging1flutterwave.co:8080/'
+        },
+        {
+            'merchant': 'flutterwave',
+            'currency': 'KES',
+            'business_number': '123545',
             'merchant_key': '123456789',
             'api_key': '123456789123456789',
             'api_url': 'http://staging1flutterwave.co:8080/'
@@ -89,11 +98,9 @@ class FlutterwaveRedirectTest(BluebottleTestCase):
                                                 'text': json.dumps(success_response)}))
     def test_valid_redirect(self, get_current_host, validate):
         response = self.client.get(self.update_url)
-
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'settled')
         path = urlparse(response['location']).path
-
         self.assertEqual(path, '/orders/{}/success'.format(self.order_payment.order.id))
 
     @patch('flutterwave.card.Card.verifyCharge',
@@ -101,11 +108,9 @@ class FlutterwaveRedirectTest(BluebottleTestCase):
                                                 'text': json.dumps(failure_response)}))
     def test_invalid_redirect(self, get_current_host, validate):
         response = self.client.get(self.update_url)
-
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'failed')
         path = urlparse(response['location']).path
-
         self.assertEqual(path, '/orders/{}/failed'.format(self.order_payment.order.id))
 
     @patch('flutterwave.card.Card.verifyCharge',
@@ -113,20 +118,19 @@ class FlutterwaveRedirectTest(BluebottleTestCase):
                                                 'text': json.dumps(another_failure_response)}))
     def test_invalid_redirect_another(self, get_current_host, validate):
         response = self.client.get(self.update_url)
-
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'failed')
         path = urlparse(response['location']).path
-
         self.assertEqual(path, '/orders/{}/failed'.format(self.order_payment.order.id))
 
 
+@override_settings(**flutterwave_settings)
 class FlutterwaveMpesaUpdateTest(BluebottleTestCase):
     def setUp(self):
         super(FlutterwaveMpesaUpdateTest, self).setUp()
 
-        self.order_payment = FlutterwaveOrderPaymentFactory.create(amount=Money(2000, KES))
-        self.payment = FlutterwavePaymentFactory.create(order_payment=self.order_payment)
+        self.order_payment = FlutterwaveMpesaOrderPaymentFactory.create(amount=Money(2000, KES))
+        self.payment = FlutterwaveMpesaPaymentFactory.create(order_payment=self.order_payment)
         self.mpesa_update_url = reverse('flutterwave-mpesa-payment-update')
 
     @patch('flutterwave.card.Card.verifyCharge',
@@ -135,9 +139,6 @@ class FlutterwaveMpesaUpdateTest(BluebottleTestCase):
     def test_valid_redirect(self, validate):
         mpesa_update_request['billrefnumber'] = self.order_payment.id
         response = self.client.post(self.mpesa_update_url, mpesa_update_request)
-
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'settled')
-        path = urlparse(response['location']).path
-
-        self.assertEqual(path, '/orders/{}/success'.format(self.order_payment.order.id))
+        self.assertEqual(response.status_code, 200)

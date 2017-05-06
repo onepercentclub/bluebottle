@@ -37,5 +37,6 @@ class MpesaPaymentUpdateView(View):
         except FlutterwaveMpesaPayment.DoesNotExist:
             raise Http404('No payment found with this billrefnumber.')
         service = PaymentService(payment.order_payment)
-        service.check_payment_status()
-        return HttpResponse(status=200, data={'success': 1})
+        service.adapter.update_mpesa(**payload)
+
+        return HttpResponse(status=200, content={'success': 1})

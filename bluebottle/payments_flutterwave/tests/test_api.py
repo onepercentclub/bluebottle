@@ -33,9 +33,9 @@ flutterwave_settings = {
     'PAYMENT_METHODS': [
         {
             'provider': 'flutterwave',
-            'id': 'flutterwave-verve',
-            'profile': 'verve',
-            'name': 'Verve',
+            'id': 'flutterwave-nigeria',
+            'profile': 'nigeria',
+            'name': 'Nigerian Credit Card',
             'currencies': {'NGN': {}},
             'supports_recurring': False,
         },

@@ -1,6 +1,7 @@
 # coding=utf-8
 import json
 import logging
+import requests
 
 from django.db import connection
 from flutterwave import Flutterwave
@@ -265,16 +266,6 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         return self._get_credit_card_authorization_action()
 
     def _check_credit_card_payment(self):
-        pass
-
-    def check_payment_status(self):
-
-        if self.payment.status == 'settled':
-            if self.method == 'mpesa':
-                action = self.get_authorization_action()
-                self.order_payment.set_authorization_action(action)
-            return
-
         transaction_reference = self.payment.transaction_reference
         self.card_data = self.order_payment.card_data or {}
         if 'otp' in self.card_data:
@@ -296,8 +287,6 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                 self.payment.status = 'settled'
             else:
                 self.payment.status = 'failed'
-        elif not transaction_reference:
-            raise PaymentException('Payment could not be verified yet.')
         else:
             r = self.flw.card.verifyCharge(transactionRef=transaction_reference, country='NG')
             response = json.loads(r.text)
@@ -318,3 +307,45 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
 
         if self.payment.status == 'failed':
             raise PaymentException(response['data']['responsemessage'])
+
+    def _check_mpesa_payment(self):
+        status_url = "{}{}{}".format(
+            self.credentials['mpesa_base_url'],
+            'flwmp/services/mpcore/status/',
+            self.payment.transaction_reference)
+        response = requests.get(status_url)
+        self.payment.update_response = response.text
+        if response.status_code == 200:
+            self.payment.status = 'settled'
+        else:
+            self.payment.status = 'failed'
+        self.payment.save()
+
+    def check_payment_status(self):
+
+        if self.payment.status == 'settled':
+            if self.method == 'mpesa':
+                action = self.get_authorization_action()
+                self.order_payment.set_authorization_action(action)
+            return
+        if self.method == 'mpesa':
+            self._check_mpesa_payment()
+            action = self.get_authorization_action()
+            self.order_payment.set_authorization_action(action)
+        else:
+            self._check_credit_card_payment()
+
+    def update_mpesa(self, **payload):
+        # Store incoming data
+        self.payment.update_response = payload
+        self.payment.kyc_info = payload['kycinfo']
+        self.payment.msisdn = payload['msisdn']
+        self.payment.remote_id = payload['id']
+        self.payment.transaction_time = payload['transactiontime']
+        self.payment.transaction_reference = payload['transactionid']
+        self.payment.third_party_transaction_id = payload['thirdpartytransactionid']
+        self.payment.invoice_number = payload['invoicenumber']
+        self.payment.transaction_amount = payload['transactionamount']
+        self.payment.save()
+        # Now do a a check of the payment
+        self.check_payment_status()

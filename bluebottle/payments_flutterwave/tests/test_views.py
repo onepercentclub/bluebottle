@@ -20,7 +20,7 @@ flutterwave_settings = {
             'currency': 'NGN',
             'merchant_key': '123456789',
             'api_key': '123456789123456789',
-            'api_url': 'http://staging1flutterwave.co:8080/'
+            'mpesa_base_url': 'https://flutterwavestaging.com:9443/'
         },
         {
             'merchant': 'flutterwave',
@@ -28,7 +28,7 @@ flutterwave_settings = {
             'business_number': '123545',
             'merchant_key': '123456789',
             'api_key': '123456789123456789',
-            'api_url': 'http://staging1flutterwave.co:8080/'
+            'mpesa_base_url': 'https://flutterwavestaging.com:9443/'
         }
     ],
     'PAYMENT_METHODS': [{
@@ -79,6 +79,11 @@ mpesa_update_request = {
     "transactiontime": "20170203205214",
     "transactionid": "LB34YRSLD6",
     "invoicenumber": ""
+}
+
+mpesa_response = {
+    "status": "okidoki",
+    "description": "This is a mock response, we do not know what Fw will send us."
 }
 
 
@@ -133,12 +138,11 @@ class FlutterwaveMpesaUpdateTest(BluebottleTestCase):
         self.payment = FlutterwaveMpesaPaymentFactory.create(order_payment=self.order_payment)
         self.mpesa_update_url = reverse('flutterwave-mpesa-payment-update')
 
-    @patch('flutterwave.card.Card.verifyCharge',
+    @patch('bluebottle.payments_flutterwave.adapters.requests.get',
            return_value=type('obj', (object,), {'status_code': 200,
-                                                'text': json.dumps(success_response)}))
-    def test_valid_redirect(self, validate):
+                                                'text': json.dumps(mpesa_response)}))
+    def test_valid_redirect(self, get):
         mpesa_update_request['billrefnumber'] = self.order_payment.id
-        response = self.client.post(self.mpesa_update_url, mpesa_update_request)
+        self.client.post(self.mpesa_update_url, mpesa_update_request)
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'settled')
-        self.assertEqual(response.status_code, 200)

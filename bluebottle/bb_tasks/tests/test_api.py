@@ -59,7 +59,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timedelta(days=1))
         }
         response = self.client.post(self.task_url, some_task_data,
                                     token=self.some_token)
@@ -101,7 +102,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill3.id),
             'location': 'Tiel',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timedelta(days=1))
         }
         response = self.client.post(self.task_url, another_task_data,
                                     token=self.another_token)
@@ -118,7 +120,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill4.id),
             'location': 'Tiel',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timedelta(days=1))
         }
         response = self.client.post(self.task_url, third_task_data,
                                     token=self.another_token)
@@ -149,7 +152,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': str(self.some_project.deadline + timedelta(hours=1))
+            'deadline': str(self.some_project.deadline + timedelta(hours=1)),
+            'deadline_to_apply': str(self.some_project.deadline + timedelta(minutes=1))
         }
         response = self.client.post(self.task_url, some_task_data,
                                     token=self.some_token)
@@ -172,7 +176,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timezone.timedelta(days=1))
         }
 
         response = self.client.post(self.task_url, some_task_data,
@@ -193,7 +198,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timedelta(days=1))
         }
         response = self.client.post(self.task_url, some_task_data,
                                     token=self.some_token)

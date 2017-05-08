@@ -14,7 +14,7 @@ from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.tasks.models import Task
 from bluebottle.clients.utils import LocalTenant
 
@@ -218,13 +218,12 @@ class TestStatusMC(BluebottleTestCase):
         """
         now = timezone.now()
 
-        task = TaskFactory.create(title='task1', status='in progress',
+        task = TaskFactory.create(title='task1', people_needed=2,
                                   deadline=now - timezone.timedelta(days=5))
-        task2 = TaskFactory.create(title='task2', status='open',
+        task2 = TaskFactory.create(title='task2', people_needed=2,
                                    deadline=now - timezone.timedelta(days=5))
 
-        self.assertEqual(task.status, 'in progress')
-        self.assertEqual(task2.status, 'open')
+        TaskMemberFactory.create(task=task, status='accepted')
 
         call_command('cron_status_realised')
 

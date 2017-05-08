@@ -54,6 +54,12 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'deadline': [_("The deadline must be before the project deadline.")]}
             )
+
+        if not data['deadline_to_apply'] or data['deadline_to_apply'] > data['deadline']:
+            raise serializers.ValidationError(
+                {'deadline': [_("The deadline to apply must be before the deadline.")]}
+            )
+
         return data
 
     class Meta:

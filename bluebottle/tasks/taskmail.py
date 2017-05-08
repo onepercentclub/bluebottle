@@ -175,6 +175,37 @@ def send_task_realized_mail(task, template, subject, tenant):
         )
 
 
+@shared_task
+def send_deadline_to_apply_passed_mail(task, subject, tenant):
+    connection.set_tenant(tenant)
+
+    with LocalTenant(tenant, clear_tenant=True):
+        if not task.members_applied:
+            template = 'deadline_to_apply_closed'
+        else:
+            if task.people_applied + task.externals_applied < task.people_needed:
+                status = 'partial'
+            elif task.people_accepted < task.people_needed:
+                status = 'accept'
+            else:
+                status = 'target_reached'
+
+            template = 'deadline_to_apply_{type}_{status}'.format(
+                type=task.type, status=status
+            )
+
+        send_mail(
+            template_name='tasks/mails/{}.mail'.format(template),
+            subject=subject,
+            task=task,
+            to=task.author,
+            site=tenant_url(),
+            edit_link='/tasks/{0}/edit'.format(task.id),
+            link='/tasks/{0}'.format(task.id),
+
+        )
+
+
 @receiver(post_save, weak=False, sender=TaskMember)
 def new_reaction_notification(sender, instance, created, **kwargs):
     mailer = TaskMemberMailAdapter(instance)

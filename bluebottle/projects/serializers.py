@@ -76,7 +76,6 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     owner = UserProfileSerializer()
-    title = SafeField()
     story = SafeField()
     image = ImageSerializer(required=False)
     task_count = serializers.IntegerField()

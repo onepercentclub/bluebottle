@@ -637,48 +637,6 @@ class ProjectStoryXssTest(BluebottleTestCase):
         self.init_projects()
         self.some_user = BlueBottleUserFactory.create()
 
-    def test_unsafe_title(self):
-        title = '''
-        <p onmouseover=\"alert('Persistent_XSS');\"></p>
-        <br size="&{alert('Injected')}">
-        <script>alert('Injected!');</script>
-        '''
-
-        project = ProjectFactory.create(title=title,
-                                        slug="testproject",
-                                        story="testproject",
-                                        owner=self.some_user,
-                                        status=ProjectPhase.objects.get(
-                                            slug='campaign'))
-
-        response = self.client.get(reverse('project_detail',
-                                           args=[project.slug]))
-        escaped_title = '''
-        <p></p>
-        <br>
-        &lt;script&gt;alert(\'Injected!\');&lt;/script&gt;
-        '''
-        self.assertEqual(response.data['title'], escaped_title)
-
-    def test_safe_title(self):
-        title = '''
-            <p>test</p>
-            <blockquote>test</blockquote>
-            <pre>test</pre>
-            <h1>test</h1>
-            <br>
-        '''
-        project = ProjectFactory.create(title=title,
-                                        slug="testproject",
-                                        story="testproject",
-                                        owner=self.some_user,
-                                        status=ProjectPhase.objects.get(
-                                            slug='campaign'))
-
-        response = self.client.get(reverse('project_detail',
-                                           args=[project.slug]))
-        self.assertEqual(response.data['title'], title)
-
     def test_unsafe_story(self):
         story = '''
         <p onmouseover=\"alert('Persistent_XSS');\"></p>

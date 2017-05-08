@@ -59,6 +59,20 @@ class TestTaskMemberCase(BluebottleTestCase):
         # More than people_needed have applied
         self.assertEqual(task.status, 'in progress')
 
+    def test_accepting_automatic(self):
+        task = TaskFactory.create(status='open', people_needed=4, accepting='automatic')
+
+        task_member = TaskMemberFactory.create(task=task, status='applied')
+
+        self.assertEqual(task_member.status, 'accepted')
+
+    def test_accepting_manual(self):
+        task = TaskFactory.create(status='open', people_needed=4, accepting='manual')
+
+        task_member = TaskMemberFactory.create(task=task, status='applied')
+
+        self.assertEqual(task_member.status, 'applied')
+
 
 class TestTaskStatus(BluebottleTestCase):
     def setUp(self):

@@ -40,6 +40,10 @@ class Task(models.Model, PreviousStatusMixin):
         ongoing = ChoiceItem('ongoing', label=_('Ongoing (with deadline)'))
         event = ChoiceItem('event', label=_('Event (on set date)'))
 
+    class TaskAcceptingChoices(DjangoChoices):
+        manual = ChoiceItem('manual', label=_('Manual'))
+        automatic = ChoiceItem('automatic', label=_('Automatic'))
+
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
     location = models.CharField(_('location'), max_length=200, null=True,
@@ -57,6 +61,10 @@ class Task(models.Model, PreviousStatusMixin):
     type = models.CharField(_('type'), max_length=20,
                             choices=TaskTypes.choices,
                             default=TaskTypes.ongoing)
+
+    accepting = models.CharField(_('accepting'), max_length=20,
+                                 choices=TaskAcceptingChoices.choices,
+                                 default=TaskAcceptingChoices.manual)
 
     date_status_change = models.DateTimeField(_('date status change'),
                                               blank=True, null=True)
@@ -294,6 +302,13 @@ class TaskMember(models.Model, PreviousStatusMixin):
     @property
     def project(self):
         return self.task.project
+
+    def save(self, *args, **kwargs):
+        if (self.status == self.TaskMemberStatuses.applied and
+                self.task.accepting == self.task.TaskAcceptingChoices.automatic):
+            self.status = self.TaskMemberStatuses.accepted
+
+        super(TaskMember, self).save(*args, **kwargs)
 
 
 class TaskFile(models.Model):

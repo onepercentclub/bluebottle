@@ -139,7 +139,7 @@ class PaymentFlutterwaveApiTests(BluebottleTestCase):
 
         # Select Flutterwave as payment method
         data = {
-            "payment_method": "flutterwaveVerve",
+            "payment_method": "flutterwaveCreditcard",
             "integration_data": integration_data,
             "authorization_action": None,
             "status": "",
@@ -155,7 +155,7 @@ class PaymentFlutterwaveApiTests(BluebottleTestCase):
                                     token=self.user_token)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['status'], 'authorized')
-        self.assertEqual(response.data['payment_method'], 'flutterwaveVerve')
+        self.assertEqual(response.data['payment_method'], 'flutterwaveCreditcard')
         self.assertEqual(response.data['authorization_action']['type'], 'success')
 
     @patch('flutterwave.card.Card.charge',
@@ -206,7 +206,7 @@ class PaymentFlutterwaveApiTests(BluebottleTestCase):
 
         # Select Flutterwave as payment method
         data = {
-            "payment_method": "flutterwaveVerve",
+            "payment_method": "flutterwaveCreditcard",
             "integration_data": integration_data,
             "authorization_action": None,
             "status": "",
@@ -223,7 +223,7 @@ class PaymentFlutterwaveApiTests(BluebottleTestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['status'], 'started')
         order_payment_url = reverse('manage-order-payment-detail', kwargs={'pk': response.data['id']})
-        self.assertEqual(response.data['payment_method'], 'flutterwaveVerve')
+        self.assertEqual(response.data['payment_method'], 'flutterwaveCreditcard')
         self.assertEqual(response.data['authorization_action']['type'], 'step2')
 
         # Now let's update it with an OTP

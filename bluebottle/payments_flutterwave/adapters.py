@@ -19,13 +19,12 @@ logger = logging.getLogger(__name__)
 SUCCESS_RESPONSECODES = ['0', '00']
 
 
-class FlutterwavePaymentAdapter(BasePaymentAdapter):
-    MODEL_CLASSES = [FlutterwavePayment, FlutterwaveMpesaPayment]
+class FlutterwaveBasePaymentAdapter(BasePaymentAdapter):
 
     card_data = {}
 
     def __init__(self, order_payment):
-        super(FlutterwavePaymentAdapter, self).__init__(order_payment)
+        super(FlutterwaveBasePaymentAdapter, self).__init__(order_payment)
         options = {'debug': True}
 
         if properties.LIVE_PAYMENTS_ENABLED:
@@ -38,9 +37,11 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                                self.credentials['merchant_key'],
                                options)
 
-    def _create_mpesa_payment(self):
 
-        payment = self.MODEL_CLASSES[1](
+class FlutterwaveMpesaPaymentAdapter(BasePaymentAdapter):
+
+    def create_payment(self):
+        payment = FlutterwaveMpesaPayment(
             order_payment=self.order_payment,
             business_number=self.credentials['business_number'],
             account_number=self.order_payment.id
@@ -56,7 +57,63 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         self.payment = payment
         return payment
 
-    def _create_credit_card_payment(self):
+    def get_authorization_action(self):
+
+        if self.payment.status == 'settled':
+            return {'type': 'success'}
+        if self.payment.status == 'started':
+            return {
+                'type': 'process',
+                'payload': {
+                    'account_number': self.payment.account_number,
+                    'business_number': self.payment.business_number,
+                    'amount': int(float(self.payment.amount))
+                }
+            }
+        raise PaymentException('Payment could not be verified yet.')
+
+    def check_payment_status(self):
+
+        if self.payment.status == 'settled':
+            self.order_payment.set_authorization_action({'type': 'success'})
+            return
+        status_url = "{}{}{}".format(
+            self.credentials['mpesa_base_url'],
+            'flwmp/services/mpcore/status/',
+            self.payment.transaction_reference)
+        response = requests.get(status_url)
+        self.payment.update_response = response.text
+        if response.status_code == 200:
+            self.payment.status = 'settled'
+        else:
+            self.payment.status = 'failed'
+        self.payment.save()
+        try:
+            action = self.get_authorization_action()
+            self.order_payment.set_authorization_action(action)
+        except PaymentException:
+            pass
+
+    def update_mpesa(self, **payload):
+        # Store incoming data
+        self.payment.update_response = payload
+        self.payment.kyc_info = payload['kycinfo']
+        self.payment.msisdn = payload['msisdn']
+        self.payment.remote_id = payload['id']
+        self.payment.transaction_time = payload['transactiontime']
+        self.payment.transaction_reference = payload['transactionid']
+        self.payment.third_party_transaction_id = payload['thirdpartytransactionid']
+        self.payment.invoice_number = payload['invoicenumber']
+        self.payment.transaction_amount = payload['transactionamount']
+        self.payment.save()
+        # Now do a a check of the payment
+        self.check_payment_status()
+
+
+class FlutterwaveCreditcardPaymentAdapter(FlutterwaveBasePaymentAdapter):
+
+    def create_payment(self):
+        self.card_data = self.order_payment.card_data
 
         if not {'card_number', 'expiry_month', 'expiry_year', 'cvv'}.issubset(self.card_data):
             logger.warn('payment_tracer: {}, '
@@ -72,7 +129,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                                          ))
             raise PaymentException('Card number, expiry month/year and cvv is required')
 
-        payment = self.MODEL_CLASSES[0](
+        payment = FlutterwavePayment(
             order_payment=self.order_payment,
             card_number="**** **** **** " + self.card_data['card_number'][-4:]
         )
@@ -103,16 +160,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                                 'event: payment.flutterwave.create_payment.success'.format(self.payment_tracer))
         return payment
 
-    def create_payment(self):
-        """
-        Create a new payment
-        """
-        self.card_data = self.order_payment.card_data
-        if self.method == 'mpesa':
-            return self._create_mpesa_payment()
-        return self._create_credit_card_payment()
-
-    def _get_credit_card_authorization_action(self):
+    def get_authorization_action(self):
         pin = ''
         cvv = ''
         if 'pin' in self.card_data:
@@ -241,35 +289,11 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                                                       ))
         raise PaymentException('Error starting payment: {0}'.format(response['data']['responsemessage']))
 
-    def _get_mpesa_authorization_action(self):
-
-        if self.payment.status == 'settled':
-            return {'type': 'success'}
-        if self.payment.status == 'started':
-            return {
-                'type': 'process',
-                'payload': {
-                    'account_number': self.payment.account_number,
-                    'business_number': self.payment.business_number,
-                    'amount': int(float(self.payment.amount))
-                }
-            }
-        raise PaymentException('Payment could not be verified yet.')
-
-    def get_authorization_action(self):
-        """
-        Handle payment
-        """
-        self.card_data = self.card_data
-        if self.method == 'mpesa':
-            return self._get_mpesa_authorization_action()
-        return self._get_credit_card_authorization_action()
-
-    def _check_credit_card_payment(self):
+    def check_payment_status(self):
         transaction_reference = self.payment.transaction_reference
-        self.card_data = self.order_payment.card_data or {}
-        if 'otp' in self.card_data:
-            otp = self.card_data['otp']
+        card_data = self.order_payment.card_data or {}
+        if 'otp' in card_data:
+            otp = card_data['otp']
             data = {
                 "otp": otp,
                 "otpTransactionIdentifier": self.payment.transaction_reference,
@@ -307,45 +331,3 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
 
         if self.payment.status == 'failed':
             raise PaymentException(response['data']['responsemessage'])
-
-    def _check_mpesa_payment(self):
-        status_url = "{}{}{}".format(
-            self.credentials['mpesa_base_url'],
-            'flwmp/services/mpcore/status/',
-            self.payment.transaction_reference)
-        response = requests.get(status_url)
-        self.payment.update_response = response.text
-        if response.status_code == 200:
-            self.payment.status = 'settled'
-        else:
-            self.payment.status = 'failed'
-        self.payment.save()
-
-    def check_payment_status(self):
-
-        if self.payment.status == 'settled':
-            if self.method == 'mpesa':
-                action = self.get_authorization_action()
-                self.order_payment.set_authorization_action(action)
-            return
-        if self.method == 'mpesa':
-            self._check_mpesa_payment()
-            action = self.get_authorization_action()
-            self.order_payment.set_authorization_action(action)
-        else:
-            self._check_credit_card_payment()
-
-    def update_mpesa(self, **payload):
-        # Store incoming data
-        self.payment.update_response = payload
-        self.payment.kyc_info = payload['kycinfo']
-        self.payment.msisdn = payload['msisdn']
-        self.payment.remote_id = payload['id']
-        self.payment.transaction_time = payload['transactiontime']
-        self.payment.transaction_reference = payload['transactionid']
-        self.payment.third_party_transaction_id = payload['thirdpartytransactionid']
-        self.payment.invoice_number = payload['invoicenumber']
-        self.payment.transaction_amount = payload['transactionamount']
-        self.payment.save()
-        # Now do a a check of the payment
-        self.check_payment_status()

@@ -568,7 +568,8 @@ EXPOSED_TENANT_PROPERTIES = ['closed_site', 'mixpanel', 'analytics', 'maps_api_k
                              'bb_apps', 'donation_amounts', 'facebook_sharing_reviewed',
                              'project_create_flow', 'project_create_types', 'project_contact_types',
                              'closed_site', 'partner_login', 'share_options', 'sso_url',
-                             'project_suggestions', 'readOnlyFields', 'search_options']
+                             'project_suggestions', 'readOnlyFields', 'search_options',
+                             'task_accepting', 'task_show_accepting', 'task_plus_one']
 
 DEFAULT_FILE_STORAGE = 'bluebottle.utils.storage.TenantFileSystemStorage'
 
@@ -794,3 +795,7 @@ THUMBNAIL_ENGINE = 'sorl_watermarker.engines.pil_engine.Engine'
 THUMBNAIL_WATERMARK_ALWAYS = False
 
 REMINDER_MAIL_DELAY = 60 * 24 * 3  # Three days
+
+TASK_ACCEPTING = 'manual'
+TASK_PLUS_ONE = False
+TASK_SHOW_ACCEPTING = False

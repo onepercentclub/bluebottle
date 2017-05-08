@@ -49,8 +49,8 @@ class ProjectEndpointTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-        organization = OrganizationFactory.create()
-        organization.save()
+        self.organization = OrganizationFactory.create()
+        self.organization.save()
 
         self.campaign_phase = ProjectPhase.objects.get(slug='campaign')
         self.plan_phase = ProjectPhase.objects.get(slug='done-complete')
@@ -63,12 +63,12 @@ class ProjectEndpointTestCase(BluebottleTestCase):
                                                 status=self.campaign_phase,
                                                 amount_asked=0,
                                                 amount_needed=30,
-                                                organization=organization)
+                                                organization=self.organization)
                 project.save()
             else:
                 project = ProjectFactory.create(title=char * 3, slug=char * 3,
                                                 status=self.plan_phase,
-                                                organization=organization)
+                                                organization=self.organization)
 
                 task = TaskFactory.create(project=project)
                 project.save()
@@ -160,6 +160,12 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(owner['task_count'], 0)
         self.assertEquals(owner['donation_count'], 0)
         self.assertTrue(owner.get('email', None) is None)
+
+        organization = response.data['organization']
+
+        self.assertEqual(organization.keys(), ['id', 'name', 'slug', 'website'])
+        self.assertEqual(organization['name'], self.organization.name)
+
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_project_detail_view_bank_details(self):

@@ -118,6 +118,7 @@ class Statistics(object):
             .distinct('task__id')\
             .order_by('-task__id', '-start')
 
+        # TODO: Refactor to use django filters for sub-queries
         count = 0
         for log in logs:
             if log.status == 'realized':
@@ -145,6 +146,7 @@ class Statistics(object):
             .distinct('project__id')\
             .order_by('-project__id', '-start')
 
+        # TODO: Refactor to use django filters for sub-queries
         count = 0
         for log in phase_logs:
             if log.status.slug in ['done-complete', 'done-incomplete']:
@@ -189,6 +191,7 @@ class Statistics(object):
             .distinct('task_member__id') \
             .order_by('-task_member__id', '-start') \
 
+        # TODO: Refactor to use django filters for sub-queries
         count = 0
         for log in logs:
             if log.status == 'realized':
@@ -217,6 +220,7 @@ class Statistics(object):
             .distinct('project__id')\
             .order_by('-project__id', '-start')
 
+        # TODO: Refactor to use django filters for sub-queries
         count = 0
         for log in logs:
             if log.status.slug == 'done-complete':
@@ -232,6 +236,7 @@ class Statistics(object):
             .distinct('task_member__id') \
             .order_by('-task_member__id', '-start')
 
+        # TODO: Refactor to use django filters for sub-queries
         count = 0
         for log in logs:
             if log.status == 'realized':

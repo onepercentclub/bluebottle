@@ -30,15 +30,7 @@ flutterwave_settings = {
             'api_key': '123456789123456789',
             'mpesa_base_url': 'https://flutterwavestaging.com:9443/'
         }
-    ],
-    'PAYMENT_METHODS': [{
-        'provider': 'flutterwave',
-        'id': 'flutterwave-verve',
-        'profile': 'verve',
-        'name': 'Verve',
-        'currencies': {'NGN': {}},
-        'supports_recurring': False,
-    }]
+    ]
 }
 
 

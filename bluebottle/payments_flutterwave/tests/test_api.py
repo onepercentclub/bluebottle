@@ -29,24 +29,6 @@ flutterwave_settings = {
             'api_key': '123456789123456789',
             'api_url': 'http://staging1flutterwave.co:8080/'
         }
-    ],
-    'PAYMENT_METHODS': [
-        {
-            'provider': 'flutterwave',
-            'id': 'flutterwave-nigeria',
-            'profile': 'nigeria',
-            'name': 'Nigerian Credit Card',
-            'currencies': {'NGN': {}},
-            'supports_recurring': False,
-        },
-        {
-            'provider': 'flutterwave',
-            'id': 'flutterwave-mpesa',
-            'profile': 'mpesa',
-            'name': 'M-PESA',
-            'currencies': {'KES': {}},
-            'supports_recurring': False,
-        },
     ]
 }
 

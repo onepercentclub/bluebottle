@@ -24,11 +24,10 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
+        self.some_project = ProjectFactory.create(owner=self.some_user)
 
         self.another_user = BlueBottleUserFactory.create()
         self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
-
-        self.some_project = ProjectFactory.create(owner=self.some_user)
         self.another_project = ProjectFactory.create(owner=self.another_user)
 
         self.skill1 = SkillFactory.create()
@@ -216,12 +215,12 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         """
         Ensure we can filter task list by status
         """
-        self.task1 = TaskFactory.create(
+        TaskFactory.create(
             status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
         )
-        self.task2 = TaskFactory.create(
+        TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
@@ -253,13 +252,13 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.another_project.save()
 
         # create tasks for projects
-        self.task1 = TaskFactory.create(
+        task1 = TaskFactory.create(
             status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
             deadline=timezone.datetime(2010, 05, 05, tzinfo=timezone.get_current_timezone())
         )
-        self.task2 = TaskFactory.create(
+        TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
@@ -290,20 +289,20 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
         self.assertEqual(response.data['count'], 0)
 
-        skill = self.task1.skill
+        skill = task1.skill
         response = self.client.get(api_url, {'skill': skill.id},
                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['id'], self.task1.id)
+        self.assertEqual(response.data['results'][0]['id'], task1.id)
 
         response = self.client.get(api_url, {'before': '2011-01-01'},
                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['id'], self.task1.id)
+        self.assertEqual(response.data['results'][0]['id'], task1.id)
 
         response = self.client.get(api_url, {'after': '2011-01-01'},
                                    token=self.some_token)
@@ -360,6 +359,35 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN,
                          response.data)
 
+    def test_task_member_set_time_spent(self):
+        task_user = BlueBottleUserFactory.create()
+        task_user_token = "JWT {0}".format(task_user.get_jwt_token())
+        task = TaskFactory.create(status=Task.TaskStatuses.open,
+                                  project=self.some_project,
+                                  author=task_user)
+
+        task_member_user = BlueBottleUserFactory.create()
+        task_member_user_token = "JWT {0}".format(task_member_user.get_jwt_token())
+        task_member = TaskMemberFactory.create(member=task_member_user, task=task)
+
+        # Only task author can set the time spent
+        response1 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
+                                    {'time_spent': 42, 'task': task.id},
+                                    token=task_user_token)
+        self.assertEqual(response1.status_code, status.HTTP_200_OK, response1.data)
+
+        # Task Member cannot update his/her own time_spent
+        response2 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
+                                    {'time_spent': 5, 'task': task.id},
+                                    token=task_member_user_token)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN, response2.data)
+
+        # Project owner cannot update the time_spent
+        response3 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
+                                    {'time_spent': 5, 'task': task.id},
+                                    token=self.some_token)
+        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN, response3.data)
+
     def test_get_correct_base_task_fields(self):
         """ Test that the fields defined in the BaseTask serializer are returned in the response """
 
@@ -369,11 +397,22 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                                    token=self.some_token)
 
         # Fields as defined in the serializer
-        serializer_fields = (
-            'id', 'members', 'files', 'project', 'skill', 'author', 'status',
-            'description', 'location', 'deadline', 'time_needed', 'title',
-            'people_needed'
-        )
+        serializer_fields = ('id', 'members', 'files', 'project', 'skill', 'author', 'status', 'description',
+                             'location', 'deadline', 'time_needed', 'title', 'people_needed')
+
+        for field in serializer_fields:
+            self.assertTrue(field in response.data)
+
+    def test_get_correct_base_task_member_fields(self):
+        """ Test that the fields defined in the BaseTaskMember serializer are returned in the response """
+
+        task = TaskFactory.create()
+        task_member = TaskMemberFactory.create(member=self.another_user, task=task)
+
+        response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id), token=self.some_token)
+
+        # Fields as defined in the serializer
+        serializer_fields = ('id', 'member', 'status', 'created', 'motivation', 'task', 'externals', 'time_spent')
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)

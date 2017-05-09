@@ -133,8 +133,17 @@ class FlutterwaveMpesaUpdateTest(BluebottleTestCase):
     @patch('bluebottle.payments_flutterwave.adapters.requests.get',
            return_value=type('obj', (object,), {'status_code': 200,
                                                 'text': json.dumps(mpesa_response)}))
-    def test_valid_redirect(self, get):
+    def test_successful_payment(self, get):
         mpesa_update_request['billrefnumber'] = self.order_payment.id
         self.client.post(self.mpesa_update_url, mpesa_update_request)
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, 'settled')
+
+    @patch('bluebottle.payments_flutterwave.adapters.requests.get',
+           return_value=type('obj', (object,), {'status_code': 400,
+                                                'text': json.dumps(mpesa_response)}))
+    def test_unsuccessful_valid_payment(self, get):
+        mpesa_update_request['billrefnumber'] = self.order_payment.id
+        self.client.post(self.mpesa_update_url, mpesa_update_request)
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, 'failed')

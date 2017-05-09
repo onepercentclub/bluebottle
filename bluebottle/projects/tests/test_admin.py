@@ -85,6 +85,14 @@ class TestProjectAdmin(BluebottleTestCase):
             'payout_status' not in self.project_admin.get_list_filter(request)
         )
 
+    def test_list_filter_task_skills(self):
+        request = self.request_factory.get('/')
+        request.user = MockUser()
+
+        self.assertTrue(
+            'skill' not in self.project_admin.get_list_filter(request)
+        )
+
     def test_list_display(self):
         request = self.request_factory.get('/')
         request.user = MockUser(['projects.approve_payout'])

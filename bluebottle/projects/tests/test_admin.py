@@ -342,7 +342,7 @@ class ProjectAdminFormTest(BluebottleTestCase):
 
 class ProjectSkillFilterTest(BluebottleTestCase):
     """
-    Test project reviewer filter
+    Test project task skill filter
     """
 
     def setUp(self):

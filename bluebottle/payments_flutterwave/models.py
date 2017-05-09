@@ -81,3 +81,81 @@ class FlutterwavePayment(Payment):
             except (TypeError, KeyError):
                 pass
         super(FlutterwavePayment, self).save(*args, **kwargs)
+
+
+class FlutterwaveMpesaPayment(Payment):
+
+    amount = models.CharField(
+        help_text="Amount / Transaction amount",
+        null=True, blank=True,
+        max_length=200)
+
+    currency = models.CharField(
+        help_text="Transaction currency",
+        default="KES",
+        null=True, blank=True,
+        max_length=200)
+
+    business_number = models.CharField(
+        help_text="Amount",
+        null=True, blank=True,
+        max_length=200)
+
+    account_number = models.CharField(
+        help_text="Billrefnumber / Account number",
+        null=True, blank=True,
+        max_length=200)
+
+    kyc_info = models.TextField(
+        help_text="Personal details",
+        null=True, blank=True)
+
+    remote_id = models.CharField(
+        help_text="Remote id",
+        null=True, blank=True,
+        max_length=200)
+
+    msisdn = models.CharField(
+        help_text="Msisdn / Phone number",
+        null=True, blank=True,
+        max_length=200)
+
+    third_party_transaction_id = models.CharField(
+        help_text="Third party transaction id",
+        null=True, blank=True,
+        max_length=200)
+
+    transaction_time = models.CharField(
+        help_text="Transaction time",
+        null=True, blank=True,
+        max_length=200)
+
+    transaction_reference = models.CharField(
+        help_text="Flutterwave transaction reference",
+        null=True, blank=True,
+        max_length=200)
+
+    invoice_number = models.CharField(
+        help_text="Invoice Number",
+        null=True, blank=True,
+        max_length=200)
+
+    response = models.TextField(
+        help_text=_('Response from Flutterwave'),
+        null=True,
+        blank=True)
+
+    update_response = models.TextField(
+        help_text=_('Result from Flutterware (status update)'),
+        null=True,
+        blank=True)
+
+    class Meta:
+        ordering = ('-created', '-updated')
+        verbose_name = "Flutterwave Mpesa Payment"
+        verbose_name_plural = "Flutterwave Mpesa Payments"
+
+    def save(self, *args, **kwargs):
+        if not self.account_number:
+            self.account_number = self.order_payment.id
+        super(FlutterwaveMpesaPayment, self).save(*args, **kwargs)

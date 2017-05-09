@@ -52,6 +52,11 @@ class BasePaymentAdapter(object):
                       self.order_payment.payment_method)
 
     @property
+    def method(self):
+        return re.sub('([a-z]+)([A-Z][a-z]+)', r'\2',
+                      self.order_payment.payment_method).lower()
+
+    @property
     def credentials(self):
         for account in properties.MERCHANT_ACCOUNTS:
             if account['merchant'] == self.merchant and account['currency'] == self.currency:

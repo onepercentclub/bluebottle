@@ -2,6 +2,9 @@ import json
 import mock
 
 import requests
+from bluebottle.test.factory_models.tasks import TaskFactory
+
+from bluebottle.tasks.models import Skill
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib import messages
@@ -9,8 +12,8 @@ from django.test.client import RequestFactory
 
 from bluebottle.projects.admin import (
     LocationFilter, ProjectReviewerFilter, ProjectAdminForm,
-    ReviewerWidget, ProjectAdmin
-)
+    ReviewerWidget, ProjectAdmin,
+    ProjectSkillFilter)
 from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -335,3 +338,33 @@ class ProjectAdminFormTest(BluebottleTestCase):
         )
         parameters = widget.url_parameters()
         self.assertTrue(parameters['is_staff'], True)
+
+
+class ProjectSkillFilterTest(BluebottleTestCase):
+    """
+    Test project reviewer filter
+    """
+
+    def setUp(self):
+        super(ProjectSkillFilterTest, self).setUp()
+        self.init_projects()
+
+        self.skill = Skill.objects.all()[0]
+        self.project_with_skill = ProjectFactory.create()
+        TaskFactory(project=self.project_with_skill, skill=self.skill)
+        ProjectFactory.create()
+        self.user = BlueBottleUserFactory.create()
+        self.request = factory.get('/')
+        self.request.user = self.user
+        self.admin = ProjectAdmin(Project, AdminSite())
+
+    def test_unfiltered(self):
+        filter = ProjectSkillFilter(None, {}, Project, self.admin)
+        queryset = filter.queryset(self.request, Project.objects.all())
+        self.assertEqual(len(queryset), 2)
+
+    def test_filter(self):
+        filter = ProjectSkillFilter(None, {'skill': self.skill.id}, Project, self.admin)
+        queryset = filter.queryset(self.request, Project.objects.all())
+        self.assertEqual(len(queryset), 1)
+        self.assertEqual(queryset.get(), self.project_with_skill)

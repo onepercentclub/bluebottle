@@ -45,6 +45,10 @@ class InterswitchPayment(Payment):
         verbose_name = "Interswitch Payment"
         verbose_name_plural = "Interswitch Payments"
 
+    @property
+    def transaction_reference(self):
+        return self.txn_ref
+
     def get_method_name(self):
         """ Return the payment method name."""
         return 'interswitch'

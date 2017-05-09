@@ -2,6 +2,7 @@ from collections import OrderedDict
 import logging
 from decimal import InvalidOperation
 
+from bluebottle.tasks.models import Skill
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin, messages
@@ -137,6 +138,21 @@ class ProjectThemeFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(theme=self.value())
+        else:
+            return queryset
+
+
+class ProjectSkillFilter(admin.SimpleListFilter):
+    title = _('Task skills')
+    parameter_name = 'skill'
+
+    def lookups(self, request, model_admin):
+        skills = Skill.objects.all()
+        return [(skill.id, _(skill.name)) for skill in skills]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(task__skill=self.value())
         else:
             return queryset
 
@@ -326,7 +342,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     list_filter = ('country__subregion__region', )
 
     def get_list_filter(self, request):
-        filters = ['status', 'is_campaign', ProjectThemeFilter, ProjectReviewerFilter,
+        filters = ['status', 'is_campaign', ProjectThemeFilter, ProjectSkillFilter,
+                   ProjectReviewerFilter,
                    'project_type', ('deadline', DateRangeFilter), ]
 
         if request.user.has_perm('projects.approve_payout'):

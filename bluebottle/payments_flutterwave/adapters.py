@@ -96,15 +96,16 @@ class FlutterwaveMpesaPaymentAdapter(BasePaymentAdapter):
 
     def update_mpesa(self, **payload):
         # Store incoming data
-        self.payment.update_response = payload
         self.payment.kyc_info = payload['kycinfo']
         self.payment.msisdn = payload['msisdn']
         self.payment.remote_id = payload['id']
+        self.payment.transaction_amount = payload['transactionamount']
         self.payment.transaction_time = payload['transactiontime']
         self.payment.transaction_reference = payload['transactionid']
         self.payment.third_party_transaction_id = payload['thirdpartytransactionid']
         self.payment.invoice_number = payload['invoicenumber']
         self.payment.transaction_amount = payload['transactionamount']
+        self.payment.update_response = json.dumps(payload)
         self.payment.save()
         # Now do a a check of the payment
         self.check_payment_status()

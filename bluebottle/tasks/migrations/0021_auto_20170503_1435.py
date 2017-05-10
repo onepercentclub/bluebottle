@@ -19,11 +19,19 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL(
+            'SET CONSTRAINTS ALL IMMEDIATE',
+            reverse_sql=migrations.RunSQL.noop
+        ),
         migrations.RunPython(set_deadline_to_apply),
         migrations.AlterField(
             model_name='task',
             name='deadline_to_apply',
             field=models.DateTimeField(default=None, help_text='Deadline to apply', verbose_name='deadline_to_apply'),
             preserve_default=False,
+        ),
+        migrations.RunSQL(
+            migrations.RunSQL.noop,
+            reverse_sql='SET CONSTRAINTS ALL IMMEDIATE'
         ),
     ]

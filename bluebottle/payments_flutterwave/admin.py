@@ -16,6 +16,8 @@ class FlutterwaveMpesaPaymentAdmin(PolymorphicChildModelAdmin):
     model = FlutterwaveMpesaPayment
     raw_id_fields = ('order_payment', )
     readonly_fields = ('business_number', 'account_number',
-                       'kyc_info', 'msisdn',
+                       'kyc_info', 'msisdn', 'invoice_number',
                        'third_party_transaction_id',
+                       'remote_id', 'transaction_amount',
+                       'transaction_time', 'transaction_reference',
                        'response', 'update_response')

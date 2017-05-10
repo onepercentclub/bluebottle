@@ -38,5 +38,4 @@ class MpesaPaymentUpdateView(View):
             raise Http404('No payment found with this billrefnumber.')
         service = PaymentService(payment.order_payment)
         service.adapter.update_mpesa(**payload)
-
         return HttpResponse(status=200, content={'success': 1})

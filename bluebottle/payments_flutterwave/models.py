@@ -125,6 +125,11 @@ class FlutterwaveMpesaPayment(Payment):
         null=True, blank=True,
         max_length=200)
 
+    transaction_amount = models.CharField(
+        help_text="Transaction amount",
+        null=True, blank=True,
+        max_length=200)
+
     transaction_time = models.CharField(
         help_text="Transaction time",
         null=True, blank=True,

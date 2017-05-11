@@ -268,16 +268,6 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'in progress')
 
-        # Applying without motivation should work
-        unmotivated_task_member_data = {
-            'task': task.id,
-            'motivation': ''
-        }
-        response = self.client.post(self.task_member_url,
-                                    unmotivated_task_member_data,
-                                    HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
     def test_deadline_dates(self):
         """
         Test the setting of the deadline of a Task on save to the end of a day.

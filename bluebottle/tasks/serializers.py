@@ -16,7 +16,7 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
     status = serializers.ChoiceField(
         choices=TaskMember.TaskMemberStatuses.choices,
         required=False, default=TaskMember.TaskMemberStatuses.applied)
-    motivation = serializers.CharField(required=False, allow_blank=True)
+    motivation = serializers.CharField(required=False)
 
     class Meta:
         model = TaskMember

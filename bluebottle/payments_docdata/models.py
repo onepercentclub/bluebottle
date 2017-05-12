@@ -59,7 +59,7 @@ class AbstractDocdataPayment(Payment):
 
     @property
     def transaction_reference(self):
-        return self.merchant_order_id
+        return self.payment_cluster_id
 
     def get_method_name(self):
         """ Return the payment method name.

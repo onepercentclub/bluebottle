@@ -268,6 +268,48 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'in progress')
 
+    def test_time_spent(self):
+        task = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.some_user,
+            project=self.some_project,
+            people_needed=4,
+            time_needed=8
+        )
+
+        task_member_data = {
+            'task': task.id,
+            'motivation': 'Pick me!'
+        }
+
+        response = self.client.post(self.task_member_url,
+                                    task_member_data,
+                                    HTTP_AUTHORIZATION=self.another_token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        task_member1_id = response.data['id']
+        task_member1_url = reverse('task_member_detail', kwargs={'pk': task_member1_id})
+
+        response = self.client.post(self.task_member_url,
+                                    task_member_data,
+                                    HTTP_AUTHORIZATION=self.yet_another_token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        task_member2_id = response.data['id']
+        task_member2_url = reverse('task_member_detail', kwargs={'pk': task_member2_id})
+
+        # Check that if we don't specify time spent it uses the time_needed froem task.
+        response = self.client.patch(task_member1_url,
+                                     {'status': 'realized'},
+                                     HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['time_spent'], 8)
+
+        # Check that we can individually edit task member time spent.
+        response = self.client.patch(task_member2_url,
+                                     {'status': 'realized', 'time_spent': '7'},
+                                     HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['time_spent'], 7)
+
     def test_deadline_dates(self):
         """
         Test the setting of the deadline of a Task on save to the end of a day.

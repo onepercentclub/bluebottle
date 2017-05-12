@@ -208,8 +208,9 @@ def send_deadline_to_apply_passed_mail(task, subject, tenant):
 
 @receiver(post_save, weak=False, sender=TaskMember)
 def new_reaction_notification(sender, instance, created, **kwargs):
-    mailer = TaskMemberMailAdapter(instance)
-    mailer.send_mail()
+    if instance.status != instance._original_status or created:
+        mailer = TaskMemberMailAdapter(instance)
+        mailer.send_mail()
 
 
 @receiver(pre_delete, weak=False, sender=TaskMember)

@@ -7,6 +7,7 @@ from django.test.utils import override_settings
 from django.utils.timezone import now
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.tasks.models import TaskMember
 from bluebottle.tasks.taskmail import send_task_realized_mail
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -107,6 +108,24 @@ class TestTaskMemberMail(TaskMailTestBase):
         self.assertNotEquals(email.subject.find("realised"), -1)
         self.assertEquals(email.to[0], task_member.member.email)
         self.assertTrue(survey.url(self.task) in email.body)
+
+    def test_member_realized_mail_not_sent_twice(self):
+        task_member = TaskMemberFactory.create(
+            task=self.task,
+            status='accepted'
+        )
+
+        task_member.status = 'realized'
+        task_member.save()
+
+        self.assertEquals(len(mail.outbox), 2)
+
+        # Make sure we reload the member, so that _original_status is correct
+        task_member = TaskMember.objects.get(pk=task_member.pk)
+        task_member.time_spent = 4
+        task_member.save()
+
+        self.assertEquals(len(mail.outbox), 2)
 
 
 @override_settings(CELERY_RESULT_BACKEND='amqp')

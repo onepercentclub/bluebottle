@@ -242,3 +242,38 @@ class TestTaskStatusMail(TaskMailTestBase):
         self.task.save()
 
         self.assertEquals(len(mail.outbox), 0)
+
+
+class TestDeadlineChangedEmail(TaskMailTestBase):
+    def setUp(self):
+        super(TestDeadlineChangedEmail, self).setUp()
+
+        self.task_members = [
+            TaskMemberFactory.create(task=self.task, status='applied') for
+            _index in range(4)
+        ]
+        mail.outbox = []
+
+    def test_deadline_changed_email(self):
+        """
+        Changing the deadline should trigger an email
+        """
+        self.task.deadline = now() + timedelta(days=4)
+        self.task.save()
+
+        # There should be 4 emails send
+        self.assertEquals(len(mail.outbox), 4)
+        self.assertTrue('deadline' in mail.outbox[0].subject)
+
+    def test_deadline_changed_withdrew(self):
+        self.task_members[0].status = 'withdrew'
+        self.task_members[0].save()
+
+        mail.outbox = []
+
+        self.task.deadline = now() + timedelta(days=4)
+        self.task.save()
+
+        # There should be 4 emails send
+        self.assertEquals(len(mail.outbox), 3)
+        self.assertTrue('deadline' in mail.outbox[0].subject)

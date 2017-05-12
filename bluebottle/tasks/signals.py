@@ -24,7 +24,9 @@ def task_post_save(sender, instance, **kwargs):
 @receiver(pre_save, weak=False, sender=TaskMember,
           dispatch_uid='set-hours-spent-taskmember')
 def set_hours_spent_taskmember(sender, instance, **kwargs):
-    if instance.status != instance._initial_status and instance.status == TaskMember.TaskMemberStatuses.realized:
+    if instance.status != instance._initial_status \
+            and instance.status == TaskMember.TaskMemberStatuses.realized \
+            and not instance.time_spent:
         instance.time_spent = instance.task.time_needed
 
 

@@ -1533,7 +1533,7 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
         self.assertEqual(len(response.data['task_members']), 2)
 
     def test_project_media_pictures_only_from_project(self):
-        self.task = TaskFactory.create(id=self.project.id)
+        self.task = TaskFactory.create()
         TextWallpostFactory.create(content_object=self.task, author=self.user4)
 
         response = self.client.get(self.project_supporters_url)

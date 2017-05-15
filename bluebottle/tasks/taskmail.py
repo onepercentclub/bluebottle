@@ -2,7 +2,7 @@ from celery import shared_task
 
 from django.dispatch import receiver
 from django.db import connection
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import pre_save, pre_delete, post_save
 from django.utils import translation
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
@@ -10,7 +10,7 @@ from django.utils.safestring import mark_safe
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import tenant_url, LocalTenant
-from bluebottle.tasks.models import TaskMember
+from bluebottle.tasks.models import TaskMember, Task
 from bluebottle.surveys.models import Survey
 from bluebottle.utils.email_backend import send_mail
 
@@ -211,6 +211,30 @@ def new_reaction_notification(sender, instance, created, **kwargs):
     if instance.status != instance._original_status or created:
         mailer = TaskMemberMailAdapter(instance)
         mailer.send_mail()
+
+
+@receiver(pre_save, weak=False, sender=Task)
+def email_deadline_update(sender, instance, **kwargs):
+    if instance.pk:
+        previous_instance = Task.objects.get(pk=instance.pk)
+
+        if (previous_instance.deadline != instance.deadline and
+                instance.status not in (Task.TaskStatuses.realized, Task.TaskStatuses.closed)):
+            for task_member in instance.members_applied:
+
+                with TenantLanguage(task_member.member.primary_language):
+                    subject = _('The deadline of your task is changed')
+
+                send_mail(
+                    template_name='tasks/mails/deadline_changed.mail',
+                    subject=subject,
+                    title=instance.title,
+                    original_date=previous_instance.deadline,
+                    date=instance.deadline,
+                    to=task_member.member,
+                    site=tenant_url(),
+                    link='/go/tasks/{0}'.format(instance.id)
+                )
 
 
 @receiver(pre_delete, weak=False, sender=TaskMember)

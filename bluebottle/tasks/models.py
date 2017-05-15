@@ -117,6 +117,10 @@ class Task(models.Model, PreviousStatusMixin):
             self.save()
 
     @property
+    def expertise_based(self):
+        return self.skill.expertise
+
+    @property
     def members_applied(self):
         return self.members.exclude(status__in=['stopped', 'withdrew'])
 
@@ -217,6 +221,9 @@ class Task(models.Model, PreviousStatusMixin):
 class Skill(models.Model):
     name = models.CharField(_('english name'), max_length=100, unique=True)
     description = models.TextField(_('description'), blank=True)
+    expertise = models.BooleanField(_('expertise'),
+                                    help_text=_('Is this skill expertise based, or could anyone do it?'),
+                                    default=True)
     disabled = models.BooleanField(_('disabled'), default=False)
 
     @property

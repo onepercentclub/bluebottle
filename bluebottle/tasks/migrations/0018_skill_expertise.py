@@ -14,7 +14,7 @@ def set_no_skill_no_expertise(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0022_task_accepting'),
+        ('tasks', '0017_task_deadline_to_apply'),
     ]
 
     operations = [

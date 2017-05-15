@@ -136,6 +136,40 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
             self.projects_url + '?ordering=deadline&phase=campaign&country=101')
         self.assertEquals(response.status_code, 200)
 
+    def test_project_detail_no_expertise(self):
+        for project in self.projects:
+            for task in project.task_set.all():
+                task.skill = None
+                task.save()
+
+        response = self.client.get(self.projects_preview_url)
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['count'], 26)
+
+        for item in data['results']:
+            self.assertEqual(item['skills'], [])
+
+    def test_project_detail_expertise(self):
+        for project in self.projects:
+            TaskFactory.create(project=project)
+            TaskFactory.create(project=project)
+
+        response = self.client.get(self.projects_preview_url)
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 26)
+
+        for item in data['results']:
+            project = Project.objects.get(slug=item['id'])
+            for task in project.task_set.all():
+                self.assertTrue(
+                    task.skill.name in item['skills']
+                )
+
     def test_project_list_filter_expertise(self):
         skill = SkillFactory.create(name='test skill')
         for project in self.projects[:3]:

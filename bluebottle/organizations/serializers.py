@@ -4,6 +4,16 @@ from bluebottle.utils.serializers import URLField
 from bluebottle.organizations.models import Organization, OrganizationContact
 
 
+class OrganizationPreviewSerializer(serializers.ModelSerializer):
+    slug = serializers.SlugField(required=False, allow_null=True)
+    name = serializers.CharField(required=True)
+    website = URLField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Organization
+        fields = ('id', 'name', 'slug', 'website', )
+
+
 class OrganizationSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(required=False, allow_null=True)
     name = serializers.CharField(required=True)

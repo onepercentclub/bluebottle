@@ -14,6 +14,7 @@ from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
+from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.utils.serializers import MoneySerializer
@@ -75,7 +76,6 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     owner = UserProfileSerializer()
-    title = SafeField()
     story = SafeField()
     image = ImageSerializer(required=False)
     task_count = serializers.IntegerField()
@@ -103,6 +103,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     has_voted = serializers.SerializerMethodField()
 
     currencies = serializers.JSONField(read_only=True)
+    organization = OrganizationPreviewSerializer(read_only=True)
 
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)

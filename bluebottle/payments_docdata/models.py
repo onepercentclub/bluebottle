@@ -57,6 +57,10 @@ class AbstractDocdataPayment(Payment):
     city = models.CharField(max_length=200, default='')
     ip_address = models.CharField(max_length=200, default='')
 
+    @property
+    def transaction_reference(self):
+        return self.payment_cluster_id
+
     def get_method_name(self):
         """ Return the payment method name.
 

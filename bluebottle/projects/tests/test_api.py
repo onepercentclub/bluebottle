@@ -356,6 +356,7 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
             )
 
     def test_project_list_filter_date_passed(self):
+        self.projects[-1].task_set.all().update(location=None)
         response = self.client.get(
             self.projects_preview_url + '?start={}'.format('2017-01-21')
         )
@@ -363,6 +364,17 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['count'], 0)
+
+    def test_project_list_filter_anywhere(self):
+        self.projects[1].task_set.all().update(location=None)
+
+        response = self.client.get(
+            self.projects_preview_url + '?anywhere=1'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 1)
 
 
 class ProjectManageApiIntegrationTest(BluebottleTestCase):
@@ -372,6 +384,10 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
     def setUp(self):
         super(ProjectManageApiIntegrationTest, self).setUp()
+
+
+
+
 
         self.some_user = BlueBottleUserFactory.create()
         self.some_user_token = "JWT {0}".format(self.some_user.get_jwt_token())

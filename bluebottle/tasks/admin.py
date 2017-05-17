@@ -98,11 +98,11 @@ class TaskAdmin(admin.ModelAdmin):
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
 
     raw_id_fields = ('author', 'project')
-    list_filter = ('status', 'type',
+    list_filter = ('status', 'type', 'skill__expertise',
                    'deadline', ('deadline', DateRangeFilter),
                    'deadline_to_apply', ('deadline_to_apply', DateRangeFilter)
                    )
-    list_display = ('title', 'project', 'status', 'created', 'deadline')
+    list_display = ('title', 'project', 'status', 'created', 'deadline', 'expertise_based')
 
     readonly_fields = ('date_status_change',)
 
@@ -110,6 +110,7 @@ class TaskAdmin(admin.ModelAdmin):
         'title', 'description',
         'author__first_name', 'author__last_name'
     )
+
     export_fields = (
         ('title', 'title'),
         ('project', 'project'),
@@ -117,6 +118,7 @@ class TaskAdmin(admin.ModelAdmin):
         ('status', 'status'),
         ('deadline', 'deadline'),
         ('skill', 'skill'),
+        ('skill__expertise', 'expertise based'),
         ('people_needed', 'people needed'),
         ('time_needed', 'time needed'),
         ('author', 'author'),
@@ -202,9 +204,9 @@ admin.site.register(TaskMember, TaskMemberAdmin)
 
 
 class SkillAdmin(admin.ModelAdmin):
-    list_display = ('translated_name', 'disabled')
+    list_display = ('translated_name', 'disabled', 'expertise')
     readonly_fields = ('translated_name',)
-    fields = readonly_fields + ('disabled', 'description',)
+    fields = readonly_fields + ('disabled', 'description', 'expertise')
 
     def translated_name(self, obj):
         return _(obj.name)

@@ -385,10 +385,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
     def setUp(self):
         super(ProjectManageApiIntegrationTest, self).setUp()
 
-
-
-
-
         self.some_user = BlueBottleUserFactory.create()
         self.some_user_token = "JWT {0}".format(self.some_user.get_jwt_token())
 

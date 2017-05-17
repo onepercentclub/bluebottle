@@ -218,7 +218,7 @@ def email_deadline_update(sender, instance, **kwargs):
     if instance.pk:
         previous_instance = Task.objects.get(pk=instance.pk)
 
-        if (previous_instance.deadline != instance.deadline and
+        if (previous_instance.deadline.date() != instance.deadline.date() and
                 instance.status not in (Task.TaskStatuses.realized, Task.TaskStatuses.closed)):
             for task_member in instance.members_applied:
 

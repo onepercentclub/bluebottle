@@ -88,11 +88,8 @@ class FlutterwaveMpesaPaymentAdapter(BasePaymentAdapter):
         else:
             self.payment.status = 'failed'
         self.payment.save()
-        try:
-            action = self.get_authorization_action()
-            self.order_payment.set_authorization_action(action)
-        except PaymentException:
-            pass
+        action = self.get_authorization_action()
+        self.order_payment.set_authorization_action(action)
 
     def update_mpesa(self, **payload):
         # Store incoming data

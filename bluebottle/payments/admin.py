@@ -1,3 +1,4 @@
+from bluebottle.payments.exception import PaymentException
 from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
@@ -45,7 +46,10 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     def check_status(self, request, pk=None):
         order_payment = OrderPayment.objects.get(pk=pk)
         service = PaymentService(order_payment)
-        service.check_payment_status()
+        try:
+            service.check_payment_status()
+        except PaymentException:
+            pass
         order_payment_url = reverse('admin:payments_orderpayment_change', args=(order_payment.id,))
         response = HttpResponseRedirect(order_payment_url)
         return response

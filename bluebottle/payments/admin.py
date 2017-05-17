@@ -9,7 +9,7 @@ from polymorphic.admin import (PolymorphicParentModelAdmin,
 
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
-from bluebottle.payments_flutterwave.admin import FlutterwavePaymentAdmin
+from bluebottle.payments_flutterwave.admin import FlutterwavePaymentAdmin, FlutterwaveMpesaPaymentAdmin
 from bluebottle.payments_interswitch.admin import InterswitchPaymentAdmin
 from bluebottle.payments_docdata.admin import (
     DocdataPaymentAdmin,
@@ -105,7 +105,8 @@ class OrderPaymentInline(admin.TabularInline):
 
 class PaymentAdmin(PolymorphicParentModelAdmin):
     base_model = Payment
-    list_display = ('created', 'order_payment_amount', 'polymorphic_ctype')
+    list_display = ('created', 'status', 'order_payment_amount', 'polymorphic_ctype')
+    list_filter = ('status', )
 
     inlines = (PaymentLogEntryInline,)
     ordering = ('-created',)
@@ -115,8 +116,8 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
             (admin.model, admin) for admin in (
                 DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin,
                 VoucherPaymentAdmin, InterswitchPaymentAdmin,
-                FlutterwavePaymentAdmin, TelesomPaymentAdmin,
-                VitepayPaymentAdmin
+                FlutterwavePaymentAdmin, FlutterwaveMpesaPaymentAdmin,
+                TelesomPaymentAdmin, VitepayPaymentAdmin
             )
         )
 

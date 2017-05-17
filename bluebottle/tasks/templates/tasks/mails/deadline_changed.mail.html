@@ -1,0 +1,19 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with receiver_name=to.short_name %}
+
+        Hello {{ receiver_name }}
+        <br><br>
+        The date of task "{{ title }}" has changed.<br>
+        Original date: {{ original_date}} New date: {{ date }}
+
+        If you can't make it to the new date, you can withdraw from the task.
+    {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ site }}{{ link }}"
+       class="action-email">{% trans 'Withdraw from task' context 'email' %}</a>
+{% endblock %}`

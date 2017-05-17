@@ -1,2 +1,4 @@
 [run]
 concurrency=multiprocessing
+source=bluebottle
+omit=**/migrations/**,**/site-packages/**

@@ -5,9 +5,11 @@ from bluebottle.utils.serializers import MoneySerializer
 
 
 class OrderPaymentActionSerializer(serializers.ModelSerializer):
+    data = serializers.JSONField(source='payload')
+
     class Meta:
         model = OrderPaymentAction
-        fields = ('type', 'method', 'url', 'payload')
+        fields = ('type', 'method', 'url', 'payload', 'data')
 
 
 class ManageOrderPaymentSerializer(serializers.ModelSerializer):

@@ -60,16 +60,26 @@ class IsMemberOrReadOnly(permissions.BasePermission):
 
 
 class IsMemberOrAuthorOrReadOnly(permissions.BasePermission):
+
+    def _time_spent_updated(self, request, task_member):
+        if request.data:
+            time_spent = request.data.get('time_spent', None)
+            if time_spent and task_member.time_spent != time_spent:
+                return True
+        return False
+
     def has_object_permission(self, request, view, obj):
         # Read permissions are allowed to any request, so we'll always allow GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        if isinstance(obj,
-                      TaskMember) and obj.task.author == request.user:
+        if isinstance(obj, TaskMember) and obj.task.author == request.user:
             return True
 
         if isinstance(obj, TaskMember) and obj.member == request.user:
+            # Task member cannot update his/her own time_spent
+            if self._time_spent_updated(request, obj):
+                return False
             return True
 
         return False

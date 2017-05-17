@@ -5,7 +5,7 @@ from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import Task
-from bluebottle.test.factory_models.tasks import TaskFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -36,7 +36,11 @@ class TestDeadline(TaskUnitTestBase):
         self.task.save()
 
     def test_deadline_realised(self):
-        self.task.status = Task.TaskStatuses.in_progress
+        self.task.people_needed = 2
+        self.task.save()
+
+        TaskMemberFactory.create(task=self.task, status='accepted')
+
         self.task.deadline_reached()
 
         self.assertEqual(self.task.status, Task.TaskStatuses.realized)

@@ -1,3 +1,4 @@
+from datetime import timedelta
 import mock
 
 from django.core.urlresolvers import reverse
@@ -274,6 +275,7 @@ class TaskApiTestcase(BluebottleTestCase):
         task_data = {
             'people_needed': 1,
             'deadline': '2016-08-09T12:45:14.134756',
+            'deadline_to_apply': '2016-08-04T12:45:14.134756',
             'project': self.some_project.slug,
             'title': 'Help me',
             'description': 'I need help',
@@ -288,6 +290,50 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['deadline'], '2016-08-09T23:59:59.999999+02:00')
+
+    def test_deadline_before_project_deadline(self):
+        """
+        A task should have a deadline before the project deadline
+        """
+        task_data = {
+            'people_needed': 1,
+            'deadline': '2015-08-09T12:45:14.134756',
+            'deadline_to_apply': self.some_project.deadline + timedelta(weeks=1),
+            'project': self.some_project.slug,
+            'title': 'Help me',
+            'description': 'I need help',
+            'location': '',
+            'skill': 1,
+            'time_needed': '4.00',
+            'type': 'event'
+        }
+
+        # Task deadline time should changed be just before midnight after setting.
+        response = self.client.post(self.tasks_url, task_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_deadline_before_deadline_to_apply(self):
+        """
+        Test the setting of the deadline of a Task on save to the end of a day.
+        """
+        task_data = {
+            'people_needed': 1,
+            'deadline': '2016-08-09T12:45:14.134756',
+            'deadline_to_apply': '2016-08-10:45:14.134756',
+            'project': self.some_project.slug,
+            'title': 'Help me',
+            'description': 'I need help',
+            'location': '',
+            'skill': 1,
+            'time_needed': '4.00',
+            'type': 'event'
+        }
+
+        # Task deadline time should changed be just before midnight after setting.
+        response = self.client.post(self.tasks_url, task_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class TestProjectTaskAPIPermissions(BluebottleTestCase):

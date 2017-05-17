@@ -3,17 +3,10 @@
 
 {% block content %}
 {% blocktrans with receiver_name=to.short_name  %}
-
 Hello {{receiver_name}}
-
-The status of your task "{{ title }}" has changed to 'closed'.
-
-Please let us know if your task is realised:
-{{ site}}{{link}}/edit
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-{% trans 'Go to task' context 'email' %} {{ site }}{{ link }}
+{% trans 'Edit task' context 'email' %} {{ site }}{{ edit_link }}
 {% endblock %}
-

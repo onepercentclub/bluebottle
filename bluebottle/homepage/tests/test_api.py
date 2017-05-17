@@ -159,11 +159,7 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         self.task = TaskFactory.create(project=projects[0],
                                        status=Task.TaskStatuses.realized)
         for char in 'abcdefghij':
-            # Put half of the projects in the campaign phase.
-            if ord(char) % 2 == 1:
-                TaskMemberFactory.create(task=self.task)
-            else:
-                TaskMemberFactory.create(task=self.task)
+            TaskMemberFactory.create(task=self.task, status='realized')
 
         """
         Create 10 Donations with half to fundraisers

@@ -223,17 +223,27 @@ class MetricsTest(BluebottleTestCase):
         # Realized task without realized task member, count
         TaskMemberFactory(task=task1, status='applied')
         TaskMemberFactory(task=task1, status='accepted')
+        task1.status = 'realized'
+        task1.save()
 
         # Realized task with realized task member and others, dont count
         TaskMemberFactory(task=task4, status='applied')
         TaskMemberFactory(task=task4, status='accepted')
         TaskMemberFactory(task=task4, status='realized')
 
+        task4.skatus = 'realized'
+        task4.save()
+
         # Open task - Don't count
         TaskMemberFactory(task=task2, status='applied')
+        task2.status = 'open'
+        task2.save()
 
         # Task in progress, don't count
         TaskMemberFactory(task=task3, status='accepted')
+        task3.status = 'in_progress'
+        task3.save()
+
         self.assertEquals(
             self.metrics.calculate_realized_tasks_unconfirmed_taskmembers(), 1)
 

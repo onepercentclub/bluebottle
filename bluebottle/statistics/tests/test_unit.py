@@ -331,13 +331,13 @@ class StatisticsDateTest(BluebottleTestCase):
             author=old_user, project=old_project, status=Task.TaskStatuses.realized,
             deadline=last_year
         )
-        TaskMemberFactory.create(task=old_task, member=old_user)
+        TaskMemberFactory.create(task=old_task, member=old_user, status='realized')
 
         new_task = TaskFactory.create(
             author=old_user, project=new_project, status=Task.TaskStatuses.realized,
             deadline=now
         )
-        TaskMemberFactory.create(task=new_task, member=new_user)
+        TaskMemberFactory.create(task=new_task, member=new_user, status='realized')
 
         order1 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS,
                                      confirmed=now)

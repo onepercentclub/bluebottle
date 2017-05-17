@@ -183,8 +183,13 @@ def clean_for_hashtag(text):
     return " #".join(tags)
 
 
-# Get the class from dotted string
+class GetClassError(Exception):
+    """ Custom exception for an GetClass """
+    pass
+
+
 def get_class(cl):
+    # Get the class from dotted string
     try:
         # try to call handler
         parts = cl.split('.')
@@ -192,9 +197,9 @@ def get_class(cl):
         module = import_module(module_path)
         return getattr(module, class_name)
 
-    except (ImportError, AttributeError) as e:
+    except (ImportError, AttributeError, ValueError) as e:
         error_message = "Could not import '%s'. %s: %s." % (cl, e.__class__.__name__, e)
-        raise Exception(error_message)
+        raise GetClassError(error_message)
 
 
 def get_current_host():

@@ -26,6 +26,7 @@ class TaskFactory(factory.DjangoModelFactory):
     skill = factory.SubFactory(SkillFactory)
     title = factory.Sequence(lambda n: 'Task_{0}'.format(n))
     deadline = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=4))
+    deadline_to_apply = factory.fuzzy.FuzzyDateTime(now(), now() + timedelta(weeks=3))
     description = factory.Sequence(
         lambda n: "Filler description text{0}".format(n))
     location = factory.Sequence(lambda n: "Location_{0}".format(n))

@@ -110,7 +110,7 @@ class SkillSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Skill
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'expertise')
 
 
 class TaskPreviewSerializer(serializers.ModelSerializer):

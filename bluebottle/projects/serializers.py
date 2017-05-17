@@ -139,7 +139,9 @@ class ProjectPreviewSerializer(ProjectSerializer):
     skills = serializers.SerializerMethodField()
 
     def get_skills(self, obj):
-        return set(task.skill.id for task in obj.task_set.all() if task.skill)
+        return set(
+            task.skill.id for task in obj.task_set.filter(skill__expertise=True)
+        )
 
     class Meta:
         model = Project

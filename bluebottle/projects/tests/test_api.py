@@ -170,6 +170,21 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
                     task.skill.id in item['skills']
                 )
 
+    def test_project_detail_skill_no_expertise(self):
+        for project in self.projects:
+            for task in project.task_set.all():
+                task.skill.expertise = False
+                task.skill.save()
+
+        response = self.client.get(self.projects_preview_url)
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 26)
+
+        for item in data['results']:
+            self.assertEqual(item['skills'], [])
+
     def test_project_list_filter_expertise(self):
         skill = SkillFactory.create(name='test skill')
         for project in self.projects[:3]:

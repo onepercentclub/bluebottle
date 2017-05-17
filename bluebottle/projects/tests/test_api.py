@@ -167,7 +167,7 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
             project = Project.objects.get(slug=item['id'])
             for task in project.task_set.all():
                 self.assertTrue(
-                    task.skill.name in item['skills']
+                    task.skill.id in item['skills']
                 )
 
     def test_project_list_filter_expertise(self):

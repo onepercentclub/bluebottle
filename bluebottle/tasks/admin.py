@@ -98,7 +98,10 @@ class TaskAdmin(admin.ModelAdmin):
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
 
     raw_id_fields = ('author', 'project')
-    list_filter = ('status', 'type', 'deadline', ('deadline', DateRangeFilter))
+    list_filter = ('status', 'type',
+                   'deadline', ('deadline', DateRangeFilter),
+                   'deadline_to_apply', ('deadline_to_apply', DateRangeFilter)
+                   )
     list_display = ('title', 'project', 'status', 'created', 'deadline')
 
     readonly_fields = ('date_status_change',)

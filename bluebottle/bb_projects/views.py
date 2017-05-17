@@ -44,7 +44,8 @@ class ProjectPreviewList(generics.ListAPIView):
 
     def get_queryset(self):
         query = self.request.query_params
-        qs = Project.objects.search(query=query)
+        qs = Project.objects.search(query)
+        qs.select_related('task')
         return qs.filter(status__viewable=True)
 
 

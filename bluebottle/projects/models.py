@@ -1,3 +1,4 @@
+from dateutil import parser
 import datetime
 import logging
 
@@ -121,6 +122,30 @@ class ProjectManager(models.Manager):
         money_needed = query.get('money_needed', None)
         if money_needed:
             qs = qs.filter(amount_needed__gt=0)
+
+        skill = query.get('skill', None)
+        if skill:
+            qs.select_related('task')
+            qs = qs.filter(task__skill=skill)
+
+        start = query.get('start', None)
+        if start:
+            qs.select_related('task')
+
+            tz = timezone.get_current_timezone()
+            start_date = tz.localize(
+                datetime.datetime.combine(parser.parse(start), datetime.datetime.min.time())
+            )
+
+            end = query.get('end', start)
+            end_date = tz.localize(
+                datetime.datetime.combine(parser.parse(end), datetime.datetime.max.time())
+            )
+
+            qs = qs.filter(
+                Q(task__type='event', task__deadline__range=[start_date, end_date]) |
+                Q(task__type='ongoing', task__deadline__gte=start_date)
+            ).distinct()
 
         project_type = query.get('project_type', None)
         if project_type == 'volunteering':

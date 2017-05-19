@@ -147,7 +147,7 @@ class ProjectSkillFilter(admin.SimpleListFilter):
     parameter_name = 'skill'
 
     def lookups(self, request, model_admin):
-        skills = Skill.objects.all()
+        skills = Skill.objects.filter(disabled=False)
         return [(skill.id, _(skill.name)) for skill in skills]
 
     def queryset(self, request, queryset):

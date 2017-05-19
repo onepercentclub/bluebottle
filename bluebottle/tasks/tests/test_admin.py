@@ -38,7 +38,7 @@ class TestTaskAdmin(BluebottleTestCase):
         request.user = MockUser()
 
         self.assertIn('deadline', self.task_admin.get_list_filter(request))
-        self.assertIn('deadline_to_apply', self.task_admin.get_list_filter(request))
+        self.assertIn(DeadlineToAppliedFilter, self.task_admin.get_list_filter(request))
 
 
 class TestDeadlineToApplyFilter(BluebottleTestCase):

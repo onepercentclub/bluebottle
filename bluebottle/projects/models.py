@@ -522,6 +522,10 @@ class Project(BaseProject, PreviousStatusMixin):
     def has_survey(self):
         return len(self.response_set.all()) > 0
 
+    @property
+    def expertise_based(self):
+        return any(task.skill.expertise for task in self.task_set.all() if task.skill)
+
     def supporter_count(self, with_guests=True):
         # TODO: Replace this with a proper Supporters API
         # something like /projects/<slug>/donations

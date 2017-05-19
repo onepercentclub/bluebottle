@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from daterange_filter.filter import DateRangeFilter
@@ -92,6 +95,33 @@ class TaskFileAdminInline(admin.StackedInline):
     extra = 0
 
 
+class DeadlineToAppliedFilter(admin.SimpleListFilter):
+    title = _('Deadline to apply')
+    parameter_name = 'deadline_to_apply'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('7', 'Next 7 days'),
+            ('30', 'Next 30 days'),
+            ('0', 'Deadline passed')
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() is not None:
+            days = int(self.value())
+            if days > 0:
+                return queryset.filter(
+                    deadline_to_apply__gt=now(),
+                    deadline_to_apply__lt=now() + timedelta(days=days)
+                )
+            else:
+                return queryset.filter(
+                    deadline_to_apply__lt=now()
+                )
+        else:
+            return queryset
+
+
 class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
@@ -100,7 +130,7 @@ class TaskAdmin(admin.ModelAdmin):
     raw_id_fields = ('author', 'project')
     list_filter = ('status', 'type', 'skill__expertise',
                    'deadline', ('deadline', DateRangeFilter),
-                   'deadline_to_apply', ('deadline_to_apply', DateRangeFilter)
+                   DeadlineToAppliedFilter, ('deadline_to_apply', DateRangeFilter)
                    )
     list_display = ('title', 'project', 'status', 'created', 'deadline', 'expertise_based')
 

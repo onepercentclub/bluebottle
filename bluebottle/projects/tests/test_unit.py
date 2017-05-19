@@ -15,7 +15,7 @@ from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
@@ -341,3 +341,26 @@ class TestProjectUpdateAmounts(BluebottleTestCase):
         self.assertEqual(self.project.amount_asked.currency, new_amount.currency)
         self.assertEqual(self.project.amount_extra.currency, new_amount.currency)
         self.assertEqual(self.project.amount_donated.currency, new_amount.currency)
+
+
+class TestModel(BluebottleTestCase):
+    def setUp(self):
+        super(TestModel, self).setUp()
+
+        self.init_projects()
+        self.project = ProjectFactory.create()
+
+    def test_expertise_based(self):
+        skill = SkillFactory.create(expertise=True)
+        TaskFactory.create(skill=skill, project=self.project)
+
+        self.assertTrue(self.project.expertise_based)
+
+    def test_expertise_based_no_task(self):
+        self.assertFalse(self.project.expertise_based)
+
+    def test_expertise_based_no_expertise(self):
+        skill = SkillFactory.create(expertise=False)
+        TaskFactory.create(skill=skill, project=self.project)
+
+        self.assertFalse(self.project.expertise_based)

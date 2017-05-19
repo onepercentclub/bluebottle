@@ -112,7 +112,7 @@ class Task(models.Model, PreviousStatusMixin):
 
     @property
     def expertise_based(self):
-        return self.skill.expertise
+        return self.skill.expertise if self.skill else False
 
     @property
     def members_applied(self):

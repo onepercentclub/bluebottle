@@ -1,3 +1,5 @@
+[![Requirements Status](https://requires.io/github/onepercentclub/bluebottle/requirements.svg?branch=master)](https://requires.io/github/onepercentclub/bluebottle/requirements/?branch=master)
+
 Project Bluebottle
 ==================
 

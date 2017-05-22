@@ -262,16 +262,6 @@ class TestTaskStatusMail(TaskMailTestBase):
 
         self.assertEquals(len(mail.outbox), 0)
 
-    def test_closed_mail(self):
-        """
-        Closing a project should send an email
-        """
-        self.task.status = "closed"
-        self.task.save()
-        self.assertEquals(len(mail.outbox), 1)
-
-        self.assertTrue('set to closed' in mail.outbox[0].subject)
-
 
 class TestDeadlineChangedEmail(TaskMailTestBase):
     def setUp(self):

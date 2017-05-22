@@ -147,6 +147,7 @@ class TaskAdmin(admin.ModelAdmin):
         ('type', 'type'),
         ('status', 'status'),
         ('deadline', 'deadline'),
+        ('deadline_to_apply', 'deadline'),
         ('skill', 'skill'),
         ('skill__expertise', 'expertise based'),
         ('people_needed', 'people needed'),
@@ -160,7 +161,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     fields = ('title', 'description', 'skill', 'time_needed', 'status',
               'date_status_change', 'people_needed', 'project', 'author',
-              'type', 'deadline')
+              'type', 'deadline', 'deadline_to_apply')
 
 
 admin.site.register(Task, TaskAdmin)

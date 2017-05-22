@@ -71,7 +71,7 @@ class Task(models.Model, PreviousStatusMixin):
 
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
     deadline_to_apply = models.DateTimeField(
-        _('deadline_to_apply'), help_text=_('Deadline to apply')
+        _('Deadline to apply'), help_text=_('Deadline to apply')
     )
 
     objects = UpdateSignalsQuerySet.as_manager()

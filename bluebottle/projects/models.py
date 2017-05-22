@@ -130,7 +130,7 @@ class ProjectManager(models.Manager):
 
         anywhere = query.get('anywhere', None)
         if anywhere:
-            qs = qs.filter(task__id__isnull=False, task__location__isnull=True)
+            qs = qs.filter(task__id__isnull=False, task__location__isnull=True).distinct()
 
         start = query.get('start', None)
         if start:

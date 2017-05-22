@@ -170,6 +170,18 @@ class Task(models.Model, PreviousStatusMixin):
             self.status = 'realized'
         else:
             self.status = 'closed'
+            with TenantLanguage(self.author.primary_language):
+                subject = _("The status of your task '{0}' is set to closed").format(self.title)
+
+            send_mail(
+                template_name="tasks/mails/task_status_closed.mail",
+                subject=subject,
+                title=self.title,
+                to=self.author,
+                site=tenant_url(),
+                link='/tasks/{0}'.format(self.id)
+            )
+
         self.save()
 
     def members_changed(self):
@@ -220,19 +232,6 @@ class Task(models.Model, PreviousStatusMixin):
                     [self, 'task_status_realized_second_reminder', third_subject, connection.tenant],
                     eta=timezone.now() + timedelta(minutes=2 * settings.REMINDER_MAIL_DELAY)
                 )
-
-        if oldstate in ("open", "in progress", "full") and newstate == "closed":
-            with TenantLanguage(self.author.primary_language):
-                subject = _("The status of your task '{0}' is set to closed").format(self.title)
-
-            send_mail(
-                template_name="tasks/mails/task_status_closed.mail",
-                subject=subject,
-                title=self.title,
-                to=self.author,
-                site=tenant_url(),
-                link='/tasks/{0}'.format(self.id)
-            )
 
     def save(self, *args, **kwargs):
         if not self.author_id:

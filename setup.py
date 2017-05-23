@@ -43,7 +43,7 @@ install_requires = [
     'django-choices==1.4.2',
     'django-cors-headers==1.1.0',
     'django-daterange-filter==1.3.0',
-    'django-extensions==1.7.4',
+    'django-extensions==1.7.9',
     'django-exportdb==0.4.7',
     'django-filetransfers==0.1.1',
     'django-filter==0.13.0',
@@ -51,7 +51,7 @@ install_requires = [
     'django-dynamic-fixture==1.8.5',
     'django-fluent-dashboard==1.0a1',
     'django-fsm==2.4.0',
-    'django-ipware==1.1.5',
+    'django-ipware==1.1.6',
     'django-localflavor==1.2',
     'django-lockdown==1.2',
     'django-loginas==0.1.9',
@@ -75,12 +75,12 @@ install_requires = [
     'html5lib==0.9999999',
     'influxdb==3.0.0',
     'lxml==3.6.0',
-    'micawber==0.3.3',
-    'mixpanel==4.3.0',
+    'micawber==0.3.4',
+    'mixpanel==4.3.2',
     'psycopg2==2.6.1',
     'pygeoip==0.3.2',
     'python-dateutil==2.5.3',
-    'python-memcached==1.57',
+    'python-memcached==1.58',
     'python-social-auth==0.2.19',
     'surlex==0.2.0',
     'raven==5.16.0',
@@ -91,7 +91,7 @@ install_requires = [
     'South==1.0.2',
     'Sphinx==1.4.1',
     'suds-jurko==0.6',
-    'SurveyGizmo==1.2.1',
+    'SurveyGizmo==1.2.2',
     'transifex-client==0.11',
     'unicodecsv==0.14.1',
     'wheel==0.29.0',
@@ -110,7 +110,7 @@ install_requires = [
 
 tests_requires = [
     'coverage==4.0.3',
-    'django-nose==1.4.3',
+    'django-nose==1.4.4',
     'django-setuptest==0.2.1',
     'django-webtest==1.7.9',
     'factory-boy==2.8.1',
@@ -119,9 +119,9 @@ tests_requires = [
     'nose==1.3.7',
     'pylint==1.5.5',
     'pyquery==1.2.13',
-    'tblib==1.3.0',
+    'tblib==1.3.2',
     'tdaemon==0.1.1',
-    'WebTest==2.0.21'
+    'WebTest==2.0.27'
 ]
 
 dev_requires = [

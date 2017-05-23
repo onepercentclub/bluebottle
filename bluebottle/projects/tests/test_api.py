@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 import json
 from random import randint
 
@@ -20,7 +20,9 @@ from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.tasks import (
+    TaskFactory, TaskMemberFactory, SkillFactory
+)
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.factory_models.wallposts import (
     MediaWallpostFactory, MediaWallpostPhotoFactory,
@@ -49,8 +51,8 @@ class ProjectEndpointTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-        self.organization = OrganizationFactory.create()
-        self.organization.save()
+        organization = OrganizationFactory.create()
+        organization.save()
 
         self.campaign_phase = ProjectPhase.objects.get(slug='campaign')
         self.plan_phase = ProjectPhase.objects.get(slug='done-complete')
@@ -63,12 +65,12 @@ class ProjectEndpointTestCase(BluebottleTestCase):
                                                 status=self.campaign_phase,
                                                 amount_asked=0,
                                                 amount_needed=30,
-                                                organization=self.organization)
+                                                organization=organization)
                 project.save()
             else:
                 project = ProjectFactory.create(title=char * 3, slug=char * 3,
                                                 status=self.plan_phase,
-                                                organization=self.organization)
+                                                organization=organization)
 
                 task = TaskFactory.create(project=project)
                 project.save()
@@ -134,6 +136,58 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
             self.projects_url + '?ordering=deadline&phase=campaign&country=101')
         self.assertEquals(response.status_code, 200)
 
+    def test_project_detail_no_expertise(self):
+        for project in self.projects:
+            for task in project.task_set.all():
+                task.skill = None
+                task.save()
+
+        response = self.client.get(self.projects_preview_url)
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['count'], 26)
+
+        for item in data['results']:
+            self.assertEqual(item['skills'], [])
+
+    def test_project_detail_expertise(self):
+        for project in self.projects:
+            TaskFactory.create(project=project)
+            TaskFactory.create(project=project)
+
+        response = self.client.get(self.projects_preview_url)
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 26)
+
+        for item in data['results']:
+            project = Project.objects.get(slug=item['id'])
+            for task in project.task_set.all():
+                self.assertTrue(
+                    task.skill.id in item['skills']
+                )
+
+    def test_project_list_filter_expertise(self):
+        skill = SkillFactory.create(name='test skill')
+        for project in self.projects[:3]:
+            TaskFactory.create(project=project, skill=skill)
+            TaskFactory.create(project=project, skill=skill)
+
+        response = self.client.get(self.projects_preview_url + '?skill={}'.format(skill.pk))
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 3)
+
+        for item in data['results']:
+            project = Project.objects.get(slug=item['id'])
+            self.assertTrue(
+                skill in [task.skill for task in project.task_set.all()]
+            )
+
     def test_project_order_amount_needed(self):
         for project in Project.objects.all():
             project.amount_needed = Money(randint(0, int(project.amount_asked.amount)), 'EUR')
@@ -160,12 +214,6 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(owner['task_count'], 0)
         self.assertEquals(owner['donation_count'], 0)
         self.assertTrue(owner.get('email', None) is None)
-
-        organization = response.data['organization']
-
-        self.assertEqual(organization.keys(), ['id', 'name', 'slug', 'website'])
-        self.assertEqual(organization['name'], self.organization.name)
-
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_project_detail_view_bank_details(self):
@@ -224,6 +272,110 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         self.assertEquals(response.data['vote_count'], 2)
+
+
+class ProjectDateSearchTestCase(BluebottleTestCase):
+    """
+    Integration tests for the Project API.
+    """
+
+    def setUp(self):
+        super(ProjectDateSearchTestCase, self).setUp()
+        self.init_projects()
+
+        campaign_phase = ProjectPhase.objects.get(slug='campaign')
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.projects_preview_url = reverse('project_preview_list')
+
+        self.projects = [
+            ProjectFactory.create(status=campaign_phase) for _index in range(0, 10)
+        ]
+
+        for project in self.projects[:4]:
+            TaskFactory.create(
+                project=project,
+                type='ongoing',
+                deadline=datetime(2017, 1, 20, tzinfo=timezone.get_current_timezone())
+            )
+
+        for project in self.projects[3:6]:
+            TaskFactory.create(
+                project=project,
+                type='event',
+                deadline=datetime(2017, 1, 10, tzinfo=timezone.get_current_timezone())
+            )
+
+    def test_project_list_filter_date(self):
+        response = self.client.get(
+            self.projects_preview_url + '?start={}'.format('2017-01-10')
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 6)
+
+    def test_project_list_filter_date_end(self):
+        response = self.client.get(
+            self.projects_preview_url + '?start={}&end={}'.format('2017-01-5', '2017-01-25')
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 6)
+
+    def test_project_list_filter_date_ongoing(self):
+        response = self.client.get(
+            self.projects_preview_url + '?start={}'.format('2017-01-20')
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 4)
+
+        for item in data['results']:
+            project = Project.objects.get(slug=item['id'])
+            self.assertTrue(
+                'ongoing' in [task.type for task in project.task_set.all()]
+            )
+
+    def test_project_list_filter_date_ongoing_end(self):
+        response = self.client.get(
+            self.projects_preview_url + '?start={}&end={}'.format('2017-01-15', '2017-01-25')
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 4)
+
+        for item in data['results']:
+            project = Project.objects.get(slug=item['id'])
+            self.assertTrue(
+                'ongoing' in [task.type for task in project.task_set.all()]
+            )
+
+    def test_project_list_filter_date_passed(self):
+        self.projects[-1].task_set.all().update(location=None)
+        response = self.client.get(
+            self.projects_preview_url + '?start={}'.format('2017-01-21')
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 0)
+
+    def test_project_list_filter_anywhere(self):
+        self.projects[1].task_set.all().update(location=None)
+
+        response = self.client.get(
+            self.projects_preview_url + '?anywhere=1'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 1)
 
 
 class ProjectManageApiIntegrationTest(BluebottleTestCase):

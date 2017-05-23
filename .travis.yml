@@ -31,7 +31,7 @@ before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
 - flake8 .
 script:
-- coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8
+- python -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8
 notifications:
   hipchat:
     rooms:

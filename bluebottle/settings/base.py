@@ -198,7 +198,7 @@ JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_mock', '/payments_interswitch',
                           '/payments_vitepay', '/payments_flutterwave',
-                          '/media', '/surveys')
+                          '/media', '/surveys', '/token')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'

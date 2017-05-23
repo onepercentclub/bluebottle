@@ -24,8 +24,6 @@ install:
 - pip install --upgrade setuptools --use-mirrors
 - pip install --upgrade -I flake8
 - pip install -e .[test] --process-dependency-links --trusted-host github.com
-- bash -c "pip list | grep coveralls && pip uninstall --yes coveralls"
-- pip install --upgrade coverage coveralls pyyaml
 - echo `psql --version`
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat

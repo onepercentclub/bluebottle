@@ -111,6 +111,8 @@ install_requires = [
 
 tests_requires = [
     'coverage==4.4.1',
+    'coveralls==1.1',
+    'pyyaml==3.12',
     'django-nose==1.4.4',
     'django-setuptest==0.2.1',
     'django-webtest==1.9.2',

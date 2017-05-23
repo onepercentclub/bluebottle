@@ -18,6 +18,10 @@ class VoucherPayment(Payment):
         verbose_name = "Voucher Payment"
         verbose_name_plural = "Voucher Payments"
 
+    @property
+    def transaction_reference(self):
+        return self.id
+
     def get_fee(self):
         # Fix me. Get the fee from the payment that bought the related voucher.
         return Decimal(0)

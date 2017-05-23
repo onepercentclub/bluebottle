@@ -49,8 +49,8 @@ class ProjectEndpointTestCase(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
-        organization = OrganizationFactory.create()
-        organization.save()
+        self.organization = OrganizationFactory.create()
+        self.organization.save()
 
         self.campaign_phase = ProjectPhase.objects.get(slug='campaign')
         self.plan_phase = ProjectPhase.objects.get(slug='done-complete')
@@ -63,12 +63,12 @@ class ProjectEndpointTestCase(BluebottleTestCase):
                                                 status=self.campaign_phase,
                                                 amount_asked=0,
                                                 amount_needed=30,
-                                                organization=organization)
+                                                organization=self.organization)
                 project.save()
             else:
                 project = ProjectFactory.create(title=char * 3, slug=char * 3,
                                                 status=self.plan_phase,
-                                                organization=organization)
+                                                organization=self.organization)
 
                 task = TaskFactory.create(project=project)
                 project.save()
@@ -160,6 +160,12 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(owner['task_count'], 0)
         self.assertEquals(owner['donation_count'], 0)
         self.assertTrue(owner.get('email', None) is None)
+
+        organization = response.data['organization']
+
+        self.assertEqual(organization.keys(), ['id', 'name', 'slug', 'website'])
+        self.assertEqual(organization['name'], self.organization.name)
+
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_project_detail_view_bank_details(self):
@@ -630,48 +636,6 @@ class ProjectStoryXssTest(BluebottleTestCase):
 
         self.init_projects()
         self.some_user = BlueBottleUserFactory.create()
-
-    def test_unsafe_title(self):
-        title = '''
-        <p onmouseover=\"alert('Persistent_XSS');\"></p>
-        <br size="&{alert('Injected')}">
-        <script>alert('Injected!');</script>
-        '''
-
-        project = ProjectFactory.create(title=title,
-                                        slug="testproject",
-                                        story="testproject",
-                                        owner=self.some_user,
-                                        status=ProjectPhase.objects.get(
-                                            slug='campaign'))
-
-        response = self.client.get(reverse('project_detail',
-                                           args=[project.slug]))
-        escaped_title = '''
-        <p></p>
-        <br>
-        &lt;script&gt;alert(\'Injected!\');&lt;/script&gt;
-        '''
-        self.assertEqual(response.data['title'], escaped_title)
-
-    def test_safe_title(self):
-        title = '''
-            <p>test</p>
-            <blockquote>test</blockquote>
-            <pre>test</pre>
-            <h1>test</h1>
-            <br>
-        '''
-        project = ProjectFactory.create(title=title,
-                                        slug="testproject",
-                                        story="testproject",
-                                        owner=self.some_user,
-                                        status=ProjectPhase.objects.get(
-                                            slug='campaign'))
-
-        response = self.client.get(reverse('project_detail',
-                                           args=[project.slug]))
-        self.assertEqual(response.data['title'], title)
 
     def test_unsafe_story(self):
         story = '''
@@ -1533,7 +1497,7 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
         self.assertEqual(len(response.data['task_members']), 2)
 
     def test_project_media_pictures_only_from_project(self):
-        self.task = TaskFactory.create(id=self.project.id)
+        self.task = TaskFactory.create()
         TextWallpostFactory.create(content_object=self.task, author=self.user4)
 
         response = self.client.get(self.project_supporters_url)

@@ -1,30 +1,16 @@
+from datetime import timedelta
+
+from django.core import mail
 from django.utils import timezone
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-from bluebottle.tasks.models import TaskMember, Task, TaskStatusLog, TaskMemberStatusLog
+from bluebottle.tasks.models import TaskStatusLog, TaskMemberStatusLog
 
 
 class TestTaskMemberCase(BluebottleTestCase):
     def setUp(self):
         self.init_projects()
-
-    def test_task_realized_when_members_realized(self):
-        """
-        If all the task members are realized after the deadline for a task which
-        is not yet realized (eg. closed) then the task should also be realized.
-        """
-        deadline = timezone.now() - timezone.timedelta(days=1)
-        task = TaskFactory.create(deadline=deadline, status='closed', people_needed=2)
-        task_member1 = TaskMemberFactory.create(task=task, status='accepted')
-        task_member2 = TaskMemberFactory.create(task=task, status='accepted')
-
-        task_member1.status = TaskMember.TaskMemberStatuses.realized
-        task_member1.save()
-        task_member2.status = TaskMember.TaskMemberStatuses.realized
-        task_member2.save()
-
-        self.assertEqual(task.status, Task.TaskStatuses.realized)
 
     def test_check_number_of_members_needed_no_externals_count(self):
         """ Test that 'check_number_of_members_needed' returns the right count without externals"""
@@ -73,15 +59,28 @@ class TestTaskMemberCase(BluebottleTestCase):
         # More than people_needed have applied
         self.assertEqual(task.status, 'in progress')
 
+    def test_accepting_automatic(self):
+        task = TaskFactory.create(status='open', people_needed=4, accepting='automatic')
 
-class TestTaskCase(BluebottleTestCase):
+        task_member = TaskMemberFactory.create(task=task, status='applied')
+
+        self.assertEqual(task_member.status, 'accepted')
+
+    def test_accepting_manual(self):
+        task = TaskFactory.create(status='open', people_needed=4, accepting='manual')
+
+        task_member = TaskMemberFactory.create(task=task, status='applied')
+
+        self.assertEqual(task_member.status, 'applied')
+
+
+class TestTaskStatus(BluebottleTestCase):
     def setUp(self):
         self.init_projects()
 
-    def test_save_check_status_update_insufficent_accepted_members(self):
+    def test_insufficient_members(self):
         """
-        Check that the save method correctly sets the status of the task if not enough task members are
-        accepted for the task and the save method is called
+        Check that tasks with insufficient members are marked as 'open'
         """
         task = TaskFactory.create(status='open', people_needed=4)
         TaskMemberFactory.create(task=task, status='accepted', externals=1)
@@ -95,16 +94,310 @@ class TestTaskCase(BluebottleTestCase):
         # Total of 3 out of 4 people. Task status should be open.
         self.assertEqual(task.status, 'open')
 
-    def test_save_check_status_update_sufficent_accepted_members(self):
+    def test_sufficient_members(self):
         """
-        Check that the save method correctly sets the status of the task if enough task members are
-        accepted for the task and the save method is called
+        Ongoing Tasks with sufficient members (including externals) should be in progess
         """
-        task = TaskFactory.create(status='open', people_needed=2)
+        task = TaskFactory.create(status='open', people_needed=2, type='ongoing')
         TaskMemberFactory.create(task=task, status='accepted', externals=1)
-        task.save()
 
         self.assertEqual(task.status, 'in progress')
+
+    def test_event_sufficient_members(self):
+        """
+        Ongoing Tasks with sufficient members (including externals) should be full progess
+        """
+        task = TaskFactory.create(status='open', people_needed=2, type='event')
+        TaskMemberFactory.create(task=task, status='accepted', externals=1)
+
+        self.assertEqual(task.status, 'full')
+
+    def test_rejected_member(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='event')
+        member = TaskMemberFactory.create(task=task, status='accepted', externals=1)
+
+        self.assertEqual(task.status, 'full')
+
+        member.status = 'rejected'
+        member.save()
+
+        self.assertEqual(task.status, 'open')
+
+    def test_rejected_after_deadline_to_apply(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='event')
+        member = TaskMemberFactory.create(task=task, status='accepted', externals=1)
+
+        self.assertEqual(task.status, 'full')
+        task.deadline_to_apply = timezone.now() - timedelta(days=1)
+
+        member.status = 'rejected'
+        member.save()
+
+        self.assertEqual(task.status, 'full')
+
+    def test_task_realized(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='event')
+        TaskMemberFactory.create(task=task, status='accepted', externals=1)
+
+        self.assertEqual(task.status, 'full')
+
+        task.deadline = timezone.now() - timedelta(days=1)
+        task.deadline_reached()
+
+        self.assertEqual(task.status, 'realized')
+
+    def test_task_only_applied(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='event')
+        TaskMemberFactory.create(task=task, status='applied')
+
+        self.assertEqual(task.status, 'open')
+
+        task.deadline = timezone.now() - timedelta(days=1)
+        task.deadline_reached()
+
+        self.assertEqual(task.status, 'closed')
+
+    def test_task_no_members(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='event')
+
+        self.assertEqual(task.status, 'open')
+
+        task.deadline = timezone.now() - timedelta(days=1)
+        task.deadline_reached()
+
+        self.assertEqual(task.status, 'closed')
+        self.assertEquals(len(mail.outbox), 1)
+
+        self.assertTrue('set to closed' in mail.outbox[0].subject)
+
+    def test_full_after_deadline_to_apply(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='event')
+
+        TaskMemberFactory.create(task=task, status='applied')
+        self.assertEqual(task.status, 'open')
+
+        task.deadline_to_apply = timezone.now() - timedelta(days=1)
+        task.deadline_to_apply_reached()
+
+        self.assertEqual(task.status, 'full')
+        self.assertEqual(task.people_needed, 1)
+
+        email = mail.outbox[-1]
+        self.assertEqual(
+            email.subject,
+            "The deadline to apply for your task '{}' has passed".format(task.title)
+        )
+        self.assertTrue(
+            "The task has been set to 'running' with the {} candidates that applied".format(
+                task.people_needed) in email.body
+        )
+        self.assertTrue(
+            'Edit task https://testserver/tasks/{}/edit'.format(task.id) in email.body
+        )
+
+    def test_ongoing_running_after_deadline_to_apply(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='ongoing')
+
+        TaskMemberFactory.create(task=task, status='applied')
+        self.assertEqual(task.status, 'open')
+
+        task.deadline_to_apply = timezone.now() - timedelta(days=1)
+        task.deadline_to_apply_reached()
+
+        self.assertEqual(task.status, 'in progress')
+        self.assertEqual(task.people_needed, 1)
+
+        email = mail.outbox[-1]
+        self.assertEqual(
+            email.subject,
+            "The deadline to apply for your task '{}' has passed".format(task.title)
+        )
+        self.assertTrue(
+            "The task has been set to 'full' with the {} candidates that applied".format(
+                task.people_needed) in email.body
+        )
+        self.assertTrue(
+            'Edit task https://testserver/tasks/{}/edit'.format(task.id) in email.body
+        )
+
+    def test_ongoing_running_after_deadline_to_apply_to_many(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='ongoing')
+
+        TaskMemberFactory.create(task=task, status='applied', externals=2)
+        self.assertEqual(task.status, 'open')
+
+        task.deadline_to_apply = timezone.now() - timedelta(days=1)
+        task.deadline_to_apply_reached()
+
+        self.assertEqual(task.status, 'in progress')
+        self.assertEqual(task.people_needed, 2)
+
+        email = mail.outbox[-1]
+        self.assertEqual(
+            email.subject,
+            "The deadline to apply for your task '{}' has passed".format(task.title)
+        )
+        self.assertTrue(
+            "Your task has been set to 'running'" in email.body
+        )
+        self.assertTrue(
+            "You still have to accept your candidates" in email.body
+        )
+
+        self.assertTrue(
+            'Accept candidates: https://testserver/tasks/{}'.format(task.id) in email.body
+        )
+
+    def test_event_running_after_deadline_to_apply_to_many(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='event')
+
+        TaskMemberFactory.create(task=task, status='applied', externals=2)
+        self.assertEqual(task.status, 'open')
+
+        task.deadline_to_apply = timezone.now() - timedelta(days=1)
+        task.deadline_to_apply_reached()
+
+        self.assertEqual(task.status, 'full')
+        self.assertEqual(task.people_needed, 2)
+
+        email = mail.outbox[-1]
+        self.assertEqual(
+            email.subject,
+            "The deadline to apply for your task '{}' has passed".format(task.title)
+        )
+        self.assertTrue(
+            "Your task has been set to 'full'" in email.body
+        )
+        self.assertTrue(
+            "You still have to accept your candidates" in email.body
+        )
+
+        self.assertTrue(
+            'Accept candidates: https://testserver/tasks/{}'.format(task.id) in email.body
+        )
+
+    def test_ongoing_running_accepted_running_after_deadline_to_apply(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='ongoing')
+
+        TaskMemberFactory.create(task=task, status='accepted', externals=2)
+
+        task.deadline_to_apply = timezone.now() - timedelta(days=1)
+        task.deadline_to_apply_reached()
+
+        self.assertEqual(task.status, 'in progress')
+        self.assertEqual(task.people_needed, 2)
+
+        email = mail.outbox[-1]
+        self.assertEqual(
+            email.subject,
+            "The deadline to apply for your task '{}' has passed".format(task.title)
+        )
+        self.assertTrue(
+            "The task has been set to 'running'" in email.body
+        )
+        self.assertTrue(
+            "Leave a message" in email.body
+        )
+
+    def test_event_running_accepted_running_after_deadline_to_apply(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='event')
+
+        TaskMemberFactory.create(task=task, status='accepted', externals=2)
+
+        task.deadline_to_apply = timezone.now() - timedelta(days=1)
+        task.deadline_to_apply_reached()
+
+        self.assertEqual(task.status, 'full')
+        self.assertEqual(task.people_needed, 2)
+
+        email = mail.outbox[-1]
+        self.assertEqual(
+            email.subject,
+            "The deadline to apply for your task '{}' has passed".format(task.title)
+        )
+        self.assertTrue(
+            "The task has been set to 'full'" in email.body
+        )
+        self.assertTrue(
+            "Leave a message" in email.body
+        )
+
+    def test_no_members_after_deadline_to_apply(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='ongoing')
+
+        self.assertEqual(task.status, 'open')
+
+        task.deadline_to_apply = timezone.now() - timedelta(days=1)
+        task.deadline_to_apply_reached()
+
+        self.assertEqual(task.status, 'closed')
+        self.assertEqual(task.people_needed, 2)
+
+        email = mail.outbox[-1]
+        self.assertEqual(
+            email.subject,
+            "The deadline to apply for your task '{}' has passed".format(task.title)
+        )
+
+        self.assertTrue(
+            "the task is set to 'closed'" in email.body
+        )
+        self.assertTrue(
+            'Edit task https://testserver/tasks/{}/edit'.format(task.id) in email.body
+        )
+
+    def test_task_member_realized(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='ongoing')
+        member = TaskMemberFactory.create(task=task, status='applied')
+
+        self.assertEqual(task.status, 'open')
+
+        task.deadline = timezone.now() - timedelta(days=1)
+        task.deadline_reached()
+
+        self.assertEqual(task.status, 'closed')
+
+        member.status = 'realized'
+        member.save()
+
+        self.assertEqual(task.status, 'realized')
+
+    def test_task_member_realized_to_rejected(self):
+        task = TaskFactory.create(status='realized', people_needed=2, type='ongoing')
+        member = TaskMemberFactory.create(task=task, status='realized')
+
+        self.assertEqual(task.status, 'realized')
+
+        member.status = 'rejected'
+        member.save()
+
+        self.assertEqual(task.status, 'closed')
+
+    def test_task_member_realized_to_partially_rejected(self):
+        task = TaskFactory.create(status='realized', people_needed=2, type='ongoing')
+        member = TaskMemberFactory.create(task=task, status='realized')
+        TaskMemberFactory.create(task=task, status='realized')
+
+        self.assertEqual(task.status, 'realized')
+
+        member.status = 'rejected'
+        member.save()
+
+        self.assertEqual(task.status, 'realized')
+
+    def test_task_member_applied_to_realized(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='ongoing')
+        member = TaskMemberFactory.create(task=task, status='applied')
+        TaskMemberFactory.create(task=task, status='applied')
+
+        task.deadline_reached()
+
+        self.assertEqual(task.status, 'closed')
+
+        member.status = 'realized'
+        member.save()
+
+        self.assertEqual(task.status, 'realized')
 
 
 class TestTaskSearchDate(BluebottleTestCase):

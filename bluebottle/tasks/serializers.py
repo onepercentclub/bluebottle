@@ -54,12 +54,18 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'deadline': [_("The deadline must be before the project deadline.")]}
             )
+
+        if not data['deadline_to_apply'] or data['deadline_to_apply'] > data['deadline']:
+            raise serializers.ValidationError(
+                {'deadline': [_("The deadline to apply must be before the deadline.")]}
+            )
+
         return data
 
     class Meta:
         model = Task
         fields = ('id', 'members', 'files', 'project', 'skill',
-                  'author', 'status', 'description', 'type',
+                  'author', 'status', 'description', 'type', 'accepting',
                   'location', 'deadline', 'deadline_to_apply',
                   'time_needed', 'title', 'people_needed')
 
@@ -85,7 +91,7 @@ class MyTasksSerializer(BaseTaskSerializer):
         model = Task
         fields = ('id', 'title', 'skill', 'project', 'time_needed',
                   'people_needed', 'status', 'deadline', 'deadline_to_apply',
-                  'description', 'location', 'type')
+                  'accepting', 'description', 'location', 'type')
 
 
 # Task Wallpost serializers

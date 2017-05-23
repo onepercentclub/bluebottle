@@ -11,6 +11,10 @@ class MockPayment(Payment):
         verbose_name = "Mock Payment"
         verbose_name_plural = "Mock Payments"
 
+    @property
+    def transaction_reference(self):
+        return self.id
+
     def get_fee(self):
 
         if self.order_payment.payment_method == 'mockIdeal':

@@ -10,12 +10,11 @@ from django_extensions.db.fields import (
 from djchoices.choices import DjangoChoices, ChoiceItem
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
+from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
-from bluebottle.utils.email_backend import send_mail
 
 
 GROUP_PERMS = {
@@ -33,6 +32,7 @@ GROUP_PERMS = {
 class Task(models.Model, PreviousStatusMixin):
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
+        full = ChoiceItem('full', label=_('Full'))
         in_progress = ChoiceItem('in progress', label=_('Running'))
         realized = ChoiceItem('realized', label=_('Realised'))
         closed = ChoiceItem('closed', label=_('Closed'))
@@ -40,6 +40,10 @@ class Task(models.Model, PreviousStatusMixin):
     class TaskTypes(DjangoChoices):
         ongoing = ChoiceItem('ongoing', label=_('Ongoing (with deadline)'))
         event = ChoiceItem('event', label=_('Event (on set date)'))
+
+    class TaskAcceptingChoices(DjangoChoices):
+        manual = ChoiceItem('manual', label=_('Manual'))
+        automatic = ChoiceItem('automatic', label=_('Automatic'))
 
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
@@ -59,11 +63,17 @@ class Task(models.Model, PreviousStatusMixin):
                             choices=TaskTypes.choices,
                             default=TaskTypes.ongoing)
 
+    accepting = models.CharField(_('accepting'), max_length=20,
+                                 choices=TaskAcceptingChoices.choices,
+                                 default=TaskAcceptingChoices.manual)
+
     date_status_change = models.DateTimeField(_('date status change'),
                                               blank=True, null=True)
 
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
-    deadline_to_apply = models.FloatField(_('deadline_to_apply'), help_text=_('Deadline to apply'), null=True)
+    deadline_to_apply = models.DateTimeField(
+        _('deadline_to_apply'), help_text=_('Deadline to apply')
+    )
 
     objects = UpdateSignalsQuerySet.as_manager()
 
@@ -93,32 +103,29 @@ class Task(models.Model, PreviousStatusMixin):
         self.status = self.TaskStatuses.in_progress
         self.save()
 
+    def set_full(self):
+        self.status = self.TaskStatuses.full
+        self.save()
+
     def set_open(self):
         self.status = self.TaskStatuses.open
         self.save()
 
-    def task_member_realized(self):
-        """
-        Called if a task member is realized. Now check if the other members
-        are also realized and the deadline has expired. If so, then the task
-        should also be realized. Members who are rejected, stopped, realized
-        withdrew or applied can be ignored as these are not seen as active members.
-        """
-        if self.status == self.TaskStatuses.realized or self.deadline > timezone.now():
-            return
-
-        accepted_count = TaskMember.objects.filter(
-            task=self,
-            status__in=('accepted',)
-        ).count()
-
-        if accepted_count == 0:
-            self.status = self.TaskStatuses.realized
-            self.save()
-
     @property
     def members_applied(self):
         return self.members.exclude(status__in=['stopped', 'withdrew'])
+
+    @property
+    def members_realized(self):
+        return self.members.filter(status=self.TaskStatuses.realized)
+
+    @property
+    def externals_applied(self):
+        total_externals = 0
+
+        for member in self.members_applied:
+            total_externals += member.externals
+        return total_externals
 
     @property
     def people_applied(self):
@@ -136,27 +143,69 @@ class Task(models.Model, PreviousStatusMixin):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
 
-    # This could also belong to bb_tasks.models but we need the actual, non-abstract
-    # model for the signal handling anyway. Eventually, tasks/bb_tasks will have to be
-    # merged.
-    def deadline_reached(self):
-        """
-        The task deadline has been reached. Set it to realised and notify the
-        owner
-        """
-        # send "The deadline of your task" - mail
+    def deadline_to_apply_reached(self):
+        with TenantLanguage(self.author.primary_language):
+            subject = ugettext(
+                "The deadline to apply for your task '{0}' has passed"
+            ).format(self.title)
 
-        if self.status == 'in progress':
+        send_deadline_to_apply_passed_mail(self, subject, connection.tenant)
+
+        if self.status == self.TaskStatuses.open:
+            if self.people_applied:
+                if self.people_applied + self.externals_applied < self.people_needed:
+                    self.people_needed = self.people_applied
+
+                if self.type == self.TaskTypes.ongoing:
+                    self.set_in_progress()
+                else:
+                    self.set_full()
+            else:
+                self.status = 'closed'
+
+            self.save()
+
+    def deadline_reached(self):
+        if self.people_accepted:
             self.status = 'realized'
         else:
             self.status = 'closed'
+            with TenantLanguage(self.author.primary_language):
+                subject = _("The status of your task '{0}' is set to closed").format(self.title)
+
+            send_mail(
+                template_name="tasks/mails/task_status_closed.mail",
+                subject=subject,
+                title=self.title,
+                to=self.author,
+                site=tenant_url(),
+                link='/tasks/{0}'.format(self.id)
+            )
+
         self.save()
 
-        data = {
-            "Task": self.title,
-            "Author": self.author.username
-        }
-        bb_track("Task Deadline Reached", data)
+    def members_changed(self):
+        people_accepted = self.people_accepted
+
+        if (self.status == self.TaskStatuses.open and
+                self.people_needed <= people_accepted):
+            if self.type == self.TaskTypes.ongoing:
+                self.set_in_progress()
+            else:
+                self.set_full()
+
+        if (self.status in (self.TaskStatuses.in_progress, self.TaskStatuses.full) and
+                self.people_needed > people_accepted and
+                self.deadline_to_apply > timezone.now()):
+            self.set_open()
+
+        if self.status == self.TaskStatuses.closed and self.members_realized:
+            self.status = self.TaskStatuses.realized
+
+        if self.status == self.TaskStatuses.realized and not self.members_realized:
+            self.status = self.TaskStatuses.closed
+
+        self.save()
 
     def status_changed(self, oldstate, newstate):
         """ called by post_save signal handler, if status changed """
@@ -183,29 +232,6 @@ class Task(models.Model, PreviousStatusMixin):
                     [self, 'task_status_realized_second_reminder', third_subject, connection.tenant],
                     eta=timezone.now() + timedelta(minutes=2 * settings.REMINDER_MAIL_DELAY)
                 )
-
-        if oldstate in ("in progress", "open") and newstate == "closed":
-            with TenantLanguage(self.author.primary_language):
-                subject = _("The status of your task '{0}' is set to closed").format(self.title)
-
-            send_mail(
-                template_name="tasks/mails/task_status_closed.mail",
-                subject=subject,
-                title=self.title,
-                to=self.author,
-                site=tenant_url(),
-                link='/go/tasks/{0}'.format(self.id)
-            )
-
-        if oldstate in ("in progress", "open") and newstate in ("realized", "closed"):
-            data = {
-                "Task": self.title,
-                "Author": self.author.username,
-                "Old status": oldstate,
-                "New status": newstate
-            }
-
-            bb_track("Task Completed", data)
 
     def save(self, *args, **kwargs):
         if not self.author_id:
@@ -279,6 +305,13 @@ class TaskMember(models.Model, PreviousStatusMixin):
     @property
     def project(self):
         return self.task.project
+
+    def save(self, *args, **kwargs):
+        if (self.status == self.TaskMemberStatuses.applied and
+                self.task.accepting == self.task.TaskAcceptingChoices.automatic):
+            self.status = self.TaskMemberStatuses.accepted
+
+        super(TaskMember, self).save(*args, **kwargs)
 
 
 class TaskFile(models.Model):
@@ -361,6 +394,6 @@ class TaskMemberStatusLog(models.Model):
             return obj.start
 
 
-from .taskmail import send_task_realized_mail  # noqa
+from .taskmail import send_task_realized_mail, send_deadline_to_apply_passed_mail  # noqa
 from .taskwallmails import *  # noqa
 from .signals import *  # noqa

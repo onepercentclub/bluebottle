@@ -1,6 +1,7 @@
 # coding=utf-8
 import json
 import logging
+import requests
 
 from django.db import connection
 from flutterwave import Flutterwave
@@ -8,6 +9,7 @@ from flutterwave import Flutterwave
 from bluebottle.clients import properties
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.payments.exception import PaymentException
+from bluebottle.payments_flutterwave.models import FlutterwaveMpesaPayment
 from bluebottle.utils.utils import get_current_host
 from .models import FlutterwavePayment
 
@@ -17,16 +19,103 @@ logger = logging.getLogger(__name__)
 SUCCESS_RESPONSECODES = ['0', '00']
 
 
-class FlutterwavePaymentAdapter(BasePaymentAdapter):
-    MODEL_CLASSES = [FlutterwavePayment]
+class FlutterwaveBasePaymentAdapter(BasePaymentAdapter):
 
     card_data = {}
 
+    def __init__(self, order_payment):
+        super(FlutterwaveBasePaymentAdapter, self).__init__(order_payment)
+        options = {'debug': True}
+
+        if properties.LIVE_PAYMENTS_ENABLED:
+            options = {
+                'debug': False,
+                'env': 'production'
+            }
+
+        self.flw = Flutterwave(self.credentials['api_key'],
+                               self.credentials['merchant_key'],
+                               options)
+
+
+class FlutterwaveMpesaPaymentAdapter(FlutterwaveBasePaymentAdapter):
+
     def create_payment(self):
-        """
-        Create a new payment
-        """
+        payment = FlutterwaveMpesaPayment(
+            order_payment=self.order_payment,
+            business_number=self.credentials['business_number'],
+            account_number=self.order_payment.id
+        )
+        payment.amount = str(self.order_payment.amount.amount)
+        payment.currency = str(self.order_payment.amount.currency)
+        payment.save()
+        self.payment_logger.log(payment,
+                                'info',
+                                'payment_tracer: {}, '
+                                'event: payment.flutterwave.create_payment.success'.format(self.payment_tracer))
+
+        self.payment = payment
+        return payment
+
+    def get_authorization_action(self):
+
+        if self.payment.status == 'settled':
+            return {'type': 'success'}
+        if self.payment.status == 'started':
+            return {
+                'type': 'process',
+                'payload': {
+                    'account_number': self.payment.account_number,
+                    'business_number': self.payment.business_number,
+                    'amount': int(float(self.payment.amount))
+                }
+            }
+        raise PaymentException('Payment could not be verified yet.')
+
+    def check_payment_status(self):
+
+        if self.payment.status == 'settled':
+            self.order_payment.set_authorization_action({'type': 'success'})
+            return
+        status_url = "{}{}{}".format(
+            self.credentials['mpesa_base_url'],
+            'flwmp/services/mpcore/status/',
+            self.payment.transaction_reference)
+        response = requests.get(status_url)
+        self.payment.update_response = response.text
+        if response.status_code == 200:
+            self.payment.status = 'settled'
+        else:
+            self.payment.status = 'failed'
+        self.payment.save()
+        try:
+            action = self.get_authorization_action()
+            self.order_payment.set_authorization_action(action)
+        except PaymentException:
+            pass
+
+    def update_mpesa(self, **payload):
+        # Store incoming data
+        self.payment.kyc_info = payload['kycinfo']
+        self.payment.msisdn = payload['msisdn']
+        self.payment.remote_id = payload['id']
+        self.payment.transaction_amount = payload['transactionamount']
+        self.payment.transaction_time = payload['transactiontime']
+        self.payment.transaction_reference = payload['transactionid']
+        self.payment.third_party_transaction_id = payload['thirdpartytransactionid']
+        self.payment.invoice_number = payload['invoicenumber']
+        self.payment.transaction_amount = payload['transactionamount']
+        self.payment.update_response = json.dumps(payload)
+        self.payment.save()
+        # Now do a a check of the payment
+        self.check_payment_status()
+
+
+class FlutterwaveCreditcardPaymentAdapter(FlutterwaveBasePaymentAdapter):
+
+    def create_payment(self):
         self.card_data = self.order_payment.card_data
+
         if not {'card_number', 'expiry_month', 'expiry_year', 'cvv'}.issubset(self.card_data):
             logger.warn('payment_tracer: {}, '
                         'event: payment.flutterwave.invalid_credentials,'
@@ -41,9 +130,10 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                                          ))
             raise PaymentException('Card number, expiry month/year and cvv is required')
 
-        payment = self.MODEL_CLASSES[0](order_payment=self.order_payment,
-                                        card_number="**** **** **** " + self.card_data['card_number'][-4:]
-                                        )
+        payment = FlutterwavePayment(
+            order_payment=self.order_payment,
+            card_number="**** **** **** " + self.card_data['card_number'][-4:]
+        )
         if 'pin' in self.card_data and self.card_data['pin']:
             payment.auth_model = 'PIN'
         else:
@@ -72,28 +162,12 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         return payment
 
     def get_authorization_action(self):
-        """
-        Handle payment
-        """
-        options = {'debug': True}
-
-        if properties.LIVE_PAYMENTS_ENABLED:
-            options = {
-                'debug': False,
-                'env': 'production'
-            }
-
-        flw = Flutterwave(self.credentials['api_key'],
-                          self.credentials['merchant_key'],
-                          options)
-
-        card_data = self.card_data
         pin = ''
         cvv = ''
-        if 'pin' in card_data:
-            pin = card_data['pin']
-        if 'cvv' in card_data:
-            cvv = card_data['cvv']
+        if 'pin' in self.card_data:
+            pin = self.card_data['pin']
+        if 'cvv' in self.card_data:
+            cvv = self.card_data['cvv']
 
         if not {'card_number', 'expiry_month', 'expiry_year', 'cvv'}.issubset(self.card_data):
             logger.warn('payment_tracer: {}, '
@@ -113,10 +187,10 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             "amount": self.payment.amount,
             "currency": self.payment.currency,
             "authModel": self.payment.auth_model,
-            "cardNumber": card_data['card_number'],
+            "cardNumber": self.card_data['card_number'],
             "cvv": cvv,
-            "expiryMonth": card_data['expiry_month'],
-            "expiryYear": card_data['expiry_year'],
+            "expiryMonth": self.card_data['expiry_month'],
+            "expiryYear": self.card_data['expiry_year'],
             "pin": pin,
             "customerID": self.payment.customer_id,
             "narration": self.payment.narration,
@@ -141,17 +215,17 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                                          self.payment.amount,
                                          self.payment.currency,
                                          self.payment.auth_model,
-                                         card_data['card_number'][-4:],
+                                         self.card_data['card_number'][-4:],
                                          cvv,
-                                         card_data['expiry_month'],
-                                         card_data['expiry_year'],
+                                         self.card_data['expiry_month'],
+                                         self.card_data['expiry_year'],
                                          pin,
                                          self.payment.customer_id,
                                          self.payment.narration,
                                          self.payment.response_url,
                                          self.payment.country)
                     )
-        r = flw.card.charge(data)
+        r = self.flw.card.charge(data)
         if r.status_code == 500:
             logger.warn('payment_tracer: {}, '
                         'event: payment.flutterwave.error.500, '
@@ -217,19 +291,6 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
         raise PaymentException('Error starting payment: {0}'.format(response['data']['responsemessage']))
 
     def check_payment_status(self):
-
-        options = {'debug': True}
-
-        if properties.LIVE_PAYMENTS_ENABLED:
-            options = {
-                'debug': False,
-                'env': 'production'
-            }
-
-        flw = Flutterwave(self.credentials['api_key'],
-                          self.credentials['merchant_key'],
-                          options)
-
         transaction_reference = self.payment.transaction_reference
         card_data = self.order_payment.card_data or {}
         if 'otp' in card_data:
@@ -244,7 +305,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
                         'flutterwave_request: {}'.format(self.payment_tracer,
                                                          data
                                                          ))
-            r = flw.card.validate(data)
+            r = self.flw.card.validate(data)
             response = json.loads(r.text)
             if response['data']['responsecode'] in SUCCESS_RESPONSECODES:
                 self.order_payment.set_authorization_action({'type': 'success'})
@@ -252,7 +313,7 @@ class FlutterwavePaymentAdapter(BasePaymentAdapter):
             else:
                 self.payment.status = 'failed'
         else:
-            r = flw.card.verifyCharge(transactionRef=transaction_reference, country='NG')
+            r = self.flw.card.verifyCharge(transactionRef=transaction_reference, country='NG')
             response = json.loads(r.text)
             if response['data']['responsecode'] in SUCCESS_RESPONSECODES:
                 self.payment.status = 'settled'

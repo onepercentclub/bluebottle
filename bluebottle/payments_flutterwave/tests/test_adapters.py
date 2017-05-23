@@ -6,7 +6,7 @@ from mock import patch
 
 from django.test.utils import override_settings
 
-from bluebottle.payments_flutterwave.adapters import FlutterwavePaymentAdapter
+from bluebottle.payments_flutterwave.adapters import FlutterwaveCreditcardPaymentAdapter
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -86,10 +86,10 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         self.init_projects()
         order = OrderFactory.create()
         DonationFactory.create(amount=Money(150000, NGN), order=order)
-        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
+        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveCreditcard',
                                                    order=order,
                                                    integration_data=integration_data)
-        adapter = FlutterwavePaymentAdapter(order_payment)
+        adapter = FlutterwaveCreditcardPaymentAdapter(order_payment)
         authorization_action = adapter.get_authorization_action()
 
         self.assertEqual(adapter.payment.amount, '150000.00')
@@ -111,10 +111,10 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         self.init_projects()
         order = OrderFactory.create()
         DonationFactory.create(amount=Money(150000, NGN), order=order)
-        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
+        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveCreditcard',
                                                    order=order,
                                                    integration_data=integration_data)
-        adapter = FlutterwavePaymentAdapter(order_payment)
+        adapter = FlutterwaveCreditcardPaymentAdapter(order_payment)
         authorization_action = adapter.get_authorization_action()
 
         self.assertEqual(adapter.payment.amount, '150000.00')
@@ -146,11 +146,11 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         order = OrderFactory.create()
         user = BlueBottleUserFactory(first_name=u'T\xc3\xabst user')
         DonationFactory.create(amount=Money(20000, NGN), order=order)
-        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
+        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveCreditcard',
                                                    order=order,
                                                    user=user,
                                                    integration_data=integration_data)
-        adapter = FlutterwavePaymentAdapter(order_payment)
+        adapter = FlutterwaveCreditcardPaymentAdapter(order_payment)
         authorization_action = adapter.get_authorization_action()
 
         self.assertEqual(adapter.payment.amount, '20000.00')
@@ -167,7 +167,7 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         # Now set the otp
         order_payment.integration_data = {'otp': '123456'}
         order_payment.save()
-        adapter = FlutterwavePaymentAdapter(order_payment)
+        adapter = FlutterwaveCreditcardPaymentAdapter(order_payment)
         adapter.check_payment_status()
         self.assertEqual(adapter.payment.status, 'settled')
 
@@ -187,11 +187,11 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         order = OrderFactory.create()
         user = BlueBottleUserFactory(first_name=u'T\xc3\xabst user')
         DonationFactory.create(amount=Money(20000, NGN), order=order)
-        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
+        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveCreditcard',
                                                    order=order,
                                                    user=user,
                                                    integration_data=integration_data)
-        adapter = FlutterwavePaymentAdapter(order_payment)
+        adapter = FlutterwaveCreditcardPaymentAdapter(order_payment)
         authorization_action = adapter.get_authorization_action()
 
         self.assertEqual(adapter.payment.amount, '20000.00')
@@ -208,7 +208,7 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         # Now set the otp
         order_payment.integration_data = {'otp': '123456'}
         order_payment.save()
-        adapter = FlutterwavePaymentAdapter(order_payment)
+        adapter = FlutterwaveCreditcardPaymentAdapter(order_payment)
         with self.assertRaises(PaymentException):
             adapter.check_payment_status()
             self.assertEqual(adapter.payment.status, 'failed')
@@ -225,11 +225,11 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         self.init_projects()
         order = OrderFactory.create()
         DonationFactory.create(amount=Money(150000, NGN), order=order)
-        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
+        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveCreditcard',
                                                    order=order,
                                                    integration_data={'card_number': '123blabla'})
         with self.assertRaises(PaymentException):
-            FlutterwavePaymentAdapter(order_payment)
+            FlutterwaveCreditcardPaymentAdapter(order_payment)
 
     @patch('flutterwave.card.Card.charge',
            return_value=type('obj', (object,), {'status_code': 500,
@@ -243,9 +243,9 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
         self.init_projects()
         order = OrderFactory.create()
         DonationFactory.create(amount=Money(150000, NGN), order=order)
-        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveVerve',
+        order_payment = OrderPaymentFactory.create(payment_method='flutterwaveCreditcard',
                                                    order=order,
                                                    integration_data=integration_data)
-        adapter = FlutterwavePaymentAdapter(order_payment)
+        adapter = FlutterwaveCreditcardPaymentAdapter(order_payment)
         with self.assertRaises(PaymentException):
             adapter.get_authorization_action()

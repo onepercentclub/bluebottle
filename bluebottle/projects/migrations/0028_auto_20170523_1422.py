@@ -24,6 +24,9 @@ def forward(apps, schema_editor):
     old_dir = safe_join(root, 'projects/documents')
     new_dir = safe_join(root, 'private/projects/documents')
 
+    if not os.path.exists(old_dir):
+        return
+
     if not os.path.exists(new_dir):
         os.makedirs(new_dir)
 

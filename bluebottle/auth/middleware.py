@@ -172,7 +172,7 @@ class AdminOnlyAuthenticationMiddleware(AuthenticationMiddleware):
     """
 
     def process_request(self, request):
-        if isAdminRequest(request):
+        if isAdminRequest(request) and not hasattr(request, 'user'):
             super(AdminOnlyAuthenticationMiddleware, self).process_request(
                 request)
 

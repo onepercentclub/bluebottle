@@ -6,7 +6,7 @@
 {% blocktrans with title=task.title people_applied=task.people_applied %}
 The deadline to apply for your task "{{ title }}" has been reached.
 
-Your task didn’t get all the task members you requested. The task has been set to 'full' with the {{people_applied}} candidates that applied. If your task requires more task 
+Your task didn’t get all the task members you requested. The task has been set to 'running' with the {{people_applied}} candidates that applied. If your task requires more task 
 members, you can change the date to apply.
 
 Note: You have to accept candidates before they become task members

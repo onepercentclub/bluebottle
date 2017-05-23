@@ -4,8 +4,6 @@
 {% block content %}
 {% blocktrans with receiver_name=to.short_name  %}
 
-Hello {{receiver_name}}
-
 Hello {{ receiver_name }}
 
 The scheduled date of your task "{{ title }}" has been reached.

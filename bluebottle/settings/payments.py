@@ -1,4 +1,4 @@
-from bluebottle.payments_docdata.settings import DOCDATA_SETTINGS
+from bluebottle.payments_docdata.settings import DOCDATA_SETTINGS  # noqa
 
 PAYMENT_METHODS = (
     {

@@ -2,11 +2,13 @@
 import hashlib
 import json
 import requests
+from urlparse import urljoin
 
-from bluebottle.payments.exception import PaymentException
+from django.core.urlresolvers import reverse
 from moneyed import XOF
 
 from bluebottle.payments.adapters import BasePaymentAdapter
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments_vitepay.models import VitepayPayment
 from bluebottle.utils.utils import get_current_host, StatusDefinition
 
@@ -15,27 +17,13 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
 
     MODEL_CLASSES = [VitepayPayment]
 
-    fields = ['language_code',
-              'currency_code',
-              'country_code',
-              'order_id',
-              'description',
-              'amount_100',
-              'buyer_ip_adress',
-              'return_url',
-              'decline_url',
-              'cancel_url',
-              'callback_url',
-              'email',
-              'p_type']
-
-    def _get_callback_host(self):
+    def _get_callback_url(self):
         host = get_current_host()
-        # Replace localhost with some existing webdomain.
-        # This is only for local use.
         if 'localhost' in host:
-            host = 'https://vitepay.com'
-        return host
+            # Use a mocked url that will always return the expected result
+            return 'http://www.mocky.io/v2/5810a2873a0000a1056097c7'
+
+        return urljoin(host, reverse('vitepay-status-update'))
 
     def create_payment(self):
         """
@@ -52,10 +40,7 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         # Amount on the payment should be in CFA * 100
         payment.amount_100 = int(self.order_payment.amount.amount * 100)
         payment.description = "Thanks for your donation!"
-        payment.callback_url = '{0}/payments_vitepay/payment_response/{1}'.format(
-            self._get_callback_host(),
-            self.order_payment.id)
-
+        payment.callback_url = self._get_callback_url()
         payment.return_url = '{0}/orders/{1}/success'.format(
             get_current_host(),
             self.order_payment.order.id)
@@ -88,22 +73,23 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         Get payment url from VitePay to redirect the user to.
         """
         data = {
-            "language_code": "en",
-            "currency_code": "XOF",
-            "country_code": "ML",
-            "order_id": self.payment.order_id,
-            "description": self.payment.description,
-            "amount_100": self.payment.amount_100,
-            "return_url": self.payment.return_url,
-            "decline_url": self.payment.decline_url,
-            "cancel_url": self.payment.cancel_url,
-            "callback_url": self.payment.callback_url,
-            "p_type": "orange_money",
-            "redirect": "0",
+            "payment": {
+                "language_code": "fr",
+                "currency_code": "XOF",
+                "country_code": "ML",
+                "order_id": self.payment.order_id,
+                "description": self.payment.description,
+                "amount_100": self.payment.amount_100,
+                "return_url": self.payment.return_url,
+                "decline_url": self.payment.decline_url,
+                "cancel_url": self.payment.cancel_url,
+                "callback_url": self.payment.callback_url,
+                "p_type": "orange_money",
+            },
+            "redirect": 0,
             "api_key": self.credentials['api_key'],
             "hash": self._create_payment_hash()
         }
-
         url = self.credentials['api_url']
         headers = {'Content-Type': 'application/json'}
         response = requests.post(url, data=json.dumps(data), headers=headers)
@@ -130,9 +116,14 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         authenticity = SHA1("order_id;amount_100;currency_code;api_secret")
         """
         api_secret = self.credentials['api_secret']
-        message = "{p.order_id};{p.amount_100};{p.currency_code};" \
-                  "{api_secret}".format(p=self.payment, api_secret=api_secret)
-        return hashlib.sha1(message.upper()).hexdigest()
+        message = '{order_id};{amount};{currency};{api_secret}'.format(
+            order_id=self.payment.order_id.upper(),
+            amount=self.payment.amount_100,
+            currency=self.payment.currency_code,
+            api_secret=api_secret
+        )
+
+        return hashlib.sha1(message).hexdigest().upper()
 
     def check_payment_status(self):
         pass

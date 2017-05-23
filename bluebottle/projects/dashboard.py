@@ -1,6 +1,6 @@
+from admin_tools.dashboard.modules import DashboardModule, LinkList
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-
-from admin_tools.dashboard.modules import DashboardModule
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.projects.models import Project
@@ -79,3 +79,16 @@ class EndedProjects(DashboardModule):
         if not len(self.children):
             self.pre_content = _('No recently funded projects.')
         self._initialized = True
+
+
+class Analytics(LinkList):
+    title = _('Analytics')
+
+    def __init__(self, title=None, **kwargs):
+        self.children = ({'title': _('Analytics'),
+                          'url': getattr(settings, 'ANALYTICS_FRONTEND', ''),
+                          'external': True,
+                          'description': _('Analytics'),
+                          'attrs': {'target': '_blank'},
+                          },)
+        super(Analytics, self).__init__(title, **kwargs)

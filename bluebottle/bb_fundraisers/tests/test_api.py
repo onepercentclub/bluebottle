@@ -1,5 +1,4 @@
 import json
-import tempfile
 from django.core.files import File
 
 from django.core.urlresolvers import reverse

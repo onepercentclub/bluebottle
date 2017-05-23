@@ -206,7 +206,6 @@ class PayoutBase(InvoiceReferenceMixin, CompletedDateTimeMixin, models.Model, FS
         self.planned = self.__class__.get_next_planned_date()
 
 
-
 class PayoutLogBase(models.Model):
     """
     Abstract base class for logging state changes.
@@ -251,7 +250,7 @@ class PayoutLogBase(models.Model):
 
 class BaseProjectPayout(PayoutBase):
     """
-    A projects is payed after the campaign deadline is hit..
+    A projects is paid after the campaign deadline is hit..
     Project payouts are checked manually.
     """
 
@@ -378,8 +377,9 @@ class BaseProjectPayout(PayoutBase):
                           " '{1}'".format(self.payout_rule, calculator_name)
                 raise PayoutException(message)
 
-            self.amount_payable = Decimal(
-                round(calculator(raised_without_pledges), 2))
+            self.amount_payable = Money(
+                round(calculator(raised_without_pledges), 2), self.amount_raised.currency
+            )
 
         self.organization_fee = raised_without_pledges - self.amount_payable
 
@@ -465,7 +465,7 @@ class BaseProjectPayout(PayoutBase):
 
     def __unicode__(self):
         date = self.created.strftime('%d-%m-%Y')
-        return "{0} : {1} : {2} : {3} {4}".format(
+        return u"{0} : {1} : {2} : {3} {4}".format(
             self.invoice_reference,
             date,
             self.receiver_account_number,
@@ -650,8 +650,7 @@ class BaseOrganizationPayout(PayoutBase):
             # Check for consistency before changing into 'progress'.
             old_status = self.__class__.objects.get(id=self.id).status
 
-            if (old_status == StatusDefinition.NEW and
-                        self.status == StatusDefinition.IN_PROGRESS):
+            if old_status == StatusDefinition.NEW and self.status == StatusDefinition.IN_PROGRESS:
                 # Old status: new
                 # New status: progress
 
@@ -699,6 +698,7 @@ class BaseOrganizationPayout(PayoutBase):
 class OrganizationPayoutLog(PayoutLogBase):
     payout = models.ForeignKey('payouts.OrganizationPayout',
                                related_name='payout_logs')
+
 
 # Connect signals after defining models
 # Ref:  http://stackoverflow.com/a/9851875

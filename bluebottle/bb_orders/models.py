@@ -58,7 +58,8 @@ class BaseOrder(models.Model, FSMTransition):
     total = MoneyField(_("Amount"), )
 
     @transition(field=status,
-                source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED],
+                source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED,
+                        StatusDefinition.FAILED],
                 target=StatusDefinition.LOCKED)
     def locked(self):
         pass
@@ -93,12 +94,10 @@ class BaseOrder(models.Model, FSMTransition):
         self.confirmed = None
 
     def update_total(self, save=True):
-        donations = Donation.objects.filter(order=self, amount__gt=0)
-        total = [
-            Money(data['amount__sum'], data['amount_currency']) for data in
-                donations.values('amount_currency').annotate(Sum('amount')).order_by()
+        donations = Donation.objects.filter(order=self, amount__gt=0).\
+            values('amount_currency').annotate(Sum('amount')).order_by()
 
-        ]
+        total = [Money(data['amount__sum'], data['amount_currency']) for data in donations]
         if len(total) > 1:
             raise ValueError('Multiple currencies in one order')
         self.total = total[0]
@@ -122,8 +121,12 @@ class BaseOrder(models.Model, FSMTransition):
             return self.order_payments.order_by('-created').all()[0]
         return None
 
+    @property
+    def order_payment(self):
+        return self.get_latest_order_payment()
+
     class Meta:
         abstract = True
 
 
-import signals
+import signals  # noqa

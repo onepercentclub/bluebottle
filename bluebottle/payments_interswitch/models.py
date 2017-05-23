@@ -1,3 +1,4 @@
+import json
 from decimal import Decimal
 
 from django.db import models
@@ -44,6 +45,10 @@ class InterswitchPayment(Payment):
         verbose_name = "Interswitch Payment"
         verbose_name_plural = "Interswitch Payments"
 
+    @property
+    def transaction_reference(self):
+        return self.txn_ref
+
     def get_method_name(self):
         """ Return the payment method name."""
         return 'interswitch'
@@ -58,6 +63,20 @@ class InterswitchPayment(Payment):
         if fee > 2000:
             return 2000
         return fee
+
+    @property
+    def status_code(self):
+        try:
+            return json.loads(self.response)['ResponseCode']
+        except (TypeError, KeyError):
+            return ""
+
+    @property
+    def status_description(self):
+        try:
+            return json.loads(self.response)['ResponseDescription']
+        except (TypeError, KeyError):
+            return ""
 
 
 class InterswitchPaymentStatusUpdate(models.Model):

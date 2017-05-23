@@ -1,6 +1,12 @@
+from datetime import timedelta
+
 from django.contrib import admin
-from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
+from django.utils.html import format_html
+from django.utils.timezone import now
+from django.utils.translation import ugettext_lazy as _
+
+from daterange_filter.filter import DateRangeFilter
 
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
 from bluebottle.utils.admin import export_as_csv_action
@@ -9,47 +15,65 @@ from bluebottle.utils.admin import export_as_csv_action
 # Bulk actions for Task
 def mark_as_open(modeladmin, request, queryset):
     queryset.update(status='open')
+
+
 mark_as_open.short_description = _("Mark selected Tasks as Open")
 
 
 def mark_as_in_progress(modeladmin, request, queryset):
     queryset.update(status='in progress')
+
+
 mark_as_in_progress.short_description = _("Mark selected Tasks as Running")
 
 
 def mark_as_closed(modeladmin, request, queryset):
     queryset.update(status='closed')
+
+
 mark_as_closed.short_description = _("Mark selected Tasks as Done")
 
 
 def mark_as_realized(modeladmin, request, queryset):
     queryset.update(status='realized')
+
+
 mark_as_realized.short_description = _("Mark selected Tasks as Realised")
 
 
 # Bulk actions for Task Member
 def mark_as_applied(modeladmin, request, queryset):
     queryset.update(status='applied')
+
+
 mark_as_applied.short_description = _("Mark selected Task Members as Applied")
 
 
 def mark_as_accepted(modeladmin, request, queryset):
     queryset.update(status='accepted')
+
+
 mark_as_accepted.short_description = _("Mark selected Task Members as Accepted")
 
 
 def mark_as_rejected(modeladmin, request, queryset):
     queryset.update(status='rejected')
+
+
 mark_as_rejected.short_description = _("Mark selected Task Members as Rejected")
 
 
 def mark_as_stopped(modeladmin, request, queryset):
     queryset.update(status='stopped')
+
+
 mark_as_stopped.short_description = _("Mark selected Task Members as Withdrew")
 
 
 def mark_as_tm_realized(modeladmin, request, queryset):
     queryset.update(status='realized')
+
+
 mark_as_tm_realized.short_description = _("Mark selected Task Members as Realised")
 
 
@@ -71,15 +95,44 @@ class TaskFileAdminInline(admin.StackedInline):
     extra = 0
 
 
-class TaskAdmin(admin.ModelAdmin):
+class DeadlineToAppliedFilter(admin.SimpleListFilter):
+    title = _('Deadline to apply')
+    parameter_name = 'deadline_to_apply'
 
+    def lookups(self, request, model_admin):
+        return (
+            ('7', 'Next 7 days'),
+            ('30', 'Next 30 days'),
+            ('0', 'Deadline passed')
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() is not None:
+            days = int(self.value())
+            if days > 0:
+                return queryset.filter(
+                    deadline_to_apply__gt=now(),
+                    deadline_to_apply__lt=now() + timedelta(days=days)
+                )
+            else:
+                return queryset.filter(
+                    deadline_to_apply__lt=now()
+                )
+        else:
+            return queryset
+
+
+class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
 
     raw_id_fields = ('author', 'project')
-    list_filter = ('status', 'type')
-    list_display = ('title', 'project', 'status', 'deadline')
+    list_filter = ('status', 'type', 'skill__expertise',
+                   'deadline', ('deadline', DateRangeFilter),
+                   DeadlineToAppliedFilter, ('deadline_to_apply', DateRangeFilter)
+                   )
+    list_display = ('title', 'project', 'status', 'created', 'deadline', 'expertise_based')
 
     readonly_fields = ('date_status_change',)
 
@@ -87,13 +140,16 @@ class TaskAdmin(admin.ModelAdmin):
         'title', 'description',
         'author__first_name', 'author__last_name'
     )
+
     export_fields = (
         ('title', 'title'),
         ('project', 'project'),
         ('type', 'type'),
         ('status', 'status'),
         ('deadline', 'deadline'),
+        ('deadline_to_apply', 'deadline'),
         ('skill', 'skill'),
+        ('skill__expertise', 'expertise based'),
         ('people_needed', 'people needed'),
         ('time_needed', 'time needed'),
         ('author', 'author'),
@@ -105,7 +161,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     fields = ('title', 'description', 'skill', 'time_needed', 'status',
               'date_status_change', 'people_needed', 'project', 'author',
-              'type', 'deadline')
+              'type', 'deadline', 'deadline_to_apply')
 
 
 admin.site.register(Task, TaskAdmin)
@@ -115,16 +171,17 @@ class TaskAdminInline(admin.TabularInline):
     model = Task
     extra = 0
     fields = ('title', 'project', 'status', 'deadline', 'time_needed', 'task_admin_link')
-    readonly_fields = ('task_admin_link', )
+    readonly_fields = ('task_admin_link',)
 
     def task_admin_link(self, obj):
         object = obj
         url = reverse('admin:{0}_{1}_change'.format(
             object._meta.app_label, object._meta.model_name),
             args=[object.id])
-        return "<a href='{0}'>{1}</a>".format(str(url), obj.title)
-
-    task_admin_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url), obj.title.encode("utf8")
+        )
 
 
 class TaskMemberAdmin(admin.ModelAdmin):
@@ -151,6 +208,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
         ('member__remote_id', 'remote id'),
         ('task', 'task'),
         ('task__project', 'project'),
+        ('task__project__location__name', 'location'),
         ('status', 'status'),
         ('updated', 'updated'),
         ('time_spent', 'time spent'),
@@ -177,9 +235,9 @@ admin.site.register(TaskMember, TaskMemberAdmin)
 
 
 class SkillAdmin(admin.ModelAdmin):
-    list_display = ('translated_name', 'disabled')
-    readonly_fields = ('translated_name', )
-    fields = readonly_fields + ('disabled', 'description', )
+    list_display = ('translated_name', 'disabled', 'expertise')
+    readonly_fields = ('translated_name',)
+    fields = readonly_fields + ('disabled', 'description', 'expertise')
 
     def translated_name(self, obj):
         return _(obj.name)
@@ -191,5 +249,6 @@ class SkillAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
 
 admin.site.register(Skill, SkillAdmin)

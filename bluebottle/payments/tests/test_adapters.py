@@ -7,7 +7,7 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
-@override_settings(MERCHANT_ACCOUNTS = [{
+@override_settings(MERCHANT_ACCOUNTS=[{
     'merchant': 'docdata',
     'merchant_password': 'eur_password',
     'currency': 'EUR',

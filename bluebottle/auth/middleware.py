@@ -9,7 +9,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render_to_response
-from django.template import RequestContext
 from django.utils import timezone
 
 from rest_framework import exceptions
@@ -23,7 +22,7 @@ from lockdown import settings as lockdown_settings
 from bluebottle.utils.utils import get_client_ip
 
 
-LAST_SEEN_DELTA = 10 # in minutes
+LAST_SEEN_DELTA = 10  # in minutes
 
 
 def isAdminRequest(request):
@@ -279,13 +278,13 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         if not hasattr(form, 'show_form') or form.show_form():
             page_data['form'] = form
 
-        response = render_to_response('lockdown/form.html', page_data,
-                                      context_instance=RequestContext(request))
+        response = render_to_response('lockdown/form.html', page_data)
         response.status_code = 401
         return response
 
 
-authorization_logger = logging.getLogger('authorization')
+authorization_logger = logging.getLogger(__name__)
+
 
 class LogAuthFailureMiddleWare:
     def process_request(self, request):
@@ -294,18 +293,20 @@ class LogAuthFailureMiddleWare:
     def process_response(self, request, response):
         """ Log a message for each failed login attempt. """
         if reverse('admin:login') == request.path and request.method == 'POST' and response.status_code != 302:
-            authorization_logger.error('Authorization failed: {username} {ip}'.format(
-               ip=get_client_ip(request), username=request.POST.get('username')
-            ))
+            error = 'Authorization failed: {username} {ip}'.format(
+                ip=get_client_ip(request), username=request.POST.get('username')
+            )
+            authorization_logger.error(error)
 
         if reverse('token-auth') == request.path and request.method == 'POST' and response.status_code != 200:
             try:
                 data = json.loads(request.body)
             except ValueError:
-                data  = request.POST
+                data = request.POST
 
-            authorization_logger.error('Authorization failed: {username} {ip}'.format(
-               ip=get_client_ip(request), username=data.get('email')
-            ))
+            error = 'Authorization failed: {username} {ip}'.format(
+                ip=get_client_ip(request), username=data.get('email')
+            )
+            authorization_logger.error(error)
 
         return response

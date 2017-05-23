@@ -39,7 +39,9 @@ class NewsItem(models.Model):
     slug = models.SlugField(_("Slug"))
 
     # Contents
-    main_image = ImageField(_("Main image"), help_text=_("Shows at the top of your post."),upload_to='blogs', blank=True)
+    main_image = ImageField(_("Main image"),
+                            help_text=_("Shows at the top of your post."),
+                            upload_to='blogs', blank=True)
     language = models.CharField(_("language"),
                                 max_length=5,
                                 choices=lazy(get_languages, tuple)())

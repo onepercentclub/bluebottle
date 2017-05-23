@@ -35,8 +35,7 @@ class OrderPayment(object):
         self.amount = Money(2000, XOF)
 
 
-@patch('bluebottle.payments_vitepay.models.VitepayPayment.objects.get',
-        return_value=None)
+@patch('bluebottle.payments_vitepay.models.VitepayPayment.objects.get', return_value=None)
 @patch('bluebottle.payments_vitepay.adapters.VitepayPaymentAdapter.create_payment')
 @override_settings(**vitepay_settings)
 class TestAuthenticityHash(SimpleTestCase):
@@ -54,4 +53,4 @@ class TestAuthenticityHash(SimpleTestCase):
         adapter = VitepayPaymentAdapter(order_payment=order_payment)
 
         self.assertEqual(adapter._create_update_hash(),
-                         '64d7effd1c2540f0c9230dbb680c100dd2558d63')
+                         '64d7effd1c2540f0c9230dbb680c100dd2558d63'.upper())

@@ -14,7 +14,7 @@ class RewardPagination(BluebottlePagination):
 class RewardList(generics.ListCreateAPIView):
     queryset = Reward.objects.all()
     serializer_class = RewardSerializer
-    permission_classes = (IsProjectOwnerOrReadOnly, )
+    permission_classes = (IsProjectOwnerOrReadOnly,)
     pagination_class = RewardPagination
 
     def get_queryset(self):

@@ -33,6 +33,7 @@ class ProjectTinyPreviewList(generics.ListAPIView):
     def get_queryset(self):
         query = self.request.query_params
         qs = Project.objects.search(query=query)
+        qs = qs.order_by('created')
         return qs.filter(status__viewable=True)
 
 
@@ -43,7 +44,8 @@ class ProjectPreviewList(generics.ListAPIView):
 
     def get_queryset(self):
         query = self.request.query_params
-        qs = Project.objects.search(query=query)
+        qs = Project.objects.search(query)
+        qs.select_related('task')
         return qs.filter(status__viewable=True)
 
 
@@ -51,6 +53,7 @@ class ProjectPreviewDetail(generics.RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectPreviewSerializer
     lookup_field = 'slug'
+
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
         return qs
@@ -166,7 +169,6 @@ class ManageProjectDetail(generics.RetrieveUpdateAPIView):
 
 
 class ProjectThemeList(generics.ListAPIView):
-    queryset = ProjectTheme.objects.all()
     serializer_class = ProjectThemeSerializer
     queryset = ProjectTheme.objects.all().filter(disabled=False)
 
@@ -186,6 +188,7 @@ class ProjectThemeDetail(generics.RetrieveAPIView):
 
 class ManageProjectDocumentPagination(BluebottlePagination):
     page_size = 20
+
 
 class ManageProjectDocumentList(generics.ListCreateAPIView):
     queryset = Project.objects.all()

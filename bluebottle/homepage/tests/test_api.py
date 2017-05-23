@@ -1,21 +1,18 @@
-from decimal import Decimal
-
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 
-from bluebottle.test.factory_models.statistics import StatisticFactory
-from bluebottle.utils.utils import StatusDefinition
-from bluebottle.utils.models import Language
-
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.statistics.views import Statistics
+from bluebottle.tasks.models import Task
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-
-from bluebottle.statistics.views import Statistics
-from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.tasks.models import Task
+from bluebottle.test.factory_models.statistics import StatisticFactory
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.models import Language
 
 from ..models import HomePage
 
@@ -41,7 +38,7 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               is_campaign=True,
                               language=self.en,
                               status=self.phases['plan-new'])
-        self.assertEquals(HomePage().get('en').projects, None)
+        self.assertEquals(len(HomePage().get('en').projects), 0)
 
     def test_plan_submitted(self):
         """ plan_submitted shouldn't be visible """
@@ -50,7 +47,7 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               slug="plan-submitted",
                               language=self.en,
                               status=self.phases['plan-submitted'])
-        self.assertEquals(HomePage().get('en').projects, None)
+        self.assertEquals(len(HomePage().get('en').projects), 0)
 
     def test_plan_needs_work(self):
         """ plan_needs_work shouldn't be visible """
@@ -59,7 +56,7 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               slug="plan-needs-work",
                               language=self.en,
                               status=self.phases['plan-needs-work'])
-        self.assertEquals(HomePage().get('en').projects, None)
+        self.assertEquals(len(HomePage().get('en').projects), 0)
 
     def test_closed(self):
         """ done_incomplete shouldn't be visible """
@@ -68,7 +65,7 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               slug="closed",
                               language=self.en,
                               status=self.phases['closed'])
-        self.assertEquals(HomePage().get('en').projects, None)
+        self.assertEquals(len(HomePage().get('en').projects), 0)
 
     def test_campaign(self):
         """ plan_new should be visible """
@@ -104,9 +101,16 @@ class HomepagePreviewProjectsTestCase(BluebottleTestCase):
                               slug="done-complete",
                               language=self.en,
                               status=self.phases['done-complete'])
-        self.assertEquals(HomePage().get('en').projects, None)
+        self.assertEquals(len(HomePage().get('en').projects), 0)
 
 
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+)
 class HomepageEndpointTestCase(BluebottleTestCase):
     """
     Integration tests for the Statistics API.
@@ -155,11 +159,7 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         self.task = TaskFactory.create(project=projects[0],
                                        status=Task.TaskStatuses.realized)
         for char in 'abcdefghij':
-            # Put half of the projects in the campaign phase.
-            if ord(char) % 2 == 1:
-                task = TaskMemberFactory.create(task=self.task)
-            else:
-                task = TaskMemberFactory.create(task=self.task)
+            TaskMemberFactory.create(task=self.task, status='realized')
 
         """
         Create 10 Donations with half to fundraisers
@@ -187,9 +187,6 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         StatisticFactory.create(type='tasks_realized', title='Tasks realised', language='en')
         StatisticFactory.create(type='people_involved', title='Peeps', language='en')
         StatisticFactory.create(type='manual', title='Rating', value='9.3', language='en')
-
-    def tearDown(self):
-        self.stats.clear_cached()
 
     def test_homepage_stats(self):
         response = self.client.get(reverse('stats', kwargs={'language': 'en'}))

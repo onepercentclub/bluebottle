@@ -22,19 +22,22 @@ env:
   - secure: PUYWLPG0f1QTf1Q77/0ft636ZKQaIIjy0eHZCVpzVyRMW0XX9N5UXhbTPE1fPFt5aRNdNjGIWxOF/4SuIEhYEaZamGG3PBNqvXI530SkTNUbNVoeAcTleYbwcaVWeYdyK2P2k1YdNUt+BbRuYN2o9I8+2QmQvQsZEwugCG4+UH4=
 install:
 - pip install --upgrade setuptools --use-mirrors
+- pip install --upgrade -I flake8
 - pip install -e .[test] --process-dependency-links --trusted-host github.com
-- createdb bluebottle_test
 - echo `psql --version`
 before_script:
-- curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz
-  | gunzip - > GeoIP.dat
+- curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
+- flake8 .
 script:
-- python manage.py test
+- python -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8
 notifications:
   hipchat:
     rooms:
       secure: A7SQlgtz1wTbt5wSpP5inxXAB7Gxmss6KIjnV0RdcU1jzKbf/umrAWgLIb/M6vr/zO/YwZCa60SkYm7yn0fGEU3fVjA7rWy5w1yllMEgxxEUy4E2DF1pL/0vryI4GwgcNzre0XA1o/Lx5/8cq6FB1fZ0V5yDyIl8xxMdWFb++X4=
     template:
     - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
+  slack:
+    secure: TOveMBh9HePYKWuGTrWF+hTXzxGZvbVsa3KU0sB1yv6qkcixb5/ggvmkTeRddYEd/zyWyMenicFsrXVBgsP0SmbNgke6kq5+EN0U5oJWse998lvCVCpwmJQMdwDHvYsOtbFEOppQrbRK4vmH8qibx3x2YVg+u+61ePHvWYF9z6U=
 after_success:
 - bash post_travis.sh
+- coverage combine; coverage report --omit **/migrations/**; coveralls

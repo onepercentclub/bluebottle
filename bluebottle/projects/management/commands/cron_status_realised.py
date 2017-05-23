@@ -27,6 +27,7 @@ class Command(BaseCommand):
         or they have been overfunded and have expired.
         """
         connection.set_tenant(client)
+
         with LocalTenant(client, clear_tenant=True):
 
             self.stdout.write("Checking deadlines for client {0}".
@@ -62,7 +63,7 @@ class Command(BaseCommand):
             """
             self.stdout.write("Checking Project funded and still running...")
             for project in Project.objects.filter(status=campaign_phase, deadline__gt=now()):
-                if project.amount_needed <= 0:
+                if project.amount_needed.amount <= 0:
                     project.campaign_funded = now()
                     project.save()
 
@@ -80,6 +81,10 @@ class Command(BaseCommand):
             signal
             """
             self.stdout.write("Checking Task deadlines...\n\n")
+            for task in Task.objects.filter(status__in=['in progress', 'open'],
+                                            deadline_to_apply__lt=now()).all():
+                task.deadline_to_apply_reached()
+
             for task in Task.objects.filter(status__in=['in progress', 'open'],
                                             deadline__lt=now()).all():
                 task.deadline_reached()

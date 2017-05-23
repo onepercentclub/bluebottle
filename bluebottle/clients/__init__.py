@@ -1,1 +1,1 @@
-from .middleware import properties
+from .middleware import properties  # noqa

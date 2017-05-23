@@ -75,6 +75,14 @@ class Payment(PolymorphicModel):
             raise PaymentException("get_fee() not implemented for "
                                    "{0}".format(self.__class__.__name__))
 
+    @property
+    def status_code(self):
+        return ""
+
+    @property
+    def status_description(self):
+        return ""
+
     class Meta:
         ordering = ('-created', '-updated')
 
@@ -121,7 +129,7 @@ class OrderPayment(models.Model, FSMTransition):
     status = FSMField(
         default=StatusDefinition.CREATED, choices=STATUS_CHOICES,
         protected=True)
-    previous_status = None
+
     created = CreationDateTimeField(_("Created"))
     updated = ModificationDateTimeField(_("Updated"))
     closed = models.DateTimeField(
@@ -139,6 +147,9 @@ class OrderPayment(models.Model, FSMTransition):
         _("Integration data"), max_length=5000, blank=True)
     authorization_action = models.OneToOneField(
         OrderPaymentAction, verbose_name=_("Authorization action"), null=True)
+
+    previous_status = None
+    card_data = None
 
     @classmethod
     def get_latest_by_order(cls, order):
@@ -218,6 +229,20 @@ class OrderPayment(models.Model, FSMTransition):
             self.save()
 
     @property
+    def status_code(self):
+        try:
+            return self.payment.status_code
+        except Payment.DoesNotExist:
+            return ""
+
+    @property
+    def status_description(self):
+        try:
+            return self.payment.status_description
+        except Payment.DoesNotExist:
+            return ""
+
+    @property
     def info_text(self):
         """ The description on the payment receipt.
         """
@@ -248,6 +273,8 @@ class OrderPayment(models.Model, FSMTransition):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         self.amount = self.order.total
+        self.card_data = self.integration_data
+        self.integration_data = {}
         if self.id:
             # If the payment method has changed we should recalculate the fee.
             try:

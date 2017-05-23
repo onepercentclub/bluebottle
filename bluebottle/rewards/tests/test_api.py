@@ -83,7 +83,6 @@ class RewardTestCase(BluebottleTestCase):
             response.data['amount'], [u'Ensure this amount is greater than or equal to 5.0.']
         )
 
-
     def test_reward_can_not_be_created_by_non_project_owner(self):
         """
         Non-project owner should not be allowed to create
@@ -109,7 +108,6 @@ class RewardTestCase(BluebottleTestCase):
             unicode(response.data['non_field_errors'][0]),
             u'Currency does not match project any of the currencies.'
         )
-
 
     def test_reward_can_be_deleted(self):
         """
@@ -143,5 +141,3 @@ class RewardTestCase(BluebottleTestCase):
         reward_url = reverse('reward-detail', kwargs={'pk': reward.id})
         response = self.client.delete(reward_url, token=self.user2_token)
         self.assertEqual(response.status_code, 403)
-
-

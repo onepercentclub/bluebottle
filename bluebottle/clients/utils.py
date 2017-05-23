@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import itertools
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import re
 
 from babel.numbers import get_currency_symbol, get_currency_name
@@ -17,7 +17,7 @@ from tenant_extras.utils import get_tenant_properties
 
 import logging
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class LocalTenant(object):
@@ -65,20 +65,33 @@ def tenant_site():
                                                   connection.tenant.domain_url)
 
 
+def get_min_amounts(methods):
+    result = defaultdict(list)
+    for method in methods:
+        for currency, data in method['currencies'].items():
+            result[currency].append(data.get('min_amount', float("inf")))
+
+    return dict((currency, min(amounts)) for currency, amounts in result.items())
+
+
 def get_currencies():
     properties = get_tenant_properties()
 
     currencies = set(itertools.chain(*[
         method['currencies'].keys() for method in properties.PAYMENT_METHODS
     ]))
+    min_amounts = get_min_amounts(properties.PAYMENT_METHODS)
 
     currencies = [{
         'code': code,
         'name': get_currency_name(code),
-        'symbol': get_currency_symbol(code)
+        'symbol': get_currency_symbol(code).replace('US$', '$')
     } for code in currencies]
 
     for currency in currencies:
+        if currency['code'] in min_amounts:
+            currency['minAmount'] = min_amounts[currency['code']]
+
         try:
             currency['rate'] = get_rate(currency['code'])
         except (CurrencyConversionException, ProgrammingError):
@@ -150,7 +163,7 @@ def get_public_properties(request):
     # Now load the tenant specific properties
     for item in props:
         try:
-            key = re.sub('_.',lambda x: x.group()[1].upper(), item)
+            key = re.sub('_.', lambda x: x.group()[1].upper(), item)
             # Use camelcase for setting keys (convert from snakecase)
             config[key] = getattr(properties, item.upper())
         except AttributeError:

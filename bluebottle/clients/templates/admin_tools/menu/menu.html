@@ -1,0 +1,62 @@
+{% load i18n staticfiles admin_tools_menu_tags %}
+{% if menu.children %}
+<script type="text/javascript" src="{% static "admin_tools/js/utils.js" %}"></script>
+<script type="text/javascript" charset="utf-8">
+
+    // Load js files syncronously and conditionally
+    var js_files = [
+        {
+            src : '{% static "admin/js/vendor/jquery/jquery.js" %}',
+            test: function() { return typeof(jQuery) == 'undefined'; }
+        },
+        {
+            src : '{% static "admin_tools/js/json.min.js" %}',
+            test: function() { return typeof(JSON.stringify) == 'undefined'; }
+        },
+        {
+            src : '{% static "admin_tools/js/menu.js" %}',
+            test: function() { return true; }
+        }{% for js in menu.Media.js %},
+        {
+            src : '{% static js %}',
+            test: function() { return true; }
+        }{% endfor %}
+    ];
+
+    loadScripts(js_files, function(){
+        jQuery(function($) {
+            {% if has_bookmark_item %}
+                process_bookmarks(
+                   "{{ request.get_full_path }}",
+                   "{{ title|capfirst }}",
+                   "{% trans 'Please enter a name for the bookmark' %}"
+                );
+            {% endif %}
+        });
+    });
+
+</script>
+<!--[if IE 6]>
+<script type="text/javascript">
+jQuery(document).ready(function() {
+    jQuery('#navigation-menu').children('li').hover(
+        function() { jQuery(this).addClass('over'); },
+        function() { jQuery(this).removeClass('over'); }
+    );
+});
+</script>
+<![endif]-->
+
+{% if has_bookmark_item %}
+
+{% if bookmark %}
+{% include "admin_tools/menu/remove_bookmark_form.html" %}
+{% else %}
+{% include "admin_tools/menu/add_bookmark_form.html" %}
+{% endif %}
+
+{% endif %}
+<ul id="navigation-menu">
+    {% for item in menu.children %}{% admin_tools_render_menu_item item forloop.counter %}{% endfor %}
+</ul>
+{% endif %}

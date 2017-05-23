@@ -10,4 +10,5 @@ class StatisticAdmin(admin.ModelAdmin):
 
     readonly_fields = ('calculated_value', )
 
+
 admin.site.register(Statistic, StatisticAdmin)

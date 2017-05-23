@@ -1,0 +1,11 @@
+{% extends 'admin/fluent_contents/contentitem/admin_form.html' %}
+
+{% block plugin-message %}
+{% endblock %}
+
+
+{% block after_fieldsets %}
+    {% if inline_admin_form.original %}
+        {% include inline_admin_form.original.preview_template with instance=inline_admin_form.original %}
+    {% endif %}
+{% endblock %}

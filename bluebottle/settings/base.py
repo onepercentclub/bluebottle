@@ -1,12 +1,11 @@
-# Django settings for BlueBottle project.
-
-import os, datetime
+import os
+import datetime
 from collections import OrderedDict
 import rules
 from PIL import ImageFile
 
-from .payments import *
-from .admin_dashboard import *
+from .payments import *  # noqa
+from .admin_dashboard import *  # noqa
 
 BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
@@ -100,6 +99,7 @@ COMPRESS_OUTPUT_DIR = 'compressed'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'tenant_extras.staticfiles_finders.TenantStaticFilesFinder'
 )
 
 # List of callables that know how to import templates from various sources.
@@ -144,10 +144,10 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
     'bluebottle.auth.middleware.UserJwtTokenMiddleware',
     'bluebottle.utils.middleware.SubDomainSessionMiddleware',
+    'bluebottle.utils.middleware.APILanguageMiddleware',
     'bluebottle.auth.middleware.AdminOnlySessionMiddleware',
     'bluebottle.auth.middleware.AdminOnlyCsrf',
     'bluebottle.auth.middleware.AdminOnlyAuthenticationMiddleware',
-    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'bluebottle.auth.middleware.LockdownMiddleware',
@@ -156,6 +156,7 @@ MIDDLEWARE_CLASSES = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
+    'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
 )
 
 REST_FRAMEWORK = {
@@ -183,12 +184,11 @@ JWT_AUTH = {
 
     # Override the JWT token handlers, use tenant aware ones.
     'JWT_ENCODE_HANDLER':
-    'tenant_extras.jwt_utils.jwt_encode_handler',
+        'tenant_extras.jwt_utils.jwt_encode_handler',
 
     'JWT_DECODE_HANDLER':
-    'tenant_extras.jwt_utils.jwt_decode_handler',
+        'tenant_extras.jwt_utils.jwt_decode_handler',
 }
-
 
 # Time between attempts to refresh the jwt token automatically on standard request
 # TODO: move this setting into the JWT_AUTH settings.
@@ -197,7 +197,9 @@ JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 # List of paths to ignore for locale redirects
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_mock', '/payments_interswitch',
-                          '/payments_vitepay', '/media', '/surveys')
+                          '/payments_vitepay', '/payments_flutterwave',
+                          '/payments_lipisha', '/media',
+                          '/surveys', '/token')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
@@ -241,8 +243,10 @@ SHARED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
 
     # 3rd party apps
+    'lockdown',
     'django_extensions',
     'raven.contrib.django.raven_compat',
     'djcelery',
@@ -253,9 +257,11 @@ SHARED_APPS = (
     'tenant_extras',
     'localflavor',
     'filetransfers',
-    'lockdown',
     'corsheaders',
-    'djmoney_rates'
+    'djmoney_rates',
+    'parler',
+    'daterange_filter',
+    'adminsortable'
 
 )
 
@@ -287,7 +293,7 @@ TENANT_APPS = (
 
     'bb_salesforce',
 
-    #Widget
+    # Widget
     'bluebottle.widget',
 
     'rest_framework.authtoken',
@@ -301,6 +307,7 @@ TENANT_APPS = (
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
+    'bluebottle.payouts_dorado',
     'bluebottle.surveys',
 
     # Plain Bluebottle apps
@@ -318,19 +325,19 @@ TENANT_APPS = (
     'bluebottle.payments',
     'bluebottle.payments_docdata',
     'bluebottle.payments_interswitch',
+    'bluebottle.payments_flutterwave',
+    'bluebottle.payments_lipisha',
+    'bluebottle.payments_telesom',
     'bluebottle.payments_vitepay',
     'bluebottle.payments_pledge',
     'bluebottle.payments_logger',
     'bluebottle.payments_voucher',
-    'bluebottle.payments_manual',
     'bluebottle.redirects',
     'bluebottle.statistics',
     'bluebottle.suggestions',
     'bluebottle.terms',
     'bluebottle.votes',
     'bluebottle.social',
-    'bluebottle.accounting',
-    'bluebottle.journals',
     'bluebottle.csvimport',
     'bluebottle.rewards',
 
@@ -339,7 +346,6 @@ TENANT_APPS = (
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
-    'bluebottle.bb_organizations',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
     'bluebottle.bb_fundraisers',
@@ -364,6 +370,8 @@ TENANT_APPS = (
     'django.contrib.humanize',
     'django_tools',
     'taggit',
+
+    'bluebottle.cms',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -376,11 +384,11 @@ TENANT_PROPERTIES = "bluebottle.clients.properties"
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
-
 THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85
-THUMBNAIL_DUMMY=True
+THUMBNAIL_DUMMY = True
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -392,15 +400,21 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '%(asctime)s %(levelname)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(asctime)s %(levelname)s %(name) %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '%(asctime)s %(levelname)s %(message)s'
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s'
+        },
+        'json': {
+            '()': 'bluebottle.utils.formatters.JsonFormatter'
         },
     },
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
+        },
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue'
         }
     },
     'handlers': {
@@ -410,6 +424,7 @@ LOGGING = {
         },
         'console': {
             'level': 'DEBUG',
+            'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
@@ -425,42 +440,50 @@ LOGGING = {
         'payment_logs': {
             'level': 'INFO',
             'class': 'bluebottle.payments_logger.handlers.PaymentLogHandler',
+        },
+        'json': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api-json.log'),
+            'formatter': 'json',
+            'when': 'midnight',
+        },
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(PROJECT_ROOT, 'logs', 'api.log'),
+            'formatter': 'simple',
+            'when': 'midnight',
+        },
+        'default': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
         }
     },
     'loggers': {
-        'null': {
-            'handlers': ['null'],
+        'django.request': {
+            'handlers': ['mail_admins'],
             'propagate': True,
-            'level': 'INFO',
+            'level': 'ERROR',
         },
-        'console': {
-            'handlers': ['console'],
-            'propagate': True,
-            'level': 'INFO',
-        },
-        'bluebottle.recurring_donations': {
-            'handlers': ['console'],
+        'bluebottle': {
+            'handlers': ['console', 'file'],
             'propagate': True,
             'level': 'INFO',
         },
         'bluebottle.salesforce': {
             'handlers': ['mail_admins'],
-            'level': 'ERROR',
             'propagate': True,
+            'level': 'ERROR',
         },
         'payments.payment': {
             'handlers': ['mail_admins', 'payment_logs', 'sentry'],
+            'propagate': True,
             'level': 'INFO',
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
         },
     }
 }
-
 
 # Custom User model
 AUTH_USER_MODEL = 'members.Member'
@@ -476,7 +499,7 @@ DONATIONS_ENABLED = True
 # Analytics Service
 ANALYTICS_ENABLED = False
 ANALYTICS_BACKENDS = {
-    'default': {
+    'influxdb': {
         'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
         'host': 'localhost',
         'port': 8086,
@@ -485,8 +508,16 @@ ANALYTICS_BACKENDS = {
         'database': 'platform_v1',
         'measurement': 'saas',
         'ssl': True
+    },
+    'file': {
+        'handler_class': 'bluebottle.analytics.backends.FileExporter',
+        'base_dir': os.path.join(PROJECT_ROOT, 'analytics'),
+        'measurement': 'saas',
     }
 }
+
+ANALYTICS_FRONTEND = ''
+ANALYTICS_BACKOFFICE_ENABLED = True
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'
@@ -525,13 +556,12 @@ TENANT_JWT_SECRET = 'global-tenant-secret'
 
 # email properties
 TENANT_MAIL_PROPERTIES = {
-    'logo':'',
-    'address':'',
-    'sender':'',
-    'footer':'',
-    'website':'',
+    'logo': '',
+    'address': '',
+    'sender': '',
+    'footer': '',
+    'website': '',
 }
-
 
 CLOSED_SITE = False
 PARTNER_LOGIN = False
@@ -541,7 +571,8 @@ EXPOSED_TENANT_PROPERTIES = ['closed_site', 'mixpanel', 'analytics', 'maps_api_k
                              'bb_apps', 'donation_amounts', 'facebook_sharing_reviewed',
                              'project_create_flow', 'project_create_types', 'project_contact_types',
                              'closed_site', 'partner_login', 'share_options', 'sso_url',
-                             'project_suggestions', 'readOnlyFields', 'search_options']
+                             'project_suggestions', 'readOnlyFields', 'search_options',
+                             'task_accepting', 'task_show_accepting', 'task_plus_one']
 
 DEFAULT_FILE_STORAGE = 'bluebottle.utils.storage.TenantFileSystemStorage'
 
@@ -566,7 +597,7 @@ DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', )
+IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif',)
 
 EXPORTDB_EXPORT_CONF = {
     'models': OrderedDict([
@@ -592,6 +623,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('id', 'Project ID'),
                 ('owner__id', 'User ID'),
                 ('owner__remote_id', 'Remote ID'),
+                ('reviewer__id', 'Reviewer ID'),
                 ('status__name', 'Status'),
                 ('title', 'Title'),
                 ('owner__email', 'Email'),
@@ -603,7 +635,10 @@ EXPORTDB_EXPORT_CONF = {
                 ('funding', 'Funding'),
                 ('sourcing', 'Sourcing'),
                 ('amount_asked', 'Amount asked'),
+                ('amount_donated', 'Amount raised'),
+                ('amount_extra', 'Amount matched'),
                 ('task_count', 'Task Count'),
+                ('has_survey', 'Has Survey'),
                 ('realized_task_count', 'Realized Task Count'),
                 ('time_spent', 'Time Spent'),
                 ('from_suggestion', 'Submitted Suggestion'),
@@ -615,6 +650,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('campaign_started', 'Campaign Started'),
                 ('campaign_ended', 'Campaign Ended'),
                 ('campaign_funded', 'Campaign Funded'),
+                ('organization__name', 'organization'),
             ),
             'resource_class': 'bluebottle.exports.resources.ProjectResource',
             'title': 'Projects',
@@ -665,6 +701,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('member__id', 'User ID'),
                 ('member__remote_id', 'Remote ID'),
                 ('task__project__id', 'Project ID'),
+                ('task__project__location', 'Project Location'),
+                ('task__project__location__group', 'Project Region'),
                 ('task__id', 'Task ID'),
                 ('member__get_full_name', 'Name'),
                 ('member__email', 'Email'),
@@ -739,9 +777,8 @@ REQUESTS_MAX_RETRIES = 0
 SF_LAZY_CONNECT = True
 
 SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
-    'fields': 'id,name,email,first_name,last_name,link', # needed starting from protocol v2.4
+    'fields': 'id,name,email,first_name,last_name,link',  # needed starting from protocol v2.4
 }
-
 
 SURVEYGIZMO_API_TOKEN = ''
 SURVEYGIZMO_API_SECRET = ''
@@ -755,3 +792,17 @@ DJANGO_MONEY_RATES = {
     'OPENEXCHANGE_BASE_CURRENCY': 'USD',
 }
 AUTO_CONVERT_MONEY = False
+
+LOCKDOWN_URL_EXCEPTIONS = [r'^/payments_vitepay/status_update/']
+THUMBNAIL_ENGINE = 'sorl_watermarker.engines.pil_engine.Engine'
+THUMBNAIL_WATERMARK_ALWAYS = False
+
+REMINDER_MAIL_DELAY = 60 * 24 * 3  # Three days
+
+SEARCH_OPTIONS = {
+    'filter_types': ['funding', 'volunteering'],
+    'filters': ['project.status', 'project.location', 'project.theme']
+}
+TASK_ACCEPTING = 'manual'
+TASK_PLUS_ONE = False
+TASK_SHOW_ACCEPTING = False

@@ -38,8 +38,9 @@ class FollowTests(BluebottleTestCase):
         order = OrderFactory.create(user=self.another_user,
                                     status=StatusDefinition.CREATED)
         # Make sure to set Fundraiser to None. Otherwise, a fundraiser is created
-        donation = DonationFactory(order=order, amount=35, project=self.project,
-                                   fundraiser=None)
+        DonationFactory(order=order, amount=35,
+                        project=self.project,
+                        fundraiser=None)
         self.assertEqual(Follow.objects.count(), 1)
         self.assertEqual(Follow.objects.all()[0].followed_object, self.project)
         self.assertEqual(Follow.objects.all()[0].user, self.another_user)
@@ -50,7 +51,7 @@ class FollowTests(BluebottleTestCase):
 
         task_owner = BlueBottleUserFactory.create()
 
-        another_task = TaskFactory.create(
+        TaskFactory.create(
             author=task_owner,
             project=self.project,
         )
@@ -60,7 +61,7 @@ class FollowTests(BluebottleTestCase):
         self.assertEqual(Follow.objects.all()[0].user, task_owner)
 
         # Test that no follower is created when the task owner is also the project owner
-        project_owner_task = TaskFactory.create(
+        TaskFactory.create(
             author=self.project.owner,
             project=self.project
         )
@@ -76,7 +77,7 @@ class FollowTests(BluebottleTestCase):
 
         voter = BlueBottleUserFactory.create()
 
-        vote = VoteFactory.create(
+        VoteFactory.create(
             voter=voter,
             project=self.project,
         )
@@ -87,7 +88,7 @@ class FollowTests(BluebottleTestCase):
 
         # Test that no follower is created when the task owner
         # is also the project owner
-        project_owner_vote = VoteFactory.create(
+        VoteFactory.create(
             voter=self.project.owner,
             project=self.project
         )
@@ -111,8 +112,7 @@ class FollowTests(BluebottleTestCase):
         self.assertEqual(Follow.objects.count(), 0)
 
         fundraiser_person = BlueBottleUserFactory.create()
-        fundraiser = FundraiserFactory(project=self.project,
-                                       owner=fundraiser_person)
+        FundraiserFactory(project=self.project, owner=fundraiser_person)
 
         self.assertEqual(Follow.objects.count(), 1)
         self.assertEqual(Follow.objects.all()[0].followed_object, self.project)
@@ -125,15 +125,13 @@ class FollowTests(BluebottleTestCase):
 
         order = OrderFactory.create(user=user, status=StatusDefinition.CREATED)
         # Make sure to set Fundraiser to None. Otherwise, fundraiser is created
-        donation = DonationFactory(order=order, amount=35,
-                                   project=self.project,
-                                   fundraiser=None)
+        DonationFactory(order=order, amount=35,
+                        project=self.project, fundraiser=None)
 
         order = OrderFactory.create(user=user, status=StatusDefinition.CREATED)
         # Make sure to set Fundraiser to None. Otherwise, fundraiser is created
-        donation = DonationFactory(order=order, amount=35,
-                                   project=self.project,
-                                   fundraiser=None)
+        DonationFactory(order=order, amount=35,
+                        project=self.project, fundraiser=None)
 
         self.assertEqual(Follow.objects.count(), 1)
         # Make sure to inspect the second Follow object, this is the Follow
@@ -145,9 +143,9 @@ class FollowTests(BluebottleTestCase):
         """ Test that users do not follow their own project page """
         self.assertEqual(Follow.objects.count(), 0)
 
-        some_wallpost = TextWallpostFactory.create(content_object=self.project,
-                                                   author=self.some_user,
-                                                   text="test1")
+        TextWallpostFactory.create(content_object=self.project,
+                                   author=self.some_user,
+                                   text="test1")
 
         self.assertEqual(Follow.objects.count(), 0)
 
@@ -155,9 +153,9 @@ class FollowTests(BluebottleTestCase):
         """ Test that users do not follow their own task page """
         self.assertEqual(Follow.objects.count(), 0)
 
-        some_wallpost = TextWallpostFactory.create(content_object=self.task,
-                                                   author=self.some_user,
-                                                   text="test1")
+        TextWallpostFactory.create(content_object=self.task,
+                                   author=self.some_user,
+                                   text="test1")
 
         self.assertEqual(Follow.objects.count(), 0)
 
@@ -168,8 +166,8 @@ class FollowTests(BluebottleTestCase):
         order = OrderFactory.create(user=self.some_user,
                                     status=StatusDefinition.CREATED)
         # Make sure that no fundraisers are created. A new fundraiser will also create a follower
-        donation = DonationFactory(order=order, amount=35, project=self.project,
-                                   fundraiser=None)
+        DonationFactory(order=order, amount=35,
+                        project=self.project, fundraiser=None)
 
         self.assertEqual(Follow.objects.count(), 0)
 
@@ -178,22 +176,22 @@ class FollowTests(BluebottleTestCase):
             Email_followers boolean is false by default on wallpost model"""
         self.assertEqual(len(mail.outbox), 0)
         self.assertEqual(Follow.objects.count(), 0)
-        commenter = BlueBottleUserFactory.create()
-        commenter2 = BlueBottleUserFactory.create()
+        BlueBottleUserFactory.create()
+        BlueBottleUserFactory.create()
 
         # Create follower by creating a donation
 
         order = OrderFactory.create(user=self.another_user,
                                     status=StatusDefinition.CREATED)
         # Make sure to set Fundraiser to None. Otherwise, a fundraiser is created
-        donation = DonationFactory(order=order, amount=35, project=self.project,
-                                   fundraiser=None)
+        DonationFactory(order=order, amount=35,
+                        project=self.project, fundraiser=None)
 
         # Create follower by creating a task owner
 
         task_owner1 = BlueBottleUserFactory.create()
 
-        task = TaskFactory.create(
+        TaskFactory.create(
             author=task_owner1,
             project=self.project
         )
@@ -202,10 +200,10 @@ class FollowTests(BluebottleTestCase):
         self.assertEqual(Follow.objects.count(), 2)
 
         # Create a text Wallpost for our dummy project
-        some_wallpost = TextWallpostFactory.create(content_object=self.project,
-                                                   author=self.project.owner,
-                                                   text="test1",
-                                                   email_followers=False)
+        TextWallpostFactory.create(content_object=self.project,
+                                   author=self.project.owner,
+                                   text="test1",
+                                   email_followers=False)
 
         self.assertEqual(Follow.objects.count(), 2)
 
@@ -214,51 +212,53 @@ class FollowTests(BluebottleTestCase):
             self.assertTrue("New wallpost on" not in email.subject)
 
     def test_wallpost_mail_project(self):
-        """ Test that the relevant people get an email when the 
-            email_followers option is selected for a project """
+        """
+        Test that the relevant people get an email when the
+        email_followers option is selected for a project
+        """
 
         # On a project page, task owners, fundraisers, and people who donated,  get a mail.
 
         # Create a follower by being a task owner
         task_owner1 = BlueBottleUserFactory.create()
 
-        task = TaskFactory.create(
+        TaskFactory.create(
             author=task_owner1,
             project=self.project
         )
 
         # Add extra project and owner that should not get any email
         project_owner = BlueBottleUserFactory.create()
-        project2 = ProjectFactory(owner=project_owner, status=self.phase1)
+        ProjectFactory(owner=project_owner, status=self.phase1)
 
         # iLeaving a wallpost should not create a follower
         commenter = BlueBottleUserFactory.create()
-        some_wallpost = TextWallpostFactory.create(content_object=self.project,
-                                                   author=commenter,
-                                                   text="test1",
-                                                   email_followers=False)
+        TextWallpostFactory.create(content_object=self.project,
+                                   author=commenter,
+                                   text="test1",
+                                   email_followers=False)
 
         # Create a follower by donating
         donator1 = BlueBottleUserFactory.create()
         order = OrderFactory.create(user=donator1,
                                     status=StatusDefinition.CREATED)
-        donation = DonationFactory(order=order, amount=35, project=self.project,
-                                   fundraiser=None)
+        DonationFactory(order=order, amount=35,
+                        project=self.project,
+                        fundraiser=None)
 
         # Create a follower by being a fundraiser for the project
         fundraiser_person = BlueBottleUserFactory.create()
-        fundraiser = FundraiserFactory(project=self.project,
-                                       owner=fundraiser_person)
+        FundraiserFactory(project=self.project, owner=fundraiser_person)
 
         self.assertEqual(Follow.objects.count(), 3)
 
         voter = BlueBottleUserFactory.create()
-        vote = VoteFactory(voter=voter, project=self.project)
+        VoteFactory(voter=voter, project=self.project)
 
         self.assertEqual(Follow.objects.count(), 4)
 
         # Project owner creates a wallpost and emails followers
-        some_wallpost_2 = TextWallpostFactory.create(
+        TextWallpostFactory.create(
             content_object=self.project, author=self.project.owner,
             text="test2", email_followers=True)
 
@@ -300,10 +300,10 @@ class FollowTests(BluebottleTestCase):
             if follower.user != task_owner1:
                 self.assertEqual(follower.followed_object, task)
 
-        some_wallpost = TextWallpostFactory.create(content_object=task,
-                                                   author=task_owner1,
-                                                   text="test2",
-                                                   email_followers=True)
+        TextWallpostFactory.create(content_object=task,
+                                   author=task_owner1,
+                                   text="test2",
+                                   email_followers=True)
 
         mail_count = 0
 
@@ -333,20 +333,22 @@ class FollowTests(BluebottleTestCase):
         donator1 = BlueBottleUserFactory.create()
         order = OrderFactory.create(user=donator1,
                                     status=StatusDefinition.CREATED)
-        donation = DonationFactory(order=order, amount=35, project=self.project,
-                                   fundraiser=fundraiser)
+        DonationFactory(order=order, amount=35,
+                        project=self.project,
+                        fundraiser=fundraiser)
 
         donator2 = BlueBottleUserFactory.create()
         order2 = OrderFactory.create(user=donator2,
                                      status=StatusDefinition.CREATED)
-        donation = DonationFactory(order=order2, amount=35,
-                                   project=self.project, fundraiser=fundraiser)
+        DonationFactory(order=order2, amount=35,
+                        project=self.project,
+                        fundraiser=fundraiser)
 
         # The fundraiser owner creates a wallpost to followers
-        some_wallpost = TextWallpostFactory.create(content_object=fundraiser,
-                                                   author=fundraiser_person,
-                                                   text="test_fundraiser",
-                                                   email_followers=True)
+        TextWallpostFactory.create(content_object=fundraiser,
+                                   author=fundraiser_person,
+                                   text="test_fundraiser",
+                                   email_followers=True)
 
         mail_count = 0
         self.assertEqual(Follow.objects.count(), 3)
@@ -367,38 +369,37 @@ class FollowTests(BluebottleTestCase):
         """ Test that users who have campaign_notifications turned off don't get email """
         task_owner1 = BlueBottleUserFactory.create(campaign_notifications=False)
 
-        task = TaskFactory.create(
+        TaskFactory.create(
             author=task_owner1,
             project=self.project
         )
 
         # Add extra project and owner that should not get any email
-        project_owner = BlueBottleUserFactory.create(
-            campaign_notifications=False)
-        project2 = ProjectFactory(owner=project_owner, status=self.phase1)
+        project_owner = BlueBottleUserFactory.create(campaign_notifications=False)
+        ProjectFactory(owner=project_owner, status=self.phase1)
 
         # Create a follower by donating
         donator1 = BlueBottleUserFactory.create(campaign_notifications=False)
         order = OrderFactory.create(user=donator1,
                                     status=StatusDefinition.CREATED)
-        donation = DonationFactory(order=order, amount=35, project=self.project,
-                                   fundraiser=None)
+        DonationFactory(order=order, amount=35,
+                        project=self.project,
+                        fundraiser=None)
 
         # Create a follower by being a fundraiser for the project
-        fundraiser_person = BlueBottleUserFactory.create(
-            campaign_notifications=False)
-        fundraiser = FundraiserFactory(project=self.project,
-                                       owner=fundraiser_person)
+        fundraiser_person = BlueBottleUserFactory.create(campaign_notifications=False)
+        FundraiserFactory(project=self.project,
+                          owner=fundraiser_person)
 
         self.assertEqual(Follow.objects.count(), 3)
 
         # Create follower by voting
         voter_person = BlueBottleUserFactory.create(
             campaign_notifications=False)
-        vote = VoteFactory(voter=voter_person, project=self.project)
+        VoteFactory(voter=voter_person, project=self.project)
 
         # Project owner creates a wallpost and emails followers
-        some_wallpost_2 = TextWallpostFactory.create(
+        TextWallpostFactory.create(
             content_object=self.project, author=self.project.owner,
             text="test2", email_followers=True)
 
@@ -406,55 +407,56 @@ class FollowTests(BluebottleTestCase):
 
         # People who should get an email: self.some_user, task_owner1,
         # fundraiser_person, commenter, voter and donator1
-        receivers = []
         for email in mail.outbox:
             if "New wallpost on" in email.subject:
                 mail_count += 1
         self.assertEqual(mail_count, 0)
 
     def test_wallpost_delete_mail_project(self):
-        """ Test that the relevant people don't get an email when the
-            email_followers option is selected for a project 
-            during wallpost create but is then deleted."""
+        """
+        Test that the relevant people don't get an email when the
+        email_followers option is selected for a project
+        during wallpost create but is then deleted.
+        """
 
         # On a project page, task owners, fundraisers, and people who donated,  get a mail.
 
         # Create a follower by being a task owner
         task_owner1 = BlueBottleUserFactory.create()
 
-        task = TaskFactory.create(
+        TaskFactory.create(
             author=task_owner1,
             project=self.project
         )
 
         # Add extra project and owner that should not get any email
         project_owner = BlueBottleUserFactory.create()
-        project2 = ProjectFactory(owner=project_owner, status=self.phase1)
+        ProjectFactory(owner=project_owner, status=self.phase1)
 
         # iLeaving a wallpost should not create a follower
         commenter = BlueBottleUserFactory.create()
-        some_wallpost = TextWallpostFactory.create(content_object=self.project,
-                                                   author=commenter,
-                                                   text="test1",
-                                                   email_followers=False)
+        TextWallpostFactory.create(content_object=self.project,
+                                   author=commenter,
+                                   text="test1",
+                                   email_followers=False)
 
         # Create a follower by donating
         donator1 = BlueBottleUserFactory.create()
         order = OrderFactory.create(user=donator1,
                                     status=StatusDefinition.CREATED)
-        donation = DonationFactory(order=order, amount=35,
-                                   project=self.project,
-                                   fundraiser=None)
+        DonationFactory(order=order, amount=35,
+                        project=self.project,
+                        fundraiser=None)
 
         # Create a follower by being a fundraiser for the project
         fundraiser_person = BlueBottleUserFactory.create()
-        fundraiser = FundraiserFactory(project=self.project,
-                                       owner=fundraiser_person)
+        FundraiserFactory(project=self.project,
+                          owner=fundraiser_person)
 
         self.assertEqual(Follow.objects.count(), 3)
 
         voter = BlueBottleUserFactory.create()
-        vote = VoteFactory(voter=voter, project=self.project)
+        VoteFactory(voter=voter, project=self.project)
 
         self.assertEqual(Follow.objects.count(), 4)
 

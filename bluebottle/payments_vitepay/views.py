@@ -1,4 +1,3 @@
-import json
 from django.http import HttpResponse
 from django.views.generic import View
 
@@ -13,11 +12,10 @@ class PaymentStatusListener(View):
     """
 
     def post(self, request, *args, **kwargs):
-        data = json.loads(request.body)
-        success = data.get('success', 0)
-        failure = data.get('failure', 0)
-        authenticity = data.get('authenticity')
-        order_id = data.get('order_id')
+        success = 'success' in request.POST
+        failure = 'failure' in request.POST
+        authenticity = request.POST.get('authenticity')
+        order_id = request.POST.get('order_id')
 
         try:
             payment = VitepayPayment.objects.get(order_id=order_id)

@@ -62,7 +62,7 @@ class Wallpost(PolymorphicModel):
     updated = ModificationDateTimeField(_('updated'))
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
-                                       default=None)
+                                              default=None)
 
     # Generic foreign key so we can connect it to any object.
     content_type = models.ForeignKey(
@@ -93,12 +93,20 @@ class Wallpost(PolymorphicModel):
             'user_id': 'author.id'
         }
 
-        def skip(self, obj, created):
+        @staticmethod
+        def skip(obj, created):
             return True if obj.wallpost_type == 'system' else False
+
+        @staticmethod
+        def timestamp(obj, created):
+            if created:
+                return obj.created
+            else:
+                return obj.updated
 
     class Meta:
         ordering = ('created',)
-        base_manager_name = 'objects_with_deleted' # when doing update / delete queries use the manager with all the objects
+        base_manager_name = 'objects_with_deleted'
 
     def __unicode__(self):
         return str(self.id)
@@ -119,25 +127,15 @@ class MediaWallpost(Wallpost):
     def __unicode__(self):
         return Truncator(self.text).words(10)
 
-        # FIXME: See how we can re-enable this
-        # def save(self, *args, **kwargs):
-        #     super(MediaWallpost, self).save(*args, **kwargs)
-        #
-        #     # Mark the photos as deleted when the MediaWallpost is deleted.
-        #     if self.deleted:
-        #         for photo in self.photos.all():
-        #             if not photo.deleted:
-        #                 photo.deleted = self.deleted
-        #                 photo.save()
-
 
 class MediaWallpostPhoto(models.Model):
     mediawallpost = models.ForeignKey(MediaWallpost, related_name='photos',
                                       null=True, blank=True)
+    results_page = models.BooleanField(default=True)
     photo = models.ImageField(upload_to='mediawallpostphotos')
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
-                                       default=None)
+                                              default=None)
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
                                verbose_name=_('author'),
                                related_name="%(class)s_wallpost_photo",
@@ -204,7 +202,7 @@ class Reaction(models.Model):
     updated = ModificationDateTimeField(_('updated'))
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
-                                       default=None)
+                                              default=None)
 
     # Manager
     objects = ReactionManager()
@@ -219,12 +217,20 @@ class Reaction(models.Model):
             'user_id': 'author.id'
         }
 
-        def extra_tags(self, instance, created):
+        @staticmethod
+        def extra_tags(instance, created):
             return {'sub_type': 'reaction'}
+
+        @staticmethod
+        def timestamp(obj, created):
+            if created:
+                return obj.created
+            else:
+                return obj.updated
 
     class Meta:
         ordering = ('created',)
-        base_manager_name = 'objects_with_deleted' # when doing update / delete queries use the manager with all the objects
+        base_manager_name = 'objects_with_deleted'
         verbose_name = _('Reaction')
         verbose_name_plural = _('Reactions')
 
@@ -232,5 +238,6 @@ class Reaction(models.Model):
         s = self.text
         return Truncator(s).words(10)
 
-import mails
-import bluebottle.wallposts.signals
+
+import mails  # noqa
+import bluebottle.wallposts.signals  # noqa

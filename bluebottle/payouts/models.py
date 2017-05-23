@@ -1,15 +1,9 @@
 from decimal import Decimal
 
-from django.utils.translation import ugettext as _
 from django.db import models
-
-from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
-from bluebottle.clients import properties
-from bluebottle.sepa.sepa import SepaDocument, SepaAccount
-
+from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django.conf import settings
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 
@@ -17,13 +11,9 @@ from bluebottle.bb_payouts.models import (BaseProjectPayout,
                                           BaseOrganizationPayout)
 from bluebottle.clients import properties
 from bluebottle.sepa.sepa import SepaDocument, SepaAccount
-from bluebottle.utils.utils import StatusDefinition
-
-from djchoices.choices import DjangoChoices, ChoiceItem
 
 
 class ProjectPayout(BaseProjectPayout):
-    
     class PayoutRules(DjangoChoices):
         """ Which rules to use to calculate fees. """
         beneath_threshold = ChoiceItem('beneath_threshold',
@@ -197,7 +187,6 @@ class OrganizationPayout(BaseOrganizationPayout):
 
         return fee
 
-    
     @classmethod
     def create_sepa_xml(cls, qs):
         """ Create a SEPA XML file for OrganizationPayouts in QuerySet. """
@@ -236,6 +225,3 @@ class OrganizationPayout(BaseOrganizationPayout):
             )
 
         return sepa.as_xml()
-
-
-from .signals import *

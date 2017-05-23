@@ -32,7 +32,7 @@ class BaseFundraiserSerializer(serializers.ModelSerializer):
                   'amount_donated', 'deadline')
 
     def validate(self, data):
-        if not data['deadline'] or data['deadline'] > data['project'].deadline:
+        if not data.get('deadline') or data['deadline'] > data['project'].deadline:
             raise serializers.ValidationError(
                 {'deadline': [_("Fundraiser deadline exceeds project deadline.")]}
             )

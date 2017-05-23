@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 
 from bluebottle.surveys.models import Survey, Question, Response, Answer, AggregateAnswer
 
@@ -8,7 +9,7 @@ class QuestionAdminInline(admin.StackedInline):
     model = Question
     readonly_fields = ('type', )
     fields = readonly_fields + ('display', 'display_title',
-                                'display_style',
+                                'display_style', 'display_theme',
                                 'left_label', 'right_label',
                                 'aggregation')
 
@@ -43,6 +44,7 @@ class SurveyAdmin(admin.ModelAdmin):
         for survey in queryset:
             survey.synchronize()
 
+
 admin.site.register(Survey, SurveyAdmin)
 
 
@@ -76,6 +78,7 @@ class ResponseAdmin(admin.ModelAdmin):
     def answer_count(self, obj):
         return obj.answer_set.count()
 
+
 admin.site.register(Response, ResponseAdmin)
 
 
@@ -87,7 +90,10 @@ class AggregateAnswerAdmin(admin.ModelAdmin):
     list_filter = ('aggregation_type', 'question')
 
     def survey_question(self, obj):
-        return u"<span title='{1}'>{0}</span>".format(unicode(obj.question)[:30], obj.question)
-    survey_question.allow_tags = True
+        return format_html(
+            u"<span title='{}'>{}</span>",
+            unicode(obj.question)[:30], obj.question
+        )
+
 
 admin.site.register(AggregateAnswer, AggregateAnswerAdmin)

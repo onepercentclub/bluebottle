@@ -12,4 +12,3 @@ class TestCategoryModel(BluebottleTestCase):
         category.save()
 
         self.assertEqual(category.slug, 'test-title')
-

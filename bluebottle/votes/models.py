@@ -33,6 +33,10 @@ class Vote(models.Model):
             'project_id': 'project.id'
         }
 
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.created
+
     class Meta:
         unique_together = (('project', 'voter'),)
         ordering = ('-created',)

@@ -1,6 +1,5 @@
 from moneyed import Money
 
-from django.core.exceptions import FieldError
 from django.db import models
 from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext as _

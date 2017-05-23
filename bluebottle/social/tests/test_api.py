@@ -14,9 +14,11 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 def facebook_me_mock(url, request):
     return json.dumps({'firstname': 'bla', 'lastname': 'bla'})
 
+
 @httmock.urlmatch(netloc='graph.facebook.com', path='/v2.3/oauth/access_token')
 def facebook_access_token(url, request):
     return json.dumps({})
+
 
 @httmock.urlmatch(netloc='graph.facebook.com', path='/me/permissions')
 def facebook_me_permissions_mock(url, request):
@@ -145,8 +147,6 @@ class SocialTokenAPITestCase(BluebottleTestCase):
                         },
                         token=self.user_token)
                     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-
 
     @mock.patch(
         'social.apps.django_app.utils.BACKENDS',

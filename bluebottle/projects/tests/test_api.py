@@ -1,10 +1,9 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 import json
 from random import randint
 
 from django.test import RequestFactory
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
 from django.utils import timezone
 from django.test.utils import override_settings
 
@@ -14,16 +13,16 @@ from rest_framework import status
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.tasks.models import Task
 from bluebottle.test.factory_models.categories import CategoryFactory
-from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.tasks import (
+    TaskFactory, TaskMemberFactory, SkillFactory
+)
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.factory_models.wallposts import (
     MediaWallpostFactory, MediaWallpostPhotoFactory,
@@ -65,6 +64,7 @@ class ProjectEndpointTestCase(BluebottleTestCase):
                 project = ProjectFactory.create(title=char * 3, slug=char * 3,
                                                 status=self.campaign_phase,
                                                 amount_asked=0,
+                                                amount_needed=30,
                                                 organization=organization)
                 project.save()
             else:
@@ -120,21 +120,73 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(len(response.data['results']), 8)
 
         # Test that ordering works
-        response = self.client.get(self.projects_url + '?ordering=newest')
+        response = self.client.get(self.projects_preview_url + '?ordering=newest')
         self.assertEquals(response.status_code, 200)
-        response = self.client.get(self.projects_url + '?ordering=title')
+        response = self.client.get(self.projects_preview_url + '?ordering=title')
         self.assertEquals(response.status_code, 200)
-        response = self.client.get(self.projects_url + '?ordering=deadline')
+        response = self.client.get(self.projects_preview_url + '?ordering=deadline')
         self.assertEquals(response.status_code, 200)
-        response = self.client.get(self.projects_url + '?ordering=amount_needed')
+        response = self.client.get(self.projects_preview_url + '?ordering=amount_needed')
         self.assertEquals(response.status_code, 200)
-        response = self.client.get(self.projects_url + '?ordering=popularity')
+        response = self.client.get(self.projects_preview_url + '?ordering=popularity')
         self.assertEquals(response.status_code, 200)
 
         # Test that combination of arguments works
         response = self.client.get(
             self.projects_url + '?ordering=deadline&phase=campaign&country=101')
         self.assertEquals(response.status_code, 200)
+
+    def test_project_detail_no_expertise(self):
+        for project in self.projects:
+            for task in project.task_set.all():
+                task.skill = None
+                task.save()
+
+        response = self.client.get(self.projects_preview_url)
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['count'], 26)
+
+        for item in data['results']:
+            self.assertEqual(item['skills'], [])
+
+    def test_project_detail_expertise(self):
+        for project in self.projects:
+            TaskFactory.create(project=project)
+            TaskFactory.create(project=project)
+
+        response = self.client.get(self.projects_preview_url)
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 26)
+
+        for item in data['results']:
+            project = Project.objects.get(slug=item['id'])
+            for task in project.task_set.all():
+                self.assertTrue(
+                    task.skill.id in item['skills']
+                )
+
+    def test_project_list_filter_expertise(self):
+        skill = SkillFactory.create(name='test skill')
+        for project in self.projects[:3]:
+            TaskFactory.create(project=project, skill=skill)
+            TaskFactory.create(project=project, skill=skill)
+
+        response = self.client.get(self.projects_preview_url + '?skill={}'.format(skill.pk))
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 3)
+
+        for item in data['results']:
+            project = Project.objects.get(slug=item['id'])
+            self.assertTrue(
+                skill in [task.skill for task in project.task_set.all()]
+            )
 
     def test_project_order_amount_needed(self):
         for project in Project.objects.all():
@@ -220,6 +272,110 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         self.assertEquals(response.data['vote_count'], 2)
+
+
+class ProjectDateSearchTestCase(BluebottleTestCase):
+    """
+    Integration tests for the Project API.
+    """
+
+    def setUp(self):
+        super(ProjectDateSearchTestCase, self).setUp()
+        self.init_projects()
+
+        campaign_phase = ProjectPhase.objects.get(slug='campaign')
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.projects_preview_url = reverse('project_preview_list')
+
+        self.projects = [
+            ProjectFactory.create(status=campaign_phase) for _index in range(0, 10)
+        ]
+
+        for project in self.projects[:4]:
+            TaskFactory.create(
+                project=project,
+                type='ongoing',
+                deadline=datetime(2017, 1, 20, tzinfo=timezone.get_current_timezone())
+            )
+
+        for project in self.projects[3:6]:
+            TaskFactory.create(
+                project=project,
+                type='event',
+                deadline=datetime(2017, 1, 10, tzinfo=timezone.get_current_timezone())
+            )
+
+    def test_project_list_filter_date(self):
+        response = self.client.get(
+            self.projects_preview_url + '?start={}'.format('2017-01-10')
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 6)
+
+    def test_project_list_filter_date_end(self):
+        response = self.client.get(
+            self.projects_preview_url + '?start={}&end={}'.format('2017-01-5', '2017-01-25')
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 6)
+
+    def test_project_list_filter_date_ongoing(self):
+        response = self.client.get(
+            self.projects_preview_url + '?start={}'.format('2017-01-20')
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 4)
+
+        for item in data['results']:
+            project = Project.objects.get(slug=item['id'])
+            self.assertTrue(
+                'ongoing' in [task.type for task in project.task_set.all()]
+            )
+
+    def test_project_list_filter_date_ongoing_end(self):
+        response = self.client.get(
+            self.projects_preview_url + '?start={}&end={}'.format('2017-01-15', '2017-01-25')
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 4)
+
+        for item in data['results']:
+            project = Project.objects.get(slug=item['id'])
+            self.assertTrue(
+                'ongoing' in [task.type for task in project.task_set.all()]
+            )
+
+    def test_project_list_filter_date_passed(self):
+        self.projects[-1].task_set.all().update(location=None)
+        response = self.client.get(
+            self.projects_preview_url + '?start={}'.format('2017-01-21')
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 0)
+
+    def test_project_list_filter_anywhere(self):
+        self.projects[1].task_set.all().update(location=None)
+
+        response = self.client.get(
+            self.projects_preview_url + '?anywhere=1'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 1)
 
 
 class ProjectManageApiIntegrationTest(BluebottleTestCase):
@@ -1323,7 +1479,7 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         project.save()
 
         loaded_project = Project.objects.get(pk=project.pk)
-        self.assertEquals(loaded_project.campaign_ended, project.deadline)
+        self.assertTrue(loaded_project.campaign_ended)
         self.assertTrue(loaded_project.campaign_funded is None)
         self.assertEquals(
             loaded_project.status, ProjectPhase.objects.get(slug="closed"))
@@ -1370,20 +1526,27 @@ class ChangeProjectStatuses(ProjectEndpointTestCase):
         self.assertTrue(project.campaign_funded is None)
 
         loaded_project = Project.objects.get(pk=project.pk)
-        self.assertEquals(loaded_project.campaign_ended, project.deadline)
+        self.assertTrue(loaded_project.campaign_ended)
         self.assertTrue(loaded_project.campaign_funded is None)
         self.assertEquals(loaded_project.status,
                           ProjectPhase.objects.get(slug="done-incomplete"))
 
 
-class ProjectMediaApi(ProjectEndpointTestCase):
+class ProjectMediaApi(BluebottleTestCase):
     """
     Test that project media return media (pictures & videos) from wallposts.
     """
 
     def setUp(self):
+        super(ProjectMediaApi, self).setUp()
         self.init_projects()
-        self.project = ProjectFactory.create()
+
+        self.some_user = BlueBottleUserFactory.create()
+        self.another_user = BlueBottleUserFactory.create()
+        self.some_user_token = "JWT {0}".format(self.some_user.get_jwt_token())
+        self.another_user_token = "JWT {0}".format(self.another_user.get_jwt_token())
+        self.project = ProjectFactory.create(owner=self.some_user)
+
         mwp1 = MediaWallpostFactory.create(content_object=self.project,
                                            video_url='https://youtu.be/Bal2U5jxZDQ')
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
@@ -1407,6 +1570,31 @@ class ProjectMediaApi(ProjectEndpointTestCase):
 
         self.assertEqual(len(response.data['pictures']), 8)
         self.assertEqual(len(response.data['videos']), 2)
+
+    def test_project_hide_media_picture(self):
+        # Hide a picture from results media
+        response = self.client.get(self.project_media_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(len(response.data['pictures']), 8)
+
+        pic_id = response.data['pictures'][0]['id']
+        pic_data = {
+            'id': pic_id,
+            'results_page': False
+        }
+
+        # Only project owner can hide an image
+        picture_url = reverse('project-media-photo-detail', kwargs={'pk': pic_id})
+        response = self.client.put(picture_url, pic_data, token=self.another_user_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.client.put(picture_url, pic_data, token=self.some_user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Check the image is not listed anymore
+        response = self.client.get(self.project_media_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(len(response.data['pictures']), 7)
 
 
 class ProjectSupportersApi(ProjectEndpointTestCase):
@@ -1461,7 +1649,7 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
         self.assertEqual(len(response.data['task_members']), 2)
 
     def test_project_media_pictures_only_from_project(self):
-        self.task = TaskFactory.create(id=self.project.id)
+        self.task = TaskFactory.create()
         TextWallpostFactory.create(content_object=self.task, author=self.user4)
 
         response = self.client.get(self.project_supporters_url)
@@ -1632,7 +1820,6 @@ class ProjectCurrenciesApiTest(BluebottleTestCase):
         response = self.client.get(self.project_url)
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertEqual(response.data['currencies'], ['EUR'])
-
 
         self.project_url = reverse('project_detail', args=[self.another_project.slug])
         response = self.client.get(self.project_url)

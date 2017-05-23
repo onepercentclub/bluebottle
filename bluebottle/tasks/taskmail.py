@@ -1,13 +1,16 @@
+from celery import shared_task
+
 from django.dispatch import receiver
-from django.db.models.signals import post_save, pre_delete
-from django.utils.translation import ugettext as _
+from django.db import connection
+from django.db.models.signals import pre_save, pre_delete, post_save
 from django.utils import translation
+from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.clients.utils import tenant_url
-from bluebottle.tasks.models import TaskMember
+from bluebottle.clients.utils import tenant_url, LocalTenant
+from bluebottle.tasks.models import TaskMember, Task
 from bluebottle.surveys.models import Survey
 from bluebottle.utils.email_backend import send_mail
 
@@ -133,7 +136,7 @@ class TaskMemberMailAdapter:
         TaskMember.TaskMemberStatuses.rejected: TaskMemberRejectMail,
         TaskMember.TaskMemberStatuses.accepted: TaskMemberAcceptedMail,
         TaskMember.TaskMemberStatuses.realized: TaskMemberRealizedMail,
-        'withdraw': TaskMemberWithdrawMail,
+        TaskMember.TaskMemberStatuses.withdrew: TaskMemberWithdrawMail,
     }
 
     mail_sender = None
@@ -150,10 +153,88 @@ class TaskMemberMailAdapter:
             self.mail_sender.send()
 
 
+@shared_task
+def send_task_realized_mail(task, template, subject, tenant):
+    """ Send an email to the task owner with the request to confirm
+    the task participants.
+    """
+    connection.set_tenant(tenant)
+
+    with LocalTenant(tenant, clear_tenant=True):
+        if len(task.members.filter(status=TaskMember.TaskMemberStatuses.realized)):
+            # There is already a confirmed task member: Do not bother the owner
+            return
+
+        send_mail(
+            template_name='tasks/mails/{}.mail'.format(template),
+            subject=subject,
+            title=task.title,
+            to=task.author,
+            site=tenant_url(),
+            link='/go/tasks/{0}'.format(task.id)
+        )
+
+
+@shared_task
+def send_deadline_to_apply_passed_mail(task, subject, tenant):
+    connection.set_tenant(tenant)
+
+    with LocalTenant(tenant, clear_tenant=True):
+        if not task.members_applied:
+            template = 'deadline_to_apply_closed'
+        else:
+            if task.people_applied + task.externals_applied < task.people_needed:
+                status = 'partial'
+            elif task.people_accepted < task.people_needed:
+                status = 'accept'
+            else:
+                status = 'target_reached'
+
+            template = 'deadline_to_apply_{type}_{status}'.format(
+                type=task.type, status=status
+            )
+
+        send_mail(
+            template_name='tasks/mails/{}.mail'.format(template),
+            subject=subject,
+            task=task,
+            to=task.author,
+            site=tenant_url(),
+            edit_link='/tasks/{0}/edit'.format(task.id),
+            link='/tasks/{0}'.format(task.id),
+
+        )
+
+
 @receiver(post_save, weak=False, sender=TaskMember)
 def new_reaction_notification(sender, instance, created, **kwargs):
-    mailer = TaskMemberMailAdapter(instance)
-    mailer.send_mail()
+    if instance.status != instance._original_status or created:
+        mailer = TaskMemberMailAdapter(instance)
+        mailer.send_mail()
+
+
+@receiver(pre_save, weak=False, sender=Task)
+def email_deadline_update(sender, instance, **kwargs):
+    if instance.pk:
+        previous_instance = Task.objects.get(pk=instance.pk)
+
+        if (previous_instance.deadline.date() != instance.deadline.date() and
+                instance.status not in (Task.TaskStatuses.realized, Task.TaskStatuses.closed)):
+            for task_member in instance.members_applied:
+
+                with TenantLanguage(task_member.member.primary_language):
+                    subject = _('The deadline of your task is changed')
+
+                send_mail(
+                    template_name='tasks/mails/deadline_changed.mail',
+                    subject=subject,
+                    title=instance.title,
+                    original_date=previous_instance.deadline,
+                    date=instance.deadline,
+                    to=task_member.member,
+                    site=tenant_url(),
+                    link='/go/tasks/{0}'.format(instance.id)
+                )
 
 
 @receiver(pre_delete, weak=False, sender=TaskMember)

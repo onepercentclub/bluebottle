@@ -4,14 +4,15 @@ from django.db import connection
 from django.test.utils import override_settings
 from django.test import TestCase
 from django.conf import settings
-from importlib import import_module
 
+from django_webtest import WebTestMixin
+from importlib import import_module
 from rest_framework.settings import api_settings
 from rest_framework.test import APIClient as RestAPIClient
-
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_tenant_model
 
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
 
@@ -155,6 +156,18 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
         super(BluebottleTestCase, cls).setUpClass()
         cls.tenant = get_tenant_model().objects.get(schema_name='test')
         connection.set_tenant(cls.tenant)
+
+
+class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
+    """
+    Set-up webtest so we can do admin tests.
+    e.g.
+    payout_url = reverse('admin:payouts_projectpayout_changelist')
+    response = self.app.get(payout_url, user=self.superuser)
+    """
+    def setUp(self):
+        self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
+        self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
 
 
 class SessionTestMixin(object):

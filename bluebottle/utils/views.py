@@ -1,34 +1,27 @@
-from django.conf import settings
 from collections import namedtuple
 import os
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.http.response import HttpResponseForbidden, HttpResponseNotFound
-from django.views.generic.base import View
 from django.template.loader import render_to_string
-from django.template import Context
 from django.utils.translation import ugettext as _
 from django.utils import translation
-
-from sorl.thumbnail.shortcuts import get_thumbnail
-
-from bluebottle.projects.models import Project
-from tenant_extras.utils import TenantLanguage
+from django.views.generic.base import View
 
 from filetransfers.api import serve_file
 from rest_framework import generics
 from rest_framework import views, response
-
-from bunch import bunchify
+from sorl.thumbnail.shortcuts import get_thumbnail
 from taggit.models import Tag
+from tenant_extras.utils import TenantLanguage
 
-from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients import properties
-
-from .serializers import ShareSerializer
-from .serializers import LanguageSerializer
+from bluebottle.projects.models import Project
+from bluebottle.utils.email_backend import send_mail
 
 from .models import Language
+from .serializers import ShareSerializer, LanguageSerializer
 
 
 class TagList(views.APIView):
@@ -181,4 +174,3 @@ class DocumentDownloadView(View):
             file_name = os.path.basename(file.file.name)
             return serve_file(request, file.file, save_as=file_name)
         return HttpResponseForbidden()
-

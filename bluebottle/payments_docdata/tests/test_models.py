@@ -5,7 +5,6 @@ from mock import patch
 
 from bluebottle.payments.models import OrderPayment, Transaction
 from bluebottle.payments.services import PaymentService
-from bluebottle.payments_docdata.gateway import DocdataClient
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 from bluebottle.payments_docdata.tests.factory_models import (
     DocdataDirectdebitPaymentFactory, DocdataPaymentFactory,
@@ -17,7 +16,6 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.utils import BluebottleTestCase, FsmTestMixin
 from bluebottle.utils.utils import StatusDefinition
-
 
 
 # Mock create_payment so we don't need to call the external docdata service
@@ -33,17 +31,16 @@ def fake_create_payment(self):
 
 
 class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
-    @patch.object(DocdataClient, 'create')
-    def setUp(self, mock_client_create):
+    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
+    def setUp(self, mock_client):
         super(PaymentsDocdataTestCase, self).setUp()
 
         # Mock response to creating the payment at docdata
-        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+        instance = mock_client.return_value
+        instance.create.return_value = {'order_key': 123, 'order_id': 123}
 
         # Mock create payment
-        patch.object(DocdataPaymentAdapter, 'create_payment',
-                     fake_create_payment)
-
+        patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='docdataIdeal',
@@ -448,9 +445,12 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
 
 
 class AdapterTestCase(BluebottleTestCase):
-    @patch.object(DocdataClient, 'create')
-    def test_incomplete_userdata(self, mock_client_create):
-        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
+    def test_incomplete_userdata(self, mock_client):
+        # Mock response to creating the payment at docdata
+        instance = mock_client.return_value
+        instance.create.return_value = {'order_key': 123, 'order_id': 123}
+
         patch.object(DocdataPaymentAdapter, 'create_payment',
                      fake_create_payment)
 
@@ -480,9 +480,12 @@ class AdapterTestCase(BluebottleTestCase):
         self.assertEqual(user_data['house_number_addition'], '')
         self.assertEqual(user_data['state'], '')
 
-    @patch.object(DocdataClient, 'create')
-    def test_normal_userdata(self, mock_client_create):
-        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
+    def test_normal_userdata(self, mock_client):
+        # Mock response to creating the payment at docdata
+        instance = mock_client.return_value
+        instance.create.return_value = {'order_key': 123, 'order_id': 123}
+
         patch.object(DocdataPaymentAdapter, 'create_payment',
                      fake_create_payment)
 
@@ -523,9 +526,12 @@ class AdapterTestCase(BluebottleTestCase):
         self.assertEqual(user_data['house_number_addition'], '')
         self.assertEqual(user_data['state'], '')
 
-    @patch.object(DocdataClient, 'create')
-    def test_abnormal_address_data(self, mock_client_create):
-        mock_client_create.return_value = {'order_key': 123, 'order_id': 123}
+    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
+    def test_abnormal_address_data(self, mock_client):
+        # Mock response to creating the payment at docdata
+        instance = mock_client.return_value
+        instance.create.return_value = {'order_key': 123, 'order_id': 123}
+
         patch.object(DocdataPaymentAdapter, 'create_payment',
                      fake_create_payment)
 

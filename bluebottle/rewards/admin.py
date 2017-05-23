@@ -1,6 +1,5 @@
 from django.contrib import admin
 
-
 from .models import Reward
 
 
@@ -13,5 +12,5 @@ class RewardAdmin(admin.ModelAdmin):
 
     fields = ('title', 'description', 'project', 'amount')
 
-admin.site.register(Reward, RewardAdmin)
 
+admin.site.register(Reward, RewardAdmin)

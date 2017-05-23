@@ -1,5 +1,4 @@
 from rest_framework import generics, filters, permissions
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.utils.utils import get_client_ip

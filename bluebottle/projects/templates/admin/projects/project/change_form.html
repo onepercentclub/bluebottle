@@ -1,0 +1,17 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_static admin_list admin_urls %}
+
+{% block object-tools-items %}
+    <li>
+        {% if perms.projects.approve_payout and original.payout_status == 'needs_approval' %}
+            <a href="{% url 'admin:projects_project_approve_payout' object_id %}" style="background-color: darkgreen">
+                {% trans  "Approve payout" %}
+            </a>
+        {% elif original.payout_status %}
+            <a href="#" style="background-color: #eee; color: #999">
+                {% trans  "Payout" %} {{ original.payout_status }}
+            </a>
+        {% endif %}
+    </li>
+    {{ block.super }}
+{% endblock %}

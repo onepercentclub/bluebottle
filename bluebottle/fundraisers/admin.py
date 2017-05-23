@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.utils.html import format_html
 
 from bluebottle.fundraisers.models import Fundraiser
 
@@ -29,19 +30,26 @@ class FundraiserAdmin(admin.ModelAdmin):
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
                                                     object._meta.model_name),
                       args=[object.id])
-        return "<a href='{0}'>{1}</a>".format(str(url), object.title)
 
-    project_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url),
+            object.title
+        )
 
     def owner_link(self, obj):
         object = obj.owner
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
                                                     object._meta.model_name),
                       args=[object.id])
-        return "<a href='{0}'>{1}</a>".format(
-            str(url), object.email)
 
-    owner_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url),
+            object.email
+        )
+
     owner_link.short_description = 'initiator'
+
 
 admin.site.register(Fundraiser, FundraiserAdmin)

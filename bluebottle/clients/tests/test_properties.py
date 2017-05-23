@@ -56,18 +56,14 @@ class TestTenantMiddleware(TestCase):
         """ verify that with an invalid tenant default settings resolving
             works """
         with mock.patch("bluebottle.clients.middleware.settings", foo=42), \
-             mock.patch("bluebottle.clients.middleware.connection",
-                        Mock(**{"tenant.client_name": "dontexist"})):
+                mock.patch("bluebottle.clients.middleware.connection", Mock(**{"tenant.client_name": "dontexist"})):
             self.middleware.process_request(Mock())
             self.assertEquals(properties.foo, 42)
 
     def test_valid_tenant(self):
         """ verify that the correct properties are loaded"""
-        with mock.patch("bluebottle.clients.middleware.settings",
-                        MULTI_TENANT_DIR="/some/client/path/"), \
-             mock.patch("bluebottle.clients.middleware.connection",
-                        Mock(**{"tenant.client_name": "valid"})), \
-             mock.patch("__builtin__.execfile") as execfile:
+        with mock.patch("bluebottle.clients.middleware.settings", MULTI_TENANT_DIR="/some/client/path/"), \
+                mock.patch("bluebottle.clients.middleware.connection", Mock(**{"tenant.client_name": "valid"})), \
+                mock.patch("__builtin__.execfile") as execfile:
             self.middleware.process_request(Mock())
-            self.assertEquals(execfile.call_args_list[0][0][0],
-                              "/some/client/path/valid/settings.py")
+            self.assertEquals(execfile.call_args_list[0][0][0], "/some/client/path/valid/settings.py")

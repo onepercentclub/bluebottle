@@ -1,5 +1,4 @@
 from django import forms
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
@@ -7,6 +6,7 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.bb_accounts.models import UserAddress
@@ -162,14 +162,14 @@ class MemberAdmin(UserAdmin):
         ('username', 'username'),
         ('email', 'email'),
         ('remote_id', 'remote_id'),
-        ('first_name','first_name'),
-        ('last_name','last name'),
-        ('date_joined','date joined'),
-        ('is_initiator','is initiator'),
-        ('is_supporter','is supporter'),
-        ('amount_donated','amount donated'),
-        ('is_volunteer','is volunteer'),
-        ('time_spent','time spent'),
+        ('first_name', 'first_name'),
+        ('last_name', 'last name'),
+        ('date_joined', 'date joined'),
+        ('is_initiator', 'is initiator'),
+        ('is_supporter', 'is supporter'),
+        ('amount_donated', 'amount donated'),
+        ('is_volunteer', 'is volunteer'),
+        ('time_spent', 'time spent'),
     )
 
     actions = (export_as_csv_action(fields=export_fields),)
@@ -187,10 +187,11 @@ class MemberAdmin(UserAdmin):
     ordering = ('-date_joined', 'email',)
 
     def login_as_user(self, obj):
-        return "<a href='/login/user/{0}'>{1}</a>".format(obj.id,
-                                                          'Login as user')
-
-    login_as_user.allow_tags = True
+        return format_html(
+            u"<a href='/login/user/{}'>{}</a>",
+            obj.id,
+            'Login as user'
+        )
 
     def change_view(self, request, *args, **kwargs):
         # for superuser
@@ -217,9 +218,7 @@ class MemberAdmin(UserAdmin):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = [
-            url(r'^login-as/(?P<user_id>\d+)/$',
-             self.admin_site.admin_view(
-                 self.login_as_redirect))
+            url(r'^login-as/(?P<user_id>\d+)/$', self.admin_site.admin_view(self.login_as_redirect))
         ]
         return extra_urls + urls
 
@@ -230,10 +229,10 @@ class MemberAdmin(UserAdmin):
         return HttpResponseRedirect(url)
 
     def login_as_link(self, obj):
-        return "<a target='_blank' href='{0}members/member/login-as/{1}/'>{2}</a>".format(
-            reverse('admin:index'), obj.pk, 'Login as user')
-
-    login_as_link.allow_tags = True
+        return format_html(
+            u"<a target='_blank' href='{}members/member/login-as/{}/'>{}</a>",
+            reverse('admin:index'), obj.pk, 'Login as user'
+        )
 
 
 admin.site.register(Member, MemberAdmin)

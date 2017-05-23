@@ -10,7 +10,7 @@ from celery import shared_task
 
 from bluebottle.clients.utils import LocalTenant
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 @shared_task

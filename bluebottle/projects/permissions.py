@@ -66,6 +66,15 @@ class IsProjectOwner(permissions.BasePermission):
         return project.owner == request.user
 
 
+class IsProjectWallOwner(permissions.BasePermission):
+    """
+    Allows access only to project owner.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return obj.mediawallpost.content_object.owner == request.user
+
+
 class IsOwner(permissions.BasePermission):
     """
     Allows access only to project owner.

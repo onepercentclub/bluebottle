@@ -1,9 +1,10 @@
 import socket
+import logging
 from importlib import import_module
+import bleach
+
 
 from django.db import connection
-from django_fsm import TransitionNotAllowed
-from django_tools.middlewares import ThreadLocal
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.utils.http import urlquote
@@ -11,10 +12,20 @@ from django.utils.translation import ugettext as _
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import Permission, Group
 
+from django_tools.middlewares import ThreadLocal
+from django_fsm import TransitionNotAllowed
+
 import pygeoip
-import logging
 
 from bluebottle.clients import properties
+
+TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
+        'br', 'pre', 'blockquote']
+ATTRIBUTES = {'a': ['target', 'href']}
+
+
+def clean_html(content):
+    return bleach.clean(content, tags=TAGS, attributes=ATTRIBUTES)
 
 
 def get_languages():
@@ -58,19 +69,25 @@ class StatusDefinition(object):
     NEW = 'new'
     IN_PROGRESS = 'in_progress'
     PENDING = 'pending'
+    NEEDS_APPROVAL = 'needs_approval'
     CREATED = 'created'
     LOCKED = 'locked'
     PLEDGED = 'pledged'
+    APPROVED = 'approved'
     SUCCESS = 'success'
     STARTED = 'started'
+    SCHEDULED = 'scheduled'
+    RE_SCHEDULED = 're_scheduled'
     CANCELLED = 'cancelled'
     AUTHORIZED = 'authorized'
     SETTLED = 'settled'
+    CONFIRMED = 'confirmed'
     CHARGED_BACK = 'charged_back'
     REFUNDED = 'refunded'
     PAID = 'paid'
     FAILED = 'failed'
     RETRY = 'retry'
+    PARTIAL = 'partial'
     UNKNOWN = 'unknown'
 
 
@@ -166,8 +183,13 @@ def clean_for_hashtag(text):
     return " #".join(tags)
 
 
-# Get the class from dotted string
-def get_class(cl): 
+class GetClassError(Exception):
+    """ Custom exception for an GetClass """
+    pass
+
+
+def get_class(cl):
+    # Get the class from dotted string
     try:
         # try to call handler
         parts = cl.split('.')
@@ -175,9 +197,9 @@ def get_class(cl):
         module = import_module(module_path)
         return getattr(module, class_name)
 
-    except (ImportError, AttributeError) as e:
+    except (ImportError, AttributeError, ValueError) as e:
         error_message = "Could not import '%s'. %s: %s." % (cl, e.__class__.__name__, e)
-        raise Exception(error_message)
+        raise GetClassError(error_message)
 
 
 def get_current_host():
@@ -243,20 +265,23 @@ def update_group_permissions(sender, group_perms=None):
     if Group.objects.model._meta.db_table not in connection.introspection.table_names():
         return
 
-    create_permissions(sender, verbosity=False)
     try:
         if not group_perms:
-            group_perms = sender.module.models.GROUP_PERMS
+            create_permissions(sender, verbosity=False)
+            try:
+                group_perms = sender.module.models.GROUP_PERMS
+            except AttributeError:
+                return
 
         for group_name, permissions in group_perms.items():
             group, _ = Group.objects.get_or_create(name=group_name)
             for perm_codename in permissions['perms']:
-                perm = Permission.objects.get(codename=perm_codename)
-                group.permissions.add(perm)
+                permissions = Permission.objects.filter(codename=perm_codename)
+                if sender:
+                    permissions = permissions.filter(content_type__app_label=sender.label)
+                group.permissions.add(permissions.get())
 
             group.save()
-    except AttributeError:
-        pass
     except Permission.DoesNotExist, e:
         logging.debug(e)
 

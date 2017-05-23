@@ -73,7 +73,6 @@ class InterswitchPaymentAdapterTestCase(BluebottleTestCase):
                                                        amount=Money(3500, NGN))
             InterswitchPaymentAdapter(order_payment)
 
-
     @patch('bluebottle.payments_interswitch.adapters.get_current_host',
            return_value='https://onepercentclub.com')
     @patch('bluebottle.payments_interswitch.adapters.InterswitchPaymentAdapter._create_hash',
@@ -88,10 +87,11 @@ class InterswitchPaymentAdapterTestCase(BluebottleTestCase):
         order_payment = OrderPaymentFactory.create(payment_method='interswitchWebpay', order=order)
         adapter = InterswitchPaymentAdapter(order_payment)
         authorization_action = adapter.get_authorization_action()
+        redirect_url = 'https://onepercentclub.com/payments_interswitch/payment_response/{0}'.format(order_payment.id)
         data = {
             'hash': '123123',
             'product_id': '1234',
-            'site_redirect_url': 'https://onepercentclub.com/payments_interswitch/payment_response/{0}'.format(order_payment.id),
+            'site_redirect_url': redirect_url,
             'local_date_time': None,
             'txn_ref': '-{0}'.format(order_payment.id),
             'cust_name': None,

@@ -21,7 +21,7 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = TaskMember
         fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
-                  'externals')
+                  'externals', 'time_spent')
 
 
 class TaskFileSerializer(serializers.ModelSerializer):
@@ -50,18 +50,24 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             # The date has not changed: Do not validate
             return data
 
-        if (not data['deadline'] or data['deadline'] > data['project'].deadline):
+        if not data['deadline'] or data['deadline'] > data['project'].deadline:
             raise serializers.ValidationError(
                 {'deadline': [_("The deadline must be before the project deadline.")]}
             )
+
+        if not data['deadline_to_apply'] or data['deadline_to_apply'] > data['deadline']:
+            raise serializers.ValidationError(
+                {'deadline': [_("The deadline to apply must be before the deadline.")]}
+            )
+
         return data
 
     class Meta:
         model = Task
         fields = ('id', 'members', 'files', 'project', 'skill',
-                  'author', 'status', 'description', 'type',
-                  'location', 'deadline', 'time_needed', 'title',
-                  'people_needed')
+                  'author', 'status', 'description', 'type', 'accepting',
+                  'location', 'deadline', 'deadline_to_apply',
+                  'time_needed', 'title', 'people_needed')
 
 
 class MyTaskPreviewSerializer(serializers.ModelSerializer):
@@ -77,9 +83,6 @@ class MyTaskMemberSerializer(BaseTaskMemberSerializer):
     task = MyTaskPreviewSerializer()
     member = serializers.PrimaryKeyRelatedField(queryset=Member.objects)
 
-    class Meta(BaseTaskMemberSerializer.Meta):
-        fields = BaseTaskMemberSerializer.Meta.fields + ('time_spent',)
-
 
 class MyTasksSerializer(BaseTaskSerializer):
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
@@ -87,8 +90,8 @@ class MyTasksSerializer(BaseTaskSerializer):
     class Meta:
         model = Task
         fields = ('id', 'title', 'skill', 'project', 'time_needed',
-                  'people_needed', 'status', 'deadline', 'description',
-                  'location', 'type')
+                  'people_needed', 'status', 'deadline', 'deadline_to_apply',
+                  'accepting', 'description', 'location', 'type')
 
 
 # Task Wallpost serializers
@@ -110,7 +113,7 @@ class SkillSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Skill
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'expertise')
 
 
 class TaskPreviewSerializer(serializers.ModelSerializer):

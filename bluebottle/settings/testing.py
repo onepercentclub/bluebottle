@@ -1,5 +1,4 @@
-import logging
-import sys
+# flake8: noqa
 
 SECRET_KEY = '1, 2, this is just a test!'
 
@@ -14,7 +13,6 @@ warnings.filterwarnings(
     r"DateTimeField .* received a naive datetime",
     RuntimeWarning, r'django\.db\.models\.fields')
 
-
 MERCHANT_ACCOUNTS = [
     {
         'merchant': 'docdata',
@@ -24,7 +22,6 @@ MERCHANT_ACCOUNTS = [
     },
 ]
 
-
 # Set up a proper testing email backend
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 COMPRESS_ENABLED = False
@@ -32,9 +29,7 @@ COMPRESS_ENABLED = False
 # Include the tests models
 INCLUDE_TEST_MODELS = True
 
-INSTALLED_APPS += (
-    'bluebottle.payments_mock',
-)
+INSTALLED_APPS += ('bluebottle.payments_mock',)
 
 # Yes, activate the South migrations. Otherwise, we'll never notice if our
 # code screwed up the database synchronization
@@ -62,6 +57,9 @@ DATABASES = {
     }
 }
 
+# used in migrations to indicate that db extensions should be created
+CREATE_DB_EXTENSIONS = True
+
 DATABASE_ROUTERS = (
     'tenant_schemas.routers.TenantSyncRouter',
 )
@@ -70,8 +68,7 @@ TENANT_APPS += (
     'bluebottle.payments_mock',
 )
 
-from bluebottle.payments_mock.settings import (MOCK_PAYMENT_METHODS,
-                                               MOCK_FEES)
+from bluebottle.payments_mock.settings import MOCK_PAYMENT_METHODS
 
 PAYMENT_METHODS = MOCK_PAYMENT_METHODS
 MINIMAL_PAYOUT_AMOUNT = 10
@@ -92,4 +89,41 @@ SEND_WELCOME_MAIL = False
 SEND_MAIL = True
 
 
+PAYOUT_METHODS = [
+    {
+        'method': 'duckbank',
+        'payment_methods': [
+            'duck-directdebit',
+            'duck-creditcard',
+            'duck-ideal'
+        ],
+        'currencies': ['EUR'],
+        'account_name': "Dagobert Duck",
+        'account_bic': "DUCKNL2U",
+        'account_iban': "NL12DUCK0123456789"
+    },
+    {
+        'method': 'excel',
+        'payment_methods': [
+            'vitepay-orangemoney',
+            'interswitch-webpay',
+            'pledge-standard'
+        ],
+        'currencies': ['XOF', 'CFA', 'USD', 'EUR']
+    }
+]
+
+PAYOUT_SERVICE = {
+    'service': 'dorado',
+    'url': 'test'
+}
+
+
 TEST_RUNNER = 'bluebottle.test.test_runner.MultiTenantRunner'
+
+# Optional local override for test settings
+try:
+    from _testing import *
+except ImportError:
+    pass
+

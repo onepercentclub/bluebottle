@@ -69,7 +69,9 @@ class TaskResource(DateRangeResource):
 
 
 class TaskMemberResource(DateRangeResource):
-    select_related = ('member', 'task', 'task__project', 'member__location', 'member__location__group')
+    select_related = ('member', 'task', 'task__project', 'member__location',
+                      'member__location__group', 'task__project__location',
+                      'task__project__location__group')
 
     def export(self, **kwargs):
         task_signal = dict(

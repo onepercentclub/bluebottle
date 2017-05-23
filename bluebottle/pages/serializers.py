@@ -1,10 +1,9 @@
 from django.template import Context, Template
-
 from django.utils.safestring import mark_safe
+
 from fluent_contents.rendering import render_placeholder
 from rest_framework import serializers
 
-from bluebottle.members.serializers import UserPreviewSerializer
 from .models import Page
 
 

@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 
 from django.core.urlresolvers import reverse
 
@@ -101,7 +102,7 @@ class TestProjectList(ProjectEndpointTestCase):
             self.assertIn('owner', item)
             self.assertIn('status', item)
 
-            #Ensure that non-viewable status are filtered out
+            # Ensure that non-viewable status are filtered out
             phase = ProjectPhase.objects.get(id=item['status'])
             self.assertTrue(phase.viewable, "Projects with non-viewable status were returned")
 
@@ -243,6 +244,7 @@ class TestProjectThemeList(ProjectEndpointTestCase):
             self.assertIn('description', item)
             self.assertNotEquals(item['id'], disabled.id)
 
+
 class TestProjectThemeDetail(ProjectEndpointTestCase):
     """
     Test case for the ``ProjectThemeDetail`` API view.
@@ -336,17 +338,19 @@ class TestManageProjectList(ProjectEndpointTestCase):
         self.assertIn('country', data)
         self.assertIn('editable', data)
 
-
     def test_none_accepted_for_project_amount_asked(self):
+        """
+        Check that None is allowed for amount_asked, but it will convert it to 0.
+        """
         post_data = {
             'slug': 'test-project',
             'title': 'Testing Project POST request',
             'pitch': 'A new project to be used in unit tests',
-            'amount_asked': None,
-            'amount_donated': 0
+            'amount_asked': None
         }
         response = self.client.post(reverse('project_manage_list'), post_data, token=self.user_token)
         self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['amount_asked'], {'currency': 'EUR', 'amount': Decimal('0')})
 
 
 class TestManageProjectDetail(ProjectEndpointTestCase):
@@ -426,3 +430,34 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         self.assertTrue('permission' in response.content)
 
 
+class TestTinyProjectList(ProjectEndpointTestCase):
+    """
+    Test case for the ``TinyProjectList`` API view.
+    """
+
+    def setUp(self):
+        self.init_projects()
+        campaign = ProjectPhase.objects.get(slug='campaign')
+        incomplete = ProjectPhase.objects.get(slug='done-incomplete')
+        complete = ProjectPhase.objects.get(slug='done-complete')
+        self.project1 = ProjectFactory(status=complete)
+        self.project1.created = '2017-03-18 00:00:00.000000+00:00'
+        self.project1.save()
+        self.project2 = ProjectFactory(status=campaign)
+        self.project2.created = '2017-03-12 00:00:00.000000+00:00'
+        self.project2.save()
+        self.project3 = ProjectFactory(status=incomplete)
+        self.project3.created = '2017-03-01 00:00:00.000000+00:00'
+        self.project3.save()
+        self.project4 = ProjectFactory(status=campaign)
+        self.project4.created = '2017-03-20 00:00:00.000000+00:00'
+        self.project4.save()
+
+    def test_tiny_project_list(self):
+        response = self.client.get(reverse('project_tiny_preview_list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(int(data['results'][0]['id']), self.project3.id)
+        self.assertEqual(int(data['results'][1]['id']), self.project2.id)
+        self.assertEqual(int(data['results'][2]['id']), self.project1.id)
+        self.assertEqual(int(data['results'][3]['id']), self.project4.id)

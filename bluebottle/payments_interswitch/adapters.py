@@ -50,7 +50,7 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
         payment.site_name = str(tenant.domain_url)
         try:
             payment.cust_id = self.order_payment.user.id
-            payment.cust_name = str(self.order_payment.user.full_name)
+            payment.cust_name = unicode(self.order_payment.user.full_name)
         except AttributeError:
             # Anonymous order
             pass
@@ -108,11 +108,11 @@ class InterswitchPaymentAdapter(BasePaymentAdapter):
             status_url, self.payment.product_id, self.payment.txn_ref, self.payment.amount
         )
         response = requests.get(url, headers={"Hash": self._get_status_hash()}).content
-        result = simplejson.loads(response)
-        self.payment.result = response
+        self.payment.response = response
 
         InterswitchPaymentStatusUpdate.objects.create(payment=self.payment, result=response)
 
+        result = simplejson.loads(response)
         if 'ResponseCode' in result and result['ResponseCode'] == '00':
             self.payment.status = StatusDefinition.SETTLED
         else:

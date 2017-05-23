@@ -25,27 +25,21 @@ class AbstractDocdataPayment(Payment):
                                            max_length=200, default='',
                                            unique=True)
 
-    language = models.CharField(_("Language"), max_length=5, blank=True,
-                                default='en')
+    language = models.CharField(_("Language"), max_length=5, blank=True, default='en')
 
-    ideal_issuer_id = models.CharField(_("Ideal Issuer ID"), max_length=100,
-                                       default='')
+    ideal_issuer_id = models.CharField(_("Ideal Issuer ID"), max_length=100, default='')
     default_pm = models.CharField(_("Default Payment Method"), max_length=100)
 
     # Track sent information
     total_gross_amount = models.IntegerField(_("Total gross amount"))
     currency = models.CharField(_("Currency"), max_length=10)
-    country = models.CharField(_("Country_code"), max_length=2, null=True,
-                               blank=True)
+    country = models.CharField(_("Country_code"), max_length=2, null=True, blank=True)
 
     # Track received information
     total_registered = models.IntegerField(_("Total registered"), default=0)
-    total_shopper_pending = models.IntegerField(_("Total shopper pending"),
-                                                default=0)
-    total_acquirer_pending = models.IntegerField(_("Total acquirer pending"),
-                                                 default=0)
-    total_acquirer_approved = models.IntegerField(_("Total acquirer approved"),
-                                                  default=0)
+    total_shopper_pending = models.IntegerField(_("Total shopper pending"), default=0)
+    total_acquirer_pending = models.IntegerField(_("Total acquirer pending"), default=0)
+    total_acquirer_approved = models.IntegerField(_("Total acquirer approved"), default=0)
     total_captured = models.IntegerField(_("Total captured"), default=0)
     total_refunded = models.IntegerField(_("Total refunded"), default=0)
     total_charged_back = models.IntegerField(_("Total charged back"), default=0)
@@ -62,6 +56,10 @@ class AbstractDocdataPayment(Payment):
     postal_code = models.CharField(max_length=20, default='')
     city = models.CharField(max_length=200, default='')
     ip_address = models.CharField(max_length=200, default='')
+
+    @property
+    def transaction_reference(self):
+        return self.payment_cluster_id
 
     def get_method_name(self):
         """ Return the payment method name.

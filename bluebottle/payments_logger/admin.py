@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.utils.html import format_html
+
 from bluebottle.payments_logger.models import PaymentLogEntry
 
 
@@ -32,10 +34,12 @@ class PaymentLogEntryAdmin(admin.ModelAdmin):
         url = reverse('admin:{0}_{1}_change'.format(payment._meta.app_label,
                                                     payment._meta.model_name),
                       args=[payment.id])
-        return "<a href='{0}'>Order Payment</a>".format(str(url))
+        return format_html(
+            u"<a href='{}'>Order Payment</a>",
+            str(url)
+        )
 
     link_to_order_payment.short_description = 'Related OrderPayment'
-    link_to_order_payment.allow_tags = True
 
     def related_payment_method(self, obj):
         payment = obj.payment
@@ -46,7 +50,6 @@ class PaymentLogEntryAdmin(admin.ModelAdmin):
         return payment.method_name
 
     related_payment_method.short_description = 'Payment method'
-    related_payment_method.allow_tags = True
 
     def payment_link(self, obj):
         # creates a link to the payment
@@ -54,12 +57,14 @@ class PaymentLogEntryAdmin(admin.ModelAdmin):
         url = reverse('admin:{0}_{1}_change'.format(payment._meta.app_label,
                                                     payment._meta.model_name),
                       args=[payment.id])
-        return "<a href='{0}'>{1}: {2}</a>".format(str(url),
-                                                   payment.polymorphic_ctype,
-                                                   payment.id)
+        return format_html(
+            u"<a href='{}'>{}: {}</a>",
+            str(url),
+            payment.polymorphic_ctype,
+            payment.id
+        )
 
     payment_link.short_description = "Related Payment"
-    payment_link.allow_tags = True
 
 
 admin.site.register(PaymentLogEntry, PaymentLogEntryAdmin)

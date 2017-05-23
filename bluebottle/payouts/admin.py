@@ -171,7 +171,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
         'admin:projects_project_change',
         view_args=lambda obj: (obj.project.id,),
         short_description=_('project'),
-        truncate=50
+        truncate=25
     )
 
     # Link to organization
@@ -192,7 +192,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
     admin_has_iban.boolean = True
 
     def payout(self, obj):
-        return "View/Edit"
+        return "View"
 
     def has_add_permission(self, request):
         return False
@@ -282,7 +282,7 @@ class PayoutListFilter(admin.SimpleListFilter):
                 return None
 
         def _label(v, k):
-            return "{0}% ({1})".format(int(v * 100), k)
+            return "{0:.3g}% ({1})".format(v * 100, k)
 
         return tuple(sorted(((k, _label(v, k)) for k, v in rules.iteritems()),
                             key=lambda x: _value(x[1])))
@@ -345,7 +345,8 @@ admin.site.register(OrganizationPayout, OrganizationPayoutAdmin)
 class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
     list_display = ['payout', 'status', 'admin_project', 'amount_pending',
                     'amount_raised', 'amount_pledged', 'amount_payable',
-                    'rule', 'percent', 'admin_has_iban', 'created_date',
+                    # 'percent',
+                    'admin_has_iban', 'created_date',
                     'submitted_date', 'completed_date']
 
     export_fields = [

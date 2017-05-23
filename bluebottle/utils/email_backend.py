@@ -110,6 +110,7 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
 
     with TenantLanguage(language):
         c = ClientContext(kwargs)
+        c['to'] = to  # Add the recipient to the context
         text_content = get_template(
             '{0}.txt'.format(template_name)).render(c)
         html_content = get_template(

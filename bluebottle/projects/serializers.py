@@ -1,9 +1,7 @@
 import re
-import bleach
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
-from bs4 import BeautifulSoup
 from localflavor.generic.validators import IBANValidator
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -11,15 +9,16 @@ from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, SorlImageField, ImageSerializer,
     PrivateFileSerializer
 )
-from bluebottle.clients import properties
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer
-from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
+from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import Task, TaskMember, Skill
+from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.fields import SafeField
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 from bluebottle.votes.models import Vote
 
@@ -38,28 +37,6 @@ class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectTheme
         fields = ('id', 'name', 'description')
-
-
-class StoryField(serializers.CharField):
-    TAGS=['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
-          'br', 'pre', 'blockquote']
-    ATTRIBUTES={'a': ['target', 'href']}
-
-    def to_representation(self, value):
-        """ Reading / Loading the story field """
-        return bleach.clean(value, tags=self.TAGS, attributes=self.ATTRIBUTES)
-
-    def to_internal_value(self, data):
-        """
-        Saving the story text
-
-        Convert &gt; and &lt; back to HTML tags so Beautiful Soup can clean
-        unwanted tags. Script tags are sent by redactor as
-        "&lt;;script&gt;;", Iframe tags have just one semicolon.
-        """
-        data = data.replace("&lt;;", "<").replace("&gt;;", ">")
-        data = data.replace("&lt;", "<").replace("&gt;", ">")
-        return unicode(bleach.clean(data, tags=self.TAGS, attributes=self.ATTRIBUTES))
 
 
 class ProjectCountrySerializer(CountrySerializer):
@@ -99,10 +76,10 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     owner = UserProfileSerializer()
+    story = SafeField()
     image = ImageSerializer(required=False)
     task_count = serializers.IntegerField()
     country = ProjectCountrySerializer()
-    story = StoryField()
     is_funding = serializers.ReadOnlyField()
     budget_lines = BasicProjectBudgetLineSerializer(
         many=True, source='projectbudgetline_set', read_only=True)
@@ -112,7 +89,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     vote_count = serializers.IntegerField()
     supporter_count = serializers.IntegerField()
 
-    people_requested = serializers.ReadOnlyField()
+    people_needed = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
 
     amount_asked = MoneySerializer()
@@ -126,6 +103,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     has_voted = serializers.SerializerMethodField()
 
     currencies = serializers.JSONField(read_only=True)
+    organization = OrganizationPreviewSerializer(read_only=True)
 
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
@@ -144,7 +122,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count', 'celebrate_results',
-                  'supporter_count', 'people_requested', 'people_registered',
+                  'supporter_count', 'people_needed', 'people_registered',
                   'voting_deadline', 'latitude', 'longitude', 'video_url', 'has_voted',
                   'video_html', 'location', 'project_type')
 
@@ -158,15 +136,20 @@ class ProjectPreviewSerializer(ProjectSerializer):
     categories = serializers.SlugRelatedField(many=True, read_only=True,
                                               slug_field='slug')
 
+    skills = serializers.SerializerMethodField()
+
+    def get_skills(self, obj):
+        return set(task.skill.id for task in obj.task_set.all() if task.skill)
+
     class Meta:
         model = Project
         fields = ('id', 'title', 'status', 'image', 'country', 'pitch',
                   'theme', 'categories', 'owner', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'deadline', 'latitude',
                   'longitude', 'task_count', 'allow_overfunding', 'is_campaign',
-                  'is_funding', 'people_requested', 'celebrate_results',
+                  'is_funding', 'people_needed', 'celebrate_results',
                   'people_registered', 'location', 'vote_count',
-                  'voting_deadline', 'project_type')
+                  'voting_deadline', 'project_type', 'skills')
 
 
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
@@ -206,6 +189,8 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     image = ImageSerializer(required=False, allow_null=True)
     pitch = serializers.CharField(required=False, allow_null=True)
     slug = serializers.CharField(read_only=True)
+    people_registered = serializers.IntegerField(read_only=True)
+    people_needed = serializers.IntegerField(read_only=True)
 
     amount_asked = MoneySerializer(required=False, allow_null=True)
     amount_donated = MoneySerializer(read_only=True)
@@ -217,14 +202,14 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                                                read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
-    story = StoryField(required=False, allow_blank=True)
+    story = SafeField(required=False, allow_blank=True)
     is_funding = serializers.ReadOnlyField()
 
     tasks = ManageTaskSerializer(
-         many=True,
-         source='task_set',
-         read_only=True
-     )
+        many=True,
+        source='task_set',
+        read_only=True
+    )
 
     documents = ProjectDocumentSerializer(
         many=True, read_only=True)
@@ -242,7 +227,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
             # Expecting something like: NL18xxxxxxxxxx
             iban_validator = IBANValidator()
             if country_code in iban_validator.validation_countries.keys() and \
-               digits_regex.match(check_digits):
+                    digits_regex.match(check_digits):
                 iban_validator(value)
         return value
 
@@ -303,6 +288,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'account_number', 'account_bic', 'documents',
                   'account_bank_country', 'amount_asked',
                   'amount_donated', 'amount_needed', 'currencies',
+                  'people_needed', 'people_registered',
                   'video_url', 'video_html', 'is_funding', 'story', 'tasks',
                   'budget_lines', 'deadline', 'latitude', 'longitude',
                   'project_type')
@@ -312,6 +298,7 @@ class ProjectDonationSerializer(serializers.ModelSerializer):
     member = UserPreviewSerializer(source='user')
     date_donated = serializers.DateTimeField(source='ready')
     amount = MoneySerializer()
+    siblings = serializers.IntegerField()
 
     class Meta:
         model = Donation
@@ -319,12 +306,13 @@ class ProjectDonationSerializer(serializers.ModelSerializer):
 
 
 class ProjectWallpostPhotoSerializer(serializers.ModelSerializer):
-    photo = ImageSerializer()
-    created = serializers.DateTimeField(source='mediawallpost.created')
+    photo = ImageSerializer(read_only=True)
+    created = serializers.DateTimeField(source='mediawallpost.created',
+                                        read_only=True)
 
     class Meta:
         model = MediaWallpostPhoto
-        fields = ('id', 'photo', 'created')
+        fields = ('id', 'photo', 'created', 'results_page')
 
 
 class ProjectWallpostVideoSerializer(serializers.ModelSerializer):
@@ -339,11 +327,16 @@ class ProjectWallpostVideoSerializer(serializers.ModelSerializer):
 class ProjectMediaSerializer(serializers.ModelSerializer):
     pictures = ProjectWallpostPhotoSerializer(source='wallpost_photos', many=True)
     videos = ProjectWallpostVideoSerializer(source='wallpost_videos', many=True)
+    image = SorlImageField(
+        '1200x600', crop='center', watermark='images/completed.png',
+        watermark_pos='-40 40', watermark_size='213x255'
+    )
+
     id = serializers.CharField(source='slug')
 
     class Meta:
         model = Project
-        fields = ('id', 'title', 'pictures', 'videos')
+        fields = ('id', 'title', 'pictures', 'videos', 'image')
 
 
 class ProjectDonorSerializer(serializers.ModelSerializer):

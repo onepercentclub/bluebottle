@@ -7,7 +7,7 @@ from bluebottle.bb_donations.donationmail import (
     new_oneoff_donation, successful_donation_fundraiser_mail)
 from bluebottle.orders.models import Order
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.wallposts.models import SystemWallpost
+from bluebottle.wallposts.models import SystemWallpost, TextWallpost
 
 
 @receiver(post_save, sender=Order)
@@ -39,10 +39,11 @@ def _order_status_post_transition(sender, instance, **kwargs):
         first_time_success = (
             kwargs['source'] not in [StatusDefinition.PLEDGED,
                                      StatusDefinition.SUCCESS,
-                                     StatusDefinition.PENDING]
-            and kwargs['target'] in [StatusDefinition.PLEDGED,
-                                     StatusDefinition.SUCCESS,
-                                     StatusDefinition.PENDING])
+                                     StatusDefinition.PENDING] and
+            kwargs['target'] in [StatusDefinition.PLEDGED,
+                                 StatusDefinition.SUCCESS,
+                                 StatusDefinition.PENDING]
+        )
 
         # Process each donation in the order
         for donation in instance.donations.all():
@@ -58,14 +59,15 @@ def _order_status_post_transition(sender, instance, **kwargs):
                 successful_donation_fundraiser_mail(donation)
                 new_oneoff_donation(donation)
 
-                # Create Wallpost on project wall
-                post = SystemWallpost()
-                post.content_object = donation.project
-                post.related_object = donation
-                post.donation = donation
-                post.author = author
-                post.ip = '127.0.0.1'
-                post.save()
+                # Create Wallpost on project wall if there isn't a wallpost for this donation yet
+                if TextWallpost.objects.filter(donation=donation).count() == 0:
+                    post = SystemWallpost()
+                    post.content_object = donation.project
+                    post.related_object = donation
+                    post.donation = donation
+                    post.author = author
+                    post.ip = '127.0.0.1'
+                    post.save()
 
                 # Create Wallpost on fundraiser wall (if FR present)
                 if donation.fundraiser:

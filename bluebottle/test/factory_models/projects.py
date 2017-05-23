@@ -57,4 +57,3 @@ class ProjectFactory(factory.DjangoModelFactory):
     account_holder_postal_code = '1234ab'
     account_holder_city = 'test'
     account_holder_country = factory.SubFactory(CountryFactory)
-

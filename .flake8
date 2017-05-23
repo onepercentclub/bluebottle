@@ -1,4 +1,13 @@
 [flake8]
+# Ignore lambda function assignment and inline imports (not at top of file)
 ignore = E731,E402
+
+# Lengthen max line length
 max-line-length = 120
-exclude=**/migrations/*
+
+exclude =
+    **/*local.py,
+    **/secrets.py,
+    **/migrations/*,
+    docs,
+    build,

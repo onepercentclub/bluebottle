@@ -9,4 +9,5 @@ class CategoryAdmin(AdminImageMixin, admin.ModelAdmin):
     model = Category
     list_display = ('title', 'slug')
 
+
 admin.site.register(Category, CategoryAdmin)

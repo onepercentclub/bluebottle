@@ -15,8 +15,7 @@ class HomePage(object):
         self.slides = Slide.objects.published().filter(language=language)
         self.statistics = Statistic.objects.filter(active=True, language=language).all()
 
-        projects = Project.objects.filter(is_campaign=True,
-                                                status__viewable=True)
+        projects = Project.objects.filter(is_campaign=True, status__viewable=True)
         if language == 'en':
             projects = projects.filter(language__code=language)
 
@@ -27,6 +26,6 @@ class HomePage(object):
         elif len(projects) > 0:
             self.projects = projects[0:len(projects)]
         else:
-            self.projects = None
+            self.projects = Project.objects.none()
 
         return self

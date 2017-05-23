@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 
 from bluebottle.projects.models import Project, ProjectPhase
-from bluebottle.tasks.models import Task
+from bluebottle.tasks.models import Task, Skill
 from bluebottle.test.utils import BluebottleTestCase
 from django.utils import timezone
 
@@ -24,11 +24,10 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
+        self.some_project = ProjectFactory.create(owner=self.some_user)
 
         self.another_user = BlueBottleUserFactory.create()
         self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
-
-        self.some_project = ProjectFactory.create(owner=self.some_user)
         self.another_project = ProjectFactory.create(owner=self.another_user)
 
         self.skill1 = SkillFactory.create()
@@ -59,7 +58,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timedelta(days=1))
         }
         response = self.client.post(self.task_url, some_task_data,
                                     token=self.some_token)
@@ -101,7 +101,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill3.id),
             'location': 'Tiel',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timedelta(days=1))
         }
         response = self.client.post(self.task_url, another_task_data,
                                     token=self.another_token)
@@ -118,7 +119,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill4.id),
             'location': 'Tiel',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timedelta(days=1))
         }
         response = self.client.post(self.task_url, third_task_data,
                                     token=self.another_token)
@@ -149,7 +151,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': str(self.some_project.deadline + timedelta(hours=1))
+            'deadline': str(self.some_project.deadline + timedelta(hours=1)),
+            'deadline_to_apply': str(self.some_project.deadline + timedelta(minutes=1))
         }
         response = self.client.post(self.task_url, some_task_data,
                                     token=self.some_token)
@@ -172,7 +175,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timezone.timedelta(days=1))
         }
 
         response = self.client.post(self.task_url, some_task_data,
@@ -193,7 +197,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill1.id),
             'location': 'Overthere',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timedelta(days=1))
         }
         response = self.client.post(self.task_url, some_task_data,
                                     token=self.some_token)
@@ -210,12 +215,12 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         """
         Ensure we can filter task list by status
         """
-        self.task1 = TaskFactory.create(
+        TaskFactory.create(
             status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
         )
-        self.task2 = TaskFactory.create(
+        TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
@@ -247,13 +252,13 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.another_project.save()
 
         # create tasks for projects
-        self.task1 = TaskFactory.create(
+        task1 = TaskFactory.create(
             status=Task.TaskStatuses.in_progress,
             author=self.some_project.owner,
             project=self.some_project,
             deadline=timezone.datetime(2010, 05, 05, tzinfo=timezone.get_current_timezone())
         )
-        self.task2 = TaskFactory.create(
+        TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_project.owner,
             project=self.another_project,
@@ -284,20 +289,20 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
         self.assertEqual(response.data['count'], 0)
 
-        skill = self.task1.skill
+        skill = task1.skill
         response = self.client.get(api_url, {'skill': skill.id},
                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['id'], self.task1.id)
+        self.assertEqual(response.data['results'][0]['id'], task1.id)
 
         response = self.client.get(api_url, {'before': '2011-01-01'},
                                    token=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
         self.assertEqual(response.data['count'], 1)
-        self.assertEqual(response.data['results'][0]['id'], self.task1.id)
+        self.assertEqual(response.data['results'][0]['id'], task1.id)
 
         response = self.client.get(api_url, {'after': '2011-01-01'},
                                    token=self.some_token)
@@ -354,6 +359,35 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN,
                          response.data)
 
+    def test_task_member_set_time_spent(self):
+        task_user = BlueBottleUserFactory.create()
+        task_user_token = "JWT {0}".format(task_user.get_jwt_token())
+        task = TaskFactory.create(status=Task.TaskStatuses.open,
+                                  project=self.some_project,
+                                  author=task_user)
+
+        task_member_user = BlueBottleUserFactory.create()
+        task_member_user_token = "JWT {0}".format(task_member_user.get_jwt_token())
+        task_member = TaskMemberFactory.create(member=task_member_user, task=task)
+
+        # Only task author can set the time spent
+        response1 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
+                                    {'time_spent': 42, 'task': task.id},
+                                    token=task_user_token)
+        self.assertEqual(response1.status_code, status.HTTP_200_OK, response1.data)
+
+        # Task Member cannot update his/her own time_spent
+        response2 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
+                                    {'time_spent': 5, 'task': task.id},
+                                    token=task_member_user_token)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN, response2.data)
+
+        # Project owner cannot update the time_spent
+        response3 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
+                                    {'time_spent': 5, 'task': task.id},
+                                    token=self.some_token)
+        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN, response3.data)
+
     def test_get_correct_base_task_fields(self):
         """ Test that the fields defined in the BaseTask serializer are returned in the response """
 
@@ -363,11 +397,22 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                                    token=self.some_token)
 
         # Fields as defined in the serializer
-        serializer_fields = (
-            'id', 'members', 'files', 'project', 'skill', 'author', 'status',
-            'description', 'location', 'deadline', 'time_needed', 'title',
-            'people_needed'
-        )
+        serializer_fields = ('id', 'members', 'files', 'project', 'skill', 'author', 'status', 'description',
+                             'location', 'deadline', 'time_needed', 'title', 'people_needed')
+
+        for field in serializer_fields:
+            self.assertTrue(field in response.data)
+
+    def test_get_correct_base_task_member_fields(self):
+        """ Test that the fields defined in the BaseTaskMember serializer are returned in the response """
+
+        task = TaskFactory.create()
+        task_member = TaskMemberFactory.create(member=self.another_user, task=task)
+
+        response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id), token=self.some_token)
+
+        # Fields as defined in the serializer
+        serializer_fields = ('id', 'member', 'status', 'created', 'motivation', 'task', 'externals', 'time_spent')
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)
@@ -380,7 +425,7 @@ class TestTaskSearchCase(BluebottleTestCase):
         """Setup reusable data."""
         self.init_projects()
 
-        self.now = datetime.combine(timezone.now(), datetime.max.time())
+        self.now = datetime.combine(timezone.now(), datetime.min.time())
         self.now = timezone.get_current_timezone().localize(self.now)
         self.tomorrow = self.now + timezone.timedelta(days=1)
         self.week = self.now + timezone.timedelta(days=7)
@@ -534,13 +579,13 @@ class TestTaskSearchCase(BluebottleTestCase):
             'end': str(task.deadline.date())
         }
 
-        response = self.client.get(self.task_url, search_date,
-                                   token=self.some_token)
+        response = self.client.get(self.task_url, search_date, token=self.some_token)
 
         # Search should return task, ongoing_task_1, and ongoing_task_3
         # Task2 and Task3 should NOT be returned
         ids = [task.id, self.ongoing_task_1.id, self.ongoing_task_3.id]
         self.assertEqual(response.data['count'], 3)
+
         self.assertIn(response.data['results'][0]['id'], ids)
         self.assertIn(response.data['results'][1]['id'], ids)
         self.assertIn(response.data['results'][2]['id'], ids)
@@ -551,19 +596,15 @@ class SkillListApiTests(BluebottleTestCase):
 
     def setUp(self):
         super(SkillListApiTests, self).setUp()
-
-        self.skill1 = SkillFactory.create()
-        self.skill2 = SkillFactory.create()
-        self.skill3 = SkillFactory.create()
-        self.skill4 = SkillFactory.create(disabled=True)
-
+        # Disable 3 skills
+        Skill.objects.filter(id__in=[4, 5, 6]).update(disabled=True)
+        self.skill_count = Skill.objects.count()
         self.skills_url = '/api/bb_tasks/skills/'
 
     def test_get_list(self):
         """
-        Test that the list of tasks contains all the not disabled tasks.
+        Test that the list of skills contains all but disabled skills.
         """
         response = self.client.get(self.skills_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK,
-                         response.data)
-        self.assertEquals(len(response.data), 3)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), self.skill_count - 3)

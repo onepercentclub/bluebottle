@@ -1,23 +1,17 @@
-from bluebottle.bb_accounts.models import UserAddress
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX
 
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, ImageSerializer)
-
-from bluebottle.clients import properties
-from bluebottle.tasks.models import Skill
-from bluebottle.geo.models import Location
+from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
+from bluebottle.clients import properties
 from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
 from bluebottle.geo.models import Location
 from bluebottle.tasks.models import Skill
-from bluebottle.bb_projects.models import ProjectTheme
 
 BB_USER_MODEL = get_user_model()
 
@@ -140,9 +134,6 @@ class ManageProfileSerializer(UserProfileSerializer):
         return super(ManageProfileSerializer, self).update(instance, validated_data)
 
 
-
-
-
 # Thanks to Neamar Tucote for this code:
 # https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
 class PasswordField(serializers.CharField):
@@ -164,7 +155,6 @@ class PasswordField(serializers.CharField):
         return self.hidden_password_string
 
 
-
 class UserCreateSerializer(serializers.ModelSerializer):
     """
     Serializer for creating users. This can only be used for creating
@@ -179,7 +169,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     @property
     def errors(self):
-        errors =  super(UserCreateSerializer, self).errors
+        errors = super(UserCreateSerializer, self).errors
 
         if 'email' in errors and 'email' in self.data:
             user = self.Meta.model.objects.get(email=self.data['email'])
@@ -189,8 +179,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
                 'id': user.id
             }
 
-            # We assume if they have a social auth associated then they use
-            # it
+            # We assume if they have a social auth associated then they use it
             if user.social_auth.count() > 0:
                 social_auth = user.social_auth.all()[0]
                 conflict['provider'] = social_auth.provider
@@ -216,27 +205,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
                   'email', 'password', 'jwt_token', 'primary_language')
 
 
-def validate_reset_email(email):
-    try:
-        user = BB_USER_MODEL._default_manager.get(email__iexact=email)
-        if not user.is_active or user.password.startswith(UNUSABLE_PASSWORD_PREFIX):
-            raise serializers.ValidationError(
-                _("That email address doesn't have an associated "
-                  "user account. Are you sure you've registered?")
-            )
-    except BB_USER_MODEL.DoesNotExist:
-        raise serializers.ValidationError(
-            _("The user account associated with this email "
-              "address cannot reset the password.")
-        )
-
-
 class PasswordResetSerializer(serializers.Serializer):
     """
     Password reset request serializer that uses the email validation from the
     Django PasswordResetForm.
     """
-    email = serializers.EmailField(required=True, max_length=254, validators=[validate_reset_email])
+    email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
         fields = ('email',)

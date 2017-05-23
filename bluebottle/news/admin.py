@@ -7,17 +7,16 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
+
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from django import forms
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.models import Placeholder
 from fluent_contents.rendering import render_content_items
 from sorl.thumbnail.admin import AdminImageMixin
-
-from bluebottle.clients import properties
 
 from .models import NewsItem
 
@@ -34,8 +33,7 @@ class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
             'fields': ('title', 'slug', 'language', 'main_image', 'contents'),
         }),
         (_('Publication settings'), {
-            'fields': ('status', 'publication_date', 'publication_end_date',
-                       'allow_comments'),
+            'fields': ('status', 'publication_date', 'publication_end_date', 'allow_comments'),
         }),
     )
 
@@ -208,11 +206,11 @@ class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
                  rec[0] == status].pop()
         icon = self.STATUS_ICONS[status]
         admin_url = settings.STATIC_URL + 'admin/img/'
-        html = u'<img src="{admin}{icon}" width="10" height="10" ' \
-               u'alt="{title}" title="{title}" />'
-        return html.format(admin=admin_url, icon=icon, title=title)
+        return format_html(
+            u'<img src="{}{}" width="10" height="10" alt="{}" title="{}" />',
+            admin_url, icon, title, title
+        )
 
-    status_column.allow_tags = True
     status_column.short_description = _('Status')
 
     def make_published(self, request, queryset):

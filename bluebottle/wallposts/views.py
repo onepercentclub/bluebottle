@@ -1,27 +1,21 @@
 from django.contrib.contenttypes.models import ContentType
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-
-from rest_framework import permissions, exceptions
 
 import django_filters
+from rest_framework import permissions
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
-from bluebottle.bluebottle_drf2.views import (
-    ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView)
-from bluebottle.fundraisers.models import Fundraiser
-from bluebottle.tasks.models import Task
-from bluebottle.utils.utils import set_author_editor_ip, get_client_ip
+from bluebottle.bluebottle_drf2.views import ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView
+from bluebottle.utils.utils import get_client_ip
 from bluebottle.projects.models import Project
 
-from .models import (TextWallpost, MediaWallpost, MediaWallpostPhoto,
-                     Wallpost, Reaction)
+from .models import TextWallpost, MediaWallpost, MediaWallpostPhoto, Wallpost, Reaction
 from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
                           MediaWallpostPhotoSerializer, ReactionSerializer,
                           WallpostSerializer)
 from .permissions import IsConnectedWallpostAuthorOrReadOnly, CanEmailFollowers
-
-from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 
 class WallpostFilter(django_filters.FilterSet):
@@ -124,7 +118,7 @@ class WallpostDetail(RetrieveUpdateDeleteAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
-    
+
 
 class MediaWallpostPhotoPagination(BluebottlePagination):
     page_size = 4
@@ -157,8 +151,7 @@ class MediaWallpostPhotoList(SetAuthorMixin, ListCreateAPIView):
         post = request.POST.get('mediawallpost', False)
         if post and post == u'null':
             request.POST['mediawallpost'] = u''
-        return super(MediaWallpostPhotoList, self).create(request, *args,
-                                                          **kwargs)
+        return super(MediaWallpostPhotoList, self).create(request, *args, **kwargs)
 
 
 class MediaWallpostPhotoDetail(RetrieveUpdateDeleteAPIView):

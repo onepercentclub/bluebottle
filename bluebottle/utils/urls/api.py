@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.conf.urls import url
 from ..views import TagList, TagSearch, LanguageList
 from ..views import ShareFlyer

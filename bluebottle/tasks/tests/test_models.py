@@ -166,6 +166,9 @@ class TestTaskStatus(BluebottleTestCase):
         task.deadline_reached()
 
         self.assertEqual(task.status, 'closed')
+        self.assertEquals(len(mail.outbox), 1)
+
+        self.assertTrue('set to closed' in mail.outbox[0].subject)
 
     def test_full_after_deadline_to_apply(self):
         task = TaskFactory.create(status='open', people_needed=2, type='event')

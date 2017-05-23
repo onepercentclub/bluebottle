@@ -1,0 +1,19 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {% blocktrans with receiver_name=to.short_name %}
+
+        Hello {{ receiver_name }}
+        <br><br>
+        The scheduled date of your task "{{ title }}" has been reached.
+        No candidates have been accepted, therefore the task is set to closed.
+        <br><br>
+        Please confirm the candidates to set your task to realised.
+    {% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+    <a href="{{ site }}{{ link }}"
+       class="action-email">{% trans 'Confirm participants' context 'email' %}</a>
+{% endblock %}`

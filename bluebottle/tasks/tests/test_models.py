@@ -373,7 +373,6 @@ class TestTaskStatus(BluebottleTestCase):
             'Edit task https://testserver/tasks/{}/edit'.format(task.id) in email.body
         )
 
-
     def test_task_member_realized(self):
         task = TaskFactory.create(status='open', people_needed=2, type='ongoing')
         member = TaskMemberFactory.create(task=task, status='applied')

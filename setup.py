@@ -74,6 +74,7 @@ install_requires = [
     'gunicorn==19.5.0',
     'html5lib==0.9999999',
     'influxdb==3.0.0',
+    'lipisha==0.2.4',
     'lxml==3.6.0',
     'micawber==0.3.3',
     'mixpanel==4.3.0',

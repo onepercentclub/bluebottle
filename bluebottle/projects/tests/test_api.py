@@ -174,6 +174,7 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         skill = SkillFactory.create(name='test skill')
         for project in self.projects[:3]:
             TaskFactory.create(project=project, skill=skill)
+            TaskFactory.create(project=project, skill=skill)
 
         response = self.client.get(self.projects_preview_url + '?skill={}'.format(skill.pk))
         self.assertEqual(response.status_code, 200)

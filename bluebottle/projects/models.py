@@ -126,7 +126,7 @@ class ProjectManager(models.Manager):
         skill = query.get('skill', None)
         if skill:
             qs.select_related('task')
-            qs = qs.filter(task__skill=skill)
+            qs = qs.filter(task__skill=skill).distinct()
 
         anywhere = query.get('anywhere', None)
         if anywhere:

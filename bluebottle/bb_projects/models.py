@@ -132,9 +132,8 @@ class BaseProject(models.Model, GetTweetMixin):
                                     choices=Type.choices, null=True, blank=True)
 
     # Basics
-    created = CreationDateTimeField(
-        _('created'), help_text=_('When this project was created.'))
-    updated = ModificationDateTimeField(_('updated'))
+    created = models.DateTimeField(_('created'), help_text=_('When this project was created.'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
     title = models.CharField(_('title'), max_length=255, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     pitch = models.TextField(
@@ -211,21 +210,29 @@ class BaseProject(models.Model, GetTweetMixin):
 
     @property
     def people_registered(self):
+        # Number of people that where accepted for tasks of this project.
         counts = self.task_set.filter(
-            status='open',
-            deadline__gt=now(),
+            status__in=['open', 'in_progress', 'realized'],
             members__status__in=['accepted', 'realized']
         ).aggregate(total=Count('members'), externals=Sum('members__externals'))
 
-        # If there are no members, externals is None
+        # If there are no members, externals is None return 0
         return counts['total'] + (counts['externals'] or 0)
 
     @property
-    def people_requested(self):
-        return self.task_set.filter(
+    def people_needed(self):
+        # People still needed for tasks of this project.
+        # This can only be tasks that are open en in the future.
+        requested = self.task_set.filter(
             status='open',
             deadline__gt=now(),
-        ).aggregate(total=Sum('people_needed'))['total']
+        ).aggregate(total=Sum('people_needed'))['total'] or 0
+        counts = self.task_set.filter(
+            status='open',
+            members__status__in=['accepted', 'realized']
+        ).aggregate(total=Count('members'), externals=Sum('members__externals'))
+
+        return requested - counts['total'] + (counts['externals'] or 0)
 
     _initial_status = None
 

@@ -89,7 +89,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     vote_count = serializers.IntegerField()
     supporter_count = serializers.IntegerField()
 
-    people_requested = serializers.ReadOnlyField()
+    people_needed = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
 
     amount_asked = MoneySerializer()
@@ -121,7 +121,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'task_count', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count', 'celebrate_results',
-                  'supporter_count', 'people_requested', 'people_registered',
+                  'supporter_count', 'people_needed', 'people_registered',
                   'voting_deadline', 'latitude', 'longitude', 'video_url', 'has_voted',
                   'video_html', 'location', 'project_type')
 
@@ -141,7 +141,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'theme', 'categories', 'owner', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'deadline', 'latitude',
                   'longitude', 'task_count', 'allow_overfunding', 'is_campaign',
-                  'is_funding', 'people_requested', 'celebrate_results',
+                  'is_funding', 'people_needed', 'celebrate_results',
                   'people_registered', 'location', 'vote_count',
                   'voting_deadline', 'project_type')
 
@@ -183,6 +183,8 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     image = ImageSerializer(required=False, allow_null=True)
     pitch = serializers.CharField(required=False, allow_null=True)
     slug = serializers.CharField(read_only=True)
+    people_registered = serializers.IntegerField(read_only=True)
+    people_needed = serializers.IntegerField(read_only=True)
 
     amount_asked = MoneySerializer(required=False, allow_null=True)
     amount_donated = MoneySerializer(read_only=True)
@@ -280,6 +282,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'account_number', 'account_bic', 'documents',
                   'account_bank_country', 'amount_asked',
                   'amount_donated', 'amount_needed', 'currencies',
+                  'people_needed', 'people_registered',
                   'video_url', 'video_html', 'is_funding', 'story', 'tasks',
                   'budget_lines', 'deadline', 'latitude', 'longitude',
                   'project_type')

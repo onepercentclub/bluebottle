@@ -126,6 +126,7 @@ class TestTaskStatusMail(TaskMailTestBase):
         # There should be one email send immediately
         self.assertEquals(len(mail.outbox), 1)
         self.assertTrue('set to realized' in mail.outbox[0].subject)
+        self.assertTrue('Hello {}'.format(self.task.author.short_name) in mail.outbox[0].body)
 
         # And there should be 2 scheduled
 
@@ -142,6 +143,30 @@ class TestTaskStatusMail(TaskMailTestBase):
         self.assertEqual(args2[0][1], 'task_status_realized_second_reminder')
         self.assertTrue(
             now() + timedelta(days=6) - kwargs2['eta'] < timedelta(minutes=1)
+        )
+
+    @override_settings(REMINDER_MAIL_DELAY=60)
+    def test_status_realized_mail_override_delay(self):
+        """
+        Setting status to realized should trigger email
+        """
+        self.task.status = "in progress"
+        self.task.save()
+        self.assertEquals(len(mail.outbox), 0)
+
+        with patch('bluebottle.tasks.taskmail.send_task_realized_mail.apply_async') as mock_task:
+            self.task.status = "realized"
+            self.task.save()
+
+        # One mail should be scheduled in 60 minutes
+        (args1, kwargs1), (args2, kwargs2) = mock_task.call_args_list
+        self.assertTrue(
+            now() + timedelta(minutes=60) - kwargs1['eta'] < timedelta(minutes=1)
+        )
+
+        # and one in 120 minutes
+        self.assertTrue(
+            now() + timedelta(minutes=120) - kwargs2['eta'] < timedelta(minutes=1)
         )
 
     def test_status_realized_mail_already_confirmed(self):
@@ -176,6 +201,7 @@ class TestTaskStatusMail(TaskMailTestBase):
         self.assertEquals(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.subject, 'test subject')
+        self.assertTrue('Hello {}'.format(self.task.author.short_name) in mail.outbox[0].body)
         self.assertTrue(
             'Hopefully your task "{}" was a great success'.format(self.task.title) in email.body
         )
@@ -197,6 +223,7 @@ class TestTaskStatusMail(TaskMailTestBase):
         self.assertTrue(
             'In case it slipped your mind' in email.body
         )
+        self.assertTrue('Hello {}'.format(self.task.author.short_name) in mail.outbox[0].body)
         self.assertTrue(
             'https://testserver/go/tasks/{}'.format(self.task.pk) in email.body
         )

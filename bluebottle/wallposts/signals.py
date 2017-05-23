@@ -3,7 +3,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import connection
 
-from bluebottle.wallposts.models import MediaWallpost, TextWallpost
+from bluebottle.wallposts.models import MediaWallpost, TextWallpost, SystemWallpost
 
 from bluebottle.common.tasks import _post_to_facebook
 
@@ -23,3 +23,11 @@ def post_to_facebook(sender, instance, created, **kwargs):
             kwargs={'tenant': tenant},
             countdown=5
         )
+
+
+@receiver(post_save, sender=TextWallpost)
+def clean_up_system_wallpost(sender, instance, created, **kwargs):
+
+    # Remove SystemWallpost connected to the same donation
+    if instance.donation:
+        SystemWallpost.objects.filter(donation=instance.donation).all().delete()

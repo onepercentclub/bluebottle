@@ -26,6 +26,6 @@ class HomePage(object):
         elif len(projects) > 0:
             self.projects = projects[0:len(projects)]
         else:
-            self.projects = None
+            self.projects = Project.objects.none()
 
         return self

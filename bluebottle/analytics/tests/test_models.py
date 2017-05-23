@@ -1,16 +1,13 @@
+from django.test.utils import override_settings
 from mock import patch
 from moneyed import Money
-from datetime import timedelta
-
-from django.test.utils import override_settings
-from django.utils import timezone
 
 from bluebottle.analytics import utils
 from bluebottle.analytics.backends import InfluxExporter
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.projects import models
 from bluebottle.projects.models import Project
-from bluebottle.tasks.models import Task, TaskMember, TaskStatusLog
+from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
@@ -77,33 +74,34 @@ class TestProjectAnalytics(BluebottleTestCase):
 
         self.theme = ProjectThemeFactory.create(name='Cleaning the beach',
                                                 slug='cleaning-the-beach')
-        self.country = CountryFactory.create()
+        self.country = CountryFactory.create(name='Beachville')
         self.status = ProjectPhase.objects.get(slug='campaign')
         self.expected_tags = {
             'status': self.status.name,
             'theme_slug': u'cleaning-the-beach',
             'status_slug': self.status.slug,
-            'country': self.country.name,
+            'country': u'Beachville',
             'theme': u'Cleaning the beach',
             'location': '',
             'location_group': '',
             'type': 'project',
-            'sub_type': 'funding',
+            'sub_type': u'funding',
             'tenant': u'test',
         }
 
     def test_country_tag(self, queue_mock):
-        ProjectFactory.create(theme=self.theme, status=self.status,
-                              country=self.country, location=None)
+        project = ProjectFactory.create(theme=self.theme, status=self.status, country=self.country, location=None)
+
+        self.expected_tags['id'] = project.id
 
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], self.expected_tags)
 
     def test_location_country_tag(self, queue_mock):
         location = LocationFactory.create()
-        ProjectFactory.create(theme=self.theme, status=self.status,
-                              location=location, country=None)
-
+        project = ProjectFactory.create(theme=self.theme, status=self.status,
+                                        location=location, country=None)
+        self.expected_tags['id'] = project.id
         self.expected_tags['country'] = location.country.name
         self.expected_tags['location'] = location.name
         self.expected_tags['location_group'] = location.group.name
@@ -113,7 +111,7 @@ class TestProjectAnalytics(BluebottleTestCase):
     def test_tags_generation(self, queue_mock):
         project = ProjectFactory.create(theme=self.theme, status=self.status,
                                         country=self.country)
-
+        self.expected_tags['id'] = project.id
         self.expected_fields = {
             'id': project.id,
             'user_id': project.owner.id
@@ -125,9 +123,9 @@ class TestProjectAnalytics(BluebottleTestCase):
 
     @patch.object(utils, '_', fake_trans)
     def test_tags_translated(self, queue_mock):
-        ProjectFactory.create(theme=self.theme, status=self.status,
-                              country=self.country)
-
+        project = ProjectFactory.create(theme=self.theme, status=self.status,
+                                        country=self.country)
+        self.expected_tags['id'] = project.id
         # Simple translation added via fake_trans method above
         self.expected_tags['theme'] = 'Cleaning the park'
         args, kwargs = queue_mock.call_args
@@ -152,10 +150,13 @@ class TestProjectAnalytics(BluebottleTestCase):
         previous_call_count = queue_mock.call_count
         Project.objects.update(status=self.status)
 
-        # ProjectPhaseLog will also be created when projects are created
-        self.assertEqual(queue_mock.call_count, previous_call_count + len(Project.objects.all()) * 2,
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Project.objects.all()),
                          'Analytics should be sent when update is called')
 
+        # Get the last updated project as this will be the last project to
+        # trigger the analytics queue task
+        project = Project.objects.latest('updated')
+        self.expected_tags['id'] = project.id
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], self.expected_tags)
 
@@ -173,17 +174,19 @@ class TestTaskAnalytics(BluebottleTestCase):
         task = TaskFactory.create(author=user)
         project = task.project
         expected_tags = {
+            'id': task.id,
             'type': 'task',
             'tenant': u'test',
             'status': 'open',
             'location': '',
             'location_group': '',
-            'country': '',
+            'country': project.country_name,
             'theme': project.theme.name,
             'theme_slug': project.theme.slug,
         }
         expected_fields = {
             'id': task.id,
+            'project_id': project.id,
             'user_id': task.author.id
         }
         args, kwargs = queue_mock.call_args
@@ -220,8 +223,7 @@ class TestTaskAnalytics(BluebottleTestCase):
         previous_call_count = queue_mock.call_count
         Task.objects.update(status='realized')
 
-        # TaskStatusLog will also be created when tasks are created
-        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()) * 2,
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()),
                          'Analytics should be sent when update is called')
 
         args, kwargs = queue_mock.call_args
@@ -243,18 +245,20 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
 
         project = task.project
         expected_tags = {
+            'id': task_member.id,
             'type': 'task_member',
             'tenant': u'test',
             'status': 'applied',
             'location': '',
             'location_group': '',
-            'country': task.project.country.name,
+            'country': project.country.name,
             'theme': project.theme.name,
             'theme_slug': project.theme.slug,
         }
         expected_fields = {
             'id': task_member.id,
-            'task_id': task.id,
+            'task_id': task_member.task.id,
+            'project_id': project.id,
             'user_id': user.id,
             'hours': int(task_member.time_spent)
         }
@@ -272,8 +276,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         task_member.motivation = 'I want an extra clean beach'
         task_member.save()
 
-        self.assertEqual(previous_call_count, queue_mock.call_count,
-                         'Analytics should only be sent when status changes')
+        self.assertEqual(previous_call_count, queue_mock.call_count)
 
     def test_status_change(self, queue_mock):
         user = BlueBottleUserFactory.create()
@@ -285,26 +288,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         task_member.status = 'realized'
         task_member.save()
 
-        # TaskMemberStatusLog will also be created when task status is updated
-        self.assertEqual(previous_call_count + 2, queue_mock.call_count,
-                         'Analytics should be sent when task member status changes')
-
-    def test_realized_status(self, queue_mock):
-        user = BlueBottleUserFactory.create()
-        task = TaskFactory.create(author=user, people_needed=2, status='realized')
-        task_member = TaskMemberFactory.create(member=user, task=task, status='approved')
-
-        # update task status realized log to be 10 hours ago
-        task_log = TaskStatusLog.objects.filter(task=task, status=task.TaskStatuses.realized).last()
-        task_log.start = timezone.now() - timedelta(hours=10)
-        task_log.save()
-
-        # Set task member as realized
-        task_member.status = task_member.TaskMemberStatuses.realized
-        task_member.save()
-
-        args, kwargs = queue_mock.call_args
-        self.assertEqual(kwargs['fields']['realized_duration'], 10)
+        self.assertEqual(previous_call_count + 1, queue_mock.call_count)
 
     @patch.object(utils, '_', fake_trans)
     def test_theme_translated(self, queue_mock):
@@ -324,8 +308,7 @@ class TestTaskMemberAnalytics(BluebottleTestCase):
         previous_call_count = queue_mock.call_count
         TaskMember.objects.update(status='realized')
 
-        # TaskMemberStatusLog will also be created when TaskMember are created
-        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()) * 2,
+        self.assertEqual(queue_mock.call_count, previous_call_count + len(Task.objects.all()),
                          'Analytics should be sent when update is called')
 
         args, kwargs = queue_mock.call_args
@@ -346,6 +329,7 @@ class TestOrderAnalytics(BluebottleTestCase):
     def test_tags_generation(self, queue_mock):
         order = OrderFactory.create(total=Money(100, 'EUR'), user=self.user)
         expected_tags = {
+            'id': order.id,
             'type': 'order',
             'tenant': u'test',
             'status': u'created',
@@ -362,10 +346,12 @@ class TestOrderAnalytics(BluebottleTestCase):
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
         self.assertEqual(str(kwargs['fields']['total']), '100.0')
+        self.assertEqual(kwargs['timestamp'], order.created)
 
     def test_tags_generation_usd(self, queue_mock):
         order = OrderFactory.create(total=Money(100, 'USD'), user=self.user)
         expected_tags = {
+            'id': order.id,
             'type': 'order',
             'tenant': u'test',
             'status': u'created',
@@ -430,6 +416,7 @@ class TestVoteAnalytics(BluebottleTestCase):
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
+        self.assertEqual(kwargs['timestamp'], vote.created)
 
 
 @override_settings(ANALYTICS_ENABLED=True)
@@ -457,6 +444,7 @@ class TestWallpostAnalytics(BluebottleTestCase):
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
+        self.assertEqual(kwargs['timestamp'], wallpost.created)
 
     def test_system_wallpost(self, queue_mock):
         project = ProjectFactory.create()
@@ -507,6 +495,7 @@ class TestMemberAnalytics(BluebottleTestCase):
         args, kwargs = queue_mock.call_args
         self.assertEqual(kwargs['tags'], expected_tags)
         self.assertEqual(kwargs['fields'], expected_fields)
+        self.assertEqual(kwargs['timestamp'], member.date_joined)
 
     def test_member_update(self, queue_mock):
         def do_nothing(**kwargs):

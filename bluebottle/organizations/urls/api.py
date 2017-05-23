@@ -1,16 +1,14 @@
-from ..views import ManageOrganizationList, ManageOrganizationDetail
 from django.conf.urls import url
-from surlex.dj import surl
-from ..views import OrganizationDetail, OrganizationList
+
+from bluebottle.organizations.views import (OrganizationList, OrganizationDetail,
+                                            OrganizationContactList, OrganizationContactDetail)
 
 urlpatterns = [
-    url(r'^$', OrganizationList.as_view(),
-        name='organization-list'),
-    surl(r'^<pk:#>$', OrganizationDetail.as_view(),
-         name='organization-detail'),
-    surl(r'^manage/$', ManageOrganizationList.as_view(),
-         name='manage-organization-list'),
-    surl(r'^manage/<pk:#>$',
-         ManageOrganizationDetail.as_view(),
-         name='manage-organization-detail'),
+    url(r'^$', OrganizationList.as_view(), name='organization_list'),
+    url(r'^(?P<pk>\d+)$', OrganizationDetail.as_view(),
+        name='organization_detail'),
+    url(r'^contacts/$', OrganizationContactList.as_view(),
+        name='organization_contact_list'),
+    url(r'^contacts/(?P<pk>\d+)$', OrganizationContactDetail.as_view(),
+        name='organization_contact_detail')
 ]

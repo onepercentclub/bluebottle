@@ -1,7 +1,9 @@
 import logging
+from datetime import datetime, timedelta
 
 from celery import shared_task
 from django.conf import settings
+from django.core.management import call_command
 
 from bluebottle.utils.utils import get_class
 from .exception import AnalyticsException
@@ -35,3 +37,12 @@ def _process_handler(backend, timestamp, tags, fields):
         handler.process(timestamp, tags, fields)
     except Exception as exc:
         raise AnalyticsException(exc)
+
+
+@shared_task
+def generate_engagement_metrics():
+    today = datetime.utcnow().date()
+    yesterday = today - timedelta(days=1)
+    logger.info("Generating Engagement Metrics: start date: {} end date: {}".format(yesterday, today))
+    call_command('export_engagement_metrics', '--start', yesterday.strftime('%Y-%m-%d'),
+                 '--end', today.strftime('%Y-%m-%d'), '--export-to', 'influxdb')

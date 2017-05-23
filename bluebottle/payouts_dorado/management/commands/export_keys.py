@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand, CommandError
 from rest_framework.authtoken.models import Token
 
 from bluebottle.clients.models import Client
+from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
 
 
@@ -49,7 +50,11 @@ class Command(BaseCommand):
                     {
                         'api_key': token.key,
                         'name': tenant.client_name,
-                        'domain': 'https://{}'.format(tenant.domain_url)
+                        'domain': 'https://{}'.format(tenant.domain_url),
+                        'fees': {
+                            'under_target': properties.PROJECT_PAYOUT_FEES.get('not_fully_funded', 0),
+                            'over_target': properties.PROJECT_PAYOUT_FEES.get('fully_funded', 0)
+                        }
                     } for token in
                     Token.objects.filter(user__email=options['email'])
                 ]

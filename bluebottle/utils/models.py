@@ -60,7 +60,9 @@ ADDITIONAL_GROUP_PERMS = {
             'add_rawhtmlitem', 'change_rawhtmlitem', 'delete_rawhtmlitem',
             'add_textitem', 'change_textitem', 'delete_textitem',
             'add_placeholder', 'change_placeholder', 'delete_placeholder',
-            'add_contentitem', 'change_contentitem', 'delete_contentitem'
+            'add_contentitem', 'change_contentitem', 'delete_contentitem',
+            'add_placeholder', 'change_placeholder', 'delete_placeholder',
+            'add_textitem', 'change_textitem', 'delete_textitem',
         )
     }
 }
@@ -72,7 +74,7 @@ def _update_permissions(sender, **kwargs):
 
     # Load additional permissions after all models have been synced
     if sender.name == settings.INSTALLED_APPS[-1]:
-        update_group_permissions(sender, ADDITIONAL_GROUP_PERMS)
+        update_group_permissions(None, ADDITIONAL_GROUP_PERMS)
 
 
 # Below is test-only stuff

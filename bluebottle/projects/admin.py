@@ -4,17 +4,21 @@ from decimal import InvalidOperation
 
 from django import forms
 from django.conf.urls import url
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.db.models import Count, Sum
 from django.utils.html import format_html
-from django.http.response import HttpResponseRedirect
+from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.utils.translation import ugettext_lazy as _
 
 from daterange_filter.filter import DateRangeFilter
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
+from bluebottle.payouts_dorado.adapters import (
+    DoradoPayoutAdapter, PayoutValidationError, PayoutCreationError
+)
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
@@ -262,10 +266,11 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                ProjectPhaseLogInline)
 
     def get_readonly_fields(self, request, obj=None):
-        fields = ('vote_count',
+        fields = ['vote_count',
                   'amount_donated', 'amount_needed',
-                  'popularity'
-                  )
+                  'popularity', 'payout_status']
+        if obj and obj.payout_status and obj.payout_status != 'needs_approval':
+            fields += ('status', )
         return fields
 
     def get_urls(self):
@@ -279,29 +284,68 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def approve_payout(self, request, pk=None):
         project = Project.objects.get(pk=pk)
-        if project.payout_status == 'needs_approval':
-            project.payout_status = 'approved'
-            project.save()
-        project_url = reverse('admin:projects_project_change', args=(project.id,))
-        response = HttpResponseRedirect(project_url)
-        return response
+        if not request.user.has_perm('projects.approve_payout'):
+            return HttpResponseForbidden('Missing permission: projects.approve_payout')
+        elif project.payout_status != 'needs_approval':
+            self.message_user(request, 'The payout does not have the status "needs approval"')
+        else:
+            adapter = DoradoPayoutAdapter(project)
+            try:
+                adapter.trigger_payout()
+            except PayoutValidationError, e:
+                errors = e.message['errors']
+                if type(errors) == unicode:
+                    self.message_user(
+                        request,
+                        'Account details: {}.'.format(errors),
+                        level=messages.ERROR
+                    )
+                else:
+                    for field, errors in errors.items():
+                        for error in errors:
+                            self.message_user(
+                                request,
+                                'Account details: {}, {}.'.format(field, error.lower()),
+                                level=messages.ERROR
+                            )
+            except (PayoutCreationError, ImproperlyConfigured), e:
+                logger.warning(
+                    'Error approving payout: {}'.format(e),
+                    exc_info=1
+                )
 
-    list_filter = ('country__subregion__region',)
+                self.message_user(
+                    request,
+                    'Failed to approve payout: {}'.format(e),
+                    level=messages.ERROR
+                )
+
+        project_url = reverse('admin:projects_project_change', args=(project.id,))
+        return HttpResponseRedirect(project_url)
+
+    list_filter = ('country__subregion__region', )
 
     def get_list_filter(self, request):
-        filters = ('status', 'is_campaign', ProjectThemeFilter, ProjectReviewerFilter,
-                   'project_type', ('deadline', DateRangeFilter),)
+        filters = ['status', 'is_campaign', ProjectThemeFilter, ProjectReviewerFilter,
+                   'project_type', ('deadline', DateRangeFilter), ]
+
+        if request.user.has_perm('projects.approve_payout'):
+            filters.insert(1, 'payout_status')
 
         # Only show Location column if there are any
         if Location.objects.count():
-            filters += (LocationGroupFilter, LocationFilter)
+            filters += [LocationGroupFilter, LocationFilter]
         else:
-            filters += ('country__subregion__region', ('country', admin.RelatedOnlyFieldListFilter),)
+            filters += ['country__subregion__region', ('country', admin.RelatedOnlyFieldListFilter), ]
         return filters
 
     def get_list_display(self, request):
-        fields = ('get_title_display', 'get_owner_display', 'created',
-                  'status', 'deadline', 'donated_percentage')
+        fields = ['get_title_display', 'get_owner_display', 'created',
+                  'status', 'deadline', 'donated_percentage', 'amount_extra']
+
+        if request.user.has_perm('projects.approve_payout'):
+            fields.insert(4, 'payout_status')
+
         # Only show Location column if there are any
         if Location.objects.count():
             fields += ('location',)
@@ -317,16 +361,20 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('title', 'title'),
         ('owner', 'owner'),
         ('owner__remote_id', 'remote id'),
+        ('reviewer', 'reviewer'),
         ('created', 'created'),
         ('status', 'status'),
+        ('payout_status', 'payout status'),
         ('theme', 'theme'),
         ('location__group', 'region'),
+        ('country', 'country'),
         ('location', 'location'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),
         ('campaign_started', 'campaign started'),
         ('campaign_ended', 'campaign ended'),
         ('campaign_funded', 'campaign funded'),
+        ('campaign_paid_out', 'campaign paid out'),
         ('task_count', 'task count'),
         ('supporters', 'supporters'),
         ('time_spent', 'time spent'),
@@ -348,36 +396,42 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         actions = super(ProjectAdmin, self).get_actions(request)
         return OrderedDict(reversed(actions.items()))
 
-    fieldsets = (
-        (_('Main'), {'fields': ('owner', 'reviewer', 'organization',
-                                'status', 'title', 'slug', 'project_type',
-                                'is_campaign', 'celebrate_results')}),
+    def get_fieldsets(self, request, obj=None):
+        main = {'fields': ['owner', 'reviewer', 'organization',
+                           'status', 'title', 'slug', 'project_type',
+                           'is_campaign', 'celebrate_results']}
 
-        (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
+        if request.user.has_perm('projects.approve_payout'):
+            main['fields'].insert(3, 'payout_status')
 
-        (_('Details'), {'fields': ('language', 'theme', 'categories', 'image',
-                                   'video_url', 'country',
-                                   'latitude', 'longitude',
-                                   'location', 'place')}),
+        return (
+            (_('Main'), main),
 
-        (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
-                                'amount_donated', 'amount_needed',
-                                'currencies',
-                                'popularity', 'vote_count')}),
+            (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
 
-        (_('Dates'), {'fields': ('voting_deadline', 'deadline',
-                                 'date_submitted', 'campaign_started',
-                                 'campaign_ended', 'campaign_funded')}),
+            (_('Details'), {'fields': ('language', 'theme', 'categories', 'image',
+                                       'video_url', 'country',
+                                       'latitude', 'longitude',
+                                       'location', 'place')}),
 
-        (_('Bank details'), {'fields': ('account_holder_name',
-                                        'account_holder_address',
-                                        'account_holder_postal_code',
-                                        'account_holder_city',
-                                        'account_holder_country',
-                                        'account_number',
-                                        'account_bic',
-                                        'account_bank_country')})
-    )
+            (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
+                                    'amount_donated', 'amount_needed',
+                                    'currencies',
+                                    'popularity', 'vote_count')}),
+
+            (_('Dates'), {'fields': ('voting_deadline', 'deadline',
+                                     'date_submitted', 'campaign_started',
+                                     'campaign_ended', 'campaign_funded', 'campaign_paid_out')}),
+
+            (_('Bank details'), {'fields': ('account_holder_name',
+                                            'account_holder_address',
+                                            'account_holder_postal_code',
+                                            'account_holder_city',
+                                            'account_holder_country',
+                                            'account_number',
+                                            'account_bic',
+                                            'account_bank_country')})
+        )
 
     def vote_count(self, obj):
         return obj.vote_set.count()

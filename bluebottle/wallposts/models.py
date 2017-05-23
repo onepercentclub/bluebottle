@@ -93,8 +93,16 @@ class Wallpost(PolymorphicModel):
             'user_id': 'author.id'
         }
 
-        def skip(self, obj, created):
+        @staticmethod
+        def skip(obj, created):
             return True if obj.wallpost_type == 'system' else False
+
+        @staticmethod
+        def timestamp(obj, created):
+            if created:
+                return obj.created
+            else:
+                return obj.updated
 
     class Meta:
         ordering = ('created',)
@@ -209,8 +217,16 @@ class Reaction(models.Model):
             'user_id': 'author.id'
         }
 
-        def extra_tags(self, instance, created):
+        @staticmethod
+        def extra_tags(instance, created):
             return {'sub_type': 'reaction'}
+
+        @staticmethod
+        def timestamp(obj, created):
+            if created:
+                return obj.created
+            else:
+                return obj.updated
 
     class Meta:
         ordering = ('created',)

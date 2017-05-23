@@ -3,8 +3,9 @@ from django.core.urlresolvers import reverse
 from django.template.response import TemplateResponse
 from django.http.response import HttpResponseRedirect
 from django.utils.translation import ugettext as _
+from django.utils.html import format_html
 
-from bluebottle.organizations.models import Organization
+from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.projects.models import Project
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -40,9 +41,38 @@ merge.short_description = _('Merge Organizations')
 
 class OrganizationProjectInline(admin.TabularInline):
     model = Project
-    readonly_fields = ('title', 'owner', 'status')
-    fields = ('title', 'owner', 'status')
+    readonly_fields = ('project_url', 'owner', 'status')
+    fields = ('project_url', 'owner', 'status')
     extra = 0
+
+    def project_url(self, obj):
+        url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label,
+                                                    obj._meta.model_name),
+                      args=[obj.id])
+        return format_html(u"<a href='{}'>{}</a>", str(url), obj.title)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class OrganizationContactInline(admin.TabularInline):
+    model = OrganizationContact
+    verbose_name = "Contact"
+    verbose_name_plural = "Contacts"
+    readonly_fields = ('name', 'email', 'phone', 'creator')
+    fields = ('name', 'email', 'phone', 'creator')
+
+    def creator(self, obj):
+        owner = obj.owner
+        url = reverse('admin:{0}_{1}_change'.format(owner._meta.app_label,
+                                                    owner._meta.model_name),
+                      args=[owner.id])
+        return format_html(u"<a href='{}'>{} {}</a>", str(url), owner.first_name, owner.last_name)
+
+    creator.short_description = _('Creator')
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -52,9 +82,9 @@ class OrganizationProjectInline(admin.TabularInline):
 
 
 class OrganizationAdmin(admin.ModelAdmin):
-    inlines = (OrganizationProjectInline, )
+    inlines = (OrganizationProjectInline, OrganizationContactInline,)
 
-    list_display = ('name', 'website', 'phone_number', 'created')
+    list_display = ('name', 'email', 'website', 'phone_number', 'created')
     list_filter = (
         ('projects__theme', admin.RelatedOnlyFieldListFilter),
         ('projects__location', admin.RelatedOnlyFieldListFilter),

@@ -6,13 +6,16 @@ from django.core import mail
 
 from rest_framework import status
 
+from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.tests.test_unit import UserTestsMixin
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory
+
 from ..models import Reaction
 
 
@@ -600,7 +603,7 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
         response = self.client.get(self.wallpost_url,
-                                   {'project': self.some_project.slug,
+                                   {'parent_id': self.some_project.slug,
                                     'parent_type': 'project'})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -609,7 +612,7 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
         response = self.client.get(self.wallpost_url,
-                                   {'project': self.some_project.slug,
+                                   {'parent_id': self.some_project.slug,
                                     'parent_type': 'project'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -618,7 +621,62 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
         response = self.client.get(self.wallpost_url,
-                                   {'project': self.some_project.slug,
+                                   {'parent_id': self.some_project.slug,
                                     'parent_type': 'project'},
                                    token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestDonationWallpost(BluebottleTestCase):
+    """
+    Test that a wallpost is created after making a donation and that
+    the system wallposts is removed if we post a comment.
+    """
+
+    def setUp(self):
+        super(TestDonationWallpost, self).setUp()
+
+        self.init_projects()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.some_project = ProjectFactory.create()
+        self.wallpost_url = reverse('wallpost_list')
+        self.text_wallpost_url = reverse('text_wallpost_list')
+
+    def test_donation_wallposts(self):
+        # Create a donation and set it to settled to trigger wallpost
+        order = OrderFactory.create(user=self.user)
+        donation = DonationFactory.create(project=self.some_project, order=order)
+        order.locked()
+        order.success()
+        order.save()
+
+        # There should be one system wallpost now
+        response = self.client.get(self.wallpost_url,
+                                   {'parent_id': self.some_project.slug, 'parent_type': 'project'},
+                                   token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['type'], 'system')
+
+        # Now create a text wallpost for this donation (user enters text in thank you modal)
+        data = {
+            "title": "",
+            "text": "What a nice project!",
+            "parent_id": self.some_project.slug,
+            "parent_type": "project",
+            "donation": donation.id
+        }
+        response = self.client.post(self.text_wallpost_url, data, token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # The project should still have one wallpost, only the message last added
+        response = self.client.get(self.wallpost_url,
+                                   {'parent_id': self.some_project.slug,
+                                    'parent_type': 'project'},
+                                   token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['type'], 'text')
+        self.assertEqual(response.data['results'][0]['text'], '<p>What a nice project!</p>')

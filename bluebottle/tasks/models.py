@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.db import models, connection
 from django.conf import settings
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext, ugettext_lazy as _
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
@@ -23,6 +23,8 @@ GROUP_PERMS = {
         'perms': (
             'add_task', 'change_task', 'delete_task',
             'add_taskmember', 'change_taskmember', 'delete_taskmember',
+            'add_taskfile', 'change_taskfile', 'delete_taskfile',
+            'add_skill', 'change_skill', 'delete_skill',
         )
     }
 }
@@ -61,6 +63,7 @@ class Task(models.Model, PreviousStatusMixin):
                                               blank=True, null=True)
 
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
+    deadline_to_apply = models.FloatField(_('deadline_to_apply'), help_text=_('Deadline to apply'), null=True)
 
     objects = UpdateSignalsQuerySet.as_manager()
 
@@ -82,23 +85,6 @@ class Task(models.Model, PreviousStatusMixin):
         verbose_name_plural = _(u'tasks')
 
         ordering = ['-created']
-
-    class Analytics:
-        type = 'task'
-        tags = {
-            'status': 'status',
-            'location': 'project.location.name',
-            'location_group': 'project.location.group.name',
-            'country': 'task.project.country_name',
-            'theme': {
-                'project.theme.name': {'translate': True}
-            },
-            'theme_slug': 'project.theme.slug'
-        }
-        fields = {
-            'id': 'id',
-            'user_id': 'author.id'
-        }
 
     def __unicode__(self):
         return self.title
@@ -180,9 +166,9 @@ class Task(models.Model, PreviousStatusMixin):
             self.project.check_task_status()
 
             with TenantLanguage(self.author.primary_language):
-                subject = _("The status of your task '{0}' is set to realized").format(self.title)
-                second_subject = _("(Don't forget to) confirm the participants of your task!")
-                third_subject = _("Last chance to confirm the participants of your task")
+                subject = ugettext("The status of your task '{0}' is set to realized").format(self.title)
+                second_subject = ugettext("Don't forget to confirm the participants of your task!")
+                third_subject = ugettext("Last chance to confirm the participants of your task")
 
             # Immediately send email about realized task
             send_task_realized_mail(self, 'task_status_realized', subject, connection.tenant)
@@ -191,11 +177,11 @@ class Task(models.Model, PreviousStatusMixin):
                 #  And schedule two more mails (in  3 and 6 days)
                 send_task_realized_mail.apply_async(
                     [self, 'task_status_realized_reminder', second_subject, connection.tenant],
-                    eta=timezone.now() + timedelta(days=3)
+                    eta=timezone.now() + timedelta(minutes=settings.REMINDER_MAIL_DELAY)
                 )
                 send_task_realized_mail.apply_async(
                     [self, 'task_status_realized_second_reminder', third_subject, connection.tenant],
-                    eta=timezone.now() + timedelta(days=6)
+                    eta=timezone.now() + timedelta(minutes=2 * settings.REMINDER_MAIL_DELAY)
                 )
 
         if oldstate in ("in progress", "open") and newstate == "closed":
@@ -283,44 +269,6 @@ class TaskMember(models.Model, PreviousStatusMixin):
         verbose_name = _(u'task member')
         verbose_name_plural = _(u'task members')
 
-    class Analytics:
-        type = 'task_member'
-        tags = {
-            'status': 'status',
-            'location': 'task.project.location.name',
-            'location_group': 'task.project.location.group.name',
-            'country': 'task.project.country_name',
-            'theme': {
-                'task.project.theme.name': {'translate': True}
-            },
-            'theme_slug': 'task.project.theme.slug'
-        }
-        fields = {
-            'id': 'id',
-            'task_id': 'task.id',
-            'user_id': 'member.id'
-        }
-
-        def extra_fields(self, obj, created):
-            fields = {}
-
-            # Also set the hours since the task was realized if the task member
-            # status is now realized.
-            if (obj._original_status != obj.TaskMemberStatuses.realized and
-               obj.status == obj.TaskMemberStatuses.realized and
-               obj.task.status == obj.task.TaskStatuses.realized):
-                # Use the last realized start time recorded in the task status logs as the base
-                task_log = TaskStatusLog.objects.filter(task=obj.task, status=obj.task.TaskStatuses.realized).last()
-                delta = obj.updated - task_log.start
-
-                # add the hours since task realized
-                fields['realized_duration'] = int(delta.total_seconds() / 60 / 60)
-
-            # Force the time_spent to an int.
-            fields['hours'] = int(obj.time_spent)
-
-            return fields
-
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
 
@@ -354,8 +302,9 @@ class TaskStatusLog(models.Model):
         _('created'), help_text=_('When this task entered in this status.'))
 
     class Analytics:
-        type = 'task_status_update'
+        type = 'task'
         tags = {
+            'id': 'task.id',
             'status': 'status',
             'theme': {
                 'task.project.theme.name': {'translate': True}
@@ -366,11 +315,14 @@ class TaskStatusLog(models.Model):
             'country': 'task.project.country_name'
         }
         fields = {
-            'id': 'id',
+            'id': 'task.id',
             'project_id': 'task.project.id',
             'user_id': 'task.author.id',
-            'task_id': 'task.id'
         }
+
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.start
 
 
 class TaskMemberStatusLog(models.Model):
@@ -380,23 +332,33 @@ class TaskMemberStatusLog(models.Model):
         _('created'), help_text=_('When this task member entered in this status.'))
 
     class Analytics:
-        type = 'task_member_status_update'
+        type = 'task_member'
         tags = {
+            'id': 'task_member.id',
             'status': 'status',
+            'location': 'task_member.project.location.name',
+            'location_group': 'task_member.project.location.group.name',
+            'country': 'task_member.project.country_name',
             'theme': {
                 'task_member.project.theme.name': {'translate': True}
             },
             'theme_slug': 'task_member.project.theme.slug',
-            'location': 'task_member.project.location.name',
-            'location_group': 'task_member.project.location.group.name',
-            'country': 'task_member.project.country_name'
         }
         fields = {
-            'id': 'id',
+            'id': 'task_member.id',
+            'task_id': 'task_member.task.id',
             'project_id': 'task_member.project.id',
             'user_id': 'task_member.member.id',
-            'task_id': 'task_member.task.id'
         }
+
+        @staticmethod
+        def extra_fields(obj, created):
+            # Force the time_spent to an int.
+            return {'hours': int(obj.task_member.time_spent)}
+
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.start
 
 
 from .taskmail import send_task_realized_mail  # noqa

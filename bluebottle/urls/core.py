@@ -17,8 +17,6 @@ urlpatterns = [
         include('bluebottle.redirects.urls.api')),
     url(r'^api/users/',
         include('bluebottle.bb_accounts.urls.api')),
-    url(r'^api/bb_organizations/',
-        include('bluebottle.bb_organizations.urls.api')),
     url(r'^api/bb_projects/',
         include('bluebottle.bb_projects.urls.api')),
     url(r'^api/fundraisers/',
@@ -83,8 +81,6 @@ urlpatterns = [
     url(r'^surveys/',
         include('bluebottle.surveys.urls.core')),
 
-    url(r'^api/organizations/',
-        include('bluebottle.organizations.urls.api')),
     url(r'^api/suggestions/',
         include('bluebottle.suggestions.urls.api')),
 
@@ -97,6 +93,9 @@ urlpatterns = [
     # Organization urls for private documents
     url(r'^documents/',
         include('bluebottle.organizations.urls.documents')),
+
+    url(r'^api/organizations/',
+        include('bluebottle.organizations.urls.api')),
 
     url(r'^embed/', include('bluebottle.widget.urls.core')),
 

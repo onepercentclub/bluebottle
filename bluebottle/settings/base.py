@@ -241,6 +241,7 @@ SHARED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
 
     # 3rd party apps
     'lockdown',
@@ -303,6 +304,7 @@ TENANT_APPS = (
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
+    'bluebottle.payouts_dorado',
     'bluebottle.surveys',
 
     # Plain Bluebottle apps
@@ -321,6 +323,7 @@ TENANT_APPS = (
     'bluebottle.payments_docdata',
     'bluebottle.payments_interswitch',
     'bluebottle.payments_flutterwave',
+    'bluebottle.payments_telesom',
     'bluebottle.payments_vitepay',
     'bluebottle.payments_pledge',
     'bluebottle.payments_logger',
@@ -339,7 +342,6 @@ TENANT_APPS = (
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
-    'bluebottle.bb_organizations',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
     'bluebottle.bb_fundraisers',
@@ -509,7 +511,8 @@ ANALYTICS_BACKENDS = {
         'measurement': 'saas',
     }
 }
-ANALYTICS_FRONTEND = 'https://analytics.onepercentclub.com'
+
+ANALYTICS_FRONTEND = ''
 ANALYTICS_BACKOFFICE_ENABLED = True
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
@@ -615,6 +618,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('id', 'Project ID'),
                 ('owner__id', 'User ID'),
                 ('owner__remote_id', 'Remote ID'),
+                ('reviewer__id', 'Reviewer ID'),
                 ('status__name', 'Status'),
                 ('title', 'Title'),
                 ('owner__email', 'Email'),
@@ -787,3 +791,5 @@ AUTO_CONVERT_MONEY = False
 LOCKDOWN_URL_EXCEPTIONS = [r'^/payments_vitepay/status_update/']
 THUMBNAIL_ENGINE = 'sorl_watermarker.engines.pil_engine.Engine'
 THUMBNAIL_WATERMARK_ALWAYS = False
+
+REMINDER_MAIL_DELAY = 60 * 24 * 3  # Three days

@@ -166,10 +166,12 @@ class ResultPageTestCase(BluebottleTestCase):
 
     def test_results_map(self):
         done_complete = ProjectPhase.objects.get(slug='done-complete')
+        done_incomplete = ProjectPhase.objects.get(slug='done-incomplete')
+
         for _index in range(0, 10):
             ProjectFactory.create(
-                status=done_complete,
-                campaign_ended=now() - timedelta(days=random.choice(range(0, 30)))
+                status=done_complete if _index % 2 == 0 else done_incomplete,
+                campaign_ended=now() - timedelta(days=random.choice(range(0, 30))),
             )
 
         ProjectsMapContent.objects.create_for_placeholder(self.placeholder, title='Test title')
@@ -189,8 +191,10 @@ class ResultPageTestCase(BluebottleTestCase):
         for key in ('title', 'slug', 'status', 'image', 'latitude', 'longitude'):
             self.assertTrue(key in project)
 
-        dates = [Project.objects.get(pk=item['id']).campaign_ended for item in data['projects']]
-        self.assertEqual(dates, sorted(dates))
+        # The last project in the list should be the completed (status == done-complete) one
+        # that has most recent campaign ended timestamp.
+        highlighted = Project.objects.filter(status__slug='done-complete').order_by('-campaign_ended')[0]
+        self.assertEqual(highlighted.id, int(data['projects'][9]['id']))
 
     def test_results_map_end_date_inclusive(self):
         self.page.end_date = date(2016, 12, 31)

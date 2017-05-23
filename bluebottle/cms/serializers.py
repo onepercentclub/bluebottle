@@ -1,6 +1,8 @@
 from django.db import connection
 from django.db.models import Sum
 
+from memoize import memoize
+
 from bluebottle.bluebottle_drf2.serializers import ImageSerializer, SorlImageField
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
@@ -113,7 +115,7 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
         projects = Project.objects.filter(
             campaign_ended__gte=self.context['start_date'],
             campaign_ended__lte=self.context['end_date'],
-            status__slug__in=['done-complete', 'done-incomplete']).order_by('?')
+            status__slug__in=['done-complete', 'done-incomplete']).order_by('?')[:8]
 
         return ProjectImageSerializer(projects, many=True).to_representation(projects)
 
@@ -126,16 +128,23 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 class ProjectsMapContentSerializer(serializers.ModelSerializer):
     projects = serializers.SerializerMethodField()
 
+    @memoize(timeout=60 * 60)
     def get_projects(self, obj):
         projects = Project.objects.filter(
             campaign_ended__gte=self.context['start_date'],
             campaign_ended__lte=self.context['end_date'],
             status__slug__in=['done-complete', 'done-incomplete']
         ).order_by(
+            '-status__sequence',
             'campaign_ended'
         )
 
         return ProjectTinyPreviewSerializer(projects, many=True).to_representation(projects)
+
+    def __repr__(self):
+        start = self.context['start_date'].strftime('%s') if self.context['start_date'] else 'none'
+        end = self.context['end_date'].strftime('%s') if self.context['end_date'] else 'none'
+        return 'MapsContent({},{})'.format(start, end)
 
     class Meta:
         model = ProjectImagesContent
@@ -231,21 +240,23 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
 class BlockSerializer(serializers.Serializer):
     def to_representation(self, obj):
         if isinstance(obj, StatsContent):
-            return StatsContentSerializer(obj, context=self.context).to_representation(obj)
+            serializer = StatsContentSerializer
         if isinstance(obj, QuotesContent):
-            return QuotesContentSerializer(obj, context=self.context).to_representation(obj)
+            serializer = QuotesContentSerializer
         if isinstance(obj, ProjectImagesContent):
-            return ProjectImagesContentSerializer(obj, context=self.context).to_representation(obj)
+            serializer = ProjectImagesContentSerializer
         if isinstance(obj, SurveyContent):
-            return SurveyContentSerializer(obj, context=self.context).to_representation(obj)
+            serializer = SurveyContentSerializer
         if isinstance(obj, ProjectsContent):
-            return ProjectsContentSerializer(obj, context=self.context).to_representation(obj)
+            serializer = ProjectsContentSerializer
         if isinstance(obj, ShareResultsContent):
-            return ShareResultsContentSerializer(obj, context=self.context).to_representation(obj)
+            serializer = ShareResultsContentSerializer
         if isinstance(obj, ProjectsMapContent):
-            return ProjectsMapContentSerializer(obj, context=self.context).to_representation(obj)
+            serializer = ProjectsMapContentSerializer
         if isinstance(obj, SupporterTotalContent):
-            return SupporterTotalContentSerializer(obj, context=self.context).to_representation(obj)
+            serializer = SupporterTotalContentSerializer
+
+        return serializer(obj, context=self.context).to_representation(obj)
 
 
 def watermark():

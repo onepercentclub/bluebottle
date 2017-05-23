@@ -9,7 +9,16 @@ class IsOrganizationMember(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         if isinstance(obj, Organization):
-            return request.user.id in obj.organizationmember_set.values_list(
+            return request.user.id in obj.members.values_list(
                 'user_id', flat=True)
-        return request.user.id in obj.organization.organizationmember_set.values_list(
+        return request.user.id in obj.organization.members.values_list(
             'user_id', flat=True)
+
+
+class IsContactOwner(permissions.BasePermission):
+    """
+    allows access only to contact owner.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return obj.owner == request.user

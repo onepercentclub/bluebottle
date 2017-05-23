@@ -8,6 +8,15 @@ from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
 
 
+GROUP_PERMS = {
+    'Staff': {
+        'perms': (
+            'add_reward', 'change_reward', 'delete_reward',
+        )
+    }
+}
+
+
 class Reward(models.Model):
     """
     Rewards for donations

@@ -29,7 +29,7 @@ dependency_links = [
 
 install_requires = [
     'Babel==2.3.4',
-    'Django==1.10.2',
+    'Django==1.10.7',
     'Flutterwave==1.0.7',
     'Pillow==3.2.0',
     'South==1.0.2',
@@ -95,6 +95,8 @@ install_requires = [
     'transifex-client==0.11',
     'unicodecsv==0.14.1',
     'wheel==0.29.0',
+    'xlsxwriter==0.9.6',
+    'openpyxl==2.4.7',
 
     # Github requirements
     'django-fluent-contents==1.1.11',

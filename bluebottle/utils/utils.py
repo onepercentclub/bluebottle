@@ -76,9 +76,12 @@ class StatusDefinition(object):
     APPROVED = 'approved'
     SUCCESS = 'success'
     STARTED = 'started'
+    SCHEDULED = 'scheduled'
+    RE_SCHEDULED = 're_scheduled'
     CANCELLED = 'cancelled'
     AUTHORIZED = 'authorized'
     SETTLED = 'settled'
+    CONFIRMED = 'confirmed'
     CHARGED_BACK = 'charged_back'
     REFUNDED = 'refunded'
     PAID = 'paid'
@@ -257,20 +260,23 @@ def update_group_permissions(sender, group_perms=None):
     if Group.objects.model._meta.db_table not in connection.introspection.table_names():
         return
 
-    create_permissions(sender, verbosity=False)
     try:
         if not group_perms:
-            group_perms = sender.module.models.GROUP_PERMS
+            create_permissions(sender, verbosity=False)
+            try:
+                group_perms = sender.module.models.GROUP_PERMS
+            except AttributeError:
+                return
 
         for group_name, permissions in group_perms.items():
             group, _ = Group.objects.get_or_create(name=group_name)
             for perm_codename in permissions['perms']:
-                perm = Permission.objects.get(codename=perm_codename)
-                group.permissions.add(perm)
+                permissions = Permission.objects.filter(codename=perm_codename)
+                if sender:
+                    permissions = permissions.filter(content_type__app_label=sender.label)
+                group.permissions.add(permissions.get())
 
             group.save()
-    except AttributeError:
-        pass
     except Permission.DoesNotExist, e:
         logging.debug(e)
 

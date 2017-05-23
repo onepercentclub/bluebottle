@@ -231,8 +231,7 @@ class DocdataClient(object):
         if not order_key:
             raise DocdataPaymentException("Missing order_key!")
 
-        paymentRequestInput = self.client.factory.create(
-            'ns0:paymentRequestInput')
+        paymentRequestInput = self.client.factory.create('ns0:paymentRequestInput')
 
         # We only need to set amount because of bug in suds library. Otherwise
         # it defaults to order amount.

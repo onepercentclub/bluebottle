@@ -23,7 +23,8 @@ dependency_links = [
     # https://github.com/django-money/django-money/issues/221 is not released
     'git+https://github.com/django-money/django-money.git@c6fc1aad48712b2780b8c8563c78831fb9c88a73#egg=django-money-0.10-pre',
     'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1',
-    'git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github'
+    'git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github',
+    'git+https://github.com/mcanaves/django-tenant-schemas@45157bf459c5df0f11d8c327505bf2129e7ce2e3#egg=django-tenant-schemas-1.6.3-mcanaves'
 ]
 
 install_requires = [
@@ -63,7 +64,6 @@ install_requires = [
     'django-rest-swagger==0.3.6',
     'django-select-multiple-field==0.5.0a-draft',
     'django-taggit==0.18.3',
-    'django-tenant-schemas==1.6.4',
     'django-tinymce==2.3.0',
     'django-tools==0.30.0',
     'django-uuidfield==0.5.0',
@@ -104,6 +104,7 @@ install_requires = [
     'django-bb-salesforce==1.2.2',
     'django-cors-headers==1.1.0',
     'django-taggit-autocomplete-modified==0.1.1b1',
+    'django-tenant-schemas==1.6.3-mcanaves',
     'django-token-auth==0.3.3',
     'django-money-rates==0.3.1-github'
 ]

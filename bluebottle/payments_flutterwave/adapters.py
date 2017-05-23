@@ -38,7 +38,7 @@ class FlutterwaveBasePaymentAdapter(BasePaymentAdapter):
                                options)
 
 
-class FlutterwaveMpesaPaymentAdapter(BasePaymentAdapter):
+class FlutterwaveMpesaPaymentAdapter(FlutterwaveBasePaymentAdapter):
 
     def create_payment(self):
         payment = FlutterwaveMpesaPayment(

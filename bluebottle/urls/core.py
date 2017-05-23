@@ -115,6 +115,8 @@ urlpatterns = [
         include('bluebottle.projects.urls.api')),
     url(r'^api/payouts/',
         include('bluebottle.payouts_dorado.urls')),
+
+    url(r'^downloads/', include('bluebottle.projects.urls.media')),
 ]
 
 

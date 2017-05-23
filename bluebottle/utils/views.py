@@ -1,15 +1,12 @@
 from collections import namedtuple
-import os
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.http.response import HttpResponseForbidden, HttpResponseNotFound, HttpResponse
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.views.generic.base import View
 
-from filetransfers.api import serve_file
 from rest_framework import generics
 from rest_framework import views, response
 from sorl.thumbnail.shortcuts import get_thumbnail

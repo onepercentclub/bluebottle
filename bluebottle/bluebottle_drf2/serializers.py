@@ -6,7 +6,6 @@ import sys
 from urllib2 import URLError
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.template import defaultfilters

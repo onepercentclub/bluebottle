@@ -1,5 +1,12 @@
-sudo: false
+# REF: Full .travis.yml spec. (https://github.com/travis-ci/travis-yaml/blob/master/SPEC.md)
 language: python
+
+dist: trusty
+sudo: required
+
+python:
+  - 2.7.13
+
 addons:
   postgresql: '9.1'
   apt:
@@ -7,27 +14,32 @@ addons:
       - libxmlsec1
       - libxmlsec1-dev
       - swig
+
 cache:
   directories:
     - "$HOME/.pip-cache/"
-    - "$HOME/virtualenv/python2.7.9/lib/python2.7/site-packages"
-python:
-  - 2.7.9
+    - "$HOME/virtualenv/python2.7.13/lib/python2.7/site-packages"
+
 env:
   global:
     - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
+
 install:
   - pip install --upgrade setuptools --use-mirrors
   - pip install --upgrade -I flake8
   - pip install -e .[test] --process-dependency-links --trusted-host github.com
   - echo `psql --version`
+
 before_script:
   - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
   - flake8 .
+
 script:
   - python -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8
+
 notifications:
   slack:
     secure: TOveMBh9HePYKWuGTrWF+hTXzxGZvbVsa3KU0sB1yv6qkcixb5/ggvmkTeRddYEd/zyWyMenicFsrXVBgsP0SmbNgke6kq5+EN0U5oJWse998lvCVCpwmJQMdwDHvYsOtbFEOppQrbRK4vmH8qibx3x2YVg+u+61ePHvWYF9z6U=
+
 after_success:
   - coverage combine; coverage report --omit **/migrations/**; coveralls

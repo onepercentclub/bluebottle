@@ -54,7 +54,7 @@ install_requires = [
     'django-modeltranslation==0.11',
     'django-parler==1.6.5',
     'django_polymorphic==1.0.1',
-    'django-money==0.10.2',
+    'django-money==0.10',
     'django-money-rates==0.3.1',
     'django-rest-swagger==0.3.6',
     'django-select-multiple-field==0.5.0a-draft',

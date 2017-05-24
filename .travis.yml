@@ -1,43 +1,44 @@
-sudo: false
+# REF: Full .travis.yml spec. (https://github.com/travis-ci/travis-yaml/blob/master/SPEC.md)
 language: python
+
+dist: trusty
+sudo: required
+
+python: 2.7.13
+
 addons:
-  postgresql: '9.1'
+  postgresql: 9.2
   apt:
     packages:
-    - libxmlsec1
-    - libxmlsec1-dev
-    - swig
+      - libxmlsec1
+      - libxmlsec1-dev
+      - swig
+
 cache:
   directories:
-  - "$HOME/.pip-cache/"
-  - "$HOME/virtualenv/python2.7.9/lib/python2.7/site-packages"
-python:
-- 2.7.9
+    - "$HOME/.pip-cache/"
+    - "$HOME/virtualenv/python2.7.13/lib/python2.7/site-packages"
+
 env:
   global:
-  - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
-  # $GROUPNAME for the hipchat room name
-  - secure: B05yVl8sJf8UUJuda+8VB5CV+cyuqKLTEAK0t1n/1czX+FvkyXsNdE+5b81CTjPNOQwZMzw7kbDkhq65aJpn4Ni07TWP6bpdkuX1nY6Bf+S/brLgf4wlQ+Oibj1hWhyH2iiQ9gM0ONe28/d0y/C74/ISvIDn9MYFRkuCF0Vujzo=
-  # $APIKEY for the hipchat api auth
-  - secure: PUYWLPG0f1QTf1Q77/0ft636ZKQaIIjy0eHZCVpzVyRMW0XX9N5UXhbTPE1fPFt5aRNdNjGIWxOF/4SuIEhYEaZamGG3PBNqvXI530SkTNUbNVoeAcTleYbwcaVWeYdyK2P2k1YdNUt+BbRuYN2o9I8+2QmQvQsZEwugCG4+UH4=
+    - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
+
 install:
-- pip install --upgrade setuptools --use-mirrors
-- pip install --upgrade -I flake8
-- pip install -e .[test] --process-dependency-links --trusted-host github.com
-- echo `psql --version`
+  - pip install --upgrade setuptools
+  - pip install --upgrade -I flake8
+  - pip install -e .[test] --process-dependency-links --trusted-host github.com
+  - echo `psql --version`
+
 before_script:
-- curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
-- flake8 .
+  - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
+  - flake8 .
+
 script:
-- python -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8
+  - python -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8
+
 notifications:
-  hipchat:
-    rooms:
-      secure: A7SQlgtz1wTbt5wSpP5inxXAB7Gxmss6KIjnV0RdcU1jzKbf/umrAWgLIb/M6vr/zO/YwZCa60SkYm7yn0fGEU3fVjA7rWy5w1yllMEgxxEUy4E2DF1pL/0vryI4GwgcNzre0XA1o/Lx5/8cq6FB1fZ0V5yDyIl8xxMdWFb++X4=
-    template:
-    - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
   slack:
     secure: TOveMBh9HePYKWuGTrWF+hTXzxGZvbVsa3KU0sB1yv6qkcixb5/ggvmkTeRddYEd/zyWyMenicFsrXVBgsP0SmbNgke6kq5+EN0U5oJWse998lvCVCpwmJQMdwDHvYsOtbFEOppQrbRK4vmH8qibx3x2YVg+u+61ePHvWYF9z6U=
+
 after_success:
-- bash post_travis.sh
-- coverage combine; coverage report --omit **/migrations/**; coveralls
+  - coverage combine; coverage report --omit **/migrations/**; coveralls

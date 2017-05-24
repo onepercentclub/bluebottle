@@ -188,8 +188,8 @@ class TestTaskStatus(BluebottleTestCase):
             "The deadline to apply for your task '{}' has passed".format(task.title)
         )
         self.assertTrue(
-            "The task has been set to 'running' with the {} candidates that applied".format(
-                task.people_needed) in email.body
+            "The task has been set to 'full' with the {} candidates that applied".format(
+                task.people_applied) in email.body
         )
         self.assertTrue(
             'Edit task https://testserver/tasks/{}/edit'.format(task.id) in email.body
@@ -213,8 +213,8 @@ class TestTaskStatus(BluebottleTestCase):
             "The deadline to apply for your task '{}' has passed".format(task.title)
         )
         self.assertTrue(
-            "The task has been set to 'full' with the {} candidates that applied".format(
-                task.people_needed) in email.body
+            "The task has been set to 'running' with the {} candidates that applied".format(
+                task.people_applied) in email.body
         )
         self.assertTrue(
             'Edit task https://testserver/tasks/{}/edit'.format(task.id) in email.body
@@ -326,6 +326,33 @@ class TestTaskStatus(BluebottleTestCase):
         task = TaskFactory.create(status='open', people_needed=2, type='ongoing')
 
         self.assertEqual(task.status, 'open')
+
+        task.deadline_to_apply = timezone.now() - timedelta(days=1)
+        task.deadline_to_apply_reached()
+
+        self.assertEqual(task.status, 'closed')
+        self.assertEqual(task.people_needed, 2)
+
+        email = mail.outbox[-1]
+        self.assertEqual(
+            email.subject,
+            "The deadline to apply for your task '{}' has passed".format(task.title)
+        )
+
+        self.assertTrue(
+            "the task is set to 'closed'" in email.body
+        )
+        self.assertTrue(
+            'Edit task https://testserver/tasks/{}/edit'.format(task.id) in email.body
+        )
+
+    def test_no_members_after_deadline_to_apply_withdrew(self):
+        task = TaskFactory.create(status='open', people_needed=2, type='ongoing')
+
+        self.assertEqual(task.status, 'open')
+
+        member = TaskMemberFactory.create(task=task, status='accepted', externals=0)
+        member.delete()
 
         task.deadline_to_apply = timezone.now() - timedelta(days=1)
         task.deadline_to_apply_reached()

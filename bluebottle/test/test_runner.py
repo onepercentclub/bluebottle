@@ -40,6 +40,7 @@ class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
             RateFactory.create(source=rate_source, currency='EUR', value=1.5)
             RateFactory.create(source=rate_source, currency='XOF', value=1000)
             RateFactory.create(source=rate_source, currency='NGN', value=500)
+            RateFactory.create(source=rate_source, currency='KES', value=100)
         except IntegrityError:
             pass
 

@@ -136,6 +136,11 @@ class ProjectPreviewSerializer(ProjectSerializer):
     categories = serializers.SlugRelatedField(many=True, read_only=True,
                                               slug_field='slug')
 
+    skills = serializers.SerializerMethodField()
+
+    def get_skills(self, obj):
+        return set(task.skill.id for task in obj.task_set.all() if task.skill)
+
     class Meta:
         model = Project
         fields = ('id', 'title', 'status', 'image', 'country', 'pitch',
@@ -144,7 +149,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'longitude', 'task_count', 'allow_overfunding', 'is_campaign',
                   'is_funding', 'people_needed', 'celebrate_results',
                   'people_registered', 'location', 'vote_count',
-                  'voting_deadline', 'project_type')
+                  'voting_deadline', 'project_type', 'skills')
 
 
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):

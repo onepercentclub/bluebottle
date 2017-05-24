@@ -1,6 +1,9 @@
+from datetime import timedelta
+
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from daterange_filter.filter import DateRangeFilter
@@ -92,14 +95,44 @@ class TaskFileAdminInline(admin.StackedInline):
     extra = 0
 
 
+class DeadlineToAppliedFilter(admin.SimpleListFilter):
+    title = _('Deadline to apply')
+    parameter_name = 'deadline_to_apply'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('7', 'Next 7 days'),
+            ('30', 'Next 30 days'),
+            ('0', 'Deadline passed')
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() is not None:
+            days = int(self.value())
+            if days > 0:
+                return queryset.filter(
+                    deadline_to_apply__gt=now(),
+                    deadline_to_apply__lt=now() + timedelta(days=days)
+                )
+            else:
+                return queryset.filter(
+                    deadline_to_apply__lt=now()
+                )
+        else:
+            return queryset
+
+
 class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
 
     raw_id_fields = ('author', 'project')
-    list_filter = ('status', 'type', 'deadline', ('deadline', DateRangeFilter))
-    list_display = ('title', 'project', 'status', 'created', 'deadline')
+    list_filter = ('status', 'type', 'skill__expertise',
+                   'deadline', ('deadline', DateRangeFilter),
+                   DeadlineToAppliedFilter, ('deadline_to_apply', DateRangeFilter)
+                   )
+    list_display = ('title', 'project', 'status', 'created', 'deadline', 'expertise_based')
 
     readonly_fields = ('date_status_change',)
 
@@ -107,13 +140,16 @@ class TaskAdmin(admin.ModelAdmin):
         'title', 'description',
         'author__first_name', 'author__last_name'
     )
+
     export_fields = (
         ('title', 'title'),
         ('project', 'project'),
         ('type', 'type'),
         ('status', 'status'),
         ('deadline', 'deadline'),
+        ('deadline_to_apply', 'deadline'),
         ('skill', 'skill'),
+        ('skill__expertise', 'expertise based'),
         ('people_needed', 'people needed'),
         ('time_needed', 'time needed'),
         ('author', 'author'),
@@ -125,7 +161,7 @@ class TaskAdmin(admin.ModelAdmin):
 
     fields = ('title', 'description', 'skill', 'time_needed', 'status',
               'date_status_change', 'people_needed', 'project', 'author',
-              'type', 'deadline')
+              'type', 'deadline', 'deadline_to_apply')
 
 
 admin.site.register(Task, TaskAdmin)
@@ -199,9 +235,9 @@ admin.site.register(TaskMember, TaskMemberAdmin)
 
 
 class SkillAdmin(admin.ModelAdmin):
-    list_display = ('translated_name', 'disabled')
+    list_display = ('translated_name', 'disabled', 'expertise')
     readonly_fields = ('translated_name',)
-    fields = readonly_fields + ('disabled', 'description',)
+    fields = readonly_fields + ('disabled', 'description', 'expertise')
 
     def translated_name(self, obj):
         return _(obj.name)

@@ -4,6 +4,9 @@ language: python
 dist: trusty
 sudo: required
 
+python:
+  - 2.7.13
+
 addons:
   postgresql: '9.1'
   apt:
@@ -22,7 +25,7 @@ env:
     - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
 
 install:
-  - pip install --upgrade setuptools --use-mirrors
+  - pip install --upgrade setuptools
   - pip install --upgrade -I flake8
   - pip install -e .[test] --process-dependency-links --trusted-host github.com
   - echo `psql --version`

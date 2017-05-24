@@ -22,8 +22,7 @@ dependency_links = [
     # Use pre-release version of django-money as long as
     # https://github.com/django-money/django-money/issues/221 is not released
     'git+https://github.com/django-money/django-money.git@c6fc1aad48712b2780b8c8563c78831fb9c88a73#egg=django-money-0.10-pre',
-    'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1',
-    'git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github'
+    'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1'
 ]
 
 install_requires = [
@@ -60,6 +59,7 @@ install_requires = [
     'django-parler==1.6.5',
     'django_polymorphic==1.0.1',
     'django-money==0.10-pre',
+    'django-money-rates==0.3.1',
     'django-rest-swagger==0.3.6',
     'django-select-multiple-field==0.5.0a-draft',
     'django-taggit==0.18.3',
@@ -105,8 +105,7 @@ install_requires = [
     'django-bb-salesforce==1.2.2',
     'django-cors-headers==1.1.0',
     'django-taggit-autocomplete-modified==0.1.1b1',
-    'django-token-auth==0.3.4',
-    'django-money-rates==0.3.1-github'
+    'django-token-auth==0.3.4'
 ]
 
 tests_requires = [

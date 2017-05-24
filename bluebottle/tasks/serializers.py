@@ -2,7 +2,8 @@ from rest_framework import serializers
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.bluebottle_drf2.serializers import (
-    PrimaryKeyGenericRelatedField, FileSerializer)
+    PrimaryKeyGenericRelatedField, FileSerializer, PrivateFileSerializer
+)
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.projects.serializers import ProjectPreviewSerializer
@@ -17,11 +18,14 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
         choices=TaskMember.TaskMemberStatuses.choices,
         required=False, default=TaskMember.TaskMemberStatuses.applied)
     motivation = serializers.CharField(required=False)
+    resume = PrivateFileSerializer(
+        url_name='task-member-resume', required=False
+    )
 
     class Meta:
         model = TaskMember
         fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
-                  'externals', 'time_spent')
+                  'externals', 'time_spent', 'resume')
 
 
 class TaskFileSerializer(serializers.ModelSerializer):

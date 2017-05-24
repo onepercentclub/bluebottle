@@ -3,10 +3,11 @@ import os
 from django.http.response import HttpResponseForbidden
 from django.views.generic.detail import DetailView
 
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework import generics
 from rest_framework import filters
 
+from tenant_extras.drf_permissions import TenantConditionalOpenClose
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.organizations.serializers import (OrganizationSerializer,
                                                   OrganizationContactSerializer)
@@ -36,7 +37,7 @@ class OrganizationContactDetail(generics.UpdateAPIView):
 class OrganizationDetail(generics.RetrieveAPIView):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly,)
 
 
 class OrganizationList(generics.ListCreateAPIView):

@@ -4,9 +4,6 @@ language: python
 dist: trusty
 sudo: required
 
-python:
-  - 2.7.13
-
 addons:
   postgresql: '9.1'
   apt:

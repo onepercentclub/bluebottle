@@ -47,7 +47,9 @@ class Task(models.Model, PreviousStatusMixin):
 
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
-    location = models.CharField(_('location'), max_length=200, null=True,
+    location = models.CharField(_('location'),
+                                help_text=_('Task location (leave empty for anywhere/online)'),
+                                max_length=200, null=True,
                                 blank=True)
     people_needed = models.PositiveIntegerField(_('people needed'), default=1)
 

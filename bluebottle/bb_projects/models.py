@@ -12,7 +12,7 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 
@@ -84,8 +84,10 @@ class BaseProjectDocument(models.Model):
 
     """ Document for an Project """
 
-    file = models.FileField(
-        upload_to='projects/documents')
+    file = PrivateFileField(
+        max_length=110,
+        upload_to='projects/documents'
+    )
     author = models.ForeignKey('members.Member',
                                verbose_name=_('author'), blank=True, null=True)
     project = models.ForeignKey('projects.Project',

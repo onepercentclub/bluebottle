@@ -19,7 +19,7 @@ from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectDocumentFactory
 from bluebottle.test.factory_models.tasks import (
     TaskFactory, TaskMemberFactory, SkillFactory
 )
@@ -581,6 +581,72 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                                     token=self.some_user_token, format='multipart')
 
         self.assertEqual(response.status_code, 201)
+        data = json.loads(response.content)
+
+        self.assertTrue(
+            data['file']['url'].startswith('/downloads/project/document')
+        )
+
+    def test_project_document_download(self):
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        response = self.client.get(file_url)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_project_document_download_author(self):
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        response = self.client.get(file_url, token=self.some_user_token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
+        )
+
+    def test_project_document_download_non_author(self):
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        response = self.client.get(file_url, token=self.another_user_token)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_project_document_staff_session_user(self):
+        self.another_user.is_staff = True
+        self.another_user.save()
+
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        self.client.force_login(self.another_user)
+        response = self.client.get(file_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
+        )
+
+    def test_project_document_non_staff_session_user(self):
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        self.client.force_login(self.another_user)
+        response = self.client.get(file_url)
+
+        self.assertEqual(response.status_code, 403)
 
     def test_create_project_contains_empty_bank_details(self):
         """ Create project with bank details. Ensure they are returned """

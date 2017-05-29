@@ -13,6 +13,7 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
+from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
 
@@ -290,6 +291,11 @@ class TaskMember(models.Model, PreviousStatusMixin):
     externals = models.PositiveSmallIntegerField(
         _('Externals'), default=0,
         help_text=_('External people helping for this task'))
+
+    resume = PrivateFileField(
+        upload_to='task-members/resume',
+        blank=True
+    )
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))

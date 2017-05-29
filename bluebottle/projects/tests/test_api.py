@@ -16,7 +16,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.geo import CountryFactory
+from bluebottle.test.factory_models.geo import CountryFactory, LocationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -376,6 +376,20 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['count'], 1)
+
+    def test_project_list_search_location(self):
+        self.projects[1].location = LocationFactory(name='Lyutidol')
+        self.projects[1].save()
+        self.projects[2].location = LocationFactory(name='Honolyulyu')
+        self.projects[2].save()
+
+        response = self.client.get(
+            self.projects_preview_url + '?text=Lyu'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 2)
 
 
 class ProjectManageApiIntegrationTest(BluebottleTestCase):

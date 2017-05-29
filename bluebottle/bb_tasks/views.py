@@ -16,6 +16,7 @@ from bluebottle.tasks.serializers import (BaseTaskSerializer,
                                           BaseTaskMemberSerializer, TaskFileSerializer,
                                           TaskPreviewSerializer, MyTaskMemberSerializer,
                                           SkillSerializer, MyTasksSerializer)
+from bluebottle.utils.views import PrivateFileView
 
 from .permissions import IsMemberOrAuthorOrReadOnly
 
@@ -219,6 +220,22 @@ class TaskMemberDetail(generics.RetrieveUpdateAPIView):
 
     permission_classes = (TenantConditionalOpenClose,
                           IsMemberOrAuthorOrReadOnly,)
+
+
+class TaskMemberResumeView(PrivateFileView):
+    queryset = TaskMember.objects
+    field = 'resume'
+
+    def check_permission(self, request, instance):
+        """
+        The task owner and task member can both see the files.
+        Staff members can also see these files.
+        """
+        return (
+            request.user == instance.member or
+            request.user == instance.task.author or
+            request.user.is_staff
+        )
 
 
 class TaskFileList(generics.ListCreateAPIView):

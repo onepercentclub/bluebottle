@@ -24,14 +24,12 @@ install:
 - pip install --upgrade setuptools --use-mirrors
 - pip install --upgrade -I flake8
 - pip install -e .[test] --process-dependency-links --trusted-host github.com
-- pip uninstall --yes coveralls
-- pip install --upgrade coverage coveralls pyyaml
 - echo `psql --version`
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
 - flake8 .
 script:
-- coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8
+- python -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8
 notifications:
   hipchat:
     rooms:
@@ -42,4 +40,4 @@ notifications:
     secure: TOveMBh9HePYKWuGTrWF+hTXzxGZvbVsa3KU0sB1yv6qkcixb5/ggvmkTeRddYEd/zyWyMenicFsrXVBgsP0SmbNgke6kq5+EN0U5oJWse998lvCVCpwmJQMdwDHvYsOtbFEOppQrbRK4vmH8qibx3x2YVg+u+61ePHvWYF9z6U=
 after_success:
 - bash post_travis.sh
-- coverage combine; coverage report --omit **/migrations/**; coveralls
+- python coverage combine; coverage report --omit **/migrations/**; coveralls

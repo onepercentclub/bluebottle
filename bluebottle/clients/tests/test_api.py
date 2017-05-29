@@ -17,6 +17,11 @@ class ClientSettingsTestCase(BluebottleTestCase):
         super(ClientSettingsTestCase, self).setUp()
         self.settings_url = reverse('settings')
 
+    @override_settings(PARENT={'child': True}, EXPOSED_TENANT_PROPERTIES=['parent.child'])
+    def test_nested_exposed_properties(self):
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.data['parent']['child'], True)
+
     @override_settings(CLOSED_SITE=False, TOP_SECRET="*****", EXPOSED_TENANT_PROPERTIES=['closed_site'])
     def test_settings_show(self):
         # Check that exposed property is in settings api, and other settings are not shown

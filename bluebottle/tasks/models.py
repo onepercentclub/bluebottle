@@ -73,7 +73,7 @@ class Task(models.Model, PreviousStatusMixin):
 
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
     deadline_to_apply = models.DateTimeField(
-        _('deadline_to_apply'), help_text=_('Deadline to apply')
+        _('Deadline to apply'), help_text=_('Deadline to apply')
     )
 
     objects = UpdateSignalsQuerySet.as_manager()
@@ -111,6 +111,10 @@ class Task(models.Model, PreviousStatusMixin):
     def set_open(self):
         self.status = self.TaskStatuses.open
         self.save()
+
+    @property
+    def expertise_based(self):
+        return self.skill.expertise if self.skill else False
 
     @property
     def members_applied(self):
@@ -244,6 +248,9 @@ class Task(models.Model, PreviousStatusMixin):
 class Skill(models.Model):
     name = models.CharField(_('english name'), max_length=100, unique=True)
     description = models.TextField(_('description'), blank=True)
+    expertise = models.BooleanField(_('expertise'),
+                                    help_text=_('Is this skill expertise based, or could anyone do it?'),
+                                    default=True)
     disabled = models.BooleanField(_('disabled'), default=False)
 
     @property

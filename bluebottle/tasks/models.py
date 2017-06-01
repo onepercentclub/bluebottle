@@ -68,6 +68,10 @@ class Task(models.Model, PreviousStatusMixin):
                                  choices=TaskAcceptingChoices.choices,
                                  default=TaskAcceptingChoices.manual)
 
+    needs_motivation = models.BooleanField(_('Needs motivation'),
+                                           default=False,
+                                           help_text=_('Indicates if a task candidate needs to submit a motivation'))
+
     date_status_change = models.DateTimeField(_('date status change'),
                                               blank=True, null=True)
 

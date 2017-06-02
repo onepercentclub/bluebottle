@@ -17,7 +17,7 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
     status = serializers.ChoiceField(
         choices=TaskMember.TaskMemberStatuses.choices,
         required=False, default=TaskMember.TaskMemberStatuses.applied)
-    motivation = serializers.CharField(required=False)
+    motivation = serializers.CharField(required=False, allow_blank=True)
     resume = PrivateFileSerializer(
         url_name='task-member-resume', required=False
     )

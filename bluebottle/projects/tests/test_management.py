@@ -19,6 +19,7 @@ from bluebottle.tasks.models import Task
 from bluebottle.clients.utils import LocalTenant
 
 
+@override_settings(SEND_WELCOME_MAIL=False)
 class TestStatusMC(BluebottleTestCase):
     def setUp(self):
         super(TestStatusMC, self).setUp()
@@ -217,13 +218,17 @@ class TestStatusMC(BluebottleTestCase):
         their deadline get the status 'realized'
         """
         now = timezone.now()
+        project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'))
 
         task = TaskFactory.create(title='task1', people_needed=2,
+                                  project=project,
                                   deadline=now - timezone.timedelta(days=5))
         task2 = TaskFactory.create(title='task2', people_needed=2,
+                                   project=project,
                                    deadline=now - timezone.timedelta(days=5))
 
         TaskMemberFactory.create(task=task, status='accepted')
+        self.assertEquals(len(mail.outbox), 1)
 
         call_command('cron_status_realised')
 
@@ -232,6 +237,31 @@ class TestStatusMC(BluebottleTestCase):
 
         self.assertEqual(task1.status, 'realized')
         self.assertEqual(task2.status, 'closed')
+        # Expect two extra mails
+        self.assertEquals(len(mail.outbox), 3)
+
+    def test_task_ignored_non_active_project(self):
+        """
+        Task that are connected to a proejct that hasn't started yet should be ignored.
+        """
+        now = timezone.now()
+        project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='plan-new'))
+
+        task = TaskFactory.create(title='task1', people_needed=2,
+                                  project=project, status='open',
+                                  deadline=now - timezone.timedelta(days=5))
+
+        TaskMemberFactory.create(task=task, status='accepted')
+        self.assertEquals(len(mail.outbox), 1)
+
+        call_command('cron_status_realised')
+
+        # There should not be additional mails
+        self.assertEquals(len(mail.outbox), 1)
+
+        # Task should still be open
+        task1 = Task.objects.get(title='task1')
+        self.assertEquals(task1.status, 'open')
 
 
 @override_settings(SEND_WELCOME_MAIL=False)

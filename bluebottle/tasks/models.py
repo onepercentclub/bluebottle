@@ -178,7 +178,6 @@ class Task(models.Model, PreviousStatusMixin):
             self.status = 'closed'
             with TenantLanguage(self.author.primary_language):
                 subject = _("The status of your task '{0}' is set to closed").format(self.title)
-
             send_mail(
                 template_name="tasks/mails/task_status_closed.mail",
                 subject=subject,

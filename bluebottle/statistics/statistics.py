@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, F
 from django.db.models.aggregates import Sum
 
 from memoize import memoize
@@ -243,27 +243,48 @@ class Statistics(object):
                 count += 1
         return count
 
+    def participant_details(self):
+        """ List of participants (members that started a project, or where a realized task member) """
+        project_owner_ids = Project.objects\
+            .filter(self.date_filter('created'),
+                    status__slug__in=('voting', 'voting-done', 'to-be-continued', 'campaign', 'done-complete',
+                                      'done-incomplete'))\
+            .order_by('owner__id')\
+            .distinct('owner')\
+            .values('owner_id', 'owner__email', 'created')\
+            .annotate(id=F('owner_id'))\
+            .annotate(email=F('owner__email'))
+
+        task_member_ids = TaskMember.objects\
+            .filter(self.date_filter('created'), status='realized')\
+            .order_by('member__id')\
+            .distinct('member')\
+            .values('member_id', 'member__email', 'created')\
+            .annotate(id=F('member_id')) \
+            .annotate(email=F('member__email'))
+
+        # return set(task_member_ids).union(set(project_owner_ids))
+        # return set([x['member_id'] for x in task_member_ids]).union(set(x['owner_id'] for x in project_owner_ids))
+
+        ids = list()
+
+        for x in task_member_ids:
+            ids.append(x)
+
+        for x in project_owner_ids:
+            ids.append(x)
+
+        # NOTE: All the magic we do for booking. Booking needs the participant date to be one when the first event
+        # (member created project, task member realized task successfully)
+        # NOTE: Project creation date should take precendence since the project was created before the task member
+        # NOTE: The list will effectively be a set union of two dictionaries
+        return list({v['id']: v for v in ids}.values())
+
     @property
     @memoize(timeout=300)
     def participants(self):
         """ Total numbers of participants (members that started a project, or where a realized task member) """
-        project_owner_ids = Project.objects.filter(
-            self.date_filter('created'),
-            status__slug__in=(
-                'voting', 'voting-done', 'to-be-continued', 'campaign', 'done-complete', 'done-incomplete'
-            )
-        ).order_by(
-            'owner__id'
-        ).distinct('owner').values_list('owner_id', flat=True)
-
-        task_member_ids = TaskMember.objects.filter(
-            self.date_filter('task__deadline'),
-            status='realized'
-        ).order_by('member__id').distinct(
-            'member'
-        ).values_list('member_id', flat=True)
-
-        return len(set(task_member_ids) | set(project_owner_ids))
+        return len(self.participant_details())
 
     @property
     @memoize(timeout=300)

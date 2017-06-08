@@ -43,8 +43,8 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         self.tenant = options['tenant']
-        self.start_date = dateparse.parse_datetime('{}-01-01 00:00:00+00:00'.format(options['start-year']))
-        self.end_date = dateparse.parse_datetime('{}-01-01 00:00:00+00:00'.format(options['end-year']))
+        self.start_date = dateparse.parse_datetime('{}-01-01 00:00:00+00:00'.format(options['start']))
+        self.end_date = dateparse.parse_datetime('{}-01-01 00:00:00+00:00'.format(options['end']))
 
         self.generate_participation_xls()
 
@@ -62,11 +62,7 @@ class Command(BaseCommand):
                             .format(self.tenant,
                                     self.start_date.strftime('%Y-%m-%d %H:%M:%S'),
                                     self.end_date.strftime('%Y-%m-%d %H:%M:%S')))
-                self.generate_participants_worksheet(workbook)
                 self.generate_totals_worksheet(workbook)
-            # client_raw_data = self.generate_raw_data()
-            # client_aggregated_data = self.generate_aggregated_data(client_raw_data)
-            # engagement_data[client.client_name] = client_aggregated_data
 
         return engagement_data
 
@@ -81,7 +77,7 @@ class Command(BaseCommand):
         return formatters
 
     @staticmethod
-    def create_totals_work_sheet(workbook, year):
+    def create_totals_worksheet(workbook, year):
         name = 'Totals - Year {}'.format(year)
         headers = ('Time Period',
                    'Year',
@@ -95,6 +91,15 @@ class Command(BaseCommand):
                    'Projects - Successful',)
         return initialize_work_sheet(workbook, name, headers)
 
+    @staticmethod
+    def create_participants_worksheet(workbook, year):
+        name = 'Participants - Year {}'.format(year)
+        headers = ('Email Address',
+                   'Participation Date',
+                   'Year',
+                   'Week Number')
+        return initialize_work_sheet(workbook, name, headers)
+
     def generate_totals_worksheet(self, workbook):
 
         formatters = self.setup_workbook_formatters(workbook)
@@ -106,7 +111,22 @@ class Command(BaseCommand):
         statistics_year_end = end_date.end_of('year').year
 
         for year in range(statistics_year_start, statistics_year_end + 1):
-            worksheet = self.create_totals_work_sheet(workbook, year)
+
+            statistics_start_date = pendulum.create(year, 1, 1)
+            statistics_end_date = pendulum.create(year + 1, 1, 1)
+            statistics = Statistics(start=statistics_start_date, end=statistics_end_date)
+
+            # Participants by Year
+            participant_worksheet = self.create_participants_worksheet(workbook, year)
+            participants = statistics.participant_details()
+            for row, participant in enumerate(participants, 1):
+                participation_date = pendulum.instance(participant['created'])
+                participant_worksheet.write(row, 0, participant['email'])
+                participant_worksheet.write_datetime(row, 1, participation_date)
+                participant_worksheet.write(row, 2, participation_date.year)
+                participant_worksheet.write(row, 3, participation_date.week_of_year)
+
+            worksheet = self.create_totals_worksheet(workbook, year)
 
             row = 1
 
@@ -114,13 +134,8 @@ class Command(BaseCommand):
             worksheet.write(row, 0, 'By Year', formatters['format_metrics_header'])
             row += 1
 
-            statistics_start_date = pendulum.create(year, 1, 1)
-            statistics_end_date = pendulum.create(year + 1, 1, 1)
-
             logger.info('{} Yearly: {} - {}'.format(self.tenant, statistics_start_date, statistics_end_date))
 
-            statistics = Statistics(start=statistics_start_date,
-                                    end=statistics_end_date)
             worksheet.write(row, 0, 'Yearly')
             worksheet.write(row, 1, statistics_start_date.year)  # Year
             worksheet.write(row, 5, statistics_start_date)  # Start Date
@@ -145,8 +160,7 @@ class Command(BaseCommand):
                 if statistics_end_date < pendulum.now().add(months=1):
                     logger.info('{} Monthly: {} - {}'.format(self.tenant, statistics_start_date, statistics_end_date))
 
-                    statistics = Statistics(start=statistics_start_date,
-                                            end=statistics_end_date)
+                    statistics = Statistics(start=statistics_start_date, end=statistics_end_date)
                     worksheet.write(row, 0, 'Monthly')  # Time period
                     worksheet.write(row, 1, statistics_start_date.year)  # Year
                     worksheet.write(row, 2, (statistics_end_date.subtract(days=1).month - 1) // 3 + 1)  # Quarter
@@ -176,8 +190,7 @@ class Command(BaseCommand):
 
                 if statistics_end_date <= pendulum.now().add(weeks=1):
                     logger.info('{} Weekly: {} - {}'.format(self.tenant, statistics_start_date, statistics_end_date))
-                    statistics = Statistics(start=statistics_start_date,
-                                            end=statistics_end_date)
+                    statistics = Statistics(start=statistics_start_date, end=statistics_end_date)
                     worksheet.write(row, 0, 'Weekly')  # Time Period
                     worksheet.write(row, 1, statistics_start_date.year)  # Year
                     worksheet.write(row, 2, (statistics_end_date.month - 1) // 3 + 1)  # Quarter

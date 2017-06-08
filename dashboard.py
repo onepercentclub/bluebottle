@@ -27,7 +27,7 @@ from bluebottle.utils.exchange_rates import convert
 class Metrics():
     task_member_allowed_statuses = ['accepted', 'realized']
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         self.today = datetime.today()
         self.this_year = datetime.now().year
         self.next_year = self.this_year + 1
@@ -38,9 +38,9 @@ class Metrics():
         Calculate the metrics for partners. 1) Calculate number of
         partners, 2) calculate time spent for each partner
         """
-        partners = {}
+        partners = dict()
         partners[self.this_year] = 0
-        partner_hours = {}
+        partner_hours = dict()
         partner_hours[self.this_year] = 0
 
         task_members = TaskMember.objects.filter(task__deadline__year=self.this_year,
@@ -53,9 +53,8 @@ class Metrics():
 
     def calculate_taskmember_metrics(self):
         """ Calculate the metrics for task members."""
-        taskmembers = {}
+        taskmembers = dict()
         taskmembers[self.this_year] = 0
-        taskmember_hours = 0
 
         task_members = TaskMember.objects.filter(status__in=self.task_member_allowed_statuses)
 
@@ -67,7 +66,7 @@ class Metrics():
         Calculate suggestion metrics. Expired content is not
         excluded in totals!
         """
-        suggestion_metrics = {}
+        suggestion_metrics = dict()
 
         # the explicit project_isnull check is a bit redundant - a submitted
         # suggestion always (?) has a project.
@@ -83,12 +82,14 @@ class Metrics():
 
         return suggestion_metrics
 
-    def calculate_supporters(self):
+    @staticmethod
+    def calculate_supporters():
         """ Return the number of unique people who did a successfull donation """
         return Donation.objects.filter(order__status__in=['success', 'pending']).\
             order_by('order__user').distinct('order__user').count()
 
-    def calculate_total_raised(self):
+    @staticmethod
+    def calculate_total_raised():
         """ Calculate the total amount raised by projects """
         totals = Donation.objects.filter(
             order__status__in=['success', 'pending']
@@ -99,21 +100,40 @@ class Metrics():
         amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
         return sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
 
-    def calculate_initiators(self):
+    @staticmethod
+    def calculate_initiators():
         """ Return number of unique users that started a project, which now has a valid status """
         project_statuses = [6, 8, 9]  # Campaign, Done-Complete, Done-Incomplete
         return Project.objects.filter(status__sequence__in=project_statuses).\
             order_by('owner').distinct('owner').count()
 
-    def calculate_realized_tasks_unconfirmed_taskmembers(self):
+    @staticmethod
+    def calculate_realized_tasks_unconfirmed_taskmembers():
         """ Return unique number of realzied tasks where there no task members with status realized """
         return Task.objects.filter(status='realized').\
             exclude(members__status__in=['realized', 'rejected', 'stopped']).distinct().count()
 
-    def calculate_tasks_realized_taskmembers(self):
+    @staticmethod
+    def calculate_tasks_realized_taskmembers():
         """ Return number of unique tasks that have a taskmember with status realized """
         return TaskMember.objects.filter(status='realized').\
             aggregate(Count('task', distinct=True))['task__count']
+
+    def calculate_participants(self):
+        participants = {}
+        years = [self.last_year, self.this_year, self.next_year]
+        allowed_statuses = ['applied', 'accepted', 'realized']
+        project_statuses = [6, 8, 9]  # Campaign, Done-Complete, Done-Incomplete
+        for year in years:
+            task_members = TaskMember.objects.\
+                filter(task__deadline__year=year, status__in=allowed_statuses).\
+                order_by('member').distinct('member')
+            project_owners = Project.objects.values('owner').\
+                filter(created__year=year, status__sequence__in=project_statuses).\
+                order_by('owner').distinct('owner')
+            doubles = task_members.filter(member__in=project_owners)
+            participants[year] = task_members.count() + project_owners.count() - doubles.count()
+        return participants
 
 
 class CustomIndexDashboard(FluentIndexDashboard):
@@ -164,31 +184,15 @@ class MetricsModule(DashboardModule):
         total_updated_count = Member.objects.filter(updated__gt=F('date_joined') + timedelta(minutes=1)).count()
 
         this_year = datetime.now().year
-        next_year = this_year + 1
         last_year = this_year - 1
-        participants = {}
 
-        years = [last_year, this_year, next_year]
         allowed_statuses = ['applied', 'accepted', 'realized']
-        project_statuses = [6, 8, 9]  # Campaign, Done-Complete, Done-Incomplete
-
-        for year in years:
-            task_members = TaskMember.objects.\
-                filter(task__deadline__year=year, status__in=allowed_statuses).\
-                order_by('member').distinct('member')
-            project_owners = Project.objects.values('owner').\
-                filter(created__year=year, status__sequence__in=project_statuses).\
-                order_by('owner').distinct('owner')
-            doubles = task_members.filter(member__in=project_owners)
-            participants[year] = task_members.count() + project_owners.count() - doubles.count()
 
         metrics = Metrics()
+        participants = metrics.calculate_participants()
         partners, partner_hours = metrics.calculate_partner_metrics()
-
         suggestion_metrics = metrics.calculate_suggestion_metrics()
-
         __, taskmember_hours = metrics.calculate_taskmember_metrics()
-
         supporters = metrics.calculate_supporters()
         total_raised = metrics.calculate_total_raised()
         initiators = metrics.calculate_initiators()

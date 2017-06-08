@@ -19,7 +19,7 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
         required=False, default=TaskMember.TaskMemberStatuses.applied)
     motivation = serializers.CharField(required=False, allow_blank=True)
     resume = PrivateFileSerializer(
-        url_name='task-member-resume', required=False
+        url_name='task-member-resume', required=False, allow_null=True
     )
 
     class Meta:

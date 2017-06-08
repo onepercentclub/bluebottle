@@ -9,7 +9,6 @@ from django.utils import dateparse
 from .utils import initialize_work_sheet, get_xls_file_name
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.members.models import Member
 from bluebottle.statistics.statistics import Statistics
 
 logger = logging.getLogger(__name__)
@@ -100,6 +99,30 @@ class Command(BaseCommand):
                    'Week Number')
         return initialize_work_sheet(workbook, name, headers)
 
+    @staticmethod
+    def create_participant_monthly_chart(workbook, data):
+        chartsheet = workbook.add_chartsheet('YoY Monthly Participants')
+        chart = workbook.add_chart({'type': 'line'})
+        chartsheet.set_chart(chart)
+
+        for item in data:
+            chart.add_series({
+                'name': item['chart_name_coordinates'],
+                'categories': item['chart_categories_coordinates'],
+                'values': item['chart_values_coordinates'],
+                'marker': {'type': 'circle'},
+            })
+
+        # Add a chart title and some axis labels.
+        chart.set_title({'name': 'Monthly Participants'})
+        chart.set_x_axis({'name': 'Month'})
+        chart.set_y_axis({'name': 'Participants'})
+
+        # Set an Excel chart style. Colors with white outline and shadow.
+        chart.set_style(10)
+
+        return chart
+
     def generate_totals_worksheet(self, workbook):
 
         formatters = self.setup_workbook_formatters(workbook)
@@ -109,6 +132,8 @@ class Command(BaseCommand):
 
         statistics_year_start = start_date.start_of('year').year
         statistics_year_end = end_date.end_of('year').year
+
+        chart_monthly_data = []
 
         for year in range(statistics_year_start, statistics_year_end + 1):
 
@@ -126,16 +151,16 @@ class Command(BaseCommand):
                 participant_worksheet.write(row, 2, participation_date.year)
                 participant_worksheet.write(row, 3, participation_date.week_of_year)
 
+            # Worksheet for aggregated data
             worksheet = self.create_totals_worksheet(workbook, year)
 
-            row = 1
-
             # By Year
-            worksheet.write(row, 0, 'By Year', formatters['format_metrics_header'])
-            row += 1
-
             logger.info('{} Yearly: {} - {}'.format(self.tenant, statistics_start_date, statistics_end_date))
 
+            row = 1
+            worksheet.write(row, 0, 'By Year', formatters['format_metrics_header'])
+
+            row += 1
             worksheet.write(row, 0, 'Yearly')
             worksheet.write(row, 1, statistics_start_date.year)  # Year
             worksheet.write(row, 5, statistics_start_date)  # Start Date
@@ -147,11 +172,16 @@ class Command(BaseCommand):
             # TODO: Double check definition of projects successful
             worksheet.write(row, 9, statistics.projects_realized)  # Projects - Successful
 
-            row += 1
-
             # By Month
-            worksheet.write(row, 0, 'By Month', formatters['format_metrics_header'])
             row += 1
+            worksheet.write(row, 0, 'By Month', formatters['format_metrics_header'])
+
+            chart_data = dict()
+
+            row += 1
+            chart_data['chart_name_coordinates'] = [worksheet.get_name(), row, 1]
+            chart_data['chart_categories_coordinates'] = [worksheet.get_name(), row, 3]
+            chart_data['chart_values_coordinates'] = [worksheet.get_name(), row, 7]
 
             statistics_start_date = pendulum.create(year, 1, 1)
             for month in range(1, 13):
@@ -176,6 +206,11 @@ class Command(BaseCommand):
                     worksheet.write(row, 9, statistics.projects_realized)  # Projects - Successful
 
                     row += 1
+
+            chart_data['chart_categories_coordinates'].extend([row - 1, 3])
+            chart_data['chart_values_coordinates'].extend([row - 1, 7])
+
+            chart_monthly_data.append(chart_data)
 
             # By Week
             worksheet.write(row, 0, 'By Week', formatters['format_metrics_header'])
@@ -206,38 +241,4 @@ class Command(BaseCommand):
 
                     row += 1
 
-        # chartsheet = workbook.add_chartsheet('Chart - Yearly Participants')
-        # chart = workbook.add_chart({'type': 'line'})
-        # chartsheet.set_chart(chart)
-        # # Configure second series. Note use of alternative syntax to define ranges.
-        # chart.add_series({
-        #     'name': ['Totals - To Date', 0, 1],
-        #     'categories': ['Totals - To Date', 2, 1, 5, 1],
-        #     'values': ['Totals - To Date', 2, 7, 5, 7],
-        # })
-        #
-        # # Add a chart title and some axis labels.
-        # chart.set_title({'name': 'Yearly Participants'})
-        # chart.set_x_axis({'name': 'Year'})
-        # chart.set_y_axis({'name': 'Participants'})
-        #
-        # # Set an Excel chart style. Colors with white outline and shadow.
-        # chart.set_style(10)
-
-    @staticmethod
-    def generate_participants_worksheet(workbook):
-        name = 'Participants - To Date'
-        headers = ('Email Address',
-                   'Date Joined',
-                   'Year',
-                   'Week Number')
-        worksheet = initialize_work_sheet(workbook, name, headers)
-
-        members = Member.objects.all().order_by('-date_joined')
-        date_format = workbook.add_format({'num_format': 'dd/mm/yy', 'align': 'right'})
-        for row, member in enumerate(members, 1):
-            date_joined = pendulum.instance(member.date_joined)
-            worksheet.write(row, 0, member.email)
-            worksheet.write_datetime(row, 1, date_joined, date_format)
-            worksheet.write(row, 2, date_joined.year)
-            worksheet.write(row, 3, date_joined.week_of_year)
+        self.create_participant_monthly_chart(workbook, chart_monthly_data)

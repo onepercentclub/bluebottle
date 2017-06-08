@@ -186,6 +186,24 @@ class Command(BaseCommand):
 
                     row += 1
 
+        chartsheet = workbook.add_chartsheet('Chart - Yearly Participants')
+        chart = workbook.add_chart({'type': 'line'})
+        chartsheet.set_chart(chart)
+        # Configure second series. Note use of alternative syntax to define ranges.
+        chart.add_series({
+            'name': ['Totals - To Date', 0, 1],
+            'categories': ['Totals - To Date', 2, 1, 5, 1],
+            'values': ['Totals - To Date', 2, 7, 5, 7],
+        })
+
+        # Add a chart title and some axis labels.
+        chart.set_title({'name': 'Yearly Participants'})
+        chart.set_x_axis({'name': 'Year'})
+        chart.set_y_axis({'name': 'Participants'})
+
+        # Set an Excel chart style. Colors with white outline and shadow.
+        chart.set_style(10)
+
     @staticmethod
     def generate_participants_worksheet(workbook):
         name = 'Participants - To Date'

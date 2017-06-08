@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.utils import dateparse
 
-from .utils import validate_date, initialize_work_sheet, get_xls_file_name
+from .utils import initialize_work_sheet, get_xls_file_name
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.members.models import Member
@@ -22,9 +22,7 @@ class Command(BaseCommand):
         super(Command, self).__init__(**kwargs)
 
         self.tenant = None
-
         self.all_tenants = []
-
         for client in Client.objects.all():
             self.all_tenants.append(client.client_name)
 
@@ -33,22 +31,20 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-        parser.add_argument('--start', metavar='YYYY-MM-DD', action='store', dest='start', required=True,
-                            type=validate_date, help="Start date (YYYY-MM-DD) for dump. UTC is the default \
-                            time zone")
+        parser.add_argument('--start-year', metavar='YYYY', action='store', dest='start', required=True,
+                            type=int, help="Start Year (YYYY) for dump. UTC is the default time zone")
 
-        parser.add_argument('--end', metavar='YYYY-MM-DD', action='store', dest='end', required=True,
-                            type=validate_date,
-                            help="End date (YYYY-MM-DD) for dump. UTC is the default time zone")
+        parser.add_argument('--end-year', metavar='YYYY', action='store', dest='end', required=True,
+                            type=int,
+                            help="End Year (YYYY) for dump. UTC is the default time zone")
 
         parser.add_argument('--tenant', metavar='TENANT', action='store', dest='tenant', required=True,
                             choices=self.all_tenants, help="Name of the tenant to export")
 
     def handle(self, **options):
         self.tenant = options['tenant']
-
-        self.start_date = dateparse.parse_datetime('{} 00:00:00+00:00'.format(options['start']))
-        self.end_date = dateparse.parse_datetime('{} 00:00:00+00:00'.format(options['end']))
+        self.start_date = dateparse.parse_datetime('{}-01-01 00:00:00+00:00'.format(options['start-year']))
+        self.end_date = dateparse.parse_datetime('{}-01-01 00:00:00+00:00'.format(options['end-year']))
 
         self.generate_participation_xls()
 
@@ -74,8 +70,19 @@ class Command(BaseCommand):
 
         return engagement_data
 
-    def generate_totals_worksheet(self, workbook):
-        name = 'Totals - To Date'
+    @staticmethod
+    def setup_workbook_formatters(workbook):
+        formatters = dict()
+
+        formatters['format_metrics_header'] = workbook.add_format()
+        formatters['format_metrics_header'].set_bg_color('gray')
+        formatters['format_metrics_header'].set_bold()
+
+        return formatters
+
+    @staticmethod
+    def create_totals_work_sheet(workbook, year):
+        name = 'Totals - Year {}'.format(year)
         headers = ('Time Period',
                    'Year',
                    'Quarter',
@@ -86,25 +93,27 @@ class Command(BaseCommand):
                    'Participants',
                    'Tasks - Successful',
                    'Projects - Successful',)
-        worksheet = initialize_work_sheet(workbook, name, headers)
+        return initialize_work_sheet(workbook, name, headers)
 
-        format_metrics_header = workbook.add_format()
-        format_metrics_header.set_bg_color('gray')
-        format_metrics_header.set_bold()
+    def generate_totals_worksheet(self, workbook):
+
+        formatters = self.setup_workbook_formatters(workbook)
 
         start_date = pendulum.instance(self.start_date)
         end_date = pendulum.instance(self.end_date)
-
-        row = 1
-
-        # By Year
-        worksheet.write(row, 0, 'By Year', format_metrics_header)
-        row += 1
 
         statistics_year_start = start_date.start_of('year').year
         statistics_year_end = end_date.end_of('year').year
 
         for year in range(statistics_year_start, statistics_year_end + 1):
+            worksheet = self.create_totals_work_sheet(workbook, year)
+
+            row = 1
+
+            # By Year
+            worksheet.write(row, 0, 'By Year', formatters['format_metrics_header'])
+            row += 1
+
             statistics_start_date = pendulum.create(year, 1, 1)
             statistics_end_date = pendulum.create(year + 1, 1, 1)
 
@@ -125,11 +134,10 @@ class Command(BaseCommand):
 
             row += 1
 
-        # By Month
-        worksheet.write(row, 0, 'By Month', format_metrics_header)
-        row += 1
+            # By Month
+            worksheet.write(row, 0, 'By Month', formatters['format_metrics_header'])
+            row += 1
 
-        for year in range(statistics_year_start, statistics_year_end + 1):
             statistics_start_date = pendulum.create(year, 1, 1)
             for month in range(1, 13):
                 statistics_end_date = pendulum.create(year, month, 1).end_of('month')
@@ -155,11 +163,10 @@ class Command(BaseCommand):
 
                     row += 1
 
-        # By Week
-        worksheet.write(row, 0, 'By Week', format_metrics_header)
-        row += 1
+            # By Week
+            worksheet.write(row, 0, 'By Week', formatters['format_metrics_header'])
+            row += 1
 
-        for year in range(statistics_year_start, statistics_year_end + 1):
             statistics_start_date = pendulum.create(year, 1, 1)
             time_period = pendulum.period(statistics_start_date, pendulum.create(year, 12, 31))
             for period in time_period.range('weeks'):
@@ -186,23 +193,23 @@ class Command(BaseCommand):
 
                     row += 1
 
-        chartsheet = workbook.add_chartsheet('Chart - Yearly Participants')
-        chart = workbook.add_chart({'type': 'line'})
-        chartsheet.set_chart(chart)
-        # Configure second series. Note use of alternative syntax to define ranges.
-        chart.add_series({
-            'name': ['Totals - To Date', 0, 1],
-            'categories': ['Totals - To Date', 2, 1, 5, 1],
-            'values': ['Totals - To Date', 2, 7, 5, 7],
-        })
-
-        # Add a chart title and some axis labels.
-        chart.set_title({'name': 'Yearly Participants'})
-        chart.set_x_axis({'name': 'Year'})
-        chart.set_y_axis({'name': 'Participants'})
-
-        # Set an Excel chart style. Colors with white outline and shadow.
-        chart.set_style(10)
+        # chartsheet = workbook.add_chartsheet('Chart - Yearly Participants')
+        # chart = workbook.add_chart({'type': 'line'})
+        # chartsheet.set_chart(chart)
+        # # Configure second series. Note use of alternative syntax to define ranges.
+        # chart.add_series({
+        #     'name': ['Totals - To Date', 0, 1],
+        #     'categories': ['Totals - To Date', 2, 1, 5, 1],
+        #     'values': ['Totals - To Date', 2, 7, 5, 7],
+        # })
+        #
+        # # Add a chart title and some axis labels.
+        # chart.set_title({'name': 'Yearly Participants'})
+        # chart.set_x_axis({'name': 'Year'})
+        # chart.set_y_axis({'name': 'Participants'})
+        #
+        # # Set an Excel chart style. Colors with white outline and shadow.
+        # chart.set_style(10)
 
     @staticmethod
     def generate_participants_worksheet(workbook):

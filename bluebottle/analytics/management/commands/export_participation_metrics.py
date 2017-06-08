@@ -88,13 +88,17 @@ class Command(BaseCommand):
                    'Projects - Successful',)
         worksheet = initialize_work_sheet(workbook, name, headers)
 
+        format_metrics_header = workbook.add_format()
+        format_metrics_header.set_bg_color('gray')
+        format_metrics_header.set_bold()
+
         start_date = pendulum.instance(self.start_date)
         end_date = pendulum.instance(self.end_date)
 
         row = 1
 
         # By Year
-        worksheet.write(row, 0, 'By Year')
+        worksheet.write(row, 0, 'By Year', format_metrics_header)
         row += 1
 
         statistics_year_start = start_date.start_of('year').year
@@ -122,7 +126,7 @@ class Command(BaseCommand):
             row += 1
 
         # By Month
-        worksheet.write(row, 0, 'By Month')
+        worksheet.write(row, 0, 'By Month', format_metrics_header)
         row += 1
 
         for year in range(statistics_year_start, statistics_year_end + 1):

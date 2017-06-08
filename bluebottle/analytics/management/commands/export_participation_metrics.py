@@ -134,43 +134,47 @@ class Command(BaseCommand):
             for month in range(1, 13):
                 statistics_end_date = pendulum.create(year, month, 1).end_of('month')
 
-                logger.info('{} Monthly: {} - {}'.format(self.tenant, statistics_start_date, statistics_end_date))
+                if statistics_end_date < pendulum.now().add(months=1):
+                    logger.info('{} Monthly: {} - {}'.format(self.tenant, statistics_start_date, statistics_end_date))
 
-                statistics = Statistics(start=statistics_start_date,
-                                        end=statistics_end_date)
-                worksheet.write(row, 0, 'Monthly')  # Time period
-                worksheet.write(row, 1, statistics_start_date.year)  # Year
-                worksheet.write(row, 2, (statistics_end_date.subtract(days=1).month - 1) // 3 + 1)  # Quarter
-                worksheet.write(row, 3, statistics_end_date.subtract(days=1).format('MMMM', formatter='alternative'))
-                worksheet.write(row, 5, statistics_start_date)  # Start Date
-                worksheet.write(row, 6, statistics_end_date.subtract(days=1))  # End Date
-                # TODO: Double check defintion of participants
-                worksheet.write(row, 7, statistics.participants)  # Participants
-                # TODO: Double check definition of task successful
-                worksheet.write(row, 8, statistics.tasks_realized)  # Tasks - Successful
-                # TODO: Double check definition of projects successful
-                worksheet.write(row, 9, statistics.projects_realized)  # Projects - Successful
+                    statistics = Statistics(start=statistics_start_date,
+                                            end=statistics_end_date)
+                    worksheet.write(row, 0, 'Monthly')  # Time period
+                    worksheet.write(row, 1, statistics_start_date.year)  # Year
+                    worksheet.write(row, 2, (statistics_end_date.subtract(days=1).month - 1) // 3 + 1)  # Quarter
+                    worksheet.write(row, 3,
+                                    statistics_end_date.subtract(days=1).format('MMMM', formatter='alternative'))
+                    worksheet.write(row, 5, statistics_start_date)  # Start Date
+                    worksheet.write(row, 6, statistics_end_date.subtract(days=1))  # End Date
+                    # TODO: Double check defintion of participants
+                    worksheet.write(row, 7, statistics.participants)  # Participants
+                    # TODO: Double check definition of task successful
+                    worksheet.write(row, 8, statistics.tasks_realized)  # Tasks - Successful
+                    # TODO: Double check definition of projects successful
+                    worksheet.write(row, 9, statistics.projects_realized)  # Projects - Successful
 
-                row += 1
+                    row += 1
 
         # By Week
-        worksheet.write(row, 0, 'By Week')
+        worksheet.write(row, 0, 'By Week', format_metrics_header)
         row += 1
 
         for year in range(statistics_year_start, statistics_year_end + 1):
-            time_period = pendulum.period(pendulum.create(year, 1, 1), pendulum.create(year, 12, 31))
+            statistics_start_date = pendulum.create(year, 1, 1)
+            time_period = pendulum.period(statistics_start_date, pendulum.create(year, 12, 31))
             for period in time_period.range('weeks'):
-                statistics_start_date = period.start_of('week')
-                statistics_end_date = period.end_of('week')
+                statistics_end_date = period.end_of('week') \
+                    if period.end_of('week') < statistics_start_date.end_of('year') \
+                    else statistics_start_date.end_of('year')
 
-                if statistics_start_date <= pendulum.now():
+                if statistics_end_date <= pendulum.now().add(weeks=1):
                     logger.info('{} Weekly: {} - {}'.format(self.tenant, statistics_start_date, statistics_end_date))
                     statistics = Statistics(start=statistics_start_date,
                                             end=statistics_end_date)
                     worksheet.write(row, 0, 'Weekly')  # Time Period
                     worksheet.write(row, 1, statistics_start_date.year)  # Year
-                    worksheet.write(row, 2, (statistics_start_date.month - 1) // 3 + 1)  # Quarter
-                    worksheet.write(row, 4, statistics_start_date.week_of_year)  # Week
+                    worksheet.write(row, 2, (statistics_end_date.month - 1) // 3 + 1)  # Quarter
+                    worksheet.write(row, 4, statistics_end_date.week_of_year)  # Week
                     worksheet.write(row, 5, statistics_start_date)  # Start Date
                     worksheet.write(row, 6, statistics_end_date.subtract(days=1))  # End Date
                     # TODO: Double check defintion of participants

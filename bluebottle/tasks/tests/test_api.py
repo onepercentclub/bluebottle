@@ -369,8 +369,7 @@ class TaskApiTestcase(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        resume = response.data['resume']
-        self.assertEquals(resume, None)
+        self.assertEquals(response.data['resume'], None)
 
     def test_deadline_dates(self):
         """

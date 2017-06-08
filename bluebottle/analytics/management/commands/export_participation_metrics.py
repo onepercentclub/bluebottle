@@ -66,8 +66,8 @@ class Command(BaseCommand):
                             .format(self.tenant,
                                     self.start_date.strftime('%Y-%m-%d %H:%M:%S'),
                                     self.end_date.strftime('%Y-%m-%d %H:%M:%S')))
-                self.generate_totals_worksheet(workbook)
                 self.generate_participants_worksheet(workbook)
+                self.generate_totals_worksheet(workbook)
             # client_raw_data = self.generate_raw_data()
             # client_aggregated_data = self.generate_aggregated_data(client_raw_data)
             # engagement_data[client.client_name] = client_aggregated_data

@@ -347,6 +347,30 @@ class TaskApiTestcase(BluebottleTestCase):
             task_member.resume.name.startswith('private')
         )
 
+    def test_task_member_without_resume(self):
+        task = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.some_user,
+            project=self.some_project,
+            people_needed=4,
+            time_needed=8
+        )
+
+        task_member_data = {
+            'task': task.id,
+            'motivation': 'Pick me!'
+        }
+
+        response = self.client.post(
+            self.task_member_url,
+            task_member_data,
+            token=self.another_token,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(response.data['resume'], None)
+
     def test_deadline_dates(self):
         """
         Test the setting of the deadline of a Task on save to the end of a day.

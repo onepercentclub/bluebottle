@@ -130,7 +130,8 @@ class TaskAdmin(admin.ModelAdmin):
     raw_id_fields = ('author', 'project')
     list_filter = ('status', 'type', 'skill__expertise',
                    'deadline', ('deadline', DateRangeFilter),
-                   DeadlineToAppliedFilter, ('deadline_to_apply', DateRangeFilter)
+                   DeadlineToAppliedFilter, ('deadline_to_apply', DateRangeFilter),
+                   'accepting'
                    )
     list_display = ('title', 'project', 'status', 'created', 'deadline', 'expertise_based')
 
@@ -148,6 +149,8 @@ class TaskAdmin(admin.ModelAdmin):
         ('status', 'status'),
         ('deadline', 'deadline'),
         ('deadline_to_apply', 'deadline'),
+        ('accepting', 'accepting'),
+        ('needs_motivation', 'needs_motivation'),
         ('skill', 'skill'),
         ('skill__expertise', 'expertise based'),
         ('people_needed', 'people needed'),
@@ -160,8 +163,9 @@ class TaskAdmin(admin.ModelAdmin):
                mark_as_realized, export_as_csv_action(fields=export_fields)]
 
     fields = ('title', 'description', 'skill', 'time_needed', 'status',
-              'date_status_change', 'people_needed', 'project', 'author',
-              'type', 'deadline', 'deadline_to_apply')
+              'accepting', 'needs_motivation',
+              'date_status_change', 'people_needed',
+              'project', 'author', 'type', 'deadline', 'deadline_to_apply')
 
 
 admin.site.register(Task, TaskAdmin)

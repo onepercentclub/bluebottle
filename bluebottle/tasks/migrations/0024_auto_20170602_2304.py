@@ -10,9 +10,19 @@ def add_phaselogs_to_old_tasks(apps, schema_editor):
     TaskStatusLog = apps.get_model('tasks', 'TaskStatusLog')
 
     for task in Task.objects.filter(taskstatuslog__isnull=True):
-        log = TaskStatusLog.objects.create(task=task, status=task.status, start=task.deadline)
+        log = TaskStatusLog.objects.create(task=task,
+                                           status=task.status,
+                                           start=task.deadline)
         log.save()
 
+    TaskMember = apps.get_model('tasks', 'TaskMember')
+    TaskMemberStatusLog = apps.get_model('tasks', 'TaskMemberStatusLog')
+
+    for task_member in TaskMember.objects.filter(taskmemberstatuslog__isnull=True):
+        log = TaskMemberStatusLog.objects.create(task_member=task_member,
+                                                 status=task_member.status,
+                                                 start=task_member.task.deadline)
+        log.save()
 
 def dummy(apps, schema_editor):
     pass

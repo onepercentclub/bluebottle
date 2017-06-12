@@ -249,41 +249,68 @@ class Statistics(object):
             .filter(self.date_filter('created'),
                     status__slug__in=('voting', 'voting-done', 'to-be-continued', 'campaign', 'done-complete',
                                       'done-incomplete'))\
-            .order_by('owner__id')\
-            .distinct('owner')\
             .values('owner_id', 'owner__email', 'created')\
             .annotate(id=F('owner_id'))\
             .annotate(email=F('owner__email'))
 
         task_member_ids = TaskMember.objects\
             .filter(self.date_filter('created'), status='realized')\
-            .order_by('member__id')\
-            .distinct('member')\
             .values('member_id', 'member__email', 'created')\
             .annotate(id=F('member_id')) \
             .annotate(email=F('member__email'))
 
-        # return set(task_member_ids).union(set(project_owner_ids))
-        # return set([x['member_id'] for x in task_member_ids]).union(set(x['owner_id'] for x in project_owner_ids))
+        participants = dict()
 
-        ids = list()
+        for member in task_member_ids:
+            if participants.get(member['id']):
+                if member['created'] < participants[member['id']]['created']:
+                    participants[member['id']]['created'] = member['created']
+            else:
+                participants[member['id']] = member
 
-        for x in task_member_ids:
-            ids.append(x)
+        for member in project_owner_ids:
+            if participants.get(member['id']):
+                if member['created'] < participants[member['id']]['created']:
+                    participants[member['id']]['created'] = member['created']
+            else:
+                participants[member['id']] = member
 
-        for x in project_owner_ids:
-            ids.append(x)
+        return list(participants.values())
+
+        # members = list()
+        #
+        # for member in task_member_ids:
+        #     members.append(member)
+        #
+        # for member in project_owner_ids:
+        #     members.append(member)
 
         # NOTE: All the magic we do for booking. Booking needs the participant date to be one when the first event
         # (member created project, task member realized task successfully)
         # NOTE: Project creation date should take precendence since the project was created before the task member
         # NOTE: The list will effectively be a set union of two dictionaries
-        return list({v['id']: v for v in ids}.values())
+        # return list({member['id']: member for member in members}.values())
+
+        # participants = dict()
+        # for member in members:
+        #     if participants.get(member['id']):
+        #         # If member was a participant before then only compare and set the oldest created date
+        #         participant = participants[member['id']]
+        #         if member['created'] < participant['created']:
+        #             participant['created'] = member['created']
+        #     else:
+        #         # If member wasn't a participant then add it to the participant list
+        #         participants[member['id']] = member
+        #
+        # return list(participants.values())
 
     @property
     @memoize(timeout=300)
     def participants(self):
         """ Total numbers of participants (members that started a project, or where a realized task member) """
+        # participant_details = self.participant_details()
+        # for p in participant_details:
+        #     print('id:{} email:{} created:{}'.format(p['id'], p['email'], p['created']))
         return len(self.participant_details())
 
     @property

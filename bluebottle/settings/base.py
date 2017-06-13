@@ -137,7 +137,7 @@ TEMPLATES = [
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
-    'tenant_schemas.middleware.TenantMiddleware',
+    'bluebottle.tenants.middleware.DefaultTenantMiddleware',
     'bluebottle.clients.middleware.TenantPropertiesMiddleware',
     'bluebottle.clients.middleware.MediaMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',

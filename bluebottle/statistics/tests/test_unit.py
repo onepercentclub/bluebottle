@@ -196,7 +196,7 @@ class StatisticsTest(BluebottleTestCase):
         # - campaigner
         # - donator (another_user)
         self.assertEqual(self.stats.people_involved, 2)
-        self.assertEqual(self.stats.participants, 1)
+        self.assertEqual(self.stats.participants, 2)
 
     def test_donation_pledged_stats(self):
         self.some_project.status = self.campaign_status

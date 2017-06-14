@@ -274,40 +274,10 @@ class Statistics(object):
 
         return sorted(participants.values(), key=lambda k: k['created'])
 
-        # members = list()
-        #
-        # for member in task_member_ids:
-        #     members.append(member)
-        #
-        # for member in project_owner_ids:
-        #     members.append(member)
-
-        # NOTE: All the magic we do for booking. Booking needs the participant date to be one when the first event
-        # (member created project, task member realized task successfully)
-        # NOTE: Project creation date should take precendence since the project was created before the task member
-        # NOTE: The list will effectively be a set union of two dictionaries
-        # return list({member['id']: member for member in members}.values())
-
-        # participants = dict()
-        # for member in members:
-        #     if participants.get(member['id']):
-        #         # If member was a participant before then only compare and set the oldest created date
-        #         participant = participants[member['id']]
-        #         if member['created'] < participant['created']:
-        #             participant['created'] = member['created']
-        #     else:
-        #         # If member wasn't a participant then add it to the participant list
-        #         participants[member['id']] = member
-        #
-        # return list(participants.values())
-
     @property
     @memoize(timeout=300)
     def participants(self):
         """ Total numbers of participants (members that started a project, or where a realized task member) """
-        # participant_details = self.participant_details()
-        # for p in participant_details:
-        #     print('id:{} email:{} created:{}'.format(p['id'], p['email'], p['created']))
         return len(self.participant_details())
 
     @property

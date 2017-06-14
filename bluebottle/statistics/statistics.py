@@ -1,3 +1,5 @@
+import itertools
+
 from django.db.models import Q, F
 from django.db.models.aggregates import Sum
 from memoize import memoize
@@ -6,12 +8,12 @@ from moneyed.classes import Money
 from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
 from bluebottle.fundraisers.models import Fundraiser
-from bluebottle.orders.models import Order
 from bluebottle.projects.models import Project, ProjectPhaseLog
 from bluebottle.tasks.models import Task, TaskMember, TaskStatusLog, TaskMemberStatusLog
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.votes.models import Vote
+from bluebottle.orders.models import Order
 
 
 class Statistics(object):
@@ -241,8 +243,12 @@ class Statistics(object):
         return count
 
     def participant_details(self):
-        """ List of participants (members that started a project, or where a realized task member) """
-        project_owner_ids = Project.objects\
+        """ Participants are defined as project initiators of a project (running, done or realised),
+        task members (that applied for, got accepted for, or realised a task) and supporters who successfully finished
+        a donation. If a member is one of the three (e.g. a project initiator or a task member or a supporter),
+        they are counted as one participant."""
+
+        project_owners = Project.objects\
             .filter(self.date_filter('created'),
                     status__slug__in=('voting', 'voting-done', 'to-be-continued', 'campaign', 'done-complete',
                                       'done-incomplete'))\
@@ -250,22 +256,31 @@ class Statistics(object):
             .annotate(id=F('owner_id'))\
             .annotate(email=F('owner__email'))
 
-        task_member_ids = TaskMember.objects\
+        task_members = TaskMember.objects\
             .filter(self.date_filter('created'), status='realized')\
             .values('member_id', 'member__email', 'created')\
-            .annotate(id=F('member_id')) \
+            .annotate(id=F('member_id'))\
             .annotate(email=F('member__email'))
+
+        donaters = Order.objects\
+            .filter(self.date_filter('created'), status='success')\
+            .values('user_id', 'user__email', 'created')\
+            .annotate(id=F('user_id')) \
+            .annotate(email=F('user__email'))
+
+        # NOTE: If we want to calculate a participant who has performed two out of three actions
+        # project_owner_ids = {member["id"] for member in project_owners}
+        # task_member_ids = {member["id"] for member in task_members}
+        # donaters_ids = {member["id"] for member in donaters}
+        #
+        # p = set.union(set.intersection(project_owner_ids, task_member_ids),
+        #               set.intersection(project_owner_ids, donaters_ids),
+        #               set.intersection(task_member_ids, donaters_ids))
+        # print(len(p))
 
         participants = dict()
 
-        for member in task_member_ids:
-            if participants.get(member['id']):
-                if member['created'] < participants[member['id']]['created']:
-                    participants[member['id']]['created'] = member['created']
-            else:
-                participants[member['id']] = member
-
-        for member in project_owner_ids:
+        for member in itertools.chain(task_members, project_owners, donaters):
             if participants.get(member['id']):
                 if member['created'] < participants[member['id']]['created']:
                     participants[member['id']]['created'] = member['created']

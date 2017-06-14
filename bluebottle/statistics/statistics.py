@@ -1,19 +1,16 @@
 from django.db.models import Q, F
 from django.db.models.aggregates import Sum
-
 from memoize import memoize
-
 from moneyed.classes import Money
 
 from bluebottle.clients import properties
-from bluebottle.utils.exchange_rates import convert
-from bluebottle.utils.utils import StatusDefinition
-
 from bluebottle.donations.models import Donation
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.orders.models import Order
 from bluebottle.projects.models import Project, ProjectPhaseLog
 from bluebottle.tasks.models import Task, TaskMember, TaskStatusLog, TaskMemberStatusLog
+from bluebottle.utils.exchange_rates import convert
+from bluebottle.utils.utils import StatusDefinition
 from bluebottle.votes.models import Vote
 
 
@@ -275,7 +272,7 @@ class Statistics(object):
             else:
                 participants[member['id']] = member
 
-        return list(participants.values())
+        return sorted(participants.values(), key=lambda k: k['created'])
 
         # members = list()
         #

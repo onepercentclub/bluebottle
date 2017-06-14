@@ -524,4 +524,10 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
 admin.site.register(Project, ProjectAdmin)
 
-admin.site.register(ProjectPhase)
+
+class ProjectPhaseAdmin(admin.ModelAdmin):
+
+    list_display = ['__unicode__', 'name', 'slug']
+
+
+admin.site.register(ProjectPhase, ProjectPhaseAdmin)

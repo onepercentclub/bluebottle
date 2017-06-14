@@ -262,7 +262,7 @@ class Statistics(object):
             .annotate(id=F('member_id'))\
             .annotate(email=F('member__email'))
 
-        donaters = Order.objects\
+        donors = Order.objects\
             .filter(self.date_filter('created'), status='success')\
             .values('user_id', 'user__email', 'created')\
             .annotate(id=F('user_id')) \
@@ -271,16 +271,16 @@ class Statistics(object):
         # NOTE: If we want to calculate a participant who has performed two out of three actions
         # project_owner_ids = {member["id"] for member in project_owners}
         # task_member_ids = {member["id"] for member in task_members}
-        # donaters_ids = {member["id"] for member in donaters}
+        # donors = {member["id"] for member in donors}
         #
         # p = set.union(set.intersection(project_owner_ids, task_member_ids),
-        #               set.intersection(project_owner_ids, donaters_ids),
-        #               set.intersection(task_member_ids, donaters_ids))
+        #               set.intersection(project_owner_ids, donors),
+        #               set.intersection(task_member_ids, donors))
         # print(len(p))
 
         participants = dict()
 
-        for member in itertools.chain(task_members, project_owners, donaters):
+        for member in itertools.chain(task_members, project_owners, donors):
             if participants.get(member['id']):
                 if member['created'] < participants[member['id']]['created']:
                     participants[member['id']]['created'] = member['created']

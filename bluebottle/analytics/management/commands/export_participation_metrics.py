@@ -48,7 +48,7 @@ class Command(BaseCommand):
         self.generate_participation_xls()
 
     def generate_participation_xls(self):
-        file_name = get_xls_file_name('participation_metrics', self.start_date, self.end_date)
+        file_name = get_xls_file_name('participation_metrics_{}'.format(self.tenant), self.start_date, self.end_date)
 
         engagement_data = {}
 

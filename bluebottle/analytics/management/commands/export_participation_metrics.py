@@ -100,8 +100,8 @@ class Command(BaseCommand):
         return initialize_work_sheet(workbook, name, headers)
 
     @staticmethod
-    def create_participant_monthly_chart(workbook, data):
-        chartsheet = workbook.add_chartsheet('YoY Monthly Participants')
+    def create_monthly_chart(workbook, data, title):
+        chartsheet = workbook.add_chartsheet('YoY Monthly {}'.format(title))
         chart = workbook.add_chart({'type': 'line'})
         chartsheet.set_chart(chart)
 
@@ -114,14 +114,22 @@ class Command(BaseCommand):
             })
 
         # Add a chart title and some axis labels.
-        chart.set_title({'name': 'Monthly Participants'})
+        chart.set_title({'name': 'Monthly {}s'.format(title)})
         chart.set_x_axis({'name': 'Month'})
-        chart.set_y_axis({'name': 'Participants'})
+        chart.set_y_axis({'name': '{}s'.format(title)})
 
         # Set an Excel chart style. Colors with white outline and shadow.
         chart.set_style(10)
 
         return chart
+
+    @staticmethod
+    def get_yearly_quarter(date):
+        return (date.subtract(days=1).month - 1) // 3 + 1
+
+    @staticmethod
+    def get_month_name(date):
+        return date.subtract(days=1).format('MMMM', formatter='alternative')
 
     def generate_totals_worksheet(self, workbook):
 
@@ -133,7 +141,9 @@ class Command(BaseCommand):
         statistics_year_start = start_date.start_of('year').year
         statistics_year_end = end_date.end_of('year').year
 
-        chart_monthly_data = []
+        chart_participant_monthly_data = []
+        chart_task_monthly_data = []
+        chart_project_monthly_data = []
 
         for year in range(statistics_year_start, statistics_year_end + 1):
 
@@ -165,23 +175,30 @@ class Command(BaseCommand):
             worksheet.write(row, 1, statistics_start_date.year)  # Year
             worksheet.write(row, 5, statistics_start_date)  # Start Date
             worksheet.write(row, 6, statistics_end_date.subtract(days=1))  # End Date
-            # TODO: Double check defintion of participants
             worksheet.write(row, 7, statistics.participants)  # Participants
-            # TODO: Double check definition of task successful
             worksheet.write(row, 8, statistics.tasks_realized)  # Tasks - Successful
-            # TODO: Double check definition of projects successful
             worksheet.write(row, 9, statistics.projects_realized)  # Projects - Successful
 
             # By Month
             row += 1
             worksheet.write(row, 0, 'By Month', formatters['format_metrics_header'])
 
-            chart_data = dict()
-
             row += 1
-            chart_data['chart_name_coordinates'] = [worksheet.get_name(), row, 1]
-            chart_data['chart_categories_coordinates'] = [worksheet.get_name(), row, 3]
-            chart_data['chart_values_coordinates'] = [worksheet.get_name(), row, 7]
+
+            chart_participant_data = dict()
+            chart_participant_data['chart_name_coordinates'] = [worksheet.get_name(), row, 1]
+            chart_participant_data['chart_categories_coordinates'] = [worksheet.get_name(), row, 3]
+            chart_participant_data['chart_values_coordinates'] = [worksheet.get_name(), row, 7]
+
+            chart_task_data = dict()
+            chart_task_data['chart_name_coordinates'] = [worksheet.get_name(), row, 1]
+            chart_task_data['chart_categories_coordinates'] = [worksheet.get_name(), row, 3]
+            chart_task_data['chart_values_coordinates'] = [worksheet.get_name(), row, 8]
+
+            chart_project_data = dict()
+            chart_project_data['chart_name_coordinates'] = [worksheet.get_name(), row, 1]
+            chart_project_data['chart_categories_coordinates'] = [worksheet.get_name(), row, 3]
+            chart_project_data['chart_values_coordinates'] = [worksheet.get_name(), row, 9]
 
             statistics_start_date = pendulum.create(year, 1, 1)
             for month in range(1, 13):
@@ -193,24 +210,27 @@ class Command(BaseCommand):
                     statistics = Statistics(start=statistics_start_date, end=statistics_end_date)
                     worksheet.write(row, 0, 'Monthly')  # Time period
                     worksheet.write(row, 1, statistics_start_date.year)  # Year
-                    worksheet.write(row, 2, (statistics_end_date.subtract(days=1).month - 1) // 3 + 1)  # Quarter
-                    worksheet.write(row, 3,
-                                    statistics_end_date.subtract(days=1).format('MMMM', formatter='alternative'))
+                    worksheet.write(row, 2, self.get_yearly_quarter(statistics_end_date))  # Quarter
+                    worksheet.write(row, 3, self.get_month_name(statistics_end_date))  # Month
                     worksheet.write(row, 5, statistics_start_date)  # Start Date
                     worksheet.write(row, 6, statistics_end_date.subtract(days=1))  # End Date
-                    # TODO: Double check defintion of participants
                     worksheet.write(row, 7, statistics.participants)  # Participants
-                    # TODO: Double check definition of task successful
                     worksheet.write(row, 8, statistics.tasks_realized)  # Tasks - Successful
-                    # TODO: Double check definition of projects successful
                     worksheet.write(row, 9, statistics.projects_realized)  # Projects - Successful
 
                     row += 1
 
-            chart_data['chart_categories_coordinates'].extend([row - 1, 3])
-            chart_data['chart_values_coordinates'].extend([row - 1, 7])
+            chart_participant_data['chart_categories_coordinates'].extend([row - 1, 3])
+            chart_participant_data['chart_values_coordinates'].extend([row - 1, 7])
+            chart_participant_monthly_data.append(chart_participant_data)
 
-            chart_monthly_data.append(chart_data)
+            chart_task_data['chart_categories_coordinates'].extend([row - 1, 3])
+            chart_task_data['chart_values_coordinates'].extend([row - 1, 8])
+            chart_task_monthly_data.append(chart_task_data)
+
+            chart_project_data['chart_categories_coordinates'].extend([row - 1, 3])
+            chart_project_data['chart_values_coordinates'].extend([row - 1, 9])
+            chart_project_monthly_data.append(chart_project_data)
 
             # By Week
             worksheet.write(row, 0, 'By Week', formatters['format_metrics_header'])
@@ -219,26 +239,27 @@ class Command(BaseCommand):
             statistics_start_date = pendulum.create(year, 1, 1)
             time_period = pendulum.period(statistics_start_date, pendulum.create(year, 12, 31))
             for period in time_period.range('weeks'):
+
                 statistics_end_date = period.end_of('week') \
                     if period.end_of('week') < statistics_start_date.end_of('year') \
                     else statistics_start_date.end_of('year')
 
                 if statistics_end_date <= pendulum.now().add(weeks=1):
                     logger.info('{} Weekly: {} - {}'.format(self.tenant, statistics_start_date, statistics_end_date))
+
                     statistics = Statistics(start=statistics_start_date, end=statistics_end_date)
                     worksheet.write(row, 0, 'Weekly')  # Time Period
                     worksheet.write(row, 1, statistics_start_date.year)  # Year
-                    worksheet.write(row, 2, (statistics_end_date.month - 1) // 3 + 1)  # Quarter
+                    worksheet.write(row, 2, self.get_yearly_quarter(statistics_end_date))  # Quarter
                     worksheet.write(row, 4, statistics_end_date.week_of_year)  # Week
                     worksheet.write(row, 5, statistics_start_date)  # Start Date
                     worksheet.write(row, 6, statistics_end_date.subtract(days=1))  # End Date
-                    # TODO: Double check defintion of participants
                     worksheet.write(row, 7, statistics.participants)  # Participants
-                    # TODO: Double check definition of task successful
                     worksheet.write(row, 8, statistics.tasks_realized)  # Tasks - Successful
-                    # TODO: Double check definition of projects successful
                     worksheet.write(row, 9, statistics.projects_realized)  # Projects - Successful
 
                     row += 1
 
-        self.create_participant_monthly_chart(workbook, chart_monthly_data)
+        self.create_monthly_chart(workbook, chart_participant_monthly_data, 'Participant')
+        self.create_monthly_chart(workbook, chart_task_monthly_data, 'Task')
+        self.create_monthly_chart(workbook, chart_project_monthly_data, 'Project')

@@ -256,13 +256,13 @@ class Statistics(object):
             .annotate(email=F('owner__email'))
 
         task_members = TaskMember.objects\
-            .filter(self.date_filter('created'), status_in=('applied', 'accepted', 'realized'))\
+            .filter(self.date_filter('created'), status__in=('applied', 'accepted', 'realized'))\
             .values('member_id', 'member__email', 'created')\
             .annotate(id=F('member_id'))\
             .annotate(email=F('member__email'))
 
         task_authors = Task.objects\
-            .filter(self.date_filter('created'), status='realized')\
+            .filter(self.date_filter('created'), status__in=('open', 'in_progress', 'realized', 'full', 'closed'))\
             .values('author_id', 'author__email', 'created')\
             .annotate(id=F('author_id'))\
             .annotate(email=F('author__email'))

@@ -256,7 +256,7 @@ class Statistics(object):
             .annotate(email=F('owner__email'))
 
         task_members = TaskMember.objects\
-            .filter(self.date_filter('created'), status='applied')\
+            .filter(self.date_filter('created'), status_in=('applied', 'accepted', 'realized'))\
             .values('member_id', 'member__email', 'created')\
             .annotate(id=F('member_id'))\
             .annotate(email=F('member__email'))

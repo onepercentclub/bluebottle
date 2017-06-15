@@ -243,44 +243,33 @@ class Statistics(object):
         return count
 
     def participant_details(self):
-        """ Participants are defined as project initiators of a project (running, done or realised),
-        task members (that applied for, got accepted for, or realised a task) and supporters who successfully finished
-        a donation. If a member is one of the three (e.g. a project initiator or a task member or a supporter),
+        """Participants are defined as project initiators of a project (running, done or realised),
+        task members (that applied for, got accepted for, or realised a task) or task initiators.
+        If a member is one of the three (e.g. a project initiator or a task member or a task initiator),
         they are counted as one participant."""
 
         project_owners = Project.objects\
             .filter(self.date_filter('created'),
-                    status__slug__in=('voting', 'voting-done', 'to-be-continued', 'campaign', 'done-complete',
-                                      'done-incomplete'))\
+                    status__slug__in=('voting', 'voting-done', 'campaign', 'done-complete', 'done-incomplete'))\
             .values('owner_id', 'owner__email', 'created')\
             .annotate(id=F('owner_id'))\
             .annotate(email=F('owner__email'))
 
         task_members = TaskMember.objects\
-            .filter(self.date_filter('created'), status='realized')\
+            .filter(self.date_filter('created'), status='applied')\
             .values('member_id', 'member__email', 'created')\
             .annotate(id=F('member_id'))\
             .annotate(email=F('member__email'))
 
-        donors = Order.objects\
-            .filter(self.date_filter('created'), status='success')\
-            .values('user_id', 'user__email', 'created')\
-            .annotate(id=F('user_id')) \
-            .annotate(email=F('user__email'))
-
-        # NOTE: If we want to calculate a participant who has performed two out of three actions
-        # project_owner_ids = {member["id"] for member in project_owners}
-        # task_member_ids = {member["id"] for member in task_members}
-        # donors = {member["id"] for member in donors}
-        #
-        # p = set.union(set.intersection(project_owner_ids, task_member_ids),
-        #               set.intersection(project_owner_ids, donors),
-        #               set.intersection(task_member_ids, donors))
-        # print(len(p))
+        task_authors = Task.objects\
+            .filter(self.date_filter('created'), status='realized')\
+            .values('author_id', 'author__email', 'created')\
+            .annotate(id=F('author_id'))\
+            .annotate(email=F('author__email'))
 
         participants = dict()
 
-        for member in itertools.chain(task_members, project_owners, donors):
+        for member in itertools.chain(task_members, project_owners, task_authors):
             if participants.get(member['id']):
                 if member['created'] < participants[member['id']]['created']:
                     participants[member['id']]['created'] = member['created']
@@ -292,7 +281,8 @@ class Statistics(object):
     @property
     @memoize(timeout=300)
     def participants(self):
-        """ Total numbers of participants (members that started a project, or where a realized task member) """
+        """ Total numbers of participants (members that started a project, or realized task member,
+        or inititated a task)"""
         return len(self.participant_details())
 
     @property

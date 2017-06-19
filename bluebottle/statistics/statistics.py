@@ -253,30 +253,33 @@ class Statistics(object):
                     status__slug__in=('voting', 'voting-done', 'campaign', 'done-complete', 'done-incomplete'))\
             .values('owner_id', 'owner__email', 'created')\
             .annotate(id=F('owner_id'))\
-            .annotate(email=F('owner__email'))
+            .annotate(email=F('owner__email'))\
+            .annotate(action_date=F('created'))
 
         task_members = TaskMember.objects\
-            .filter(self.date_filter('created'), status__in=('applied', 'accepted', 'realized'))\
-            .values('member_id', 'member__email', 'created')\
+            .filter(self.date_filter('task__deadline'), status__in=('applied', 'accepted', 'realized'))\
+            .values('member_id', 'member__email', 'task__deadline')\
             .annotate(id=F('member_id'))\
-            .annotate(email=F('member__email'))
+            .annotate(email=F('member__email'))\
+            .annotate(action_date=F('task__deadline'))
 
         task_authors = Task.objects\
-            .filter(self.date_filter('created'), status__in=('open', 'in_progress', 'realized', 'full', 'closed'))\
-            .values('author_id', 'author__email', 'created')\
+            .filter(self.date_filter('deadline'), status__in=('open', 'in_progress', 'realized', 'full', 'closed'))\
+            .values('author_id', 'author__email', 'deadline')\
             .annotate(id=F('author_id'))\
-            .annotate(email=F('author__email'))
+            .annotate(email=F('author__email'))\
+            .annotate(action_date=F('deadline'))
 
         participants = dict()
 
         for member in itertools.chain(task_members, project_owners, task_authors):
             if participants.get(member['id']):
-                if member['created'] < participants[member['id']]['created']:
-                    participants[member['id']]['created'] = member['created']
+                if member['action_date'] < participants[member['id']]['action_date']:
+                    participants[member['id']]['action_date'] = member['action_date']
             else:
                 participants[member['id']] = member
 
-        return sorted(participants.values(), key=lambda k: k['created'])
+        return sorted(participants.values(), key=lambda k: k['action_date'])
 
     @property
     @memoize(timeout=300)

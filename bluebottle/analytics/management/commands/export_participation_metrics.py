@@ -155,7 +155,7 @@ class Command(BaseCommand):
             participant_worksheet = self.create_participants_worksheet(workbook, year)
             participants = statistics.participant_details()
             for row, participant in enumerate(participants, 1):
-                participation_date = pendulum.instance(participant['created'])
+                participation_date = pendulum.instance(participant['action_date'])
                 participant_worksheet.write(row, 0, participant['email'])
                 participant_worksheet.write_datetime(row, 1, participation_date)
                 participant_worksheet.write(row, 2, participation_date.year)

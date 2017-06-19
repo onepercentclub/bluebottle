@@ -27,6 +27,7 @@ dependency_links = [
 ]
 
 install_requires = [
+    'apiai==1.2.3',
     'Babel==2.3.4',
     'Django==1.10.7',
     'Flutterwave==1.0.7',

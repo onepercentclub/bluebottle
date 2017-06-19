@@ -135,7 +135,8 @@ urlpatterns += staticfiles_urlpatterns()
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += [
-
+    url(r'^api/ai',
+        include('bluebottle.ai.urls.api')),
     url('', include('social.apps.django_app.urls',
                     namespace='social')),
     url(r'^api/social-login/(?P<backend>[^/]+)/$',

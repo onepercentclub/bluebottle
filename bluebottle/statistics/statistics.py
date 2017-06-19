@@ -248,6 +248,18 @@ class Statistics(object):
         If a member is one of the three (e.g. a project initiator or a task member or a task initiator),
         they are counted as one participant."""
 
+        # NOTE: Queries just for reference.
+        """
+        SELECT "projects_project"."owner_id", "members_member"."email", "projects_project"."created",
+        "projects_project"."owner_id" AS "id", "members_member"."email" AS "email",\
+        "projects_project"."created" AS "action_date" FROM "projects_project"
+        INNER JOIN "bb_projects_projectphase" ON ("projects_project"."status_id" = "bb_projects_projectphase"."id")
+        INNER JOIN "members_member" ON ("projects_project"."owner_id" = "members_member"."id")
+        WHERE ("projects_project"."created"
+        BETWEEN 2014-01-01T00:00:00+00:00 AND 2015-01-01T00:00:00+00:00
+        AND "bb_projects_projectphase"."slug" IN (voting-done, voting, done-incomplete, campaign, done-complete))
+        ORDER BY "projects_project"."title" ASC
+        """
         project_owners = Project.objects\
             .filter(self.date_filter('created'),
                     status__slug__in=('voting', 'voting-done', 'campaign', 'done-complete', 'done-incomplete'))\
@@ -256,6 +268,13 @@ class Statistics(object):
             .annotate(email=F('owner__email'))\
             .annotate(action_date=F('created'))
 
+        """
+        SELECT "tasks_task"."author_id", "members_member"."email", "tasks_task"."deadline",
+        "tasks_task"."author_id" AS "id", "members_member"."email" AS "email", "tasks_task"."deadline" AS "action_date"
+        FROM "tasks_task" INNER JOIN "members_member" ON ("tasks_task"."author_id" = "members_member"."id")
+        WHERE ("tasks_task"."deadline" BETWEEN 2014-01-01T00:00:00+00:00 AND 2015-01-01T00:00:00+00:00
+        AND "tasks_task"."status" IN (in_progress, full, open, realized, closed)) ORDER BY "tasks_task"."created" DESC
+        """
         task_members = TaskMember.objects\
             .filter(self.date_filter('task__deadline'), status__in=('applied', 'accepted', 'realized'))\
             .values('member_id', 'member__email', 'task__deadline')\
@@ -263,6 +282,15 @@ class Statistics(object):
             .annotate(email=F('member__email'))\
             .annotate(action_date=F('task__deadline'))
 
+        """
+        SELECT "tasks_taskmember"."member_id", "members_member"."email", "tasks_task"."deadline",
+        "tasks_taskmember"."member_id" AS "id", "members_member"."email" AS "email",
+        "tasks_task"."deadline" AS "action_date"
+        FROM "tasks_taskmember" INNER JOIN "tasks_task" ON ("tasks_taskmember"."task_id" = "tasks_task"."id")
+        INNER JOIN "members_member" ON ("tasks_taskmember"."member_id" = "members_member"."id")
+        WHERE ("tasks_task"."deadline" BETWEEN 2014-01-01T00:00:00+00:00 AND 2015-01-01T00:00:00+00:00
+        AND "tasks_taskmember"."status" IN (applied, realized, accepted))
+        """
         task_authors = Task.objects\
             .filter(self.date_filter('deadline'), status__in=('open', 'in_progress', 'realized', 'full', 'closed'))\
             .values('author_id', 'author__email', 'deadline')\

@@ -313,7 +313,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             adapter = DoradoPayoutAdapter(project)
             try:
                 adapter.trigger_payout()
-            except PayoutValidationError, e:
+            except PayoutValidationError as e:
                 errors = e.message['errors']
                 if type(errors) == unicode:
                     self.message_user(
@@ -329,7 +329,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                                 'Account details: {}, {}.'.format(field, error.lower()),
                                 level=messages.ERROR
                             )
-            except (PayoutCreationError, ImproperlyConfigured), e:
+            except (PayoutCreationError, ImproperlyConfigured) as e:
                 logger.warning(
                     'Error approving payout: {}'.format(e),
                     exc_info=1

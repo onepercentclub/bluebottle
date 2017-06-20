@@ -2,9 +2,13 @@ import json
 
 import datetime
 import pytz
+from bluebottle.donations.models import Donation
+
+from bluebottle.members.models import Member
 from django.db.utils import IntegrityError
 from moneyed.classes import Money
 
+from bluebottle.orders.models import Order
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.models import Task
 
@@ -40,13 +44,24 @@ class Command(BaseCommand):
 
             campaign = ProjectPhase.objects.get(slug='campaign')
 
+            for u in data['users']:
+                user, created = Member.objects.get_or_create(email=u['email'], remote_id=u['remote_id'])
+                user.password = u['password']
+                user.first_name = u['first_name']
+                user.last_name = u['last_name']
+                user.username = u['username']
+                user.about_me = u['description']
+                user.save()
+
             for p in data['projects']:
                 deadline = datetime.datetime.strptime(p['deadline'], '%Y-%m-%d')
                 deadline = pytz.utc.localize(deadline)
 
-                project, created = Project.objects.get_or_create(
-                    owner_id=1,
-                    slug=p['slug'])
+                project, created = Project.objects.get_or_create(slug=p['slug'])
+                try:
+                    project.owner = Member.objects.get(email=p['user'])
+                except Member.DoesNotExist:
+                    project.owner_id = 1
                 project.status = campaign
                 project.title = p['title']
                 project.created = p['created'] + 'T12:00:00+01:00'
@@ -84,7 +99,7 @@ class Command(BaseCommand):
                     project = Project.objects.get(slug=r['project'])
                     reward, created = Reward.objects.get_or_create(
                         project=project,
-                        title=r['title'],
+                        title=r['title'][0:30],
                     )
                     reward.description = r['description'],
                     reward.amount = Money(r['amount'], 'EUR'),
@@ -92,3 +107,28 @@ class Command(BaseCommand):
                     reward.save()
                 except Project.DoesNotExist:
                     pass
+
+            for o in data['orders']:
+                try:
+                    user = Member.objects.get(email=o['user']['email'])
+                except TypeError:
+                    user = None
+                order = Order.objects.create(user=user)
+                if o['completed']:
+                    order.locked()
+                    order.success()
+                    order.created = o['completed']
+                    order.completed = o['completed']
+                    order.confirmed = o['completed']
+                order.save()
+
+                if o['donations']:
+                    for don in o['donations']:
+                        try:
+                            project = Project.objects.get(title=don['project'])
+                        except Project.DoesNotExist:
+                            project = Project.objects.all()[0]
+                        donation = Donation.objects.create(project=project,
+                                                           order=order,
+                                                           amount=Money(don['amount'], 'EUR'))
+                        donation.save()

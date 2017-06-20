@@ -417,6 +417,22 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         for field in serializer_fields:
             self.assertTrue(field in response.data)
 
+    def test_access_to_motivation(self):
+        """ Test that the motivation can only be accessed by project owner or task member """
+
+        task = TaskFactory.create(project=self.some_project)
+        task_member = TaskMemberFactory.create(member=self.some_user, task=task, motivation="I am motivated")
+
+        another_user_response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id),
+                                                token=self.another_token)
+
+        self.assertEquals(another_user_response.data['motivation'], '')
+
+        some_user_response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id),
+                                             token=self.some_token)
+
+        self.assertEquals(some_user_response.data['motivation'], 'I am motivated')
+
 
 class TestTaskSearchCase(BluebottleTestCase):
     """Tests for the task search functionality."""

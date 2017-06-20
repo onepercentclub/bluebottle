@@ -91,7 +91,6 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     people_needed = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
-    has_open_tasks = serializers.ReadOnlyField()
 
     amount_asked = MoneySerializer()
     amount_donated = MoneySerializer()
@@ -125,7 +124,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'status', 'deadline', 'is_funding', 'vote_count', 'celebrate_results',
                   'supporter_count', 'people_needed', 'people_registered',
                   'voting_deadline', 'latitude', 'longitude', 'video_url', 'has_voted',
-                  'video_html', 'location', 'project_type', 'has_open_tasks')
+                  'video_html', 'location', 'project_type')
 
 
 class ProjectPreviewSerializer(ProjectSerializer):
@@ -138,7 +137,6 @@ class ProjectPreviewSerializer(ProjectSerializer):
                                               slug_field='slug')
 
     skills = serializers.SerializerMethodField()
-    has_open_tasks = serializers.BooleanField()
 
     def get_skills(self, obj):
         return set(task.skill.id for task in obj.task_set.all() if task.skill)
@@ -151,7 +149,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'longitude', 'task_count', 'allow_overfunding', 'is_campaign',
                   'is_funding', 'people_needed', 'celebrate_results',
                   'people_registered', 'location', 'vote_count',
-                  'voting_deadline', 'project_type', 'skills', 'has_open_tasks')
+                  'voting_deadline', 'project_type', 'skills')
 
 
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):

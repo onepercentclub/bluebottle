@@ -202,14 +202,12 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         response = self.client.get(project1_url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['people_needed'], 2)
-        self.assertEqual(response.data['has_open_tasks'], True)
 
         project2_url = reverse('project_preview_detail',
                                kwargs={'slug': project2.slug})
         response = self.client.get(project2_url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['people_needed'], 0)
-        self.assertEqual(response.data['has_open_tasks'], False)
 
     def test_project_order_amount_needed(self):
         for project in Project.objects.all():

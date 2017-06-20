@@ -236,10 +236,6 @@ class BaseProject(models.Model, GetTweetMixin):
 
         return requested - counts['total'] + (counts['externals'] or 0)
 
-    @property
-    def has_open_tasks(self):
-        return self.task_set.filter(status='open').count() > 0 and self.people_needed > 0
-
     _initial_status = None
 
     class Meta:

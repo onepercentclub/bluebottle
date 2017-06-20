@@ -188,6 +188,27 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
                 skill in [task.skill for task in project.task_set.all()]
             )
 
+    def test_project_has_open_tasks(self):
+        project1 = self.projects[0]
+        task1 = TaskFactory.create(project=project1, people_needed=4, status='open')
+        TaskMemberFactory.create_batch(2, task=task1, status='accepted')
+
+        project2 = self.projects[2]
+        task2 = TaskFactory.create(project=project2, people_needed=4, status='full')
+        TaskMemberFactory.create_batch(4, task=task2, status='accepted')
+
+        project1_url = reverse('project_preview_detail',
+                               kwargs={'slug': project1.slug})
+        response = self.client.get(project1_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['people_needed'], 2)
+
+        project2_url = reverse('project_preview_detail',
+                               kwargs={'slug': project2.slug})
+        response = self.client.get(project2_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['people_needed'], 0)
+
     def test_project_order_amount_needed(self):
         for project in Project.objects.all():
             project.amount_needed = Money(randint(0, int(project.amount_asked.amount)), 'EUR')

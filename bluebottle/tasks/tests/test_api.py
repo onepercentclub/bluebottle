@@ -55,6 +55,7 @@ class TaskApiTestcase(BluebottleTestCase):
         # No task members assigned to a task of a project, so there is a task open
         response = self.client.get(self.previews_url,
                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.data['results'][0]['open_task_count'], 1)
         self.assertEqual(response.data['results'][0]['task_count'], 1)
 
         TaskMemberFactory.create(member=self.another_user,
@@ -64,6 +65,7 @@ class TaskApiTestcase(BluebottleTestCase):
         # The task has one task member and two people needed, still one task open
         response = self.client.get(self.previews_url,
                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.data['results'][0]['open_task_count'], 1)
         self.assertEqual(response.data['results'][0]['task_count'], 1)
 
         task_member2 = TaskMemberFactory.create(member=self.yet_another_user,
@@ -73,7 +75,8 @@ class TaskApiTestcase(BluebottleTestCase):
         # The task has two accepted task members for two people_needed, no more task open
         response = self.client.get(self.previews_url,
                                    HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.data['results'][0]['task_count'], 0)
+        self.assertEqual(response.data['results'][0]['open_task_count'], 0)
+        self.assertEqual(response.data['results'][0]['task_count'], 1)
 
         task_member2.status = 'applied'
         task_member2.save()
@@ -90,6 +93,8 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.get(self.previews_url,
                                    HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.data['results'][0]['task_count'], 0)
+        self.assertEqual(response.data['results'][0]['open_task_count'], 0)
+        self.assertEqual(response.data['results'][0]['realized_task_count'], 0)
 
         self.task1.status = Task.TaskStatuses.realized
         self.task1.save()
@@ -97,7 +102,9 @@ class TaskApiTestcase(BluebottleTestCase):
         # The task is realized, so don't give a task_count
         response = self.client.get(self.previews_url,
                                    HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.data['results'][0]['task_count'], 0)
+        self.assertEqual(response.data['results'][0]['task_count'], 1)
+        self.assertEqual(response.data['results'][0]['open_task_count'], 0)
+        self.assertEqual(response.data['results'][0]['realized_task_count'], 1)
 
         self.task1.status = Task.TaskStatuses.open
         self.task1.save()

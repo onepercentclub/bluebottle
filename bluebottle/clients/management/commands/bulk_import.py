@@ -2,6 +2,11 @@ import json
 
 import datetime
 import pytz
+
+from django.utils.text import slugify
+from django.utils.timezone import now
+from fluent_contents.plugins.text.models import TextItem
+
 from bluebottle.donations.models import Donation
 
 from bluebottle.members.models import Member
@@ -9,6 +14,7 @@ from django.db.utils import IntegrityError
 from moneyed.classes import Money
 
 from bluebottle.orders.models import Order
+from bluebottle.pages.models import Page
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.models import Task
 
@@ -57,11 +63,10 @@ class Command(BaseCommand):
                 deadline = datetime.datetime.strptime(p['deadline'], '%Y-%m-%d')
                 deadline = pytz.utc.localize(deadline)
 
-                project, created = Project.objects.get_or_create(slug=p['slug'])
-                try:
-                    project.owner = Member.objects.get(email=p['user'])
-                except Member.DoesNotExist:
-                    project.owner_id = 1
+                project, created = Project.objects.get_or_create(
+                    slug=p['slug'],
+                    owner=Member.objects.get(email=p['user'])
+                )
                 project.status = campaign
                 project.title = p['title']
                 project.created = p['created'] + 'T12:00:00+01:00'
@@ -95,22 +100,23 @@ class Command(BaseCommand):
                     pass
 
             for r in data['rewards']:
-                try:
-                    project = Project.objects.get(slug=r['project'])
-                    reward, created = Reward.objects.get_or_create(
-                        project=project,
-                        title=r['title'][0:30],
-                    )
-                    reward.description = r['description'],
-                    reward.amount = Money(r['amount'], 'EUR'),
-                    reward.limit = r['limit'],
-                    reward.save()
-                except Project.DoesNotExist:
-                    pass
+                if r['amount']:
+                    try:
+                        project = Project.objects.get(slug=r['project'])
+                        reward, created = Reward.objects.get_or_create(
+                            project=project,
+                            title=r['title'],
+                            description=r['description'],
+                            amount=Money(r['amount'].replace(",", ".") or 0.0, 'EUR'),
+                            limit=r['limit']
+                        )
+                        reward.save()
+                    except (Project.DoesNotExist, ValueError):
+                        pass
 
             for o in data['orders']:
                 try:
-                    user = Member.objects.get(email=o['user']['email'])
+                    user = Member.objects.get(email=o['user'])
                 except TypeError:
                     user = None
                 order = Order.objects.create(user=user)
@@ -132,3 +138,22 @@ class Command(BaseCommand):
                                                            order=order,
                                                            amount=Money(don['amount'], 'EUR'))
                         donation.save()
+
+            for p in data['pages']:
+                author = Member.objects.get(email=p['author'])
+                page, created = Page.objects.get_or_create(
+                    title=p['title'],
+                    author=author,
+                    status=Page.PageStatus.published,
+                )
+                page.publication_date = now()
+                page.language = 'nl'
+                page.slug = p['slug'] or slugify(p['title'] + author.username)
+                page.save()
+                if created:
+                    text = TextItem.objects.create(
+                        parent=page,
+                        text=p['content']
+                    )
+                    text.save()
+                page.save()

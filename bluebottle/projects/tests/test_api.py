@@ -273,6 +273,26 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
 
         self.assertEquals(response.data['vote_count'], 2)
 
+    def test_project_task_count(self):
+        """ Tests retrieving a project detail with task counts from the API. """
+
+        project = self.projects[0]
+
+        TaskFactory.create_batch(4, project=project, status='full')
+        TaskFactory.create_batch(5, project=project, status='realized')
+        TaskFactory.create_batch(3, project=project, status='closed')
+        TaskFactory.create_batch(10, project=project, status='open')
+
+        # Test retrieving the project detail and check task counts.
+        url = "{}{}".format(self.projects_url, project.slug)
+        response = self.client.get(url)
+        p = response.data
+        self.assertEquals(p['task_count'], 19)
+        self.assertEquals(p['realized_task_count'], 5)
+        self.assertEquals(p['full_task_count'], 4)
+        self.assertEquals(p['open_task_count'], 10)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
 
 class ProjectDateSearchTestCase(BluebottleTestCase):
     """

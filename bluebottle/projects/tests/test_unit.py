@@ -289,6 +289,13 @@ class TestProjectBulkActions(BluebottleTestCase):
         for project in Project.objects.all():
             self.assertEqual(project.status.slug, 'plan-new')
 
+    def test_project_phase_log_creation(self):
+        mark_as_plan_new(None, None, Project.objects)
+
+        for project in Project.objects.all():
+            log = ProjectPhaseLog.objects.filter(project=project).order_by('start').last()
+            self.assertEqual(log.status.slug, 'plan-new')
+
     def test_mark_annotated(self):
         queryset = Project.objects.annotate(
             admin_vote_count=Count('vote', distinct=True)

@@ -1,7 +1,7 @@
-import json
-
 import datetime
+import json
 import pytz
+import sys
 
 from django.utils.text import slugify
 from django.utils.timezone import now
@@ -31,7 +31,7 @@ from bluebottle.projects.models import Project
 
 
 class Command(BaseCommand):
-    help = 'Import Projects from json'
+    help = 'Import data from json'
 
     def add_arguments(self, parser):
         parser.add_argument('file')
@@ -50,110 +50,165 @@ class Command(BaseCommand):
 
             campaign = ProjectPhase.objects.get(slug='campaign')
 
-            for u in data['users']:
-                user, created = Member.objects.get_or_create(email=u['email'], remote_id=u['remote_id'])
-                user.password = u['password']
-                user.first_name = u['first_name']
-                user.last_name = u['last_name']
-                user.username = u['username']
-                user.about_me = u['description']
-                user.save()
+            if 'users' in data:
+                print "Importing users"
+                t = 1
+                for u in data['users']:
+                    sys.stdout.flush()
+                    str = "\r{}/{}".format(t, len(data['users']))
+                    sys.stdout.write(str)
+                    t += 1
+                    if 'remote_id' in u:
+                        user, created = Member.objects.get_or_create(remote_id=u['remote_id'])
+                    else:
+                        user, created = Member.objects.get_or_create(email=u['email'])
+                    for k in u:
+                        if hasattr(user, k):
+                            setattr(user, k, u[k])
+                    user.save()
+                print " Done!\n"
 
-            for p in data['projects']:
-                deadline = datetime.datetime.strptime(p['deadline'], '%Y-%m-%d')
-                deadline = pytz.utc.localize(deadline)
+            if 'projects' in data:
+                print "Importing projects"
+                t = 1
+                for p in data['projects']:
+                    sys.stdout.flush()
+                    str = "\r{}/{}".format(t, len(data['projects']))
+                    sys.stdout.write(str)
+                    t += 1
+                    deadline = datetime.datetime.strptime(p['deadline'], '%Y-%m-%d')
+                    deadline = pytz.utc.localize(deadline)
 
-                project, created = Project.objects.get_or_create(
-                    slug=p['slug'],
-                    owner=Member.objects.get(email=p['user'])
-                )
-                project.status = campaign
-                project.title = p['title']
-                project.created = p['created'] + 'T12:00:00+01:00'
-                project.campaign_started = p['created'] + 'T12:00:00+01:00'
-                project.story = p['description']
-                project.pitch = p['pitch']
-                project.amount_asked = Money(p['goal'], 'EUR')
-                project.video = p['video']
-                project.deadline = deadline
-                try:
-                    project.save()
-                except IntegrityError:
-                    project.title += '*'
-                    project.save()
-
-            for t in data['tasks']:
-                try:
-                    project = Project.objects.get(slug=t['project'])
-                    task, created = Task.objects.get_or_create(
-                        project=project,
-                        time_needed="8",
-                        skill__id=1,
-                        deadline=project.deadline,
-                        deadline_to_apply=project.deadline,
-                        title=t['title']
+                    project, created = Project.objects.get_or_create(
+                        slug=p['slug'],
+                        owner=Member.objects.get(email=p['user'])
                     )
-                    task.description = t['description'],
-                    task.people_needed = t['people_needed'],
-                    task.save()
-                except (Project.DoesNotExist, TypeError):
-                    pass
-
-            for r in data['rewards']:
-                if r['amount']:
+                    project.status = campaign
+                    project.title = p['title']
+                    project.created = p['created'] + 'T12:00:00+01:00'
+                    project.campaign_started = p['created'] + 'T12:00:00+01:00'
+                    project.story = p['description']
+                    project.pitch = p['pitch']
+                    project.amount_asked = Money(p['goal'], 'EUR')
+                    project.video = p['video']
+                    project.deadline = deadline
                     try:
-                        project = Project.objects.get(slug=r['project'])
-                        reward, created = Reward.objects.get_or_create(
+                        project.save()
+                    except IntegrityError:
+                        project.title += '*'
+                        project.save()
+                print " Done!\n"
+
+            if 'tasks' in data:
+                print "Importing tasks"
+                i = 1
+                for t in data['tasks']:
+                    sys.stdout.flush()
+                    str = "\r{}/{}".format(i, len(data['tasks']))
+                    sys.stdout.write(str)
+                    i += 1
+                    try:
+                        project = Project.objects.get(slug=t['project'])
+                        task, created = Task.objects.get_or_create(
                             project=project,
-                            title=r['title'],
-                            description=r['description'],
-                            amount=Money(r['amount'].replace(",", ".") or 0.0, 'EUR'),
-                            limit=r['limit']
+                            time_needed="8",
+                            skill__id=1,
+                            deadline=project.deadline,
+                            deadline_to_apply=project.deadline,
+                            title=t['title']
                         )
-                        reward.save()
-                    except (Project.DoesNotExist, ValueError):
+                        task.description = t['description'],
+                        task.people_needed = t['people_needed'],
+                        task.save()
+                    except (Project.DoesNotExist, TypeError):
                         pass
+                print " Done!\n"
 
-            for o in data['orders']:
-                try:
-                    user = Member.objects.get(email=o['user'])
-                except TypeError:
-                    user = None
-                order = Order.objects.create(user=user)
-                if o['completed']:
-                    order.locked()
-                    order.success()
-                    order.created = o['completed']
-                    order.completed = o['completed']
-                    order.confirmed = o['completed']
-                order.save()
-
-                if o['donations']:
-                    for don in o['donations']:
+            if 'rewards' in data:
+                print "Importing rewards"
+                t = 1
+                for r in data['rewards']:
+                    sys.stdout.flush()
+                    str = "\r{}/{}".format(t, len(data['rewards']))
+                    sys.stdout.write(str)
+                    t += 1
+                    if r['amount']:
                         try:
-                            project = Project.objects.get(title=don['project'])
-                        except Project.DoesNotExist:
-                            project = Project.objects.all()[0]
-                        donation = Donation.objects.create(project=project,
-                                                           order=order,
-                                                           amount=Money(don['amount'], 'EUR'))
-                        donation.save()
+                            project = Project.objects.get(slug=r['project'])
+                            reward, created = Reward.objects.get_or_create(
+                                project=project,
+                                title=r['title'],
+                                description=r['description'],
+                                amount=Money(r['amount'].replace(",", ".") or 0.0, 'EUR'),
+                                limit=r['limit']
+                            )
+                            reward.save()
+                        except (Project.DoesNotExist, ValueError):
+                            pass
+                print " Done!\n"
 
-            for p in data['pages']:
-                author = Member.objects.get(email=p['author'])
-                page, created = Page.objects.get_or_create(
-                    title=p['title'],
-                    author=author,
-                    status=Page.PageStatus.published,
-                )
-                page.publication_date = now()
-                page.language = 'nl'
-                page.slug = p['slug'] or slugify(p['title'] + author.username)
-                page.save()
-                if created:
-                    text = TextItem.objects.create(
-                        parent=page,
-                        text=p['content']
+            if 'orders' in data:
+                print "Importing orders/donations"
+                t = 1
+                for o in data['orders']:
+                    sys.stdout.flush()
+                    str = "\r{}/{}".format(t, len(data['orders']))
+                    sys.stdout.write(str)
+                    t += 1
+                    try:
+                        user = Member.objects.get(email=o['user'])
+                    except (TypeError, Member.DoesNotExist):
+                        user = None
+                    order = Order.objects.create(user=user)
+                    if o['completed']:
+                        try:
+                            completed = o['completed'] + '+01:00'
+                        except AttributeError as e:
+                            print e
+                            print o['completed']
+                            completed = now()
+                        order.locked()
+                        order.success()
+                        order.created = completed
+                        order.completed = completed
+                        order.confirmed = completed
+                    order.save()
+
+                    if o['donations']:
+                        for don in o['donations']:
+                            try:
+                                project = Project.objects.get(title=don['project'])
+                            except Project.DoesNotExist:
+                                project = Project.objects.all()[0]
+                            donation = Donation.objects.create(project=project,
+                                                               order=order,
+                                                               amount=Money(don['amount'], 'EUR'))
+                            donation.save()
+                print " Done!\n"
+
+            if 'pages' in data:
+                print "Importing pages"
+                t = 1
+                for p in data['pages']:
+                    sys.stdout.flush()
+                    str = "\r{}/{}".format(t, len(data['pages']))
+                    sys.stdout.write(str)
+                    t += 1
+                    author = Member.objects.get(email=p['author'])
+                    page, created = Page.objects.get_or_create(
+                        title=p['title'],
+                        author=author,
+                        status=Page.PageStatus.published,
                     )
-                    text.save()
-                page.save()
+                    page.publication_date = now()
+                    page.language = 'nl'
+                    page.slug = p['slug'] or slugify(p['title'] + author.username)
+                    page.save()
+                    if created:
+                        text = TextItem.objects.create(
+                            parent=page,
+                            text=p['content']
+                        )
+                        text.save()
+                    page.save()
+                print " Done!\n"

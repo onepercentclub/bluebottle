@@ -10,8 +10,9 @@ from django_extensions.db.fields import (
 from djchoices.choices import DjangoChoices, ChoiceItem
 from tenant_extras.utils import TenantLanguage
 
-from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.clients import properties
+from bluebottle.clients.utils import tenant_url
+from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
 
@@ -46,7 +47,9 @@ class Task(models.Model, PreviousStatusMixin):
 
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
-    location = models.CharField(_('location'), max_length=200, null=True,
+    location = models.CharField(_('location'),
+                                help_text=_('Task location (leave empty for anywhere/online)'),
+                                max_length=200, null=True,
                                 blank=True)
     people_needed = models.PositiveIntegerField(_('people needed'), default=1)
 
@@ -71,7 +74,7 @@ class Task(models.Model, PreviousStatusMixin):
 
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
     deadline_to_apply = models.DateTimeField(
-        _('deadline_to_apply'), help_text=_('Deadline to apply')
+        _('Deadline to apply'), help_text=_('Deadline to apply')
     )
 
     objects = UpdateSignalsQuerySet.as_manager()
@@ -109,6 +112,10 @@ class Task(models.Model, PreviousStatusMixin):
     def set_open(self):
         self.status = self.TaskStatuses.open
         self.save()
+
+    @property
+    def expertise_based(self):
+        return self.skill.expertise if self.skill else False
 
     @property
     def members_applied(self):
@@ -169,6 +176,17 @@ class Task(models.Model, PreviousStatusMixin):
             self.status = 'realized'
         else:
             self.status = 'closed'
+            with TenantLanguage(self.author.primary_language):
+                subject = _("The status of your task '{0}' is set to closed").format(self.title)
+            send_mail(
+                template_name="tasks/mails/task_status_closed.mail",
+                subject=subject,
+                title=self.title,
+                to=self.author,
+                site=tenant_url(),
+                link='/tasks/{0}'.format(self.id)
+            )
+
         self.save()
 
     def members_changed(self):
@@ -220,16 +238,6 @@ class Task(models.Model, PreviousStatusMixin):
                     eta=timezone.now() + timedelta(minutes=2 * settings.REMINDER_MAIL_DELAY)
                 )
 
-        if oldstate in ("in progress", "open") and newstate in ("realized", "closed"):
-            data = {
-                "Task": self.title,
-                "Author": self.author.username,
-                "Old status": oldstate,
-                "New status": newstate
-            }
-
-            bb_track("Task Completed", data)
-
     def save(self, *args, **kwargs):
         if not self.author_id:
             self.author = self.project.owner
@@ -240,6 +248,9 @@ class Task(models.Model, PreviousStatusMixin):
 class Skill(models.Model):
     name = models.CharField(_('english name'), max_length=100, unique=True)
     description = models.TextField(_('description'), blank=True)
+    expertise = models.BooleanField(_('expertise'),
+                                    help_text=_('Is this skill expertise based, or could anyone do it?'),
+                                    default=True)
     disabled = models.BooleanField(_('disabled'), default=False)
 
     @property

@@ -124,7 +124,7 @@ class MemberAdmin(UserAdmin):
                 'phone_number']}],
             [_("Profile"),
              {'fields': ['user_type', 'is_co_financer', 'picture', 'about_me', 'location']}],
-            [_("Settings"), {'fields': ['primary_language', 'newsletter']}],
+            [_("Settings"), {'fields': ['primary_language', 'newsletter', 'campaign_notifications']}],
             [_('Skills & interests'), {'fields': ['favourite_themes', 'skills']}],
             [_('Important dates'),
              {'fields': ['last_login', 'date_joined', 'deleted']}],

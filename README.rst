@@ -5,7 +5,8 @@ Project Bluebottle
    :target: https://travis-ci.org/onepercentclub/bluebottle
 .. image:: https://coveralls.io/repos/github/onepercentclub/bluebottle/badge.svg?branch=develop
    :target: https://coveralls.io/github/onepercentclub/bluebottle?branch=develop
-
+.. image:: https://requires.io/github/onepercentclub/bluebottle/requirements.svg?branch=master
+   :target: https://requires.io/github/onepercentclub/bluebottle/requirements/?branch=master
 
 The repository for Project Bluebottle, the crowdsourcing framework initiated
 by the 1%Club.

@@ -2,6 +2,7 @@ from collections import OrderedDict
 import logging
 from decimal import InvalidOperation
 
+from bluebottle.tasks.models import Skill
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin, messages
@@ -137,6 +138,25 @@ class ProjectThemeFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(theme=self.value())
+        else:
+            return queryset
+
+
+class ProjectSkillFilter(admin.SimpleListFilter):
+    title = _('Task skills')
+    parameter_name = 'skill'
+
+    def lookups(self, request, model_admin):
+        skills = Skill.objects.filter(disabled=False)
+        lookups = [(skill.id, _(skill.name)) for skill in skills]
+        return [('any', _('Any expertise based skill'))] + lookups
+
+    def queryset(self, request, queryset):
+        if self.value():
+            if self.value() == 'any':
+                return queryset.filter(task__skill__isnull=False, task__skill__expertise=True)
+            else:
+                return queryset.filter(task__skill=self.value())
         else:
             return queryset
 
@@ -326,7 +346,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     list_filter = ('country__subregion__region', )
 
     def get_list_filter(self, request):
-        filters = ['status', 'is_campaign', ProjectThemeFilter, ProjectReviewerFilter,
+        filters = ['status', 'is_campaign', ProjectThemeFilter, ProjectSkillFilter,
+                   ProjectReviewerFilter,
                    'project_type', ('deadline', DateRangeFilter), ]
 
         if request.user.has_perm('projects.approve_payout'):
@@ -341,7 +362,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_display(self, request):
         fields = ['get_title_display', 'get_owner_display', 'created',
-                  'status', 'deadline', 'donated_percentage', 'amount_extra']
+                  'status', 'deadline', 'donated_percentage', 'amount_extra',
+                  'expertise_based']
 
         if request.user.has_perm('projects.approve_payout'):
             fields.insert(4, 'payout_status')
@@ -382,6 +404,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('amount_donated', 'amount donated'),
         ('organization__name', 'organization'),
         ('amount_extra', 'amount matched'),
+        ('expertise_based', 'expertise based'),
     ]
 
     actions = [export_as_csv_action(fields=export_fields),
@@ -443,6 +466,11 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         except (AttributeError, InvalidOperation):
             return '-'
 
+    def expertise_based(self, obj):
+        return obj.expertise_based
+
+    expertise_based.boolean = True
+
     def get_queryset(self, request):
         # Optimization: Select related fields that are used in admin specific
         # display fields.
@@ -496,4 +524,10 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
 admin.site.register(Project, ProjectAdmin)
 
-admin.site.register(ProjectPhase)
+
+class ProjectPhaseAdmin(admin.ModelAdmin):
+
+    list_display = ['__unicode__', 'name', 'slug']
+
+
+admin.site.register(ProjectPhase, ProjectPhaseAdmin)

@@ -288,18 +288,22 @@ class TestStatusMC(BluebottleTestCase):
         """
         now = timezone.now()
 
-        task1 = TaskFactory.create(title='My Task', people_needed=2,
+        project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'))
+
+        task1 = TaskFactory.create(title='My Task', people_needed=5,
+                                   project=project,
                                    status='open', type='event',
                                    deadline_to_apply=now - timezone.timedelta(days=5),
                                    deadline=now + timezone.timedelta(days=5))
 
-        task2 = TaskFactory.create(title='My Task 2', people_needed=4,
+        task2 = TaskFactory.create(title='My Task 2', people_needed=5,
+                                   project=project,
                                    status='open', type='ongoing',
                                    deadline_to_apply=now - timezone.timedelta(days=5),
                                    deadline=now + timezone.timedelta(days=5))
 
-        TaskMemberFactory.create(task=task1, status='accepted')
-        TaskMemberFactory.create_batch(4, task=task2, status='accepted')
+        TaskMemberFactory.create_batch(5, task=task1, status='accepted')
+        TaskMemberFactory.create_batch(5, task=task2, status='accepted')
 
         task1 = Task.objects.get(title='My Task')
         self.assertEqual(task1.status, 'full')

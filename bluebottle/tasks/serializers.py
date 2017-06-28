@@ -27,6 +27,13 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
         fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
                   'externals', 'time_spent', 'resume')
 
+    def to_representation(self, obj):
+        ret = super(BaseTaskMemberSerializer, self).to_representation(obj)
+        if self.context['request'].method == 'GET' \
+                and self.context['request'].user not in [obj.member, obj.task.author, obj.task.project.owner]:
+            ret['motivation'] = ''
+        return ret
+
 
 class TaskFileSerializer(serializers.ModelSerializer):
     author = UserPreviewSerializer()

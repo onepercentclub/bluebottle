@@ -162,6 +162,7 @@ class ProjectManager(models.Manager):
         text = query.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
+                           Q(location__name__icontains=text) |
                            Q(pitch__icontains=text) |
                            Q(description__icontains=text))
 

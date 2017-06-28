@@ -77,7 +77,6 @@ def admin_password_reset(request, is_admin_site=False,
                          token_generator=default_token_generator,
                          post_reset_redirect=None,
                          from_email=None,
-                         current_app=None,
                          extra_context=None):
     """
     This is a copy of django.contrib.auth.views.password_reset but this
@@ -112,5 +111,4 @@ def admin_password_reset(request, is_admin_site=False,
     }
     if extra_context is not None:
         context.update(extra_context)
-    return TemplateResponse(request, template_name, context,
-                            current_app=current_app)
+    return TemplateResponse(request, template_name, context)

@@ -222,13 +222,13 @@ class TestStatusMC(BluebottleTestCase):
 
         task1 = TaskFactory.create(title='task1', people_needed=5,
                                    project=project,
-                                   deadline=now - timezone.timedelta(days=5))
+                                   deadline=now + timezone.timedelta(days=5))
         task2 = TaskFactory.create(title='task2', people_needed=5,
                                    project=project,
-                                   deadline=now - timezone.timedelta(days=5))
+                                   deadline=now + timezone.timedelta(days=5))
         task3 = TaskFactory.create(title='task3', people_needed=5,
-                                   project=project,
-                                   deadline=now - timezone.timedelta(days=5))
+                                   project=project, type='event',
+                                   deadline=now + timezone.timedelta(days=5))
 
         TaskMemberFactory.create(task=task1, status='accepted')
         TaskMemberFactory.create_batch(5, task=task3, status='accepted')
@@ -238,9 +238,13 @@ class TestStatusMC(BluebottleTestCase):
         task2 = Task.objects.get(title='task2')
         task3 = Task.objects.get(title='task3')
 
+        # Check task statuses
         self.assertEqual(task1.status, 'open')
         self.assertEqual(task2.status, 'open')
         self.assertEqual(task3.status, 'full')
+
+        # Change deadline so we can finish the tasks
+        Task.objects.update(deadline=now - timezone.timedelta(days=5))
 
         call_command('cron_status_realised')
 
@@ -252,8 +256,8 @@ class TestStatusMC(BluebottleTestCase):
         self.assertEqual(task2.status, 'closed')
         self.assertEqual(task3.status, 'realized')
 
-        # Expect two extra mails
-        self.assertEquals(len(mail.outbox), 3)
+        # Expect two extra mails for task owners
+        self.assertEquals(len(mail.outbox), 8)
 
     def test_task_ignored_non_active_project(self):
         """

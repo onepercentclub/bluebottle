@@ -1,33 +1,30 @@
 import datetime
 import json
+from moneyed.classes import Money
 import pytz
 import sys
+import urllib
+from urlparse import urlparse
 
-from django.utils.text import slugify
-from django.utils.timezone import now
-from fluent_contents.plugins.text.models import TextItem
-
-from bluebottle.donations.models import Donation
-
-from bluebottle.members.models import Member
-from django.db.utils import IntegrityError
-from moneyed.classes import Money
-
-from bluebottle.orders.models import Order
-from bluebottle.pages.models import Page
-from bluebottle.rewards.models import Reward
-from bluebottle.tasks.models import Task
-
-from bluebottle.bb_projects.models import ProjectPhase
-
+from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.db import connection
+from django.db.utils import IntegrityError
+from django.utils.text import slugify
+from django.utils.timezone import now
+
+from fluent_contents.plugins.text.models import TextItem
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-
-
+from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.donations.models import Donation
+from bluebottle.members.models import Member
+from bluebottle.orders.models import Order
+from bluebottle.pages.models import Page
 from bluebottle.projects.models import Project
+from bluebottle.rewards.models import Reward
+from bluebottle.tasks.models import Task
 
 
 class Command(BaseCommand):
@@ -92,6 +89,12 @@ class Command(BaseCommand):
                     project.amount_asked = Money(p['goal'], 'EUR')
                     project.video = p['video']
                     project.deadline = deadline
+
+                    if 'image' in p and p['image'].startswith('http'):
+                        content = urllib.urlretrieve(p['image'])
+                        name = urlparse(p['image']).path.split('/')[-1]
+                        project.image.save(name, File(open(content[0])), save=True)
+
                     try:
                         project.save()
                     except IntegrityError:

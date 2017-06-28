@@ -299,7 +299,6 @@ class TestStatusMC(BluebottleTestCase):
                                    deadline=now + timezone.timedelta(days=5))
 
         TaskMemberFactory.create(task=task1, status='accepted')
-        TaskMemberFactory.create(task=task1, status='accepted')
         TaskMemberFactory.create_batch(4, task=task2, status='accepted')
 
         task1 = Task.objects.get(title='My Task')

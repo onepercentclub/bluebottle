@@ -49,6 +49,7 @@ class TestTaskMemberMail(TaskMailTestBase):
         self.assertEquals(len(mail.outbox), 1)
         body = mail.outbox[0].body
         self.assertTrue('applied for your task' in body)
+        self.assertFalse('with the following motivation' in body)
         self.assertTrue(self.task_member.member.full_name in body)
         self.assertEquals(mail.outbox[0].to[0], self.task.author.email)
 
@@ -59,6 +60,27 @@ class TestTaskMemberMail(TaskMailTestBase):
         self.assertEquals(len(mail.outbox), 2)
         self.assertNotEquals(mail.outbox[1].subject.find("assigned"), -1)
         self.assertEquals(mail.outbox[1].to[0], self.task_member.member.email)
+
+    def test_member_applied_with_motivation_to_task_mail(self):
+        """
+        Test emails for realized task with a task member
+        """
+        self.task.status = "in progress"
+        self.assertEquals(len(mail.outbox), 0)
+        self.task.save()
+
+        self.task_member = TaskMemberFactory.create(
+            task=self.task,
+            motivation='Some motivation',
+            status='applied'
+        )
+
+        # Task owner receives email about new task member
+        self.assertEquals(len(mail.outbox), 1)
+        body = mail.outbox[0].body
+        self.assertTrue('applied for your task' in body)
+        self.assertTrue('with the following motivation' in body)
+        self.assertTrue('Some motivation' in body)
 
     def test_member_withdrew_to_task_mail(self):
         """

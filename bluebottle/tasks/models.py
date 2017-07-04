@@ -242,6 +242,13 @@ class Task(models.Model, PreviousStatusMixin):
                     eta=timezone.now() + timedelta(minutes=2 * settings.REMINDER_MAIL_DELAY)
                 )
 
+    @property
+    def date_realized(self):
+        if self.status == TaskMember.TaskMemberStatuses.realized:
+            return self.date_status_change
+        else:
+            return None
+
     def save(self, *args, **kwargs):
         if not self.author_id:
             self.author = self.project.owner

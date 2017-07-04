@@ -802,8 +802,19 @@ THUMBNAIL_WATERMARK_ALWAYS = False
 REMINDER_MAIL_DELAY = 60 * 24 * 3  # Three days
 
 SEARCH_OPTIONS = {
-    'filter_types': ['funding', 'volunteering'],
-    'filters': ['project.status', 'project.location', 'project.theme']
+    'filters': {
+        'projects': [
+            {
+                'name': 'status'
+            },
+            {
+                'name': 'location'
+            },
+            {
+                'name': 'theme'
+            }
+        ]
+    }
 }
 
 TASKS = {

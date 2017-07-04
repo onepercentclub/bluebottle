@@ -162,6 +162,7 @@ class ProjectManager(models.Manager):
         text = query.get('text', None)
         if text:
             qs = qs.filter(Q(title__icontains=text) |
+                           Q(location__name__icontains=text) |
                            Q(pitch__icontains=text) |
                            Q(description__icontains=text))
 
@@ -562,21 +563,23 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def task_count(self):
-        return len(
-            self.task_set.filter(status=Task.TaskStatuses.open).all())
+        return self.task_set.exclude(status=Task.TaskStatuses.closed).count()
 
     @property
     def realized_task_count(self):
-        return len(
-            self.task_set.filter(status=Task.TaskStatuses.realized).all())
+        return self.task_set.filter(status=Task.TaskStatuses.realized).count()
+
+    @property
+    def open_task_count(self):
+        return self.task_set.filter(status=Task.TaskStatuses.open).count()
+
+    @property
+    def full_task_count(self):
+        return self.task_set.filter(status=Task.TaskStatuses.full).count()
 
     @property
     def from_suggestion(self):
         return len(self.suggestions.all()) > 0
-
-    @property
-    def get_open_tasks(self):
-        return self.task_set.filter(status=Task.TaskStatuses.open).all()
 
     @property
     def date_funded(self):

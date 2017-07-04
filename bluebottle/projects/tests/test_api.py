@@ -16,7 +16,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.geo import CountryFactory
+from bluebottle.test.factory_models.geo import CountryFactory, LocationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -273,6 +273,26 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
 
         self.assertEquals(response.data['vote_count'], 2)
 
+    def test_project_task_count(self):
+        """ Tests retrieving a project detail with task counts from the API. """
+
+        project = self.projects[0]
+
+        TaskFactory.create_batch(4, project=project, status='full')
+        TaskFactory.create_batch(5, project=project, status='realized')
+        TaskFactory.create_batch(3, project=project, status='closed')
+        TaskFactory.create_batch(10, project=project, status='open')
+
+        # Test retrieving the project detail and check task counts.
+        url = "{}{}".format(self.projects_url, project.slug)
+        response = self.client.get(url)
+        p = response.data
+        self.assertEquals(p['task_count'], 19)
+        self.assertEquals(p['realized_task_count'], 5)
+        self.assertEquals(p['full_task_count'], 4)
+        self.assertEquals(p['open_task_count'], 10)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
 
 class ProjectDateSearchTestCase(BluebottleTestCase):
     """
@@ -376,6 +396,20 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(data['count'], 1)
+
+    def test_project_list_search_location(self):
+        self.projects[1].location = LocationFactory(name='Lyutidol')
+        self.projects[1].save()
+        self.projects[2].location = LocationFactory(name='Honolyulyu')
+        self.projects[2].save()
+
+        response = self.client.get(
+            self.projects_preview_url + '?text=Lyu'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 2)
 
 
 class ProjectManageApiIntegrationTest(BluebottleTestCase):

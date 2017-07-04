@@ -47,7 +47,9 @@ class Task(models.Model, PreviousStatusMixin):
 
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
-    location = models.CharField(_('location'), max_length=200, null=True,
+    location = models.CharField(_('location'),
+                                help_text=_('Task location (leave empty for anywhere/online)'),
+                                max_length=200, null=True,
                                 blank=True)
     people_needed = models.PositiveIntegerField(_('people needed'), default=1)
 
@@ -176,7 +178,6 @@ class Task(models.Model, PreviousStatusMixin):
             self.status = 'closed'
             with TenantLanguage(self.author.primary_language):
                 subject = _("The status of your task '{0}' is set to closed").format(self.title)
-
             send_mail(
                 template_name="tasks/mails/task_status_closed.mail",
                 subject=subject,

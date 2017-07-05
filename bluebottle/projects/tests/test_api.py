@@ -261,6 +261,7 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.data['title'], 'test project')
         self.assertEquals(response.data['account_number'], 'NL18ABNA0484869868')
         self.assertEquals(response.data['account_details'], 'ABNANL2AABNANL2AABNANL2A')
+        self.assertEquals(response.data['account_bic'], 'ABNANL2AABNANL2AABNANL2A')
         self.assertEquals(response.data['account_bank_country'], country.id)
 
         self.assertEquals(response.data['account_holder_name'], 'test name')

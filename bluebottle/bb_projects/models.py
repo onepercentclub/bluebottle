@@ -235,6 +235,10 @@ class BaseProject(models.Model, GetTweetMixin):
 
         return requested - counts['total'] + (counts['externals'] or 0)
 
+    @property
+    def account_bic(self):
+        return self.account_details
+
     _initial_status = None
 
     class Meta:

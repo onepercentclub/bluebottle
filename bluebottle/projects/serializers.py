@@ -308,6 +308,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
         fields = ('id',
                   'account_bank_country',
                   'account_details',
+                  'account_bic',
                   'account_holder_address',
                   'account_holder_city',
                   'account_holder_country',

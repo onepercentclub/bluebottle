@@ -151,7 +151,7 @@ class ProjectPayout(BaseProjectPayout):
             creditor = SepaAccount(
                 name=payout.receiver_account_name,
                 iban=payout.receiver_account_iban,
-                bic=payout.receiver_account_bic
+                bic=payout.receiver_account_details
             )
 
             sepa.add_credit_transfer(

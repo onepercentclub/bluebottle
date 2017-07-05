@@ -13,7 +13,7 @@ class PayoutSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount', 'project',
                   'receiver_account_number',
                   'receiver_account_iban',
-                  'receiver_account_bic',
+                  'receiver_account_details',
                   'receiver_account_name',
                   'receiver_account_city',
                   'receiver_account_country'

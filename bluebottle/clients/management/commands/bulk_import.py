@@ -1,5 +1,7 @@
 import datetime
 import json
+
+from django.contrib.contenttypes.models import ContentType
 from moneyed.classes import Money
 import pytz
 import sys
@@ -15,6 +17,7 @@ from django.utils.timezone import now
 
 from fluent_contents.plugins.text.models import TextItem
 
+from bluebottle.categories.models import Category
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.bb_projects.models import ProjectPhase
@@ -25,6 +28,7 @@ from bluebottle.pages.models import Page
 from bluebottle.projects.models import Project
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.models import Task
+from bluebottle.wallposts.models import TextWallpost
 
 
 class Command(BaseCommand):
@@ -65,6 +69,19 @@ class Command(BaseCommand):
                     user.save()
                 print " Done!\n"
 
+            if 'categories' in data:
+                print "Importing categories"
+                t = 1
+                for c in data['categories']:
+                    sys.stdout.flush()
+                    str = "\r{}/{}".format(t, len(data['categories']))
+                    sys.stdout.write(str)
+                    t += 1
+                    cat, created = Category.objects.get_or_create(slug=c['slug'])
+                    cat.title = c['title']
+                    cat.save()
+                print " Done!\n"
+
             if 'projects' in data:
                 print "Importing projects"
                 t = 1
@@ -89,17 +106,18 @@ class Command(BaseCommand):
                     project.amount_asked = Money(p['goal'], 'EUR')
                     project.video = p['video']
                     project.deadline = deadline
-
-                    if 'image' in p and p['image'].startswith('http'):
-                        content = urllib.urlretrieve(p['image'])
-                        name = urlparse(p['image']).path.split('/')[-1]
-                        project.image.save(name, File(open(content[0])), save=True)
+                    project.categories = Category.objects.filter(slug__in=p['categories'])
 
                     try:
+                        if 'image' in p and p['image'].startswith('http'):
+                            content = urllib.urlretrieve(p['image'])
+                            name = urlparse(p['image']).path.split('/')[-1]
+                            project.image.save(name, File(open(content[0])), save=True)
                         project.save()
                     except IntegrityError:
                         project.title += '*'
                         project.save()
+
                 print " Done!\n"
 
             if 'tasks' in data:
@@ -143,11 +161,35 @@ class Command(BaseCommand):
                                 title=r['title'],
                                 description=r['description'],
                                 amount=Money(r['amount'].replace(",", ".") or 0.0, 'EUR'),
-                                limit=r['limit']
+                                limit=r['limit'] or 0
                             )
                             reward.save()
                         except (Project.DoesNotExist, ValueError):
                             pass
+                print " Done!\n"
+
+            if 'wallposts' in data:
+                print "Importing wallposts"
+                t = 1
+                for w in data['wallposts']:
+                    sys.stdout.flush()
+                    str = "\r{}/{}".format(t, len(data['wallposts']))
+                    sys.stdout.write(str)
+                    t += 1
+                    try:
+                        project = Project.objects.get(slug=w['project'])
+                        author = Member.objects.get(email=w['email'])
+                        reward, created = TextWallpost.objects.get_or_create(
+                            object_id=project.id,
+                            content_type=ContentType.objects.get_for_model(Project).model,
+                            text=w['text'],
+                            created=w['date'],
+                            author=author
+                        )
+                        reward.save()
+                    except (Project.DoesNotExist, Member.DoesNotExist, ValueError) as e:
+                        print e
+                        pass
                 print " Done!\n"
 
             if 'orders' in data:

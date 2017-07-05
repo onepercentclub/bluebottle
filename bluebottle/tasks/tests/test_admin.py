@@ -40,6 +40,15 @@ class TestTaskAdmin(BluebottleTestCase):
         self.assertIn('deadline', self.task_admin.get_list_filter(request))
         self.assertIn(DeadlineToAppliedFilter, self.task_admin.get_list_filter(request))
 
+    def test_fields_appear(self):
+        request = self.request_factory.get('/')
+        request.user = MockUser()
+
+        for field in ['title', 'description', 'skill', 'time_needed', 'status',
+                      'date_status_change', 'people_needed', 'project', 'author',
+                      'type', 'accepting', 'location', 'deadline', 'deadline_to_apply']:
+            self.assertIn(field, self.task_admin.get_fields(request))
+
 
 class TestDeadlineToApplyFilter(BluebottleTestCase):
     def setUp(self):

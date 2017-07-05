@@ -163,9 +163,9 @@ class TaskAdmin(admin.ModelAdmin):
                mark_as_realized, export_as_csv_action(fields=export_fields)]
 
     fields = ('title', 'description', 'skill', 'time_needed', 'status',
-              'accepting', 'needs_motivation',
-              'date_status_change', 'people_needed',
-              'project', 'author', 'type', 'deadline', 'deadline_to_apply')
+              'needs_motivation', 'date_status_change', 'people_needed',
+              'project', 'author', 'type', 'accepting', 'location',
+              'deadline', 'deadline_to_apply')
 
 
 admin.site.register(Task, TaskAdmin)
@@ -174,7 +174,8 @@ admin.site.register(Task, TaskAdmin)
 class TaskAdminInline(admin.TabularInline):
     model = Task
     extra = 0
-    fields = ('title', 'project', 'status', 'deadline', 'time_needed', 'task_admin_link')
+    fields = ('title', 'project', 'status', 'deadline', 'deadline_to_apply',
+              'time_needed', 'task_admin_link')
     readonly_fields = ('task_admin_link',)
 
     def task_admin_link(self, obj):

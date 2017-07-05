@@ -2,7 +2,8 @@ from rest_framework import serializers
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.bluebottle_drf2.serializers import (
-    PrimaryKeyGenericRelatedField, FileSerializer)
+    PrimaryKeyGenericRelatedField, FileSerializer, PrivateFileSerializer
+)
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.projects.serializers import ProjectPreviewSerializer
@@ -16,12 +17,15 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
     status = serializers.ChoiceField(
         choices=TaskMember.TaskMemberStatuses.choices,
         required=False, default=TaskMember.TaskMemberStatuses.applied)
-    motivation = serializers.CharField(required=False)
+    motivation = serializers.CharField(required=False, allow_blank=True)
+    resume = PrivateFileSerializer(
+        url_name='task-member-resume', required=False, allow_null=True
+    )
 
     class Meta:
         model = TaskMember
         fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
-                  'externals', 'time_spent')
+                  'externals', 'time_spent', 'resume')
 
     def to_representation(self, obj):
         ret = super(BaseTaskMemberSerializer, self).to_representation(obj)
@@ -73,7 +77,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = ('id', 'members', 'files', 'project', 'skill',
                   'author', 'status', 'description', 'type', 'accepting',
-                  'location', 'deadline', 'deadline_to_apply',
+                  'needs_motivation', 'location', 'deadline', 'deadline_to_apply',
                   'time_needed', 'title', 'people_needed')
 
 
@@ -98,7 +102,7 @@ class MyTasksSerializer(BaseTaskSerializer):
         model = Task
         fields = ('id', 'title', 'skill', 'project', 'time_needed',
                   'people_needed', 'status', 'deadline', 'deadline_to_apply',
-                  'accepting', 'description', 'location', 'type')
+                  'accepting', 'needs_motivation', 'description', 'location', 'type')
 
 
 # Task Wallpost serializers

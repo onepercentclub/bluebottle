@@ -7,10 +7,14 @@
 Hello {{ receiver_name }},
 
 Good news! {{ sender_name }} applied for your task '{{ task_title }}'.
-
+{% endblocktrans %}
+{% if motivation %}
+{% blocktrans with sender_name=sender.full_name %}
 {{ sender_name }} replied with the following motivation to your task:
+{% endblocktrans %}
 {{ motivation }}
-
+{% endif %}
+{% blocktrans %}
 Please accept or reject this application, he or she will receive an email when you have confirmed the status.
 {% endblocktrans %}
 {% endblock %}

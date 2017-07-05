@@ -19,7 +19,7 @@ from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory, LocationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectDocumentFactory
 from bluebottle.test.factory_models.tasks import (
     TaskFactory, TaskMemberFactory, SkillFactory
 )
@@ -187,6 +187,27 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
             self.assertTrue(
                 skill in [task.skill for task in project.task_set.all()]
             )
+
+    def test_project_has_open_tasks(self):
+        project1 = self.projects[0]
+        task1 = TaskFactory.create(project=project1, people_needed=4, status='open')
+        TaskMemberFactory.create_batch(2, task=task1, status='accepted')
+
+        project2 = self.projects[2]
+        task2 = TaskFactory.create(project=project2, people_needed=4, status='full')
+        TaskMemberFactory.create_batch(4, task=task2, status='accepted')
+
+        project1_url = reverse('project_preview_detail',
+                               kwargs={'slug': project1.slug})
+        response = self.client.get(project1_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['people_needed'], 2)
+
+        project2_url = reverse('project_preview_detail',
+                               kwargs={'slug': project2.slug})
+        response = self.client.get(project2_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['people_needed'], 0)
 
     def test_project_order_amount_needed(self):
         for project in Project.objects.all():
@@ -615,6 +636,72 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                                     token=self.some_user_token, format='multipart')
 
         self.assertEqual(response.status_code, 201)
+        data = json.loads(response.content)
+
+        self.assertTrue(
+            data['file']['url'].startswith('/downloads/project/document')
+        )
+
+    def test_project_document_download(self):
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        response = self.client.get(file_url)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_project_document_download_author(self):
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        response = self.client.get(file_url, token=self.some_user_token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
+        )
+
+    def test_project_document_download_non_author(self):
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        response = self.client.get(file_url, token=self.another_user_token)
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_project_document_staff_session_user(self):
+        self.another_user.is_staff = True
+        self.another_user.save()
+
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        self.client.force_login(self.another_user)
+        response = self.client.get(file_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
+        )
+
+    def test_project_document_non_staff_session_user(self):
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        self.client.force_login(self.another_user)
+        response = self.client.get(file_url)
+
+        self.assertEqual(response.status_code, 403)
 
     def test_create_project_contains_empty_bank_details(self):
         """ Create project with bank details. Ensure they are returned """

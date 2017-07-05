@@ -65,7 +65,7 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
 
 
 class ProjectDocumentSerializer(serializers.ModelSerializer):
-    file = PrivateFileSerializer()
+    file = PrivateFileSerializer(url_name='project-document-file')
     project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
 
     class Meta:

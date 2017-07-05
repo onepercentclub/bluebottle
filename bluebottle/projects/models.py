@@ -196,13 +196,10 @@ class ProjectManager(models.Manager):
 class ProjectDocument(BaseProjectDocument):
     @property
     def document_url(self):
-        content_type = ContentType.objects.get_for_model(ProjectDocument).id
         # pk may be unset if not saved yet, in which case no url can be
         # generated.
         if self.pk is not None:
-            return reverse('document_download_detail',
-                           kwargs={'content_type': content_type,
-                                   'pk': self.pk or 1})
+            return reverse('project-document-file', kwargs={'pk': self.pk})
         return None
 
 

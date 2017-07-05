@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.tasks.models import Task
+from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -317,6 +317,67 @@ class TaskApiTestcase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['time_spent'], 7)
 
+    def test_task_member_resume(self):
+        task = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.some_user,
+            project=self.some_project,
+            people_needed=4,
+            time_needed=8
+        )
+
+        resume_file = open(
+            './bluebottle/projects/test_images/upload.png',
+            mode='rb'
+        )
+
+        task_member_data = {
+            'task': task.id,
+            'resume': resume_file,
+            'motivation': 'Pick me!'
+        }
+
+        response = self.client.post(
+            self.task_member_url,
+            task_member_data,
+            token=self.another_token,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        resume = response.data['resume']
+        self.assertTrue(
+            resume['url'].startswith('/downloads/taskmember/resume')
+        )
+        task_member = TaskMember.objects.get(pk=response.data['id'])
+        self.assertTrue(
+            task_member.resume.name.startswith('private')
+        )
+
+    def test_task_member_without_resume(self):
+        task = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.some_user,
+            project=self.some_project,
+            people_needed=4,
+            time_needed=8
+        )
+
+        task_member_data = {
+            'task': task.id,
+            'motivation': 'Pick me!'
+        }
+
+        response = self.client.post(
+            self.task_member_url,
+            task_member_data,
+            token=self.another_token,
+            format='multipart'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(response.data['resume'], None)
+
     def test_deadline_dates(self):
         """
         Test the setting of the deadline of a Task on save to the end of a day.
@@ -383,6 +444,88 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.post(self.tasks_url, task_data,
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class TaskMemberResumeTest(BluebottleTestCase):
+    def setUp(self):
+        super(TaskMemberResumeTest, self).setUp()
+
+        self.init_projects()
+
+        self.some_user = BlueBottleUserFactory.create()
+        self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
+
+        self.another_user = BlueBottleUserFactory.create()
+        self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
+
+        self.yet_another_user = BlueBottleUserFactory.create()
+        self.yet_another_token = "JWT {0}".format(
+            self.yet_another_user.get_jwt_token()
+        )
+
+        self.task = TaskFactory.create(
+            author=self.some_user
+        )
+
+        self.member = TaskMemberFactory.create(
+            task=self.task,
+            member=self.another_user,
+            resume='private/tasks/resume/test.jpg'
+        )
+        self.resume_url = reverse('task-member-resume', args=(self.member.id, ))
+
+    def test_task_member_resume_download_member(self):
+        response = self.client.get(
+            self.resume_url, token=self.another_token
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['x-accel-redirect'],
+            '/media/private/tasks/resume/test.jpg'
+        )
+
+    def test_task_member_resume_download_task_owner(self):
+        response = self.client.get(
+            self.resume_url, token=self.some_token
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['x-accel-redirect'],
+            '/media/private/tasks/resume/test.jpg'
+        )
+
+    def test_task_member_resume_download_task_anonymous(self):
+        response = self.client.get(self.resume_url)
+        self.assertEqual(response.status_code, 403)
+
+    def test_task_member_resume_download_unrelated_user(self):
+        response = self.client.get(
+            self.resume_url, token=self.yet_another_token
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_task_member_resume_download_staff_session(self):
+        self.yet_another_user.is_staff = True
+        self.yet_another_user.save()
+
+        self.client.force_login(self.yet_another_user)
+        response = self.client.get(
+            self.resume_url, token=self.yet_another_token
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response['x-accel-redirect'],
+            '/media/private/tasks/resume/test.jpg'
+        )
+
+    def test_task_member_resume_download_non_staff_session(self):
+        self.client.force_login(self.yet_another_user)
+        response = self.client.get(
+            self.resume_url, token=self.yet_another_token
+        )
+
+        self.assertEqual(response.status_code, 403)
 
 
 class TestProjectTaskAPIPermissions(BluebottleTestCase):

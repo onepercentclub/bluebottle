@@ -1,0 +1,14 @@
+version: '3'
+services:
+  bluebottle:
+    build: .
+    container_name: bluebottle
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+  db:
+    image: postgres:9.2
+    container_name: postgres
+    environment:
+            POSTGRES_PASSWORD: postgres

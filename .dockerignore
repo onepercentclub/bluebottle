@@ -1,0 +1,72 @@
+*.py[co]
+
+
+
+# Ignore engagement analysis excel reports
+*.xlsx
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+setup.cfg
+
+# Bundler
+.bundle
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+
+# Mac stuff and specific weirdness
+.DS\_Store
+*.sqlite
+
+# Local settings overrides
+# bluebottle/settings/local.py
+# bluebottle/settings/secrets.py
+
+# Misc stuff
+env
+docs/_build
+.idea
+.noseids
+
+# CI reports
+reports
+
+# SASS
+.sass-cache
+bluebottle/common/static/css/admin/dashboard.css
+
+static/global/compass_app_log.txt
+
+# GeoIP.dat
+# GeoIP.dat
+
+# vim
+*.swp
+
+#autoenv
+/.env
+
+#locale
+locale/en/
+
+# Analytics Testing
+analytics/*
+
+# logs
+*.log
+*.log.*

@@ -288,13 +288,15 @@ class TestStatusMC(BluebottleTestCase):
         """
         now = timezone.now()
 
+        project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'))
+
         task1 = TaskFactory.create(title='My Task', people_needed=2,
-                                   status='open', type='event',
+                                   status='open', type='event', project=project,
                                    deadline_to_apply=now - timezone.timedelta(days=5),
                                    deadline=now + timezone.timedelta(days=5))
 
         task2 = TaskFactory.create(title='My Task 2', people_needed=4,
-                                   status='open', type='ongoing',
+                                   status='open', type='ongoing', project=project,
                                    deadline_to_apply=now - timezone.timedelta(days=5),
                                    deadline=now + timezone.timedelta(days=5))
 

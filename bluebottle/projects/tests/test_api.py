@@ -717,8 +717,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                           status.HTTP_201_CREATED,
                           response)
 
-        bank_detail_fields = ['account_number', 'account_details',
-                              'account_bank_country']
+        bank_detail_fields = ['account_number', 'account_details', 'account_bic', 'account_bank_country']
 
         for field in bank_detail_fields:
             self.assertIn(field, response.data)
@@ -790,6 +789,40 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                           response)
 
         bank_detail_fields = ['account_number', 'account_details',
+                              'account_bank_country',
+                              'account_holder_name', 'account_holder_address',
+                              'account_holder_postal_code',
+                              'account_holder_city',
+                              'account_holder_country']
+
+        for field in bank_detail_fields:
+            self.assertEqual(response.data[field], project_data[field])
+
+    def test_set_legacy_bank_bic_details(self):
+        """ Set bank details in new project, use legacy account_bic instead of account_details"""
+
+        country = CountryFactory.create()
+
+        project_data = {
+            'title': 'Project with bank details',
+            'account_number': 'NL18ABNA0484869868',
+            'account_bic': 'ABNANL2A',
+            'account_bank_country': country.pk,
+            'account_holder_name': 'blabla',
+            'account_holder_address': 'howdy',
+            'account_holder_postal_code': '12334',
+            'account_holder_city': 'yada yada',
+            'account_holder_country': country.pk
+        }
+
+        response = self.client.post(self.manage_projects_url, project_data,
+                                    token=self.some_user_token)
+
+        self.assertEquals(response.status_code,
+                          status.HTTP_201_CREATED,
+                          response)
+
+        bank_detail_fields = ['account_number', 'account_bic',
                               'account_bank_country',
                               'account_holder_name', 'account_holder_address',
                               'account_holder_postal_code',

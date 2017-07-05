@@ -286,7 +286,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'organization', 'language', 'account_holder_name',
                   'account_holder_address', 'account_holder_postal_code',
                   'account_holder_city', 'account_holder_country',
-                  'account_number', 'account_bic', 'documents',
+                  'account_number', 'account_details', 'documents',
                   'account_bank_country', 'amount_asked',
                   'amount_donated', 'amount_needed', 'currencies',
                   'people_needed', 'people_registered',

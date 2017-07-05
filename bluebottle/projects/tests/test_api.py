@@ -260,7 +260,7 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK, response)
         self.assertEquals(response.data['title'], 'test project')
         self.assertEquals(response.data['account_number'], 'NL18ABNA0484869868')
-        self.assertEquals(response.data['account_bic'], 'ABNANL2A')
+        self.assertEquals(response.data['account_details'], 'ABNANL2AABNANL2AABNANL2A')
         self.assertEquals(response.data['account_bank_country'], country.id)
 
         self.assertEquals(response.data['account_holder_name'], 'test name')
@@ -716,7 +716,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                           status.HTTP_201_CREATED,
                           response)
 
-        bank_detail_fields = ['account_number', 'account_bic',
+        bank_detail_fields = ['account_number', 'account_details',
                               'account_bank_country']
 
         for field in bank_detail_fields:
@@ -772,7 +772,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         project_data = {
             'title': 'Project with bank details',
             'account_number': 'NL18ABNA0484869868',
-            'account_bic': 'ABNANL2A',
+            'account_details': 'ABNANL2A',
             'account_bank_country': country.pk,
             'account_holder_name': 'blabla',
             'account_holder_address': 'howdy',
@@ -788,7 +788,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                           status.HTTP_201_CREATED,
                           response)
 
-        bank_detail_fields = ['account_number', 'account_bic',
+        bank_detail_fields = ['account_number', 'account_details',
                               'account_bank_country',
                               'account_holder_name', 'account_holder_address',
                               'account_holder_postal_code',
@@ -815,22 +815,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                           status.HTTP_400_BAD_REQUEST)
         self.assertEquals(json.loads(response.content)['account_number'][0],
                           'NL IBANs must contain 18 characters.')
-
-    def test_set_invalid_bic(self):
-        """ Set invalid bic bank detail """
-
-        project_data = {
-            'title': 'Project with bank details',
-            'account_bic': 'vlkengkewngklw',
-        }
-
-        response = self.client.post(self.manage_projects_url, project_data,
-                                    token=self.some_user_token)
-
-        self.assertEquals(response.status_code,
-                          status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(json.loads(response.content)['account_bic'][0],
-                          u'BIC codes have either 8 or 11 characters.')
 
     def test_skip_iban_validation(self):
         """ The iban validation should be skipped for other account formats """

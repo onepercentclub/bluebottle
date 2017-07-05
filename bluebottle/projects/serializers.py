@@ -218,6 +218,7 @@ class ManageTaskSerializer(serializers.ModelSerializer):
 class ManageProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
+    account_bic = serializers.CharField(required=False)
     amount_asked = MoneySerializer(required=False, allow_null=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_needed = MoneySerializer(read_only=True)

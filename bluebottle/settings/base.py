@@ -816,8 +816,8 @@ SEARCH_OPTIONS = {
 }
 
 TASKS = {
-    'cv_upload': 'allowed',  # allowed, required or disabled
+    'cv_upload': 'disabled',  # allowed, required or disabled
     'accepting': 'manual',
     'plus_one': False,
-    'show_accepting': False
+    'show_accepting': True
 }

@@ -42,11 +42,12 @@ def mark_as(slug, queryset):
     except ProjectPhase.DoesNotExist:
         return
 
-    Project.objects.filter(
-        pk__in=queryset.values_list('pk', flat=True)
-    ).update(
-        status=status
-    )
+    # NOTE: To trigger the post save signals, resist using bulk updates
+    # REF: https://docs.djangoproject.com/en/1.10/ref/models/querysets/#update
+    projects = Project.objects.filter(pk__in=queryset.values_list('pk', flat=True))
+    for project in projects:
+        project.status = status
+        project.save()
 
 
 def mark_as_plan_new(modeladmin, request, queryset):
@@ -312,7 +313,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             adapter = DoradoPayoutAdapter(project)
             try:
                 adapter.trigger_payout()
-            except PayoutValidationError, e:
+            except PayoutValidationError as e:
                 errors = e.message['errors']
                 if type(errors) == unicode:
                     self.message_user(
@@ -328,7 +329,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                                 'Account details: {}, {}.'.format(field, error.lower()),
                                 level=messages.ERROR
                             )
-            except (PayoutCreationError, ImproperlyConfigured), e:
+            except (PayoutCreationError, ImproperlyConfigured) as e:
                 logger.warning(
                     'Error approving payout: {}'.format(e),
                     exc_info=1

@@ -13,6 +13,7 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.email_backend import send_mail
+from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
 
@@ -68,6 +69,10 @@ class Task(models.Model, PreviousStatusMixin):
     accepting = models.CharField(_('accepting'), max_length=20,
                                  choices=TaskAcceptingChoices.choices,
                                  default=TaskAcceptingChoices.manual)
+
+    needs_motivation = models.BooleanField(_('Needs motivation'),
+                                           default=False,
+                                           help_text=_('Indicates if a task candidate needs to submit a motivation'))
 
     date_status_change = models.DateTimeField(_('date status change'),
                                               blank=True, null=True)
@@ -238,6 +243,13 @@ class Task(models.Model, PreviousStatusMixin):
                     eta=timezone.now() + timedelta(minutes=2 * settings.REMINDER_MAIL_DELAY)
                 )
 
+    @property
+    def date_realized(self):
+        if self.status == TaskMember.TaskMemberStatuses.realized:
+            return self.date_status_change
+        else:
+            return None
+
     def save(self, *args, **kwargs):
         if not self.author_id:
             self.author = self.project.owner
@@ -291,6 +303,11 @@ class TaskMember(models.Model, PreviousStatusMixin):
     externals = models.PositiveSmallIntegerField(
         _('Externals'), default=0,
         help_text=_('External people helping for this task'))
+
+    resume = PrivateFileField(
+        upload_to='task-members/resume',
+        blank=True
+    )
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))

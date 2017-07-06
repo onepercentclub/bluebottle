@@ -1,15 +1,12 @@
 from collections import namedtuple
-import os
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
-from django.http.response import HttpResponseForbidden, HttpResponseNotFound
+from django.http.response import HttpResponseForbidden, HttpResponseNotFound, HttpResponse
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.views.generic.base import View
 
-from filetransfers.api import serve_file
 from rest_framework import generics
 from rest_framework import views, response
 from sorl.thumbnail.shortcuts import get_thumbnail
@@ -157,20 +154,29 @@ class ModelTranslationViewMixin(object):
         return super(ModelTranslationViewMixin, self).get(request, *args, **kwargs)
 
 
-# Non API views
-# Download private documents based on content_type (id) and pk
-# Only 'author' of a document is allowed
-# TODO: Implement a real ACL for this
+class PrivateFileView(View):
+    """
+    Serve private files using X-sendfile header.
+    """
+    queryset = None  # Queryset that is used for finding ojects
+    field = None  # Field on the model that is the actual file
 
-class DocumentDownloadView(View):
-    def get(self, request, content_type, pk):
-        type = ContentType.objects.get(pk=content_type)
-        type_class = type.model_class()
+    def check_permission(self, request, instance):
+        """
+        Check if the request is allowed access to the file on instance
+        """
+        raise NotImplemented
+
+    def get(self, request, pk):
         try:
-            file = type_class.objects.get(pk=pk)
-        except type_class.DoesNotExist:
+            instance = self.queryset.get(pk=pk)
+        except self.queryset.DoesNotExist:
             return HttpResponseNotFound()
-        if file.author == request.user or request.user.is_staff:
-            file_name = os.path.basename(file.file.name)
-            return serve_file(request, file.file, save_as=file_name)
-        return HttpResponseForbidden()
+
+        if self.check_permission(request, instance):
+            field = getattr(instance, self.field)
+            response = HttpResponse()
+            response['X-Accel-Redirect'] = field.url
+            return response
+        else:
+            return HttpResponseForbidden()

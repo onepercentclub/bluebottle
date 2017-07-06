@@ -198,7 +198,7 @@ JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_mock', '/payments_interswitch',
                           '/payments_vitepay', '/payments_flutterwave',
-                          '/payments_lipisha', '/media',
+                          '/payments_lipisha', '/media', '/downloads',
                           '/surveys', '/token')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
@@ -572,7 +572,7 @@ EXPOSED_TENANT_PROPERTIES = ['closed_site', 'mixpanel', 'analytics', 'maps_api_k
                              'project_create_flow', 'project_create_types', 'project_contact_types',
                              'closed_site', 'partner_login', 'share_options', 'sso_url',
                              'project_suggestions', 'readOnlyFields', 'search_options',
-                             'task_accepting', 'task_show_accepting', 'task_plus_one']
+                             'tasks']
 
 DEFAULT_FILE_STORAGE = 'bluebottle.utils.storage.TenantFileSystemStorage'
 
@@ -673,6 +673,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('time_needed', 'Time needed'),
                 ('people_applied', 'People applied'),
                 ('time_spent', 'Time Spent'),
+                ('date_realized', 'Date realized'),
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),
@@ -815,6 +816,9 @@ SEARCH_OPTIONS = {
     }
 }
 
-TASK_ACCEPTING = 'manual'
-TASK_PLUS_ONE = False
-TASK_SHOW_ACCEPTING = False
+TASKS = {
+    'cv_upload': 'disabled',  # allowed, required or disabled
+    'accepting': 'manual',
+    'plus_one': False,
+    'show_accepting': True
+}

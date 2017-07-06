@@ -65,7 +65,7 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
 
 
 class ProjectDocumentSerializer(serializers.ModelSerializer):
-    file = PrivateFileSerializer()
+    file = PrivateFileSerializer(url_name='project-document-file')
     project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
 
     class Meta:
@@ -78,7 +78,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     owner = UserProfileSerializer()
     story = SafeField()
     image = ImageSerializer(required=False)
-    task_count = serializers.IntegerField()
     country = ProjectCountrySerializer()
     is_funding = serializers.ReadOnlyField()
     budget_lines = BasicProjectBudgetLineSerializer(
@@ -119,8 +118,9 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'latitude', 'longitude', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra',
                   'allow_overfunding', 'currencies',
-                  'task_count', 'amount_asked', 'amount_donated',
-                  'amount_needed', 'amount_extra', 'story', 'budget_lines',
+                  'task_count', 'realized_task_count', 'open_task_count', 'full_task_count',
+                  'amount_asked', 'amount_donated', 'amount_needed',
+                  'amount_extra', 'story', 'budget_lines',
                   'status', 'deadline', 'is_funding', 'vote_count', 'celebrate_results',
                   'supporter_count', 'people_needed', 'people_registered',
                   'voting_deadline', 'latitude', 'longitude', 'video_url', 'has_voted',
@@ -146,7 +146,8 @@ class ProjectPreviewSerializer(ProjectSerializer):
         fields = ('id', 'title', 'status', 'image', 'country', 'pitch',
                   'theme', 'categories', 'owner', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'deadline', 'latitude',
-                  'longitude', 'task_count', 'allow_overfunding', 'is_campaign',
+                  'longitude', 'allow_overfunding', 'is_campaign',
+                  'task_count', 'realized_task_count', 'open_task_count', 'full_task_count',
                   'is_funding', 'people_needed', 'celebrate_results',
                   'people_registered', 'location', 'vote_count',
                   'voting_deadline', 'project_type', 'skills')

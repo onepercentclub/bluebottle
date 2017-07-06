@@ -673,6 +673,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('time_needed', 'Time needed'),
                 ('people_applied', 'People applied'),
                 ('time_spent', 'Time Spent'),
+                ('date_realized', 'Date realized'),
                 ('created', 'Date created'),
                 ('updated', 'Last update'),
             ),

@@ -239,6 +239,10 @@ class BaseProject(models.Model, GetTweetMixin):
     def account_bic(self):
         return self.account_details
 
+    @account_bic.setter
+    def account_bic(self, value):
+        self.account_details = value
+
     _initial_status = None
 
     class Meta:

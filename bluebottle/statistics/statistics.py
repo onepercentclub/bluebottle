@@ -276,11 +276,11 @@ class Statistics(object):
         AND "tasks_task"."status" IN (in_progress, full, open, realized, closed)) ORDER BY "tasks_task"."created" DESC
         """
         task_members = TaskMember.objects\
-            .filter(self.date_filter('task__deadline'), status__in=('applied', 'accepted', 'realized'))\
-            .values('member_id', 'member__email', 'task__deadline')\
+            .filter(self.date_filter('task__created'), status__in=('applied', 'accepted', 'realized'))\
+            .values('member_id', 'member__email', 'task__created')\
             .annotate(id=F('member_id'))\
             .annotate(email=F('member__email'))\
-            .annotate(action_date=F('task__deadline'))
+            .annotate(action_date=F('task__created'))
 
         """
         SELECT "tasks_taskmember"."member_id", "members_member"."email", "tasks_task"."deadline",
@@ -292,11 +292,11 @@ class Statistics(object):
         AND "tasks_taskmember"."status" IN (applied, realized, accepted))
         """
         task_authors = Task.objects\
-            .filter(self.date_filter('deadline'), status__in=('open', 'in_progress', 'realized', 'full', 'closed'))\
-            .values('author_id', 'author__email', 'deadline')\
+            .filter(self.date_filter('created'), status__in=('open', 'in progress', 'realized', 'full', 'closed'))\
+            .values('author_id', 'author__email', 'created')\
             .annotate(id=F('author_id'))\
             .annotate(email=F('author__email'))\
-            .annotate(action_date=F('deadline'))
+            .annotate(action_date=F('created'))
 
         participants = dict()
 

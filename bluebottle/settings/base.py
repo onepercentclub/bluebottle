@@ -572,7 +572,7 @@ EXPOSED_TENANT_PROPERTIES = ['closed_site', 'mixpanel', 'analytics', 'maps_api_k
                              'project_create_flow', 'project_create_types', 'project_contact_types',
                              'closed_site', 'partner_login', 'share_options', 'sso_url',
                              'project_suggestions', 'readOnlyFields', 'search_options',
-                             'task_accepting', 'task_show_accepting', 'task_plus_one']
+                             'tasks']
 
 DEFAULT_FILE_STORAGE = 'bluebottle.utils.storage.TenantFileSystemStorage'
 

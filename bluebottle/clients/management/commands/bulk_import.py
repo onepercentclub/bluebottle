@@ -35,12 +35,12 @@ class Command(BaseCommand):
     help = 'Import data from json'
 
     def add_arguments(self, parser):
-        parser.add_argument('file')
+        parser.add_argument('--file', '-f', action='store', dest='file',
+                            help="JSON import file.")
         parser.add_argument('--tenant', '-t', action='store', dest='tenant',
                             help="The tenant to run the recurring donations for.")
 
     def handle(self, *args, **options):
-
         client = Client.objects.get(client_name=options['tenant'])
         connection.set_tenant(client)
 
@@ -52,7 +52,7 @@ class Command(BaseCommand):
             campaign = ProjectPhase.objects.get(slug='campaign')
 
             if 'users' in data:
-                print "Importing users"
+                print("Importing users")
                 t = 1
                 for u in data['users']:
                     sys.stdout.flush()
@@ -67,10 +67,10 @@ class Command(BaseCommand):
                         if hasattr(user, k):
                             setattr(user, k, u[k])
                     user.save()
-                print " Done!\n"
+                print(" Done!\n")
 
             if 'categories' in data:
-                print "Importing categories"
+                print("Importing categories")
                 t = 1
                 for c in data['categories']:
                     sys.stdout.flush()
@@ -80,10 +80,10 @@ class Command(BaseCommand):
                     cat, created = Category.objects.get_or_create(slug=c['slug'])
                     cat.title = c['title']
                     cat.save()
-                print " Done!\n"
+                print(" Done!\n")
 
             if 'projects' in data:
-                print "Importing projects"
+                print("Importing projects")
                 t = 1
                 for p in data['projects']:
                     sys.stdout.flush()
@@ -95,9 +95,9 @@ class Command(BaseCommand):
 
                     project, created = Project.objects.get_or_create(
                         slug=p['slug'],
-                        owner=Member.objects.get(email=p['user'])
+                        owner=Member.objects.get(email=p['user']),
+                        status=campaign
                     )
-                    project.status = campaign
                     project.title = p['title']
                     project.created = p['created'] + 'T12:00:00+01:00'
                     project.campaign_started = p['created'] + 'T12:00:00+01:00'
@@ -108,20 +108,21 @@ class Command(BaseCommand):
                     project.deadline = deadline
                     project.categories = Category.objects.filter(slug__in=p['categories'])
 
+                    if 'image' in p:
+                        content = urllib.urlretrieve(p['image'])
+                        name = urlparse(p['image']).path.split('/')[-1]
+                        project.image.save(name, File(open(content[0])), save=True)
+
                     try:
-                        if 'image' in p and p['image'].startswith('http'):
-                            content = urllib.urlretrieve(p['image'])
-                            name = urlparse(p['image']).path.split('/')[-1]
-                            project.image.save(name, File(open(content[0])), save=True)
                         project.save()
                     except IntegrityError:
                         project.title += '*'
                         project.save()
 
-                print " Done!\n"
+                print(" Done!\n")
 
             if 'tasks' in data:
-                print "Importing tasks"
+                print("Importing tasks")
                 i = 1
                 for t in data['tasks']:
                     sys.stdout.flush()
@@ -135,18 +136,19 @@ class Command(BaseCommand):
                             time_needed="8",
                             skill__id=1,
                             deadline=project.deadline,
+                            status=Task.TaskStatuses.realized,
                             deadline_to_apply=project.deadline,
-                            title=t['title']
+                            title=t['title'],
+                            people_needed=t['people_needed']
                         )
                         task.description = t['description'],
-                        task.people_needed = t['people_needed'],
                         task.save()
                     except (Project.DoesNotExist, TypeError):
                         pass
-                print " Done!\n"
+                print(" Done!\n")
 
             if 'rewards' in data:
-                print "Importing rewards"
+                print("Importing rewards")
                 t = 1
                 for r in data['rewards']:
                     sys.stdout.flush()
@@ -166,10 +168,10 @@ class Command(BaseCommand):
                             reward.save()
                         except (Project.DoesNotExist, ValueError):
                             pass
-                print " Done!\n"
+                print(" Done!\n")
 
             if 'wallposts' in data:
-                print "Importing wallposts"
+                print("Importing wallposts")
                 t = 1
                 for w in data['wallposts']:
                     sys.stdout.flush()
@@ -179,21 +181,23 @@ class Command(BaseCommand):
                     try:
                         project = Project.objects.get(slug=w['project'])
                         author = Member.objects.get(email=w['email'])
-                        reward, created = TextWallpost.objects.get_or_create(
+                        created = datetime.datetime.strptime(w['date'], '%Y-%m-%d %H:%M:%S')
+                        created = pytz.utc.localize(created)
+                        wallpost, created = TextWallpost.objects.get_or_create(
                             object_id=project.id,
-                            content_type=ContentType.objects.get_for_model(Project).model,
+                            content_type=ContentType.objects.get_for_model(Project),
                             text=w['text'],
-                            created=w['date'],
+                            created=created,
                             author=author
                         )
-                        reward.save()
+                        wallpost.save()
                     except (Project.DoesNotExist, Member.DoesNotExist, ValueError) as e:
                         print e
                         pass
-                print " Done!\n"
+                print(" Done!\n")
 
             if 'orders' in data:
-                print "Importing orders/donations"
+                print("Importing orders/donations")
                 t = 1
                 for o in data['orders']:
                     sys.stdout.flush()
@@ -209,8 +213,8 @@ class Command(BaseCommand):
                         try:
                             completed = o['completed'] + '+01:00'
                         except AttributeError as e:
-                            print e
-                            print o['completed']
+                            print(e)
+                            print(o['completed'])
                             completed = now()
                         order.locked()
                         order.success()
@@ -229,10 +233,10 @@ class Command(BaseCommand):
                                                                order=order,
                                                                amount=Money(don['amount'], 'EUR'))
                             donation.save()
-                print " Done!\n"
+                print(" Done!\n")
 
             if 'pages' in data:
-                print "Importing pages"
+                print("Importing pages")
                 t = 1
                 for p in data['pages']:
                     sys.stdout.flush()
@@ -256,4 +260,4 @@ class Command(BaseCommand):
                         )
                         text.save()
                     page.save()
-                print " Done!\n"
+                print(" Done!\n")

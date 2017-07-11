@@ -9,6 +9,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, SorlImageField, ImageSerializer,
     PrivateFileSerializer
 )
+from bluebottle.bb_projects.permissions import ProjectPermissions
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
@@ -127,6 +128,21 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'video_html', 'location', 'project_type')
 
 
+class PermissionField(serializers.Field):
+    def __init__(self, permission_class, *args, **kwargs):
+        self.permissions = permission_class
+        kwargs['read_only'] = True
+
+        super(PermissionField, self).__init__(*args, **kwargs)
+
+    def get_attribute(self, obj):
+        return obj
+
+    def to_representation(self, value):
+        import ipdb;ipdb.set_trace()
+        self.permissions().get_permissions(self.context['request'])
+
+
 class ProjectPreviewSerializer(ProjectSerializer):
     image = ImageSerializer(required=False)
     theme = ProjectThemeSerializer()
@@ -137,6 +153,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                                               slug_field='slug')
 
     skills = serializers.SerializerMethodField()
+    permissions = PermissionField(ProjectPermissions)
 
     def get_skills(self, obj):
         return set(task.skill.id for task in obj.task_set.all() if task.skill)
@@ -146,7 +163,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
         fields = ('id', 'title', 'status', 'image', 'country', 'pitch',
                   'theme', 'categories', 'owner', 'amount_asked', 'amount_donated',
                   'amount_needed', 'amount_extra', 'deadline', 'latitude',
-                  'longitude', 'allow_overfunding', 'is_campaign',
+                  'longitude', 'allow_overfunding', 'is_campaign', 'permissions',
                   'task_count', 'realized_task_count', 'open_task_count', 'full_task_count',
                   'is_funding', 'people_needed', 'celebrate_results',
                   'people_registered', 'location', 'vote_count',
@@ -214,6 +231,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
 
     documents = ProjectDocumentSerializer(
         many=True, read_only=True)
+
 
     def validate_account_number(self, value):
 

@@ -14,7 +14,9 @@ from bluebottle.projects.serializers import (
 from bluebottle.utils.utils import get_client_ip
 
 from .models import ProjectTheme, ProjectPhase
-from .permissions import IsProjectOwner, IsEditableOrReadOnly
+from .permissions import (
+    IsProjectOwner, IsEditableOrReadOnly, ProjectPermissions, ManageProjectPermissions
+)
 
 
 class ProjectPagination(BluebottlePagination):
@@ -30,6 +32,8 @@ class ProjectTinyPreviewList(generics.ListAPIView):
     pagination_class = TinyProjectPagination
     serializer_class = ProjectTinyPreviewSerializer
 
+    permission_classes = (ProjectPermissions, )
+
     def get_queryset(self):
         query = self.request.query_params
         qs = Project.objects.search(query=query)
@@ -42,6 +46,8 @@ class ProjectPreviewList(generics.ListAPIView):
     pagination_class = ProjectPagination
     serializer_class = ProjectPreviewSerializer
 
+    permission_classes = (ProjectPermissions, )
+
     def get_queryset(self):
         query = self.request.query_params
         qs = Project.objects.search(query)
@@ -53,6 +59,8 @@ class ProjectPreviewDetail(generics.RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectPreviewSerializer
     lookup_field = 'slug'
+
+    permission_classes = (ProjectPermissions, )
 
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
@@ -107,6 +115,8 @@ class ProjectList(generics.ListAPIView):
     pagination_class = BluebottlePagination
     serializer_class = ProjectSerializer
 
+    permission_classes = (ProjectPermissions, )
+
     def get_queryset(self):
         qs = super(ProjectList, self).get_queryset()
         status = self.request.query_params.get('status', None)
@@ -120,9 +130,7 @@ class ProjectDetail(generics.RetrieveAPIView):
     serializer_class = ProjectSerializer
     lookup_field = 'slug'
 
-    def get_queryset(self):
-        qs = super(ProjectDetail, self).get_queryset()
-        return qs
+    permission_classes = (ProjectPermissions, )
 
 
 class ManageProjectPagination(BluebottlePagination):
@@ -131,7 +139,7 @@ class ManageProjectPagination(BluebottlePagination):
 
 class ManageProjectList(generics.ListCreateAPIView):
     queryset = Project.objects.all()
-    permission_classes = (TenantConditionalOpenClose, IsAuthenticated, )
+    permission_classes = (ManageProjectPermissions, )
 
     pagination_class = ManageProjectPagination
     serializer_class = ManageProjectSerializer
@@ -154,7 +162,7 @@ class ManageProjectList(generics.ListCreateAPIView):
 
 class ManageProjectDetail(generics.RetrieveUpdateAPIView):
     queryset = Project.objects.all()
-    permission_classes = (IsProjectOwner, IsEditableOrReadOnly)
+    permission_classes = (ManageProjectPermissions, )
     serializer_class = ManageProjectSerializer
     lookup_field = 'slug'
 

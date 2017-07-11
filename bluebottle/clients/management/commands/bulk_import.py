@@ -47,11 +47,6 @@ class Counter(object):
 
 
 class Command(BaseCommand):
-    """
-    TODO: json import should:
-        * pages:
-        ** always include language
-    """
     help = 'Import data from json'
 
     def add_arguments(self, parser):
@@ -87,6 +82,18 @@ class Command(BaseCommand):
                 setattr(instance, k, data[k])
 
     def _handle_users(self, data):
+        """Expected fields for Users import:
+        email               (string<email>)
+        remote_id           (string, optional)
+        description         (string)
+        verfied             (bool)
+        username            (string)
+        is_staff            (bool)
+        is_admin            (bool)
+        first_name          (string)
+        last_name           (string)
+        primary_language    (string)
+        """
         if 'remote_id' in data:
             user, _ = Member.objects.get_or_create(remote_id=data['remote_id'])
         else:
@@ -95,10 +102,28 @@ class Command(BaseCommand):
         user.save()
 
     def _handle_categories(self, data):
+        """Expected fields for Categories import:
+        title       (string)
+        slug        (string)
+        description (string)
+        """
         cat, _ = Category.objects.get_or_create(slug=data['slug'])
         self._generic_import(cat, data, excludes=['slug'])
 
     def _handle_projects(self, data):
+        """Expected fields for Projects import:
+        slug        (string)
+        title       (string)
+        deadline    (string<date>)
+        created     (string<date>)
+        user        (string<email>)
+        description (string)
+        pitch       (string)
+        goal        (int)
+        video       (string<url>)
+        image       (string<url>)
+        categories  (array<category-slug>)
+        """
         campaign = ProjectPhase.objects.get(slug='campaign')
         deadline = datetime.datetime.strptime(data['deadline'], '%Y-%m-%d')
         deadline = pytz.utc.localize(deadline)
@@ -130,6 +155,12 @@ class Command(BaseCommand):
             project.save()
 
     def _handle_tasks(self, data):
+        """Expected fields for Tasks import:
+        project         (string<slug>)
+        title           (string)
+        description     (string)
+        people_needed   (int)
+        """
         project = Project.objects.get(slug=data['project'])
         task, _ = Task.objects.get_or_create(
             project=project,
@@ -145,6 +176,13 @@ class Command(BaseCommand):
         task.save()
 
     def _handle_rewards(self, data):
+        """Expected fields for Rewards import:
+        project     (string<slug>)
+        title       (string)
+        description (string)
+        amount      (string)
+        text        (string)
+        """
         if data['amount']:
             try:
                 project = Project.objects.get(slug=data['project'])
@@ -159,6 +197,12 @@ class Command(BaseCommand):
                 pass
 
     def _handle_wallposts(self, data):
+        """Expected fields for Wallpost import:
+        project (string<slug>)
+        email   (string<email>)
+        date    (string<datetime>)
+        text    (string)
+        """
         try:
             project = Project.objects.get(slug=data['project'])
             author = Member.objects.get(email=data['email'])
@@ -176,6 +220,14 @@ class Command(BaseCommand):
             print(err)
 
     def _handle_orders(self, data):
+        """Expected fields for Order import:
+        completed   (string<date>)
+        user        (string<email>)
+        total       (string)
+        donations   (array)
+            project     (string<title>)
+            amount      (float)
+        """
         try:
             user = Member.objects.get(email=data['user'])
         except (TypeError, Member.DoesNotExist):
@@ -208,18 +260,23 @@ class Command(BaseCommand):
 
     def _handle_pages(self, data):
         """Expected fields for Page import:
-        slug    (string)
-        title   (string)
-        author  (string <email>)
-        content (string)
-
+        slug     (string)
+        title    (string)
+        author   (string<email>)
+        content  (string)
+        language (string, optional)
         """
         author = Member.objects.get(email=data['author'])
+        try:
+            language = data['language']
+        except KeyError:
+            language = properties.LANGUAGE_CODE
+
         page, created = Page.objects.get_or_create(
             author=author,
             status=Page.PageStatus.published,
             publication_date=now(),
-            language=data['language'] or properties.LANGUAGE_CODE
+            language=language
         )
 
         # TODO: add the slug generation to the Page model

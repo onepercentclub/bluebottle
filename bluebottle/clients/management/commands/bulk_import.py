@@ -1,12 +1,11 @@
-import datetime
-import json
-
-from django.contrib.contenttypes.models import ContentType
-from moneyed.classes import Money
-import pytz
 import sys
 import urllib
+import datetime
+import json
 from urlparse import urlparse
+
+import pytz
+from moneyed.classes import Money
 
 from django.core.files import File
 from django.core.management.base import BaseCommand
@@ -14,6 +13,7 @@ from django.db import connection
 from django.db.utils import IntegrityError
 from django.utils.text import slugify
 from django.utils.timezone import now
+from django.contrib.contenttypes.models import ContentType
 
 from fluent_contents.plugins.text.models import TextItem
 
@@ -29,6 +29,7 @@ from bluebottle.projects.models import Project
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.models import Task
 from bluebottle.wallposts.models import TextWallpost
+from bluebottle.clients import properties
 
 
 class Counter(object):
@@ -68,7 +69,8 @@ class Command(BaseCommand):
                 data = json.load(json_file)
 
             counter = Counter()
-            for key in ['users', 'categories', 'projects', 'tasks', 'rewards', 'wallposts', 'orders', 'pages']:
+            for key in ['users', 'categories', 'projects', 'tasks', 'rewards',
+                        'wallposts', 'orders', 'pages']:
                 if key in data:
                     print("Importing {}".format(key))
                     counter.reset(total=len(data[key]))
@@ -84,41 +86,42 @@ class Command(BaseCommand):
             if k not in excludes and hasattr(instance, k):
                 setattr(instance, k, data[k])
 
-    def _handle_users(self, d):
-        if 'remote_id' in d:
-            user, created = Member.objects.get_or_create(remote_id=d['remote_id'])
+    def _handle_users(self, data):
+        if 'remote_id' in data:
+            user, _ = Member.objects.get_or_create(remote_id=data['remote_id'])
         else:
-            user, created = Member.objects.get_or_create(email=d['email'])
-        self._generic_import(user, d, excludes=['email', 'remote_id'])
+            user, _ = Member.objects.get_or_create(email=data['email'])
+        self._generic_import(user, data, excludes=['email', 'remote_id'])
         user.save()
 
-    def _handle_categories(self, d):
-        cat, created = Category.objects.get_or_create(slug=d['slug'])
-        self._generic_import(cat, d, excludes=['slug'])
+    def _handle_categories(self, data):
+        cat, _ = Category.objects.get_or_create(slug=data['slug'])
+        self._generic_import(cat, data, excludes=['slug'])
 
-    def _handle_projects(self, d):
+    def _handle_projects(self, data):
         campaign = ProjectPhase.objects.get(slug='campaign')
-        deadline = datetime.datetime.strptime(d['deadline'], '%Y-%m-%d')
+        deadline = datetime.datetime.strptime(data['deadline'], '%Y-%m-%d')
         deadline = pytz.utc.localize(deadline)
 
-        project, created = Project.objects.get_or_create(
-            slug=d['slug'],
-            owner=Member.objects.get(email=d['user']),
+        project, _ = Project.objects.get_or_create(
+            slug=data['slug'],
+            owner=Member.objects.get(email=data['user']),
             status=campaign
         )
-        project.created = d['created'] + 'T12:00:00+01:00'
-        project.campaign_started = d['created'] + 'T12:00:00+01:00'
-        project.amount_asked = Money(d['goal'], 'EUR')
-        project.categories = Category.objects.filter(slug__in=d['categories'])
+        project.created = data['created'] + 'T12:00:00+01:00'
+        project.campaign_started = data['created'] + 'T12:00:00+01:00'
+        project.amount_asked = Money(data['goal'], 'EUR')
+        project.categories = Category.objects.filter(slug__in=data['categories'])
         project.deadline = deadline
 
-        if 'image' in d:
-            content = urllib.urlretrieve(d['image'])
-            name = urlparse(d['image']).path.split('/')[-1]
+        if 'image' in data:
+            content = urllib.urlretrieve(data['image'])
+            name = urlparse(data['image']).path.split('/')[-1]
             project.image.save(name, File(open(content[0])), save=True)
 
-        self._generic_import(project, d,
-                             excludes=['deadline', 'slug', 'user', 'created', 'goal', 'categories', 'image'])
+        self._generic_import(project, data,
+                             excludes=['deadline', 'slug', 'user', 'created',
+                                       'goal', 'categories', 'image'])
 
         try:
             project.save()
@@ -126,65 +129,64 @@ class Command(BaseCommand):
             project.title += '*'
             project.save()
 
-    def _handle_tasks(self, d):
-        project = Project.objects.get(slug=d['project'])
-        task, created = Task.objects.get_or_create(
+    def _handle_tasks(self, data):
+        project = Project.objects.get(slug=data['project'])
+        task, _ = Task.objects.get_or_create(
             project=project,
             time_needed="8",
             skill__id=1,
             deadline=project.deadline,
             status=Task.TaskStatuses.realized,
             deadline_to_apply=project.deadline,
-            title=d['title'],
-            people_needed=d['people_needed']
+            title=data['title'],
+            people_needed=data['people_needed']
         )
-        self._generic_import(task, d, excludes=['project', 'title', 'people_needed'])
+        self._generic_import(task, data, excludes=['project', 'title', 'people_needed'])
         task.save()
 
-    def _handle_rewards(self, d):
-        if d['amount']:
+    def _handle_rewards(self, data):
+        if data['amount']:
             try:
-                project = Project.objects.get(slug=d['project'])
-                reward, created = Reward.objects.get_or_create(
+                project = Project.objects.get(slug=data['project'])
+                reward, _ = Reward.objects.get_or_create(
                     project=project,
-                    amount=Money(d['amount'].replace(",", ".") or 0.0, 'EUR'),
-                    limit=d['limit'] or 0
+                    amount=Money(data['amount'].replace(",", ".") or 0.0, 'EUR'),
+                    limit=data['limit'] or 0
                 )
-                self._generic_import(reward, d, excludes=['amount', 'limit', 'project'])
+                self._generic_import(reward, data, excludes=['amount', 'limit', 'project'])
                 reward.save()
             except (Project.DoesNotExist, ValueError):
                 pass
 
-    def _handle_wallposts(self, d):
+    def _handle_wallposts(self, data):
         try:
-            project = Project.objects.get(slug=d['project'])
-            author = Member.objects.get(email=d['email'])
-            created = datetime.datetime.strptime(d['date'], '%Y-%m-%d %H:%M:%S')
+            project = Project.objects.get(slug=data['project'])
+            author = Member.objects.get(email=data['email'])
+            created = datetime.datetime.strptime(data['date'], '%Y-%m-%d %H:%M:%S')
             created = pytz.utc.localize(created)
-            wallpost, created = TextWallpost.objects.get_or_create(
+            wallpost, _ = TextWallpost.objects.get_or_create(
                 object_id=project.id,
                 content_type=ContentType.objects.get_for_model(Project),
                 created=created,
                 author=author
             )
-            self._generic_import(wallpost, d, excludes=['project', 'author', 'email'])
+            self._generic_import(wallpost, data, excludes=['project', 'author', 'email'])
             wallpost.save()
-        except (Project.DoesNotExist, Member.DoesNotExist, ValueError) as e:
-            print(e)
-            pass
+        except (Project.DoesNotExist, Member.DoesNotExist, ValueError) as err:
+            print(err)
 
-    def _handle_orders(self, d):
+    def _handle_orders(self, data):
         try:
-            user = Member.objects.get(email=d['user'])
+            user = Member.objects.get(email=data['user'])
         except (TypeError, Member.DoesNotExist):
             user = None
         order = Order.objects.create(user=user)
-        if d['completed']:
+        if data['completed']:
             try:
-                completed = d['completed'] + '+01:00'
-            except AttributeError as e:
-                print(e)
-                print(d['completed'])
+                completed = data['completed'] + '+01:00'
+            except AttributeError as err:
+                print(err)
+                print(data['completed'])
                 completed = now()
             order.locked()
             order.success()
@@ -193,8 +195,8 @@ class Command(BaseCommand):
             order.confirmed = completed
         order.save()
 
-        if d['donations']:
-            for don in d['donations']:
+        if data['donations']:
+            for don in data['donations']:
                 try:
                     project = Project.objects.get(title=don['project'])
                 except Project.DoesNotExist:
@@ -204,22 +206,31 @@ class Command(BaseCommand):
                                                    amount=Money(don['amount'], 'EUR'))
                 donation.save()
 
-    def _handle_pages(self, d):
-        author = Member.objects.get(email=d['author'])
+    def _handle_pages(self, data):
+        """Expected fields for Page import:
+        slug    (string)
+        title   (string)
+        author  (string <email>)
+        content (string)
+
+        """
+        author = Member.objects.get(email=data['author'])
         page, created = Page.objects.get_or_create(
             author=author,
             status=Page.PageStatus.published,
             publication_date=now(),
-            language='nl'
+            language=data['language'] or properties.LANGUAGE_CODE
         )
-        d['slug'] = d["slug"] or slugify(d['title'] + author.username)
 
-        self._generic_import(page, d, excludes=['author', 'project', 'content'])
+        # TODO: add the slug generation to the Page model
+        data['slug'] = data["slug"] or slugify(data['title'] + author.username)
+
+        self._generic_import(page, data, excludes=['author', 'content'])
         page.save()
 
         if created:
             text = TextItem.objects.create(
                 parent=page,
-                text=d['content']
+                text=data['content']
             )
             text.save()

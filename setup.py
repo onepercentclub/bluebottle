@@ -121,6 +121,7 @@ tests_requires = [
     'mock==2.0.0',
     'nose==1.3.7',
     'pylint==1.5.5',
+    'pylint-django==0.7.2',
     'pyquery==1.2.13',
     'tblib==1.3.0',
     'tdaemon==0.1.1',

@@ -1,12 +1,11 @@
-import datetime
-import json
-
-from django.contrib.contenttypes.models import ContentType
-from moneyed.classes import Money
-import pytz
 import sys
 import urllib
+import datetime
+import json
 from urlparse import urlparse
+
+import pytz
+from moneyed.classes import Money
 
 from django.core.files import File
 from django.core.management.base import BaseCommand
@@ -14,6 +13,7 @@ from django.db import connection
 from django.db.utils import IntegrityError
 from django.utils.text import slugify
 from django.utils.timezone import now
+from django.contrib.contenttypes.models import ContentType
 
 from fluent_contents.plugins.text.models import TextItem
 
@@ -29,231 +29,265 @@ from bluebottle.projects.models import Project
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.models import Task
 from bluebottle.wallposts.models import TextWallpost
+from bluebottle.clients import properties
+
+
+class Counter(object):
+    def __init__(self, total=1):
+        self.reset(total=total)
+
+    def inc(self):
+        sys.stdout.flush()
+        sys.stdout.write("\r{}/{}".format(self.count, self.total))
+        self.count += 1
+
+    def reset(self, total=1):
+        self.total = total
+        self.count = 1
 
 
 class Command(BaseCommand):
     help = 'Import data from json'
 
     def add_arguments(self, parser):
-        parser.add_argument('file')
+        parser.add_argument('--file', '-f', action='store', dest='file',
+                            help="JSON import file.")
         parser.add_argument('--tenant', '-t', action='store', dest='tenant',
                             help="The tenant to run the recurring donations for.")
 
     def handle(self, *args, **options):
-
         client = Client.objects.get(client_name=options['tenant'])
         connection.set_tenant(client)
 
         with LocalTenant(client, clear_tenant=True):
-
             with open(options['file']) as json_file:
                 data = json.load(json_file)
 
-            campaign = ProjectPhase.objects.get(slug='campaign')
+            counter = Counter()
+            for key in ['users', 'categories', 'projects', 'tasks', 'rewards',
+                        'wallposts', 'orders', 'pages']:
+                if key in data:
+                    print("Importing {}".format(key))
+                    counter.reset(total=len(data[key]))
+                    for value in data[key]:
+                        counter.inc()
+                        method_to_call = getattr(self, '_handle_{}'.format(key))
+                        method_to_call(value)
+                    print(" Done!\n")
 
-            if 'users' in data:
-                print "Importing users"
-                t = 1
-                for u in data['users']:
-                    sys.stdout.flush()
-                    str = "\r{}/{}".format(t, len(data['users']))
-                    sys.stdout.write(str)
-                    t += 1
-                    if 'remote_id' in u:
-                        user, created = Member.objects.get_or_create(remote_id=u['remote_id'])
-                    else:
-                        user, created = Member.objects.get_or_create(email=u['email'])
-                    for k in u:
-                        if hasattr(user, k):
-                            setattr(user, k, u[k])
-                    user.save()
-                print " Done!\n"
+    def _generic_import(self, instance, data, excludes=False):
+        excludes = excludes or []
+        for k in data:
+            if k not in excludes and hasattr(instance, k):
+                setattr(instance, k, data[k])
 
-            if 'categories' in data:
-                print "Importing categories"
-                t = 1
-                for c in data['categories']:
-                    sys.stdout.flush()
-                    str = "\r{}/{}".format(t, len(data['categories']))
-                    sys.stdout.write(str)
-                    t += 1
-                    cat, created = Category.objects.get_or_create(slug=c['slug'])
-                    cat.title = c['title']
-                    cat.save()
-                print " Done!\n"
+    def _handle_users(self, data):
+        """Expected fields for Users import:
+        email               (string<email>)
+        remote_id           (string, optional)
+        description         (string)
+        verfied             (bool)
+        username            (string)
+        is_staff            (bool)
+        is_admin            (bool)
+        first_name          (string)
+        last_name           (string)
+        primary_language    (string)
+        """
+        if 'remote_id' in data:
+            user, _ = Member.objects.get_or_create(remote_id=data['remote_id'])
+        else:
+            user, _ = Member.objects.get_or_create(email=data['email'])
+        self._generic_import(user, data, excludes=['email', 'remote_id'])
+        user.save()
 
-            if 'projects' in data:
-                print "Importing projects"
-                t = 1
-                for p in data['projects']:
-                    sys.stdout.flush()
-                    str = "\r{}/{}".format(t, len(data['projects']))
-                    sys.stdout.write(str)
-                    t += 1
-                    deadline = datetime.datetime.strptime(p['deadline'], '%Y-%m-%d')
-                    deadline = pytz.utc.localize(deadline)
+    def _handle_categories(self, data):
+        """Expected fields for Categories import:
+        title       (string)
+        slug        (string)
+        description (string)
+        """
+        cat, _ = Category.objects.get_or_create(slug=data['slug'])
+        self._generic_import(cat, data, excludes=['slug'])
 
-                    project, created = Project.objects.get_or_create(
-                        slug=p['slug'],
-                        owner=Member.objects.get(email=p['user'])
-                    )
-                    project.status = campaign
-                    project.title = p['title']
-                    project.created = p['created'] + 'T12:00:00+01:00'
-                    project.campaign_started = p['created'] + 'T12:00:00+01:00'
-                    project.story = p['description']
-                    project.pitch = p['pitch']
-                    project.amount_asked = Money(p['goal'], 'EUR')
-                    project.video = p['video']
-                    project.deadline = deadline
-                    project.categories = Category.objects.filter(slug__in=p['categories'])
+    def _handle_projects(self, data):
+        """Expected fields for Projects import:
+        slug        (string)
+        title       (string)
+        deadline    (string<date>)
+        created     (string<date>)
+        user        (string<email>)
+        description (string)
+        pitch       (string)
+        goal        (int)
+        video       (string<url>)
+        image       (string<url>)
+        categories  (array<category-slug>)
+        """
+        campaign = ProjectPhase.objects.get(slug='campaign')
+        deadline = datetime.datetime.strptime(data['deadline'], '%Y-%m-%d')
+        deadline = pytz.utc.localize(deadline)
 
-                    try:
-                        if 'image' in p and p['image'].startswith('http'):
-                            content = urllib.urlretrieve(p['image'])
-                            name = urlparse(p['image']).path.split('/')[-1]
-                            project.image.save(name, File(open(content[0])), save=True)
-                        project.save()
-                    except IntegrityError:
-                        project.title += '*'
-                        project.save()
+        project, _ = Project.objects.get_or_create(
+            slug=data['slug'],
+            owner=Member.objects.get(email=data['user']),
+            status=campaign
+        )
+        project.created = data['created'] + 'T12:00:00+01:00'
+        project.campaign_started = data['created'] + 'T12:00:00+01:00'
+        project.amount_asked = Money(data['goal'], 'EUR')
+        project.categories = Category.objects.filter(slug__in=data['categories'])
+        project.deadline = deadline
 
-                print " Done!\n"
+        if 'image' in data:
+            content = urllib.urlretrieve(data['image'])
+            name = urlparse(data['image']).path.split('/')[-1]
+            project.image.save(name, File(open(content[0])), save=True)
 
-            if 'tasks' in data:
-                print "Importing tasks"
-                i = 1
-                for t in data['tasks']:
-                    sys.stdout.flush()
-                    str = "\r{}/{}".format(i, len(data['tasks']))
-                    sys.stdout.write(str)
-                    i += 1
-                    try:
-                        project = Project.objects.get(slug=t['project'])
-                        task, created = Task.objects.get_or_create(
-                            project=project,
-                            time_needed="8",
-                            skill__id=1,
-                            deadline=project.deadline,
-                            deadline_to_apply=project.deadline,
-                            title=t['title']
-                        )
-                        task.description = t['description'],
-                        task.people_needed = t['people_needed'],
-                        task.save()
-                    except (Project.DoesNotExist, TypeError):
-                        pass
-                print " Done!\n"
+        self._generic_import(project, data,
+                             excludes=['deadline', 'slug', 'user', 'created',
+                                       'goal', 'categories', 'image'])
 
-            if 'rewards' in data:
-                print "Importing rewards"
-                t = 1
-                for r in data['rewards']:
-                    sys.stdout.flush()
-                    str = "\r{}/{}".format(t, len(data['rewards']))
-                    sys.stdout.write(str)
-                    t += 1
-                    if r['amount']:
-                        try:
-                            project = Project.objects.get(slug=r['project'])
-                            reward, created = Reward.objects.get_or_create(
-                                project=project,
-                                title=r['title'],
-                                description=r['description'],
-                                amount=Money(r['amount'].replace(",", ".") or 0.0, 'EUR'),
-                                limit=r['limit'] or 0
-                            )
-                            reward.save()
-                        except (Project.DoesNotExist, ValueError):
-                            pass
-                print " Done!\n"
+        try:
+            project.save()
+        except IntegrityError:
+            project.title += '*'
+            project.save()
 
-            if 'wallposts' in data:
-                print "Importing wallposts"
-                t = 1
-                for w in data['wallposts']:
-                    sys.stdout.flush()
-                    str = "\r{}/{}".format(t, len(data['wallposts']))
-                    sys.stdout.write(str)
-                    t += 1
-                    try:
-                        project = Project.objects.get(slug=w['project'])
-                        author = Member.objects.get(email=w['email'])
-                        reward, created = TextWallpost.objects.get_or_create(
-                            object_id=project.id,
-                            content_type=ContentType.objects.get_for_model(Project).model,
-                            text=w['text'],
-                            created=w['date'],
-                            author=author
-                        )
-                        reward.save()
-                    except (Project.DoesNotExist, Member.DoesNotExist, ValueError) as e:
-                        print e
-                        pass
-                print " Done!\n"
+    def _handle_tasks(self, data):
+        """Expected fields for Tasks import:
+        project         (string<slug>)
+        title           (string)
+        description     (string)
+        people_needed   (int)
+        """
+        project = Project.objects.get(slug=data['project'])
+        task, _ = Task.objects.get_or_create(
+            project=project,
+            time_needed="8",
+            skill__id=1,
+            deadline=project.deadline,
+            status=Task.TaskStatuses.realized,
+            deadline_to_apply=project.deadline,
+            title=data['title'],
+            people_needed=data['people_needed']
+        )
+        self._generic_import(task, data, excludes=['project', 'title', 'people_needed'])
+        task.save()
 
-            if 'orders' in data:
-                print "Importing orders/donations"
-                t = 1
-                for o in data['orders']:
-                    sys.stdout.flush()
-                    str = "\r{}/{}".format(t, len(data['orders']))
-                    sys.stdout.write(str)
-                    t += 1
-                    try:
-                        user = Member.objects.get(email=o['user'])
-                    except (TypeError, Member.DoesNotExist):
-                        user = None
-                    order = Order.objects.create(user=user)
-                    if o['completed']:
-                        try:
-                            completed = o['completed'] + '+01:00'
-                        except AttributeError as e:
-                            print e
-                            print o['completed']
-                            completed = now()
-                        order.locked()
-                        order.success()
-                        order.created = completed
-                        order.completed = completed
-                        order.confirmed = completed
-                    order.save()
+    def _handle_rewards(self, data):
+        """Expected fields for Rewards import:
+        project     (string<slug>)
+        title       (string)
+        description (string)
+        amount      (string)
+        text        (string)
+        """
+        if data['amount']:
+            try:
+                project = Project.objects.get(slug=data['project'])
+                reward, _ = Reward.objects.get_or_create(
+                    project=project,
+                    amount=Money(data['amount'].replace(",", ".") or 0.0, 'EUR'),
+                    limit=data['limit'] or 0
+                )
+                self._generic_import(reward, data, excludes=['amount', 'limit', 'project'])
+                reward.save()
+            except (Project.DoesNotExist, ValueError):
+                pass
 
-                    if o['donations']:
-                        for don in o['donations']:
-                            try:
-                                project = Project.objects.get(title=don['project'])
-                            except Project.DoesNotExist:
-                                project = Project.objects.all()[0]
-                            donation = Donation.objects.create(project=project,
-                                                               order=order,
-                                                               amount=Money(don['amount'], 'EUR'))
-                            donation.save()
-                print " Done!\n"
+    def _handle_wallposts(self, data):
+        """Expected fields for Wallpost import:
+        project (string<slug>)
+        email   (string<email>)
+        date    (string<datetime>)
+        text    (string)
+        """
+        try:
+            project = Project.objects.get(slug=data['project'])
+            author = Member.objects.get(email=data['email'])
+            created = datetime.datetime.strptime(data['date'], '%Y-%m-%d %H:%M:%S')
+            created = pytz.utc.localize(created)
+            wallpost, _ = TextWallpost.objects.get_or_create(
+                object_id=project.id,
+                content_type=ContentType.objects.get_for_model(Project),
+                created=created,
+                author=author
+            )
+            self._generic_import(wallpost, data, excludes=['project', 'author', 'email'])
+            wallpost.save()
+        except (Project.DoesNotExist, Member.DoesNotExist, ValueError) as err:
+            print(err)
 
-            if 'pages' in data:
-                print "Importing pages"
-                t = 1
-                for p in data['pages']:
-                    sys.stdout.flush()
-                    str = "\r{}/{}".format(t, len(data['pages']))
-                    sys.stdout.write(str)
-                    t += 1
-                    author = Member.objects.get(email=p['author'])
-                    page, created = Page.objects.get_or_create(
-                        title=p['title'],
-                        author=author,
-                        status=Page.PageStatus.published,
-                    )
-                    page.publication_date = now()
-                    page.language = 'nl'
-                    page.slug = p['slug'] or slugify(p['title'] + author.username)
-                    page.save()
-                    if created:
-                        text = TextItem.objects.create(
-                            parent=page,
-                            text=p['content']
-                        )
-                        text.save()
-                    page.save()
-                print " Done!\n"
+    def _handle_orders(self, data):
+        """Expected fields for Order import:
+        completed   (string<date>)
+        user        (string<email>)
+        total       (string)
+        donations   (array)
+            project     (string<title>)
+            amount      (float)
+        """
+        try:
+            user = Member.objects.get(email=data['user'])
+        except (TypeError, Member.DoesNotExist):
+            user = None
+        order = Order.objects.create(user=user)
+        if data['completed']:
+            try:
+                completed = data['completed'] + '+01:00'
+            except AttributeError as err:
+                print(err)
+                print(data['completed'])
+                completed = now()
+            order.locked()
+            order.success()
+            order.created = completed
+            order.completed = completed
+            order.confirmed = completed
+        order.save()
+
+        if data['donations']:
+            for don in data['donations']:
+                try:
+                    project = Project.objects.get(title=don['project'])
+                except Project.DoesNotExist:
+                    project = Project.objects.all()[0]
+                donation = Donation.objects.create(project=project,
+                                                   order=order,
+                                                   amount=Money(don['amount'], 'EUR'))
+                donation.save()
+
+    def _handle_pages(self, data):
+        """Expected fields for Page import:
+        slug     (string)
+        title    (string)
+        author   (string<email>)
+        content  (string)
+        language (string, optional)
+        """
+        author = Member.objects.get(email=data['author'])
+        try:
+            language = data['language']
+        except KeyError:
+            language = properties.LANGUAGE_CODE
+
+        page, created = Page.objects.get_or_create(
+            author=author,
+            status=Page.PageStatus.published,
+            publication_date=now(),
+            language=language
+        )
+
+        # TODO: add the slug generation to the Page model
+        data['slug'] = data["slug"] or slugify(data['title'] + author.username)
+
+        self._generic_import(page, data, excludes=['author', 'content'])
+        page.save()
+
+        if created:
+            text = TextItem.objects.create(
+                parent=page,
+                text=data['content']
+            )
+            text.save()

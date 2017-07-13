@@ -1,0 +1,84 @@
+{
+	"users": [{
+		"email": "bryan@brown.com",
+		"description": "Bryan Brown was born on June 23, 1947 in Sydney, New South Wales, Australia as Bryan Neathaway Brown",
+		"verfied": true,
+		"username": "bryan",
+		"is_staff": false,
+		"is_active": true,
+		"user_type": "person",
+		"first_name": "Bryan",
+		"last_name": "Brown",
+		"primary_language": "en"
+	},{
+   		"username": "brian",
+   		"first_name": "Brian",
+   		"last_name": "Dennehy",
+   		"description": "Imposing, barrel-chested and now silver-haired Brian Dennehy is a prolific US actor",
+   		"remote_id": 2,
+   		"password": "$P$BcwtTVD$2dg631^%#ffsds8$^cdq2\/",
+   		"email": "brian@dennehy.com"
+	}],
+
+	"categories": [{
+		"title": "Awesome Actors",
+		"slug": "awesome-actors",
+		"description": "Awesome Actors from Around the World"
+	}],
+
+	"projects": [{
+		"title": "F/X3 - Their effects had _better_ be special!",
+		"slug": "f-x3",
+		"deadline": "2017-12-31",
+		"user": "bryan@brown.com",
+		"created": "2017-01-01",
+		"description": "Outgunned by the mob, outmanned by the cops..... their effects had _better_ be special!",
+		"pitch": "F/X man Rollie Tyler (Bryan Brown) is now a toy maker. Mike Brandon (Tom Mason), the ex-husband of Rolly's girlfriend Kim(Rachel Ticotin), is a cop. He asks Rollie to help catch a killer. The operation goes well until some unknown man kills both the killer and Mike.",
+		"goal": 10000000,
+		"video": "https://www.youtube.com/watch?v=n1ncordnTMc",
+		"image": "file:///tmp/test-image.png",
+		"categories": ["awesome-actors"]
+	}],
+
+	"tasks": [{
+		"project": "f-x3",
+		"title": "Find lots of money",
+		"description": "This movie is not going to be cheap",
+		"people_needed": 1
+	}],
+
+	"rewards": [{
+		"project": "f-x3",
+		"title": "Front row",
+		"description": "Front row seats at the premiere",
+		"amount": "100000",
+		"limit": 0
+	}],
+	
+	"wallposts": [{
+		"project": "f-x3",
+		"date": "2017-06-06 11:11:11",
+		"author": "bryan",
+		"email": "bryan@brown.com",
+		"text": "Best movie ever!"
+	}],
+	
+	"orders": [  {
+   		"status": "publish",
+   		"completed": null,
+   		"total": "35",
+   		"donations": [{
+     			"project": "F/X3 - Their effects had _better_ be special!",
+     			"reward_sequence": "0",
+     			"amount": 35.0
+    		}],
+   		"user": "bryan@brown.com"
+  	}],
+	
+	"pages": [{
+   		"content": "Although set in New York, the majority of this film was shot in Toronto over an 11-week period during the spring and summer of 1990. The location required some extra effort to \"sell\" the illusion. In fact: streets in Toronto's Chinatown had to be dirtied up to match their New York counterparts.",
+   		"author": "bryan@brown.com",
+   		"slug": "the-road",
+   		"title": "The Road to F/X3"
+  	}]
+}

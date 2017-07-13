@@ -36,3 +36,20 @@ class Category(models.Model):
 
     def get_absolute_url(self):
         return 'https://{}/projects/?category={}'.format(properties.tenant.domain_url, self.slug)
+
+
+class CategoryContent(models.Model):
+    category = models.ForeignKey(Category, related_name='contents')
+    title = models.CharField(_('title'), max_length=60)
+    description = models.TextField(_("description"), max_length=190)
+    image = ImageField(_("image"), max_length=255, blank=True, null=True, upload_to='categories/content/',
+                       help_text=_("Category content image"))
+    video_url = models.URLField(max_length=100, blank=True, default='')
+    link = models.URLField(_('Link url'), blank=True)
+
+    class Meta:
+        verbose_name = _("category content")
+        verbose_name_plural = _("category contents")
+
+    def __unicode__(self):
+        return self.title

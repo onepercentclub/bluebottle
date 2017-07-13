@@ -7,26 +7,19 @@ from bluebottle.utils.fields import ImageField
 
 
 class Category(models.Model):
-    """
-        Some projects are run in cooperation with a partner
-        organization like EarthCharter & MacroMicro
-    """
     title = models.CharField(_("name"), max_length=255, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     description = models.TextField(_("description"))
-    image = ImageField(_("image"), max_length=255, blank=True, null=True,
-                       upload_to='categories/',
+    image = ImageField(_("image"), max_length=255, blank=True, null=True, upload_to='categories/',
                        help_text=_("Category image"))
-
-    image_logo = ImageField(_("logo"), max_length=255, blank=True, null=True,
-                            upload_to='categories/logos/',
+    image_logo = ImageField(_("logo"), max_length=255, blank=True, null=True, upload_to='categories/logos/',
                             help_text=_("Category Logo image"))
 
     @property
     def projects(self):
-        return self.project_set.order_by('-favorite', '-popularity').filter(
-            status__slug__in=['campaign', 'done-complete', 'done-incomplete',
-                              'voting', 'voting-done'])
+        return self.project_set\
+            .order_by('-favorite', '-popularity')\
+            .filter(status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done'])
 
     def save(self, **kwargs):
         if not self.slug:

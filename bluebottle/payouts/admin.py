@@ -127,7 +127,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
             'fields': (
                 'receiver_account_name', 'receiver_account_country',
                 'receiver_account_number', 'receiver_account_iban',
-                'receiver_account_bic', 'description_line1',
+                'receiver_account_details', 'description_line1',
                 'description_line2', 'description_line3', 'description_line4'
             )
         })
@@ -183,7 +183,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
     )
 
     def admin_has_iban(self, obj):
-        if obj.receiver_account_iban and obj.receiver_account_bic:
+        if obj.receiver_account_iban and obj.receiver_account_details:
             return True
 
         return False

@@ -196,13 +196,10 @@ class ProjectManager(models.Manager):
 class ProjectDocument(BaseProjectDocument):
     @property
     def document_url(self):
-        content_type = ContentType.objects.get_for_model(ProjectDocument).id
         # pk may be unset if not saved yet, in which case no url can be
         # generated.
         if self.pk is not None:
-            return reverse('document_download_detail',
-                           kwargs={'content_type': content_type,
-                                   'pk': self.pk or 1})
+            return reverse('project-document-file', kwargs={'pk': self.pk})
         return None
 
 
@@ -563,21 +560,23 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def task_count(self):
-        return len(
-            self.task_set.filter(status=Task.TaskStatuses.open).all())
+        return self.task_set.exclude(status=Task.TaskStatuses.closed).count()
 
     @property
     def realized_task_count(self):
-        return len(
-            self.task_set.filter(status=Task.TaskStatuses.realized).all())
+        return self.task_set.filter(status=Task.TaskStatuses.realized).count()
+
+    @property
+    def open_task_count(self):
+        return self.task_set.filter(status=Task.TaskStatuses.open).count()
+
+    @property
+    def full_task_count(self):
+        return self.task_set.filter(status=Task.TaskStatuses.full).count()
 
     @property
     def from_suggestion(self):
         return len(self.suggestions.all()) > 0
-
-    @property
-    def get_open_tasks(self):
-        return self.task_set.filter(status=Task.TaskStatuses.open).all()
 
     @property
     def date_funded(self):

@@ -24,4 +24,5 @@ class CategoryContentFactory(factory.DjangoModelFactory):
                                content=b'',
                                content_type='image/jpeg')
     video_url = factory.Sequence(lambda n: 'http://{}.test-video-url.com'.format(n))
-    link = factory.Sequence(lambda n: 'http://{}.test-link-url.com'.format(n))
+    link_text = factory.Sequence(lambda n: 'read more {}'.format(n))
+    link_url = factory.Sequence(lambda n: 'http://{}.test-link-url.com'.format(n))

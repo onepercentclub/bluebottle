@@ -52,7 +52,8 @@ class CategoriesTestCase(BluebottleTestCase):
             'title': 'category content title',
             'description': 'category content description',
             'video_url': 'http://vimeo.com',
-            'link': 'http://link.com',
+            'link_text': 'Find out more...',
+            'link_url': 'http://link.com',
             'category': category
         }
 
@@ -66,8 +67,9 @@ class CategoriesTestCase(BluebottleTestCase):
         self.assertEquals(data['contents'][0]['title'], 'category content title')
         self.assertEquals(data['contents'][0]['description'], 'category content description')
         self.assertEquals(data['contents'][0]['video_url'], 'http://vimeo.com')
-        self.assertEquals(data['contents'][0]['link'], 'http://link.com')
-        self.assertTrue(all(field in ('title', 'description', 'image', 'video_url', 'link')
+        self.assertEquals(data['contents'][0]['link_text'], 'Find out more...')
+        self.assertEquals(data['contents'][0]['link_url'], 'http://link.com')
+        self.assertTrue(all(field in ('title', 'description', 'image', 'video_url', 'link_text', 'link_url')
                             for field in data['contents'][0].keys()
                             )
                         )

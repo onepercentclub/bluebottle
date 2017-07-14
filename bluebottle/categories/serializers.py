@@ -6,14 +6,15 @@ from bluebottle.categories.models import Category, CategoryContent
 
 class CategoryContentSerializer(serializers.ModelSerializer):
     title = serializers.CharField(required=True)
-    description = serializers.CharField(required=True)
+    description = serializers.CharField(required=False)
     image = ImageSerializer(required=False)
     video_url = serializers.URLField(required=False)
-    link = serializers.URLField(required=False)
+    link_text = serializers.CharField(required=False)
+    link_url = serializers.URLField(required=False)
 
     class Meta:
         model = CategoryContent
-        fields = ('title', 'description', 'image', 'video_url', 'link')
+        fields = ('title', 'description', 'image', 'video_url', 'link_test', 'link_url')
 
 
 class CategorySerializer(serializers.ModelSerializer):

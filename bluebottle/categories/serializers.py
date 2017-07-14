@@ -14,7 +14,7 @@ class CategoryContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CategoryContent
-        fields = ('title', 'description', 'image', 'video_url', 'link_test', 'link_url')
+        fields = ('title', 'description', 'image', 'video_url', 'link_text', 'link_url')
 
 
 class CategorySerializer(serializers.ModelSerializer):

@@ -6,7 +6,7 @@ from .models import Category, CategoryContent
 
 
 class CatergoryContentForm(forms.ModelForm):
-    description = forms.CharField(widget=TinyMCE())
+    description = forms.CharField(required=False, widget=TinyMCE())
 
     class Meta:
         mode = CategoryContent

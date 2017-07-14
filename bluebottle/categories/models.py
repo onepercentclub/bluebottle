@@ -41,7 +41,7 @@ class Category(models.Model):
 class CategoryContent(models.Model):
     category = models.ForeignKey(Category, related_name='contents')
     title = models.CharField(_('title'), max_length=60)
-    description = models.TextField(_('description'), max_length=190, blank=True)
+    description = models.TextField(_('description'), max_length=190, blank=True, null=True)
     image = ImageField(_('image'), max_length=255, blank=True, null=True, upload_to='categories/content/',
                        help_text=_("The image will be replaced by the video if the video url is present"))
     video_url = models.URLField(max_length=100, blank=True, default='', help_text="Setting a video url will override"

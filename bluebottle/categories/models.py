@@ -15,18 +15,6 @@ class Category(models.Model):
     image_logo = ImageField(_("logo"), max_length=255, blank=True, null=True, upload_to='categories/logos/',
                             help_text=_("Category Logo image"))
 
-    @property
-    def projects(self):
-        return self.project_set\
-            .order_by('-favorite', '-popularity')\
-            .filter(status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done'])
-
-    def save(self, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
-
-        super(Category, self).save(**kwargs)
-
     class Meta:
         verbose_name = _("category")
         verbose_name_plural = _("categories")
@@ -34,8 +22,20 @@ class Category(models.Model):
     def __unicode__(self):
         return self.title
 
+    def save(self, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+
+        super(Category, self).save(**kwargs)
+
     def get_absolute_url(self):
         return 'https://{}/projects/?category={}'.format(properties.tenant.domain_url, self.slug)
+
+    @property
+    def projects(self):
+        return self.project_set\
+            .order_by('-favorite', '-popularity')\
+            .filter(status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done'])
 
 
 class CategoryContent(models.Model):

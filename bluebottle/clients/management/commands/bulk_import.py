@@ -86,7 +86,7 @@ class Command(BaseCommand):
         email               (string<email>)
         remote_id           (string, optional)
         description         (string)
-        verfied             (bool)
+        verified            (bool)
         username            (string)
         is_staff            (bool)
         is_admin            (bool)
@@ -109,6 +109,7 @@ class Command(BaseCommand):
         """
         cat, _ = Category.objects.get_or_create(slug=data['slug'])
         self._generic_import(cat, data, excludes=['slug'])
+        cat.save()
 
     def _handle_projects(self, data):
         """Expected fields for Projects import:
@@ -138,6 +139,7 @@ class Command(BaseCommand):
         project.amount_asked = Money(data['goal'], 'EUR')
         project.categories = Category.objects.filter(slug__in=data['categories'])
         project.deadline = deadline
+        project.video_url = data['video']
 
         if 'image' in data:
             content = urllib.urlretrieve(data['image'])
@@ -146,7 +148,7 @@ class Command(BaseCommand):
 
         self._generic_import(project, data,
                              excludes=['deadline', 'slug', 'user', 'created',
-                                       'goal', 'categories', 'image'])
+                                       'goal', 'categories', 'image', 'video'])
 
         try:
             project.save()

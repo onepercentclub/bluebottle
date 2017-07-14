@@ -14,6 +14,7 @@ from bluebottle.rewards.models import Reward
 from bluebottle.wallposts.models import Wallpost
 from bluebottle.orders.models import Order
 from bluebottle.pages.models import Page
+from fluent_contents.plugins.text.models import TextItem
 
 
 @override_settings(TENANT_APPS=('django_nose',),
@@ -82,17 +83,60 @@ class BulkImportTests(TestCase):
         call_command(self.cmd, file=json_file, tenant='test')
         # users (includes admin user)
         self.assertEqual(Member.objects.count(), 3)
+        user = Member.objects.get(email='bryan@brown.com')
+        self.assertFalse(user.is_staff)
+        self.assertTrue(user.is_active)
+        self.assertEqual(user.username, 'bryan')
+        self.assertEqual(user.first_name, 'Bryan')
+        self.assertEqual(user.last_name, 'Brown')
+        self.assertEqual(user.primary_language, 'en')
+
         # categories
         self.assertEqual(Category.objects.count(), 1)
+        category = Category.objects.get(slug='awesome-actors')
+        self.assertEqual(category.title, 'Awesome Actors')
+        self.assertEqual(category.description,
+                         'Awesome Actors from Around the World')
+
         # projects
         self.assertEqual(Project.objects.count(), 1)
+        project = Project.objects.get(slug='f-x3')
+        self.assertEqual(project.owner.email, 'bryan@brown.com')
+        self.assertEqual(project.amount_asked.amount, 10000000.00)
+        self.assertEqual(project.video_url, 'https://www.youtube.com/watch?v=n1ncordnTMc')
+
         # tasks
         self.assertEqual(Task.objects.count(), 1)
+        task = Task.objects.get(project=project)
+        self.assertEqual(task.description, 'This movie is not going to be cheap')
+        self.assertEqual(task.status, 'realized')
+
         # rewards
         self.assertEqual(Reward.objects.count(), 1)
+        reward = Reward.objects.get(project=project)
+        self.assertEqual(reward.title, 'Front row')
+        self.assertEqual(reward.limit, 0)
+        self.assertEqual(reward.amount.amount, 100000.00)
+
         # wallposts
         self.assertEqual(Wallpost.objects.count(), 1)
+        wallpost = Wallpost.objects.get(object_id=project.id)
+        self.assertEqual(wallpost.author, user)
+        self.assertEqual(wallpost.text, 'Best movie ever!')
+
         # orders
         self.assertEqual(Order.objects.count(), 1)
+        order = Order.objects.first()
+        self.assertEqual(order.status, 'created')
+        self.assertEqual(order.total.amount, 35.00)
+        self.assertEqual(order.user, user)
+        self.assertEqual(order.donations.count(), 1)
+        self.assertEqual(order.donations.first().project, project)
+
         # pages
         self.assertEqual(Page.objects.count(), 1)
+        page = Page.objects.first()
+        text = TextItem.objects.first()
+        self.assertEqual(page.slug, 'the-road')
+        self.assertEqual(page.author, user)
+        self.assertTrue(text.text.startswith('Although set in New York'))

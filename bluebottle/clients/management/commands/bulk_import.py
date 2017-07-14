@@ -10,7 +10,6 @@ from moneyed.classes import Money
 from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.db import connection
-from django.db.utils import IntegrityError
 from django.utils.text import slugify
 from django.utils.timezone import now
 from django.contrib.contenttypes.models import ContentType
@@ -54,18 +53,32 @@ class Command(BaseCommand):
                             help="JSON import file.")
         parser.add_argument('--tenant', '-t', action='store', dest='tenant',
                             help="The tenant to run the recurring donations for.")
+        parser.add_argument('--models', '-m', action='store', dest='models',
+                            help="Comma separated list of models you want to import.")
 
     def handle(self, *args, **options):
+
         client = Client.objects.get(client_name=options['tenant'])
         connection.set_tenant(client)
 
         with LocalTenant(client, clear_tenant=True):
+
             with open(options['file']) as json_file:
                 data = json.load(json_file)
 
+            models = options['models'].split(',') or [
+                'users',
+                'categories',
+                'projects',
+                'tasks',
+                'rewards',
+                'wallposts',
+                'orders',
+                'pages'
+            ]
+
             counter = Counter()
-            for key in ['users', 'categories', 'projects', 'tasks', 'rewards',
-                        'wallposts', 'orders', 'pages']:
+            for key in models:
                 if key in data:
                     print("Importing {}".format(key))
                     counter.reset(total=len(data[key]))
@@ -75,8 +88,7 @@ class Command(BaseCommand):
                         method_to_call(value)
                     print(" Done!\n")
 
-    def _generic_import(self, instance, data, excludes=False):
-        excludes = excludes or []
+    def _generic_import(self, instance, data, excludes=[]):
         for k in data:
             if k not in excludes and hasattr(instance, k):
                 setattr(instance, k, data[k])
@@ -124,35 +136,36 @@ class Command(BaseCommand):
         image       (string<url>)
         categories  (array<category-slug>)
         """
-        campaign = ProjectPhase.objects.get(slug='campaign')
         deadline = datetime.datetime.strptime(data['deadline'], '%Y-%m-%d')
         deadline = pytz.utc.localize(deadline)
 
-        project, _ = Project.objects.get_or_create(
-            slug=data['slug'],
-            owner=Member.objects.get(email=data['user']),
-            status=campaign
-        )
+        try:
+            project = Project.objects.get(slug=data['slug'])
+        except Project.DoesNotExist:
+            project = Project(slug=data['slug'])
+
+        project.owner = Member.objects.get(email=data['user'])
+        try:
+            project.status = ProjectPhase.objects.get(slug=data['status'])
+        except ProjectPhase.DoesNotExist:
+            project.status = ProjectPhase.objects.get(slug='closed')
+        project.title = data['title'] or data['slug']
         project.created = data['created'] + 'T12:00:00+01:00'
         project.campaign_started = data['created'] + 'T12:00:00+01:00'
         project.amount_asked = Money(data['goal'], 'EUR')
         project.categories = Category.objects.filter(slug__in=data['categories'])
         project.deadline = deadline
 
-        if 'image' in data:
+        self._generic_import(project, data,
+                             excludes=['deadline', 'slug', 'user', 'created',
+                                       'status', 'goal', 'categories', 'image'])
+
+        project.save()
+
+        if 'image' in data and data['image'].startswith('http'):
             content = urllib.urlretrieve(data['image'])
             name = urlparse(data['image']).path.split('/')[-1]
             project.image.save(name, File(open(content[0])), save=True)
-
-        self._generic_import(project, data,
-                             excludes=['deadline', 'slug', 'user', 'created',
-                                       'goal', 'categories', 'image'])
-
-        try:
-            project.save()
-        except IntegrityError:
-            project.title += '*'
-            project.save()
 
     def _handle_tasks(self, data):
         """Expected fields for Tasks import:
@@ -188,7 +201,8 @@ class Command(BaseCommand):
                 project = Project.objects.get(slug=data['project'])
                 reward, _ = Reward.objects.get_or_create(
                     project=project,
-                    amount=Money(data['amount'].replace(",", ".") or 0.0, 'EUR'),
+                    title=data['title'],
+                    amount=Money(data['amount'] or 0.0, 'EUR'),
                     limit=data['limit'] or 0
                 )
                 self._generic_import(reward, data, excludes=['amount', 'limit', 'project'])
@@ -227,6 +241,7 @@ class Command(BaseCommand):
         donations   (array)
             project     (string<title>)
             amount      (float)
+            reward      (string<title>)
         """
         try:
             user = Member.objects.get(email=data['user'])
@@ -250,10 +265,18 @@ class Command(BaseCommand):
         if data['donations']:
             for don in data['donations']:
                 try:
-                    project = Project.objects.get(title=don['project'])
+                    project = Project.objects.get(slug=don['project'])
                 except Project.DoesNotExist:
-                    project = Project.objects.all()[0]
+                    print "Could not find project {0}".format(don['project'])
+                    continue
+                try:
+                    reward = Reward.objects.get(project=project, title=don['reward'])
+                except Reward.MultipleObjectsReturned:
+                    reward = Reward.objects.filter(project=project, title=don['reward']).all()[0]
+                except (Reward.DoesNotExist, KeyError):
+                    reward = None
                 donation = Donation.objects.create(project=project,
+                                                   reward=reward,
                                                    order=order,
                                                    amount=Money(don['amount'], 'EUR'))
                 donation.save()

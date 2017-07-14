@@ -9,7 +9,7 @@ class CatergoryContentForm(forms.ModelForm):
     description = forms.CharField(required=False, widget=TinyMCE())
 
     class Meta:
-        mode = CategoryContent
+        model = CategoryContent
         exclude = ()
 
 

@@ -21,6 +21,18 @@ class Statistics(object):
         self.start = start
         self.end = end
 
+    def date_filter(self, field='created'):
+        if self.start and self.end:
+            filter_args = {'{}__range'.format(field): (self.start, self.end)}
+        elif self.start:
+            filter_args = {'{}__gte'.format(field): self.start}
+        elif self.end:
+            filter_args = {'{}__lte'.format(field): self.end}
+        else:
+            filter_args = {}
+
+        return Q(**filter_args)
+
     @property
     @memoize(timeout=60 * 60)
     def people_involved(self):
@@ -86,161 +98,12 @@ class Statistics(object):
 
         return people_count
 
-    def date_filter(self, field='created'):
-        if self.start and self.end:
-            filter_args = {'{}__range'.format(field): (self.start, self.end)}
-        elif self.start:
-            filter_args = {'{}__gte'.format(field): self.start}
-        elif self.end:
-            filter_args = {'{}__lte'.format(field): self.end}
-        else:
-            filter_args = {}
-
-        return Q(**filter_args)
-
-    @property
-    @memoize(timeout=60 * 60)
-    def tasks_realized(self):
-        """ Total number of realized tasks """
-        """
-        Reference:
-        SELECT
-            DISTINCT ON ("tasks_taskstatuslog"."task_id") "tasks_taskstatuslog"."id",
-                         "tasks_taskstatuslog"."task_id", "tasks_taskstatuslog"."status",
-                         "tasks_taskstatuslog"."start"
-            FROM "tasks_taskstatuslog"
-            WHERE "tasks_taskstatuslog"."start" BETWEEN '2017-01-01 00:00:00' AND '2017-12-31 23:59:59'
-            ORDER BY "tasks_taskstatuslog"."task_id" DESC, "tasks_taskstatuslog"."start" DESC
-        """
-        logs = TaskStatusLog.objects\
-            .filter(self.date_filter('start'))\
-            .distinct('task__id')\
-            .order_by('-task__id', '-start')
-
-        # TODO: Refactor to use django filters for sub-queries
-        count = 0
-        for log in logs:
-            if log.status == 'realized':
-                count += 1
-        return count
-
-    @property
-    @memoize(timeout=60 * 60)
-    def projects_realized(self):
-        """ Total number of realized (done-complete and incomplete) projects """
-        """
-        Reference:
-        SELECT DISTINCT ON ("projects_projectphaselog"."project_id") "projects_projectphaselog"."id",
-        "projects_projectphaselog"."project_id",
-        "projects_projectphaselog"."status_id", "projects_projectphaselog"."start"
-        FROM "projects_projectphaselog"
-        WHERE "projects_projectphaselog"."start" BETWEEN '2017-01-01 00:00:00' AND '2017-12-31 23:59:59'
-        ORDER BY "projects_projectphaselog"."project_id" DESC, "projects_projectphaselog"."start" DESC
-
-        This will get the last status log entry for all project phase logs
-        """
-
-        phase_logs = ProjectPhaseLog.objects\
-            .filter(self.date_filter('start'))\
-            .distinct('project__id')\
-            .order_by('-project__id', '-start')
-
-        # TODO: Refactor to use django filters for sub-queries
-        count = 0
-        for log in phase_logs:
-            if log.status.slug in ['done-complete', 'done-incomplete', 'voting-done']:
-                count += 1
-        return count
-
-    @property
-    @memoize(timeout=60 * 60)
-    def projects_online(self):
-        """ Total number of projects that have been in campaign mode"""
-        return Project.objects.filter(self.date_filter('campaign_started'),
-                                      status__slug__in=('voting', 'campaign')).count()
-
-    @property
-    @memoize(timeout=60 * 60)
-    def donated_total(self):
-        """ Total amount donated to all projects"""
-        donations = Donation.objects.filter(
-            self.date_filter('order__confirmed'),
-            order__status__in=['pending', 'success', 'pledged']
-        )
-        totals = donations.values('amount_currency').annotate(total=Sum('amount'))
-        amounts = [Money(total['total'], total['amount_currency']) for total in totals]
-        if totals:
-            donated = sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
-        else:
-            donated = Money(0, properties.DEFAULT_CURRENCY)
-
-        return donated
-
-    @property
-    @memoize(timeout=60 * 60)
-    def votes_cast(self):
-        return len(Vote.objects.filter(self.date_filter()))
-
-    @property
-    @memoize(timeout=60 * 60)
-    def time_spent(self):
-        """ Total amount of time spent on realized tasks """
-        logs = TaskMemberStatusLog.objects\
-            .filter(self.date_filter('start')) \
-            .distinct('task_member__id') \
-            .order_by('-task_member__id', '-start') \
-
-        # TODO: Refactor to use django filters for sub-queries
-        count = 0
-        for log in logs:
-            if log.status == 'realized':
-                count += log.task_member.time_spent
-
-        return count
-
-    @property
-    @memoize(timeout=60 * 60)
-    def amount_matched(self):
-        """ Total amount matched on realized (done and incomplete) projects """
-        totals = Project.objects.values('amount_extra_currency').annotate(total=Sum('amount_extra'))
-
-        amounts = [Money(total['total'], total['amount_extra_currency']) for total in totals]
-        if totals:
-            return sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
-        else:
-            return Money(0, properties.DEFAULT_CURRENCY)
-
     @property
     @memoize(timeout=300)
-    def projects_complete(self):
-        """ Total number of projects with the status complete """
-        logs = ProjectPhaseLog.objects\
-            .filter(self.date_filter('start'))\
-            .distinct('project__id')\
-            .order_by('-project__id', '-start')
-
-        # TODO: Refactor to use django filters for sub-queries
-        count = 0
-        for log in logs:
-            if log.status.slug == 'done-complete':
-                count += 1
-        return count
-
-    @property
-    @memoize(timeout=300)
-    def task_members(self):
-        """ Total number of realized task members """
-        logs = TaskMemberStatusLog.objects \
-            .filter(self.date_filter('start')) \
-            .distinct('task_member__id') \
-            .order_by('-task_member__id', '-start')
-
-        # TODO: Refactor to use django filters for sub-queries
-        count = 0
-        for log in logs:
-            if log.status == 'realized':
-                count += 1
-        return count
+    def participants(self):
+        """ Total numbers of participants (members that started a project, or realized task member,
+        or inititated a task)"""
+        return len(self.participant_details())
 
     def participant_details(self):
         """Participants are defined as project initiators of a project (running, done or realised),
@@ -310,11 +173,195 @@ class Statistics(object):
         return sorted(participants.values(), key=lambda k: k['action_date'])
 
     @property
+    @memoize(timeout=60 * 60)
+    def tasks_realized(self):
+        """ Total number of realized tasks """
+        """
+        Reference:
+        SELECT
+            DISTINCT ON ("tasks_taskstatuslog"."task_id") "tasks_taskstatuslog"."id",
+                         "tasks_taskstatuslog"."task_id", "tasks_taskstatuslog"."status",
+                         "tasks_taskstatuslog"."start"
+            FROM "tasks_taskstatuslog"
+            WHERE "tasks_taskstatuslog"."start" BETWEEN '2017-01-01 00:00:00' AND '2017-12-31 23:59:59'
+            ORDER BY "tasks_taskstatuslog"."task_id" DESC, "tasks_taskstatuslog"."start" DESC
+        """
+        logs = TaskStatusLog.objects\
+            .filter(self.date_filter('start'))\
+            .distinct('task__id')\
+            .order_by('-task__id', '-start')
+
+        # TODO: Refactor to use django filters for sub-queries
+        count = 0
+        for log in logs:
+            if log.status == 'realized':
+                count += 1
+        return count
+
+    @memoize(timeout=60 * 60)
+    def get_projects_by_last_status(self):
+        """
+        Reference:
+        SELECT DISTINCT ON ("projects_projectphaselog"."project_id") "projects_projectphaselog"."id",
+        "projects_projectphaselog"."project_id",
+        "projects_projectphaselog"."status_id", "projects_projectphaselog"."start"
+        FROM "projects_projectphaselog"
+        WHERE "projects_projectphaselog"."start" BETWEEN '2017-01-01 00:00:00' AND '2017-12-31 23:59:59'
+        ORDER BY "projects_projectphaselog"."project_id" DESC, "projects_projectphaselog"."start" DESC
+
+        This will get the last status log entry for all project phase logs
+        """
+        return ProjectPhaseLog.objects\
+            .filter(self.date_filter('start'))\
+            .distinct('project__id')\
+            .order_by('-project__id', '-start')
+
+    @staticmethod
+    def get_project_count(logs, statuses):
+        count = 0
+        for log in logs:
+            if log.status.slug in statuses:
+                count += 1
+        return count
+
+    @property
+    @memoize(timeout=60 * 60)
+    def projects_successful(self):
+        """ Total number of successful (done-complete, incomplete and voting done) projects """
+        logs = self.get_projects_by_last_status()
+        return self.get_project_count(logs, ['done-complete', 'done-incomplete', 'voting-done'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def projects_running(self):
+        """ Total number of running (voting, campaign) projects """
+        logs = self.get_projects_by_last_status()
+        return self.get_project_count(logs, ['voting', 'campaign'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def projects_submitted(self):
+        """ Total number of submitted (plan-submitted) projects """
+        logs = self.get_projects_by_last_status()
+        return self.get_project_count(logs, ['plan-submitted'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def projects_draft(self):
+        """ Total number of draft (plan-new) projects """
+        logs = self.get_projects_by_last_status()
+        return self.get_project_count(logs, ['plan-new'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def projects_needs_work(self):
+        """ Total number of needs work (plan-needs-work) projects """
+        logs = self.get_projects_by_last_status()
+        return self.get_project_count(logs, ['plan-needs-work'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def projects_done(self):
+        """ Total number of done (done-incomplete) projects """
+        logs = self.get_projects_by_last_status()
+        return self.get_project_count(logs, ['done-incomplete'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def projects_realized(self):
+        """ Total number of realized (done-complete) projects """
+        logs = self.get_projects_by_last_status()
+        return self.get_project_count(logs, ['done-complete'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def projects_rejected_cancelled(self):
+        """ Total number of rejected (closed) projects """
+        logs = self.get_projects_by_last_status()
+        return self.get_project_count(logs, ['closed'])
+
+    @property
     @memoize(timeout=300)
-    def participants(self):
-        """ Total numbers of participants (members that started a project, or realized task member,
-        or inititated a task)"""
-        return len(self.participant_details())
+    def projects_complete(self):
+        """ Total number of complete (done-complete, voting-done) projects"""
+        logs = self.get_projects_by_last_status()
+        return self.get_project_count(logs, ['done-complete', 'voting-done'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def projects_online(self):
+        """ Total number of projects that have been in campaign mode"""
+        return Project.objects.filter(self.date_filter('campaign_started'),
+                                      status__slug__in=('voting', 'campaign')).count()
+
+    @memoize(timeout=60 * 60)
+    def get_projects_by_location_group(self, location_group):
+        logs = ProjectPhaseLog.objects\
+            .filter(self.date_filter('start'), project__location__group__name=location_group)\
+            .distinct('project__id')\
+            .order_by('-project__id', '-start')
+        print(logs.query)
+        return logs
+
+    @property
+    @memoize(timeout=300)
+    def task_members(self):
+        """ Total number of realized task members """
+        logs = TaskMemberStatusLog.objects \
+            .filter(self.date_filter('start')) \
+            .distinct('task_member__id') \
+            .order_by('-task_member__id', '-start')
+
+        count = 0
+        for log in logs:
+            if log.status == 'realized':
+                count += 1
+        return count
+
+    @property
+    @memoize(timeout=60 * 60)
+    def time_spent(self):
+        """ Total amount of time spent on realized tasks """
+        logs = TaskMemberStatusLog.objects\
+            .filter(self.date_filter('start')) \
+            .distinct('task_member__id') \
+            .order_by('-task_member__id', '-start') \
+
+        count = 0
+        for log in logs:
+            if log.status == 'realized':
+                count += log.task_member.time_spent
+
+        return count
+
+    @property
+    @memoize(timeout=60 * 60)
+    def donated_total(self):
+        """ Total amount donated to all projects"""
+        donations = Donation.objects.filter(
+            self.date_filter('order__confirmed'),
+            order__status__in=['pending', 'success', 'pledged']
+        )
+        totals = donations.values('amount_currency').annotate(total=Sum('amount'))
+        amounts = [Money(total['total'], total['amount_currency']) for total in totals]
+        if totals:
+            donated = sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
+        else:
+            donated = Money(0, properties.DEFAULT_CURRENCY)
+
+        return donated
+
+    @property
+    @memoize(timeout=60 * 60)
+    def amount_matched(self):
+        """ Total amount matched on realized (done and incomplete) projects """
+        totals = Project.objects.values('amount_extra_currency').annotate(total=Sum('amount_extra'))
+
+        amounts = [Money(total['total'], total['amount_extra_currency']) for total in totals]
+        if totals:
+            return sum([convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts])
+        else:
+            return Money(0, properties.DEFAULT_CURRENCY)
 
     @property
     @memoize(timeout=300)
@@ -332,6 +379,11 @@ class Statistics(object):
             donated = Money(0, properties.DEFAULT_CURRENCY)
 
         return donated
+
+    @property
+    @memoize(timeout=60 * 60)
+    def votes_cast(self):
+        return len(Vote.objects.filter(self.date_filter()))
 
     def __repr__(self):
         start = self.start.strftime('%s') if self.start else 'none'

@@ -7,32 +7,13 @@ from bluebottle.utils.fields import ImageField
 
 
 class Category(models.Model):
-    """
-        Some projects are run in cooperation with a partner
-        organization like EarthCharter & MacroMicro
-    """
     title = models.CharField(_("name"), max_length=255, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     description = models.TextField(_("description"))
-    image = ImageField(_("image"), max_length=255, blank=True, null=True,
-                       upload_to='categories/',
+    image = ImageField(_("image"), max_length=255, blank=True, null=True, upload_to='categories/',
                        help_text=_("Category image"))
-
-    image_logo = ImageField(_("logo"), max_length=255, blank=True, null=True,
-                            upload_to='categories/logos/',
+    image_logo = ImageField(_("logo"), max_length=255, blank=True, null=True, upload_to='categories/logos/',
                             help_text=_("Category Logo image"))
-
-    @property
-    def projects(self):
-        return self.project_set.order_by('-favorite', '-popularity').filter(
-            status__slug__in=['campaign', 'done-complete', 'done-incomplete',
-                              'voting', 'voting-done'])
-
-    def save(self, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
-
-        super(Category, self).save(**kwargs)
 
     class Meta:
         verbose_name = _("category")
@@ -41,5 +22,36 @@ class Category(models.Model):
     def __unicode__(self):
         return self.title
 
+    def save(self, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+
+        super(Category, self).save(**kwargs)
+
     def get_absolute_url(self):
         return 'https://{}/projects/?category={}'.format(properties.tenant.domain_url, self.slug)
+
+    @property
+    def projects(self):
+        return self.project_set\
+            .order_by('-favorite', '-popularity')\
+            .filter(status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done'])
+
+
+class CategoryContent(models.Model):
+    category = models.ForeignKey(Category, related_name='contents')
+    title = models.CharField(_('title'), max_length=60)
+    description = models.TextField(_('description'), max_length=190, blank=True, default='')
+    image = ImageField(_('image'), max_length=255, blank=True, null=True, upload_to='categories/content/',
+                       help_text=_("The image will be replaced by the video if the video url is present"))
+    video_url = models.URLField(max_length=100, blank=True, default='', help_text="Setting a video url will override"
+                                                                                  " the uploaded image (if present)")
+    link_text = models.CharField(_("link text"), max_length=60, blank=True, default=_("Read more"))
+    link_url = models.URLField(_("link url"), blank=True)
+
+    class Meta:
+        verbose_name = _("category content")
+        verbose_name_plural = _("category contents")
+
+    def __unicode__(self):
+        return self.title

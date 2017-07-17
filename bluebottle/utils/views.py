@@ -177,6 +177,9 @@ class PrivateFileView(View):
             field = getattr(instance, self.field)
             response = HttpResponse()
             response['X-Accel-Redirect'] = field.url
+            response['Content-Disposition'] = 'attachment; filename={}'.format(
+                field.name
+            )
             return response
         else:
             return HttpResponseForbidden()

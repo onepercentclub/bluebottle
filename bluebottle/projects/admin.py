@@ -453,7 +453,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                                             'account_holder_city',
                                             'account_holder_country',
                                             'account_number',
-                                            'account_bic',
+                                            'account_details',
                                             'account_bank_country')})
         )
 

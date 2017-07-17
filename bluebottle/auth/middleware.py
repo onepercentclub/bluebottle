@@ -16,7 +16,7 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
 from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
-                                 _default_url_exceptions, _default_form)
+                                 compile_url_exceptions, get_lockdown_form)
 
 from lockdown import settings as lockdown_settings
 from bluebottle.utils.utils import get_client_ip
@@ -204,10 +204,10 @@ class LockdownMiddleware(BaseLockdownMiddleware):
                                        'sessions framework')
 
         # Don't lock down if the URL matches an exception pattern.
-        if self.url_exceptions is None:
-            url_exceptions = _default_url_exceptions
+        if self.url_exceptions:
+            url_exceptions = compile_url_exceptions(self.url_exceptions)
         else:
-            url_exceptions = self.url_exceptions
+            url_exceptions = compile_url_exceptions(lockdown_settings.URL_EXCEPTIONS)
         for pattern in url_exceptions:
             if pattern.search(request.path):
                 return None
@@ -230,18 +230,12 @@ class LockdownMiddleware(BaseLockdownMiddleware):
             if not locked_date:
                 return None
 
-        if request.META.get('CONTENT_TYPE') == 'application/x-www-form-urlencoded' and request.method == 'POST':
-            form_data = request.POST
-        else:
-            form_data = {}
-
         passwords = (request.META['HTTP_X_LOCKDOWN'],)
-
-        if self.form is None:
-            form_class = _default_form
-        else:
+        form_data = request.method == 'POST' and request.POST or None
+        if self.form:
             form_class = self.form
-
+        else:
+            form_class = get_lockdown_form(lockdown_settings.FORM)
         form = form_class(passwords=passwords, data=form_data, **self.form_kwargs)
 
         authorized = False

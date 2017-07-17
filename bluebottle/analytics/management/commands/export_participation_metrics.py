@@ -139,19 +139,25 @@ class Command(BaseCommand):
                                                                   xl_rowcol_to_cell(row, 7),
                                                                   xl_rowcol_to_cell(row - 1, 7)))  # Participants Growth
         worksheet.write(row, 9, statistics.projects_successful)  # Projects - Successful
-        worksheet.write(row, 10, statistics.projects_running)  # Projects - Successful
-        worksheet.write(row, 11, statistics.projects_submitted)  # Projects - Successful
-        worksheet.write(row, 12, statistics.projects_draft)  # Projects - Successful
-        worksheet.write(row, 13, statistics.projects_needs_work)  # Projects - Successful
-        worksheet.write(row, 14, statistics.projects_done)  # Projects - Successful
-        worksheet.write(row, 15, statistics.projects_realized)  # Projects - Successful
-        worksheet.write(row, 16, statistics.projects_rejected_cancelled)  # Projects - Successful
+        worksheet.write(row, 10, statistics.projects_running)  # Projects - Running
+        worksheet.write(row, 11, statistics.projects_submitted)  # Projects - Submitted
+        worksheet.write(row, 12, statistics.projects_draft)  # Projects - Draft
+        worksheet.write(row, 13, statistics.projects_needs_work)  # Projects - Needs Work
+        worksheet.write(row, 14, statistics.projects_done)  # Projects - Done
+        worksheet.write(row, 15, statistics.projects_realized)  # Projects - Realized
+        worksheet.write(row, 16, statistics.projects_rejected_cancelled)  # Projects - Rejected / Cancelled
+        # TODO: DO NOT use hard coded location_group values
         worksheet.write(row, 17, len(statistics.get_projects_by_location_group('NORAM (North America)')))
         worksheet.write(row, 18, len(statistics.get_projects_by_location_group('EMEA (Europe, Middle East & Africa)')))
         worksheet.write(row, 19, len(statistics.get_projects_by_location_group('HQ (Amsterdam)')))
         worksheet.write(row, 20, len(statistics.get_projects_by_location_group('APAC (Asia Pacific)')))
         worksheet.write(row, 21, len(statistics.get_projects_by_location_group('LATAM (Latin America)')))
         worksheet.write(row, 22, statistics.tasks_realized)  # Tasks - Successful
+        worksheet.write(row, 23, statistics.tasks_total)  # Tasks - Total
+        worksheet.write(row, 24, statistics.tasks_open)  # Tasks - Open
+        worksheet.write(row, 25, statistics.tasks_running)  # Tasks - Running
+        worksheet.write(row, 26, statistics.tasks_realized)  # Tasks - Realised
+        worksheet.write(row, 27, statistics.tasks_done)  # Tasks - Done
 
         if statistic_type == 'weekly':
             worksheet.write(row, 2, self.get_yearly_quarter(end_date))  # Quarter

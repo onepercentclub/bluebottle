@@ -172,32 +172,6 @@ class Statistics(object):
 
         return sorted(participants.values(), key=lambda k: k['action_date'])
 
-    @property
-    @memoize(timeout=60 * 60)
-    def tasks_realized(self):
-        """ Total number of realized tasks """
-        """
-        Reference:
-        SELECT
-            DISTINCT ON ("tasks_taskstatuslog"."task_id") "tasks_taskstatuslog"."id",
-                         "tasks_taskstatuslog"."task_id", "tasks_taskstatuslog"."status",
-                         "tasks_taskstatuslog"."start"
-            FROM "tasks_taskstatuslog"
-            WHERE "tasks_taskstatuslog"."start" BETWEEN '2017-01-01 00:00:00' AND '2017-12-31 23:59:59'
-            ORDER BY "tasks_taskstatuslog"."task_id" DESC, "tasks_taskstatuslog"."start" DESC
-        """
-        logs = TaskStatusLog.objects\
-            .filter(self.date_filter('start'))\
-            .distinct('task__id')\
-            .order_by('-task__id', '-start')
-
-        # TODO: Refactor to use django filters for sub-queries
-        count = 0
-        for log in logs:
-            if log.status == 'realized':
-                count += 1
-        return count
-
     @memoize(timeout=60 * 60)
     def get_projects_by_last_status(self):
         """
@@ -302,6 +276,78 @@ class Statistics(object):
             .order_by('-project__id', '-start')
         print(logs.query)
         return logs
+
+    def get_tasks_count_by_last_status(self, statuses):
+        logs = TaskStatusLog.objects\
+            .filter(self.date_filter('start'))\
+            .distinct('task__id')\
+            .order_by('-task__id', '-start')
+
+        count = 0
+        for log in logs:
+            if log.status in statuses:
+                count += 1
+        return count
+
+    @property
+    @memoize(timeout=60 * 60)
+    def tasks_realized(self):
+        """ Total number of realized tasks """
+        """
+        Reference:
+        SELECT
+            DISTINCT ON ("tasks_taskstatuslog"."task_id") "tasks_taskstatuslog"."id",
+                         "tasks_taskstatuslog"."task_id", "tasks_taskstatuslog"."status",
+                         "tasks_taskstatuslog"."start"
+            FROM "tasks_taskstatuslog"
+            WHERE "tasks_taskstatuslog"."start" BETWEEN '2017-01-01 00:00:00' AND '2017-12-31 23:59:59'
+            ORDER BY "tasks_taskstatuslog"."task_id" DESC, "tasks_taskstatuslog"."start" DESC
+        """
+        logs = TaskStatusLog.objects\
+            .filter(self.date_filter('start'))\
+            .distinct('task__id')\
+            .order_by('-task__id', '-start')
+
+        # TODO: Refactor to use django filters for sub-queries
+        count = 0
+        for log in logs:
+            if log.status == 'realized':
+                count += 1
+        return count
+
+    @property
+    @memoize(timeout=60 * 60)
+    def tasks_total(self):
+        """ Total number of all tasks """
+        return self.get_tasks_count_by_last_status(['open',
+                                                    'full',
+                                                    'in progress',
+                                                    'realized',
+                                                    'closed'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def tasks_open(self):
+        """ Total number of open (open) tasks """
+        return self.get_tasks_count_by_last_status(['open'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def tasks_running(self):
+        """ Total number of running (in progress) tasks """
+        return self.get_tasks_count_by_last_status(['in progress'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def tasks_realised(self):
+        """ Total number of realized (realized) tasks """
+        return self.get_tasks_count_by_last_status(['realized'])
+
+    @property
+    @memoize(timeout=60 * 60)
+    def tasks_done(self):
+        """ Total number of done (closed) tasks """
+        return self.get_tasks_count_by_last_status(['closed'])
 
     @property
     @memoize(timeout=300)

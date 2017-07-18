@@ -9,7 +9,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, SorlImageField, ImageSerializer,
     PrivateFileSerializer
 )
-from bluebottle.bb_projects.permissions import ProjectPermissions
+from bluebottle.utils.permissions import ResourcePermissions
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
@@ -159,8 +159,7 @@ class PermissionField(serializers.Field):
         return obj
 
     def to_representation(self, value):
-        import ipdb;ipdb.set_trace()
-        self.permissions().get_permissions(self.context['request'])
+        self.permissions().get_permissions(self.context['request'], value)
 
 
 class ProjectPreviewSerializer(ProjectSerializer):
@@ -169,7 +168,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
     owner = UserPreviewSerializer()
     skills = serializers.SerializerMethodField()
     theme = ProjectThemeSerializer()
-    permissions = PermissionField(ProjectPermissions)
+    permissions = PermissionField(ResourcePermissions)
 
     def get_skills(self, obj):
         return set(task.skill.id for task in obj.task_set.all() if task.skill)
@@ -206,6 +205,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'theme',
                   'title',
                   'vote_count',
+                  'permissions',
                   'voting_deadline',)
 
 

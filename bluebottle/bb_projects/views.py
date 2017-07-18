@@ -1,22 +1,50 @@
 from django.db.models.query_utils import Q
 
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+
+from django.contrib.auth.models import AnonymousUser
 
 from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectDocument
-from tenant_extras.drf_permissions import TenantConditionalOpenClose
-
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import (
     ProjectThemeSerializer, ProjectPhaseSerializer,
     ProjectPhaseLogSerializer, ProjectDocumentSerializer,
     ProjectTinyPreviewSerializer, ProjectSerializer, ProjectPreviewSerializer, ManageProjectSerializer)
 from bluebottle.utils.utils import get_client_ip
+from bluebottle.utils.permissions import (
+    ResourcePermissions, IsOwner
+)
 
 from .models import ProjectTheme, ProjectPhase
-from .permissions import (
-    IsProjectOwner, IsEditableOrReadOnly, ProjectPermissions, ManageProjectPermissions
-)
+
+
+class BasePermissionsMixin(object):
+    base_permission_classes = ()
+
+    def get_permissions(self):
+        all_permission_classes = tuple(self.permission_classes) + self.base_permission_classes
+        return [permission() for permission in all_permission_classes]
+
+
+# TODO: move these custom View classes to a generic place
+class ListAPIView(BasePermissionsMixin, generics.ListAPIView):
+    base_permissions_classes = (ResourcePermissions,)
+
+
+class RetrieveAPIView(BasePermissionsMixin, generics.RetrieveAPIView):
+    base_permissions_classes = (ResourcePermissions,)
+
+
+class ListCreateAPIView(BasePermissionsMixin, generics.ListCreateAPIView):
+    base_permissions_classes = (ResourcePermissions,)
+
+
+class RetrieveUpdateAPIView(BasePermissionsMixin, generics.RetrieveUpdateAPIView):
+    base_permissions_classes = (ResourcePermissions,)
+
+
+class RetrieveUpdateDestroyAPIView(BasePermissionsMixin, generics.RetrieveUpdateDestroyAPIView):
+    base_permissions_classes = (ResourcePermissions,)
 
 
 class ProjectPagination(BluebottlePagination):
@@ -27,12 +55,10 @@ class TinyProjectPagination(BluebottlePagination):
     page_size = 10000
 
 
-class ProjectTinyPreviewList(generics.ListAPIView):
+class ProjectTinyPreviewList(ListAPIView):
     queryset = Project.objects.all()
     pagination_class = TinyProjectPagination
     serializer_class = ProjectTinyPreviewSerializer
-
-    permission_classes = (ProjectPermissions, )
 
     def get_queryset(self):
         query = self.request.query_params
@@ -41,12 +67,10 @@ class ProjectTinyPreviewList(generics.ListAPIView):
         return qs.filter(status__viewable=True)
 
 
-class ProjectPreviewList(generics.ListAPIView):
+class ProjectPreviewList(ListAPIView):
     queryset = Project.objects.all()
     pagination_class = ProjectPagination
     serializer_class = ProjectPreviewSerializer
-
-    permission_classes = (ProjectPermissions, )
 
     def get_queryset(self):
         query = self.request.query_params
@@ -55,19 +79,17 @@ class ProjectPreviewList(generics.ListAPIView):
         return qs.filter(status__viewable=True)
 
 
-class ProjectPreviewDetail(generics.RetrieveAPIView):
+class ProjectPreviewDetail(RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectPreviewSerializer
     lookup_field = 'slug'
-
-    permission_classes = (ProjectPermissions, )
 
     def get_queryset(self):
         qs = super(ProjectPreviewDetail, self).get_queryset()
         return qs
 
 
-class ProjectPhaseList(generics.ListAPIView):
+class ProjectPhaseList(ListAPIView):
     queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseSerializer
     pagination_class = BluebottlePagination
@@ -90,12 +112,12 @@ class ProjectPhaseList(generics.ListAPIView):
         return qs.all()
 
 
-class ProjectPhaseDetail(generics.RetrieveAPIView):
+class ProjectPhaseDetail(RetrieveAPIView):
     queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseSerializer
 
 
-class ProjectPhaseLogList(generics.ListAPIView):
+class ProjectPhaseLogList(ListAPIView):
     queryset = ProjectPhaseLog.objects.all()
     serializer_class = ProjectPhaseLogSerializer
     pagination_class = BluebottlePagination
@@ -105,17 +127,15 @@ class ProjectPhaseLogList(generics.ListAPIView):
         return qs
 
 
-class ProjectPhaseLogDetail(generics.RetrieveAPIView):
+class ProjectPhaseLogDetail(RetrieveAPIView):
     queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseLogSerializer
 
 
-class ProjectList(generics.ListAPIView):
+class ProjectList(ListAPIView):
     queryset = Project.objects.all()
     pagination_class = BluebottlePagination
     serializer_class = ProjectSerializer
-
-    permission_classes = (ProjectPermissions, )
 
     def get_queryset(self):
         qs = super(ProjectList, self).get_queryset()
@@ -125,22 +145,18 @@ class ProjectList(generics.ListAPIView):
         return qs.filter(status__viewable=True)
 
 
-class ProjectDetail(generics.RetrieveAPIView):
+class ProjectDetail(RetrieveAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     lookup_field = 'slug'
-
-    permission_classes = (ProjectPermissions, )
 
 
 class ManageProjectPagination(BluebottlePagination):
     page_size = 100
 
 
-class ManageProjectList(generics.ListCreateAPIView):
+class ManageProjectList(ListCreateAPIView):
     queryset = Project.objects.all()
-    permission_classes = (ManageProjectPermissions, )
-
     pagination_class = ManageProjectPagination
     serializer_class = ManageProjectSerializer
 
@@ -150,7 +166,8 @@ class ManageProjectList(generics.ListCreateAPIView):
         in user owns.
         """
         queryset = super(ManageProjectList, self).get_queryset()
-        queryset = queryset.filter(owner=self.request.user)
+        if not isinstance(self.request.user, AnonymousUser):
+            queryset = queryset.filter(owner=self.request.user)
         queryset = queryset.order_by('-created')
         return queryset
 
@@ -160,9 +177,9 @@ class ManageProjectList(generics.ListCreateAPIView):
         )
 
 
-class ManageProjectDetail(generics.RetrieveUpdateAPIView):
+class ManageProjectDetail(RetrieveUpdateAPIView):
     queryset = Project.objects.all()
-    permission_classes = (ManageProjectPermissions, )
+    permission_classes = (IsOwner,)
     serializer_class = ManageProjectSerializer
     lookup_field = 'slug'
 
@@ -176,7 +193,7 @@ class ManageProjectDetail(generics.RetrieveUpdateAPIView):
         return object
 
 
-class ProjectThemeList(generics.ListAPIView):
+class ProjectThemeList(ListAPIView):
     serializer_class = ProjectThemeSerializer
     queryset = ProjectTheme.objects.all().filter(disabled=False)
 
@@ -189,7 +206,7 @@ class ProjectUsedThemeList(ProjectThemeList):
         return qs.filter(id__in=theme_ids)
 
 
-class ProjectThemeDetail(generics.RetrieveAPIView):
+class ProjectThemeDetail(RetrieveAPIView):
     queryset = ProjectTheme.objects.all()
     serializer_class = ProjectThemeSerializer
 
@@ -198,7 +215,7 @@ class ManageProjectDocumentPagination(BluebottlePagination):
     page_size = 20
 
 
-class ManageProjectDocumentList(generics.ListCreateAPIView):
+class ManageProjectDocumentList(ListCreateAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectDocumentSerializer
     pagination_class = ManageProjectDocumentPagination
@@ -210,7 +227,7 @@ class ManageProjectDocumentList(generics.ListCreateAPIView):
         )
 
 
-class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
+class ManageProjectDocumentDetail(RetrieveUpdateDestroyAPIView):
     queryset = ProjectDocument.objects.all()
     serializer_class = ProjectDocumentSerializer
     pagination_class = ManageProjectDocumentPagination

@@ -112,17 +112,6 @@ class Statistics(object):
         they are counted as one participant."""
 
         # NOTE: Queries just for reference.
-        """
-        SELECT "projects_project"."owner_id", "members_member"."email", "projects_project"."created",
-        "projects_project"."owner_id" AS "id", "members_member"."email" AS "email",\
-        "projects_project"."created" AS "action_date" FROM "projects_project"
-        INNER JOIN "bb_projects_projectphase" ON ("projects_project"."status_id" = "bb_projects_projectphase"."id")
-        INNER JOIN "members_member" ON ("projects_project"."owner_id" = "members_member"."id")
-        WHERE ("projects_project"."created"
-        BETWEEN 2014-01-01T00:00:00+00:00 AND 2015-01-01T00:00:00+00:00
-        AND "bb_projects_projectphase"."slug" IN (voting-done, voting, done-incomplete, campaign, done-complete))
-        ORDER BY "projects_project"."title" ASC
-        """
         project_owners = Project.objects\
             .filter(self.date_filter('created'),
                     status__slug__in=('voting', 'voting-done', 'campaign', 'done-complete', 'done-incomplete'))\
@@ -131,13 +120,6 @@ class Statistics(object):
             .annotate(email=F('owner__email'))\
             .annotate(action_date=F('created'))
 
-        """
-        SELECT "tasks_task"."author_id", "members_member"."email", "tasks_task"."deadline",
-        "tasks_task"."author_id" AS "id", "members_member"."email" AS "email", "tasks_task"."deadline" AS "action_date"
-        FROM "tasks_task" INNER JOIN "members_member" ON ("tasks_task"."author_id" = "members_member"."id")
-        WHERE ("tasks_task"."deadline" BETWEEN 2014-01-01T00:00:00+00:00 AND 2015-01-01T00:00:00+00:00
-        AND "tasks_task"."status" IN (in_progress, full, open, realized, closed)) ORDER BY "tasks_task"."created" DESC
-        """
         task_members = TaskMember.objects\
             .filter(self.date_filter('task__created'), status__in=('applied', 'accepted', 'realized'))\
             .values('member_id', 'member__email', 'task__created')\
@@ -145,15 +127,6 @@ class Statistics(object):
             .annotate(email=F('member__email'))\
             .annotate(action_date=F('task__created'))
 
-        """
-        SELECT "tasks_taskmember"."member_id", "members_member"."email", "tasks_task"."deadline",
-        "tasks_taskmember"."member_id" AS "id", "members_member"."email" AS "email",
-        "tasks_task"."deadline" AS "action_date"
-        FROM "tasks_taskmember" INNER JOIN "tasks_task" ON ("tasks_taskmember"."task_id" = "tasks_task"."id")
-        INNER JOIN "members_member" ON ("tasks_taskmember"."member_id" = "members_member"."id")
-        WHERE ("tasks_task"."deadline" BETWEEN 2014-01-01T00:00:00+00:00 AND 2015-01-01T00:00:00+00:00
-        AND "tasks_taskmember"."status" IN (applied, realized, accepted))
-        """
         task_authors = Task.objects\
             .filter(self.date_filter('created'), status__in=('open', 'in progress', 'realized', 'full', 'closed'))\
             .values('author_id', 'author__email', 'created')\
@@ -173,7 +146,7 @@ class Statistics(object):
         return sorted(participants.values(), key=lambda k: k['action_date'])
 
     @memoize(timeout=60 * 60)
-    def get_projects_by_last_status(self):
+    def get_projects_count_by_last_status(self, statuses):
         """
         Reference:
         SELECT DISTINCT ON ("projects_projectphaselog"."project_id") "projects_projectphaselog"."id",
@@ -185,13 +158,11 @@ class Statistics(object):
 
         This will get the last status log entry for all project phase logs
         """
-        return ProjectPhaseLog.objects\
+        logs = ProjectPhaseLog.objects\
             .filter(self.date_filter('start'))\
             .distinct('project__id')\
             .order_by('-project__id', '-start')
 
-    @staticmethod
-    def get_project_count(logs, statuses):
         count = 0
         for log in logs:
             if log.status.slug in statuses:
@@ -202,64 +173,55 @@ class Statistics(object):
     @memoize(timeout=60 * 60)
     def projects_successful(self):
         """ Total number of successful (done-complete, incomplete and voting done) projects """
-        logs = self.get_projects_by_last_status()
-        return self.get_project_count(logs, ['done-complete', 'done-incomplete', 'voting-done'])
+        return self.get_projects_count_by_last_status(['done-complete', 'done-incomplete', 'voting-done'])
 
     @property
     @memoize(timeout=60 * 60)
     def projects_running(self):
         """ Total number of running (voting, campaign) projects """
-        logs = self.get_projects_by_last_status()
-        return self.get_project_count(logs, ['voting', 'campaign'])
+        return self.get_projects_count_by_last_status(['voting', 'campaign'])
 
     @property
     @memoize(timeout=60 * 60)
     def projects_submitted(self):
         """ Total number of submitted (plan-submitted) projects """
-        logs = self.get_projects_by_last_status()
-        return self.get_project_count(logs, ['plan-submitted'])
+        return self.get_projects_count_by_last_status(['plan-submitted'])
 
     @property
     @memoize(timeout=60 * 60)
     def projects_draft(self):
         """ Total number of draft (plan-new) projects """
-        logs = self.get_projects_by_last_status()
-        return self.get_project_count(logs, ['plan-new'])
+        return self.get_projects_count_by_last_status(['plan-new'])
 
     @property
     @memoize(timeout=60 * 60)
     def projects_needs_work(self):
         """ Total number of needs work (plan-needs-work) projects """
-        logs = self.get_projects_by_last_status()
-        return self.get_project_count(logs, ['plan-needs-work'])
+        return self.get_projects_count_by_last_status(['plan-needs-work'])
 
     @property
     @memoize(timeout=60 * 60)
     def projects_done(self):
         """ Total number of done (done-incomplete) projects """
-        logs = self.get_projects_by_last_status()
-        return self.get_project_count(logs, ['done-incomplete'])
+        return self.get_projects_count_by_last_status(['done-incomplete'])
 
     @property
     @memoize(timeout=60 * 60)
     def projects_realized(self):
         """ Total number of realized (done-complete) projects """
-        logs = self.get_projects_by_last_status()
-        return self.get_project_count(logs, ['done-complete'])
+        return self.get_projects_count_by_last_status(['done-complete'])
 
     @property
     @memoize(timeout=60 * 60)
     def projects_rejected_cancelled(self):
         """ Total number of rejected (closed) projects """
-        logs = self.get_projects_by_last_status()
-        return self.get_project_count(logs, ['closed'])
+        return self.get_projects_count_by_last_status(['closed'])
 
     @property
     @memoize(timeout=300)
     def projects_complete(self):
         """ Total number of complete (done-complete, voting-done) projects"""
-        logs = self.get_projects_by_last_status()
-        return self.get_project_count(logs, ['done-complete', 'voting-done'])
+        return self.get_projects_count_by_last_status(['done-complete', 'voting-done'])
 
     @property
     @memoize(timeout=60 * 60)
@@ -274,7 +236,6 @@ class Statistics(object):
             .filter(self.date_filter('start'), project__location__group__name=location_group)\
             .distinct('project__id')\
             .order_by('-project__id', '-start')
-        print(logs.query)
         return logs
 
     def get_tasks_count_by_last_status(self, statuses):

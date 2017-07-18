@@ -159,7 +159,7 @@ class Statistics(object):
         This will get the last status log entry for all project phase logs
         """
         logs = ProjectPhaseLog.objects\
-            .filter(self.date_filter('start'))\
+            .filter(self.date_filter('start'), project__created__year=self.start.year)\
             .distinct('project__id')\
             .order_by('-project__id', '-start')
 
@@ -240,7 +240,7 @@ class Statistics(object):
 
     def get_tasks_count_by_last_status(self, statuses):
         logs = TaskStatusLog.objects\
-            .filter(self.date_filter('start'))\
+            .filter(self.date_filter('start'), task__created__year=self.start.year)\
             .distinct('task__id')\
             .order_by('-task__id', '-start')
 
@@ -254,18 +254,8 @@ class Statistics(object):
     @memoize(timeout=60 * 60)
     def tasks_realized(self):
         """ Total number of realized tasks """
-        """
-        Reference:
-        SELECT
-            DISTINCT ON ("tasks_taskstatuslog"."task_id") "tasks_taskstatuslog"."id",
-                         "tasks_taskstatuslog"."task_id", "tasks_taskstatuslog"."status",
-                         "tasks_taskstatuslog"."start"
-            FROM "tasks_taskstatuslog"
-            WHERE "tasks_taskstatuslog"."start" BETWEEN '2017-01-01 00:00:00' AND '2017-12-31 23:59:59'
-            ORDER BY "tasks_taskstatuslog"."task_id" DESC, "tasks_taskstatuslog"."start" DESC
-        """
         logs = TaskStatusLog.objects\
-            .filter(self.date_filter('start'))\
+            .filter(self.date_filter('start'), task__created__year=self.start.year)\
             .distinct('task__id')\
             .order_by('-task__id', '-start')
 
@@ -315,7 +305,7 @@ class Statistics(object):
     def task_members(self):
         """ Total number of realized task members """
         logs = TaskMemberStatusLog.objects \
-            .filter(self.date_filter('start')) \
+            .filter(self.date_filter('start'), task_member__task__created__year=self.start.year) \
             .distinct('task_member__id') \
             .order_by('-task_member__id', '-start')
 
@@ -330,7 +320,7 @@ class Statistics(object):
     def time_spent(self):
         """ Total amount of time spent on realized tasks """
         logs = TaskMemberStatusLog.objects\
-            .filter(self.date_filter('start')) \
+            .filter(self.date_filter('start'), task_member__task__created__year=self.start.year) \
             .distinct('task_member__id') \
             .order_by('-task_member__id', '-start') \
 

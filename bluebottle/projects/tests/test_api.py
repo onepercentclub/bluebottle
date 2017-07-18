@@ -722,6 +722,46 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         for field in bank_detail_fields:
             self.assertIn(field, response.data)
 
+    def test_create_project_contains_empty_account_details(self):
+        """ Create project with bank details. Ensure they are returned """
+        project_data = {
+            'title': 'Project with bank details',
+            'account_details': '',
+            'account_bic': ''
+        }
+
+        response = self.client.post(self.manage_projects_url, project_data,
+                                    token=self.some_user_token)
+
+        self.assertEquals(response.status_code,
+                          status.HTTP_201_CREATED,
+                          response)
+
+        bank_detail_fields = ['account_number', 'account_details', 'account_bic', 'account_bank_country']
+
+        for field in bank_detail_fields:
+            self.assertIn(field, response.data)
+
+    def test_create_project_contains_null_account_details(self):
+        """ Create project with bank details. Ensure they are returned """
+        project_data = {
+            'title': 'Project with bank details',
+            'account_details': None,
+            'account_bic': None
+        }
+
+        response = self.client.post(self.manage_projects_url, project_data,
+                                    token=self.some_user_token)
+
+        self.assertEquals(response.status_code,
+                          status.HTTP_201_CREATED,
+                          response)
+
+        bank_detail_fields = ['account_number', 'account_details', 'account_bic', 'account_bank_country']
+
+        for field in bank_detail_fields:
+            self.assertIn(field, response.data)
+
     def test_project_create_invalid_image(self):
         """
         Tests for Project Create

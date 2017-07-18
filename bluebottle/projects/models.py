@@ -288,7 +288,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     def __unicode__(self):
         if self.title:
-            return self.title
+            return u'{}'.format(self.title)
         return self.slug
 
     @classmethod

@@ -1,5 +1,5 @@
 import logging
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 import pendulum
 import xlsxwriter
 from django.core.management.base import BaseCommand
@@ -8,6 +8,9 @@ from django.utils import dateparse
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.geo.models import LocationGroup
+from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
+from bluebottle.tasks.models import Task
 from bluebottle.statistics.statistics import Statistics
 from .utils import initialize_work_sheet, get_xls_file_name
 from xlsxwriter.utility import xl_rowcol_to_cell
@@ -32,7 +35,6 @@ class Command(BaseCommand):
     @staticmethod
     def setup_workbook_formatters(workbook):
         formatters = dict()
-
         formatters['format_metrics_header'] = workbook.add_format()
         formatters['format_metrics_header'].set_bg_color('gray')
         formatters['format_metrics_header'].set_bold()
@@ -51,36 +53,7 @@ class Command(BaseCommand):
     @staticmethod
     def create_totals_worksheet(workbook, year):
         name = 'Totals - Year {}'.format(year)
-        headers = ('Time Period',  # 0
-                   'Year',  # 1
-                   'Quarter',  # 2
-                   'Month',  # 3
-                   'Week',  # 4
-                   'Start Date',  # 5
-                   'End Date',  # 6
-                   'Participants',  # 7
-                   'Participant Growth',  # 8
-                   'Projects - Successful',  # 9
-                   'Running - Project Status',  # 10
-                   'Submitted - Project Status',  # 11
-                   'Draft - Project Status',  # 12
-                   'Needs Work - Project Status',  # 13
-                   'Done - Project Status',  # 14
-                   'Realized - Project Status',  # 15
-                   'Rejected/ Cancelled - Project Status',  # 16
-                   'NORAM - Project Location Group',  # 17
-                   'EMEA - Project Location Group',  # 18
-                   'HQ - Project Location Group',  # 19
-                   'APAC - Project Location Group',  # 20
-                   'LATAM - Project Location Group',  # 21
-                   'Tasks - Successful',  # 22
-                   'Tasks - Total',  # 23
-                   'Tasks - Open',  # 24
-                   'Tasks - Running',  # 25
-                   'Tasks - Realised',  # 26
-                   'Tasks - Done (Closed)'  # 27
-                   )
-        return initialize_work_sheet(workbook, name, headers)
+        return initialize_work_sheet(workbook, name)
 
     @staticmethod
     def get_yearly_quarter(date):
@@ -129,42 +102,92 @@ class Command(BaseCommand):
 
     def write_stats(self, worksheet, row, statistic_type, start_date, end_date):
         statistics = Statistics(start=start_date, end=end_date)
-        worksheet.write(row, 0, statistic_type.capitalize())  # Time Period
-        worksheet.write(row, 1, start_date.year)  # Year
-        worksheet.write(row, 5, start_date)  # Start Date
-        worksheet.write(row, 6, end_date.subtract(days=1))  # End Date
-        worksheet.write(row, 7, statistics.participants)  # Participants
-        worksheet.write_formula(xl_rowcol_to_cell(row, 8),
-                                '=IF(ISBLANK({}),0,{}-{})'.format(xl_rowcol_to_cell(row - 1, 7),
-                                                                  xl_rowcol_to_cell(row, 7),
-                                                                  xl_rowcol_to_cell(row - 1, 7)))  # Participants Growth
-        worksheet.write(row, 9, statistics.projects_successful)  # Projects - Successful
-        worksheet.write(row, 10, statistics.projects_running)  # Projects - Running
-        worksheet.write(row, 11, statistics.projects_submitted)  # Projects - Submitted
-        worksheet.write(row, 12, statistics.projects_draft)  # Projects - Draft
-        worksheet.write(row, 13, statistics.projects_needs_work)  # Projects - Needs Work
-        worksheet.write(row, 14, statistics.projects_done)  # Projects - Done
-        worksheet.write(row, 15, statistics.projects_realized)  # Projects - Realized
-        worksheet.write(row, 16, statistics.projects_rejected_cancelled)  # Projects - Rejected / Cancelled
-        # TODO: DO NOT use hard coded location_group values
-        worksheet.write(row, 17, len(statistics.get_projects_by_location_group('NORAM (North America)')))
-        worksheet.write(row, 18, len(statistics.get_projects_by_location_group('EMEA (Europe, Middle East & Africa)')))
-        worksheet.write(row, 19, len(statistics.get_projects_by_location_group('HQ (Amsterdam)')))
-        worksheet.write(row, 20, len(statistics.get_projects_by_location_group('APAC (Asia Pacific)')))
-        worksheet.write(row, 21, len(statistics.get_projects_by_location_group('LATAM (Latin America)')))
-        worksheet.write(row, 22, statistics.tasks_realized)  # Tasks - Successful
-        worksheet.write(row, 23, statistics.tasks_total)  # Tasks - Total
-        worksheet.write(row, 24, statistics.tasks_open)  # Tasks - Open
-        worksheet.write(row, 25, statistics.tasks_running)  # Tasks - Running
-        worksheet.write(row, 26, statistics.tasks_realized)  # Tasks - Realised
-        worksheet.write(row, 27, statistics.tasks_done)  # Tasks - Done
 
-        if statistic_type == 'weekly':
-            worksheet.write(row, 2, self.get_yearly_quarter(end_date))  # Quarter
-            worksheet.write(row, 4, end_date.week_of_year)  # Week
-        elif statistic_type == 'monthly':
-            worksheet.write(row, 2, self.get_yearly_quarter(end_date))  # Quarter
-            worksheet.write(row, 3, self.get_month_name(end_date))  # Month
+        RowData = namedtuple('RowData', ['metric', 'definition', 'is_formula'])
+
+        row_data = OrderedDict()
+
+        row_data['Time Period'] = RowData(metric=statistic_type.capitalize(),
+                                          is_formula=False,
+                                          definition='Time Period')
+        row_data['Year'] = RowData(metric=start_date.year,
+                                   is_formula=False,
+                                   definition='')
+        row_data['Quarter'] = RowData(
+            metric=self.get_yearly_quarter(end_date) if statistic_type in ['weekly', 'monthly'] else '',
+            is_formula=False,
+            definition='')
+        row_data['Month'] = RowData(metric=self.get_month_name(end_date) if statistic_type == 'monthly' else '',
+                                    is_formula=False,
+                                    definition='')
+        row_data['Week'] = RowData(metric=end_date.week_of_year if statistic_type == 'weekly' else '',
+                                   is_formula=False,
+                                   definition='')
+        row_data['Start Date'] = RowData(metric=start_date,
+                                         is_formula=False,
+                                         definition='')
+        row_data['End Date'] = RowData(metric=end_date.subtract(days=1),
+                                       is_formula=False,
+                                       definition='')
+        row_data['Projects Total'] = RowData(metric=statistics.get_projects_count_by_last_status(
+            ProjectPhase.objects.all().values_list('slug', flat=True)),
+            is_formula=False,
+            definition='')
+
+        for project_phase in ProjectPhase.objects.all():
+            row_data['Project Status - {}'.format(project_phase.name)] = RowData(
+                metric=statistics.get_projects_count_by_last_status([project_phase.slug]),
+                is_formula=False,
+                definition='')
+
+        for location_group in LocationGroup.objects.all():
+            row_data['Location - {}'.format(location_group.name)] = RowData(
+                metric=len(statistics.get_projects_by_location_group(location_group.name)),
+                is_formula=False,
+                definition='')
+
+        for theme in ProjectTheme.objects.all():
+            row_data[theme.name] = RowData(metric=statistics.get_projects_count_by_theme(theme.slug),
+                                           is_formula=False,
+                                           definition='')
+
+        row_data['Tasks Total'] = RowData(
+            metric=statistics.get_tasks_count_by_last_status([choice[0] for choice in Task.TaskStatuses.choices]),
+            is_formula=False,
+            definition='')
+
+        for task_status, label in Task.TaskStatuses.choices:
+            row_data['Task Status - {}'.format(label)] = RowData(
+                metric=statistics.get_tasks_count_by_last_status([task_status]),
+                is_formula=False,
+                definition='')
+
+        row_data['Participants'] = RowData(metric=statistics.participants_count,
+                                           is_formula=False,
+                                           definition='')
+
+        participants_column = row_data.keys().index('Participants')
+        row_data['Participant Growth'] = RowData(
+            metric='=IF(ISBLANK({}),0,{}-{})'.format(xl_rowcol_to_cell(row - 1, participants_column),
+                                                     xl_rowcol_to_cell(row, participants_column),
+                                                     xl_rowcol_to_cell(row - 1, participants_column)),
+            is_formula=True,
+            definition='')
+
+        # Write Headers, if the first row is being written
+        if row == 2:
+            for column, data in enumerate(row_data.iteritems()):
+                worksheet.write(0, column, data[0])
+                worksheet.write_comment(0, column, data[1].definition)
+
+        # Write data
+        for column, data in enumerate(row_data.iteritems()):
+            metric_value = data[1].metric
+            is_formula = data[1].is_formula
+            if is_formula:
+                worksheet.write_formula(row, column, metric_value)
+            else:
+                worksheet.write(row, column, metric_value)
 
     @staticmethod
     def create_monthly_chart(workbook, data, title):

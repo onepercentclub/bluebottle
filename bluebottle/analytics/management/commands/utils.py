@@ -11,11 +11,12 @@ def validate_date(date_string):
         raise argparse.ArgumentTypeError(msg)
 
 
-def initialize_work_sheet(workbook, name, headers):
+def initialize_work_sheet(workbook, name, headers=None):
     worksheet = workbook.get_worksheet_by_name(name)
     if not worksheet:
         worksheet = workbook.add_worksheet(name)
-        worksheet.write_row(0, 0, headers)
+        if headers:
+            worksheet.write_row(0, 0, headers)
     return worksheet
 
 

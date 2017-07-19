@@ -33,6 +33,14 @@ class Statistics(object):
 
         return Q(**filter_args)
 
+    def end_date_filter(self, field='created'):
+        if self.end:
+            filter_args = {'{}__lte'.format(field): self.end}
+        else:
+            filter_args = {}
+
+        return Q(**filter_args)
+
     @property
     @memoize(timeout=60 * 60)
     def people_involved(self):
@@ -100,7 +108,7 @@ class Statistics(object):
 
     @property
     @memoize(timeout=300)
-    def participants(self):
+    def participants_count(self):
         """ Total numbers of participants (members that started a project, or realized task member,
         or inititated a task)"""
         return len(self.participant_details())
@@ -146,6 +154,14 @@ class Statistics(object):
         return sorted(participants.values(), key=lambda k: k['action_date'])
 
     @memoize(timeout=60 * 60)
+    def get_projects_count_by_theme(self, theme):
+        projects_count = Project.objects\
+            .filter(created__lte=self.end, theme__slug=theme)\
+            .count()
+
+        return projects_count
+
+    @memoize(timeout=60 * 60)
     def get_projects_count_by_last_status(self, statuses):
         """
         Reference:
@@ -159,7 +175,7 @@ class Statistics(object):
         This will get the last status log entry for all project phase logs
         """
         logs = ProjectPhaseLog.objects\
-            .filter(self.date_filter('start'), project__created__year=self.start.year)\
+            .filter(self.end_date_filter('start'), project__created__lte=self.end)\
             .distinct('project__id')\
             .order_by('-project__id', '-start')
 
@@ -233,14 +249,14 @@ class Statistics(object):
     @memoize(timeout=60 * 60)
     def get_projects_by_location_group(self, location_group):
         logs = ProjectPhaseLog.objects\
-            .filter(self.date_filter('start'), project__location__group__name=location_group)\
+            .filter(self.end_date_filter('start'), project__location__group__name=location_group)\
             .distinct('project__id')\
             .order_by('-project__id', '-start')
         return logs
 
     def get_tasks_count_by_last_status(self, statuses):
         logs = TaskStatusLog.objects\
-            .filter(self.date_filter('start'), task__created__year=self.start.year)\
+            .filter(self.end_date_filter('start'), task__created__lte=self.end)\
             .distinct('task__id')\
             .order_by('-task__id', '-start')
 
@@ -255,11 +271,10 @@ class Statistics(object):
     def tasks_realized(self):
         """ Total number of realized tasks """
         logs = TaskStatusLog.objects\
-            .filter(self.date_filter('start'), task__created__year=self.start.year)\
+            .filter(self.end_date_filter('start'), task__created__lte=self.end)\
             .distinct('task__id')\
             .order_by('-task__id', '-start')
 
-        # TODO: Refactor to use django filters for sub-queries
         count = 0
         for log in logs:
             if log.status == 'realized':
@@ -305,7 +320,7 @@ class Statistics(object):
     def task_members(self):
         """ Total number of realized task members """
         logs = TaskMemberStatusLog.objects \
-            .filter(self.date_filter('start'), task_member__task__created__year=self.start.year) \
+            .filter(self.end_date_filter('start'), task_member__task__created__lte=self.end) \
             .distinct('task_member__id') \
             .order_by('-task_member__id', '-start')
 
@@ -320,7 +335,7 @@ class Statistics(object):
     def time_spent(self):
         """ Total amount of time spent on realized tasks """
         logs = TaskMemberStatusLog.objects\
-            .filter(self.date_filter('start'), task_member__task__created__year=self.start.year) \
+            .filter(self.end_date_filter('start'), task_member__task__created__lte=self.end) \
             .distinct('task_member__id') \
             .order_by('-task_member__id', '-start') \
 

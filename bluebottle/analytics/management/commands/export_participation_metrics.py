@@ -1,19 +1,19 @@
 import logging
 from collections import namedtuple, OrderedDict
+
 import pendulum
 import xlsxwriter
 from django.core.management.base import BaseCommand
 from django.db import connection
-from django.utils import dateparse
+from xlsxwriter.utility import xl_rowcol_to_cell
 
+from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.geo.models import LocationGroup
-from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
-from bluebottle.tasks.models import Task
 from bluebottle.statistics.statistics import Statistics
-from .utils import initialize_work_sheet, get_xls_file_name
-from xlsxwriter.utility import xl_rowcol_to_cell
+from bluebottle.tasks.models import Task, TaskMember
+from .utils import initialize_work_sheet
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +29,8 @@ class Command(BaseCommand):
         for client in Client.objects.all():
             self.all_tenants.append(client.client_name)
 
-        self.start_date = ''
-        self.end_date = ''
+        self.start_date = None
+        self.end_date = None
 
     @staticmethod
     def setup_workbook_formatters(workbook):
@@ -77,15 +77,17 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         self.tenant = options['tenant']
-        self.start_date = dateparse.parse_datetime('{}-01-01 00:00:00+00:00'.format(options['start']))
-        self.end_date = dateparse.parse_datetime('{}-01-01 00:00:00+00:00'.format(options['end']))
+
+        self.start_date = pendulum.create(options['start'], 1, 1, 0, 0, 0)
+        self.end_date = pendulum.create(options['end'], 12, 31, 23, 59, 59)
 
         self.generate_participation_xls()
 
     def generate_participation_xls(self):
-        file_name = get_xls_file_name('participation_metrics_{}'.format(self.tenant), self.start_date, self.end_date)
-
-        engagement_data = {}
+        file_name = 'participation_metrics_{}_{}_{}_generated_{}.xlsx'.format(self.tenant,
+                                                                              self.start_date.to_date_string(),
+                                                                              self.end_date.to_date_string(),
+                                                                              pendulum.now().to_date_string())
 
         client = Client.objects.get(client_name=self.tenant)
         connection.set_tenant(client)
@@ -94,11 +96,21 @@ class Command(BaseCommand):
             with LocalTenant(client, clear_tenant=True):
                 logger.info('export participation metrics - tenant:{} start_date:{} end_date:{}'
                             .format(self.tenant,
-                                    self.start_date.strftime('%Y-%m-%d %H:%M:%S'),
-                                    self.end_date.strftime('%Y-%m-%d %H:%M:%S')))
+                                    self.start_date.to_iso8601_string(),
+                                    self.end_date.to_iso8601_string())
+                            )
+                self.generate_participants_worksheet(workbook)
                 self.generate_totals_worksheet(workbook)
 
-        return engagement_data
+    @staticmethod
+    def get_column_for_metric(row_data, metric_name):
+        return row_data.keys().index(metric_name)
+
+    @staticmethod
+    def get_growth_formula(row, col):
+        return '=IF(ISBLANK({}),0,{}-{})'.format(xl_rowcol_to_cell(row - 1, col),
+                                                 xl_rowcol_to_cell(row, col),
+                                                 xl_rowcol_to_cell(row - 1, col))
 
     def write_stats(self, worksheet, row, statistic_type, start_date, end_date):
         statistics = Statistics(start=start_date, end=end_date)
@@ -109,70 +121,144 @@ class Command(BaseCommand):
 
         row_data['Time Period'] = RowData(metric=statistic_type.capitalize(),
                                           is_formula=False,
-                                          definition='Time Period')
-        row_data['Year'] = RowData(metric=start_date.year,
+                                          definition='Statistic time period')
+        row_data['Year'] = RowData(metric=end_date.year,
                                    is_formula=False,
-                                   definition='')
+                                   definition='The year for the start date.')
         row_data['Quarter'] = RowData(
             metric=self.get_yearly_quarter(end_date) if statistic_type in ['weekly', 'monthly'] else '',
             is_formula=False,
-            definition='')
+            definition='The quarter for the end date.')
         row_data['Month'] = RowData(metric=self.get_month_name(end_date) if statistic_type == 'monthly' else '',
                                     is_formula=False,
-                                    definition='')
+                                    definition='The calendar month for the end date.')
         row_data['Week'] = RowData(metric=end_date.week_of_year if statistic_type == 'weekly' else '',
                                    is_formula=False,
-                                   definition='')
-        row_data['Start Date'] = RowData(metric=start_date,
-                                         is_formula=False,
-                                         definition='')
-        row_data['End Date'] = RowData(metric=end_date.subtract(days=1),
+                                   definition='The ISO calendar week for the end date.')
+        # row_data['Start Date'] = RowData(metric=start_date,
+        #                                  is_formula=False,
+        #                                  definition='The start date for the current statistic.')
+        row_data['End Date'] = RowData(metric=end_date,
                                        is_formula=False,
-                                       definition='')
-        row_data['Projects Total'] = RowData(metric=statistics.get_projects_count_by_last_status(
-            ProjectPhase.objects.all().values_list('slug', flat=True)),
-            is_formula=False,
+                                       definition='The end date for the current statistic.')
+
+        # Participant Statistics
+        row_data['Participants'] = RowData(metric=statistics.participants_count,
+                                           is_formula=False,
+                                           definition='')
+
+        column_participants = row_data.keys().index('Participants')
+        row_data['Participant Growth'] = RowData(
+            metric=self.get_growth_formula(row, column_participants),
+            is_formula=True,
             definition='')
+
+        # Projects Statistics
+        row_data['Projects Total'] = RowData(
+            # metric=statistics.get_projects_count_by_last_status(ProjectPhase.objects.all()
+            #                                                     .values_list('slug', flat=True)),
+            metric=statistics.projects_total,
+            is_formula=False,
+            definition='Total count of projects in all known statuses which were created before the end date.')
+
+        column_projects_total = row_data.keys().index('Projects Total')
+        row_data['Projects Total Growth'] = RowData(
+            metric=self.get_growth_formula(row, column_projects_total),
+            is_formula=True,
+            definition='Growth of projects for the defined time period.')
 
         for project_phase in ProjectPhase.objects.all():
             row_data['Project Status - {}'.format(project_phase.name)] = RowData(
                 metric=statistics.get_projects_count_by_last_status([project_phase.slug]),
                 is_formula=False,
-                definition='')
+                definition='Total count of projects with the status, {}, which were created '
+                           'before the end date.'.format(project_phase.name))
+
+            column_project_status = self.get_column_for_metric(row_data,
+                                                               'Project Status - {}'.format(project_phase.name))
+            row_data['Projects Status - {} Growth'.format(project_phase.name)] = RowData(
+                metric=self.get_growth_formula(row, column_project_status),
+                is_formula=True,
+                definition='Growth of projects for the defined status within the time period.')
 
         for location_group in LocationGroup.objects.all():
             row_data['Location - {}'.format(location_group.name)] = RowData(
                 metric=len(statistics.get_projects_by_location_group(location_group.name)),
                 is_formula=False,
-                definition='')
+                definition='Total count of projects with the location, {}, which were created '
+                           'before the end date.'.format(location_group.name))
+
+            column_location_group = self.get_column_for_metric(row_data, 'Location - {}'.format(location_group.name))
+            row_data['Location - {} Growth'.format(location_group.name)] = RowData(
+                metric=self.get_growth_formula(row, column_location_group),
+                is_formula=True,
+                definition='Growth rate of projects per location')
 
         for theme in ProjectTheme.objects.all():
-            row_data[theme.name] = RowData(metric=statistics.get_projects_count_by_theme(theme.slug),
-                                           is_formula=False,
-                                           definition='')
+            row_data['Theme - {}'.format(theme.name)] = RowData(
+                metric=statistics.get_projects_count_by_theme(theme.slug),
+                is_formula=False,
+                definition='Total count of projects with the theme, {}, which were created '
+                           'before the end date.'.format(theme.name))
 
+            column_project_theme = self.get_column_for_metric(row_data, 'Theme - {}'.format(theme.name))
+            row_data['Theme - {} Growth'.format(theme.name)] = RowData(
+                metric=self.get_growth_formula(row, column_project_theme),
+                is_formula=True,
+                definition='Growth rate of projects per theme')
+
+        # Tasks Statistics
         row_data['Tasks Total'] = RowData(
-            metric=statistics.get_tasks_count_by_last_status([choice[0] for choice in Task.TaskStatuses.choices]),
+            # metric=statistics.get_tasks_count_by_last_status([choice[0] for choice in Task.TaskStatuses.choices]),
+            metric=statistics.tasks_total,
             is_formula=False,
-            definition='')
+            definition='Total count of task in all statuses which were created before the end date.')
+
+        column_task_total = row_data.keys().index('Tasks Total')
+        row_data['Tasks Total Growth'] = RowData(
+            metric=self.get_growth_formula(row, column_task_total),
+            is_formula=True,
+            definition='Growth of tasks for the defined time period.')
 
         for task_status, label in Task.TaskStatuses.choices:
             row_data['Task Status - {}'.format(label)] = RowData(
                 metric=statistics.get_tasks_count_by_last_status([task_status]),
                 is_formula=False,
-                definition='')
+                definition='Total count of task with the status, {}, '
+                           'which were created before the end date.'.format(label))
 
-        row_data['Participants'] = RowData(metric=statistics.participants_count,
-                                           is_formula=False,
-                                           definition='')
+            column_task_status = row_data.keys().index('Task Status - {}'.format(label))
+            row_data['Tasks Status - {} Growth'.format(label)] = RowData(
+                metric=self.get_growth_formula(row, column_task_status),
+                is_formula=True,
+                definition='Growth of tasks for the defined status within the time period.')
 
-        participants_column = row_data.keys().index('Participants')
-        row_data['Participant Growth'] = RowData(
-            metric='=IF(ISBLANK({}),0,{}-{})'.format(xl_rowcol_to_cell(row - 1, participants_column),
-                                                     xl_rowcol_to_cell(row, participants_column),
-                                                     xl_rowcol_to_cell(row - 1, participants_column)),
+        # Task Member Statistics
+        row_data['Task Members Total'] = RowData(
+            # metric=statistics.get_task_members_count_by_last_status(
+            #     [choice[0] for choice in TaskMember.TaskMemberStatuses.choices]),
+            metric=statistics.task_members_total,
+            is_formula=False,
+            definition='Total count of task members in all statuses which were created before the end date.')
+
+        column_task_member_total = row_data.keys().index('Task Members Total')
+        row_data['Task Members Total Growth'] = RowData(
+            metric=self.get_growth_formula(row, column_task_member_total),
             is_formula=True,
-            definition='')
+            definition='Growth of tasks for the defined time period.')
+
+        for task_member_status, label in TaskMember.TaskMemberStatuses.choices:
+            row_data['Task Member Status - {}'.format(label)] = RowData(
+                metric=statistics.get_task_members_count_by_last_status([task_member_status]),
+                is_formula=False,
+                definition='Total count of task members with the status, {}, '
+                           'which were created before the end date.'.format(label))
+
+            column_task_member_status = row_data.keys().index('Task Member Status - {}'.format(label))
+            row_data['Task Member Status - {} Growth'.format(label)] = RowData(
+                metric=self.get_growth_formula(row, column_task_member_status),
+                is_formula=True,
+                definition='Growth of task members per status within the defined time period')
 
         # Write Headers, if the first row is being written
         if row == 2:
@@ -222,26 +308,16 @@ class Command(BaseCommand):
 
         return data
 
-    def generate_totals_worksheet(self, workbook):
+    def generate_participants_worksheet(self, workbook):
+        pass
 
+    def generate_totals_worksheet(self, workbook):
         formatters = self.setup_workbook_formatters(workbook)
 
-        start_date = pendulum.instance(self.start_date)
-        end_date = pendulum.instance(self.end_date)
+        for year in range(self.start_date.year, self.end_date.year + 1):
 
-        statistics_year_start = start_date.start_of('year').year
-        statistics_year_end = end_date.end_of('year').year
-
-        Cell = namedtuple('Cell', ['row', 'column'])
-
-        chart_participant_monthly_data = []
-        chart_task_monthly_data = []
-        chart_project_monthly_data = []
-
-        for year in range(statistics_year_start, statistics_year_end + 1):
-
-            statistics_start_date = pendulum.create(year, 1, 1)
-            statistics_end_date = pendulum.create(year + 1, 1, 1)
+            statistics_start_date = pendulum.create(year, 1, 1, 0, 0, 0)
+            statistics_end_date = pendulum.create(year, 12, 31, 23, 59, 59)
 
             # Worksheet for Participants by Year
             participant_worksheet = self.create_participants_worksheet(workbook, year)
@@ -254,13 +330,16 @@ class Command(BaseCommand):
                 participant_worksheet.write(row, 2, participation_date.year)
                 participant_worksheet.write(row, 3, participation_date.week_of_year)
 
+            # Generate data by year
+            logger.info('tenant:{} Yearly: start_date:{} - end_date:{}'
+                        .format(self.tenant,
+                                statistics_start_date.to_iso8601_string(),
+                                statistics_end_date.to_iso8601_string()))
+
             # Worksheet for Totals by Year
             worksheet = self.create_totals_worksheet(workbook, year)
 
-            # Generate data by year
-            logger.info('tenant:{} Yearly: start_date:{} - end_date:{}'.format(self.tenant, statistics_start_date,
-                                                                               statistics_end_date))
-
+            # Add label
             row = 1
             worksheet.write(row, 0, 'By Year', formatters['format_metrics_header'])
 
@@ -273,68 +352,43 @@ class Command(BaseCommand):
             worksheet.write(row, 0, 'By Month', formatters['format_metrics_header'])
 
             row += 1
-            chart_participant_data = self.create_chart_data(worksheet,
-                                                            name_coords=Cell(row=row, column=1),
-                                                            catergories_coords=Cell(row=row, column=3),
-                                                            values_coords=Cell(row=row, column=7),
-                                                            )
-            chart_project_data = self.create_chart_data(worksheet,
-                                                        name_coords=Cell(row=row, column=1),
-                                                        catergories_coords=Cell(row=row, column=3),
-                                                        values_coords=Cell(row=row, column=9),
-                                                        )
-            chart_task_data = self.create_chart_data(worksheet,
-                                                     name_coords=Cell(row=row, column=1),
-                                                     catergories_coords=Cell(row=row, column=3),
-                                                     values_coords=Cell(row=row, column=22),
-                                                     )
-
-            statistics_start_date = pendulum.create(year, 1, 1)
             for month in range(1, 13):
                 statistics_end_date = pendulum.create(year, month, 1).end_of('month')
 
+                # Stop if the end date is in the next month from current date
                 if statistics_end_date < pendulum.now().add(months=1):
                     logger.info(
-                        'tenant:{} Monthly: start_date:{} - end_date:{}'.format(self.tenant, statistics_start_date,
-                                                                                statistics_end_date))
+                        'tenant:{} Monthly: start_date:{} - end_date:{}'
+                        .format(self.tenant,
+                                statistics_start_date.to_iso8601_string(),
+                                statistics_end_date.to_iso8601_string())
+                    )
                     self.write_stats(worksheet=worksheet, row=row, statistic_type='monthly',
                                      start_date=statistics_start_date, end_date=statistics_end_date)
 
                     row += 1
 
-            chart_participant_data['chart_categories_coordinates'].extend([row - 1, 3])
-            chart_participant_data['chart_values_coordinates'].extend([row - 1, 7])
-            chart_participant_monthly_data.append(chart_participant_data)
-
-            chart_project_data['chart_categories_coordinates'].extend([row - 1, 3])
-            chart_project_data['chart_values_coordinates'].extend([row - 1, 9])
-            chart_project_monthly_data.append(chart_project_data)
-
-            chart_task_data['chart_categories_coordinates'].extend([row - 1, 3])
-            chart_task_data['chart_values_coordinates'].extend([row - 1, 22])
-            chart_task_monthly_data.append(chart_task_data)
-
             # Generate data by week
             worksheet.write(row, 0, 'By Week', formatters['format_metrics_header'])
             row += 1
 
-            statistics_start_date = pendulum.create(year, 1, 1)
             time_period = pendulum.period(statistics_start_date, pendulum.create(year, 12, 31))
             for period in time_period.range('weeks'):
 
+                # Curtail the last week of the year to end with the end of the year
+                # E.g. The end day of the last week of the year could lie in the next year, in this case we just
+                # use the last day of the year as the end day of the week
                 statistics_end_date = period.end_of('week') \
                     if period.end_of('week') < statistics_start_date.end_of('year') \
                     else statistics_start_date.end_of('year')
 
                 if statistics_end_date <= pendulum.now().add(weeks=1):
                     logger.info(
-                        'tenant:{} Weekly: start_date:{} - end_date:{}'.format(self.tenant, statistics_start_date,
-                                                                               statistics_end_date))
+                        'tenant:{} Weekly: start_date:{} - end_date:{}'
+                        .format(self.tenant,
+                                statistics_start_date.to_iso8601_string(),
+                                statistics_end_date.to_iso8601_string()))
                     self.write_stats(worksheet=worksheet, row=row, statistic_type='weekly',
                                      start_date=statistics_start_date, end_date=statistics_end_date)
 
                     row += 1
-
-        self.create_monthly_chart(workbook, chart_participant_monthly_data, 'Participant')
-        self.create_monthly_chart(workbook, chart_task_monthly_data, 'Task')
-        self.create_monthly_chart(workbook, chart_project_monthly_data, 'Project')

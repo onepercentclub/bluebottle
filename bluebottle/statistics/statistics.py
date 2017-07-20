@@ -8,12 +8,12 @@ from moneyed.classes import Money
 from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
 from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.orders.models import Order
 from bluebottle.projects.models import Project, ProjectPhaseLog
 from bluebottle.tasks.models import Task, TaskMember, TaskStatusLog, TaskMemberStatusLog
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.votes.models import Vote
-from bluebottle.orders.models import Order
 
 
 class Statistics(object):
@@ -107,7 +107,7 @@ class Statistics(object):
         return people_count
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=60 * 60)
     def participants_count(self):
         """ Total numbers of participants (members that started a project, or realized task member,
         or inititated a task)"""
@@ -153,6 +153,13 @@ class Statistics(object):
 
         return sorted(participants.values(), key=lambda k: k['action_date'])
 
+    # Projects Statistics
+
+    @property
+    @memoize(timeout=60 * 60)
+    def projects_total(self):
+        return Project.objects.filter(created__lte=self.end).count()
+
     @memoize(timeout=60 * 60)
     def get_projects_count_by_theme(self, theme):
         projects_count = Project.objects\
@@ -163,17 +170,6 @@ class Statistics(object):
 
     @memoize(timeout=60 * 60)
     def get_projects_count_by_last_status(self, statuses):
-        """
-        Reference:
-        SELECT DISTINCT ON ("projects_projectphaselog"."project_id") "projects_projectphaselog"."id",
-        "projects_projectphaselog"."project_id",
-        "projects_projectphaselog"."status_id", "projects_projectphaselog"."start"
-        FROM "projects_projectphaselog"
-        WHERE "projects_projectphaselog"."start" BETWEEN '2017-01-01 00:00:00' AND '2017-12-31 23:59:59'
-        ORDER BY "projects_projectphaselog"."project_id" DESC, "projects_projectphaselog"."start" DESC
-
-        This will get the last status log entry for all project phase logs
-        """
         logs = ProjectPhaseLog.objects\
             .filter(self.end_date_filter('start'), project__created__lte=self.end)\
             .distinct('project__id')\
@@ -184,6 +180,14 @@ class Statistics(object):
             if log.status.slug in statuses:
                 count += 1
         return count
+
+    @memoize(timeout=60 * 60)
+    def get_projects_by_location_group(self, location_group):
+        logs = ProjectPhaseLog.objects\
+            .filter(self.end_date_filter('start'), project__location__group__name=location_group)\
+            .distinct('project__id')\
+            .order_by('-project__id', '-start')
+        return logs
 
     @property
     @memoize(timeout=60 * 60)
@@ -198,42 +202,6 @@ class Statistics(object):
         return self.get_projects_count_by_last_status(['voting', 'campaign'])
 
     @property
-    @memoize(timeout=60 * 60)
-    def projects_submitted(self):
-        """ Total number of submitted (plan-submitted) projects """
-        return self.get_projects_count_by_last_status(['plan-submitted'])
-
-    @property
-    @memoize(timeout=60 * 60)
-    def projects_draft(self):
-        """ Total number of draft (plan-new) projects """
-        return self.get_projects_count_by_last_status(['plan-new'])
-
-    @property
-    @memoize(timeout=60 * 60)
-    def projects_needs_work(self):
-        """ Total number of needs work (plan-needs-work) projects """
-        return self.get_projects_count_by_last_status(['plan-needs-work'])
-
-    @property
-    @memoize(timeout=60 * 60)
-    def projects_done(self):
-        """ Total number of done (done-incomplete) projects """
-        return self.get_projects_count_by_last_status(['done-incomplete'])
-
-    @property
-    @memoize(timeout=60 * 60)
-    def projects_realized(self):
-        """ Total number of realized (done-complete) projects """
-        return self.get_projects_count_by_last_status(['done-complete'])
-
-    @property
-    @memoize(timeout=60 * 60)
-    def projects_rejected_cancelled(self):
-        """ Total number of rejected (closed) projects """
-        return self.get_projects_count_by_last_status(['closed'])
-
-    @property
     @memoize(timeout=300)
     def projects_complete(self):
         """ Total number of complete (done-complete, voting-done) projects"""
@@ -246,14 +214,13 @@ class Statistics(object):
         return Project.objects.filter(self.date_filter('campaign_started'),
                                       status__slug__in=('voting', 'campaign')).count()
 
+    # Tasks Statistics
+    @property
     @memoize(timeout=60 * 60)
-    def get_projects_by_location_group(self, location_group):
-        logs = ProjectPhaseLog.objects\
-            .filter(self.end_date_filter('start'), project__location__group__name=location_group)\
-            .distinct('project__id')\
-            .order_by('-project__id', '-start')
-        return logs
+    def tasks_total(self):
+        return Task.objects.filter(created__lte=self.end).count()
 
+    @memoize(timeout=60 * 60)
     def get_tasks_count_by_last_status(self, statuses):
         logs = TaskStatusLog.objects\
             .filter(self.end_date_filter('start'), task__created__lte=self.end)\
@@ -266,57 +233,27 @@ class Statistics(object):
                 count += 1
         return count
 
+    # Task Member Statistics
     @property
     @memoize(timeout=60 * 60)
-    def tasks_realized(self):
-        """ Total number of realized tasks """
-        logs = TaskStatusLog.objects\
-            .filter(self.end_date_filter('start'), task__created__lte=self.end)\
-            .distinct('task__id')\
-            .order_by('-task__id', '-start')
+    def task_members_total(self):
+        return TaskMember.objects.filter(created__lte=self.end).count()
+
+    @memoize(timeout=60 * 60)
+    def get_task_members_count_by_last_status(self, statuses):
+        logs = TaskMemberStatusLog.objects\
+            .filter(self.end_date_filter('start'), task_member__created__lte=self.end)\
+            .distinct('task_member__id')\
+            .order_by('-task_member__id', '-start')
 
         count = 0
         for log in logs:
-            if log.status == 'realized':
+            if log.status in statuses:
                 count += 1
         return count
 
     @property
     @memoize(timeout=60 * 60)
-    def tasks_total(self):
-        """ Total number of all tasks """
-        return self.get_tasks_count_by_last_status(['open',
-                                                    'full',
-                                                    'in progress',
-                                                    'realized',
-                                                    'closed'])
-
-    @property
-    @memoize(timeout=60 * 60)
-    def tasks_open(self):
-        """ Total number of open (open) tasks """
-        return self.get_tasks_count_by_last_status(['open'])
-
-    @property
-    @memoize(timeout=60 * 60)
-    def tasks_running(self):
-        """ Total number of running (in progress) tasks """
-        return self.get_tasks_count_by_last_status(['in progress'])
-
-    @property
-    @memoize(timeout=60 * 60)
-    def tasks_realised(self):
-        """ Total number of realized (realized) tasks """
-        return self.get_tasks_count_by_last_status(['realized'])
-
-    @property
-    @memoize(timeout=60 * 60)
-    def tasks_done(self):
-        """ Total number of done (closed) tasks """
-        return self.get_tasks_count_by_last_status(['closed'])
-
-    @property
-    @memoize(timeout=300)
     def task_members(self):
         """ Total number of realized task members """
         logs = TaskMemberStatusLog.objects \
@@ -376,7 +313,7 @@ class Statistics(object):
             return Money(0, properties.DEFAULT_CURRENCY)
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=60 * 60)
     def pledged_total(self):
         """ Total amount of pledged donations """
         donations = Donation.objects.filter(

@@ -1,7 +1,6 @@
 sudo: false
 language: python
 addons:
-  postgresql: '9.2'
   apt:
     packages:
     - libxmlsec1

@@ -49,6 +49,7 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     raw_id_fields = ('author', 'editor')
     list_display = ('created', 'view_online', 'get_text', 'thumbnail', 'author', 'deleted')
     search_fields = ('text', 'author__first_name', 'author__last_name')
+    exclude = ('object_id', 'content_type')
 
     extra_fields = ('gallery',)
 
@@ -130,6 +131,9 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
     list_display = ('created', 'author', 'content_type', 'text', 'deleted')
     raw_id_fields = ('author', 'editor', 'donation')
     fields = readonly_fields + ('text', 'author', 'editor')
+    exclude = ('object_id', 'content_type')
+
+
     ordering = ('-created',)
 
     def posted_on(self, obj):
@@ -171,6 +175,7 @@ class SystemWallpostAdmin(PolymorphicChildModelAdmin):
     list_display = ('created', 'author', 'content_type', 'related_type', 'text', 'deleted')
     raw_id_fields = ('author', 'editor', 'donation')
     ordering = ('-created',)
+    exclude = ('object_id', 'content_type')
 
     def project_link(self, obj):
         if obj.donation:

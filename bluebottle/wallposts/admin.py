@@ -133,7 +133,6 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
     fields = readonly_fields + ('text', 'author', 'editor')
     exclude = ('object_id', 'content_type')
 
-
     ordering = ('-created',)
 
     def posted_on(self, obj):

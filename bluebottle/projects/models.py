@@ -51,11 +51,11 @@ GROUP_PERMS = {
         )
     },
     'Anonymous': {
-        'perms': ('api_view_project',)
+        'perms': ('api_read_project',)
     },
     'Authenticated': {
-        'perms': ('api_view_project', 'api_add_project', 'api_change_project',
-                  'api_view_project_document', 'api_add_project_document', 'api_change_project_document',)
+        'perms': ('api_read_project', 'api_add_project', 'api_change_project',
+                  'api_read_project_document', 'api_add_project_document', 'api_change_project_document',)
     }
 }
 
@@ -211,7 +211,7 @@ class ProjectDocument(BaseProjectDocument):
 
     class Meta(BaseProjectDocument.Meta):
         permissions = (
-            ('api_view_project_documents', 'Can view project documents through the API'),
+            ('api_read_project_documents', 'Can view project documents through the API'),
             ('api_add_project_document', 'Can add project documents through the API'),
             ('api_change_project_document', 'Can change project documents through the API'),
             ('api_delete_project_document', 'Can delete project documents through the API'),
@@ -701,7 +701,7 @@ class Project(BaseProject, PreviousStatusMixin):
     class Meta(BaseProject.Meta):
         permissions = (
             ('approve_payout', 'Can approve payouts for projects'),
-            ('api_view_project', 'Can view projects through the API'),
+            ('api_read_project', 'Can view projects through the API'),
             ('api_add_project', 'Can add projects through the API'),
             ('api_change_project', 'Can change projects through the API'),
             ('api_delete_project', 'Can delete projects through the API'),

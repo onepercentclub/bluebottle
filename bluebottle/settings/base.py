@@ -169,6 +169,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'tenant_extras.drf_permissions.TenantConditionalOpenClose',
+        'bluebottle.utils.permissions.ResourcePermissions',
     ),
 }
 
@@ -205,6 +206,7 @@ SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
 
 AUTHENTICATION_BACKENDS = (
+    'bluebottle.utils.backends.AnonymousAuthenticationBackend',
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'social.backends.facebook.FacebookAppOAuth2',
     'django.contrib.auth.backends.ModelBackend',

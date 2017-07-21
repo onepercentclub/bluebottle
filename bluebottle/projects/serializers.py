@@ -5,7 +5,11 @@ from rest_framework import serializers
 from localflavor.generic.validators import IBANValidator
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.bluebottle_drf2.serializers import OEmbedField, SorlImageField, ImageSerializer, PrivateFileSerializer
+from bluebottle.bluebottle_drf2.serializers import (
+    OEmbedField, SorlImageField, ImageSerializer,
+    PrivateFileSerializer
+)
+from bluebottle.utils.permissions import ResourcePermissions
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
@@ -144,12 +148,27 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'voting_deadline',)
 
 
+class PermissionField(serializers.Field):
+    def __init__(self, permission_class, *args, **kwargs):
+        self.permissions = permission_class
+        kwargs['read_only'] = True
+
+        super(PermissionField, self).__init__(*args, **kwargs)
+
+    def get_attribute(self, obj):
+        return obj
+
+    def to_representation(self, value):
+        self.permissions().get_permissions(self.context['request'], value)
+
+
 class ProjectPreviewSerializer(ProjectSerializer):
     categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
     image = ImageSerializer(required=False)
     owner = UserPreviewSerializer()
     skills = serializers.SerializerMethodField()
     theme = ProjectThemeSerializer()
+    permissions = PermissionField(ResourcePermissions)
 
     def get_skills(self, obj):
         return set(task.skill.id for task in obj.task_set.all() if task.skill)
@@ -186,6 +205,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'theme',
                   'title',
                   'vote_count',
+                  'permissions',
                   'voting_deadline',)
 
 

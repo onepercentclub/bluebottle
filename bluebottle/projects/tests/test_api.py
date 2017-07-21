@@ -36,6 +36,60 @@ from ..models import Project
 factory = RequestFactory()
 
 
+class ProjectPermissionsTestCase(BluebottleTestCase):
+    """
+    Tests for the Project API permissions.
+    """
+    def setUp(self):
+        super(ProjectPermissionsTestCase, self).setUp()
+        self.init_projects()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.not_owner = BlueBottleUserFactory.create()
+        self.not_owner_token = "JWT {0}".format(self.not_owner.get_jwt_token())
+        self.project = ProjectFactory.create(owner=self.owner)
+        self.project_url = reverse(
+            'project_detail', kwargs={'slug': self.project.slug})
+        self.project_manage_url = reverse(
+            'project_manage_detail', kwargs={'slug': self.project.slug})
+        self.project_manage_list_url = reverse('project_manage_list')
+
+    def test_owner_permissions(self):
+        # view allowed
+        response = self.client.get(self.project_url, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        # update allowed
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
+                                   token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        # create allowed
+        response = self.client.post(self.project_manage_list_url, {'title': 'Title 2'},
+                                    token=self.owner_token)
+        self.assertEqual(response.status_code, 201)
+
+    def test_non_owner_permissions(self):
+        # update denied
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
+                                   token=self.not_owner_token)
+        self.assertEqual(response.status_code, 403)
+
+    def test_anon_permissions(self):
+        # view allowed
+        response = self.client.get(self.project_url)
+        self.assertEqual(response.status_code, 200)
+
+        # update denied
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'})
+        self.assertEqual(response.status_code, 401)
+
+        # create denied
+        response = self.client.post(self.project_manage_list_url, {'title': 'Title 2'})
+        self.assertEqual(response.status_code, 401)
+
+
 class ProjectEndpointTestCase(BluebottleTestCase):
     """
     Integration tests for the Project API.

@@ -10,6 +10,12 @@ class AnonymousAuthenticationBackend(object):
     """
     group_name = 'Anonymous'
 
+    def get_user(self, user_id):
+        return None
+
+    def authenticate(self, *args, **kwargs):
+        return None
+
     def has_perm(self, user, perm, obj):
         """
         Check if `user` has permission `perm`

@@ -19,7 +19,7 @@ from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.utils.serializers import MoneySerializer
-from bluebottle.utils.fields import SafeField
+from bluebottle.utils.fields import SafeField, PermissionField
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 from bluebottle.votes.models import Vote
 
@@ -148,27 +148,12 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'voting_deadline',)
 
 
-class PermissionField(serializers.Field):
-    def __init__(self, permission_class, *args, **kwargs):
-        self.permissions = permission_class
-        kwargs['read_only'] = True
-
-        super(PermissionField, self).__init__(*args, **kwargs)
-
-    def get_attribute(self, obj):
-        return obj
-
-    def to_representation(self, value):
-        self.permissions().get_permissions(self.context['request'], value)
-
-
 class ProjectPreviewSerializer(ProjectSerializer):
     categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
     image = ImageSerializer(required=False)
     owner = UserPreviewSerializer()
     skills = serializers.SerializerMethodField()
     theme = ProjectThemeSerializer()
-    permissions = PermissionField(ResourcePermissions)
 
     def get_skills(self, obj):
         return set(task.skill.id for task in obj.task_set.all() if task.skill)
@@ -205,7 +190,6 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'theme',
                   'title',
                   'vote_count',
-                  'permissions',
                   'voting_deadline',)
 
 
@@ -235,6 +219,16 @@ class ManageTaskSerializer(serializers.ModelSerializer):
                   'type',)
 
 
+class ProjectPermissionsSerializer(serializers.Serializer):
+    def get_attribute(self, obj):
+        return obj
+
+    rewards = PermissionField('reward-list')
+
+    class Meta:
+        fields = ('rewards', )
+
+
 class ManageProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
@@ -259,6 +253,9 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='project_manage_detail', lookup_field='slug')
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     viewable = serializers.BooleanField(read_only=True)
+    permissions = PermissionField('project_manage_detail', view_args=('slug', ))
+    related_permissions = ProjectPermissionsSerializer(read_only=True)
+
 
     @staticmethod
     def validate_account_number(value):
@@ -369,6 +366,8 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'url',
                   'video_html',
                   'video_url',
+                  'permissions',
+                  'related_permissions',
                   'viewable',)
 
 

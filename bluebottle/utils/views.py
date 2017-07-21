@@ -16,6 +16,7 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.clients import properties
 from bluebottle.projects.models import Project
 from bluebottle.utils.email_backend import send_mail
+from bluebottle.utils.permissions import ResourcePermissions, IsOwner
 
 from .models import Language
 from .serializers import ShareSerializer, LanguageSerializer
@@ -183,3 +184,34 @@ class PrivateFileView(View):
             return response
         else:
             return HttpResponseForbidden()
+
+
+class BasePermissionsMixin(object):
+    base_permission_classes = ()
+
+    def get_permissions(self):
+        all_permission_classes = tuple(self.permission_classes) + self.base_permission_classes
+        return [permission() for permission in all_permission_classes]
+
+
+# TODO: move these custom View classes to a generic place
+class ListAPIView(BasePermissionsMixin, generics.ListAPIView):
+    base_permission_classes = (ResourcePermissions,)
+
+
+class RetrieveAPIView(BasePermissionsMixin, generics.RetrieveAPIView):
+    base_permission_classes = (ResourcePermissions,)
+
+
+class ListCreateAPIView(BasePermissionsMixin, generics.ListCreateAPIView):
+    base_permission_classes = (ResourcePermissions,)
+
+
+class RetrieveUpdateAPIView(BasePermissionsMixin, generics.RetrieveUpdateAPIView):
+    base_permission_classes = (ResourcePermissions,)
+
+
+class RetrieveUpdateDestroyAPIView(BasePermissionsMixin, generics.RetrieveUpdateDestroyAPIView):
+    base_permission_classes = (ResourcePermissions,)
+
+

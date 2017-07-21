@@ -14,37 +14,13 @@ from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.permissions import (
     ResourcePermissions, IsOwner
 )
+from bluebottle.utils.views import (
+    ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
+    RetrieveUpdateDestroyAPIView
+)
 
 from .models import ProjectTheme, ProjectPhase
 
-
-class BasePermissionsMixin(object):
-    base_permission_classes = ()
-
-    def get_permissions(self):
-        all_permission_classes = tuple(self.permission_classes) + self.base_permission_classes
-        return [permission() for permission in all_permission_classes]
-
-
-# TODO: move these custom View classes to a generic place
-class ListAPIView(BasePermissionsMixin, generics.ListAPIView):
-    base_permissions_classes = (ResourcePermissions,)
-
-
-class RetrieveAPIView(BasePermissionsMixin, generics.RetrieveAPIView):
-    base_permissions_classes = (ResourcePermissions,)
-
-
-class ListCreateAPIView(BasePermissionsMixin, generics.ListCreateAPIView):
-    base_permissions_classes = (ResourcePermissions,)
-
-
-class RetrieveUpdateAPIView(BasePermissionsMixin, generics.RetrieveUpdateAPIView):
-    base_permissions_classes = (ResourcePermissions,)
-
-
-class RetrieveUpdateDestroyAPIView(BasePermissionsMixin, generics.RetrieveUpdateDestroyAPIView):
-    base_permissions_classes = (ResourcePermissions,)
 
 
 class ProjectPagination(BluebottlePagination):

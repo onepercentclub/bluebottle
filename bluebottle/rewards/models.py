@@ -32,6 +32,14 @@ class Reward(models.Model):
     updated = ModificationDateTimeField(_('last modification'))
 
     @property
+    def owner(self):
+        return self.project.owner
+
+    @property
+    def parent(self):
+        return self.project
+
+    @property
     def count(self):
         from bluebottle.donations.models import Donation
         return Donation.objects \
@@ -47,3 +55,11 @@ class Reward(models.Model):
         ordering = ['-project__created', 'amount']
         verbose_name = _("Gift")
         verbose_name_plural = _("Gifts")
+        permissions = (
+            ('api_read_reward', 'Can view reward through the API'),
+            ('api_add_reward', 'Can add reward through the API'),
+            ('api_change_reward', 'Can change reward through the API'),
+            ('api_delete_reward', 'Can delete reward through the API'),
+        )
+
+

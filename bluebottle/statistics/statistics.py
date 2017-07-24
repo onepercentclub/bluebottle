@@ -319,19 +319,34 @@ class Statistics(object):
     @property
     @memoize(timeout=60 * 60)
     def unconfirmed_task_members(self):
-        """ Total number of realized task members """
+        """ Total number of unconfirmed task members """
         logs = TaskMemberStatusLog.objects \
             .filter(self.end_date_filter('start'), task_member__task__deadline__lte=self.end.subtract(days=10)) \
             .distinct('task_member__id') \
             .order_by('-task_member__id', '-start')
-
-        print(logs.query)
 
         count = 0
         for log in logs:
             if log.status == 'accepted':
                 count += 1
         return count
+
+    @property
+    @memoize(timeout=60 * 60)
+    def unconfirmed_task_members_task_count(self):
+        """ Total number of unconfirmed task members """
+        logs = TaskMemberStatusLog.objects \
+            .filter(self.end_date_filter('start'), task_member__task__deadline__lte=self.end.subtract(days=10)) \
+            .distinct('task_member__id') \
+            .order_by('-task_member__id', '-start')
+
+        task_ids = set()
+
+        for log in logs:
+            if log.status == 'accepted':
+                task_ids.add(log.task_member.task.id)
+
+        return len(task_ids)
 
     @property
     @memoize(timeout=60 * 60)

@@ -324,6 +324,18 @@ class Command(BaseCommand):
                 hide_column=True,
                 definition='Growth of task members per status within the defined time period')
 
+        row_data['Unconfirmed Task Members Total'] = RowData(
+            metric=statistics.unconfirmed_task_members,
+            is_formula=False,
+            hide_column=False,
+            definition='Total count of task members in all statuses which were created before the end date.')
+
+        row_data['Tasks with Unconfirmed Task Members Total'] = RowData(
+            metric=statistics.unconfirmed_task_members_task_count,
+            is_formula=False,
+            hide_column=False,
+            definition='Total count of task members in all statuses which were created before the end date.')
+
         # Write Headers, if the first row is being written
         if row == 2:
             for column, data in enumerate(row_data.iteritems()):
@@ -468,9 +480,8 @@ class Command(BaseCommand):
                     )
                     self.write_stats(worksheet=worksheet, row=row, statistic_type='monthly',
                                      start_date=statistics_start_date, end_date=statistics_end_date)
-
                     row += 1
-                    self.monthly_statistics_row_end = row - 1
+                    self.monthly_statistics_row_end = row
 
             # Generate data by week
             worksheet.write(row, 0, 'By Week', formatters['format_metrics_header'])

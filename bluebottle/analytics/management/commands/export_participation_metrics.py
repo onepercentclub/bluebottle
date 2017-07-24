@@ -1,5 +1,5 @@
 import logging
-from collections import namedtuple, OrderedDict
+from collections import namedtuple, OrderedDict, defaultdict
 
 import pendulum
 import xlsxwriter
@@ -25,12 +25,21 @@ class Command(BaseCommand):
         super(Command, self).__init__(**kwargs)
 
         self.tenant = None
+
         self.all_tenants = []
         for client in Client.objects.all():
             self.all_tenants.append(client.client_name)
 
         self.start_date = None
         self.end_date = None
+
+        self.charts = defaultdict(dict)
+
+        self.yearly_statistics_row_start = 1
+        self.monthly_statistics_row_start = 4
+        self.monthly_statistics_row_end = None
+        self.weekly_statistics_row_start = 17
+        self.weekly_statistics_row_end = None
 
     @staticmethod
     def setup_workbook_formatters(workbook):
@@ -112,45 +121,84 @@ class Command(BaseCommand):
                                                  xl_rowcol_to_cell(row, col),
                                                  xl_rowcol_to_cell(row - 1, col))
 
+    def get_cumulative_growth_formula(self, statistic_type, row, col):
+        if statistic_type == 'yearly':
+            row_start = self.yearly_statistics_row_start
+        elif statistic_type == 'monthly':
+            row_start = self.monthly_statistics_row_start
+        elif statistic_type == 'weekly':
+            row_start = self.weekly_statistics_row_start
+
+        return '=IF(ISBLANK({}),0,{}-{})'.format(xl_rowcol_to_cell(row - 1, col),
+                                                 xl_rowcol_to_cell(row, col),
+                                                 xl_rowcol_to_cell(row_start, col))
+
     def write_stats(self, worksheet, row, statistic_type, start_date, end_date):
         statistics = Statistics(start=start_date, end=end_date)
 
-        RowData = namedtuple('RowData', ['metric', 'definition', 'is_formula'])
+        RowData = namedtuple('RowData', ['metric', 'definition', 'hide_column', 'is_formula'])
 
         row_data = OrderedDict()
 
         row_data['Time Period'] = RowData(metric=statistic_type.capitalize(),
                                           is_formula=False,
+                                          hide_column=False,
                                           definition='Statistic time period')
         row_data['Year'] = RowData(metric=end_date.year,
                                    is_formula=False,
+                                   hide_column=False,
                                    definition='The year for the start date.')
+        column_year = row_data.keys().index('Year')
+
         row_data['Quarter'] = RowData(
             metric=self.get_yearly_quarter(end_date) if statistic_type in ['weekly', 'monthly'] else '',
             is_formula=False,
+            hide_column=False,
             definition='The quarter for the end date.')
+
         row_data['Month'] = RowData(metric=self.get_month_name(end_date) if statistic_type == 'monthly' else '',
                                     is_formula=False,
+                                    hide_column=False,
                                     definition='The calendar month for the end date.')
+        column_month = row_data.keys().index('Month')
+
         row_data['Week'] = RowData(metric=end_date.week_of_year if statistic_type == 'weekly' else '',
                                    is_formula=False,
+                                   hide_column=False,
                                    definition='The ISO calendar week for the end date.')
         # row_data['Start Date'] = RowData(metric=start_date,
-        #                                  is_formula=False,
+        #                                  is_formula=False, hide_column=False,
         #                                  definition='The start date for the current statistic.')
-        row_data['End Date'] = RowData(metric=end_date,
+        row_data['End Date'] = RowData(metric=end_date.subtract(days=1),
                                        is_formula=False,
+                                       hide_column=False,
                                        definition='The end date for the current statistic.')
 
         # Participant Statistics
         row_data['Participants'] = RowData(metric=statistics.participants_count,
                                            is_formula=False,
+                                           hide_column=False,
                                            definition='')
 
         column_participants = row_data.keys().index('Participants')
-        row_data['Participant Growth'] = RowData(
-            metric=self.get_growth_formula(row, column_participants),
+        row_data['Participant Total Growth'] = RowData(
+            metric=self.get_cumulative_growth_formula(statistic_type, row, column_participants),
             is_formula=True,
+            hide_column=False,
+            definition='')
+
+        # NOTE: Temporary Participant Statistics considering only task members with status realized
+        row_data['Participants With Task Member Status Realized'] = RowData(
+            metric=statistics.participants_count_with_only_task_members_realized,
+            is_formula=False,
+            hide_column=False,
+            definition='')
+
+        column_participants_task_member = row_data.keys().index('Participants With Task Member Status Realized')
+        row_data['Participants With Task Member Status Realized Growth'] = RowData(
+            metric=self.get_cumulative_growth_formula(statistic_type, row, column_participants_task_member),
+            is_formula=True,
+            hide_column=False,
             definition='')
 
         # Projects Statistics
@@ -159,18 +207,21 @@ class Command(BaseCommand):
             #                                                     .values_list('slug', flat=True)),
             metric=statistics.projects_total,
             is_formula=False,
+            hide_column=False,
             definition='Total count of projects in all known statuses which were created before the end date.')
 
         column_projects_total = row_data.keys().index('Projects Total')
         row_data['Projects Total Growth'] = RowData(
-            metric=self.get_growth_formula(row, column_projects_total),
+            metric=self.get_cumulative_growth_formula(statistic_type, row, column_projects_total),
             is_formula=True,
+            hide_column=False,
             definition='Growth of projects for the defined time period.')
 
         for project_phase in ProjectPhase.objects.all():
             row_data['Project Status - {}'.format(project_phase.name)] = RowData(
                 metric=statistics.get_projects_count_by_last_status([project_phase.slug]),
                 is_formula=False,
+                hide_column=False,
                 definition='Total count of projects with the status, {}, which were created '
                            'before the end date.'.format(project_phase.name))
 
@@ -179,32 +230,37 @@ class Command(BaseCommand):
             row_data['Projects Status - {} Growth'.format(project_phase.name)] = RowData(
                 metric=self.get_growth_formula(row, column_project_status),
                 is_formula=True,
+                hide_column=True,
                 definition='Growth of projects for the defined status within the time period.')
 
         for location_group in LocationGroup.objects.all():
             row_data['Location - {}'.format(location_group.name)] = RowData(
                 metric=len(statistics.get_projects_by_location_group(location_group.name)),
                 is_formula=False,
+                hide_column=False,
                 definition='Total count of projects with the location, {}, which were created '
                            'before the end date.'.format(location_group.name))
 
             column_location_group = self.get_column_for_metric(row_data, 'Location - {}'.format(location_group.name))
             row_data['Location - {} Growth'.format(location_group.name)] = RowData(
-                metric=self.get_growth_formula(row, column_location_group),
+                metric=self.get_cumulative_growth_formula(statistic_type, row, column_location_group),
                 is_formula=True,
+                hide_column=True,
                 definition='Growth rate of projects per location')
 
         for theme in ProjectTheme.objects.all():
             row_data['Theme - {}'.format(theme.name)] = RowData(
                 metric=statistics.get_projects_count_by_theme(theme.slug),
                 is_formula=False,
+                hide_column=False,
                 definition='Total count of projects with the theme, {}, which were created '
                            'before the end date.'.format(theme.name))
 
             column_project_theme = self.get_column_for_metric(row_data, 'Theme - {}'.format(theme.name))
             row_data['Theme - {} Growth'.format(theme.name)] = RowData(
-                metric=self.get_growth_formula(row, column_project_theme),
+                metric=self.get_cumulative_growth_formula(statistic_type, row, column_project_theme),
                 is_formula=True,
+                hide_column=True,
                 definition='Growth rate of projects per theme')
 
         # Tasks Statistics
@@ -212,18 +268,21 @@ class Command(BaseCommand):
             # metric=statistics.get_tasks_count_by_last_status([choice[0] for choice in Task.TaskStatuses.choices]),
             metric=statistics.tasks_total,
             is_formula=False,
+            hide_column=False,
             definition='Total count of task in all statuses which were created before the end date.')
 
         column_task_total = row_data.keys().index('Tasks Total')
         row_data['Tasks Total Growth'] = RowData(
-            metric=self.get_growth_formula(row, column_task_total),
+            metric=self.get_cumulative_growth_formula(statistic_type, row, column_task_total),
             is_formula=True,
+            hide_column=False,
             definition='Growth of tasks for the defined time period.')
 
         for task_status, label in Task.TaskStatuses.choices:
             row_data['Task Status - {}'.format(label)] = RowData(
                 metric=statistics.get_tasks_count_by_last_status([task_status]),
                 is_formula=False,
+                hide_column=False,
                 definition='Total count of task with the status, {}, '
                            'which were created before the end date.'.format(label))
 
@@ -231,6 +290,7 @@ class Command(BaseCommand):
             row_data['Tasks Status - {} Growth'.format(label)] = RowData(
                 metric=self.get_growth_formula(row, column_task_status),
                 is_formula=True,
+                hide_column=True,
                 definition='Growth of tasks for the defined status within the time period.')
 
         # Task Member Statistics
@@ -239,18 +299,21 @@ class Command(BaseCommand):
             #     [choice[0] for choice in TaskMember.TaskMemberStatuses.choices]),
             metric=statistics.task_members_total,
             is_formula=False,
+            hide_column=False,
             definition='Total count of task members in all statuses which were created before the end date.')
 
         column_task_member_total = row_data.keys().index('Task Members Total')
         row_data['Task Members Total Growth'] = RowData(
-            metric=self.get_growth_formula(row, column_task_member_total),
+            metric=self.get_cumulative_growth_formula(statistic_type, row, column_task_member_total),
             is_formula=True,
+            hide_column=False,
             definition='Growth of tasks for the defined time period.')
 
         for task_member_status, label in TaskMember.TaskMemberStatuses.choices:
             row_data['Task Member Status - {}'.format(label)] = RowData(
                 metric=statistics.get_task_members_count_by_last_status([task_member_status]),
                 is_formula=False,
+                hide_column=False,
                 definition='Total count of task members with the status, {}, '
                            'which were created before the end date.'.format(label))
 
@@ -258,6 +321,7 @@ class Command(BaseCommand):
             row_data['Task Member Status - {} Growth'.format(label)] = RowData(
                 metric=self.get_growth_formula(row, column_task_member_status),
                 is_formula=True,
+                hide_column=True,
                 definition='Growth of task members per status within the defined time period')
 
         # Write Headers, if the first row is being written
@@ -265,6 +329,8 @@ class Command(BaseCommand):
             for column, data in enumerate(row_data.iteritems()):
                 worksheet.write(0, column, data[0])
                 worksheet.write_comment(0, column, data[1].definition)
+                if data[1].hide_column:
+                    worksheet.set_column(column, column, None, None, {'hidden': 1})
 
         # Write data
         for column, data in enumerate(row_data.iteritems()):
@@ -275,38 +341,74 @@ class Command(BaseCommand):
             else:
                 worksheet.write(row, column, metric_value)
 
+        # Generate YoY Monthly Charts
+        if statistic_type == 'monthly':
+            # participant_chart_data = self.charts['Participant Total Growth'].setdefault(end_date.year, {})
+            self.charts['Participant Total Growth'][end_date.year] = self.create_yoy_monthly_chart(
+                worksheet=worksheet,
+                column_year=column_year,
+                column_month=column_month,
+                column_total=column_participants
+            )
+
+            self.charts['Projects Total Growth'][end_date.year] = self.create_yoy_monthly_chart(
+                worksheet=worksheet,
+                column_year=column_year,
+                column_month=column_month,
+                column_total=column_projects_total
+
+            )
+
+            self.charts['Tasks Total Growth'][end_date.year] = self.create_yoy_monthly_chart(
+                worksheet=worksheet,
+                column_year=column_year,
+                column_month=column_month,
+                column_total=column_task_total
+
+            )
+
+            self.charts['Task Members Total Growth'][end_date.year] = self.create_yoy_monthly_chart(
+                worksheet=worksheet,
+                column_year=column_year,
+                column_month=column_month,
+                column_total=column_task_member_total
+
+            )
+
+    def create_yoy_monthly_chart(self, worksheet, column_year, column_month, column_total):
+        return {
+            'name_coords': [worksheet.get_name(),
+                            self.monthly_statistics_row_start,
+                            column_year],
+            'categories_coords': [worksheet.get_name(),
+                                  self.monthly_statistics_row_start,
+                                  column_month,
+                                  self.monthly_statistics_row_end,
+                                  column_month],
+            'values_coords': [worksheet.get_name(),
+                              self.monthly_statistics_row_start,
+                              column_total + 1,
+                              self.monthly_statistics_row_end,
+                              column_total + 1]
+        }
+
     @staticmethod
-    def create_monthly_chart(workbook, data, title):
-        chartsheet = workbook.add_chartsheet('YoY Monthly {}'.format(title))
-        chart = workbook.add_chart({'type': 'line'})
-        chartsheet.set_chart(chart)
-
-        for item in data:
-            chart.add_series({
-                'name': item['chart_name_coordinates'],
-                'categories': item['chart_categories_coordinates'],
-                'values': item['chart_values_coordinates'],
-                'marker': {'type': 'circle'},
-            })
-
-        # Add a chart title and axis labels.
-        chart.set_title({'name': 'Monthly {}s'.format(title)})
-        chart.set_x_axis({'name': 'Month'})
-        chart.set_y_axis({'name': '{}s'.format(title)})
-
-        # Set an Excel chart style. Colors with white outline and shadow.
-        chart.set_style(10)
-
-        return chart
-
-    @staticmethod
-    def create_chart_data(worksheet, name_coords, catergories_coords, values_coords):
-        data = dict()
-        data['chart_name_coordinates'] = [worksheet.get_name(), name_coords.row, name_coords.column]
-        data['chart_categories_coordinates'] = [worksheet.get_name(), catergories_coords.row, catergories_coords.column]
-        data['chart_values_coordinates'] = [worksheet.get_name(), values_coords.row, values_coords.column]
-
-        return data
+    def create_monthly_charts(workbook, chart_data):
+        for title, multi_year_data in chart_data.iteritems():
+            chartsheet = workbook.add_chartsheet('{}'.format(title))
+            chart = workbook.add_chart({'type': 'line'})
+            chart.set_title({'name': '{}'.format(title)})
+            chart.set_x_axis({'name': 'Month'})
+            chart.set_y_axis({'name': 'Total'})
+            chart.set_style(10)
+            for year, yearly_data in multi_year_data.iteritems():
+                chart.add_series({
+                    'name': yearly_data['name_coords'],
+                    'categories': yearly_data['categories_coords'],
+                    'values': yearly_data['values_coords'],
+                    'marker': {'type': 'circle'}
+                })
+            chartsheet.set_chart(chart)
 
     def generate_participants_worksheet(self, workbook):
         pass
@@ -352,6 +454,7 @@ class Command(BaseCommand):
             worksheet.write(row, 0, 'By Month', formatters['format_metrics_header'])
 
             row += 1
+            self.monthly_statistics_row_start = row
             for month in range(1, 13):
                 statistics_end_date = pendulum.create(year, month, 1).end_of('month')
 
@@ -367,12 +470,14 @@ class Command(BaseCommand):
                                      start_date=statistics_start_date, end_date=statistics_end_date)
 
                     row += 1
+                    self.monthly_statistics_row_end = row - 1
 
             # Generate data by week
             worksheet.write(row, 0, 'By Week', formatters['format_metrics_header'])
-            row += 1
 
             time_period = pendulum.period(statistics_start_date, pendulum.create(year, 12, 31))
+            row += 1
+            self.weekly_statistics_row_start = row
             for period in time_period.range('weeks'):
 
                 # Curtail the last week of the year to end with the end of the year
@@ -392,3 +497,6 @@ class Command(BaseCommand):
                                      start_date=statistics_start_date, end_date=statistics_end_date)
 
                     row += 1
+                    self.weekly_statistics_row_end = row - 1
+
+        self.create_monthly_charts(workbook, self.charts)

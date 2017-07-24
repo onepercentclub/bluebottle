@@ -153,6 +153,55 @@ class Statistics(object):
 
         return sorted(participants.values(), key=lambda k: k['action_date'])
 
+    # NOTE: Temporary Stats to count a special case of impact of considering only task members with status realised
+    # on the
+    # participation number
+    @property
+    @memoize(timeout=60 * 60)
+    def participants_count_with_only_task_members_realized(self):
+        """ Total numbers of participants (members that started a project, or realized task member,
+        or inititated a task)"""
+        return len(self.participant_details_with_only_task_members_realized())
+
+    def participant_details_with_only_task_members_realized(self):
+        """Participants are defined as project initiators of a project (running, done or realised),
+        task members (that applied for, got accepted for, or realised a task) or task initiators.
+        If a member is one of the three (e.g. a project initiator or a task member or a task initiator),
+        they are counted as one participant."""
+
+        project_owners = Project.objects\
+            .filter(self.date_filter('created'),
+                    status__slug__in=('voting', 'voting-done', 'campaign', 'done-complete', 'done-incomplete'))\
+            .values('owner_id', 'owner__email', 'created')\
+            .annotate(id=F('owner_id'))\
+            .annotate(email=F('owner__email'))\
+            .annotate(action_date=F('created'))
+
+        task_members = TaskMember.objects\
+            .filter(self.date_filter('task__created'), status='realized')\
+            .values('member_id', 'member__email', 'task__created')\
+            .annotate(id=F('member_id'))\
+            .annotate(email=F('member__email'))\
+            .annotate(action_date=F('task__created'))
+
+        task_authors = Task.objects\
+            .filter(self.date_filter('created'), status__in=('open', 'in progress', 'realized', 'full', 'closed'))\
+            .values('author_id', 'author__email', 'created')\
+            .annotate(id=F('author_id'))\
+            .annotate(email=F('author__email'))\
+            .annotate(action_date=F('created'))
+
+        participants = dict()
+
+        for member in itertools.chain(task_members, project_owners, task_authors):
+            if participants.get(member['id']):
+                if member['action_date'] < participants[member['id']]['action_date']:
+                    participants[member['id']]['action_date'] = member['action_date']
+            else:
+                participants[member['id']] = member
+
+        return sorted(participants.values(), key=lambda k: k['action_date'])
+
     # Projects Statistics
 
     @property
@@ -264,6 +313,23 @@ class Statistics(object):
         count = 0
         for log in logs:
             if log.status == 'realized':
+                count += 1
+        return count
+
+    @property
+    @memoize(timeout=60 * 60)
+    def unconfirmed_task_members(self):
+        """ Total number of realized task members """
+        logs = TaskMemberStatusLog.objects \
+            .filter(self.end_date_filter('start'), task_member__task__deadline__lte=self.end.subtract(days=10)) \
+            .distinct('task_member__id') \
+            .order_by('-task_member__id', '-start')
+
+        print(logs.query)
+
+        count = 0
+        for log in logs:
+            if log.status == 'accepted':
                 count += 1
         return count
 

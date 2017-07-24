@@ -55,7 +55,10 @@ GROUP_PERMS = {
     },
     'Authenticated': {
         'perms': ('api_read_project', 'api_add_project', 'api_change_project',
-                  'api_read_project_document', 'api_add_project_document', 'api_change_project_document',)
+                  'api_read_projectdocument', 'api_add_projectdocument',
+                  'api_change_projectdocument', 'api_read_projectbudgetline', 
+                  'api_add_projectbudgetline', 'api_change_projectbudgetline',
+                  'api_delete_projectbudgetline',)
     }
 }
 
@@ -209,13 +212,13 @@ class ProjectDocument(BaseProjectDocument):
             return reverse('project-document-file', kwargs={'pk': self.pk})
         return None
 
-    class Meta(BaseProjectDocument.Meta):
-        permissions = (
-            ('api_read_project_documents', 'Can view project documents through the API'),
-            ('api_add_project_document', 'Can add project documents through the API'),
-            ('api_change_project_document', 'Can change project documents through the API'),
-            ('api_delete_project_document', 'Can delete project documents through the API'),
-        )
+    @property
+    def owner(self):
+        return self.project.owner
+
+    @property
+    def parent(self):
+        return self.project
 
 
 class Project(BaseProject, PreviousStatusMixin):
@@ -705,6 +708,14 @@ class Project(BaseProject, PreviousStatusMixin):
             ('api_add_project', 'Can add projects through the API'),
             ('api_change_project', 'Can change projects through the API'),
             ('api_delete_project', 'Can delete projects through the API'),
+            ('api_read_projectdocument', 'Can view project documents through the API'),
+            ('api_add_projectdocument', 'Can add project documents through the API'),
+            ('api_change_projectdocument', 'Can change project documents through the API'),
+            ('api_delete_projectdocument', 'Can delete project documents through the API'),
+            ('api_read_projectbudgetline', 'Can view project budget lines through the API'),
+            ('api_add_projectbudgetline', 'Can add project budget lines through the API'),
+            ('api_change_projectbudgetline', 'Can change project budget lines through the API'),
+            ('api_delete_projectbudgetline', 'Can delete project budget lines through the API'),
         )
         ordering = ['title']
 
@@ -782,6 +793,14 @@ class ProjectBudgetLine(models.Model):
 
     created = CreationDateTimeField()
     updated = ModificationDateTimeField()
+
+    @property
+    def owner(self):
+        return self.project.owner
+
+    @property
+    def parent(self):
+        return self.project
 
     class Meta:
         verbose_name = _('budget line')

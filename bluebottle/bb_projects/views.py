@@ -1,7 +1,5 @@
 from django.db.models.query_utils import Q
 
-from rest_framework import generics
-
 from django.contrib.auth.models import AnonymousUser
 
 from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectDocument
@@ -11,16 +9,13 @@ from bluebottle.projects.serializers import (
     ProjectPhaseLogSerializer, ProjectDocumentSerializer,
     ProjectTinyPreviewSerializer, ProjectSerializer, ProjectPreviewSerializer, ManageProjectSerializer)
 from bluebottle.utils.utils import get_client_ip
-from bluebottle.utils.permissions import (
-    ResourcePermissions, IsOwner
-)
 from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView
 )
 
 from .models import ProjectTheme, ProjectPhase
-
+from bluebottle.projects.permissions import IsOwner
 
 
 class ProjectPagination(BluebottlePagination):

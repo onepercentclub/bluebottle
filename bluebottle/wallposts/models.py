@@ -42,10 +42,6 @@ class Wallpost(PolymorphicModel):
     and have the polymorphic behaviour of sorting on the common fields.
     """
 
-    @property
-    def wallpost_type(self):
-        return 'unknown'
-
     # The user who wrote the wall post. This can be empty to support wallposts
     # without users (e.g. anonymous
     # TextWallposts, system Wallposts for donations etc.)
@@ -84,6 +80,18 @@ class Wallpost(PolymorphicModel):
     # Manager
     objects = WallpostManager()
     objects_with_deleted = models.Manager()
+
+    @property
+    def wallpost_type(self):
+        return 'unknown'
+
+    @property
+    def owner(self):
+        return self.author
+
+    @property
+    def parent(self):
+        return self.content_object
 
     class Analytics:
         type = 'wallpost'

@@ -34,3 +34,6 @@ class AnonymousAuthenticationBackend(object):
             return True
         except (Permission.DoesNotExist, Group.DoesNotExist):
             return False
+
+    def get_user(self, user_id):
+        return None

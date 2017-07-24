@@ -186,32 +186,42 @@ class PrivateFileView(View):
             return HttpResponseForbidden()
 
 
-class BasePermissionsMixin(object):
+class ViewPermissionsMixin(object):
     base_permission_classes = ()
 
     def get_permissions(self):
         all_permission_classes = tuple(self.permission_classes) + self.base_permission_classes
         return [permission() for permission in all_permission_classes]
 
+    def check_permissions(self, request):
+        for permission in self.get_permissions():
+            if not permission.has_permission(request, self):
+                self.permission_denied(
+                    request, message=getattr(permission, 'message', None)
+                )
 
-# TODO: move these custom View classes to a generic place
-class ListAPIView(BasePermissionsMixin, generics.ListAPIView):
+
+class ListAPIView(ViewPermissionsMixin, generics.ListAPIView):
     base_permission_classes = (ResourcePermissions,)
 
 
-class RetrieveAPIView(BasePermissionsMixin, generics.RetrieveAPIView):
+class UpdateAPIView(ViewPermissionsMixin, generics.UpdateAPIView):
     base_permission_classes = (ResourcePermissions,)
 
 
-class ListCreateAPIView(BasePermissionsMixin, generics.ListCreateAPIView):
+class RetrieveAPIView(ViewPermissionsMixin, generics.RetrieveAPIView):
     base_permission_classes = (ResourcePermissions,)
 
 
-class RetrieveUpdateAPIView(BasePermissionsMixin, generics.RetrieveUpdateAPIView):
+class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView):
     base_permission_classes = (ResourcePermissions,)
 
 
-class RetrieveUpdateDestroyAPIView(BasePermissionsMixin, generics.RetrieveUpdateDestroyAPIView):
+class RetrieveUpdateAPIView(ViewPermissionsMixin, generics.RetrieveUpdateAPIView):
+    base_permission_classes = (ResourcePermissions,)
+
+
+class RetrieveUpdateDestroyAPIView(ViewPermissionsMixin, generics.RetrieveUpdateDestroyAPIView):
     base_permission_classes = (ResourcePermissions,)
 
 

@@ -4,6 +4,7 @@ from django.db.models import Q, F
 from django.db.models.aggregates import Sum
 from memoize import memoize
 from moneyed.classes import Money
+import pendulum
 
 from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
@@ -203,7 +204,6 @@ class Statistics(object):
         return sorted(participants.values(), key=lambda k: k['action_date'])
 
     # Projects Statistics
-
     @property
     @memoize(timeout=60 * 60)
     def projects_total(self):
@@ -320,10 +320,17 @@ class Statistics(object):
     @memoize(timeout=60 * 60)
     def unconfirmed_task_members(self):
         """ Total number of unconfirmed task members """
-        logs = TaskMemberStatusLog.objects \
-            .filter(self.end_date_filter('start'), task_member__task__deadline__lte=self.end.subtract(days=10)) \
-            .distinct('task_member__id') \
-            .order_by('-task_member__id', '-start')
+        now = pendulum.now()
+        if self.end <= now.subtract(days=10):
+            logs = TaskMemberStatusLog.objects \
+                .filter(self.end_date_filter('start'), task_member__task__deadline__lte=self.end.subtract(days=10)) \
+                .distinct('task_member__id') \
+                .order_by('-task_member__id', '-start')
+        else:
+            logs = TaskMemberStatusLog.objects \
+                .filter(start__lte=now, task_member__task__deadline__lte=now.subtract(days=10)) \
+                .distinct('task_member__id') \
+                .order_by('-task_member__id', '-start')
 
         count = 0
         for log in logs:
@@ -334,11 +341,18 @@ class Statistics(object):
     @property
     @memoize(timeout=60 * 60)
     def unconfirmed_task_members_task_count(self):
-        """ Total number of unconfirmed task members """
-        logs = TaskMemberStatusLog.objects \
-            .filter(self.end_date_filter('start'), task_member__task__deadline__lte=self.end.subtract(days=10)) \
-            .distinct('task_member__id') \
-            .order_by('-task_member__id', '-start')
+        """ Total number of task belonging to unconfirmed task members """
+        now = pendulum.now()
+        if self.end <= now.subtract(days=10):
+            logs = TaskMemberStatusLog.objects \
+                .filter(self.end_date_filter('start'), task_member__task__deadline__lte=self.end.subtract(days=10)) \
+                .distinct('task_member__id') \
+                .order_by('-task_member__id', '-start')
+        else:
+            logs = TaskMemberStatusLog.objects \
+                .filter(start__lte=now, task_member__task__deadline__lte=now.subtract(days=10)) \
+                .distinct('task_member__id') \
+                .order_by('-task_member__id', '-start')
 
         task_ids = set()
 

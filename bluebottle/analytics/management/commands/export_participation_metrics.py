@@ -143,56 +143,68 @@ class Command(BaseCommand):
         row_data['Time Period'] = RowData(metric=statistic_type.capitalize(),
                                           is_formula=False,
                                           hide_column=False,
-                                          definition='Statistic time period')
+                                          definition='Time period for the statistics.')
         row_data['Year'] = RowData(metric=end_date.year,
                                    is_formula=False,
                                    hide_column=False,
-                                   definition='The year for the start date.')
+                                   definition='The year associated with the end date.')
         column_year = row_data.keys().index('Year')
 
         row_data['Quarter'] = RowData(
             metric=self.get_yearly_quarter(end_date) if statistic_type in ['weekly', 'monthly'] else '',
             is_formula=False,
             hide_column=False,
-            definition='The quarter for the end date.')
+            definition='The yearly quarter associated with the end date.')
 
         row_data['Month'] = RowData(metric=self.get_month_name(end_date) if statistic_type == 'monthly' else '',
                                     is_formula=False,
                                     hide_column=False,
-                                    definition='The calendar month for the end date.')
+                                    definition='The calendar month associated with the end date.')
         column_month = row_data.keys().index('Month')
 
         row_data['Week'] = RowData(metric=end_date.week_of_year if statistic_type == 'weekly' else '',
                                    is_formula=False,
                                    hide_column=False,
-                                   definition='The ISO calendar week for the end date.')
+                                   definition='The ISO calendar week associated with the end date.')
         # row_data['Start Date'] = RowData(metric=start_date,
         #                                  is_formula=False, hide_column=False,
         #                                  definition='The start date for the current statistic.')
         row_data['End Date'] = RowData(metric=end_date.subtract(days=1),
                                        is_formula=False,
                                        hide_column=False,
-                                       definition='The end date for the current statistic.')
+                                       definition='The end date for the current statistic period.')
 
         # Participant Statistics
         row_data['Participants'] = RowData(metric=statistics.participants_count,
                                            is_formula=False,
                                            hide_column=False,
-                                           definition='')
+                                           definition='Participants are defined as project initiators of a project '
+                                                      '(running, done or realised), task members (that applied for, '
+                                                      'got accepted for, or realised a task) or task initiators. '
+                                                      'If a member is one of the three (e.g. a project initiator or a '
+                                                      'task member or a task initiator), they are counted as one '
+                                                      'participant.')
+
+        # Freeze panes before this column for easy viewing
+        worksheet.freeze_panes(1, row_data.keys().index('Participants'))
 
         column_participants = row_data.keys().index('Participants')
         row_data['Participant Total Growth'] = RowData(
             metric=self.get_cumulative_growth_formula(statistic_type, row, column_participants),
             is_formula=True,
             hide_column=False,
-            definition='')
+            definition='Growth of participants for the defined time period.')
 
         # NOTE: Temporary Participant Statistics considering only task members with status realized
         row_data['Participants With Task Member Status Realized'] = RowData(
             metric=statistics.participants_count_with_only_task_members_realized,
             is_formula=False,
             hide_column=False,
-            definition='')
+            definition='Participants are defined as project initiators of a project '
+                       '(running, done or realised), task members who realised a task or task initiators. '
+                       'If a member is one of the three (e.g. a project initiator or a '
+                       'task member or a task initiator), they are counted as one '
+                       'participant.')
 
         column_participants_task_member = row_data.keys().index('Participants With Task Member Status Realized')
         row_data['Participants With Task Member Status Realized Growth'] = RowData(
@@ -203,8 +215,6 @@ class Command(BaseCommand):
 
         # Projects Statistics
         row_data['Projects Total'] = RowData(
-            # metric=statistics.get_projects_count_by_last_status(ProjectPhase.objects.all()
-            #                                                     .values_list('slug', flat=True)),
             metric=statistics.projects_total,
             is_formula=False,
             hide_column=False,
@@ -231,7 +241,8 @@ class Command(BaseCommand):
                 metric=self.get_growth_formula(row, column_project_status),
                 is_formula=True,
                 hide_column=True,
-                definition='Growth of projects for the defined status within the time period.')
+                definition='Growth of projects for the defined status ({}) within the time period.'
+                           .format(project_phase.name))
 
         for location_group in LocationGroup.objects.all():
             row_data['Location - {}'.format(location_group.name)] = RowData(
@@ -265,7 +276,6 @@ class Command(BaseCommand):
 
         # Tasks Statistics
         row_data['Tasks Total'] = RowData(
-            # metric=statistics.get_tasks_count_by_last_status([choice[0] for choice in Task.TaskStatuses.choices]),
             metric=statistics.tasks_total,
             is_formula=False,
             hide_column=False,
@@ -295,8 +305,6 @@ class Command(BaseCommand):
 
         # Task Member Statistics
         row_data['Task Members Total'] = RowData(
-            # metric=statistics.get_task_members_count_by_last_status(
-            #     [choice[0] for choice in TaskMember.TaskMemberStatuses.choices]),
             metric=statistics.task_members_total,
             is_formula=False,
             hide_column=False,
@@ -355,7 +363,6 @@ class Command(BaseCommand):
 
         # Generate YoY Monthly Charts
         if statistic_type == 'monthly':
-            # participant_chart_data = self.charts['Participant Total Growth'].setdefault(end_date.year, {})
             self.charts['Participant Total Growth'][end_date.year] = self.create_yoy_monthly_chart(
                 worksheet=worksheet,
                 column_year=column_year,
@@ -445,9 +452,8 @@ class Command(BaseCommand):
                 participant_worksheet.write(row, 3, participation_date.week_of_year)
 
             # Generate data by year
-            logger.info('tenant:{} Yearly: start_date:{} - end_date:{}'
+            logger.info('tenant:{} Yearly: end_date:{}'
                         .format(self.tenant,
-                                statistics_start_date.to_iso8601_string(),
                                 statistics_end_date.to_iso8601_string()))
 
             # Worksheet for Totals by Year
@@ -473,9 +479,8 @@ class Command(BaseCommand):
                 # Stop if the end date is in the next month from current date
                 if statistics_end_date < pendulum.now().add(months=1):
                     logger.info(
-                        'tenant:{} Monthly: start_date:{} - end_date:{}'
+                        'tenant:{} Monthly: end_date:{}'
                         .format(self.tenant,
-                                statistics_start_date.to_iso8601_string(),
                                 statistics_end_date.to_iso8601_string())
                     )
                     self.write_stats(worksheet=worksheet, row=row, statistic_type='monthly',
@@ -500,9 +505,8 @@ class Command(BaseCommand):
 
                 if statistics_end_date <= pendulum.now().add(weeks=1):
                     logger.info(
-                        'tenant:{} Weekly: start_date:{} - end_date:{}'
+                        'tenant:{} Weekly: end_date:{}'
                         .format(self.tenant,
-                                statistics_start_date.to_iso8601_string(),
                                 statistics_end_date.to_iso8601_string()))
                     self.write_stats(worksheet=worksheet, row=row, statistic_type='weekly',
                                      start_date=statistics_start_date, end_date=statistics_end_date)

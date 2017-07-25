@@ -16,7 +16,7 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.clients import properties
 from bluebottle.projects.models import Project
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.utils.permissions import ResourcePermissions, IsOwner
+from bluebottle.utils.permissions import ResourcePermissions
 
 from .models import Language
 from .serializers import ShareSerializer, LanguageSerializer
@@ -163,10 +163,8 @@ class PrivateFileView(View):
     field = None  # Field on the model that is the actual file
 
     def check_permission(self, request, instance):
-        """
-        Check if the request is allowed access to the file on instance
-        """
-        raise NotImplemented
+        # Permission check should happen in the permission_classes
+        return True
 
     def get(self, request, pk):
         try:
@@ -223,5 +221,3 @@ class RetrieveUpdateAPIView(ViewPermissionsMixin, generics.RetrieveUpdateAPIView
 
 class RetrieveUpdateDestroyAPIView(ViewPermissionsMixin, generics.RetrieveUpdateDestroyAPIView):
     base_permission_classes = (ResourcePermissions,)
-
-

@@ -9,7 +9,6 @@ from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, SorlImageField, ImageSerializer,
     PrivateFileSerializer
 )
-from bluebottle.utils.permissions import ResourcePermissions
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
@@ -256,7 +255,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     viewable = serializers.BooleanField(read_only=True)
     permissions = PermissionField('project_manage_detail', view_args=('slug', ))
     related_permissions = ProjectPermissionsSerializer(read_only=True)
-
 
     @staticmethod
     def validate_account_number(value):

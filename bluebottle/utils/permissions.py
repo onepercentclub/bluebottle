@@ -23,14 +23,14 @@ class BasePermission(permissions.BasePermission):
 
         Used by both the DRF permission system and for returning permissions to the user
         """
-        raise NotImplemented()
+        raise NotImplementedError('check_object_permission() must be implemented')
 
     def check_permission(self, method, user, view, obj=None):
         """ Check if user has permission to access method for the view
 
         Used by both the DRF permission system and for returning permissions to the user
         """
-        raise NotImplemented()
+        raise NotImplementedError('check_permission() must be implemented')
 
 
 class IsUser(BasePermission):
@@ -45,11 +45,11 @@ class IsOwner(BasePermission):
     owner_field = 'owner'
 
     def get_parent_from_request(self, request):
-        """ For requests to list endpoints, eg when creating an object then 
-        get_parent needs to be defined to use this permission class 
+        """ For requests to list endpoints, eg when creating an object then
+        get_parent needs to be defined to use this permission class
 
         """
-        raise NotImplemented()
+        raise NotImplementedError('get_parent_from_request() must be implemented')
 
     def get_owner(self, obj):
         return getattr(obj, self.owner_field, None)
@@ -57,7 +57,6 @@ class IsOwner(BasePermission):
     def check_object_permission(self, method, user, view, obj):
         """ If the object has a parent then the user needs to be the
         owner of the parent object
-            
         """
         if hasattr(obj, 'parent'):
             obj = obj.parent
@@ -65,14 +64,23 @@ class IsOwner(BasePermission):
         return user == self.get_owner(obj)
 
     def has_permission(self, request, view):
-        # Get the parent from the request
-        parent = self.get_parent_from_request(request)
-        
-        # If we don't have a parent then don't complain.
-        if not parent:
+        try:
+            obj = view.get_object()
+        except AssertionError:
+            obj = None
+
+        if obj and hasattr(obj, 'parent'):
+            obj = obj.parent
+        else:
+            # Get the obj (parent) from the request
+            obj = self.get_parent_from_request(request)
+
+        print("IsOwner::has_permission > ", obj)
+        # If we don't have an obj then don't complain.
+        if not obj:
             return True
 
-        return request.user == self.get_owner(parent)
+        return request.user == self.get_owner(obj)
 
 
 class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
@@ -99,6 +107,7 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
         )
 
         perms = self.get_required_permissions(method, queryset.model)
+        print("ResourcePermissions::check_permission > ", perms)
         return user.has_perms(perms)
 
     def check_object_permission(self, method, user, view, obj=None):

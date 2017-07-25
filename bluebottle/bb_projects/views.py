@@ -15,7 +15,7 @@ from bluebottle.utils.views import (
 )
 
 from .models import ProjectTheme, ProjectPhase
-from bluebottle.projects.permissions import IsOwner
+from bluebottle.projects.permissions import (IsOwner, IsEditableOrReadOnly,)
 
 
 class ProjectPagination(BluebottlePagination):
@@ -150,7 +150,7 @@ class ManageProjectList(ListCreateAPIView):
 
 class ManageProjectDetail(RetrieveUpdateAPIView):
     queryset = Project.objects.all()
-    permission_classes = (IsOwner,)
+    permission_classes = (IsOwner, IsEditableOrReadOnly,)
     serializer_class = ManageProjectSerializer
     lookup_field = 'slug'
 

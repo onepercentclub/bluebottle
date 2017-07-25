@@ -10,7 +10,7 @@ from bluebottle.utils.views import (
 )
 from bluebottle.wallposts.models import MediaWallpostPhoto
 from .models import ProjectDocument, ProjectBudgetLine, Project
-from .permissions import IsOwner
+from .permissions import (IsOwner, IsOwnerOrAdmin,)
 
 
 class BudgetLinePagination(BluebottlePagination):
@@ -50,6 +50,7 @@ class ManageProjectDocumentDetail(RetrieveUpdateDestroyAPIView):
     queryset = ProjectDocument.objects.all()
     serializer_class = ProjectDocumentSerializer
     pagination_class = DocumentPagination
+    permission_classes = (IsOwner,)
 
     filter = ('project',)
 
@@ -60,9 +61,7 @@ class ManageProjectDocumentDetail(RetrieveUpdateDestroyAPIView):
 class ProjectDocumentFileView(PrivateFileView):
     queryset = ProjectDocument.objects
     field = 'file'
-
-    def check_permission(self, request, instance):
-        return request.user == instance.author or request.user.is_staff
+    permission_classes = (IsOwnerOrAdmin,)
 
 
 class ProjectMediaDetail(RetrieveAPIView):

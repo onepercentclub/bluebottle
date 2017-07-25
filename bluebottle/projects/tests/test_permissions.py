@@ -1,24 +1,11 @@
-from datetime import timedelta, datetime
-import json
-from random import randint
-
 from django.test import RequestFactory
 from django.contrib.auth.models import Permission
 from django.core.urlresolvers import reverse
-from django.utils import timezone
-from django.test.utils import override_settings
-
-from moneyed import Money
-
-from rest_framework import status
-from rest_framework.status import HTTP_200_OK
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.utils import BluebottleTestCase
-
-from ..models import Project
 
 
 # RequestFactory used for integration tests.
@@ -56,7 +43,7 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(
-            response.data['permissions']['GET'],  True
+            response.data['permissions']['GET'], True
         )
         self.assertEqual(
             response.data['related_permissions']['rewards']['GET'], False

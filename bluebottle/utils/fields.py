@@ -182,5 +182,3 @@ class PermissionField(serializers.Field):
             )
 
         return permissions
-
-

@@ -61,5 +61,3 @@ class Reward(models.Model):
             ('api_change_reward', 'Can change reward through the API'),
             ('api_delete_reward', 'Can delete reward through the API'),
         )
-
-

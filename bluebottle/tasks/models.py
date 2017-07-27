@@ -1,21 +1,20 @@
 from datetime import timedelta
 
-from django.db import models, connection
 from django.conf import settings
+from django.db import models, connection
+from django.db.models import Sum
 from django.utils import timezone
 from django.utils.translation import ugettext, ugettext_lazy as _
-
-from django_extensions.db.fields import (
-    ModificationDateTimeField, CreationDateTimeField)
+from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
-from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
+from bluebottle.utils.email_backend import send_mail
 
 
 GROUP_PERMS = {

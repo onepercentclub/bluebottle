@@ -265,13 +265,6 @@ class Task(models.Model, PreviousStatusMixin):
                     eta=timezone.now() + timedelta(minutes=2 * settings.REMINDER_MAIL_DELAY)
                 )
 
-    @property
-    def date_realized(self):
-        if self.status == TaskMember.TaskMemberStatuses.realized:
-            return self.date_status_change
-        else:
-            return None
-
     def save(self, *args, **kwargs):
         if not self.author_id:
             self.author = self.project.owner
@@ -307,29 +300,22 @@ class TaskMember(models.Model, PreviousStatusMixin):
         withdrew = ChoiceItem('withdrew', label=_('Withdrew'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
-    member = models.ForeignKey('members.Member',
-                               related_name='%(app_label)s_%(class)s_related')
+    member = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
     task = models.ForeignKey('tasks.Task', related_name="members")
     status = models.CharField(_('status'), max_length=20,
                               choices=TaskMemberStatuses.choices,
                               default=TaskMemberStatuses.applied)
-    motivation = models.TextField(
-        _('Motivation'), help_text=_('Motivation by applicant.'), blank=True)
-    comment = models.TextField(_('Comment'),
-                               help_text=_('Comment by task owner.'),
-                               blank=True)
-    time_spent = models.PositiveSmallIntegerField(
-        _('time spent'), default=0,
-        help_text=_('Time spent executing this task.'))
+    motivation = models.TextField(_('Motivation'), help_text=_('Motivation by applicant.'), blank=True)
+    comment = models.TextField(_('Comment'), help_text=_('Comment by task owner.'), blank=True)
+    time_spent = models.PositiveSmallIntegerField(_('time spent'),
+                                                  default=0,
+                                                  help_text=_('Time spent executing this task.'))
 
-    externals = models.PositiveSmallIntegerField(
-        _('Externals'), default=0,
-        help_text=_('External people helping for this task'))
+    externals = models.PositiveSmallIntegerField(_('Externals'),
+                                                 default=0,
+                                                 help_text=_('External people helping for this task'))
 
-    resume = PrivateFileField(
-        upload_to='task-members/resume',
-        blank=True
-    )
+    resume = PrivateFileField(upload_to='task-members/resume', blank=True)
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
@@ -362,8 +348,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
 
 
 class TaskFile(models.Model):
-    author = models.ForeignKey('members.Member',
-                               related_name='%(app_label)s_%(class)s_related')
+    author = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
     title = models.CharField(max_length=255)
     file = models.FileField(_('file'), upload_to='task_files/')
     created = CreationDateTimeField(_('created'))
@@ -378,8 +363,7 @@ class TaskFile(models.Model):
 class TaskStatusLog(models.Model):
     task = models.ForeignKey('tasks.Task')
     status = models.CharField(_('status'), max_length=20)
-    start = CreationDateTimeField(
-        _('created'), help_text=_('When this task entered in this status.'))
+    start = CreationDateTimeField(_('created'), help_text=_('When this task entered in this status.'))
 
     class Analytics:
         type = 'task'
@@ -408,8 +392,7 @@ class TaskStatusLog(models.Model):
 class TaskMemberStatusLog(models.Model):
     task_member = models.ForeignKey('tasks.TaskMember')
     status = models.CharField(_('status'), max_length=20)
-    start = CreationDateTimeField(
-        _('created'), help_text=_('When this task member entered in this status.'))
+    start = CreationDateTimeField(_('created'), help_text=_('When this task member entered in this status.'))
 
     class Analytics:
         type = 'task_member'

@@ -985,6 +985,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         # We should have 3 budget lines by now
         response = self.client.get(project_url, token=self.some_user_token)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data['budget_lines']), 3)
 
         # Let's change a budget_line
@@ -1012,8 +1014,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.manage_budget_lines_url,
                                     line, token=self.another_user_token)
         self.assertEquals(response.status_code,
-                          status.HTTP_403_FORBIDDEN,
-                          response)
+                          status.HTTP_403_FORBIDDEN)
 
 
 class ProjectStoryXssTest(BluebottleTestCase):

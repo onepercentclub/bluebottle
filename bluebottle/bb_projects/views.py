@@ -13,9 +13,9 @@ from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView
 )
-
+from bluebottle.utils.permissions import IsOwner
+from bluebottle.projects.permissions import IsEditableOrReadOnly
 from .models import ProjectTheme, ProjectPhase
-from bluebottle.projects.permissions import (IsOwner, IsEditableOrReadOnly,)
 
 
 class ProjectPagination(BluebottlePagination):

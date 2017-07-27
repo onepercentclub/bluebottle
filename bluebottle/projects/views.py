@@ -8,9 +8,10 @@ from bluebottle.utils.views import (
     RetrieveAPIView, ListCreateAPIView, UpdateAPIView,
     RetrieveUpdateDestroyAPIView, PrivateFileView
 )
+from bluebottle.utils.permissions import IsOwnerOrAdmin
 from bluebottle.wallposts.models import MediaWallpostPhoto
 from .models import ProjectDocument, ProjectBudgetLine, Project
-from .permissions import (IsOwner, IsOwnerOrAdmin,)
+from .permissions import IsOwner  # ,EditableOrReadOnly
 
 
 class BudgetLinePagination(BluebottlePagination):

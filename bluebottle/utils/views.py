@@ -188,15 +188,13 @@ class ViewPermissionsMixin(object):
     base_permission_classes = ()
 
     def get_permissions(self):
-        all_permission_classes = tuple(self.permission_classes) + self.base_permission_classes
+        """
+        Combine and return the base_permission_classes appended to the standard
+        permission_classes
+        """
+        all_permission_classes = (tuple(self.permission_classes) +
+                                  self.base_permission_classes)
         return [permission() for permission in all_permission_classes]
-
-    def check_permissions(self, request):
-        for permission in self.get_permissions():
-            if not permission.has_permission(request, self):
-                self.permission_denied(
-                    request, message=getattr(permission, 'message', None)
-                )
 
 
 class ListAPIView(ViewPermissionsMixin, generics.ListAPIView):

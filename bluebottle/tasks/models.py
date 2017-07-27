@@ -105,7 +105,8 @@ class Task(models.Model, PreviousStatusMixin):
 
     @property
     def members_applied(self):
-        return self.members.exclude(status__in=['stopped', 'withdrew'])
+        return self.members.exclude(status__in=[TaskMember.TaskMemberStatuses.stopped,
+                                                TaskMember.TaskMemberStatuses.withdrew])
 
     @property
     def members_realized(self):
@@ -125,7 +126,8 @@ class Task(models.Model, PreviousStatusMixin):
 
     @property
     def people_accepted(self):
-        members = self.members.filter(status__in=['accepted', 'realized'])
+        members = self.members.filter(status__in=[TaskMember.TaskMemberStatuses.accepted,
+                                                  TaskMember.TaskMemberStatuses.realized])
         total_externals = 0
         for member in members:
             total_externals += member.externals
@@ -190,15 +192,15 @@ class Task(models.Model, PreviousStatusMixin):
                 else:
                     self.set_full()
             else:
-                self.status = 'closed'
+                self.status = self.TaskStatuses.closed
 
             self.save()
 
     def deadline_reached(self):
         if self.people_accepted:
-            self.status = 'realized'
+            self.status = self.TaskStatuses.realized
         else:
-            self.status = 'closed'
+            self.status = self.TaskStatuses.closed
             with TenantLanguage(self.author.primary_language):
                 subject = _("The status of your task '{0}' is set to closed").format(self.title)
             send_mail(
@@ -239,7 +241,9 @@ class Task(models.Model, PreviousStatusMixin):
         """ called by post_save signal handler, if status changed """
         # confirm everything with task owner
 
-        if oldstate in ("in progress", "open", "closed") and newstate == "realized":
+        if oldstate in (self.TaskStatuses.in_progress,
+                        self.TaskStatuses.open,
+                        self.TaskStatuses.closed) and newstate == self.TaskStatuses.realized:
             self.project.check_task_status()
 
             with TenantLanguage(self.author.primary_language):

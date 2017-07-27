@@ -718,18 +718,6 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.TaskMemberResource',
             'title': 'Supporters (Sourcing)',
         }),
-        # ('suggestions.Suggestion', {
-        #     'fields': (
-        #         'id',
-        #         ('get_status_display', 'Status'),
-        #         'title',
-        #         'org_email',
-        #         'project__location',
-        #         'created',
-        #         'updated',
-        #     ),
-        #     'title': 'Suggestions',
-        # })
     ])
 }
 EXPORTDB_CONFIRM_FORM = 'bluebottle.exports.forms.ExportDBForm'

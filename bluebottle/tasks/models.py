@@ -49,23 +49,25 @@ class Task(models.Model, PreviousStatusMixin):
     description = models.TextField(_('description'))
     location = models.CharField(_('location'),
                                 help_text=_('Task location (leave empty for anywhere/online)'),
-                                max_length=200, null=True,
+                                max_length=200,
+                                null=True,
                                 blank=True)
     people_needed = models.PositiveIntegerField(_('people needed'), default=1)
-
     project = models.ForeignKey('projects.Project')
     # See Django docs on issues with related name and an (abstract) base class:
     # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
-    author = models.ForeignKey('members.Member',
-                               related_name='%(app_label)s_%(class)s_related')
-    status = models.CharField(_('status'), max_length=20,
+    author = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
+    status = models.CharField(_('status'),
+                              max_length=20,
                               choices=TaskStatuses.choices,
                               default=TaskStatuses.open)
-    type = models.CharField(_('type'), max_length=20,
+    type = models.CharField(_('type'),
+                            max_length=20,
                             choices=TaskTypes.choices,
                             default=TaskTypes.ongoing)
 
-    accepting = models.CharField(_('accepting'), max_length=20,
+    accepting = models.CharField(_('accepting'),
+                                 max_length=20,
                                  choices=TaskAcceptingChoices.choices,
                                  default=TaskAcceptingChoices.manual)
 
@@ -73,27 +75,19 @@ class Task(models.Model, PreviousStatusMixin):
                                            default=False,
                                            help_text=_('Indicates if a task candidate needs to submit a motivation'))
 
-    date_status_change = models.DateTimeField(_('date status change'),
-                                              blank=True, null=True)
-
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
-    deadline_to_apply = models.DateTimeField(
-        _('Deadline to apply'), help_text=_('Deadline to apply')
-    )
+    deadline_to_apply = models.DateTimeField(_('Deadline to apply'), help_text=_('Deadline to apply'))
 
     objects = UpdateSignalsQuerySet.as_manager()
 
     # required resources
-    time_needed = models.FloatField(
-        _('time_needed'),
-        help_text=_('Estimated number of hours needed to perform this task.'))
+    time_needed = models.FloatField(_('time_needed'),
+                                    help_text=_('Estimated number of hours needed to perform this task.'))
 
-    skill = models.ForeignKey('tasks.Skill',
-                              verbose_name=_('Skill needed'), null=True)
+    skill = models.ForeignKey('tasks.Skill', verbose_name=_('Skill needed'), null=True)
 
     # internal usage
-    created = CreationDateTimeField(
-        _('created'), help_text=_('When this task was created?'))
+    created = CreationDateTimeField(_('created'), help_text=_('When this task was created?'))
     updated = ModificationDateTimeField(_('updated'))
 
     class Meta:

@@ -99,18 +99,6 @@ class Task(models.Model, PreviousStatusMixin):
     def __unicode__(self):
         return self.title
 
-    def set_in_progress(self):
-        self.status = self.TaskStatuses.in_progress
-        self.save()
-
-    def set_full(self):
-        self.status = self.TaskStatuses.full
-        self.save()
-
-    def set_open(self):
-        self.status = self.TaskStatuses.open
-        self.save()
-
     @property
     def expertise_based(self):
         return self.skill.expertise if self.skill else False
@@ -142,6 +130,43 @@ class Task(models.Model, PreviousStatusMixin):
         for member in members:
             total_externals += member.externals
         return members.count() + total_externals
+
+    @property
+    def date_realized(self):
+        if self.status == self.TaskStatuses.realized:
+            return TaskStatusLog.objects\
+                .filter(task=self, status=self.TaskStatuses.realized)\
+                .order_by('-start')\
+                .first()\
+                .start
+        else:
+            return None
+
+    @property
+    def time_spent(self):
+        if self.status == self.TaskStatuses.realized:
+            queryset = TaskMember.objects\
+                .filter(task=self, status=TaskMember.TaskMemberStatuses.realized)\
+                .aggregate(time_spent=Sum('time_spent'))
+            return queryset.get('time_spent', 0)
+        else:
+            return None
+
+    @property
+    def date_status_change(self):
+        return TaskStatusLog.objects.filter(task=self).order_by('-start').first().start
+
+    def set_in_progress(self):
+        self.status = self.TaskStatuses.in_progress
+        self.save()
+
+    def set_full(self):
+        self.status = self.TaskStatuses.full
+        self.save()
+
+    def set_open(self):
+        self.status = self.TaskStatuses.open
+        self.save()
 
     def get_absolute_url(self):
         """ Get the URL for the current task. """

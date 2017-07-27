@@ -722,6 +722,7 @@ EXPORTDB_EXPORT_CONF = {
 }
 EXPORTDB_CONFIRM_FORM = 'bluebottle.exports.forms.ExportDBForm'
 EXPORTDB_EXPORT_ROOT = os.path.join(MEDIA_ROOT, '%s', 'exports')
+EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
 
 # maximum delta between from/to date for exports
 EXPORT_MAX_DAYS = 366
@@ -757,8 +758,6 @@ SHARE_OPTIONS = {
 }
 
 SHOW_DONATION_AMOUNTS = True
-
-EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
 
 # Salesforce connection settings
 SALESFORCE_QUERY_TIMEOUT = 15

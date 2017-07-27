@@ -43,15 +43,16 @@ class CategoryContent(models.Model):
     title = models.CharField(_('title'), max_length=60)
     description = models.TextField(_('description'), max_length=190, blank=True, default='')
     image = ImageField(_('image'), max_length=255, blank=True, null=True, upload_to='categories/content/',
-                       help_text=_("The image will be replaced by the video if the video url is present"))
-    video_url = models.URLField(max_length=100, blank=True, default='', help_text="Setting a video url will override"
-                                                                                  " the uploaded image (if present)")
-    link_text = models.CharField(_("link text"), max_length=60, blank=True, default=_("Read more"))
+                       help_text=_("Accepted file format: .jpg, .jpeg & .png"))
+    video_url = models.URLField(max_length=100, blank=True, default='', help_text="Setting a video url will replace "
+                                                                                  "the image. Only YouTube or Vimeo "
+                                                                                  "videos are accepted.")
+    link_text = models.CharField(_("link name"), max_length=60, blank=True, default=_("Read more"))
     link_url = models.URLField(_("link url"), blank=True)
 
     class Meta:
-        verbose_name = _("category content")
-        verbose_name_plural = _("category contents")
+        verbose_name = _("content block")
+        verbose_name_plural = _("content blocks")
 
     def __unicode__(self):
         return self.title

@@ -1,21 +1,10 @@
-from django import forms
 from django.contrib import admin
 from sorl.thumbnail.admin import AdminImageMixin
-from tinymce.widgets import TinyMCE
 from .models import Category, CategoryContent
-
-
-class CatergoryContentForm(forms.ModelForm):
-    description = forms.CharField(required=False, widget=TinyMCE())
-
-    class Meta:
-        model = CategoryContent
-        exclude = ()
 
 
 class CategoryContentInline(admin.StackedInline):
     model = CategoryContent
-    form = CatergoryContentForm
     extra = 0
     max_num = 3
 

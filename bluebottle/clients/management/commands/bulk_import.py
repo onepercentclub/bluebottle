@@ -66,16 +66,19 @@ class Command(BaseCommand):
             with open(options['file']) as json_file:
                 data = json.load(json_file)
 
-            models = options['models'].split(',') or [
-                'users',
-                'categories',
-                'projects',
-                'tasks',
-                'rewards',
-                'wallposts',
-                'orders',
-                'pages'
-            ]
+            if options['models']:
+                models = options['models'].split(',')
+            else:
+                models = [
+                    'users',
+                    'categories',
+                    'projects',
+                    'tasks',
+                    'rewards',
+                    'wallposts',
+                    'orders',
+                    'pages'
+                ]
 
             counter = Counter()
             for key in models:

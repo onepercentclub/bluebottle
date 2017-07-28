@@ -160,12 +160,37 @@ def get_public_properties(request):
     else:
         config = {}
 
+    # snake_case to CamelCase
+    def _camelize(s):
+        return re.sub('_.', lambda x: x.group()[1].upper(), s)
+
     # Now load the tenant specific properties
     for item in props:
         try:
-            key = re.sub('_.', lambda x: x.group()[1].upper(), item)
-            # Use camelcase for setting keys (convert from snakecase)
-            config[key] = getattr(properties, item.upper())
+            parts = item.split('.')
+            if len(parts) == 2:
+                # get parent and child details
+                parent = getattr(properties, parts[0].upper())
+                parent_key = _camelize(parts[0])
+                child_key = _camelize(parts[1])
+
+                # skip if the child property does not exist
+                try:
+                    value = parent[parts[1]]
+                except KeyError:
+                    continue
+
+                if parent_key not in config:
+                    config[parent_key] = {}
+                config[parent_key][child_key] = value
+
+            elif len(parts) > 2:
+                logger.info("Depth is too great for exposed property: {}".format(item))
+
+            else:
+                # Use camelcase for setting keys (convert from snakecase)
+                key = _camelize(item)
+                config[key] = getattr(properties, item.upper())
         except AttributeError:
             pass
 

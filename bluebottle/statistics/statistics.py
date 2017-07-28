@@ -149,7 +149,7 @@ class Statistics(object):
         # TODO: Refactor to use django filters for sub-queries
         count = 0
         for log in phase_logs:
-            if log.status.slug in ['done-complete', 'done-incomplete']:
+            if log.status.slug in ['done-complete', 'done-incomplete', 'voting-done']:
                 count += 1
         return count
 

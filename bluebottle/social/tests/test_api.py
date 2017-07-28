@@ -10,12 +10,12 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
 
-@httmock.urlmatch(netloc='graph.facebook.com', path='/v2.3/me')
+@httmock.urlmatch(netloc='graph.facebook.com', path='/v2.7/me')
 def facebook_me_mock(url, request):
     return json.dumps({'firstname': 'bla', 'lastname': 'bla'})
 
 
-@httmock.urlmatch(netloc='graph.facebook.com', path='/v2.3/oauth/access_token')
+@httmock.urlmatch(netloc='graph.facebook.com', path='/v2.7/oauth/access_token')
 def facebook_access_token(url, request):
     return json.dumps({})
 

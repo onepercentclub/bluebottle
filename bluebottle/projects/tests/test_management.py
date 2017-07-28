@@ -220,29 +220,48 @@ class TestStatusMC(BluebottleTestCase):
         now = timezone.now()
         project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'))
 
-        task = TaskFactory.create(title='task1', people_needed=2,
-                                  project=project,
-                                  deadline=now - timezone.timedelta(days=5))
-        task2 = TaskFactory.create(title='task2', people_needed=2,
+        task1 = TaskFactory.create(title='task1', people_needed=5,
                                    project=project,
-                                   deadline=now - timezone.timedelta(days=5))
+                                   deadline=now + timezone.timedelta(days=5))
+        task2 = TaskFactory.create(title='task2', people_needed=5,
+                                   project=project,
+                                   deadline=now + timezone.timedelta(days=5))
+        task3 = TaskFactory.create(title='task3', people_needed=5,
+                                   project=project, type='event',
+                                   deadline=now + timezone.timedelta(days=5))
 
-        TaskMemberFactory.create(task=task, status='accepted')
-        self.assertEquals(len(mail.outbox), 1)
+        TaskMemberFactory.create(task=task1, status='accepted')
+        TaskMemberFactory.create_batch(5, task=task3, status='accepted')
+        self.assertEquals(len(mail.outbox), 6)
+
+        task1 = Task.objects.get(title='task1')
+        task2 = Task.objects.get(title='task2')
+        task3 = Task.objects.get(title='task3')
+
+        # Check task statuses
+        self.assertEqual(task1.status, 'open')
+        self.assertEqual(task2.status, 'open')
+        self.assertEqual(task3.status, 'full')
+
+        # Change deadline so we can finish the tasks
+        Task.objects.update(deadline=now - timezone.timedelta(days=5))
 
         call_command('cron_status_realised')
 
         task1 = Task.objects.get(title='task1')
         task2 = Task.objects.get(title='task2')
+        task3 = Task.objects.get(title='task3')
 
         self.assertEqual(task1.status, 'realized')
         self.assertEqual(task2.status, 'closed')
-        # Expect two extra mails
-        self.assertEquals(len(mail.outbox), 3)
+        self.assertEqual(task3.status, 'realized')
+
+        # Expect two extra mails for task owners
+        self.assertEquals(len(mail.outbox), 8)
 
     def test_task_ignored_non_active_project(self):
         """
-        Task that are connected to a proejct that hasn't started yet should be ignored.
+        Task that are connected to a project that hasn't started yet should be ignored.
         """
         now = timezone.now()
         project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='plan-new'))
@@ -262,6 +281,49 @@ class TestStatusMC(BluebottleTestCase):
         # Task should still be open
         task1 = Task.objects.get(title='task1')
         self.assertEquals(task1.status, 'open')
+
+    def test_task_status_changes(self):
+        """
+        Test that tasks changes status.
+        """
+        now = timezone.now()
+
+        project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'))
+
+        task1 = TaskFactory.create(title='My Task', people_needed=5,
+                                   project=project,
+                                   status='open', type='event',
+                                   deadline_to_apply=now - timezone.timedelta(days=5),
+                                   deadline=now + timezone.timedelta(days=5))
+
+        task2 = TaskFactory.create(title='My Task 2', people_needed=5,
+                                   project=project,
+                                   status='open', type='ongoing',
+                                   deadline_to_apply=now - timezone.timedelta(days=5),
+                                   deadline=now + timezone.timedelta(days=5))
+
+        TaskMemberFactory.create_batch(5, task=task1, status='accepted')
+        TaskMemberFactory.create_batch(5, task=task2, status='accepted')
+
+        task1 = Task.objects.get(title='My Task')
+        self.assertEqual(task1.status, 'full')
+
+        task2 = Task.objects.get(title='My Task 2')
+        self.assertEqual(task2.status, 'in progress')
+
+        task1.deadline = now - timezone.timedelta(days=5)
+        task1.save()
+
+        task2.deadline = now - timezone.timedelta(days=5)
+        task2.save()
+
+        call_command('cron_status_realised')
+
+        task1 = Task.objects.get(title='My Task')
+        self.assertEqual(task1.status, 'realized')
+
+        task2 = Task.objects.get(title='My Task 2')
+        self.assertEqual(task2.status, 'realized')
 
 
 @override_settings(SEND_WELCOME_MAIL=False)

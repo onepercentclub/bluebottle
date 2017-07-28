@@ -1,6 +1,7 @@
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext as _
+from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 
 from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
@@ -50,9 +51,14 @@ class CategoryContent(models.Model):
     link_text = models.CharField(_("link name"), max_length=60, blank=True, default=_("Read more"))
     link_url = models.URLField(_("link url"), blank=True)
 
+    # internal usage
+    created = CreationDateTimeField(_('created'))
+    updated = ModificationDateTimeField(_('updated'))
+
     class Meta:
         verbose_name = _("content block")
         verbose_name_plural = _("content blocks")
+        ordering = ['created']
 
     def __unicode__(self):
         return self.title

@@ -40,7 +40,7 @@ class Category(models.Model):
 
 class CategoryContent(models.Model):
     category = models.ForeignKey(Category, related_name='contents')
-    title = models.CharField(_('title'), max_length=60, help_text=_("Max: %(chars)s characters") % {'chars': 60})
+    title = models.CharField(_('title'), max_length=60, help_text=_("Max: %(chars)s characters.") % {'chars': 60})
     description = models.TextField(_('description'),
                                    max_length=190,
                                    blank=True,
@@ -56,12 +56,12 @@ class CategoryContent(models.Model):
                                 blank=True,
                                 default='',
                                 help_text=_("Setting a video url will replace the image. Only YouTube or Vimeo videos "
-                                            "are accepted. Max: %(chars)s characters") % {'chars': 100})
+                                            "are accepted. Max: %(chars)s characters.") % {'chars': 100})
     link_text = models.CharField(_("link name"),
                                  max_length=60,
                                  blank=True,
                                  default=_("Read more"),
-                                 help_text=_("Max: %(chars)s characters") % {'chars': 60})
+                                 help_text=_("Max: %(chars)s characters.") % {'chars': 60})
     link_url = models.URLField(_("link url"), blank=True)
 
     class Meta:

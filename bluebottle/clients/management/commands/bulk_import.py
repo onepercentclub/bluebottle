@@ -151,21 +151,21 @@ class Command(BaseCommand):
         project.owner = Member.objects.get(email=data['user'])
         try:
             project.status = ProjectPhase.objects.get(slug=data['status'])
-        except ProjectPhase.DoesNotExist:
-            project.status = ProjectPhase.objects.get(slug='closed')
+        except (ProjectPhase.DoesNotExist, KeyError):
+            # If we don't have a status, then it should be set in admin, so plan-new seems best.
+            project.status = ProjectPhase.objects.get(slug='plan-new')
         project.title = data['title'] or data['slug']
         project.created = data['created'] + 'T12:00:00+01:00'
         project.campaign_started = data['created'] + 'T12:00:00+01:00'
         project.amount_asked = Money(data['goal'], 'EUR')
-        project.categories = Category.objects.filter(slug__in=data['categories'])
         project.deadline = deadline
         project.video_url = data['video']
 
         self._generic_import(project, data,
                              excludes=['deadline', 'slug', 'user', 'created',
                                        'status', 'goal', 'categories', 'image', 'video'])
-
         project.save()
+        project.categories = Category.objects.filter(slug__in=data['categories'])
 
         if 'image' in data and data['image'].startswith('http'):
             content = urllib.urlretrieve(data['image'])

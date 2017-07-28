@@ -68,7 +68,7 @@
    		"completed": null,
    		"total": "35",
    		"donations": [{
-     			"project": "F/X3 - Their effects had _better_ be special!",
+     			"project": "f-x3",
      			"reward_sequence": "0",
      			"amount": 35.0
     		}],

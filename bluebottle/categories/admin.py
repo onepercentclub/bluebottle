@@ -12,6 +12,7 @@ class CategoryContentInline(admin.StackedInline):
     model = CategoryContent
     extra = 0
     max_num = 3
+    exclude = ('created', 'updated')
 
 
 class CategoryAdmin(AdminImageMixin, admin.ModelAdmin):

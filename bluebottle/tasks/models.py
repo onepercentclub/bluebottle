@@ -135,6 +135,7 @@ class Task(models.Model, PreviousStatusMixin):
 
     @property
     def date_realized(self):
+        """The start date (creation date) of the last realized status entry from task status log"""
         if self.status == self.TaskStatuses.realized:
             return TaskStatusLog.objects\
                 .filter(task=self, status=self.TaskStatuses.realized)\

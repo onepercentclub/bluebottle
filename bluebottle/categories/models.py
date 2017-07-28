@@ -61,7 +61,8 @@ class CategoryContent(models.Model):
                                  max_length=60,
                                  blank=True,
                                  default=_("Read more"),
-                                 help_text=_("Max: %(chars)s characters.") % {'chars': 60})
+                                 help_text=_("The link will only be displayed if an URL is provided. "
+                                             "Max: %(chars)s characters.") % {'chars': 60})
     link_url = models.URLField(_("link url"), blank=True)
 
     class Meta:

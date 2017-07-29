@@ -2,6 +2,7 @@ import sys
 import urllib
 import datetime
 import json
+import logging
 from urlparse import urlparse
 
 import pytz
@@ -10,7 +11,6 @@ from moneyed.classes import Money
 from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.db import connection
-from django.db.utils import IntegrityError
 from django.utils.text import slugify
 from django.utils.timezone import now
 from django.contrib.contenttypes.models import ContentType
@@ -31,6 +31,8 @@ from bluebottle.tasks.models import Task
 from bluebottle.wallposts.models import TextWallpost
 from bluebottle.clients import properties
 
+logger = logging.getLogger(__name__)
+
 
 class Counter(object):
     def __init__(self, total=1):
@@ -48,32 +50,49 @@ class Counter(object):
 
 class Command(BaseCommand):
     help = 'Import data from json'
+    models = [
+        'users',
+        'categories',
+        'projects',
+        'tasks',
+        'rewards',
+        'wallposts',
+        'orders',
+        'pages'
+    ]
 
     def add_arguments(self, parser):
         parser.add_argument('--file', '-f', action='store', dest='file',
                             help="JSON import file.")
         parser.add_argument('--tenant', '-t', action='store', dest='tenant',
                             help="The tenant to run the recurring donations for.")
+        parser.add_argument('--models', '-m', action='store', dest='models',
+                            required=False, nargs='*', choices=self.models,
+                            help="Models you want to import, can be multiple e.g. -m users wallposts")
 
     def handle(self, *args, **options):
+
         client = Client.objects.get(client_name=options['tenant'])
         connection.set_tenant(client)
 
         with LocalTenant(client, clear_tenant=True):
+
             with open(options['file']) as json_file:
                 data = json.load(json_file)
 
+            if options['models']:
+                self.models = options['models']
+
             counter = Counter()
-            for key in ['users', 'categories', 'projects', 'tasks', 'rewards',
-                        'wallposts', 'orders', 'pages']:
+            for key in self.models:
                 if key in data:
-                    print("Importing {}".format(key))
+                    logger.info("Importing {}".format(key))
                     counter.reset(total=len(data[key]))
                     for value in data[key]:
                         counter.inc()
                         method_to_call = getattr(self, '_handle_{}'.format(key))
                         method_to_call(value)
-                    print(" Done!\n")
+                    logger.info(" Done!\n")
 
     def _generic_import(self, instance, data, excludes=False):
         excludes = excludes or []
@@ -125,36 +144,37 @@ class Command(BaseCommand):
         image       (string<url>)
         categories  (array<category-slug>)
         """
-        campaign = ProjectPhase.objects.get(slug='campaign')
         deadline = datetime.datetime.strptime(data['deadline'], '%Y-%m-%d')
         deadline = pytz.utc.localize(deadline)
 
-        project, _ = Project.objects.get_or_create(
-            slug=data['slug'],
-            owner=Member.objects.get(email=data['user']),
-            status=campaign
-        )
+        try:
+            project = Project.objects.get(slug=data['slug'])
+        except Project.DoesNotExist:
+            project = Project(slug=data['slug'])
+
+        project.owner = Member.objects.get(email=data['user'])
+        try:
+            project.status = ProjectPhase.objects.get(slug=data['status'])
+        except (ProjectPhase.DoesNotExist, KeyError):
+            # If we don't have a status, then it should be set in admin, so plan-new seems best.
+            project.status = ProjectPhase.objects.get(slug='plan-new')
+        project.title = data['title'] or data['slug']
         project.created = data['created'] + 'T12:00:00+01:00'
         project.campaign_started = data['created'] + 'T12:00:00+01:00'
         project.amount_asked = Money(data['goal'], 'EUR')
-        project.categories = Category.objects.filter(slug__in=data['categories'])
         project.deadline = deadline
         project.video_url = data['video']
 
-        if 'image' in data:
+        self._generic_import(project, data,
+                             excludes=['deadline', 'slug', 'user', 'created',
+                                       'status', 'goal', 'categories', 'image', 'video'])
+        project.save()
+        project.categories = Category.objects.filter(slug__in=data['categories'])
+
+        if 'image' in data and data['image'].startswith('http'):
             content = urllib.urlretrieve(data['image'])
             name = urlparse(data['image']).path.split('/')[-1]
             project.image.save(name, File(open(content[0])), save=True)
-
-        self._generic_import(project, data,
-                             excludes=['deadline', 'slug', 'user', 'created',
-                                       'goal', 'categories', 'image', 'video'])
-
-        try:
-            project.save()
-        except IntegrityError:
-            project.title += '*'
-            project.save()
 
     def _handle_tasks(self, data):
         """Expected fields for Tasks import:
@@ -190,7 +210,8 @@ class Command(BaseCommand):
                 project = Project.objects.get(slug=data['project'])
                 reward, _ = Reward.objects.get_or_create(
                     project=project,
-                    amount=Money(data['amount'].replace(",", ".") or 0.0, 'EUR'),
+                    title=data['title'],
+                    amount=Money(data['amount'] or 0.0, 'EUR'),
                     limit=data['limit'] or 0
                 )
                 self._generic_import(reward, data, excludes=['amount', 'limit', 'project'])
@@ -229,6 +250,7 @@ class Command(BaseCommand):
         donations   (array)
             project     (string<title>)
             amount      (float)
+            reward      (string<title>)
         """
         try:
             user = Member.objects.get(email=data['user'])
@@ -252,10 +274,18 @@ class Command(BaseCommand):
         if data['donations']:
             for don in data['donations']:
                 try:
-                    project = Project.objects.get(title=don['project'])
+                    project = Project.objects.get(slug=don['project'])
                 except Project.DoesNotExist:
-                    project = Project.objects.all()[0]
+                    print "Could not find project {0}".format(don['project'])
+                    continue
+                try:
+                    reward = Reward.objects.get(project=project, title=don['reward'])
+                except Reward.MultipleObjectsReturned:
+                    reward = Reward.objects.filter(project=project, title=don['reward']).all()[0]
+                except (Reward.DoesNotExist, KeyError):
+                    reward = None
                 donation = Donation.objects.create(project=project,
+                                                   reward=reward,
                                                    order=order,
                                                    amount=Money(don['amount'], 'EUR'))
                 donation.save()

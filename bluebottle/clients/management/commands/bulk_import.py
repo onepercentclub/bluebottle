@@ -2,6 +2,7 @@ import sys
 import urllib
 import datetime
 import json
+import logging
 from urlparse import urlparse
 
 import pytz
@@ -30,6 +31,8 @@ from bluebottle.tasks.models import Task
 from bluebottle.wallposts.models import TextWallpost
 from bluebottle.clients import properties
 
+logger = logging.getLogger(__name__)
+
 
 class Counter(object):
     def __init__(self, total=1):
@@ -47,6 +50,16 @@ class Counter(object):
 
 class Command(BaseCommand):
     help = 'Import data from json'
+    models = [
+        'users',
+        'categories',
+        'projects',
+        'tasks',
+        'rewards',
+        'wallposts',
+        'orders',
+        'pages'
+    ]
 
     def add_arguments(self, parser):
         parser.add_argument('--file', '-f', action='store', dest='file',
@@ -54,7 +67,8 @@ class Command(BaseCommand):
         parser.add_argument('--tenant', '-t', action='store', dest='tenant',
                             help="The tenant to run the recurring donations for.")
         parser.add_argument('--models', '-m', action='store', dest='models',
-                            help="Comma separated list of models you want to import.")
+                            required=False, nargs='*', choices=self.models,
+                            help="Models you want to import, can be multiple e.g. -m users wallposts")
 
     def handle(self, *args, **options):
 
@@ -67,31 +81,21 @@ class Command(BaseCommand):
                 data = json.load(json_file)
 
             if options['models']:
-                models = options['models'].split(',')
-            else:
-                models = [
-                    'users',
-                    'categories',
-                    'projects',
-                    'tasks',
-                    'rewards',
-                    'wallposts',
-                    'orders',
-                    'pages'
-                ]
+                self.models = options['models']
 
             counter = Counter()
-            for key in models:
+            for key in self.models:
                 if key in data:
-                    print("Importing {}".format(key))
+                    logger.info("Importing {}".format(key))
                     counter.reset(total=len(data[key]))
                     for value in data[key]:
                         counter.inc()
                         method_to_call = getattr(self, '_handle_{}'.format(key))
                         method_to_call(value)
-                    print(" Done!\n")
+                    logger.info(" Done!\n")
 
-    def _generic_import(self, instance, data, excludes=[]):
+    def _generic_import(self, instance, data, excludes=False):
+        excludes = excludes or []
         for k in data:
             if k not in excludes and hasattr(instance, k):
                 setattr(instance, k, data[k])

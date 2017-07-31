@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.http.response import HttpResponseForbidden, HttpResponseNotFound, HttpResponse
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
@@ -20,6 +21,7 @@ from bluebottle.utils.permissions import ResourcePermissions
 
 from .models import Language
 from .serializers import ShareSerializer, LanguageSerializer
+from .permissions import debug
 
 
 class TagList(views.APIView):
@@ -155,36 +157,9 @@ class ModelTranslationViewMixin(object):
         return super(ModelTranslationViewMixin, self).get(request, *args, **kwargs)
 
 
-class PrivateFileView(View):
-    """
-    Serve private files using X-sendfile header.
-    """
-    queryset = None  # Queryset that is used for finding ojects
-    field = None  # Field on the model that is the actual file
-
-    def check_permission(self, request, instance):
-        # Permission check should happen in the permission_classes
-        return True
-
-    def get(self, request, pk):
-        try:
-            instance = self.queryset.get(pk=pk)
-        except self.queryset.DoesNotExist:
-            return HttpResponseNotFound()
-
-        if self.check_permission(request, instance):
-            field = getattr(instance, self.field)
-            response = HttpResponse()
-            response['X-Accel-Redirect'] = field.url
-            response['Content-Disposition'] = 'attachment; filename={}'.format(
-                field.name
-            )
-            return response
-        else:
-            return HttpResponseForbidden()
-
-
 class ViewPermissionsMixin(object):
+    """ View mixin with permission checks added from the DRF APIView
+    """
     base_permission_classes = ()
 
     def get_permissions(self):
@@ -195,6 +170,77 @@ class ViewPermissionsMixin(object):
         all_permission_classes = (tuple(self.permission_classes) +
                                   self.base_permission_classes)
         return [permission() for permission in all_permission_classes]
+
+    def check_permissions(self, request):
+        """
+        Check if the request should be permitted.
+        Raises an appropriate exception if the request is not permitted.
+        """
+        debug("ViewPermissionsMixin::{}::check_permissions".format(self.__class__.__name__))
+        for permission in self.get_permissions():
+            if not permission.has_permission(request, self):
+                self.permission_denied(
+                    request, message=getattr(permission, 'message', None)
+                )
+
+    def check_object_permissions(self, request, obj):
+        """
+        Check if the request should be permitted for a given object.
+        Raises an appropriate exception if the request is not permitted.
+        """
+        debug("ViewPermissionsMixin::{}::check_object_permissions".format(self.__class__.__name__))
+        for permission in self.get_permissions():
+            if not permission.has_object_permission(request, self, obj):
+                self.permission_denied(
+                    request, message=getattr(permission, 'message', None)
+                )
+
+
+class PermissionedView(View, ViewPermissionsMixin):
+    def dispatch(self, request, *args, **kwargs):
+        view = super(PermissionedView, self).dispatch(request, *args, **kwargs)
+
+        # FIXME: The request object below does not have the session authenticated user
+        #        so the permission check does not work!
+        self.check_permissions(request)
+
+        return view
+
+    def permission_denied(self, request, message):
+        raise PermissionDenied()
+
+    def check_permission(self, request, instance):
+
+        # Permission check should happen in the permission_classes
+        return True
+
+
+class PrivateFileView(PermissionedView):
+    """
+    Serve private files using X-sendfile header.
+    """
+    queryset = None  # Queryset that is used for finding ojects
+    field = None  # Field on the model that is the actual file
+
+    def get(self, request, pk):
+        try:
+            instance = self.queryset.get(pk=pk)
+        except self.queryset.DoesNotExist:
+            return HttpResponseNotFound()
+
+        try:
+            self.check_object_permissions(request, instance)
+        except PermissionDenied:
+            return HttpResponseForbidden()
+
+        field = getattr(instance, self.field)
+        response = HttpResponse()
+        response['X-Accel-Redirect'] = field.url
+        response['Content-Disposition'] = 'attachment; filename={}'.format(
+            field.name
+        )
+
+        return response
 
 
 class ListAPIView(ViewPermissionsMixin, generics.ListAPIView):

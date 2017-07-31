@@ -1,10 +1,11 @@
 from rest_framework import permissions
 
 from bluebottle.utils.utils import get_class
-from bluebottle.utils.permissions import BasePermission, IsOwner as BaseIsOwner
+from bluebottle.utils.permissions import (BasePermission,
+                                          RelatedResourceOwnerPermission as BaseRelatedResourceOwnerPermission)
 
 
-class IsOwner(BaseIsOwner):
+class RelatedResourceOwnerPermission(BaseRelatedResourceOwnerPermission):
     parent_class = 'bluebottle.projects.models.Project'
 
     def get_parent_from_request(self, request):

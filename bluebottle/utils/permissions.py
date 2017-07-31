@@ -1,4 +1,11 @@
+import os
+
 from rest_framework import permissions
+
+
+def debug(message):
+    if 'PERMISSIONS_DEBUG' in os.environ:
+        print(message)
 
 
 class BasePermission(permissions.BasePermission):
@@ -18,6 +25,8 @@ class BasePermission(permissions.BasePermission):
 
         Return `True` if permission is granted, `False` otherwise.
         """
+
+        debug("BasePermission::{}::has_object_permission > {}".format(self.__class__.__name__, obj))
         if hasattr(obj, 'parent'):
             obj = obj.parent
 
@@ -33,6 +42,7 @@ class BasePermission(permissions.BasePermission):
 
         Return `True` if permission is granted, `False` otherwise.
         """
+        debug("BasePermission::{}::has_permission > {}".format(self.__class__.__name__, view))
         return self.has_method_permission(
             request.method, request.user, view
         )
@@ -78,50 +88,62 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
         )
 
         perms = self.get_required_permissions(method, queryset.model)
-        print("ResourcePermissions::has_method_permission > {} > {}".format(perms, user.has_perms(perms)))
+        debug("ResourcePermissions::has_method_permission > {}".format(user.has_perms(perms)))
         return user.has_perms(perms)
 
     def has_object_method_permission(self, method, user, view, obj=None):
+        debug("ResourcePermissions::has_object_method_permission > {}".format(self.has_method_permission(method, user,
+                                                                              view)))
         return self.has_method_permission(method, user, view)
 
 
-class IsOwner(BasePermission):
+class OwnerPermission(BasePermission):
     """
     Allows access only to obj owner.
     """
 
-    owner_field = 'owner'
+    def has_object_method_permission(self, method, user, view, obj):
+        debug("OwnerPermission::has_object_permission > {}".format(user == obj.owner))
+        return user == obj.owner
+
+    def has_method_permission(self, method, user, view):
+        return True
+
+
+class OwnerOrAdminPermission(OwnerPermission):
+    def check_permission(self, request, instance):
+        pass
+
+    def has_object_method_permission(self, method, user, view, obj):
+        debug("IsOwnerOrAdmin::has_object_method_permission > {}".format(user == obj.owner or user.is_staff))
+        return user == obj.owner or user.is_staff
+
+
+class RelatedResourceOwnerPermission(BasePermission):
     parent_class = None
 
     def get_parent_from_request(self, request):
         """ For requests to list endpoints, eg when creating an object then
         get_parent needs to be defined to use this permission class.
-
         """
         raise NotImplementedError('get_parent_from_request() must be implemented')
 
-    def get_owner(self, obj):
-        return getattr(obj, self.owner_field, None)
-
     def has_object_method_permission(self, method, user, view, obj):
-        print("IsOwner::has_object_permission > {} > {}".format(user, self.get_owner(obj)))
-        return user == self.get_owner(obj)
+        debug("OwnerPermission::has_object_permission > {}".format(user == obj.owner))
+        return user == obj.owner
 
     def has_method_permission(self, method, user, view):
-        print("IsOwner::has_method_permission > {} > {} > {}".format(method, user, view))
-
-        # Read permissions are allowed to any request, so we'll< always allow GET, HEAD or OPTIONS requests.
+        """ Read permissions are allowed to any request, so we'll< always allow
+        GET, HEAD or OPTIONS requests.
+        """
         if method != 'POST':
+            debug("OwnerPermission::has_method_permission > {}".format(True))
             return True
 
         parent = self.get_parent_from_request(view.request)
-        return user == self.get_owner(parent)
+        debug("OwnerPermission::has_method_permission > {}".format(user == parent.owner))
+        return user == parent.owner
 
 
-class IsOwnerOrAdmin(IsOwner):
-    def has_object_method_permission(self, method, user, view, obj):
-        return user == obj.owner or user.is_staff
-
-
-class IsUser(BasePermission):
+class UserPermission(BasePermission):
     pass

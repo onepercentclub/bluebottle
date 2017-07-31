@@ -13,7 +13,7 @@ from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView
 )
-from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.permissions import OwnerPermission
 from bluebottle.projects.permissions import IsEditableOrReadOnly
 from .models import ProjectTheme, ProjectPhase
 
@@ -150,7 +150,7 @@ class ManageProjectList(ListCreateAPIView):
 
 class ManageProjectDetail(RetrieveUpdateAPIView):
     queryset = Project.objects.all()
-    permission_classes = (IsOwner, IsEditableOrReadOnly,)
+    permission_classes = (OwnerPermission, IsEditableOrReadOnly,)
     serializer_class = ManageProjectSerializer
     lookup_field = 'slug'
 

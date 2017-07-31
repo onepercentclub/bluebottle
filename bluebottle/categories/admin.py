@@ -3,9 +3,10 @@ from django.db import models
 from django.contrib import admin
 from sorl.thumbnail.admin import AdminImageMixin
 from .models import Category, CategoryContent
+from adminsortable.admin import NonSortableParentAdmin, SortableStackedInline
 
 
-class CategoryContentInline(admin.StackedInline):
+class CategoryContentInline(SortableStackedInline):
     formfield_overrides = {
         models.TextField: {'widget': forms.Textarea(attrs={'rows': 3, 'cols': 80})},
     }
@@ -14,7 +15,7 @@ class CategoryContentInline(admin.StackedInline):
     max_num = 3
 
 
-class CategoryAdmin(AdminImageMixin, admin.ModelAdmin):
+class CategoryAdmin(AdminImageMixin, NonSortableParentAdmin):
     model = Category
     list_display = ('title', 'slug')
     inlines = (CategoryContentInline,)

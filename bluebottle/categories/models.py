@@ -4,6 +4,7 @@ from django.utils.translation import ugettext as _
 
 from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
+from adminsortable.admin import SortableMixin
 
 
 class Category(models.Model):
@@ -38,7 +39,7 @@ class Category(models.Model):
             .filter(status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done'])
 
 
-class CategoryContent(models.Model):
+class CategoryContent(SortableMixin):
     category = models.ForeignKey(Category, related_name='contents')
     title = models.CharField(_('title'), max_length=60, help_text=_("Max: %(chars)s characters.") % {'chars': 60})
     description = models.TextField(_('description'),
@@ -64,10 +65,12 @@ class CategoryContent(models.Model):
                                  help_text=_("The link will only be displayed if an URL is provided. "
                                              "Max: %(chars)s characters.") % {'chars': 60})
     link_url = models.URLField(_("link url"), blank=True)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:
         verbose_name = _("content block")
         verbose_name_plural = _("content blocks")
+        ordering = ['sequence']
 
     def __unicode__(self):
         return self.title

@@ -3,6 +3,50 @@ from rest_framework import permissions
 from bluebottle.projects.models import Project
 
 
+class ProjectPermissions(permissions.DjangoModelPermissions):
+    authenticated_users_only = False
+
+    perms_map = {
+        'GET': ['%(app_label)s.api_view_%(model_name)s'],
+        'OPTIONS': [],
+        'HEAD': [],
+        'POST': ['%(app_label)s.api_add_%(model_name)s'],
+        'PUT': ['%(app_label)s.api_change_%(model_name)s'],
+        'PATCH': ['%(app_label)s.api_change_%(model_name)s'],
+        'DELETE': ['%(app_label)s.api_delete_%(model_name)s'],
+    }
+
+    def has_permissions(self, request, method, model):
+        return all(
+            request.user.has_perm(perm) for perm in
+            self.get_required_permissions(method, model)
+        )
+
+    def get_permissions(self, request, model):
+        return {
+            'change project': self.has_permissions(request, 'PUT', model),
+            'delete project': self.has_permissions(request, 'DELETE', model),
+            'view project': self.has_permissions(request, 'GET', model),
+        }
+
+
+class ManageProjectPermissions(permissions.DjangoModelPermissions):
+    authenticated_user_only = False
+
+    perms_map = {
+        'GET': ['%(app_label)s.api_read_%(model_name)s'],
+        'OPTIONS': [],
+        'HEAD': [],
+        'POST': ['%(app_label)s.api_add_%(model_name)s'],
+        'PUT': ['%(app_label)s.api_change_%(model_name)s'],
+        'PATCH': ['%(app_label)s.api_change_%(model_name)s'],
+        'DELETE': ['%(app_label)s.api_delete_%(model_name)s'],
+    }
+
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view) and request.user == obj.owner
+
+
 class IsProjectOwner(permissions.BasePermission):
     """
     Permissions class used to allow access only to project owner.

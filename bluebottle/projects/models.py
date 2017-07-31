@@ -684,7 +684,13 @@ class Project(BaseProject, PreviousStatusMixin):
         return tweet
 
     class Meta(BaseProject.Meta):
-        permissions = (('approve_payout', 'Can approve payouts for projects'), )
+        permissions = (
+            ('approve_payout', 'Can approve payouts for projects'),
+            ('api_view_project', 'Can view projects through the API'),
+            ('api_add_project', 'Can add projects through the API'),
+            ('api_change_own_project', 'Can change own projects through the API'),
+            ('api_delete_own_project', 'Can delete own projects through the API'),
+        )
         ordering = ['title']
 
     def status_changed(self, old_status, new_status):

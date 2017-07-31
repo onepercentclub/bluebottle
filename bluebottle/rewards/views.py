@@ -1,11 +1,9 @@
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from .permissions import NoDonationsOrReadOnly
+from bluebottle.utils.permissions import IsOwner
+from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+
 from .models import Reward
 from .serializers import RewardSerializer
-from bluebottle.utils.permissions import (
-    ResourcePermissions, IsOwner
-)
-from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
 
 class RewardPagination(BluebottlePagination):

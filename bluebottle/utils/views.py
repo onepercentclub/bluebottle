@@ -16,7 +16,7 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.clients import properties
 from bluebottle.projects.models import Project
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.utils.permissions import ResourcePermissions, IsOwner
+from bluebottle.utils.permissions import ResourcePermissions
 
 from .models import Language
 from .serializers import ShareSerializer, LanguageSerializer
@@ -213,5 +213,3 @@ class RetrieveUpdateAPIView(BasePermissionsMixin, generics.RetrieveUpdateAPIView
 
 class RetrieveUpdateDestroyAPIView(BasePermissionsMixin, generics.RetrieveUpdateDestroyAPIView):
     base_permission_classes = (ResourcePermissions,)
-
-

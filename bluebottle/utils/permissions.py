@@ -4,7 +4,7 @@ from rest_framework import permissions
 class BasePermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if hasattr(obj, 'parent'):
-            obj = parent
+            obj = getattr(obj, 'parent')
 
         return self.check_object_permission(
             request.method, request.user, view, obj

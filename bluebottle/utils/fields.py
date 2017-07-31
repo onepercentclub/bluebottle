@@ -1,6 +1,5 @@
 from babel.numbers import get_currency_name
 
-
 from rest_framework import serializers
 
 from django import forms
@@ -182,5 +181,3 @@ class PermissionField(serializers.Field):
             )
 
         return permissions
-
-

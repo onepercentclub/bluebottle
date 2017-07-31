@@ -5,7 +5,10 @@ from rest_framework import serializers
 from localflavor.generic.validators import IBANValidator
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.bluebottle_drf2.serializers import OEmbedField, SorlImageField, ImageSerializer, PrivateFileSerializer
+from bluebottle.bluebottle_drf2.serializers import (
+    OEmbedField, SorlImageField, ImageSerializer,
+    PrivateFileSerializer
+)
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
@@ -15,7 +18,7 @@ from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.utils.serializers import MoneySerializer
-from bluebottle.utils.fields import SafeField
+from bluebottle.utils.fields import SafeField, PermissionField
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 from bluebottle.votes.models import Vote
 
@@ -215,6 +218,16 @@ class ManageTaskSerializer(serializers.ModelSerializer):
                   'type',)
 
 
+class ProjectPermissionsSerializer(serializers.Serializer):
+    def get_attribute(self, obj):
+        return obj
+
+    rewards = PermissionField('reward-list')
+
+    class Meta:
+        fields = ('rewards', )
+
+
 class ManageProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
@@ -240,6 +253,8 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='project_manage_detail', lookup_field='slug')
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     viewable = serializers.BooleanField(read_only=True)
+    permissions = PermissionField('project_manage_detail', view_args=('slug', ))
+    related_permissions = ProjectPermissionsSerializer(read_only=True)
 
     @staticmethod
     def validate_account_number(value):
@@ -350,6 +365,8 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'url',
                   'video_html',
                   'video_url',
+                  'permissions',
+                  'related_permissions',
                   'viewable',)
 
 

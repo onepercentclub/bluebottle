@@ -49,6 +49,13 @@ GROUP_PERMS = {
             'add_projectdocument', 'change_projectdocument', 'delete_projectdocument',
             'add_projectbudgetline', 'change_projectbudgetline', 'delete_projectbudgetline',
         )
+    },
+    'Anonymous': {
+        'perms': ('api_read_project',)
+    },
+    'Authenticated': {
+        'perms': ('api_read_project', 'api_add_project', 'api_change_project',
+                  'api_read_project_document', 'api_add_project_document', 'api_change_project_document',)
     }
 }
 
@@ -201,6 +208,14 @@ class ProjectDocument(BaseProjectDocument):
         if self.pk is not None:
             return reverse('project-document-file', kwargs={'pk': self.pk})
         return None
+
+    class Meta(BaseProjectDocument.Meta):
+        permissions = (
+            ('api_read_project_documents', 'Can view project documents through the API'),
+            ('api_add_project_document', 'Can add project documents through the API'),
+            ('api_change_project_document', 'Can change project documents through the API'),
+            ('api_delete_project_document', 'Can delete project documents through the API'),
+        )
 
 
 class Project(BaseProject, PreviousStatusMixin):
@@ -684,7 +699,13 @@ class Project(BaseProject, PreviousStatusMixin):
         return tweet
 
     class Meta(BaseProject.Meta):
-        permissions = (('approve_payout', 'Can approve payouts for projects'), )
+        permissions = (
+            ('approve_payout', 'Can approve payouts for projects'),
+            ('api_read_project', 'Can view projects through the API'),
+            ('api_add_project', 'Can add projects through the API'),
+            ('api_change_project', 'Can change projects through the API'),
+            ('api_delete_project', 'Can delete projects through the API'),
+        )
         ordering = ['title']
 
     def status_changed(self, old_status, new_status):

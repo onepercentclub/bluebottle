@@ -13,15 +13,6 @@ class IsProjectOwner(permissions.BasePermission):
         return obj.project.owner == request.user
 
 
-class IsOwner(permissions.BasePermission):
-    """
-    Allows access only to project owner.
-    """
-    def has_object_permission(self, request, view, obj):
-        # Test for project model object-level permissions.
-        return isinstance(obj, Project) and obj.owner == request.user
-
-
 class IsEditableOrReadOnly(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):

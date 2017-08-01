@@ -261,5 +261,7 @@ class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView):
 
 class RetrieveUpdateAPIView(ViewPermissionsMixin, generics.RetrieveUpdateAPIView):
     base_permission_classes = (ResourcePermissions,)
+
+
 class RetrieveUpdateDestroyAPIView(ViewPermissionsMixin, generics.RetrieveUpdateDestroyAPIView):
     base_permission_classes = (ResourcePermissions,)

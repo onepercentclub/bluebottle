@@ -156,7 +156,8 @@ class TenantConditionalOpenClose(BasePermission):
     Allows access only to authenticated users.
     """
 
-    def check_object_permission(self, method, user, view, obj):
+    def has_object_permission(self, request, view, obj):
+        user = request.user
         try:
             if get_tenant_properties('CLOSED_SITE'):
                 return user and user.is_authenticated()
@@ -164,7 +165,8 @@ class TenantConditionalOpenClose(BasePermission):
             pass
         return True
 
-    def check_permission(self, method, user, view, obj=None):
+    def has_permission(self, request, view, obj=None):
+        user = request.user
         try:
             if get_tenant_properties('CLOSED_SITE'):
                 return user and user.is_authenticated()

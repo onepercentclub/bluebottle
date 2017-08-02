@@ -144,13 +144,13 @@ def get_client_ip(request=None):
         x_forwarded_for = None
 
     if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
+        ipa = x_forwarded_for.split(',')[0]
     else:
         try:
-            ip = request.META.get('REMOTE_ADDR')
+            ipa = request.META.get('REMOTE_ADDR')
         except AttributeError:
-            ip = None
-    return ip
+            ipa = None
+    return ipa
 
 
 def set_author_editor_ip(request, obj):
@@ -188,17 +188,17 @@ class GetClassError(Exception):
     pass
 
 
-def get_class(cl):
+def get_class(cls):
     # Get the class from dotted string
     try:
         # try to call handler
-        parts = cl.split('.')
+        parts = cls.split('.')
         module_path, class_name = '.'.join(parts[:-1]), parts[-1]
         module = import_module(module_path)
         return getattr(module, class_name)
 
-    except (ImportError, AttributeError, ValueError) as e:
-        error_message = "Could not import '%s'. %s: %s." % (cl, e.__class__.__name__, e)
+    except (ImportError, AttributeError, ValueError) as err:
+        error_message = "Could not import '%s'. %s: %s." % (cls, err.__class__.__name__, err)
         raise GetClassError(error_message)
 
 
@@ -238,8 +238,8 @@ def get_country_by_ip(ip_address=None):
     except socket.error:
         raise InvalidIpError("Invalid IP address")
 
-    gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
-    return gi.country_name_by_addr(ip_address)
+    gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
+    return gip.country_name_by_addr(ip_address)
 
 
 def get_country_code_by_ip(ip_address=None):
@@ -256,8 +256,8 @@ def get_country_code_by_ip(ip_address=None):
     except socket.error:
         raise InvalidIpError("Invalid IP address")
 
-    gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
-    return gi.country_code_by_name(ip_address)
+    gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
+    return gip.country_code_by_name(ip_address)
 
 
 def update_group_permissions(sender, group_perms=None):
@@ -265,25 +265,24 @@ def update_group_permissions(sender, group_perms=None):
     if Group.objects.model._meta.db_table not in connection.introspection.table_names():
         return
 
-    try:
-        if not group_perms:
-            create_permissions(sender, verbosity=False)
-            try:
-                group_perms = sender.module.models.GROUP_PERMS
-            except AttributeError:
-                return
+    if not group_perms:
+        create_permissions(sender, verbosity=False)
+        try:
+            group_perms = sender.module.models.GROUP_PERMS
+        except AttributeError:
+            return
 
-        for group_name, permissions in group_perms.items():
-            group, _ = Group.objects.get_or_create(name=group_name)
-            for perm_codename in permissions['perms']:
+    for group_name, permissions in group_perms.items():
+        group, _ = Group.objects.get_or_create(name=group_name)
+        for perm_codename in permissions['perms']:
+            try:
                 permissions = Permission.objects.filter(codename=perm_codename)
                 if sender:
                     permissions = permissions.filter(content_type__app_label=sender.label)
                 group.permissions.add(permissions.get())
-
-            group.save()
-    except Permission.DoesNotExist, e:
-        logging.debug(e)
+            except Permission.DoesNotExist, err:
+                logging.debug(err)
+        group.save()
 
 
 class PreviousStatusMixin(object):

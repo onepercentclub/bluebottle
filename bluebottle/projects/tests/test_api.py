@@ -607,6 +607,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         project_data['slug'] = 'a-new-slug-should-not-be-possible'
         response_2 = self.client.put(project_url, project_data,
                                      token=self.another_user_token)
+        print(response_2.content)
         self.assertEquals(response_2.data['detail'],
                           'You do not have permission to perform this action.')
         self.assertEquals(response_2.status_code, 403)
@@ -708,8 +709,10 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_project_document_download_author(self):
+        project = ProjectFactory(owner=self.some_user)
         document = ProjectDocumentFactory.create(
             author=self.some_user,
+            project=project,
             file='private/projects/documents/test.jpg'
         )
         file_url = reverse('project-document-file', args=[document.pk])
@@ -984,6 +987,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         # We should have 3 budget lines by now
         response = self.client.get(project_url, token=self.some_user_token)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data['budget_lines']), 3)
 
         # Let's change a budget_line
@@ -1011,8 +1016,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.manage_budget_lines_url,
                                     line, token=self.another_user_token)
         self.assertEquals(response.status_code,
-                          status.HTTP_403_FORBIDDEN,
-                          response)
+                          status.HTTP_403_FORBIDDEN)
 
 
 class ProjectStoryXssTest(BluebottleTestCase):

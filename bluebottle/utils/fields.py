@@ -145,6 +145,9 @@ class PermissionField(serializers.Field):
 
     `view_name`: The name of the view
     `view_args`: A list of attributes that are passed into the url for the view
+
+    This field should be used with views extending the
+    .permissions.BasePermission for access to has_object_method_permission()
     """
     def __init__(self, view_name, view_args=None, *args, **kwargs):
         self.view_name = view_name
@@ -175,7 +178,7 @@ class PermissionField(serializers.Field):
         permissions = {}
         for method in view.allowed_methods:
             permissions[method] = all(
-                perm.check_object_permission(
+                perm.has_object_method_permission(
                     method, self.context['request'].user, view, value
                 ) for perm in view.get_permissions()
             )

@@ -193,7 +193,7 @@ class PermissionField(serializers.Field):
         permissions = {}
         for method in view.allowed_methods:
             permissions[method] = all(
-                perm.check_object_permission(
+                perm.has_object_method_permission(
                     method, self.context['request'].user, view, value
                 ) for perm in view.get_permissions()
             )

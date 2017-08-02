@@ -13,7 +13,21 @@ GROUP_PERMS = {
         'perms': (
             'add_reward', 'change_reward', 'delete_reward',
         )
+    },
+    'Anonymous': {
+        'perms': (
+            'api_read_reward',
+        )
+    },
+    'Authenticated': {
+        'perms': (
+            'api_read_reward',
+            'api_add_reward',
+            'api_change_reward',
+            'api_delete_reward',
+        )
     }
+
 }
 
 

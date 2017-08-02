@@ -17,8 +17,8 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import Task, TaskMember, Skill
-from bluebottle.utils.serializers import MoneySerializer
-from bluebottle.utils.fields import SafeField, PermissionField
+from bluebottle.utils.serializers import MoneySerializer, PermissionField
+from bluebottle.utils.fields import SafeField
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 from bluebottle.votes.models import Vote
 
@@ -91,6 +91,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     owner = UserProfileSerializer()
     people_needed = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
+    permissions = PermissionField('project_detail', view_args=('slug',))
     story = SafeField()
     supporter_count = serializers.IntegerField()
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
@@ -131,6 +132,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'owner',
                   'people_needed',
                   'people_registered',
+                  'permissions',
                   'pitch',
                   'project_type',
                   'realized_task_count',

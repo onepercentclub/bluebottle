@@ -166,10 +166,10 @@ REST_FRAMEWORK = {
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
+        'bluebottle.utils.backends.AnonymousAuthenticationBackend',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'tenant_extras.drf_permissions.TenantConditionalOpenClose',
-        'bluebottle.utils.permissions.ResourcePermissions',
+        'bluebottle.utils.permissions.TenantConditionalOpenClose',
     ),
 }
 
@@ -206,10 +206,10 @@ SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
 
 AUTHENTICATION_BACKENDS = (
-    'bluebottle.utils.backends.AnonymousAuthenticationBackend',
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'social.backends.facebook.FacebookAppOAuth2',
     'django.contrib.auth.backends.ModelBackend',
+    'bluebottle.utils.backends.AnonymousAuthenticationBackend',
 )
 
 SOCIAL_AUTH_PIPELINE = (

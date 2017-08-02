@@ -3,11 +3,11 @@ from django.contrib.contenttypes.models import ContentType
 import django_filters
 from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.bluebottle_drf2.views import ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView
+from bluebottle.utils.permissions import TenantConditionalOpenClose
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.projects.models import Project
 

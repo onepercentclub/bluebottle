@@ -16,11 +16,10 @@ from bluebottle.tasks.serializers import (BaseTaskSerializer,
                                           BaseTaskMemberSerializer, TaskFileSerializer,
                                           TaskPreviewSerializer, MyTaskMemberSerializer,
                                           SkillSerializer, MyTasksSerializer)
+from bluebottle.utils.permissions import TenantConditionalOpenClose
 from bluebottle.utils.views import PrivateFileView
 
 from .permissions import IsMemberOrAuthorOrReadOnly
-
-from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 
 def day_start(date_str):

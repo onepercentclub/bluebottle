@@ -168,8 +168,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'tenant_extras.drf_permissions.TenantConditionalOpenClose',
-        'bluebottle.utils.permissions.ResourcePermissions',
+        'bluebottle.utils.permissions.TenantConditionalOpenClose',
     ),
 }
 

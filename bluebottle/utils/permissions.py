@@ -2,6 +2,8 @@ import os
 
 from rest_framework import permissions
 
+from tenant_extras.utils import get_tenant_properties
+
 
 def debug(message):
     if 'PERMISSIONS_DEBUG' in os.environ:
@@ -147,3 +149,25 @@ class RelatedResourceOwnerPermission(BasePermission):
 
 class UserPermission(BasePermission):
     pass
+
+
+class TenantConditionalOpenClose(BasePermission):
+    """
+    Allows access only to authenticated users.
+    """
+
+    def check_object_permission(self, method, user, view, obj):
+        try:
+            if get_tenant_properties('CLOSED_SITE'):
+                return user and user.is_authenticated()
+        except AttributeError:
+            pass
+        return True
+
+    def check_permission(self, method, user, view, obj=None):
+        try:
+            if get_tenant_properties('CLOSED_SITE'):
+                return user and user.is_authenticated()
+        except AttributeError:
+            pass
+        return True

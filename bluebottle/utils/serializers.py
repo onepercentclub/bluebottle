@@ -1,10 +1,11 @@
-import json
 from HTMLParser import HTMLParser
+import json
+from moneyed import Money
 import re
 
-from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import resolve, reverse
 from django.core.validators import BaseValidator
-from moneyed import Money
+from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
@@ -154,3 +155,47 @@ class URLField(serializers.URLField):
         if not m:  # no scheme
             value = "http://%s" % value
         return value
+
+
+class PermissionField(serializers.Field):
+    """
+    Field that can be used to return permission of the current and related view.
+
+    `view_name`: The name of the view
+    `view_args`: A list of attributes that are passed into the url for the view
+    """
+    def __init__(self, view_name, view_args=None, *args, **kwargs):
+        self.view_name = view_name
+        self.view_args = view_args or []
+
+        kwargs['read_only'] = True
+
+        super(PermissionField, self).__init__(*args, **kwargs)
+
+    def get_attribute(self, obj):
+        return obj  # Just pass the whole object back
+
+    def to_representation(self, value):
+        """
+        Returns an dict with the permissions the current user has on the view and parent:
+        {
+            "PATCH": True,
+            "GET": True,
+            "DELETE": False
+        }
+        """
+        # Instantiate the view
+        args = [getattr(value, arg) for arg in self.view_args]
+        view_func = resolve(reverse(self.view_name, args=args)).func
+        view = view_func.view_class(**view_func.view_initkwargs)
+
+        # Loop over all methods and check the permissions on the view
+        permissions = {}
+        for method in view.allowed_methods:
+            permissions[method] = all(
+                perm.check_object_permission(
+                    method, self.context['request'].user, view, value
+                ) for perm in view.get_permissions()
+            )
+
+        return permissions

@@ -15,23 +15,6 @@ from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_project', 'change_project', 'delete_project',
-            'add_projectdocument', 'change_projectdocument', 'delete_projectdocument',
-            'add_projectbudgetline', 'change_projectbudgetline', 'delete_projectbudgetline',
-        )
-    },
-    'Anonymous': {
-        'perms': ('api_read_projectphase', 'api_read_projecttheme',)
-    },
-    'Authenticated': {
-        'perms': ('api_read_projectphase', 'api_read_projecttheme',)
-    }
-}
-
-
 class ProjectTheme(models.Model):
 
     """ Themes for Projects. """
@@ -43,11 +26,6 @@ class ProjectTheme(models.Model):
     description = models.TextField(_('description'), blank=True)
     disabled = models.BooleanField(_('disabled'), default=False)
 
-    class Meta:
-        ordering = ['name']
-        verbose_name = _('project theme')
-        verbose_name_plural = _('project themes')
-
     def __unicode__(self):
         return self.name
 
@@ -56,6 +34,14 @@ class ProjectTheme(models.Model):
             self.slug = slugify(self.name)
 
         super(ProjectTheme, self).save(**kwargs)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = _('project theme')
+        verbose_name_plural = _('project themes')
+        permissions = (
+            ('api_read_projecttheme', 'Can view project theme through API'),
+        )
 
 
 class ProjectPhase(models.Model):
@@ -88,7 +74,6 @@ class ProjectPhase(models.Model):
         ordering = ['sequence']
         permissions = (
             ('api_read_projectphase', 'Can view project phase through API'),
-            ('api_read_projecttheme', 'Can view project theme through API')
         )
 
     def __unicode__(self):

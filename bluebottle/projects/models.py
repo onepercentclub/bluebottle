@@ -45,20 +45,38 @@ from .signals import project_funded
 GROUP_PERMS = {
     'Staff': {
         'perms': (
-            'add_project', 'change_project', 'delete_project',
-            'add_projectdocument', 'change_projectdocument', 'delete_projectdocument',
-            'add_projectbudgetline', 'change_projectbudgetline', 'delete_projectbudgetline',
+            'add_project',
+            'change_project',
+            'delete_project',
+            'add_projectdocument',
+            'change_projectdocument',
+            'delete_projectdocument',
+            'add_projectbudgetline',
+            'change_projectbudgetline',
+            'delete_projectbudgetline'
         )
     },
     'Anonymous': {
-        'perms': ('api_read_project',)
+        'perms': (
+            'api_read_project',
+            'api_read_projectphase',
+            'api_read_projecttheme',
+        )
     },
     'Authenticated': {
-        'perms': ('api_read_project', 'api_add_project', 'api_change_project',
-                  'api_read_projectdocument', 'api_add_projectdocument',
-                  'api_change_projectdocument', 'api_read_projectbudgetline',
-                  'api_add_projectbudgetline', 'api_change_projectbudgetline',
-                  'api_delete_projectbudgetline',)
+        'perms': (
+            'api_add_project',
+            'api_change_project',
+
+            'api_read_projectdocument',
+            'api_add_projectdocument',
+            'api_change_projectdocument',
+
+            'api_read_projectbudgetline',
+            'api_add_projectbudgetline',
+            'api_change_projectbudgetline',
+            'api_delete_projectbudgetline'
+        )
     }
 }
 
@@ -708,6 +726,8 @@ class Project(BaseProject, PreviousStatusMixin):
             ('api_add_project', 'Can add projects through the API'),
             ('api_change_project', 'Can change projects through the API'),
             ('api_delete_project', 'Can delete projects through the API'),
+            ('api_read_projectphase', 'Can view project phase through API'),
+            ('api_read_projecttheme', 'Can view project theme through API'),
             ('api_read_projectdocument', 'Can view project documents through the API'),
             ('api_add_projectdocument', 'Can add project documents through the API'),
             ('api_change_projectdocument', 'Can change project documents through the API'),

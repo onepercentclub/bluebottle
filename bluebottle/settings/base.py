@@ -165,7 +165,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication'
+        'rest_framework.authentication.TokenAuthentication',
+        'bluebottle.utils.backends.AnonymousAuthenticationBackend',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'bluebottle.utils.permissions.TenantConditionalOpenClose',
@@ -208,7 +209,7 @@ AUTHENTICATION_BACKENDS = (
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'social.backends.facebook.FacebookAppOAuth2',
     'django.contrib.auth.backends.ModelBackend',
-    'bluebottle.utils.backends.AnonymousAuthenticationBackend'
+    'bluebottle.utils.backends.AnonymousAuthenticationBackend',
 )
 
 SOCIAL_AUTH_PIPELINE = (

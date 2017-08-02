@@ -31,5 +31,7 @@ class AnonymousAuthenticationBackend(object):
             (app_label, codename) = perm.split('.')
             group.permissions.get(codename=codename, content_type__app_label=app_label)
             return True
-        except (Permission.DoesNotExist, Group.DoesNotExist):
+        except (Permission.DoesNotExist, Group.DoesNotExist) as e:
+            print e, perm
+            print group.permissions.all()
             return False

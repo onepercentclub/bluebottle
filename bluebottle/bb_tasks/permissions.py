@@ -83,3 +83,13 @@ class IsMemberOrAuthorOrReadOnly(permissions.BasePermission):
             return True
 
         return False
+
+
+class IsResumeOwnerOrTaskAuthor(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        return (
+            request.user == obj.member or
+            request.user == obj.task.author or
+            request.user.is_staff
+        )

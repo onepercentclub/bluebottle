@@ -246,7 +246,7 @@ class Statistics(object):
         return count
 
     @memoize(timeout=60 * 60)
-    def get_projects_status_count_by_location_group(self, theme, statuses):
+    def get_projects_status_count_by_theme(self, theme, statuses):
         logs = ProjectPhaseLog.objects\
             .filter(self.end_date_filter('start'),
                     project__theme__slug=theme,

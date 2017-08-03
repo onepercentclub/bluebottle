@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('projects', '0028_auto_20170619_1555'),
         ('tasks', '0024_auto_20170602_2304'),
-        ('tasks', '0026_merge_20170628_0905'),
+        ('tasks', '0027_delete_tasks_date_status_changed'),
     ]
 
     operations = [

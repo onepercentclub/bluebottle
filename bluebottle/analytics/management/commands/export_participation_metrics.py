@@ -11,7 +11,7 @@ from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.geo.models import LocationGroup
-from bluebottle.statistics.statistics import Statistics
+from bluebottle.statistics.participation import Statistics
 from bluebottle.tasks.models import Task, TaskMember
 from .utils import initialize_work_sheet
 
@@ -119,8 +119,9 @@ class Command(BaseCommand):
                                     self.end_date.to_iso8601_string())
                             )
                 self.generate_participants_worksheet(workbook)
-                self.generate_totals_worksheet(workbook)
-                self.generate_location_segmentation_worksheet(workbook)
+                self.generate_worksheet(workbook, 'aggregated')
+                self.generate_worksheet(workbook, 'location_segmentation')
+                self.generate_worksheet(workbook, 'theme_segmentation')
 
     @staticmethod
     def get_column_for_metric(row_data, metric_name):
@@ -200,6 +201,9 @@ class Command(BaseCommand):
                                        hide_column=False,
                                        definition='The end date for the current statistic period.')
 
+        # Freeze panes after this column for easy viewing
+        worksheet.freeze_panes(1, row_data.keys().index('End Date') + 1)
+
         # Participant Statistics
         row_data['Participants'] = RowData(metric=statistics.participants_count,
                                            is_formula=False,
@@ -210,9 +214,6 @@ class Command(BaseCommand):
                                                       'If a member is one of the three (e.g. a project initiator or a '
                                                       'task member or a task initiator), they are counted as one '
                                                       'participant.')
-
-        # Freeze panes before this column for easy viewing
-        worksheet.freeze_panes(1, row_data.keys().index('Participants'))
 
         column_participants = row_data.keys().index('Participants')
         row_data['Participant Total Growth'] = RowData(
@@ -420,6 +421,82 @@ class Command(BaseCommand):
 
             )
 
+    def write_theme_segmentation_stats(self, worksheet, row, statistic_type, start_date, end_date):
+        statistics = Statistics(start=start_date, end=end_date)
+
+        RowData = namedtuple('RowData', ['metric', 'definition', 'hide_column', 'is_formula'])
+
+        row_data = OrderedDict()
+
+        row_data['Time Period'] = RowData(metric=statistic_type.capitalize(),
+                                          is_formula=False,
+                                          hide_column=False,
+                                          definition='Time period for the statistics.')
+        row_data['Year'] = RowData(metric=end_date.year,
+                                   is_formula=False,
+                                   hide_column=False,
+                                   definition='The year associated with the end date.')
+
+        row_data['Quarter'] = RowData(
+            metric=self.get_yearly_quarter(end_date) if statistic_type in ['weekly', 'monthly'] else '',
+            is_formula=False,
+            hide_column=False,
+            definition='The yearly quarter associated with the end date.')
+
+        row_data['Month'] = RowData(metric=self.get_month_name(end_date) if statistic_type == 'monthly' else '',
+                                    is_formula=False,
+                                    hide_column=False,
+                                    definition='The calendar month associated with the end date.')
+
+        row_data['Week'] = RowData(metric=end_date.week_of_year if statistic_type == 'weekly' else '',
+                                   is_formula=False,
+                                   hide_column=False,
+                                   definition='The ISO calendar week associated with the end date.')
+        row_data['End Date'] = RowData(metric=end_date.subtract(days=1),
+                                       is_formula=False,
+                                       hide_column=False,
+                                       definition='The end date for the current statistic period.')
+
+        # Freeze panes after this column for easy viewing
+        worksheet.freeze_panes(1, row_data.keys().index('End Date') + 1)
+
+        for theme in ProjectTheme.objects.all():
+            # Project Status Statistics
+            for project_phase in ProjectPhase.objects.all():
+                row_data['Theme - {} / Project Status - {}'.format(theme.name, project_phase.name)] = \
+                    RowData(metric=statistics.get_projects_status_count_by_theme(theme.slug,
+                                                                                 [project_phase.slug]),
+                            is_formula=False,
+                            hide_column=False,
+                            definition='Total count of projects with the theme - {} and project status - {} which '
+                                       'were created before the end date.'
+                                       .format(theme.name, project_phase.name))
+            # Task Status Statistics
+            for task_status, label in Task.TaskStatuses.choices:
+                row_data['Theme - {} / Task Status - {}'.format(theme.name, label)] = RowData(
+                    metric=statistics.get_tasks_status_count_by_theme(theme.slug, [task_status]),
+                    is_formula=False,
+                    hide_column=False,
+                    definition='Total count of task with the theme - {} and task status - {} '
+                               'which were created before the end date.'.format(theme.name, label))
+
+        # Write Headers, if the first row is being written
+        if row == 2:
+            for column, data in enumerate(row_data.iteritems()):
+                worksheet.write(0, column, data[0])
+                worksheet.write_comment(0, column, data[1].definition)
+                if data[1].hide_column:
+                    worksheet.set_column(column, column, None, None, {'hidden': 1})
+
+        # Write data
+        for column, data in enumerate(row_data.iteritems()):
+            metric_value = data[1].metric
+            is_formula = data[1].is_formula
+            if is_formula:
+                worksheet.write_formula(row, column, metric_value)
+            else:
+                worksheet.write(row, column, metric_value)
+
     def write_location_segmentation_stats(self, worksheet, row, statistic_type, start_date, end_date):
         statistics = Statistics(start=start_date, end=end_date)
 
@@ -479,22 +556,6 @@ class Command(BaseCommand):
                     definition='Total count of task with the location - {} and task status - {} '
                                'which were created before the end date.'.format(location_group.name, label))
 
-        # for theme in ProjectTheme.objects.all():
-        #     row_data['Theme - {}'.format(theme.name)] = RowData(
-        #         metric=statistics.get_projects_count_by_theme(theme.slug),
-        #         is_formula=False,
-        #         hide_column=False,
-        #         definition='Total count of projects with the theme, {}, which were created '
-        #                    'before the end date.'.format(theme.name))
-        #
-        #     column_project_theme = self.get_column_for_metric(row_data, 'Theme - {}'.format(theme.name))
-        #     row_data['Theme - {} Growth'.format(theme.name)] = RowData(
-        #         metric=self.get_cumulative_growth_formula(statistic_type, row, column_project_theme),
-        #         is_formula=True,
-        #         hide_column=True,
-        #         definition='Growth rate of projects per theme')
-        #
-
         # Write Headers, if the first row is being written
         if row == 2:
             for column, data in enumerate(row_data.iteritems()):
@@ -549,31 +610,42 @@ class Command(BaseCommand):
                 participant_worksheet.write(row, 2, participation_date.year)
                 participant_worksheet.write(row, 3, participation_date.week_of_year)
 
-    def generate_totals_worksheet(self, workbook):
+    def generate_worksheet(self, workbook, stats_type):
         formatters = self.setup_workbook_formatters(workbook)
+
+        if stats_type == 'aggregated':
+            write = self.write_total_stats
+            create_worksheet = self.create_totals_worksheet
+        elif stats_type == 'location_segmentation':
+            write = self.write_location_segmentation_stats
+            create_worksheet = self.create_location_segmentation_worksheet
+        elif stats_type == 'theme_segmentation':
+            write = self.write_theme_segmentation_stats
+            create_worksheet = self.create_theme_segmentation_worksheet
 
         for year in range(self.start_date.year, self.end_date.year + 1):
             statistics_start_date = pendulum.create(year, 1, 1, 0, 0, 0)
             statistics_end_date = pendulum.create(year, 12, 31, 23, 59, 59)
 
             # Generate data by year
-            logger.info('tenant:{} Yearly: end_date:{}'
+            logger.info('tenant:{} Yearly ({}): end_date:{}'
                         .format(self.tenant,
+                                stats_type,
                                 statistics_end_date.to_iso8601_string()))
 
             # Worksheet for Totals by Year
-            worksheet = self.create_totals_worksheet(workbook, year)
+            worksheet = create_worksheet(workbook, year)
 
             # Add label
             row = 1
             worksheet.write(row, 0, 'By Year', formatters['format_metrics_header'])
 
             row += 1
-            self.write_total_stats(worksheet=worksheet,
-                                   row=row,
-                                   statistic_type='yearly',
-                                   start_date=statistics_start_date,
-                                   end_date=statistics_end_date)
+            write(worksheet=worksheet,
+                  row=row,
+                  statistic_type='yearly',
+                  start_date=statistics_start_date,
+                  end_date=statistics_end_date)
 
             # Generate data by month
             row += 1
@@ -586,11 +658,14 @@ class Command(BaseCommand):
 
                 # Stop if the end date is in the next month from current date
                 if statistics_end_date < pendulum.now().add(months=1):
-                    logger.info('tenant:{} Monthly: end_date:{}'
-                                .format(self.tenant, statistics_end_date.to_iso8601_string())
+                    logger.info('tenant:{} Monthly ({}): end_date:{}'
+                                .format(self.tenant, stats_type, statistics_end_date.to_iso8601_string())
                                 )
-                    self.write_total_stats(worksheet=worksheet, row=row, statistic_type='monthly',
-                                           start_date=statistics_start_date, end_date=statistics_end_date)
+                    write(worksheet=worksheet,
+                          row=row,
+                          statistic_type='monthly',
+                          start_date=statistics_start_date,
+                          end_date=statistics_end_date)
                     row += 1
                     self.monthly_statistics_row_end = row
 
@@ -611,91 +686,18 @@ class Command(BaseCommand):
 
                 if statistics_end_date <= pendulum.now().add(weeks=1):
                     logger.info(
-                        'tenant:{} Weekly: end_date:{}'
+                        'tenant:{} Weekly ({}): end_date:{}'
                         .format(self.tenant,
+                                stats_type,
                                 statistics_end_date.to_iso8601_string()))
-                    self.write_total_stats(worksheet=worksheet,
-                                           row=row,
-                                           statistic_type='weekly',
-                                           start_date=statistics_start_date,
-                                           end_date=statistics_end_date)
+                    write(worksheet=worksheet,
+                          row=row,
+                          statistic_type='weekly',
+                          start_date=statistics_start_date,
+                          end_date=statistics_end_date)
 
                     row += 1
                     self.weekly_statistics_row_end = row - 1
 
-        self.create_monthly_charts(workbook, self.charts)
-
-    def generate_location_segmentation_worksheet(self, workbook):
-        formatters = self.setup_workbook_formatters(workbook)
-
-        for year in range(self.start_date.year, self.end_date.year + 1):
-            statistics_start_date = pendulum.create(year, 1, 1, 0, 0, 0)
-            statistics_end_date = pendulum.create(year, 12, 31, 23, 59, 59)
-
-            # Generate data by year
-            logger.info('tenant:{} Location Segmentation Yearly: end_date:{}'
-                        .format(self.tenant,
-                                statistics_end_date.to_iso8601_string()))
-
-            # Worksheet by Year
-            worksheet = self.create_location_segmentation_worksheet(workbook, year)
-
-            # Add label
-            row = 1
-            worksheet.write(row, 0, 'By Year', formatters['format_metrics_header'])
-
-            row += 1
-            self.write_location_segmentation_stats(worksheet=worksheet,
-                                                   row=row,
-                                                   statistic_type='yearly',
-                                                   start_date=statistics_start_date,
-                                                   end_date=statistics_end_date)
-
-            # Generate data by month
-            row += 1
-            worksheet.write(row, 0, 'By Month', formatters['format_metrics_header'])
-
-            row += 1
-            for month in range(1, 13):
-                statistics_end_date = pendulum.create(year, month, 1).end_of('month')
-
-                # Stop if the end date is in the next month from current date
-                if statistics_end_date < pendulum.now().add(months=1):
-                    logger.info(
-                        'tenant:{} Location Segmentation Monthly: end_date:{}'
-                        .format(self.tenant,
-                                statistics_end_date.to_iso8601_string())
-                    )
-                    self.write_location_segmentation_stats(worksheet=worksheet,
-                                                           row=row,
-                                                           statistic_type='monthly',
-                                                           start_date=statistics_start_date,
-                                                           end_date=statistics_end_date)
-                    row += 1
-
-            # Generate data by week
-            worksheet.write(row, 0, 'By Week', formatters['format_metrics_header'])
-
-            time_period = pendulum.period(statistics_start_date, pendulum.create(year, 12, 31))
-            row += 1
-            for period in time_period.range('weeks'):
-
-                # Curtail the last week of the year to end with the end of the year
-                # E.g. The end day of the last week of the year could lie in the next year, in this case we just
-                # use the last day of the year as the end day of the week
-                statistics_end_date = period.end_of('week') \
-                    if period.end_of('week') < statistics_start_date.end_of('year') \
-                    else statistics_start_date.end_of('year')
-
-                if statistics_end_date <= pendulum.now().add(weeks=1):
-                    logger.info(
-                        'tenant:{} Location Segmentation Weekly: end_date:{}'
-                        .format(self.tenant,
-                                statistics_end_date.to_iso8601_string()))
-                    self.write_location_segmentation_stats(worksheet=worksheet,
-                                                           row=row,
-                                                           statistic_type='weekly',
-                                                           start_date=statistics_start_date,
-                                                           end_date=statistics_end_date)
-
-                    row += 1
+        if stats_type == 'aggregated':
+            self.create_monthly_charts(workbook, self.charts)

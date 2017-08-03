@@ -246,6 +246,21 @@ class Statistics(object):
         return count
 
     @memoize(timeout=60 * 60)
+    def get_projects_status_count_by_location_group(self, theme, statuses):
+        logs = ProjectPhaseLog.objects\
+            .filter(self.end_date_filter('start'),
+                    project__theme__slug=theme,
+                    project__created__lte=self.end)\
+            .distinct('project__id')\
+            .order_by('-project__id', '-start')
+
+        count = 0
+        for log in logs:
+            if log.status.slug in statuses:
+                count += 1
+        return count
+
+    @memoize(timeout=60 * 60)
     def get_projects_by_location_group(self, location_group):
         logs = ProjectPhaseLog.objects\
             .filter(self.end_date_filter('start'), project__location__group__name=location_group)\
@@ -302,6 +317,21 @@ class Statistics(object):
         logs = TaskStatusLog.objects\
             .filter(self.end_date_filter('start'),
                     task__project__location__group__name=location_group,
+                    task__created__lte=self.end)\
+            .distinct('task__id')\
+            .order_by('-task__id', '-start')
+
+        count = 0
+        for log in logs:
+            if log.status in statuses:
+                count += 1
+        return count
+
+    @memoize(timeout=60 * 60)
+    def get_tasks_status_count_by_theme(self, theme, statuses):
+        logs = TaskStatusLog.objects\
+            .filter(self.end_date_filter('start'),
+                    task__project__theme__slug=theme,
                     task__created__lte=self.end)\
             .distinct('task__id')\
             .order_by('-task__id', '-start')

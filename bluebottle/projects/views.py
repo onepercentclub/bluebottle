@@ -11,7 +11,7 @@ from bluebottle.utils.views import (
 from bluebottle.utils.permissions import OwnerPermission, OwnerOrAdminPermission
 from bluebottle.wallposts.models import MediaWallpostPhoto
 from .models import ProjectDocument, ProjectBudgetLine, Project
-from .permissions import RelatedResourceOwnerPermission
+from .permissions import RelatedProjectOwnerPermission
 
 
 class BudgetLinePagination(BluebottlePagination):
@@ -22,7 +22,7 @@ class ManageProjectBudgetLineList(ListCreateAPIView):
     queryset = ProjectBudgetLine.objects.all()
     serializer_class = ProjectBudgetLineSerializer
     pagination_class = BudgetLinePagination
-    permission_classes = (RelatedResourceOwnerPermission,)
+    permission_classes = (RelatedProjectOwnerPermission,)
 
 
 class ManageProjectBudgetLineDetail(RetrieveUpdateDestroyAPIView):
@@ -39,7 +39,7 @@ class ManageProjectDocumentList(ListCreateAPIView):
     queryset = ProjectDocument.objects.all()
     serializer_class = ProjectDocumentSerializer
     pagination_class = DocumentPagination
-    permission_classes = (RelatedResourceOwnerPermission,)
+    permission_classes = (RelatedProjectOwnerPermission,)
 
     filter = ('project',)
 

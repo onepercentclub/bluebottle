@@ -1785,6 +1785,7 @@ class ProjectMediaApi(BluebottleTestCase):
         self.project = ProjectFactory.create(owner=self.some_user)
 
         mwp1 = MediaWallpostFactory.create(content_object=self.project,
+                                           author=self.some_user,
                                            video_url='https://youtu.be/Bal2U5jxZDQ')
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
@@ -1793,6 +1794,7 @@ class ProjectMediaApi(BluebottleTestCase):
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
 
         mwp2 = MediaWallpostFactory.create(content_object=self.project,
+                                           author=self.some_user,
                                            video_url='https://youtu.be/Bal2U5jxZDQ')
         MediaWallpostPhotoFactory.create(mediawallpost=mwp2)
         MediaWallpostPhotoFactory.create(mediawallpost=mwp2)

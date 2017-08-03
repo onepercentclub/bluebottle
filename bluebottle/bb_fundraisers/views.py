@@ -3,7 +3,6 @@ from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import permissions
-from tenant_extras.drf_permissions import TenantConditionalOpenClose
 
 from bluebottle.bluebottle_drf2.views import (
     RetrieveUpdateDeleteAPIView,
@@ -12,6 +11,7 @@ from bluebottle.bluebottle_drf2.views import (
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.fundraisers.serializers import BaseFundraiserSerializer
 from bluebottle.projects.models import Project
+from bluebottle.utils.permissions import TenantConditionalOpenClose
 
 
 class FundraiserListView(ListCreateAPIView):

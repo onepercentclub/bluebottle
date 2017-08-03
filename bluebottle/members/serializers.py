@@ -12,6 +12,7 @@ from bluebottle.clients import properties
 from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
 from bluebottle.geo.models import Location
 from bluebottle.tasks.models import Skill
+from bluebottle.utils.serializers import PermissionField
 
 BB_USER_MODEL = get_user_model()
 
@@ -45,6 +46,20 @@ class UserPreviewSerializer(serializers.ModelSerializer):
                   'avatar', 'full_name', 'short_name')
 
 
+class UserPermissionsSerializer(serializers.Serializer):
+    def get_attribute(self, obj):
+        return obj
+
+    project_list = PermissionField('project_list')
+    project_manage_list = PermissionField('project_manage_list')
+
+    class Meta:
+        fields = [
+            'project_list',
+            'project_manage_list'
+        ]
+
+
 class CurrentUserSerializer(UserPreviewSerializer):
     """
     Serializer for the current authenticated user. This is the same as the
@@ -57,6 +72,15 @@ class CurrentUserSerializer(UserPreviewSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     country = CountrySerializer(source='address.country')
     location = LocationSerializer()
+    permissions = UserPermissionsSerializer(read_only=True)
+
+    def get_permissions(self, obj):
+        perms = []
+        for perm in settings.EXPOSED_PERMISSIONS:
+            perms.append(
+                PermissionField(perm).to_representation(perm)
+            )
+        return perms
 
     class Meta:
         model = BB_USER_MODEL
@@ -64,7 +88,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'country', 'verified')
+            'country', 'verified', 'permissions')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

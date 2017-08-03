@@ -17,24 +17,6 @@ from bluebottle.utils.utils import PreviousStatusMixin
 from bluebottle.utils.email_backend import send_mail
 
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_task', 'change_task', 'delete_task',
-            'add_taskmember', 'change_taskmember', 'delete_taskmember',
-            'add_taskfile', 'change_taskfile', 'delete_taskfile',
-            'add_skill', 'change_skill', 'delete_skill',
-        )
-    },
-    'Anonymous': {
-        'perms': ('api_read_task',)
-    },
-    'Authenticated': {
-        'perms': ('api_read_task', 'api_add_tasks', 'api_add_taskmember')
-    }
-}
-
-
 class Task(models.Model, PreviousStatusMixin):
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))

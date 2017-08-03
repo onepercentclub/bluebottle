@@ -15,23 +15,6 @@ from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_project', 'change_project', 'delete_project',
-            'add_projectdocument', 'change_projectdocument', 'delete_projectdocument',
-            'add_projectbudgetline', 'change_projectbudgetline', 'delete_projectbudgetline',
-        )
-    },
-    'Anonymous': {
-        'perms': ('api_read_projectphase', 'api_read_projecttheme',)
-    },
-    'Authenticated': {
-        'perms': ('api_read_projectphase', 'api_read_projecttheme',)
-    }
-}
-
-
 class ProjectTheme(models.Model):
 
     """ Themes for Projects. """

@@ -473,6 +473,17 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['count'], 1)
 
+    def test_project_list_filter_anywhere_empty_string(self):
+        self.projects[1].task_set.all().update(location='')
+
+        response = self.client.get(
+            self.projects_preview_url + '?anywhere=1'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 1)
+
     def test_project_list_search_location(self):
         self.projects[1].location = LocationFactory(name='Lyutidol')
         self.projects[1].save()

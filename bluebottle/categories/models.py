@@ -4,6 +4,7 @@ from django.utils.translation import ugettext as _
 
 from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
+from adminsortable.admin import SortableMixin
 
 
 class Category(models.Model):
@@ -38,20 +39,38 @@ class Category(models.Model):
             .filter(status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done'])
 
 
-class CategoryContent(models.Model):
+class CategoryContent(SortableMixin):
     category = models.ForeignKey(Category, related_name='contents')
-    title = models.CharField(_('title'), max_length=60)
-    description = models.TextField(_('description'), max_length=190, blank=True, default='')
-    image = ImageField(_('image'), max_length=255, blank=True, null=True, upload_to='categories/content/',
-                       help_text=_("The image will be replaced by the video if the video url is present"))
-    video_url = models.URLField(max_length=100, blank=True, default='', help_text="Setting a video url will override"
-                                                                                  " the uploaded image (if present)")
-    link_text = models.CharField(_("link text"), max_length=60, blank=True, default=_("Read more"))
+    title = models.CharField(_('title'), max_length=60, help_text=_("Max: %(chars)s characters.") % {'chars': 60})
+    description = models.TextField(_('description'),
+                                   max_length=190,
+                                   blank=True,
+                                   default='',
+                                   help_text=_("Max: %(chars)s characters.") % {'chars': 190})
+    image = ImageField(_('image'),
+                       max_length=255,
+                       blank=True,
+                       null=True,
+                       upload_to='categories/content/',
+                       help_text=_("Accepted file format: .jpg, .jpeg & .png"))
+    video_url = models.URLField(max_length=100,
+                                blank=True,
+                                default='',
+                                help_text=_("Setting a video url will replace the image. Only YouTube or Vimeo videos "
+                                            "are accepted. Max: %(chars)s characters.") % {'chars': 100})
+    link_text = models.CharField(_("link name"),
+                                 max_length=60,
+                                 blank=True,
+                                 default=_("Read more"),
+                                 help_text=_("The link will only be displayed if an URL is provided. "
+                                             "Max: %(chars)s characters.") % {'chars': 60})
     link_url = models.URLField(_("link url"), blank=True)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:
-        verbose_name = _("category content")
-        verbose_name_plural = _("category contents")
+        verbose_name = _("content block")
+        verbose_name_plural = _("content blocks")
+        ordering = ['sequence']
 
     def __unicode__(self):
         return self.title

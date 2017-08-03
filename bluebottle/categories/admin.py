@@ -1,26 +1,21 @@
 from django import forms
+from django.db import models
 from django.contrib import admin
 from sorl.thumbnail.admin import AdminImageMixin
-from tinymce.widgets import TinyMCE
 from .models import Category, CategoryContent
+from adminsortable.admin import NonSortableParentAdmin, SortableStackedInline
 
 
-class CatergoryContentForm(forms.ModelForm):
-    description = forms.CharField(required=False, widget=TinyMCE())
-
-    class Meta:
-        model = CategoryContent
-        exclude = ()
-
-
-class CategoryContentInline(admin.StackedInline):
+class CategoryContentInline(SortableStackedInline):
+    formfield_overrides = {
+        models.TextField: {'widget': forms.Textarea(attrs={'rows': 3, 'cols': 80})},
+    }
     model = CategoryContent
-    form = CatergoryContentForm
     extra = 0
     max_num = 3
 
 
-class CategoryAdmin(AdminImageMixin, admin.ModelAdmin):
+class CategoryAdmin(AdminImageMixin, NonSortableParentAdmin):
     model = Category
     list_display = ('title', 'slug')
     inlines = (CategoryContentInline,)

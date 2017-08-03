@@ -282,6 +282,15 @@ def update_group_permissions(sender, group_perms=None):
                 group.permissions.add(permissions.get())
             except Permission.DoesNotExist, err:
                 logging.debug(err)
+            except Permission.MultipleObjectsReturned:
+                # Why can there be multiple permissions for one app?
+                # FIXME: When this except is removed (which we should) then rewards test fail
+                # permissions then has two values:
+                # <Permission: bb_projects | project phase | Can view project theme through API>
+                # <Permission: bb_projects | project theme | Can view project theme through API>
+                # Maybe it's only locally with an old db with wrong perms in?
+                for perm in permissions.all():
+                    group.permissions.add(perm)
         group.save()
 
 

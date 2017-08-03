@@ -12,7 +12,7 @@ class AnonymousAuthenticationBackendTest(BluebottleTestCase):
         self.permission_string = 'sites.{}'.format(self.codename)
 
         self.permission = Permission.objects.get(codename=self.codename)
-        self.group = Group.objects.create(name='Anonymous')
+        self.group, _ = Group.objects.get_or_create(name='Anonymous')
 
         self.anonymous_user = AnonymousUser()
         self.user = BlueBottleUserFactory.create()
@@ -29,7 +29,6 @@ class AnonymousAuthenticationBackendTest(BluebottleTestCase):
     def test_authenticated_user_has_no_permission(self):
         """ Test that normal user get no permissions"""
         self.group.permissions.add(self.permission)
-
         self.assertFalse(self.user.has_perm(self.permission_string))
 
     def test_no_permission_non_existant_group(self):

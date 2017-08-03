@@ -14,9 +14,8 @@ def member_created_groups(sender, instance, created, **kwargs):
 
     USER_MODEL = get_user_model()
     if isinstance(instance, USER_MODEL) and created:
-        for group in ['Authenticated', 'Anonymous']:
-            try:
-                group = Group.objects.get(name=group)
-                group.user_set.add(instance)
-            except Group.DoesNotExist:
-                logger.error('Group \'{}\' could not be found'.format(group))
+        try:
+            group = Group.objects.get(name='Authenticated')
+            group.user_set.add(instance)
+        except Group.DoesNotExist:
+            logger.error('Group \'{}\' could not be found'.format('Authenticated'))

@@ -11,10 +11,11 @@ class CategoryContentSerializer(serializers.ModelSerializer):
     video_url = serializers.URLField(required=False)
     link_text = serializers.CharField(required=False)
     link_url = serializers.URLField(required=False)
+    sequence = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = CategoryContent
-        fields = ('title', 'description', 'image', 'video_url', 'link_text', 'link_url')
+        fields = ('title', 'description', 'image', 'video_url', 'link_text', 'link_url', 'sequence')
 
 
 class CategorySerializer(serializers.ModelSerializer):

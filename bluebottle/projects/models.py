@@ -55,10 +55,9 @@ GROUP_PERMS = {
     },
     'Authenticated': {
         'perms': ('api_read_project', 'api_add_project', 'api_change_project',
-                  'api_read_projectdocument', 'api_add_projectdocument',
-                  'api_change_projectdocument', 'api_read_projectbudgetline',
-                  'api_add_projectbudgetline', 'api_change_projectbudgetline',
-                  'api_delete_projectbudgetline',)
+                  'api_read_projectdocument', 'api_add_projectdocument', 'api_change_projectdocument',
+                  'api_read_projectbudgetline', 'api_add_projectbudgetline',
+                  'api_change_projectbudgetline', 'api_delete_projectbudgetline',)
     }
 }
 

@@ -1,7 +1,6 @@
 from django.db.models.query_utils import Q
 
 from django.contrib.auth.models import AnonymousUser
-from rest_framework.permissions import IsAuthenticated
 
 from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectDocument
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
@@ -14,7 +13,7 @@ from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView
 )
-from bluebottle.utils.permissions import OwnerPermission
+from bluebottle.utils.permissions import OwnerPermission, IsAuthenticated
 from bluebottle.projects.permissions import IsEditableOrReadOnly
 from .models import ProjectTheme, ProjectPhase
 

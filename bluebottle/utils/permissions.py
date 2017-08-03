@@ -171,3 +171,12 @@ class TenantConditionalOpenClose(BasePermission):
         except AttributeError:
             pass
         return True
+
+
+class IsAuthenticated(BasePermission):
+
+    def has_object_method_permission(self, method, user, view, obj):
+        return user.is_authenticated and user.groups.filter(name='Authenticated').exists()
+
+    def has_method_permission(self, method, user, view, obj=None):
+        return user.is_authenticated and user.groups.filter(name='Authenticated').exists()

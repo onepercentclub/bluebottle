@@ -42,24 +42,6 @@ from .mails import (
 )
 from .signals import project_funded
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_project', 'change_project', 'delete_project',
-            'add_projectdocument', 'change_projectdocument', 'delete_projectdocument',
-            'add_projectbudgetline', 'change_projectbudgetline', 'delete_projectbudgetline',
-        )
-    },
-    'Anonymous': {
-        'perms': ('api_read_project',)
-    },
-    'Authenticated': {
-        'perms': ('api_read_project', 'api_add_project', 'api_change_project',
-                  'api_read_projectdocument', 'api_add_projectdocument', 'api_change_projectdocument',
-                  'api_read_projectbudgetline', 'api_add_projectbudgetline',
-                  'api_change_projectbudgetline', 'api_delete_projectbudgetline',)
-    }
-}
 
 logger = logging.getLogger(__name__)
 

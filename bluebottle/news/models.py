@@ -17,14 +17,6 @@ from bluebottle.clients import properties
 
 from .managers import NewsItemManager
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_newsitem', 'change_newsitem', 'delete_newsitem',
-        )
-    }
-}
-
 
 def get_languages():
     return properties.LANGUAGES

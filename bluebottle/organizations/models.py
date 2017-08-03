@@ -9,14 +9,6 @@ from django_extensions.db.fields import (CreationDateTimeField,
 from taggit.managers import TaggableManager
 from djchoices import DjangoChoices, ChoiceItem
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_organization', 'change_organization', 'delete_organization',
-        )
-    }
-}
-
 
 class Organization(models.Model):
     """

@@ -1,6 +1,7 @@
 from datetime import datetime
 from datetime import timedelta
 
+import pendulum
 from admin_tools.dashboard.models import DashboardModule
 from admin_tools.dashboard.modules import LinkList
 from django.conf import settings
@@ -19,12 +20,13 @@ from bluebottle.members.models import Member
 from bluebottle.projects.dashboard import Analytics
 from bluebottle.projects.dashboard import SubmittedPlans, EndedProjects, StartedCampaigns
 from bluebottle.projects.models import Project
+from bluebottle.statistics.participation import Statistics
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
 
 
-class Metrics():
+class Metrics:
     task_member_allowed_statuses = ['accepted', 'realized']
 
     def __init__(self):
@@ -136,32 +138,33 @@ class Metrics():
         return participants
 
 
-class CustomIndexDashboard(FluentIndexDashboard):
-    """
-    Custom Dashboard for Bluebottle.
-    """
-    columns = 3
+class ParticipationMetricsModule(DashboardModule):
+    title = _('ParticipationMetrics')
+    template = 'admin_tools/dashboard/metrics_module.html'
 
-    def init_with_context(self, context):
-        self.children.append(Analytics())
-        self.children.append(SubmittedPlans())
-        self.children.append(StartedCampaigns())
-        self.children.append(EndedProjects())
-        self.children.append(RecentTasks())
-        if context['request'].user.has_perm('sites.export'):
-            self.children.append(LinkList(
-                _('Export Metrics'),
-                children=[
-                    {
-                        'title': _('Export metrics'),
-                        'url': reverse_lazy('exportdb_export'),
-                    }
-                ]
-            ))
-        if getattr(settings, 'ANALYTICS_BACKOFFICE_ENABLED', True):
-            self.children.append(MetricsModule(
-                title=_("Metrics"),
-            ))
+    def __init__(self, **kwargs):
+        self.children = []
+
+        today = pendulum.now()
+        year_start_date = pendulum.create(today.year, 1, 1, 0, 0, 0)
+        year_end_date = pendulum.create(today.year, 12, 31, 23, 59, 59)
+        time_period = pendulum.period(year_start_date, year_end_date)
+
+        for week_nr, period in enumerate(time_period.range('weeks'), start=1):
+
+            # Curtail the last week of the year to end with the end of the year
+            # E.g. The end day of the last week of the year could lie in the next year, in this case we just
+            # use the last day of the year as the end day of the week
+            end_of_week = period.end_of('week')
+            statistics_end_date = end_of_week if end_of_week < year_end_date else year_end_date
+
+            if statistics_end_date <= today.add(weeks=1):
+                statistics = Statistics(start=year_start_date, end=statistics_end_date)
+                self.children.insert(0, {
+                    'title': _('Week Nr. {}'.format(week_nr)),
+                    'value': statistics.participants_count
+                })
+        super(ParticipationMetricsModule, self).__init__(**kwargs)
 
 
 class MetricsModule(DashboardModule):
@@ -376,3 +379,30 @@ class WallpostModule(DashboardModule):
 
         )
         super(WallpostModule, self).__init__(**kwargs)
+
+
+class CustomIndexDashboard(FluentIndexDashboard):
+    """
+    Custom Dashboard for Bluebottle.
+    """
+    columns = 3
+
+    def init_with_context(self, context):
+        self.children.append(Analytics())
+        self.children.append(SubmittedPlans())
+        self.children.append(StartedCampaigns())
+        self.children.append(EndedProjects())
+        self.children.append(RecentTasks())
+        if context['request'].user.has_perm('sites.export'):
+            self.children.append(LinkList(
+                _('Export Metrics'),
+                children=[
+                    {
+                        'title': _('Export metrics'),
+                        'url': reverse_lazy('exportdb_export'),
+                    }
+                ]
+            ))
+        if getattr(settings, 'ANALYTICS_BACKOFFICE_ENABLED', True):
+            self.children.append(MetricsModule(title=_("Metrics"),))
+            self.children.append(ParticipationMetricsModule(title=_("Participation Metrics"), ))

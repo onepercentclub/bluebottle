@@ -23,7 +23,7 @@ def add_group_permissions(apps, schema_editor):
             'perms': ('api_read_projectphase', 'api_read_projecttheme',)
         }     
     }
-    update_group_permissions(None, group_perms)
+    update_group_permissions('bb_projects', group_perms)
 
 
 class Migration(migrations.Migration):

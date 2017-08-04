@@ -24,7 +24,7 @@ def add_group_permissions(apps, schema_editor):
             'perms': ('api_read_task', 'api_add_tasks', 'api_add_taskmember')
         }
     }
-    update_group_permissions(None, group_perms)
+    update_group_permissions('tasks', group_perms)
 
 
 class Migration(migrations.Migration):

@@ -23,7 +23,7 @@ def add_group_permissions(apps, schema_editor):
             )
         }
     }
-    update_group_permissions(None, group_perms)
+    update_group_permissions('rewards', group_perms)
 
 
 class Migration(migrations.Migration):

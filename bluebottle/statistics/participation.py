@@ -348,22 +348,6 @@ class Statistics(object):
 
         return len(task_ids)
 
-    @property
-    @memoize(timeout=60 * 60)
-    def time_spent(self):
-        """ Total amount of time spent on realized tasks """
-        logs = TaskMemberStatusLog.objects\
-            .filter(self.end_date_filter('start'), task_member__task__created__lte=self.end) \
-            .distinct('task_member__id') \
-            .order_by('-task_member__id', '-start') \
-
-        count = 0
-        for log in logs:
-            if log.status == 'realized':
-                count += log.task_member.time_spent
-
-        return count
-
     def __repr__(self):
         start = self.start.strftime('%s') if self.start else 'none'
         end = self.end.strftime('%s') if self.end else 'none'

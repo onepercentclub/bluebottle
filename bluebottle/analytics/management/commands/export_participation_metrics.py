@@ -21,6 +21,12 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = 'Export the participation metrics per tenant'
 
+    colors = {
+        'projects': '',
+        'tasks': '',
+        'task_members': ''
+    }
+
     def __init__(self, **kwargs):
         super(Command, self).__init__(**kwargs)
 
@@ -44,9 +50,19 @@ class Command(BaseCommand):
     @staticmethod
     def setup_workbook_formatters(workbook):
         formatters = dict()
-        formatters['format_metrics_header'] = workbook.add_format()
-        formatters['format_metrics_header'].set_bg_color('gray')
-        formatters['format_metrics_header'].set_bold()
+
+        formatters['metrics_header'] = workbook.add_format()
+        formatters['metrics_header'].set_bg_color('gray')
+        formatters['metrics_header'].set_bold()
+
+        formatters['project_status'] = workbook.add_format()
+        formatters['project_status'].set_bg_color('gray')
+
+        formatters['task_status'] = workbook.add_format()
+        formatters['task_status'].set_bg_color('gray')
+
+        formatters['task_member_status'] = workbook.add_format()
+        formatters['task_member_status'].set_bg_color('gray')
 
         return formatters
 
@@ -471,14 +487,14 @@ class Command(BaseCommand):
                             definition='Total count of projects with the theme - {} and project status - {} which '
                                        'were created before the end date.'
                                        .format(theme.name, project_phase.name))
-            # Task Status Statistics
-            for task_status, label in Task.TaskStatuses.choices:
-                row_data['Theme - {} / Task Status - {}'.format(theme.name, label)] = RowData(
-                    metric=statistics.get_tasks_status_count_by_theme(theme.slug, [task_status]),
-                    is_formula=False,
-                    hide_column=False,
-                    definition='Total count of task with the theme - {} and task status - {} '
-                               'which were created before the end date.'.format(theme.name, label))
+            # # Task Status Statistics
+            # for task_status, label in Task.TaskStatuses.choices:
+            #     row_data['Theme - {} / Task Status - {}'.format(theme.name, label)] = RowData(
+            #         metric=statistics.get_tasks_status_count_by_theme(theme.slug, [task_status]),
+            #         is_formula=False,
+            #         hide_column=False,
+            #         definition='Total count of task with the theme - {} and task status - {} '
+            #                    'which were created before the end date.'.format(theme.name, label))
 
         # Write Headers, if the first row is being written
         if row == 2:
@@ -547,14 +563,14 @@ class Command(BaseCommand):
                             definition='Total count of projects with the location - {} and project status - {} which '
                                        'were created before the end date.'
                                        .format(location_group.name, project_phase.name))
-            # Task Status Statistics
-            for task_status, label in Task.TaskStatuses.choices:
-                row_data['Location - {} / Task Status - {}'.format(location_group.name, label)] = RowData(
-                    metric=statistics.get_tasks_status_count_by_location_group(location_group.name, [task_status]),
-                    is_formula=False,
-                    hide_column=False,
-                    definition='Total count of task with the location - {} and task status - {} '
-                               'which were created before the end date.'.format(location_group.name, label))
+            # # Task Status Statistics
+            # for task_status, label in Task.TaskStatuses.choices:
+            #     row_data['Location - {} / Task Status - {}'.format(location_group.name, label)] = RowData(
+            #         metric=statistics.get_tasks_status_count_by_location_group(location_group.name, [task_status]),
+            #         is_formula=False,
+            #         hide_column=False,
+            #         definition='Total count of task with the location - {} and task status - {} '
+            #                    'which were created before the end date.'.format(location_group.name, label))
 
         # Write Headers, if the first row is being written
         if row == 2:
@@ -638,7 +654,7 @@ class Command(BaseCommand):
 
             # Add label
             row = 1
-            worksheet.write(row, 0, 'By Year', formatters['format_metrics_header'])
+            worksheet.write(row, 0, 'By Year', formatters['metrics_header'])
 
             row += 1
             write(worksheet=worksheet,
@@ -649,7 +665,7 @@ class Command(BaseCommand):
 
             # Generate data by month
             row += 1
-            worksheet.write(row, 0, 'By Month', formatters['format_metrics_header'])
+            worksheet.write(row, 0, 'By Month', formatters['metrics_header'])
 
             row += 1
             self.monthly_statistics_row_start = row
@@ -670,7 +686,7 @@ class Command(BaseCommand):
                     self.monthly_statistics_row_end = row
 
             # Generate data by week
-            worksheet.write(row, 0, 'By Week', formatters['format_metrics_header'])
+            worksheet.write(row, 0, 'By Week', formatters['metrics_header'])
 
             time_period = pendulum.period(statistics_start_date, pendulum.create(year, 12, 31))
             row += 1

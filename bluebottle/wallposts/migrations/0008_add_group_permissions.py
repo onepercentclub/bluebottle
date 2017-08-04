@@ -37,7 +37,7 @@ def add_group_permissions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wallposts', '0006_remove_duplicate_donation_wallposts'),
+        ('wallposts', '0007_add_api_permissions'),
     ]
 
     operations = [

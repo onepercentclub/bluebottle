@@ -29,7 +29,7 @@ def add_group_permissions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('rewards', '0002_auto_20160720_2245'),
+        ('rewards', '0003_add_api_permissions'),
     ]
 
     operations = [

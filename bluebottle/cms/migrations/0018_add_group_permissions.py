@@ -34,7 +34,7 @@ def add_group_permissions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('cms', '0016_auto_20161228_1420'),
+        ('cms', '0017_add_api_permissions'),
     ]
 
     operations = [

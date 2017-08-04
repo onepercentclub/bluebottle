@@ -11,26 +11,25 @@ def add_group_permissions(apps, schema_editor):
     group_perms = {
         'Staff': {
             'perms': (
-                'add_task', 'change_task', 'delete_task',
-                'add_taskmember', 'change_taskmember', 'delete_taskmember',
-                'add_taskfile', 'change_taskfile', 'delete_taskfile',
-                'add_skill', 'change_skill', 'delete_skill',
+                'add_project', 'change_project', 'delete_project',
+                'add_projectdocument', 'change_projectdocument', 'delete_projectdocument',
+                'add_projectbudgetline', 'change_projectbudgetline', 'delete_projectbudgetline',
             )
         },
         'Anonymous': {
-            'perms': ('api_read_task',)
+            'perms': ('api_read_projectphase', 'api_read_projecttheme',)
         },
         'Authenticated': {
-            'perms': ('api_read_task', 'api_add_tasks', 'api_add_taskmember')
-        }
+            'perms': ('api_read_projectphase', 'api_read_projecttheme',)
+        }     
     }
-    update_group_permissions('tasks', group_perms)
+    update_group_permissions('bb_projects', group_perms)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0027_delete_tasks_date_status_changed'),
+        ('bb_projects', '0005_add_api_permissions'),
     ]
 
     operations = [

@@ -17,19 +17,23 @@ def add_group_permissions(apps, schema_editor):
             )
         },
         'Anonymous': {
-            'perms': ('api_read_projectphase', 'api_read_projecttheme',)
+            'perms': ('api_read_project',)
         },
         'Authenticated': {
-            'perms': ('api_read_projectphase', 'api_read_projecttheme',)
-        }     
+            'perms': ('api_read_project', 'api_add_project', 'api_change_project',
+                      'api_read_projectdocument', 'api_add_projectdocument', 'api_change_projectdocument',
+                      'api_read_projectbudgetline', 'api_add_projectbudgetline',
+                      'api_change_projectbudgetline', 'api_delete_projectbudgetline',)
+        }
     }
-    update_group_permissions('bb_projects', group_perms)
+
+    update_group_permissions('projects', group_perms)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bb_projects', '0004_add_project_continued_phase'),
+        ('projects', '0031_add_api_permissions'),
     ]
 
     operations = [

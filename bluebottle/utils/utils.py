@@ -1,23 +1,20 @@
-import socket
-import logging
-from importlib import import_module
 import bleach
+from importlib import import_module
+import logging
+import pygeoip
+import socket
 
-
-from django.db import connection
 from django.conf import settings
-from django.contrib.auth.management import create_permissions
+from django.contrib.auth.models import Permission, Group
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import Permission, Group
 
-from django_tools.middlewares import ThreadLocal
 from django_fsm import TransitionNotAllowed
-
-import pygeoip
+from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients import properties
+
 
 TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
         'br', 'pre', 'blockquote']
@@ -260,37 +257,16 @@ def get_country_code_by_ip(ip_address=None):
     return gip.country_code_by_name(ip_address)
 
 
-def update_group_permissions(sender, group_perms=None):
-    # Return early if there is no group permissions table. This will happen when running tests.
-    if Group.objects.model._meta.db_table not in connection.introspection.table_names():
-        return
-
-    if not group_perms:
-        create_permissions(sender, verbosity=False)
-        try:
-            group_perms = sender.module.models.GROUP_PERMS
-        except AttributeError:
-            return
-
+def update_group_permissions(label, group_perms):
     for group_name, permissions in group_perms.items():
         group, _ = Group.objects.get_or_create(name=group_name)
         for perm_codename in permissions['perms']:
             try:
                 permissions = Permission.objects.filter(codename=perm_codename)
-                if sender:
-                    permissions = permissions.filter(content_type__app_label=sender.label)
+                permissions = permissions.filter(content_type__app_label=label)
                 group.permissions.add(permissions.get())
             except Permission.DoesNotExist, err:
                 logging.debug(err)
-            except Permission.MultipleObjectsReturned:
-                # Why can there be multiple permissions for one app?
-                # FIXME: When this except is removed (which we should) then rewards test fail
-                # permissions then has two values:
-                # <Permission: bb_projects | project phase | Can view project theme through API>
-                # <Permission: bb_projects | project theme | Can view project theme through API>
-                # Maybe it's only locally with an old db with wrong perms in?
-                for perm in permissions.all():
-                    group.permissions.add(perm)
         group.save()
 
 

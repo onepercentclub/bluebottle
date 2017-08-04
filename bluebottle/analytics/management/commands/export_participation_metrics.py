@@ -110,6 +110,9 @@ class Command(BaseCommand):
         parser.add_argument('--tenant', metavar='TENANT', action='store', dest='tenant', required=True,
                             choices=self.all_tenants, help="Name of the tenant to export")
 
+        parser.add_argument('--emails', metavar='EMAILS', action='store', dest='emails', required=False,
+                            help="Emails of the contact persons")
+
     def handle(self, **options):
         self.tenant = options['tenant']
 
@@ -183,18 +186,6 @@ class Command(BaseCommand):
         return '=IF(ISBLANK({}),0,{}-{})'.format(xl_rowcol_to_cell(row - 1, col),
                                                  xl_rowcol_to_cell(row, col),
                                                  xl_rowcol_to_cell(row - 1, col))
-
-    def get_cumulative_growth_formula(self, statistic_type, row, col):
-        if statistic_type == 'yearly':
-            row_start = self.yearly_statistics_row_start
-        elif statistic_type == 'monthly':
-            row_start = self.monthly_statistics_row_start
-        elif statistic_type == 'weekly':
-            row_start = self.weekly_statistics_row_start
-
-        return '=IF(ISBLANK({}),0,{}-{})'.format(xl_rowcol_to_cell(row - 1, col),
-                                                 xl_rowcol_to_cell(row, col),
-                                                 xl_rowcol_to_cell(row_start, col))
 
     def write_total_stats(self, worksheet, row, statistic_type, start_date, end_date):
         statistics = Statistics(start=start_date, end=end_date)
@@ -690,11 +681,11 @@ class Command(BaseCommand):
                         .format(self.tenant,
                                 stats_type,
                                 statistics_end_date.to_iso8601_string()))
-                    # write(worksheet=worksheet,
-                    #       row=row,
-                    #       statistic_type='weekly',
-                    #       start_date=statistics_start_date,
-                    #       end_date=statistics_end_date)
+                    write(worksheet=worksheet,
+                          row=row,
+                          statistic_type='weekly',
+                          start_date=statistics_start_date,
+                          end_date=statistics_end_date)
 
                     row += 1
                     self.weekly_statistics_row_end = row - 1

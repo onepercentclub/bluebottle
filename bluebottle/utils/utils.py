@@ -262,9 +262,11 @@ def update_group_permissions(label, group_perms):
         group, _ = Group.objects.get_or_create(name=group_name)
         for perm_codename in permissions['perms']:
             try:
-                permissions = Permission.objects.filter(codename=perm_codename)
-                permissions = permissions.filter(content_type__app_label=label)
-                group.permissions.add(permissions.get())
+                permissions, _ = Permission.objects.get_or_create(
+                    codename=perm_codename,
+                    content_type__app_label=label
+                )
+                group.permissions.add(permissions)
             except Permission.DoesNotExist, err:
                 logging.debug(err)
         group.save()

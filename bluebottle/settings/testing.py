@@ -13,6 +13,9 @@ warnings.filterwarnings(
     r"DateTimeField .* received a naive datetime",
     RuntimeWarning, r'django\.db\.models\.fields')
 
+CSRF_COOKIE_SECURE = False
+ALLOWED_HOSTS = ['*']
+
 MERCHANT_ACCOUNTS = [
     {
         'merchant': 'docdata',

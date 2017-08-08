@@ -38,7 +38,7 @@ urlpatterns = [
         name='project_theme_detail'),
 
     # Manage stuff
-    url(r'^manage/$', ManageProjectList.as_view(), name='project_manage_list'),
+    url(r'^manage/$', ManageProjectList.as_view(), name='project-manage-list'),
     url(r'^manage/(?P<slug>[\w-]+)$', ManageProjectDetail.as_view(), name='project_manage_detail'),
 
     url(r'^documents/manage/$', ManageProjectDocumentList.as_view(), name='manage_project_document_list'),

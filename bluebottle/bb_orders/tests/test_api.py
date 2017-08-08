@@ -33,7 +33,7 @@ class OrderApiTestCase(BluebottleTestCase):
         self.project2 = ProjectFactory.create(amount_asked=3750)
         self.project2.set_status('campaign')
 
-        self.manage_order_list_url = reverse('manage-order-list')
+        self.manage_order_list_url = reverse('order-manage-list')
 
 
 class TestCreateUpdateOrder(OrderApiTestCase):
@@ -106,14 +106,14 @@ class TestOrderPermissions(BluebottleTestCase):
     def test_user_not_owner(self):
         """ User that is not owner of the order tries to do a get to the order should get a 403"""
         response = self.client.get(
-            reverse('manage-order-detail', kwargs={'pk': self.order.pk}),
+            reverse('order-manage-detail', kwargs={'pk': self.order.pk}),
             token=self.user2_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_user_is_owner(self):
         """ User that is owner of the order must get a 200 response """
         response = self.client.get(
-            reverse('manage-order-detail', kwargs={'pk': self.order.pk}),
+            reverse('order-manage-detail', kwargs={'pk': self.order.pk}),
             token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -142,7 +142,7 @@ class TestAdditionalOrderPermissions(OrderApiTestCase):
             "user": self.user2.pk
         }
 
-        response = self.client.put(reverse('manage-order-detail',
+        response = self.client.put(reverse('order-manage-detail',
                                            kwargs={'pk': self.order.id}),
                                    updated_order,
                                    token=self.user1_token)
@@ -163,7 +163,7 @@ class TestStatusUpdates(BluebottleTestCase):
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='mock')
         self.service = PaymentService(order_payment=self.order_payment)
-        self.client.get(reverse('manage-order-detail',
+        self.client.get(reverse('order-manage-detail',
                                 kwargs={'pk': self.order.id}),
                         token=self.user1_token)
         self.assertEqual(mock_check_payment_status.called, True)
@@ -176,7 +176,7 @@ class TestStatusUpdates(BluebottleTestCase):
                                                         payment_method='mock',
                                                         status=StatusDefinition.AUTHORIZED)
 
-        self.client.get(reverse('manage-order-detail',
+        self.client.get(reverse('order-manage-detail',
                                 kwargs={'pk': self.order.id}),
                         token=self.user1_token)
         self.assertEqual(mock_check_payment_status.called, False)

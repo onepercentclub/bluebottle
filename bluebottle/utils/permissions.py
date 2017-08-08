@@ -176,7 +176,18 @@ class TenantConditionalOpenClose(BasePermission):
 class IsAuthenticated(BasePermission):
 
     def has_object_method_permission(self, method, user, view, obj):
-        return user.is_authenticated and user.groups.filter(name='Authenticated').exists()
+        return self.has_method_permission(method, user, view, obj)
 
     def has_method_permission(self, method, user, view, obj=None):
+        return user.is_authenticated and user.groups.filter(name='Authenticated').exists()
+
+
+class IsAuthenticatedOrReadOnly(BasePermission):
+
+    def has_object_method_permission(self, method, user, view, obj):
+        return self.has_method_permission(method, user, view, obj)
+
+    def has_method_permission(self, method, user, view, obj=None):
+        if method in permissions.SAFE_METHODS:
+            return True
         return user.is_authenticated and user.groups.filter(name='Authenticated').exists()

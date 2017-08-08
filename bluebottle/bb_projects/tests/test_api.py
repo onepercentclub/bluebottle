@@ -276,7 +276,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         """
         Test login required for the API endpoint for manage Project list.
         """
-        response = self.client.get(reverse('project_manage_list'))
+        response = self.client.get(reverse('project-manage-list'))
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         data = json.loads(response.content)
         self.assertEqual(data['detail'], 'Authentication credentials were not provided.')
@@ -286,7 +286,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
         Test successful request for a logged in user over the API endpoint for
         manage Project list.
         """
-        response = self.client.get(reverse('project_manage_list'), token=self.user_token)
+        response = self.client.get(reverse('project-manage-list'), token=self.user_token)
 
         self.assertEqual(response.status_code, 200)
 
@@ -318,7 +318,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
             'status': self.phase_1.pk
         }
 
-        response = self.client.post(reverse('project_manage_list'),
+        response = self.client.post(reverse('project-manage-list'),
                                     post_data,
                                     token=self.user_token)
 
@@ -346,7 +346,7 @@ class TestManageProjectList(ProjectEndpointTestCase):
             'pitch': 'A new project to be used in unit tests',
             'amount_asked': None
         }
-        response = self.client.post(reverse('project_manage_list'), post_data, token=self.user_token)
+        response = self.client.post(reverse('project-manage-list'), post_data, token=self.user_token)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['amount_asked'], {'currency': 'EUR', 'amount': Decimal('0')})
 

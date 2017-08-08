@@ -45,7 +45,7 @@ class TaskApiTestcase(BluebottleTestCase):
         self.previews_url = reverse('project_preview_list')
         self.task_preview_url = reverse('task_preview_list')
         self.tasks_url = reverse('task_list')
-        self.task_member_url = reverse('task_member_list')
+        self.task_member_url = reverse('task-member-list')
 
     def test_task_count(self):
         """

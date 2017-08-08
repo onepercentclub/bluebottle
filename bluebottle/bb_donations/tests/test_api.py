@@ -55,8 +55,8 @@ class DonationApiTestCase(BluebottleTestCase, SessionTestMixin):
         self.project2 = ProjectFactory.create(amount_asked=3750)
         self.project2.set_status('campaign')
 
-        self.manage_order_list_url = reverse('manage-order-list')
-        self.manage_donation_list_url = reverse('manage-donation-list')
+        self.manage_order_list_url = reverse('order-manage-list')
+        self.manage_donation_list_url = reverse('donation-manage-list')
 
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
@@ -83,7 +83,7 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(Donation.objects.count(), 0)
-        response = self.client.post(reverse('manage-donation-list'), donation1,
+        response = self.client.post(reverse('donation-manage-list'), donation1,
                                     token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -99,7 +99,7 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(Donation.objects.count(), 0)
-        response = self.client.post(reverse('manage-donation-list'), donation1,
+        response = self.client.post(reverse('donation-manage-list'), donation1,
                                     token=self.user2_token)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -118,7 +118,7 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(Donation.objects.count(), 0)
-        response = self.client.post(reverse('manage-donation-list'), donation1,
+        response = self.client.post(reverse('donation-manage-list'), donation1,
                                     token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -137,7 +137,7 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(Donation.objects.count(), 0)
-        response = self.client.post(reverse('manage-donation-list'), donation1,
+        response = self.client.post(reverse('donation-manage-list'), donation1,
                                     token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -152,7 +152,7 @@ class TestDonationPermissions(DonationApiTestCase):
             "amount": {'currency': 'USD', 'amount': 35}
         }
 
-        response = self.client.post(reverse('manage-donation-list'), donation,
+        response = self.client.post(reverse('donation-manage-list'), donation,
                                     token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -164,7 +164,7 @@ class TestDonationPermissions(DonationApiTestCase):
             "amount": {'currency': 'USD', 'amount': 35}
         }
 
-        response = self.client.post(reverse('manage-donation-list'), donation,
+        response = self.client.post(reverse('donation-manage-list'), donation,
                                     token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -174,7 +174,7 @@ class TestDonationPermissions(DonationApiTestCase):
             "amount": {'currency': 'USD', 'amount': 35}
         }
 
-        response = self.client.post(reverse('manage-donation-list'), donation,
+        response = self.client.post(reverse('donation-manage-list'), donation,
                                     token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -190,7 +190,7 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(Donation.objects.count(), 1)
-        response = self.client.put(reverse('manage-donation-detail',
+        response = self.client.put(reverse('donation-manage-detail',
                                            kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user2_token)
@@ -210,7 +210,7 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(Donation.objects.count(), 1)
-        response = self.client.put(reverse('manage-donation-detail',
+        response = self.client.put(reverse('donation-manage-detail',
                                            kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user_token)
@@ -233,7 +233,7 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(Donation.objects.count(), 1)
-        response = self.client.put(reverse('manage-donation-detail',
+        response = self.client.put(reverse('donation-manage-detail',
                                            kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user_token)
@@ -256,7 +256,7 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(Donation.objects.count(), 1)
-        response = self.client.put(reverse('manage-donation-detail',
+        response = self.client.put(reverse('donation-manage-detail',
                                            kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user_token)
@@ -279,7 +279,7 @@ class TestDonationPermissions(DonationApiTestCase):
         }
 
         self.assertEqual(Donation.objects.count(), 1)
-        response = self.client.put(reverse('manage-donation-detail',
+        response = self.client.put(reverse('donation-manage-detail',
                                            kwargs={'pk': donation.id}),
                                    updated_donation,
                                    token=self.user_token)
@@ -450,7 +450,7 @@ class TestCreateDonation(DonationApiTestCase):
 
 class TestAnonymousAuthenicatedDonationCreate(DonationApiTestCase):
     def test_create_anonymous_donation(self):
-        donation_url = reverse('manage-donation-list')
+        donation_url = reverse('donation-manage-list')
 
         # create a new anonymous donation
         response = self.client.post(donation_url, {'order': self.order.pk,
@@ -462,7 +462,7 @@ class TestAnonymousAuthenicatedDonationCreate(DonationApiTestCase):
 
         # retrieve the donation just created
         donation_id = response.data['id']
-        donation_url = reverse('manage-donation-detail',
+        donation_url = reverse('donation-manage-detail',
                                kwargs={'pk': donation_id})
         response = self.client.get(donation_url, token=self.user_token)
 
@@ -498,7 +498,7 @@ class TestUnauthenticatedDonationCreate(DonationApiTestCase):
         s.save()
 
     def test_create_anonymous_donation(self):
-        donation_url = reverse('manage-donation-list')
+        donation_url = reverse('donation-manage-list')
 
         # create a new anonymous donation
         response = self.client.post(donation_url, {'order': self.order_anon.pk,

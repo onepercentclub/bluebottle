@@ -53,7 +53,7 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
             'project_detail', kwargs={'slug': self.project.slug})
         self.project_manage_url = reverse(
             'project_manage_detail', kwargs={'slug': self.project.slug})
-        self.project_manage_list_url = reverse('project_manage_list')
+        self.project_manage_list_url = reverse('project-manage-list')
 
     def test_owner_permissions(self):
         # view allowed
@@ -134,7 +134,7 @@ class ProjectEndpointTestCase(BluebottleTestCase):
 
         self.projects_preview_url = reverse('project_preview_list')
         self.projects_url = reverse('project_list')
-        self.manage_projects_url = reverse('project_manage_list')
+        self.manage_projects_url = reverse('project-manage-list')
 
 
 class ProjectApiIntegrationTest(ProjectEndpointTestCase):
@@ -520,7 +520,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.phase_submitted = ProjectPhase.objects.get(slug='plan-submitted')
         self.phase_campaign = ProjectPhase.objects.get(slug='campaign')
 
-        self.manage_projects_url = reverse('project_manage_list')
+        self.manage_projects_url = reverse('project-manage-list')
         self.manage_budget_lines_url = reverse('project-budgetline-list')
         self.manage_project_document_url = reverse('manage-project-document-list')
         self.some_photo = './bluebottle/projects/test_images/upload.png'

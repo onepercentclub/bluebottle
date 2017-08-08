@@ -100,6 +100,10 @@ class Task(models.Model, PreviousStatusMixin):
         return self.title
 
     @property
+    def owner(self):
+        return self.author
+
+    @property
     def expertise_based(self):
         return self.skill.expertise if self.skill else False
 

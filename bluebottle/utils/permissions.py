@@ -57,7 +57,7 @@ class BasePermission(permissions.BasePermission):
         message = 'has_object_method_permission() must be implemented on {}'.format(self)
         raise NotImplementedError(message)
 
-    def has_method_permission(self, method, user, view, obj=None):
+    def has_method_permission(self, method, user, view):
         """ Check if user has permission to access method for the view.
 
         Used by both the DRF permission system and for returning permissions to the user.
@@ -77,7 +77,7 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
         'DELETE': ['%(app_label)s.api_delete_%(model_name)s'],
     }
 
-    def has_method_permission(self, method, user, view, obj=None):
+    def has_method_permission(self, method, user, view):
         queryset = None
         if hasattr(view, 'queryset'):
             queryset = view.queryset
@@ -93,7 +93,7 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
         debug("ResourcePermissions::has_method_permission > {}".format(user.has_perms(perms)))
         return user.has_perms(perms)
 
-    def has_object_method_permission(self, method, user, view, obj=None):
+    def has_object_method_permission(self, method, user, view, obj):
         debug("ResourcePermissions::has_object_method_permission > {}".format(self.has_method_permission(method, user,
                                                                               view)))
         return self.has_method_permission(method, user, view)
@@ -112,12 +112,29 @@ class OwnerPermission(BasePermission):
         return True
 
 
+class OwnerOrReadOnlyPermission(OwnerPermission):
+    """
+    Allows access only to obj owner or read only.
+    """
+
+    def has_object_method_permission(self, method, user, view, obj):
+        if method in permissions.SAFE_METHODS:
+            debug("OwnerOrReadOnlyPermission::has_object_method_permission > {}".format(True))
+            return True
+
+        debug("OwnerOrReadOnlyPermission::has_object_method_permission > {}".format(user == obj.owner))
+        return user == obj.owner
+
+    def has_method_permission(self, method, user, view):
+        return True
+
+
 class OwnerOrAdminPermission(OwnerPermission):
     def check_permission(self, request, instance):
         pass
 
     def has_object_method_permission(self, method, user, view, obj):
-        debug("IsOwnerOrAdmin::has_object_method_permission > {}".format(user == obj.owner or user.is_staff))
+        debug("OwnerOrAdminPermission::has_object_method_permission > {}".format(user == obj.owner or user.is_staff))
         return user == obj.owner or user.is_staff
 
 
@@ -131,20 +148,29 @@ class RelatedResourceOwnerPermission(BasePermission):
         raise NotImplementedError('get_parent_from_request() must be implemented')
 
     def has_object_method_permission(self, method, user, view, obj):
-        debug("OwnerPermission::has_object_permission > {}".format(user == obj.owner))
-        return user == obj.owner
+        debug("RelatedResourceOwnerPermission::has_object_permission > {}".format(user == obj.parent.owner))
+        return user == obj.parent.owner
 
     def has_method_permission(self, method, user, view):
         """ Read permissions are allowed to any request, so we'll< always allow
         GET, HEAD or OPTIONS requests.
         """
         if method != 'POST':
-            debug("OwnerPermission::has_method_permission > {}".format(True))
+            debug("RelatedResourceOwnerPermission::has_method_permission > {}".format(True))
             return True
 
         parent = self.get_parent_from_request(view.request)
-        debug("OwnerPermission::has_method_permission > {}".format(user == parent.owner))
+        debug("RelatedResourceOwnerPermission::has_method_permission > {}".format(user == parent.owner))
         return user == parent.owner
+
+
+class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
+    def has_object_method_permission(self, method, user, view, obj):
+        return (
+            user == obj.owner or
+            user == obj.parent.owner or
+            user.is_staff
+        )
 
 
 class UserPermission(BasePermission):
@@ -164,7 +190,7 @@ class TenantConditionalOpenClose(BasePermission):
             pass
         return True
 
-    def has_method_permission(self, method, user, view, obj=None):
+    def has_method_permission(self, method, user, view):
         try:
             if get_tenant_properties('CLOSED_SITE'):
                 return user and user.is_authenticated()
@@ -174,9 +200,23 @@ class TenantConditionalOpenClose(BasePermission):
 
 
 class IsAuthenticated(BasePermission):
-
+    """
+    Allow access if the user is authenticated
+    """
     def has_object_method_permission(self, method, user, view, obj):
+        return self.has_method_permission(method, user, view)
+
+    def has_method_permission(self, method, user, view):
         return user.is_authenticated and user.groups.filter(name='Authenticated').exists()
 
-    def has_method_permission(self, method, user, view, obj=None):
+
+class AuthenticatedOrReadOnlyPermission(IsAuthenticated):
+    """
+    Allow access if the user is authenticated or the request uses a safe method
+    """
+    def has_method_permission(self, method, user, view):
+        if method in permissions.SAFE_METHODS:
+            debug("AuthenticatedOrReadOnlyPermission::has_method_permission > {}".format(True))
+            return True
+
         return user.is_authenticated and user.groups.filter(name='Authenticated').exists()

@@ -30,7 +30,8 @@ GROUP_PERMS = {
         'perms': ('api_read_task',)
     },
     'Authenticated': {
-        'perms': ('api_read_task', 'api_add_tasks', 'api_add_taskmember')
+        'perms': ('api_read_task', 'api_add_task', 'api_change_task',
+                  'api_read_taskmember', 'api_add_taskmember', 'api_change_taskmember', 'api_delete_taskmember')
     }
 }
 
@@ -98,6 +99,10 @@ class Task(models.Model, PreviousStatusMixin):
 
     def __unicode__(self):
         return self.title
+
+    @property
+    def owner(self):
+        return self.author
 
     @property
     def expertise_based(self):
@@ -349,6 +354,14 @@ class TaskMember(models.Model, PreviousStatusMixin):
 
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
+
+    @property
+    def owner(self):
+        return self.task.owner
+
+    @property
+    def parent(self):
+        return self.task
 
     @property
     def time_applied_for(self):

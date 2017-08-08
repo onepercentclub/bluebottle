@@ -88,6 +88,16 @@ class IsMemberOrAuthorOrReadOnly(permissions.BasePermission):
         return False
 
 
+class IsResumeOwnerOrTaskAuthor(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        return (
+            request.user == obj.member or
+            request.user == obj.task.author or
+            request.user.is_staff
+        )
+
+
 class IsRelatedToActiveProjectOrReadOnly(permissions.BasePermission):
 
     def _get_task_from_request(self, request):

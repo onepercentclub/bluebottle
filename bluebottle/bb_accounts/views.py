@@ -11,7 +11,8 @@ from django.utils.http import base36_to_int, int_to_base36
 from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
-from tenant_extras.drf_permissions import TenantConditionalOpenClose
+
+from bluebottle.utils.permissions import TenantConditionalOpenClose
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.utils.email_backend import send_mail

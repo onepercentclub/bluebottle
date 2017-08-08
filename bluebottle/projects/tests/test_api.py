@@ -36,6 +36,60 @@ from ..models import Project
 factory = RequestFactory()
 
 
+class ProjectPermissionsTestCase(BluebottleTestCase):
+    """
+    Tests for the Project API permissions.
+    """
+    def setUp(self):
+        super(ProjectPermissionsTestCase, self).setUp()
+        self.init_projects()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.not_owner = BlueBottleUserFactory.create()
+        self.not_owner_token = "JWT {0}".format(self.not_owner.get_jwt_token())
+        self.project = ProjectFactory.create(owner=self.owner)
+        self.project_url = reverse(
+            'project_detail', kwargs={'slug': self.project.slug})
+        self.project_manage_url = reverse(
+            'project_manage_detail', kwargs={'slug': self.project.slug})
+        self.project_manage_list_url = reverse('project_manage_list')
+
+    def test_owner_permissions(self):
+        # view allowed
+        response = self.client.get(self.project_url, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        # update allowed
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
+                                   token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        # create allowed
+        response = self.client.post(self.project_manage_list_url, {'title': 'Title 2'},
+                                    token=self.owner_token)
+        self.assertEqual(response.status_code, 201)
+
+    def test_non_owner_permissions(self):
+        # update denied
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
+                                   token=self.not_owner_token)
+        self.assertEqual(response.status_code, 403)
+
+    def test_anon_permissions(self):
+        # view allowed
+        response = self.client.get(self.project_url)
+        self.assertEqual(response.status_code, 200)
+
+        # update denied
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'})
+        self.assertEqual(response.status_code, 401)
+
+        # create denied
+        response = self.client.post(self.project_manage_list_url, {'title': 'Title 2'})
+        self.assertEqual(response.status_code, 401)
+
+
 class ProjectEndpointTestCase(BluebottleTestCase):
     """
     Integration tests for the Project API.
@@ -564,6 +618,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         project_data['slug'] = 'a-new-slug-should-not-be-possible'
         response_2 = self.client.put(project_url, project_data,
                                      token=self.another_user_token)
+        print(response_2.content)
         self.assertEquals(response_2.data['detail'],
                           'You do not have permission to perform this action.')
         self.assertEquals(response_2.status_code, 403)
@@ -665,8 +720,10 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_project_document_download_author(self):
+        project = ProjectFactory(owner=self.some_user)
         document = ProjectDocumentFactory.create(
             author=self.some_user,
+            project=project,
             file='private/projects/documents/test.jpg'
         )
         file_url = reverse('project-document-file', args=[document.pk])
@@ -941,6 +998,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         # We should have 3 budget lines by now
         response = self.client.get(project_url, token=self.some_user_token)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data['budget_lines']), 3)
 
         # Let's change a budget_line
@@ -968,8 +1027,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.manage_budget_lines_url,
                                     line, token=self.another_user_token)
         self.assertEquals(response.status_code,
-                          status.HTTP_403_FORBIDDEN,
-                          response)
+                          status.HTTP_403_FORBIDDEN)
 
 
 class ProjectStoryXssTest(BluebottleTestCase):
@@ -1738,6 +1796,7 @@ class ProjectMediaApi(BluebottleTestCase):
         self.project = ProjectFactory.create(owner=self.some_user)
 
         mwp1 = MediaWallpostFactory.create(content_object=self.project,
+                                           author=self.some_user,
                                            video_url='https://youtu.be/Bal2U5jxZDQ')
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
@@ -1746,6 +1805,7 @@ class ProjectMediaApi(BluebottleTestCase):
         MediaWallpostPhotoFactory.create(mediawallpost=mwp1)
 
         mwp2 = MediaWallpostFactory.create(content_object=self.project,
+                                           author=self.some_user,
                                            video_url='https://youtu.be/Bal2U5jxZDQ')
         MediaWallpostPhotoFactory.create(mediawallpost=mwp2)
         MediaWallpostPhotoFactory.create(mediawallpost=mwp2)

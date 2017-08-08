@@ -301,8 +301,9 @@ class TestCreateDonation(DonationApiTestCase):
         # Create an order
         response = self.client.post(self.manage_order_list_url, {},
                                     token=self.user1_token)
-        order_id = response.data['id']
 
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        order_id = response.data['id']
         fundraiser = FundraiserFactory.create(amount=100)
 
         donation1 = {
@@ -332,8 +333,9 @@ class TestCreateDonation(DonationApiTestCase):
         # Create an order
         response = self.client.post(self.manage_order_list_url, {},
                                     token=self.user1_token)
-        order_id = response.data['id']
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+        order_id = response.data['id']
         donation1 = {
             "project": self.project1.slug,
             "order": order_id,
@@ -360,8 +362,9 @@ class TestCreateDonation(DonationApiTestCase):
         # Create an order
         response = self.client.post(self.manage_order_list_url, {},
                                     token=self.user1_token)
-        order_id = response.data['id']
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+        order_id = response.data['id']
         donation1 = {
             "project": self.project1.slug,
             "order": order_id,

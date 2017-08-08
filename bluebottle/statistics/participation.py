@@ -46,7 +46,6 @@ class Statistics(object):
         If a member is one of the three (e.g. a project initiator or a task member or a task initiator),
         they are counted as one participant."""
 
-        # NOTE: Queries just for reference.
         project_owners = Project.objects\
             .filter(self.date_filter('created'),
                     status__slug__in=('voting', 'voting-done', 'campaign', 'done-complete', 'done-incomplete'))\

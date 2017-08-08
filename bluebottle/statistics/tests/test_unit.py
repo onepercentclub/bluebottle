@@ -1,22 +1,22 @@
 import datetime
+
 from django.test.utils import override_settings
 from django.utils import timezone
-
 from moneyed.classes import Money
+import pendulum
 
-from bluebottle.utils.utils import StatusDefinition
-
-from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.votes import VoteFactory
-
-from bluebottle.statistics.views import Statistics
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.statistics.views import Statistics
+from bluebottle.statistics.participation import Statistics as ParticipationStatistics
 from bluebottle.tasks.models import Task
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.votes import VoteFactory
+from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import StatusDefinition
 
 
 class InitialStatisticsTest(BluebottleTestCase):
@@ -398,3 +398,52 @@ class StatisticsDateTest(BluebottleTestCase):
         self.assertEqual(stats.projects_realized, 2)
         self.assertEqual(stats.tasks_realized, 2)
         self.assertEqual(stats.votes_cast, 2)
+
+
+@override_settings(
+    CACHES={
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+)
+class ParticipationStatisticsTest(BluebottleTestCase):
+    def setUp(self):
+        super(ParticipationStatisticsTest, self).setUp()
+
+        self.statistics = ParticipationStatistics(start=pendulum.create(2016, 1, 1, 0, 0, 0),
+                                                  end=pendulum.create(2016, 12, 31, 23, 59, 59))
+
+        # Required by Project model save method
+        self.init_projects()
+
+        self.user_1 = BlueBottleUserFactory.create()
+        self.user_2 = BlueBottleUserFactory.create()
+        self.user_3 = BlueBottleUserFactory.create()
+
+        self.some_project = ProjectFactory.create(owner=self.user_1, created=pendulum.create(2016, 1, 20))
+        self.another_project = ProjectFactory.create(owner=self.user_2, created=pendulum.create(2016, 7, 20))
+
+        self.project_status_plan_new = ProjectPhase.objects.get(slug='plan-new')
+        self.project_status_plan_submitted = ProjectPhase.objects.get(slug='plan-submitted')
+        self.project_status_voting = ProjectPhase.objects.get(slug='voting')
+        self.project_status_voting_done = ProjectPhase.objects.get(slug='voting-done')
+        self.project_status_campaign = ProjectPhase.objects.get(slug='campaign')
+        self.project_status_done_complete = ProjectPhase.objects.get(slug='done-complete')
+        self.project_status_done_incomplete = ProjectPhase.objects.get(slug='done-incomplete')
+        self.project_status_closed = ProjectPhase.objects.get(slug='closed')
+
+        self.some_task = TaskFactory.create(project=self.some_project, author=self.user_1,
+                                            created=pendulum.create(2016, 1, 30))
+        self.another_task = TaskFactory.create(project=self.another_project,
+                                               author=self.user_2,
+                                               created=pendulum.create(2016, 7, 30))
+        print(self.some_project.created)
+        self.some_task_member = TaskMemberFactory.create(member=self.user_1, task=self.some_task)
+        self.another_task_member = TaskMemberFactory.create(member=self.user_2, task=self.another_task)
+
+    def test_participant_details(self):
+        # participant_details = self.statistics.participant_details()
+        participant_count = self.statistics.participants_count
+
+        self.assertEqual(participant_count, 2)

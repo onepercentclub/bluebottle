@@ -27,6 +27,8 @@ class Command(BaseCommand):
         'task_members': ''
     }
 
+    RowData = namedtuple('RowData', ['metric', 'definition', 'hide_column', 'is_formula'])
+
     def __init__(self, **kwargs):
         super(Command, self).__init__(**kwargs)
 
@@ -187,224 +189,16 @@ class Command(BaseCommand):
                                                  xl_rowcol_to_cell(row, col),
                                                  xl_rowcol_to_cell(row - 1, col))
 
-    def write_total_stats(self, worksheet, row, statistic_type, start_date, end_date):
-        statistics = Statistics(start=start_date, end=end_date)
+    @staticmethod
+    def write_headers(worksheet, row_data):
+        for column, data in enumerate(row_data.iteritems()):
+            worksheet.write(0, column, data[0])
+            worksheet.write_comment(0, column, data[1].definition)
+            if data[1].hide_column:
+                worksheet.set_column(column, column, None, None, {'hidden': 1})
 
-        RowData = namedtuple('RowData', ['metric', 'definition', 'hide_column', 'is_formula'])
-
-        row_data = OrderedDict()
-
-        row_data['Time Period'] = RowData(metric=statistic_type.capitalize(),
-                                          is_formula=False,
-                                          hide_column=False,
-                                          definition='Time period for the statistics.')
-        row_data['Year'] = RowData(metric=end_date.year,
-                                   is_formula=False,
-                                   hide_column=False,
-                                   definition='The year associated with the end date.')
-        column_year = row_data.keys().index('Year')
-
-        row_data['Quarter'] = RowData(
-            metric=self.get_yearly_quarter(end_date) if statistic_type in ['weekly', 'monthly'] else '',
-            is_formula=False,
-            hide_column=False,
-            definition='The yearly quarter associated with the end date.')
-
-        row_data['Month'] = RowData(metric=self.get_month_name(end_date) if statistic_type == 'monthly' else '',
-                                    is_formula=False,
-                                    hide_column=False,
-                                    definition='The calendar month associated with the end date.')
-        column_month = row_data.keys().index('Month')
-
-        row_data['Week'] = RowData(metric=end_date.week_of_year if statistic_type == 'weekly' else '',
-                                   is_formula=False,
-                                   hide_column=False,
-                                   definition='The ISO calendar week associated with the end date.')
-        row_data['End Date'] = RowData(metric=end_date.subtract(days=1),
-                                       is_formula=False,
-                                       hide_column=False,
-                                       definition='The end date for the current statistic period.')
-
-        # Freeze panes after this column for easy viewing
-        worksheet.freeze_panes(1, row_data.keys().index('End Date') + 1)
-
-        # Participant Statistics
-        row_data['Participants'] = RowData(metric=statistics.participants_count,
-                                           is_formula=False,
-                                           hide_column=False,
-                                           definition='Participants are defined as project initiators of a project '
-                                                      '(running, done or realised), task members (that applied for, '
-                                                      'got accepted for, or realised a task) or task initiators. '
-                                                      'If a member is one of the three (e.g. a project initiator or a '
-                                                      'task member or a task initiator), they are counted as one '
-                                                      'participant.')
-
-        column_participants = row_data.keys().index('Participants')
-        row_data['Participant Total Growth'] = RowData(
-            metric=self.get_growth_formula(row, column_participants),
-            is_formula=True,
-            hide_column=False,
-            definition='Growth of participants for the defined time period.')
-
-        # NOTE: Temporary Participant Statistics considering only task members with status realized
-        row_data['Participants With Task Member Status Realized'] = RowData(
-            metric=statistics.participants_count_with_only_task_members_realized,
-            is_formula=False,
-            hide_column=False,
-            definition='Participants are defined as project initiators of a project '
-                       '(running, done or realised), task members who realised a task or task initiators. '
-                       'If a member is one of the three (e.g. a project initiator or a '
-                       'task member or a task initiator), they are counted as one '
-                       'participant.')
-
-        column_participants_task_member = row_data.keys().index('Participants With Task Member Status Realized')
-        row_data['Participants With Task Member Status Realized Growth'] = RowData(
-            metric=self.get_growth_formula(row, column_participants_task_member),
-            is_formula=True,
-            hide_column=False,
-            definition='')
-
-        # Projects Statistics
-        row_data['Projects Total'] = RowData(
-            metric=statistics.projects_total,
-            is_formula=False,
-            hide_column=False,
-            definition='Total count of projects in all known statuses which were created before the end date.')
-
-        column_projects_total = row_data.keys().index('Projects Total')
-        row_data['Projects Total Growth'] = RowData(
-            metric=self.get_growth_formula(row, column_projects_total),
-            is_formula=True,
-            hide_column=False,
-            definition='Growth of projects for the defined time period.')
-
-        for project_phase in ProjectPhase.objects.all():
-            row_data['Project Status - {}'.format(project_phase.name)] = RowData(
-                metric=statistics.get_projects_count_by_last_status([project_phase.slug]),
-                is_formula=False,
-                hide_column=False,
-                definition='Total count of projects with the status, {}, which were created '
-                           'before the end date.'.format(project_phase.name))
-
-            column_project_status = self.get_column_for_metric(row_data,
-                                                               'Project Status - {}'.format(project_phase.name))
-            row_data['Projects Status - {} Growth'.format(project_phase.name)] = RowData(
-                metric=self.get_growth_formula(row, column_project_status),
-                is_formula=True,
-                hide_column=True,
-                definition='Growth of projects for the defined status ({}) within the time period.'
-                           .format(project_phase.name))
-
-        for location_group in LocationGroup.objects.all():
-            row_data['Location - {}'.format(location_group.name)] = RowData(
-                metric=len(statistics.get_projects_by_location_group(location_group.name)),
-                is_formula=False,
-                hide_column=False,
-                definition='Total count of projects with the location, {}, which were created '
-                           'before the end date.'.format(location_group.name))
-
-            column_location_group = self.get_column_for_metric(row_data, 'Location - {}'.format(location_group.name))
-            row_data['Location - {} Growth'.format(location_group.name)] = RowData(
-                metric=self.get_growth_formula(row, column_location_group),
-                is_formula=True,
-                hide_column=True,
-                definition='Growth rate of projects per location')
-
-        for theme in ProjectTheme.objects.all():
-            row_data['Theme - {}'.format(theme.name)] = RowData(
-                metric=statistics.get_projects_count_by_theme(theme.slug),
-                is_formula=False,
-                hide_column=False,
-                definition='Total count of projects with the theme, {}, which were created '
-                           'before the end date.'.format(theme.name))
-
-            column_project_theme = self.get_column_for_metric(row_data, 'Theme - {}'.format(theme.name))
-            row_data['Theme - {} Growth'.format(theme.name)] = RowData(
-                metric=self.get_growth_formula(row, column_project_theme),
-                is_formula=True,
-                hide_column=True,
-                definition='Growth rate of projects per theme')
-
-        # Tasks Statistics
-        row_data['Tasks Total'] = RowData(
-            metric=statistics.tasks_total,
-            is_formula=False,
-            hide_column=False,
-            definition='Total count of task in all statuses which were created before the end date.')
-
-        column_task_total = row_data.keys().index('Tasks Total')
-        row_data['Tasks Total Growth'] = RowData(
-            metric=self.get_growth_formula(row, column_task_total),
-            is_formula=True,
-            hide_column=False,
-            definition='Growth of tasks for the defined time period.')
-
-        for task_status, label in Task.TaskStatuses.choices:
-            row_data['Task Status - {}'.format(label)] = RowData(
-                metric=statistics.get_tasks_count_by_last_status([task_status]),
-                is_formula=False,
-                hide_column=False,
-                definition='Total count of task with the status, {}, '
-                           'which were created before the end date.'.format(label))
-
-            column_task_status = row_data.keys().index('Task Status - {}'.format(label))
-            row_data['Tasks Status - {} Growth'.format(label)] = RowData(
-                metric=self.get_growth_formula(row, column_task_status),
-                is_formula=True,
-                hide_column=True,
-                definition='Growth of tasks for the defined status within the time period.')
-
-        # Task Member Statistics
-        row_data['Task Members Total'] = RowData(
-            metric=statistics.task_members_total,
-            is_formula=False,
-            hide_column=False,
-            definition='Total count of task members in all statuses which were created before the end date.')
-
-        column_task_member_total = row_data.keys().index('Task Members Total')
-        row_data['Task Members Total Growth'] = RowData(
-            metric=self.get_growth_formula(row, column_task_member_total),
-            is_formula=True,
-            hide_column=False,
-            definition='Growth of tasks for the defined time period.')
-
-        for task_member_status, label in TaskMember.TaskMemberStatuses.choices:
-            row_data['Task Member Status - {}'.format(label)] = RowData(
-                metric=statistics.get_task_members_count_by_last_status([task_member_status]),
-                is_formula=False,
-                hide_column=False,
-                definition='Total count of task members with the status, {}, '
-                           'which were created before the end date.'.format(label))
-
-            column_task_member_status = row_data.keys().index('Task Member Status - {}'.format(label))
-            row_data['Task Member Status - {} Growth'.format(label)] = RowData(
-                metric=self.get_growth_formula(row, column_task_member_status),
-                is_formula=True,
-                hide_column=True,
-                definition='Growth of task members per status within the defined time period')
-
-        row_data['Unconfirmed Task Members Total'] = RowData(
-            metric=statistics.unconfirmed_task_members,
-            is_formula=False,
-            hide_column=False,
-            definition='Total number of task members with the status - accepted, before the time period end date, '
-                       'belonging to a task that is 10 days or more beyond its task deadline')
-
-        row_data['Tasks with Unconfirmed Task Members Total'] = RowData(
-            metric=statistics.unconfirmed_task_members_task_count,
-            is_formula=False,
-            hide_column=False,
-            definition='Total number of unique tasks belonging to the unconfirmed task members.')
-
-        # Write Headers, if the first row is being written
-        if row == 2:
-            for column, data in enumerate(row_data.iteritems()):
-                worksheet.write(0, column, data[0])
-                worksheet.write_comment(0, column, data[1].definition)
-                if data[1].hide_column:
-                    worksheet.set_column(column, column, None, None, {'hidden': 1})
-
-        # Write data
+    @staticmethod
+    def write_row(worksheet, row, row_data):
         for column, data in enumerate(row_data.iteritems()):
             metric_value = data[1].metric
             is_formula = data[1].is_formula
@@ -413,9 +207,230 @@ class Command(BaseCommand):
             else:
                 worksheet.write(row, column, metric_value)
 
+    def create_time_row_data(self, worksheet, row_data, statistic_type, end_date):
+        row_data['Time Period'] = self.RowData(metric=statistic_type.capitalize(),
+                                               is_formula=False,
+                                               hide_column=False,
+                                               definition='Time period for the statistics.')
+
+        row_data['Year'] = self.RowData(metric=end_date.year,
+                                        is_formula=False,
+                                        hide_column=False,
+                                        definition='The year associated with the end date.')
+        column_year = row_data.keys().index('Year')
+
+        row_data['Quarter'] = self.RowData(
+            metric=self.get_yearly_quarter(end_date) if statistic_type in ['weekly', 'monthly'] else '',
+            is_formula=False,
+            hide_column=False,
+            definition='The yearly quarter associated with the end date.')
+
+        row_data['Month'] = self.RowData(metric=self.get_month_name(end_date) if statistic_type == 'monthly' else '',
+                                         is_formula=False,
+                                         hide_column=False,
+                                         definition='The calendar month associated with the end date.')
+        column_month = row_data.keys().index('Month')
+
+        row_data['Week'] = self.RowData(metric=end_date.week_of_year if statistic_type == 'weekly' else '',
+                                        is_formula=False,
+                                        hide_column=False,
+                                        definition='The ISO calendar week associated with the end date.')
+
+        row_data['End Date'] = self.RowData(metric=end_date.subtract(days=1),
+                                            is_formula=False,
+                                            hide_column=False,
+                                            definition='The end date for the current statistic period.')
+
+        # Freeze panes after this column for easy viewing
+        worksheet.freeze_panes(1, row_data.keys().index('End Date') + 1)
+
+        return column_year, column_month
+
+    def write_total_stats(self, worksheet, row, statistic_type, start_date, end_date):
+        statistics = Statistics(start=start_date, end=end_date)
+
+        row_data = OrderedDict()
+
+        column_year, column_month = self.create_time_row_data(worksheet, row_data, statistic_type, end_date)
+
+        # Participant Statistics
+        row_data['Participants'] = self.RowData(metric=statistics.participants_count,
+                                                is_formula=False,
+                                                hide_column=False,
+                                                definition='Participants are defined as project initiators of a '
+                                                           'project (running, done or realised), task members (that '
+                                                           'applied for, got accepted for, or realised a task) or task '
+                                                           'initiators. If a member is one of the three (e.g. a '
+                                                           'project initiator or a task member or a task initiator), '
+                                                           'they are counted as one participant.')
+        column_participants = row_data.keys().index('Participants')
+
+        row_data['Participants Total Growth'] = self.RowData(
+            metric=self.get_growth_formula(row, column_participants),
+            is_formula=True,
+            hide_column=False,
+            definition='Growth of participants for the defined time period.')
+
+        # NOTE: Temporary Participant Statistics considering only task members with status realized
+        row_data['Participants With Task Member Status Realized'] = self.RowData(
+            metric=statistics.participants_count_with_only_task_members_realized,
+            is_formula=False,
+            hide_column=False,
+            definition='Participants are defined as project initiators of a project '
+                       '(running, done or realised), task members who realised a task or task initiators. '
+                       'If a member is one of the three (e.g. a project initiator or a '
+                       'task member or a task initiator), they are counted as one '
+                       'participant.')
+        column_participants_task_member = row_data.keys().index('Participants With Task Member Status Realized')
+
+        row_data['Participants With Task Member Status Realized Growth'] = self.RowData(
+            metric=self.get_growth_formula(row, column_participants_task_member),
+            is_formula=True,
+            hide_column=False,
+            definition='')
+
+        # Projects Statistics
+        row_data['Projects Total'] = self.RowData(
+            metric=statistics.projects_total,
+            is_formula=False,
+            hide_column=False,
+            definition='Total count of projects in all known statuses which were created before the end date.')
+        column_projects_total = row_data.keys().index('Projects Total')
+
+        row_data['Projects Total Growth'] = self.RowData(
+            metric=self.get_growth_formula(row, column_projects_total),
+            is_formula=True,
+            hide_column=False,
+            definition='Growth of projects for the defined time period.')
+
+        for project_phase in ProjectPhase.objects.all():
+            row_data['Project Status - {}'.format(project_phase.name)] = self.RowData(
+                metric=statistics.get_projects_count_by_last_status([project_phase.slug]),
+                is_formula=False,
+                hide_column=False,
+                definition='Total count of projects with the status, {}, which were created '
+                           'before the end date.'.format(project_phase.name))
+            column_project_status = self.get_column_for_metric(row_data,
+                                                               'Project Status - {}'.format(project_phase.name))
+
+            row_data['Projects Status - {} Growth'.format(project_phase.name)] = self.RowData(
+                metric=self.get_growth_formula(row, column_project_status),
+                is_formula=True,
+                hide_column=True,
+                definition='Growth of projects for the defined status ({}) within the time period.'
+                           .format(project_phase.name))
+
+        for location_group in LocationGroup.objects.all():
+            row_data['Location - {}'.format(location_group.name)] = self.RowData(
+                metric=len(statistics.get_projects_by_location_group(location_group.name)),
+                is_formula=False,
+                hide_column=False,
+                definition='Total count of projects with the location, {}, which were created '
+                           'before the end date.'.format(location_group.name))
+            column_location_group = self.get_column_for_metric(row_data, 'Location - {}'.format(location_group.name))
+
+            row_data['Location - {} Growth'.format(location_group.name)] = self.RowData(
+                metric=self.get_growth_formula(row, column_location_group),
+                is_formula=True,
+                hide_column=True,
+                definition='Growth rate of projects per location')
+
+        for theme in ProjectTheme.objects.all():
+            row_data['Theme - {}'.format(theme.name)] = self.RowData(
+                metric=statistics.get_projects_count_by_theme(theme.slug),
+                is_formula=False,
+                hide_column=False,
+                definition='Total count of projects with the theme, {}, which were created '
+                           'before the end date.'.format(theme.name))
+            column_project_theme = self.get_column_for_metric(row_data, 'Theme - {}'.format(theme.name))
+
+            row_data['Theme - {} Growth'.format(theme.name)] = self.RowData(
+                metric=self.get_growth_formula(row, column_project_theme),
+                is_formula=True,
+                hide_column=True,
+                definition='Growth rate of projects per theme')
+
+        # Tasks Statistics
+        row_data['Tasks Total'] = self.RowData(
+            metric=statistics.tasks_total,
+            is_formula=False,
+            hide_column=False,
+            definition='Total count of task in all statuses which were created before the end date.')
+        column_task_total = row_data.keys().index('Tasks Total')
+
+        row_data['Tasks Total Growth'] = self.RowData(
+            metric=self.get_growth_formula(row, column_task_total),
+            is_formula=True,
+            hide_column=False,
+            definition='Growth of tasks for the defined time period.')
+
+        for task_status, label in Task.TaskStatuses.choices:
+            row_data['Task Status - {}'.format(label)] = self.RowData(
+                metric=statistics.get_tasks_count_by_last_status([task_status]),
+                is_formula=False,
+                hide_column=False,
+                definition='Total count of task with the status, {}, '
+                           'which were created before the end date.'.format(label))
+            column_task_status = row_data.keys().index('Task Status - {}'.format(label))
+
+            row_data['Tasks Status - {} Growth'.format(label)] = self.RowData(
+                metric=self.get_growth_formula(row, column_task_status),
+                is_formula=True,
+                hide_column=True,
+                definition='Growth of tasks for the defined status within the time period.')
+
+        # Task Member Statistics
+        row_data['Task Members Total'] = self.RowData(
+            metric=statistics.task_members_total,
+            is_formula=False,
+            hide_column=False,
+            definition='Total count of task members in all statuses which were created before the end date.')
+        column_task_member_total = row_data.keys().index('Task Members Total')
+
+        row_data['Task Members Total Growth'] = self.RowData(
+            metric=self.get_growth_formula(row, column_task_member_total),
+            is_formula=True,
+            hide_column=False,
+            definition='Growth of tasks for the defined time period.')
+
+        for task_member_status, label in TaskMember.TaskMemberStatuses.choices:
+            row_data['Task Member Status - {}'.format(label)] = self.RowData(
+                metric=statistics.get_task_members_count_by_last_status([task_member_status]),
+                is_formula=False,
+                hide_column=False,
+                definition='Total count of task members with the status, {}, '
+                           'which were created before the end date.'.format(label))
+            column_task_member_status = row_data.keys().index('Task Member Status - {}'.format(label))
+
+            row_data['Task Member Status - {} Growth'.format(label)] = self.RowData(
+                metric=self.get_growth_formula(row, column_task_member_status),
+                is_formula=True,
+                hide_column=True,
+                definition='Growth of task members per status within the defined time period')
+
+        row_data['Unconfirmed Task Members Total'] = self.RowData(
+            metric=statistics.unconfirmed_task_members,
+            is_formula=False,
+            hide_column=False,
+            definition='Total number of task members with the status - accepted, before the time period end date, '
+                       'belonging to a task that is 10 days or more beyond its task deadline')
+
+        row_data['Tasks with Unconfirmed Task Members Total'] = self.RowData(
+            metric=statistics.unconfirmed_task_members_task_count,
+            is_formula=False,
+            hide_column=False,
+            definition='Total number of unique tasks belonging to the unconfirmed task members.')
+
+        # Write Headers, if the first row is being written
+        if row == 2:
+            self.write_headers(worksheet, row_data)
+
+        # Write row data
+        self.write_row(worksheet, row, row_data)
+
         # Generate YoY Monthly Charts
         if statistic_type == 'monthly':
-            self.charts['Participant Total Growth'][end_date.year] = self.get_chart_data(
+            self.charts['Participants Total Growth'][end_date.year] = self.get_chart_data(
                 worksheet=worksheet,
                 column_year=column_year,
                 column_month=column_month,
@@ -446,140 +461,53 @@ class Command(BaseCommand):
     def write_theme_segmentation_stats(self, worksheet, row, statistic_type, start_date, end_date):
         statistics = Statistics(start=start_date, end=end_date)
 
-        RowData = namedtuple('RowData', ['metric', 'definition', 'hide_column', 'is_formula'])
-
         row_data = OrderedDict()
 
-        row_data['Time Period'] = RowData(metric=statistic_type.capitalize(),
-                                          is_formula=False,
-                                          hide_column=False,
-                                          definition='Time period for the statistics.')
-        row_data['Year'] = RowData(metric=end_date.year,
-                                   is_formula=False,
-                                   hide_column=False,
-                                   definition='The year associated with the end date.')
-
-        row_data['Quarter'] = RowData(
-            metric=self.get_yearly_quarter(end_date) if statistic_type in ['weekly', 'monthly'] else '',
-            is_formula=False,
-            hide_column=False,
-            definition='The yearly quarter associated with the end date.')
-
-        row_data['Month'] = RowData(metric=self.get_month_name(end_date) if statistic_type == 'monthly' else '',
-                                    is_formula=False,
-                                    hide_column=False,
-                                    definition='The calendar month associated with the end date.')
-
-        row_data['Week'] = RowData(metric=end_date.week_of_year if statistic_type == 'weekly' else '',
-                                   is_formula=False,
-                                   hide_column=False,
-                                   definition='The ISO calendar week associated with the end date.')
-
-        row_data['End Date'] = RowData(metric=end_date.subtract(days=1),
-                                       is_formula=False,
-                                       hide_column=False,
-                                       definition='The end date for the current statistic period.')
-
-        # Freeze panes after this column for easy viewing
-        worksheet.freeze_panes(1, row_data.keys().index('End Date') + 1)
+        self.create_time_row_data(worksheet, row_data, statistic_type, end_date)
 
         for theme in ProjectTheme.objects.all():
             # Project Status Statistics
             for project_phase in ProjectPhase.objects.all():
                 row_data['Theme - {} / Project Status - {}'.format(theme.name, project_phase.name)] = \
-                    RowData(metric=statistics.get_projects_status_count_by_theme(theme.slug,
-                                                                                 [project_phase.slug]),
-                            is_formula=False,
-                            hide_column=False,
-                            definition='Total count of projects with the theme - {} and project status - {} which '
-                                       'were created before the end date.'
-                                       .format(theme.name, project_phase.name))
+                    self.RowData(metric=statistics.get_projects_status_count_by_theme(theme.slug, [project_phase.slug]),
+                                 is_formula=False,
+                                 hide_column=False,
+                                 definition='Total count of projects with the theme - {} and project status - {} which '
+                                            'were created before the end date.'
+                                            .format(theme.name, project_phase.name))
 
         # Write Headers, if the first row is being written
         if row == 2:
-            for column, data in enumerate(row_data.iteritems()):
-                worksheet.write(0, column, data[0])
-                worksheet.write_comment(0, column, data[1].definition)
-                if data[1].hide_column:
-                    worksheet.set_column(column, column, None, None, {'hidden': 1})
+            self.write_headers(worksheet, row_data)
 
-        # Write data
-        for column, data in enumerate(row_data.iteritems()):
-            metric_value = data[1].metric
-            is_formula = data[1].is_formula
-            if is_formula:
-                worksheet.write_formula(row, column, metric_value)
-            else:
-                worksheet.write(row, column, metric_value)
+        # Write row data
+        self.write_row(worksheet, row, row_data)
 
     def write_location_segmentation_stats(self, worksheet, row, statistic_type, start_date, end_date):
         statistics = Statistics(start=start_date, end=end_date)
 
-        RowData = namedtuple('RowData', ['metric', 'definition', 'hide_column', 'is_formula'])
-
         row_data = OrderedDict()
 
-        row_data['Time Period'] = RowData(metric=statistic_type.capitalize(),
-                                          is_formula=False,
-                                          hide_column=False,
-                                          definition='Time period for the statistics.')
-        row_data['Year'] = RowData(metric=end_date.year,
-                                   is_formula=False,
-                                   hide_column=False,
-                                   definition='The year associated with the end date.')
-
-        row_data['Quarter'] = RowData(
-            metric=self.get_yearly_quarter(end_date) if statistic_type in ['weekly', 'monthly'] else '',
-            is_formula=False,
-            hide_column=False,
-            definition='The yearly quarter associated with the end date.')
-
-        row_data['Month'] = RowData(metric=self.get_month_name(end_date) if statistic_type == 'monthly' else '',
-                                    is_formula=False,
-                                    hide_column=False,
-                                    definition='The calendar month associated with the end date.')
-
-        row_data['Week'] = RowData(metric=end_date.week_of_year if statistic_type == 'weekly' else '',
-                                   is_formula=False,
-                                   hide_column=False,
-                                   definition='The ISO calendar week associated with the end date.')
-
-        row_data['End Date'] = RowData(metric=end_date.subtract(days=1),
-                                       is_formula=False,
-                                       hide_column=False,
-                                       definition='The end date for the current statistic period.')
-
-        # Freeze panes after this column for easy viewing
-        worksheet.freeze_panes(1, row_data.keys().index('End Date') + 1)
+        self.create_time_row_data(worksheet, row_data, statistic_type, end_date)
 
         for location_group in LocationGroup.objects.all():
             # Project Status Statistics
             for project_phase in ProjectPhase.objects.all():
                 row_data['Location - {} / Project Status - {}'.format(location_group.name, project_phase.name)] = \
-                    RowData(metric=statistics.get_projects_status_count_by_location_group(location_group.name,
-                                                                                          [project_phase.slug]),
-                            is_formula=False,
-                            hide_column=False,
-                            definition='Total count of projects with the location - {} and project status - {} which '
-                                       'were created before the end date.'
-                                       .format(location_group.name, project_phase.name))
+                    self.RowData(metric=statistics.get_projects_status_count_by_location_group(location_group.name,
+                                                                                               [project_phase.slug]),
+                                 is_formula=False,
+                                 hide_column=False,
+                                 definition='Total count of projects with the location - {} and project status - {} '
+                                            'which were created before the end date.'
+                                            .format(location_group.name, project_phase.name))
 
         # Write Headers, if the first row is being written
         if row == 2:
-            for column, data in enumerate(row_data.iteritems()):
-                worksheet.write(0, column, data[0])
-                worksheet.write_comment(0, column, data[1].definition)
-                if data[1].hide_column:
-                    worksheet.set_column(column, column, None, None, {'hidden': 1})
+            self.write_headers(worksheet, row_data)
 
-        # Write data
-        for column, data in enumerate(row_data.iteritems()):
-            metric_value = data[1].metric
-            is_formula = data[1].is_formula
-            if is_formula:
-                worksheet.write_formula(row, column, metric_value)
-            else:
-                worksheet.write(row, column, metric_value)
+        # Write row data
+        self.write_row(worksheet, row, row_data)
 
     def generate_participants_worksheet(self, workbook):
         for year in range(self.start_date.year, self.end_date.year + 1):

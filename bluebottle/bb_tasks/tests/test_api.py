@@ -426,6 +426,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         another_user_response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id),
                                                 token=self.another_token)
 
+        self.assertEqual(another_user_response.status_code, 200)
         self.assertEquals(another_user_response.data['motivation'], '')
 
         some_user_response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id),

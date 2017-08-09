@@ -83,7 +83,11 @@ class ProjectPermissionsSerializer(serializers.Serializer):
     donations = PermissionField('order-manage-list')
 
     class Meta:
-        fields = ('rewards', 'tasks', 'donations')
+        fields = (
+            'donations'
+            'rewards',
+            'tasks',
+        )
 
 
 class ProjectSerializer(serializers.ModelSerializer):

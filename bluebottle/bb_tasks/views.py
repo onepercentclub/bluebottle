@@ -16,7 +16,8 @@ from bluebottle.tasks.serializers import (BaseTaskSerializer,
                                           TaskPreviewSerializer, MyTaskMemberSerializer,
                                           SkillSerializer, MyTasksSerializer)
 from bluebottle.utils.permissions import TenantConditionalOpenClose, OwnerPermission, IsAuthenticatedOrReadOnly
-from bluebottle.utils.views import PrivateFileView, ListCreateAPIView
+from bluebottle.utils.views import PrivateFileView, ListCreateAPIView, RetrieveUpdateAPIView, \
+    RetrieveUpdateDestroyAPIView, ListAPIView
 
 from .permissions import IsMemberOrAuthorOrReadOnly
 
@@ -91,7 +92,7 @@ class FilterQSParams(object):
         return qs
 
 
-class TaskPreviewList(generics.ListAPIView, FilterQSParams):
+class TaskPreviewList(ListAPIView, FilterQSParams):
     queryset = Task.objects.all()
     serializer_class = TaskPreviewSerializer
     pagination_class = TaskPreviewPagination
@@ -171,13 +172,13 @@ class MyTaskList(BaseTaskList):
         return Task.objects.none()
 
 
-class TaskDetail(generics.RetrieveUpdateAPIView):
+class TaskDetail(RetrieveUpdateAPIView):
     queryset = Task.objects.all()
     permission_classes = (TenantConditionalOpenClose, OwnerPermission,)
     serializer_class = BaseTaskSerializer
 
 
-class MyTaskDetail(generics.RetrieveUpdateDestroyAPIView):
+class MyTaskDetail(RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     permission_classes = (TenantConditionalOpenClose, OwnerPermission,)
     serializer_class = MyTasksSerializer
@@ -191,7 +192,7 @@ class TaskPagination(BluebottlePagination):
     page_size = 50
 
 
-class TaskMemberList(generics.ListCreateAPIView):
+class TaskMemberList(ListCreateAPIView):
     serializer_class = BaseTaskMemberSerializer
     pagination_class = TaskPagination
     filter_fields = ('task', 'status',)
@@ -203,7 +204,7 @@ class TaskMemberList(generics.ListCreateAPIView):
         serializer.save(member=self.request.user, status=TaskMember.TaskMemberStatuses.applied)
 
 
-class MyTaskMemberList(generics.ListAPIView):
+class MyTaskMemberList(ListAPIView):
     queryset = TaskMember.objects.all()
     serializer_class = MyTaskMemberSerializer
 
@@ -212,7 +213,7 @@ class MyTaskMemberList(generics.ListAPIView):
         return queryset.filter(member=self.request.user)
 
 
-class TaskMemberDetail(generics.RetrieveUpdateAPIView):
+class TaskMemberDetail(RetrieveUpdateAPIView):
     queryset = TaskMember.objects.all()
     serializer_class = BaseTaskMemberSerializer
 

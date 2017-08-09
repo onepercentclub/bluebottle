@@ -204,6 +204,7 @@ class TaskApiTestcase(BluebottleTestCase):
 
         # Task should have status 'open' at first.
         response = self.client.get(task_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'open')
 
         # When a member applies and is accepted task status should change to 'in progress'

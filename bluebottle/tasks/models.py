@@ -104,6 +104,10 @@ class Task(models.Model, PreviousStatusMixin):
         return self.author
 
     @property
+    def parent(self):
+        return self.project
+
+    @property
     def expertise_based(self):
         return self.skill.expertise if self.skill else False
 

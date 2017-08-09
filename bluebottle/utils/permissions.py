@@ -10,63 +10,7 @@ def debug(message):
         print(message)
 
 
-class BasePermission(permissions.BasePermission):
-    """ BasePermission extends the standard BasePermission from DRF to include
-    the ability to get the permissions without the request... Well ideally but
-    currently the `view` is being passed which then gives access to the request
-    TODO: it should be possible to get the permissions based on a `method`, `user`,
-    and an optional `obj` which might be a parent type rather than the actual obj
-    particularly if the permission being checked is the ability to create an obj
-
-    """
-    def has_object_permission(self, request, view, obj):
-        """ This method is called from the views which include this permission.
-
-        The call happens after the referenced obj has been fetched and will not be
-        called if no object was found.
-
-        Return `True` if permission is granted, `False` otherwise.
-        """
-
-        debug("BasePermission::{}::has_object_permission > {}".format(self.__class__.__name__, obj))
-        if hasattr(obj, 'parent'):
-            obj = obj.parent
-
-        return self.has_object_method_permission(
-            request.method, request.user, view, obj
-        )
-
-    def has_permission(self, request, view):
-        """ This method is called from the views which include this permission.
-
-        The call happens during view initalisation so it will be called with views returning
-        a data set as well as a single object.
-
-        Return `True` if permission is granted, `False` otherwise.
-        """
-        debug("BasePermission::{}::has_permission > {}".format(self.__class__.__name__, view))
-        return self.has_method_permission(
-            request.method, request.user, view
-        )
-
-    def has_object_method_permission(self, method, user, view, obj):
-        """ Check if user has permission to access method on obj for the view.
-
-        Used by both the DRF permission system and for returning permissions to the user.
-        """
-        message = 'has_object_method_permission() must be implemented on {}'.format(self)
-        raise NotImplementedError(message)
-
-    def has_method_permission(self, method, user, view, obj=None):
-        """ Check if user has permission to access method for the view.
-
-        Used by both the DRF permission system and for returning permissions to the user.
-        """
-        message = 'has_method_permission() must be implemented on {}'.format(self)
-        raise NotImplementedError(message)
-
-
-class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
+class ResourcePermissions(permissions.DjangoModelPermissions):
     perms_map = {
         'GET': ['%(app_label)s.api_read_%(model_name)s'],
         'OPTIONS': [],
@@ -77,29 +21,26 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
         'DELETE': ['%(app_label)s.api_delete_%(model_name)s'],
     }
 
-    def has_method_permission(self, method, user, view, obj=None):
-        queryset = None
-        if hasattr(view, 'queryset'):
-            queryset = view.queryset
-        elif hasattr(view, 'get_queryset'):
-            queryset = view.get_queryset()
-
-        assert queryset is not None, (
-            'Cannot apply DjangoModelPermissions on a view that '
-            'does not set `.queryset` or have a `.get_queryset()` method.'
-        )
-
-        perms = self.get_required_permissions(method, queryset.model)
-        debug("ResourcePermissions::has_method_permission > {}".format(user.has_perms(perms)))
-        return user.has_perms(perms)
-
-    def has_object_method_permission(self, method, user, view, obj=None):
-        debug("ResourcePermissions::has_object_method_permission > {}".format(self.has_method_permission(method, user,
-                                                                              view)))
-        return self.has_method_permission(method, user, view)
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
 
 
-class OwnerPermission(BasePermission):
+class ResourceOwnerPermission(permissions.DjangoModelPermissions):
+    perms_map = {
+        'GET': ['%(app_label)s.api_read_own_%(model_name)s'],
+        'OPTIONS': [],
+        'HEAD': [],
+        'POST': ['%(app_label)s.api_add_%(model_name)s'],
+        'PUT': ['%(app_label)s.api_change_own_%(model_name)s'],
+        'PATCH': ['%(app_label)s.api_change_own_%(model_name)s'],
+        'DELETE': ['%(app_label)s.api_delete_own_%(model_name)s'],
+    }
+
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj.owner
+
+
+class OwnerPermission():
     """
     Allows access only to obj owner.
     """
@@ -121,7 +62,7 @@ class OwnerOrAdminPermission(OwnerPermission):
         return user == obj.owner or user.is_staff
 
 
-class RelatedResourceOwnerPermission(BasePermission):
+class RelatedResourceOwnerPermission():
     parent_class = None
 
     def get_parent_from_request(self, request):
@@ -147,36 +88,31 @@ class RelatedResourceOwnerPermission(BasePermission):
         return user == parent.owner
 
 
-class UserPermission(BasePermission):
+class UserPermission():
+    pass
+
+class IsAuthenticated():
     pass
 
 
-class TenantConditionalOpenClose(BasePermission):
+class TenantConditionalOpenClose():
     """
     Allows access only to authenticated users.
     """
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_permission(self, request, view):
+        try:
+            if get_tenant_properties('CLOSED_SITE'):
+                return request.user and request.user.is_authenticated()
+        except AttributeError:
+            pass
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
         try:
             if get_tenant_properties('CLOSED_SITE'):
                 return user and user.is_authenticated()
         except AttributeError:
             pass
         return True
-
-    def has_method_permission(self, method, user, view, obj=None):
-        try:
-            if get_tenant_properties('CLOSED_SITE'):
-                return user and user.is_authenticated()
-        except AttributeError:
-            pass
-        return True
-
-
-class IsAuthenticated(BasePermission):
-
-    def has_object_method_permission(self, method, user, view, obj):
-        return user.is_authenticated and user.groups.filter(name='Authenticated').exists()
-
-    def has_method_permission(self, method, user, view, obj=None):
-        return user.is_authenticated and user.groups.filter(name='Authenticated').exists()

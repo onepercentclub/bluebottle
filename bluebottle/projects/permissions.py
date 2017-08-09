@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
 from bluebottle.utils.utils import get_class
-from bluebottle.utils.permissions import BasePermission, RelatedResourceOwnerPermission
+from bluebottle.utils.permissions import RelatedResourceOwnerPermission
 
 
 class RelatedProjectOwnerPermission(RelatedResourceOwnerPermission):
@@ -18,17 +18,14 @@ class RelatedProjectOwnerPermission(RelatedResourceOwnerPermission):
         return parent
 
 
-class IsEditableOrReadOnly(BasePermission):
+class IsEditableOrReadOnly():
     def has_object_permission(self, request, view, obj):
-        return self.has_object_method_permission(request.method, None, view, obj)
-
-    def has_object_method_permission(self, method, user, view, obj=None):
         # Read permissions are allowed to any request, so we'll always allow
         # GET, HEAD or OPTIONS requests.
-        if method in permissions.SAFE_METHODS:
+        if request.method in permissions.SAFE_METHODS:
             return True
 
         return obj.status.editable
 
-    def has_method_permission(self, method, user, view):
+    def has_permission(self, request, view):
         return True

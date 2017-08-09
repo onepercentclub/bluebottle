@@ -157,6 +157,15 @@ class URLField(serializers.URLField):
         return value
 
 
+class FakePermissionRequest(object):
+    def __init__(self, request, method):
+        self.request = request
+        self.method = method
+
+    def __getattr__(self, attr):
+        return getattr(self.request, attr)
+
+
 class PermissionField(serializers.Field):
     """
     Field that can be used to return permission of the current and related view.
@@ -187,14 +196,16 @@ class PermissionField(serializers.Field):
         # Instantiate the view
         args = [getattr(value, arg) for arg in self.view_args]
         view_func = resolve(reverse(self.view_name, args=args)).func
-        view = view_func.view_class(**view_func.view_initkwargs)
+        view = view_func.view_class(request=self.context['request'], **view_func.view_initkwargs)
 
         # Loop over all methods and check the permissions on the view
         permissions = {}
         for method in view.allowed_methods:
             permissions[method] = all(
-                perm.has_object_method_permission(
-                    method, self.context['request'].user, view, value
+                perm.has_object_permission(
+                    FakePermissionRequest(self.context['request'], method),
+                    view,
+                    value # FIXME, Make sure that we pass in the correct object, not the parent
                 ) for perm in view.get_permissions()
             )
 

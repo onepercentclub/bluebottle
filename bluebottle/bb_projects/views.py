@@ -13,7 +13,7 @@ from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView
 )
-from bluebottle.utils.permissions import OwnerPermission, IsAuthenticated
+from bluebottle.utils.permissions import ResourcePermissions
 from bluebottle.projects.permissions import IsEditableOrReadOnly
 from .models import ProjectTheme, ProjectPhase
 
@@ -110,9 +110,17 @@ class ProjectList(ListAPIView):
 
     def get_queryset(self):
         qs = super(ProjectList, self).get_queryset()
+
         status = self.request.query_params.get('status', None)
         if status:
             qs = qs.filter(Q(status_id=status))
+
+        permissions = ResourcePermissions().get_required_permissions(
+            self.request.method, qs.model
+        )
+        if not self.request.user.has_perms(permissions):
+            qs = qs.filter(owner=self.request.user)
+
         return qs.filter(status__viewable=True)
 
 
@@ -130,7 +138,6 @@ class ManageProjectList(ListCreateAPIView):
     queryset = Project.objects.all()
     pagination_class = ManageProjectPagination
     serializer_class = ManageProjectSerializer
-    permission_classes = (IsAuthenticated, )
 
     def get_queryset(self):
         """
@@ -151,9 +158,10 @@ class ManageProjectList(ListCreateAPIView):
 
 class ManageProjectDetail(RetrieveUpdateAPIView):
     queryset = Project.objects.all()
-    permission_classes = (OwnerPermission, IsEditableOrReadOnly,)
     serializer_class = ManageProjectSerializer
     lookup_field = 'slug'
+
+    permission_classes = (IsEditableOrReadOnly,)
 
     def get_object(self):
         # Call the superclass

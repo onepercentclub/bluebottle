@@ -18,7 +18,8 @@ from bluebottle.tasks.serializers import (BaseTaskSerializer,
                                           BaseTaskMemberSerializer, TaskFileSerializer,
                                           TaskPreviewSerializer, MyTaskMemberSerializer,
                                           SkillSerializer, MyTasksSerializer)
-from bluebottle.utils.permissions import TenantConditionalOpenClose
+
+from bluebottle.utils.permissions import TenantConditionalOpenClose, ResourcePermissions
 from bluebottle.utils.views import PrivateFileView
 
 from .permissions import IsMemberOrAuthorOrReadOnly
@@ -160,6 +161,13 @@ class TaskList(BaseTaskList, FilterQSParams):
             qs = qs.order_by('-created')
         elif ordering == 'deadline':
             qs = qs.order_by('deadline')
+
+        permissions = ResourcePermissions().get_required_permissions(
+            self.request.method, qs.model
+        )
+        if not self.request.user.has_perms(permissions):
+            qs = qs.filter(author=self.request.user)
+
 
         return qs
 

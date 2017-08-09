@@ -56,6 +56,13 @@ class BaseTaskSerializer(serializers.ModelSerializer):
                                            max_digits=5,
                                            decimal_places=2)
 
+
+    def __init__(self, *args, **kwargs):
+        super(BaseTaskSerializer, self).__init__(*args, **kwargs)
+
+        if not self.context['request'].user.has_perm('api_read_taskmember'):
+            self.fields.pop('members')
+
     def validate(self, data):
         if self.instance and data.get('deadline') and self.instance.deadline.date() == data['deadline'].date():
             # The date has not changed: Do not validate

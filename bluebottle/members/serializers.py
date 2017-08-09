@@ -124,6 +124,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
     time_spent = serializers.ReadOnlyField()
     tasks_performed = serializers.ReadOnlyField()
 
+    sensitive_fields = ['picture', 'avatar', 'location', 'about_me', 'skill_ids']
+
+    def __init__(self, *args, **kwargs):
+        super(UserProfileSerializer, self).__init__(*args, **kwargs)
+
+        if ('request' in self.context and
+                not self.context['request'].user.has_perm('api_read_full_profile')
+        ):
+            for field in self.sensitive_fields:
+                self.fields.pop(field)
+
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'url', 'full_name', 'short_name', 'picture',

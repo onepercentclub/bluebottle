@@ -10,6 +10,8 @@ from django.views.generic.base import View
 
 from rest_framework import generics
 from rest_framework import views, response
+from rest_condition import Or
+
 from sorl.thumbnail.shortcuts import get_thumbnail
 from taggit.models import Tag
 from tenant_extras.utils import TenantLanguage
@@ -17,7 +19,7 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.clients import properties
 from bluebottle.projects.models import Project
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.utils.permissions import ResourcePermissions
+from bluebottle.utils.permissions import ResourcePermissions, ResourceOwnerPermission
 
 from .models import Language
 from .serializers import ShareSerializer, LanguageSerializer
@@ -244,24 +246,38 @@ class PrivateFileView(PermissionedView):
 
 
 class ListAPIView(ViewPermissionsMixin, generics.ListAPIView):
-    base_permission_classes = (ResourcePermissions,)
+    base_permission_classes = (
+        Or(ResourcePermissions, ResourceOwnerPermission),
+    )
 
 
 class UpdateAPIView(ViewPermissionsMixin, generics.UpdateAPIView):
-    base_permission_classes = (ResourcePermissions,)
+    base_permission_classes = (
+        Or(ResourcePermissions, ResourceOwnerPermission),
+    )
 
 
 class RetrieveAPIView(ViewPermissionsMixin, generics.RetrieveAPIView):
-    base_permission_classes = (ResourcePermissions,)
+    base_permission_classes = (
+        Or(ResourcePermissions, ResourceOwnerPermission),
+    )
 
 
 class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView):
-    base_permission_classes = (ResourcePermissions,)
+    base_permission_classes = (
+        Or(ResourcePermissions, ResourceOwnerPermission),
+    )
 
 
 class RetrieveUpdateAPIView(ViewPermissionsMixin, generics.RetrieveUpdateAPIView):
-    base_permission_classes = (ResourcePermissions,)
+    base_permission_classes = (
+        Or(ResourcePermissions, ResourceOwnerPermission),
+    )
 
 
 class RetrieveUpdateDestroyAPIView(ViewPermissionsMixin, generics.RetrieveUpdateDestroyAPIView):
-    base_permission_classes = (ResourcePermissions,)
+    base_permission_classes = (
+        Or(ResourcePermissions, ResourceOwnerPermission),
+    )
+
+

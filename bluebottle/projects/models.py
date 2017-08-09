@@ -703,10 +703,11 @@ class Project(BaseProject, PreviousStatusMixin):
     class Meta(BaseProject.Meta):
         permissions = (
             ('approve_payout', 'Can approve payouts for projects'),
+            ('api_read_own_project', 'Can read own projects'),
             ('api_read_project', 'Can view projects through the API'),
             ('api_add_project', 'Can add projects through the API'),
-            ('api_change_project', 'Can change projects through the API'),
-            ('api_delete_project', 'Can delete projects through the API'),
+            ('api_change_own_project', 'Can change own projects through the API'),
+            ('api_delete_own_project', 'Can delete own projects through the API'),
             ('api_read_projectdocument', 'Can view project documents through the API'),
             ('api_add_projectdocument', 'Can add project documents through the API'),
             ('api_change_projectdocument', 'Can change project documents through the API'),

@@ -1,69 +1,26 @@
 from rest_framework import permissions
 
-from bluebottle.tasks.models import Task, TaskMember
+from bluebottle.tasks.models import TaskMember
+from bluebottle.utils.utils import get_class
+from bluebottle.utils.permissions import BasePermission, RelatedResourceOwnerPermission
 
 
-class IsTaskAuthorOrReadOnly(permissions.BasePermission):
-    """
-    Allows access only to task author.
-    """
+class RelatedTaskOwnerPermission(RelatedResourceOwnerPermission):
+    parent_class = 'bluebottle.tasks.models.Task'
 
-    def _get_task_from_request(self, request):
-        if request.data:
-            task_id = request.data.get('task', None)
-        else:
-            task_id = request.query_params.get('task', None)
-        if task_id:
-            try:
-                task = Task.objects.get(pk=task_id)
-            except Task.DoesNotExist:
-                return None
-        else:
+    def get_parent_from_request(self, request):
+        task_pk = request.data['task']
+        cls = get_class(self.parent_class)
+        try:
+            parent = cls.objects.get(pk=task_pk)
+        except cls.DoesNotExist:
             return None
-        return task
 
-    def has_permission(self, request, view):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # Test for objects/lists related to a Task (e.g TaskMember).
-        # Get the task form the request
-
-        task = self._get_task_from_request(request)
-        if task:
-            return task.author == request.user
-        return False
-
-    def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # Test for project model object-level permissions.
-        if isinstance(obj, Task):
-            return obj.author == request.user
-
-        if isinstance(obj, TaskMember):
-            return obj.task.author == request.user
+        return parent
 
 
-class IsMemberOrReadOnly(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # Test for project model object-level permissions.
-        return isinstance(obj,
-                          TaskMember) and obj.member == request.user
-
-
-class IsMemberOrAuthorOrReadOnly(permissions.BasePermission):
-
+class MemberOrOwnerOrReadOnlyPermission(BasePermission):
+    # TODO: Move this check to the serialiser
     def _time_spent_updated(self, request, task_member):
         if request.data:
             time_spent = request.data.get('time_spent', None)
@@ -71,59 +28,45 @@ class IsMemberOrAuthorOrReadOnly(permissions.BasePermission):
                 return True
         return False
 
-    def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request, so we'll always allow GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
+    def has_object_method_permission(self, method, user, view, obj):
+        if method in permissions.SAFE_METHODS:
+            return True
+        if obj.owner == user:
             return True
 
-        if isinstance(obj, TaskMember) and obj.task.author == request.user:
-            return True
-
-        if isinstance(obj, TaskMember) and obj.member == request.user:
+        if isinstance(obj, TaskMember) and obj.member == user:
             # Task member cannot update his/her own time_spent
-            if self._time_spent_updated(request, obj):
+            if self._time_spent_updated(view.request, obj):
                 return False
             return True
 
         return False
 
-
-class IsResumeOwnerOrTaskAuthor(permissions.BasePermission):
-
-    def has_object_permission(self, request, view, obj):
-        return (
-            request.user == obj.member or
-            request.user == obj.task.author or
-            request.user.is_staff
-        )
+    def has_method_permission(self, method, user, view):
+        return True
 
 
-class IsRelatedToActiveProjectOrReadOnly(permissions.BasePermission):
+class ActiveProjectOrReadOnlyPermission(RelatedResourceOwnerPermission):
+    parent_class = 'bluebottle.tasks.models.Task'
 
-    def _get_task_from_request(self, request):
+    def get_parent_from_request(self, request):
         if request.data:
-            task_id = request.data.get('task', None)
+            task_pk = request.data.get('task', None)
         else:
-            task_id = request.query_params.get('task', None)
-        if task_id:
-            try:
-                task = Task.objects.get(pk=task_id)
-            except Task.DoesNotExist:
-                return None
-        else:
+            task_pk = request.query_params.get('task', None)
+        cls = get_class(self.parent_class)
+        try:
+            parent = cls.objects.get(pk=task_pk)
+        except cls.DoesNotExist:
             return None
-        return task
 
-    def has_permission(self, request, view):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
+        return parent
+
+    def has_method_permission(self, method, user, view):
+        if method in permissions.SAFE_METHODS:
             return True
 
-        # Test for objects/lists related to a Task (e.g TaskMember).
-        # Get the task form the request
-
-        task = self._get_task_from_request(request)
+        task = self.get_parent_from_request(view.request)
         if task:
             return task.project.status.slug == 'campaign'
         return False

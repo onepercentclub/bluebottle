@@ -35,7 +35,7 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
 
         self.project_manage_url = reverse(
             'project_manage_detail', kwargs={'slug': self.project.slug})
-        self.project_manage_list_url = reverse('project_manage_list')
+        self.project_manage_list_url = reverse('project-manage-list')
 
     def test_owner_permissions(self):
         # view allowed

@@ -45,7 +45,7 @@ class TaskApiTestcase(BluebottleTestCase):
         self.previews_url = reverse('project_preview_list')
         self.task_preview_url = reverse('task_preview_list')
         self.tasks_url = reverse('task_list')
-        self.task_member_url = reverse('task_member_list')
+        self.task_member_url = reverse('task-member-list')
 
     def test_task_count(self):
         """
@@ -204,6 +204,7 @@ class TaskApiTestcase(BluebottleTestCase):
 
         # Task should have status 'open' at first.
         response = self.client.get(task_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'open')
 
         # When a member applies and is accepted task status should change to 'in progress'

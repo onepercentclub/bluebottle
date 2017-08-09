@@ -445,6 +445,75 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_taskmembers_inactive_projects(self):
+        """
+        Test that user can only apply for a Task for a running Project (status=campaign)
+        """
+
+        submitted = ProjectPhase.objects.get(slug='plan-submitted')
+        rejected = ProjectPhase.objects.get(slug='plan-submitted')
+        realised = ProjectPhase.objects.get(slug='done-complete')
+        campaign = ProjectPhase.objects.get(slug='campaign')
+
+        task = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.some_user,
+            project=self.some_project,
+            people_needed=1
+        )
+        task_member_data = {
+            'task': task.id,
+            'motivation': 'Pick me!'
+        }
+
+        # Can't apply for tasks for submitted projects
+        self.some_project.status = submitted
+        self.some_project.save()
+        response = self.client.post(
+            self.task_member_url,
+            task_member_data,
+            token=self.some_token
+        )
+        self.assertEqual(response.status_code,
+                         status.HTTP_403_FORBIDDEN,
+                         "Can't apply for tasks for submitted projects")
+
+        # Can't apply for tasks for rejected projects
+        self.some_project.status = rejected
+        self.some_project.save()
+        response = self.client.post(
+            self.task_member_url,
+            task_member_data,
+            token=self.some_token
+        )
+        self.assertEqual(response.status_code,
+                         status.HTTP_403_FORBIDDEN,
+                         "Can't apply for tasks for rejected projects")
+
+        # Can't apply for tasks for realised projects
+        self.some_project.status = realised
+        self.some_project.save()
+        response = self.client.post(
+            self.task_member_url,
+            task_member_data,
+            token=self.some_token
+        )
+        self.assertEqual(response.status_code,
+                         status.HTTP_403_FORBIDDEN,
+                         "Can't apply for tasks for realised projects")
+
+        # Can apply for tasks for campaigning projects
+        self.some_project.status = campaign
+        self.some_project.save()
+        response = self.client.post(
+            self.task_member_url,
+            task_member_data,
+            token=self.some_token
+        )
+        self.assertEqual(response.status_code,
+                         status.HTTP_201_CREATED,
+                         "Can apply for tasks for campaigning projects")
+
 
 class TaskMemberResumeTest(BluebottleTestCase):
     def setUp(self):

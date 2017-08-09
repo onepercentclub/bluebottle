@@ -8,7 +8,8 @@ import django_filters
 from rest_framework import generics, filters, serializers
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-from bluebottle.bb_tasks.permissions import IsResumeOwnerOrTaskAuthor
+from bluebottle.bb_tasks.permissions import (IsResumeOwnerOrTaskAuthor,
+                                             IsRelatedToActiveProjectOrReadOnly)
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
@@ -198,6 +199,7 @@ class TaskMemberList(generics.ListCreateAPIView):
     pagination_class = TaskPagination
     filter_fields = ('task', 'status',)
     permission_classes = (TenantConditionalOpenClose,
+                          IsRelatedToActiveProjectOrReadOnly,
                           IsAuthenticatedOrReadOnly)
     queryset = TaskMember.objects.all()
 

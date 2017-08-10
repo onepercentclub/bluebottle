@@ -8,7 +8,10 @@ class RelatedProjectOwnerPermission(RelatedResourceOwnerPermission):
     parent_class = 'bluebottle.projects.models.Project'
 
     def get_parent_from_request(self, request):
-        project_slug = request.data['project']
+        if request.data:
+            project_slug = request.data.get('project', None)
+        else:
+            project_slug = request.query_params.get('project', None)
         cls = get_class(self.parent_class)
         try:
             parent = cls.objects.get(slug=project_slug)

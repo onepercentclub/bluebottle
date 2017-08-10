@@ -17,7 +17,8 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
 from bluebottle.tasks.models import Task, TaskMember, Skill
-from bluebottle.utils.serializers import MoneySerializer, PermissionField
+from bluebottle.utils.serializers import (MoneySerializer, PermissionField,
+                                          RelatedPermissionField)
 from bluebottle.utils.fields import SafeField
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 from bluebottle.votes.models import Vote
@@ -224,7 +225,7 @@ class ProjectPermissionsSerializer(serializers.Serializer):
     def get_attribute(self, obj):
         return obj
 
-    rewards = PermissionField('reward-list')
+    rewards = RelatedPermissionField('reward-list', data_mappings={'project': 'slug'})
 
     class Meta:
         fields = ('rewards', )

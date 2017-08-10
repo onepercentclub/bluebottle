@@ -27,6 +27,15 @@ GROUP_PERMS = {
             'add_mediawallpostphoto', 'change_mediawallpostphoto',
             'delete_mediawallpostphoto',
         )
+    },
+    'Anonymous': {
+        'perms': ('api_read_mediawallpost',)
+    },
+    'Authenticated': {
+        'perms': (
+            'api_read_mediawallpost', 'api_add_mediawallpost', 'api_change_mediawallpost', 'api_delete_mediawallpost',
+            'api_read_mediawallpostphoto', 'api_add_mediawallpostphoto', 'api_change_mediawallpostphoto',
+        )
     }
 }
 
@@ -41,10 +50,6 @@ class Wallpost(PolymorphicModel):
     possible to make this an abstract class
     and have the polymorphic behaviour of sorting on the common fields.
     """
-
-    @property
-    def wallpost_type(self):
-        return 'unknown'
 
     # The user who wrote the wall post. This can be empty to support wallposts
     # without users (e.g. anonymous
@@ -84,6 +89,18 @@ class Wallpost(PolymorphicModel):
     # Manager
     objects = WallpostManager()
     objects_with_deleted = models.Manager()
+
+    @property
+    def wallpost_type(self):
+        return 'unknown'
+
+    @property
+    def owner(self):
+        return self.author
+
+    @property
+    def parent(self):
+        return self.content_object
 
     class Analytics:
         type = 'wallpost'
@@ -127,6 +144,18 @@ class MediaWallpost(Wallpost):
     def __unicode__(self):
         return Truncator(self.text).words(10)
 
+    class Meta(Wallpost.Meta):
+        permissions = (
+            ('api_read_mediawallpost', 'Can view media wallposts through the API'),
+            ('api_add_mediawallpost', 'Can add media wallposts through the API'),
+            ('api_change_mediawallpost', 'Can change media wallposts through the API'),
+            ('api_delete_mediawallpost', 'Can delete media wallposts through the API'),
+            ('api_read_mediawallpostphoto', 'Can view media wallpost photos through the API'),
+            ('api_add_mediawallpostphoto', 'Can add media wallpost photos through the API'),
+            ('api_change_mediawallpostphoto', 'Can change media wallpost photos through the API'),
+            ('api_delete_mediawallpostphoto', 'Can delete media wallpost photos through the API'),
+        )
+
 
 class MediaWallpostPhoto(models.Model):
     mediawallpost = models.ForeignKey(MediaWallpost, related_name='photos',
@@ -144,6 +173,14 @@ class MediaWallpostPhoto(models.Model):
                                verbose_name=_('editor'), blank=True, null=True,
                                help_text=_(
                                    "The last user to edit this wallpost photo."))
+
+    @property
+    def owner(self):
+        return self.mediawallpost.owner
+
+    @property
+    def parent(self):
+        return self.mediawallpost
 
 
 class TextWallpost(Wallpost):

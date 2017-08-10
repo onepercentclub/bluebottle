@@ -25,6 +25,13 @@ GROUP_PERMS = {
             'add_taskfile', 'change_taskfile', 'delete_taskfile',
             'add_skill', 'change_skill', 'delete_skill',
         )
+    },
+    'Anonymous': {
+        'perms': ('api_read_task',)
+    },
+    'Authenticated': {
+        'perms': ('api_read_task', 'api_add_task', 'api_change_task',
+                  'api_read_taskmember', 'api_add_taskmember', 'api_change_taskmember', 'api_delete_taskmember')
     }
 }
 
@@ -90,14 +97,12 @@ class Task(models.Model, PreviousStatusMixin):
     created = CreationDateTimeField(_('created'), help_text=_('When this task was created?'))
     updated = ModificationDateTimeField(_('updated'))
 
-    class Meta:
-        verbose_name = _(u'task')
-        verbose_name_plural = _(u'tasks')
-
-        ordering = ['-created']
-
     def __unicode__(self):
         return self.title
+
+    @property
+    def owner(self):
+        return self.author
 
     @property
     def expertise_based(self):
@@ -272,6 +277,18 @@ class Task(models.Model, PreviousStatusMixin):
 
         super(Task, self).save(*args, **kwargs)
 
+    class Meta:
+        verbose_name = _(u'task')
+        verbose_name_plural = _(u'tasks')
+        ordering = ['-created']
+
+        permissions = (
+            ('api_read_task', 'Can view tasks through the API'),
+            ('api_add_task', 'Can add tasks through the API'),
+            ('api_change_task', 'Can change tasks through the API'),
+            ('api_delete_task', 'Can delete tasks through the API'),
+        )
+
 
 class Skill(models.Model):
     name = models.CharField(_('english name'), max_length=100, unique=True)
@@ -326,11 +343,21 @@ class TaskMember(models.Model, PreviousStatusMixin):
     objects = UpdateSignalsQuerySet.as_manager()
 
     class Meta:
+        permissions = (
+            ('api_read_taskmember', 'Can view taskmembers through the API'),
+            ('api_add_taskmember', 'Can add taskmembers through the API'),
+            ('api_change_taskmember', 'Can change taskmembers through the API'),
+            ('api_delete_taskmember', 'Can delete taskmembers through the API'),
+        )
         verbose_name = _(u'task member')
         verbose_name_plural = _(u'task members')
 
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
+
+    @property
+    def owner(self):
+        return self.task.owner
 
     @property
     def time_applied_for(self):

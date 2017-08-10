@@ -116,3 +116,6 @@ class Member(BlueBottleBaseUser):
     @property
     def is_supporter(self):
         return self.amount_donated > 0
+
+
+import signals # noqa

@@ -22,9 +22,11 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         self.init_projects()
 
+        campaign = ProjectPhase.objects.get(slug='campaign')
+
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
-        self.some_project = ProjectFactory.create(owner=self.some_user)
+        self.some_project = ProjectFactory.create(owner=self.some_user, status=campaign)
 
         self.another_user = BlueBottleUserFactory.create()
         self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
@@ -426,6 +428,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         another_user_response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id),
                                                 token=self.another_token)
 
+        self.assertEqual(another_user_response.status_code, 200)
         self.assertEquals(another_user_response.data['motivation'], '')
 
         some_user_response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id),

@@ -360,10 +360,6 @@ class TaskMember(models.Model, PreviousStatusMixin):
         return self.task.owner
 
     @property
-    def parent(self):
-        return self.task
-
-    @property
     def time_applied_for(self):
         return self.task.time_needed
 

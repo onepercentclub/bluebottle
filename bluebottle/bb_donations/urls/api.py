@@ -20,9 +20,9 @@ urlpatterns = [
 
     # Private donation resources
     url(r'^my/$', ManageDonationList.as_view(),
-        name='manage-donation-list'),
+        name='donation-manage-list'),
     url(r'^my/(?P<pk>\d+)$', ManageDonationDetail.as_view(),
-        name='manage-donation-detail'),
+        name='donation-manage-detail'),
 
     url(r'^my/projects/$', MyProjectDonationList.as_view(),
         name='my-project-donation-list'),

@@ -51,7 +51,8 @@ class UserPermissionsSerializer(serializers.Serializer):
         return obj
 
     project_list = PermissionField('project_list')
-    project_manage_list = PermissionField('project_manage_list')
+    project_manage_list = PermissionField('project-manage-list')
+    order_manage_list = PermissionField('order-manage-list')
 
     class Meta:
         fields = [

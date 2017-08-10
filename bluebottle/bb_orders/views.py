@@ -10,6 +10,7 @@ from bluebottle.orders.models import Order
 from bluebottle.orders.serializers import OrderSerializer, ManageOrderSerializer
 from bluebottle.payments.services import PaymentService
 from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.views import ListCreateAPIView
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class OrderDetail(generics.RetrieveUpdateAPIView):
     serializer_class = OrderSerializer
 
 
-class ManageOrderList(generics.ListCreateAPIView):
+class ManageOrderList(ListCreateAPIView):
     queryset = Order.objects.all()
     serializer_class = ManageOrderSerializer
     filter_fields = ('status',)

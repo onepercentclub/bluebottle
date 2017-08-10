@@ -2,6 +2,16 @@ from bluebottle.bb_orders.models import BaseOrder
 from bluebottle.utils.utils import PreviousStatusMixin
 
 
+GROUP_PERMS = {
+    'Anonymous': {
+        'perms': ('api_read_order', 'api_add_order', 'api_change_order')
+    },
+    'Authenticated': {
+        'perms': ('api_read_order', 'api_add_order', 'api_change_order')
+    }
+}
+
+
 class Order(BaseOrder, PreviousStatusMixin):
     @property
     def anonymous(self):
@@ -44,6 +54,13 @@ class Order(BaseOrder, PreviousStatusMixin):
                 return obj.created
             else:
                 return obj.updated
+
+    class Meta:
+        permissions = (
+            ('api_read_order', 'Can view order through API'),
+            ('api_add_order', 'Can add order through API'),
+            ('api_change_order', 'Can change order through API')
+        )
 
 
 import signals  # noqa

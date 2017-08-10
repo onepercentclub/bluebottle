@@ -29,9 +29,6 @@ class BasePermission(permissions.BasePermission):
         """
 
         debug("BasePermission::{}::has_object_permission > {}".format(self.__class__.__name__, obj))
-        if hasattr(obj, 'parent'):
-            obj = obj.parent
-
         return self.has_object_method_permission(
             request.method, request.user, view, obj
         )
@@ -148,7 +145,7 @@ class RelatedResourceOwnerPermission(BasePermission):
         raise NotImplementedError('get_parent_from_request() must be implemented')
 
     def has_object_method_permission(self, method, user, view, obj):
-        debug("RelatedResourceOwnerPermission::has_object_permission > {}".format(user == obj.parent.owner))
+        debug("RelatedResourceOwnerPermission::has_object_method_permission > {}".format(user == obj.parent.owner))
         return user == obj.parent.owner
 
     def has_method_permission(self, method, user, view):

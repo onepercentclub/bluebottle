@@ -166,11 +166,15 @@ class RelatedResourceOwnerPermission(BasePermission):
 
 class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
     def has_object_method_permission(self, method, user, view, obj):
-        return (
+        result = (
             user == obj.owner or
-            user == obj.parent.owner or
             user.is_staff
         )
+
+        if hasattr(obj, 'parent'):
+            result = (obj == obj.parent or result)
+
+        return result
 
 
 class UserPermission(BasePermission):

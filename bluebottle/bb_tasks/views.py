@@ -16,10 +16,11 @@ from bluebottle.tasks.serializers import (BaseTaskSerializer,
                                           TaskPreviewSerializer, MyTaskMemberSerializer,
                                           SkillSerializer, MyTasksSerializer)
 from bluebottle.utils.permissions import (OwnerOrReadOnlyPermission, AuthenticatedOrReadOnlyPermission,
-                                          TenantConditionalOpenClose, OwnerOrParentOwnerOrAdminPermission)
+                                          TenantConditionalOpenClose,)
 from bluebottle.utils.views import (PrivateFileView, ListAPIView, ListCreateAPIView,
                                     RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView)
-from .permissions import (ActiveProjectOrReadOnlyPermission, MemberOrOwnerOrReadOnlyPermission)
+from .permissions import (ActiveProjectOrReadOnlyPermission, MemberOrTaskOwnerOrReadOnlyPermission,
+                          MemberOrTaskOwnerOrAdminPermission)
 
 
 def day_start(date_str):
@@ -220,13 +221,13 @@ class TaskMemberDetail(RetrieveUpdateAPIView):
     serializer_class = BaseTaskMemberSerializer
 
     permission_classes = (TenantConditionalOpenClose,
-                          MemberOrOwnerOrReadOnlyPermission,)
+                          MemberOrTaskOwnerOrReadOnlyPermission,)
 
 
 class TaskMemberResumeView(PrivateFileView):
     queryset = TaskMember.objects
     field = 'resume'
-    permission_classes = (OwnerOrParentOwnerOrAdminPermission,)
+    permission_classes = (MemberOrTaskOwnerOrAdminPermission,)
 
 
 class TaskFileList(generics.ListCreateAPIView):

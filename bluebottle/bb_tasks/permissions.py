@@ -9,7 +9,10 @@ class RelatedTaskOwnerPermission(RelatedResourceOwnerPermission):
     parent_class = 'bluebottle.tasks.models.Task'
 
     def get_parent_from_request(self, request):
-        task_pk = request.data['task']
+        if request.data:
+            task_pk = request.data.get('task', None)
+        else:
+            task_pk = request.query_params.get('task', None)
         cls = get_class(self.parent_class)
         try:
             parent = cls.objects.get(pk=task_pk)
@@ -18,8 +21,11 @@ class RelatedTaskOwnerPermission(RelatedResourceOwnerPermission):
 
         return parent
 
+    def has_object_method_permission(self, method, user, view, obj):
+        return user == obj.owner
 
-class MemberOrOwnerOrReadOnlyPermission(BasePermission):
+
+class MemberOrTaskOwnerOrReadOnlyPermission(BasePermission):
     # TODO: Move this check to the serialiser
     def _time_spent_updated(self, request, task_member):
         if request.data:
@@ -32,8 +38,6 @@ class MemberOrOwnerOrReadOnlyPermission(BasePermission):
         if method in permissions.SAFE_METHODS:
             return True
 
-        # FIXME: when this permission is used with the update task member
-        #        then the obj is still a Task. Why?
         if isinstance(obj, TaskMember) and obj.task.owner == user:
             return True
 
@@ -49,21 +53,26 @@ class MemberOrOwnerOrReadOnlyPermission(BasePermission):
         return True
 
 
-class ActiveProjectOrReadOnlyPermission(RelatedResourceOwnerPermission):
-    parent_class = 'bluebottle.tasks.models.Task'
+class MemberOrTaskOwnerOrAdminPermission(BasePermission):
+    def has_object_method_permission(self, method, user, view, obj):
+        # FIXME: when this permission is used with the update task member
+        #        then the obj is still a Task. Why?
+        if isinstance(obj, TaskMember):
+            return (
+                obj.task.owner == user or
+                obj.member == user or
+                user.is_staff
+            )
 
-    def get_parent_from_request(self, request):
-        if request.data:
-            task_pk = request.data.get('task', None)
-        else:
-            task_pk = request.query_params.get('task', None)
-        cls = get_class(self.parent_class)
-        try:
-            parent = cls.objects.get(pk=task_pk)
-        except cls.DoesNotExist:
-            return None
+        return False
 
-        return parent
+    def has_method_permission(self, method, user, view):
+        return True
+
+
+class ActiveProjectOrReadOnlyPermission(RelatedTaskOwnerPermission):
+    def has_method_object_permission(self, method, user, view, obj):
+        pass
 
     def has_method_permission(self, method, user, view):
         if method in permissions.SAFE_METHODS:

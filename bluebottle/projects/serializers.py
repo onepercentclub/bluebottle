@@ -105,9 +105,11 @@ class ProjectSerializer(serializers.ModelSerializer):
     people_needed = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
     permissions = PermissionField('project_detail', view_args=('slug',))
+    promoter = UserProfileSerializer()
     related_permissions = ProjectPermissionsSerializer(read_only=True)
     story = SafeField()
     supporter_count = serializers.IntegerField()
+    task_manager = UserProfileSerializer()
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     vote_count = serializers.IntegerField()
 
@@ -149,6 +151,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'permissions',
                   'pitch',
                   'project_type',
+                  'promoter',
                   'realized_task_count',
                   'related_permissions',
                   'status',
@@ -156,6 +159,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'story',
                   'supporter_count',
                   'task_count',
+                  'task_manager',
                   'theme',
                   'title',
                   'video_html',
@@ -253,9 +257,11 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     people_needed = serializers.IntegerField(read_only=True)
     people_registered = serializers.IntegerField(read_only=True)
     pitch = serializers.CharField(required=False, allow_null=True)
+    promoter = UserProfileSerializer()
     slug = serializers.CharField(read_only=True)
     status = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=ProjectPhase.objects)
     story = SafeField(required=False, allow_blank=True)
+    task_manager = UserProfileSerializer()
     tasks = ManageTaskSerializer(many=True, source='task_set', read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='project_manage_detail', lookup_field='slug')
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
@@ -363,9 +369,11 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'pitch',
                   'place',
                   'project_type',
+                  'promoter',
                   'slug',
                   'status',
                   'story',
+                  'task_manager',
                   'tasks',
                   'theme',
                   'title',

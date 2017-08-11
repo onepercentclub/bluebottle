@@ -2,13 +2,17 @@ from bluebottle.quotes.models import Quote
 from bluebottle.slides.models import Slide
 from bluebottle.statistics.models import Statistic
 from bluebottle.projects.models import Project
+from bluebottle.utils.models import FakeModel
 
 
-class HomePage(object):
+class HomePage(FakeModel):
     """
     Instead of serving all the objects separately we combine
     Slide, Quote and Stats into a dummy object
     """
+    model_name = 'homepage'
+    app_label = 'homepage'
+
     def get(self, language):
         self.id = language
         self.quotes = Quote.objects.published().filter(language=language)

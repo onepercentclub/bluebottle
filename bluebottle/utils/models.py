@@ -1,5 +1,7 @@
 import sys
 
+from bunch import bunchify
+
 from django.db import models
 from django.db.models.signals import post_migrate
 from django.conf import settings
@@ -42,6 +44,18 @@ class Address(models.Model):
 
     def __unicode__(self):
         return self.line1[:80]
+
+
+class ModelMeta(type):
+    @property
+    def _meta(self):
+        return bunchify({
+            'model_name': self.model_name,
+            'app_label': self.app_label})
+
+
+class FakeModel(object):
+    __metaclass__ = ModelMeta
 
 
 """

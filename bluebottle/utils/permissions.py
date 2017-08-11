@@ -75,18 +75,24 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
     }
 
     def has_method_permission(self, method, user, view):
-        queryset = None
-        if hasattr(view, 'queryset'):
-            queryset = view.queryset
-        elif hasattr(view, 'get_queryset'):
-            queryset = view.get_queryset()
+        model_cls = None
+        try:
+            if hasattr(view, 'queryset'):
+                model_cls = view.queryset.model
+            elif hasattr(view, 'get_queryset'):
+                model_cls = view.get_queryset().model
+        except AttributeError:
+            pass
 
-        assert queryset is not None, (
+        if not model_cls and hasattr(view, 'model_class'):
+            model_cls = view.model_class
+
+        assert model_cls is not None, (
             'Cannot apply DjangoModelPermissions on a view that '
-            'does not set `.queryset` or have a `.get_queryset()` method.'
+            'does not relate to a model class.'
         )
 
-        perms = self.get_required_permissions(method, queryset.model)
+        perms = self.get_required_permissions(method, model_cls)
         debug("ResourcePermissions::has_method_permission > {}".format(user.has_perms(perms)))
         return user.has_perms(perms)
 

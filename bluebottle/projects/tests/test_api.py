@@ -117,6 +117,7 @@ class ProjectEndpointTestCase(BluebottleTestCase):
             if ord(char) % 2 == 1:
                 project = ProjectFactory.create(title=char * 3, slug=char * 3,
                                                 status=self.campaign_phase,
+                                                owner=self.user,
                                                 amount_asked=0,
                                                 amount_needed=30,
                                                 organization=organization)
@@ -124,6 +125,7 @@ class ProjectEndpointTestCase(BluebottleTestCase):
             else:
                 project = ProjectFactory.create(title=char * 3, slug=char * 3,
                                                 status=self.plan_phase,
+                                                owner=self.user,
                                                 organization=organization)
 
                 task = TaskFactory.create(project=project)
@@ -367,6 +369,31 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(p['realized_task_count'], 5)
         self.assertEquals(p['full_task_count'], 4)
         self.assertEquals(p['open_task_count'], 10)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+    def test_project_roles(self):
+        """ Tests retrieving a project detail with roles from the API. """
+
+        project = self.projects[0]
+
+        # Test retrieving the project detail and check project roles.
+        url = "{}{}".format(self.projects_url, project.slug)
+        response = self.client.get(url)
+        p = response.data
+        self.assertEquals(p['promoter'], None)
+        self.assertEquals(p['task_manager']['full_name'], self.user.full_name)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        manager = BlueBottleUserFactory()
+
+        project.promoter = manager
+        project.task_manager = manager
+        project.save()
+
+        response = self.client.get(url)
+        p = response.data
+        self.assertEquals(p['promoter']['full_name'], manager.full_name)
+        self.assertEquals(p['task_manager']['full_name'], manager.full_name)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
 

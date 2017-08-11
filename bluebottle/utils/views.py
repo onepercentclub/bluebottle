@@ -243,6 +243,10 @@ class PrivateFileView(PermissionedView):
         return response
 
 
+class GenericAPIView(ViewPermissionsMixin, generics.GenericAPIView):
+    base_permission_classes = (ResourcePermissions,)
+
+
 class ListAPIView(ViewPermissionsMixin, generics.ListAPIView):
     base_permission_classes = (ResourcePermissions,)
 

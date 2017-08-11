@@ -158,12 +158,9 @@ class URLField(serializers.URLField):
 
 
 class FakePermissionRequest(object):
-    def __init__(self, request, method):
-        self.request = request
+    def __init__(self, user, method):
+        self.request = user
         self.method = method
-
-    def __getattr__(self, attr):
-        return getattr(self.request, attr)
 
 
 class PermissionField(serializers.Field):
@@ -203,9 +200,11 @@ class PermissionField(serializers.Field):
         for method in view.allowed_methods:
             permissions[method] = all(
                 perm.has_object_permission(
-                    FakePermissionRequest(self.context['request'], method),
+                    FakePermissionRequest(
+                        self.context['request'].user, method
+                    ),
                     view,
-                    value # FIXME, Make sure that we pass in the correct object, not the parent
+                    value  # FIXME, Make sure that we pass in the correct object, not the parent
                 ) for perm in view.get_permissions()
             )
 

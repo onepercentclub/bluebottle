@@ -21,7 +21,11 @@ def add_group_permissions(apps, schema_editor):
             'perms': ('api_read_task',)
         },
         'Authenticated': {
-            'perms': ('api_read_task', 'api_add_tasks', 'api_add_taskmember')
+            'perms': (
+                'api_read_task', 'api_add_task', 'api_change_task',
+                'api_read_taskmember', 'api_add_taskmember',
+                'api_change_taskmember', 'api_delete_taskmember'
+            )
         }
     }
     update_group_permissions('tasks', group_perms)

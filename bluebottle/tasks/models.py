@@ -82,6 +82,10 @@ class Task(models.Model, PreviousStatusMixin):
         return self.title
 
     @property
+    def owner(self):
+        return self.author
+
+    @property
     def expertise_based(self):
         return self.skill.expertise if self.skill else False
 
@@ -331,6 +335,10 @@ class TaskMember(models.Model, PreviousStatusMixin):
 
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
+
+    @property
+    def owner(self):
+        return self.task.owner
 
     @property
     def time_applied_for(self):

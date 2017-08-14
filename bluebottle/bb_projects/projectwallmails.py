@@ -19,25 +19,26 @@ class ProjectWallObserver(WallpostObserver):
 
     def notify(self):
         project = self.parent
-        project_owner = project.owner
 
-        # Implement 1a: send email to Object owner, if Wallpost author is not
-        # the Object owner.
-        if self.author != project_owner:
+        for manager in [project.owner, project.task_manager, project.promoter]:
 
-            with TenantLanguage(project_owner.primary_language):
-                subject = _('%(author)s commented on your project') % {
-                    'author': self.author.get_short_name()}
+            # Implement 1a: send email to Object owner, if Wallpost author is not
+            # the Object owner.
+            if self.author != manager:
 
-            send_mail(
-                template_name='project_wallpost_new.mail',
-                subject=subject,
-                to=project_owner,
-                project=project,
-                link='/go/projects/{0}'.format(project.slug),
-                author=self.author,
-                receiver=project_owner
-            )
+                with TenantLanguage(manager.primary_language):
+                    subject = _('%(author)s commented on your project') % {
+                        'author': self.author.get_short_name()}
+
+                send_mail(
+                    template_name='project_wallpost_new.mail',
+                    subject=subject,
+                    to=manager,
+                    project=project,
+                    link='/go/projects/{0}'.format(project.slug),
+                    author=self.author,
+                    receiver=manager
+                )
 
 
 class ProjectReactionObserver(ReactionObserver):
@@ -49,7 +50,6 @@ class ProjectReactionObserver(ReactionObserver):
 
     def notify(self):
         project = self.post.content_object
-        project_owner = project.owner
 
         # Make sure users only get mailed once!
         mailed_users = set()
@@ -57,7 +57,7 @@ class ProjectReactionObserver(ReactionObserver):
         # Implement 2c: send email to other Reaction authors that are not the
         # Object owner or the post author.
         reactions = self.post.reactions.exclude(Q(author=self.post_author) |
-                                                Q(author=project_owner) |
+                                                Q(author=project.owner) |
                                                 Q(author=self.reaction_author))
         for r in reactions:
             if r.author not in mailed_users:
@@ -99,23 +99,26 @@ class ProjectReactionObserver(ReactionObserver):
 
         # Implement 2a: send email to Object owner, if Reaction author is not
         # the Object owner.
-        if self.reaction_author != project_owner:
-            if project_owner not in mailed_users:
 
-                with TenantLanguage(project_owner.primary_language):
-                    subject = _('%(author)s commented on your project') % {
-                        'author': self.reaction_author.get_short_name()}
+        for manager in [project.owner, project.task_manager, project.promoter]:
 
-                send_mail(
-                    template_name='project_wallpost_reaction_project.mail',
-                    subject=subject,
-                    to=project_owner,
-                    project=project,
-                    site=self.site,
-                    link='/go/projects/{0}'.format(project.slug),
-                    author=self.reaction_author,
-                    receiver=project_owner
-                )
+            if self.reaction_author != manager:
+                if manager not in mailed_users:
+
+                    with TenantLanguage(manager.primary_language):
+                        subject = _('%(author)s commented on your project') % {
+                            'author': self.reaction_author.get_short_name()}
+
+                    send_mail(
+                        template_name='project_wallpost_reaction_project.mail',
+                        subject=subject,
+                        to=manager,
+                        project=project,
+                        site=self.site,
+                        link='/go/projects/{0}'.format(project.slug),
+                        author=self.reaction_author,
+                        receiver=manager
+                    )
 
 
 ObserversContainer().register(ProjectWallObserver)

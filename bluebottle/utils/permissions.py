@@ -12,8 +12,10 @@ def debug(message):
 
 class BasePermission(permissions.BasePermission):
     """ BasePermission extends the standard BasePermission from DRF to include
-    the ability to get the permissions without the request... Well ideally but
-    currently the `view` is being passed which then gives access to the request
+    the ability to get the permissions without the request.
+
+    Currently the `view` is being passed which then gives access to the request.
+
     TODO: it should be possible to get the permissions based on a `method`, `user`,
     and an optional `obj` which might be a parent type rather than the actual obj
     particularly if the permission being checked is the ability to create an obj
@@ -103,9 +105,7 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
 
 
 class OwnerPermission(BasePermission):
-    """
-    Allows access only to obj owner.
-    """
+    """ Allows access only to obj owner. """
 
     def has_object_method_permission(self, method, user, view, obj):
         debug("OwnerPermission::has_object_permission > {}".format(user == obj.owner))
@@ -116,9 +116,7 @@ class OwnerPermission(BasePermission):
 
 
 class OwnerOrReadOnlyPermission(OwnerPermission):
-    """
-    Allows access only to obj owner or read only.
-    """
+    """ Allows access only to obj owner or read only. """
 
     def has_object_method_permission(self, method, user, view, obj):
         if method in permissions.SAFE_METHODS:
@@ -133,6 +131,8 @@ class OwnerOrReadOnlyPermission(OwnerPermission):
 
 
 class OwnerOrAdminPermission(OwnerPermission):
+    """ Allows access only to obj owner and admin users. """
+
     def check_permission(self, request, instance):
         pass
 
@@ -142,7 +142,10 @@ class OwnerOrAdminPermission(OwnerPermission):
 
 
 class RelatedResourceOwnerPermission(BasePermission):
-    parent_class = None
+    """ Allows access only to obj owner of related resource.
+
+    This class assumes the child resource has a `parent` property which will return the parent object.
+    """
 
     def get_parent_from_request(self, request):
         """ For requests to list endpoints, eg when creating an object then
@@ -168,6 +171,7 @@ class RelatedResourceOwnerPermission(BasePermission):
 
 
 class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
+    """ Allows access only to obj owner, parent owner and admin users. """
     def has_object_method_permission(self, method, user, view, obj):
         result = (
             user == obj.owner or
@@ -180,14 +184,8 @@ class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
         return result
 
 
-class UserPermission(BasePermission):
-    pass
-
-
 class TenantConditionalOpenClose(BasePermission):
-    """
-    Allows access only to authenticated users.
-    """
+    """ Allows access only to authenticated users. """
 
     def has_object_method_permission(self, method, user, view, obj):
         try:
@@ -207,9 +205,7 @@ class TenantConditionalOpenClose(BasePermission):
 
 
 class IsAuthenticated(BasePermission):
-    """
-    Allow access if the user is authenticated
-    """
+    """ Allow access if the user is authenticated. """
     def has_object_method_permission(self, method, user, view, obj):
         return self.has_method_permission(method, user, view)
 
@@ -218,9 +214,7 @@ class IsAuthenticated(BasePermission):
 
 
 class AuthenticatedOrReadOnlyPermission(IsAuthenticated):
-    """
-    Allow access if the user is authenticated or the request uses a safe method
-    """
+    """ Allow access if the user is authenticated or the request uses a safe method. """
     def has_method_permission(self, method, user, view):
         if method in permissions.SAFE_METHODS:
             debug("AuthenticatedOrReadOnlyPermission::has_method_permission > {}".format(True))

@@ -64,7 +64,6 @@ This handler will work for any appname.models which defines
 a GROUP_PERMS property.
 TODO: Is this the correct place for a global signal handler.
 """
-
 ADDITIONAL_GROUP_PERMS = {
     'Staff': {
         'perms': (

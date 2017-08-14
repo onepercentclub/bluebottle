@@ -54,7 +54,11 @@ class ModelMeta(type):
             'app_label': self.app_label})
 
 
-class FakeModel(object):
+class PermissionableModel(object):
+    """ PermissionableModel only implements the model_name and app_label to
+    allow instances of the class to work with the ResourcePermissions class.
+    Useful if permissions are needed on a model not extending django.models.model
+    """
     __metaclass__ = ModelMeta
 
 

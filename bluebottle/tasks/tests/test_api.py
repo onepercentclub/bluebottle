@@ -557,14 +557,14 @@ class TaskApiTestcase(BluebottleTestCase):
         task_member = TaskMemberFactory(task=task, status='applied')
 
         # Project owner should be disallowed to accept taskmember
-        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member.id})
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         # Task manager should have rights to accept taskmember
-        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member.id})
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.another_token)
@@ -577,7 +577,7 @@ class TaskApiTestcase(BluebottleTestCase):
         self.some_project.save()
 
         # Project owner should be disallowed to accept taskmember
-        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member.id})
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.some_token)

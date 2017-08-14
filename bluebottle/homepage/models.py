@@ -2,13 +2,14 @@ from bluebottle.quotes.models import Quote
 from bluebottle.slides.models import Slide
 from bluebottle.statistics.models import Statistic
 from bluebottle.projects.models import Project
-from bluebottle.utils.models import FakeModel
+from bluebottle.utils.models import PermissionableModel
 
 
-class HomePage(FakeModel):
-    """
-    Instead of serving all the objects separately we combine
-    Slide, Quote and Stats into a dummy object
+class HomePage(PermissionableModel):
+    """ HomePage is a class to combine Slide, Quote and Stats into a single object.
+
+    PermissionableModel requires a model_name and app_label to work with the
+    ResourcePermissions class
     """
     model_name = 'homepage'
     app_label = 'homepage'

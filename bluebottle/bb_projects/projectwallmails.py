@@ -20,11 +20,11 @@ class ProjectWallObserver(WallpostObserver):
     def notify(self):
         project = self.parent
 
-        for manager in [project.owner, project.task_manager, project.promoter]:
+        for manager in set([project.owner, project.task_manager, project.promoter]):
 
             # Implement 1a: send email to Object owner, if Wallpost author is not
             # the Object owner.
-            if self.author != manager:
+            if manager and self.author != manager:
 
                 with TenantLanguage(manager.primary_language):
                     subject = _('%(author)s commented on your project') % {
@@ -99,10 +99,9 @@ class ProjectReactionObserver(ReactionObserver):
 
         # Implement 2a: send email to Object owner, if Reaction author is not
         # the Object owner.
+        for manager in set([project.owner, project.task_manager, project.promoter]):
 
-        for manager in [project.owner, project.task_manager, project.promoter]:
-
-            if self.reaction_author != manager:
+            if manager and self.reaction_author != manager:
                 if manager not in mailed_users:
 
                     with TenantLanguage(manager.primary_language):

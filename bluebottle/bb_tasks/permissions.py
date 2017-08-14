@@ -21,7 +21,7 @@ class RelatedTaskOwnerPermission(RelatedResourceOwnerPermission):
 
         return parent
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, method, user, view, obj):
         return user == obj.owner
 
 
@@ -34,7 +34,7 @@ class MemberOrTaskOwnerOrReadOnlyPermission(BasePermission):
                 return True
         return False
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, method, user, view, obj):
         if method in permissions.SAFE_METHODS:
             return True
 
@@ -49,12 +49,12 @@ class MemberOrTaskOwnerOrReadOnlyPermission(BasePermission):
 
         return False
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         return True
 
 
 class MemberOrTaskOwnerOrAdminPermission(BasePermission):
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, method, user, view, obj):
         # FIXME: when this permission is used with the update task member
         #        then the obj is still a Task. Why?
         if isinstance(obj, TaskMember):
@@ -66,7 +66,7 @@ class MemberOrTaskOwnerOrAdminPermission(BasePermission):
 
         return False
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         return True
 
 
@@ -74,7 +74,7 @@ class ActiveProjectOrReadOnlyPermission(RelatedTaskOwnerPermission):
     def has_method_object_permission(self, method, user, view, obj):
         pass
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         if method in permissions.SAFE_METHODS:
             return True
 

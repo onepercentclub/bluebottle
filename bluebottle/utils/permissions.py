@@ -225,5 +225,4 @@ class AuthenticatedOrReadOnlyPermission(IsAuthenticated):
         if method in permissions.SAFE_METHODS:
             debug("AuthenticatedOrReadOnlyPermission::has_method_permission > {}".format(True))
             return True
-
         return user.is_authenticated and user.groups.filter(name='Authenticated').exists()

@@ -4,7 +4,6 @@ from rest_framework.generics import (ListAPIView, RetrieveAPIView,
 from rest_framework.permissions import IsAuthenticated
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.utils.permissions import UserPermission
 from bluebottle.terms.models import Terms, TermsAgreement
 from bluebottle.terms.serializers import (TermsSerializer,
                                           TermsAgreementSerializer)
@@ -40,12 +39,6 @@ class TermsAgreementListView(ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(terms=Terms.get_current(), user=self.request.user)
-
-
-class TermsAgreementDetailView(RetrieveAPIView):
-    queryset = TermsAgreement.objects.all()
-    serializer_class = TermsAgreementSerializer
-    permission_classes = (IsAuthenticated, UserPermission)
 
 
 class CurrentTermsAgreementDetailView(RetrieveAPIView):

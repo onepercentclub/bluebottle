@@ -465,7 +465,7 @@ class Project(BaseProject, PreviousStatusMixin):
         if not self.task_manager:
             self.task_manager = self.owner
 
-        # set all task.author to project.task_manager
+        # Set all task.author to project.task_manager
         self.task_set.exclude(author=self.task_manager).update(author=self.task_manager)
 
         super(Project, self).save(*args, **kwargs)

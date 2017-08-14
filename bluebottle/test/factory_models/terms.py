@@ -1,4 +1,4 @@
-from bluebottle.terms.models import Terms
+from bluebottle.terms.models import Terms, TermsAgreement
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 import factory
 import factory.fuzzy
@@ -15,3 +15,11 @@ class TermsFactory(factory.DjangoModelFactory):
     date = now() - timedelta(weeks=4)
     contents = u"Apply yourself!"
     version = "1.0"
+
+
+class TermsAgreementFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = TermsAgreement
+
+    user = factory.SubFactory(BlueBottleUserFactory)
+    terms = factory.SubFactory(TermsFactory)

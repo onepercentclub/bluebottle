@@ -221,7 +221,7 @@ class PermissionField(BasePermissionField):
     """ Field that can be used to return permissions for a view with object. """
 
     def _method_permissions(self, method, user, view, value):
-        return all(perm.has_object_method_permission(
+        return all(perm.has_object_action_permission(
             method, user, view, value
         ) for perm in view.get_permissions())
 
@@ -248,6 +248,6 @@ class RelatedPermissionField(BasePermissionField):
         request.data = data
         view.request = request
 
-        return all(perm.has_method_permission(
+        return all(perm.has_action_permission(
             method, user, view
         ) for perm in view.get_permissions())

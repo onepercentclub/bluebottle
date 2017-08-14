@@ -24,7 +24,7 @@ class BasePermission(permissions.BasePermission):
         Return `True` if permission is granted, `False` otherwise.
         """
 
-        return self.has_object_method_permission(
+        return self.has_object_action_permission(
             request.method, request.user, view, obj
         )
 
@@ -37,26 +37,26 @@ class BasePermission(permissions.BasePermission):
         Return `True` if permission is granted, `False` otherwise.
         """
 
-        return self.has_method_permission(
+        return self.has_action_permission(
             request.method, request.user, view
         )
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, method, user, view, obj):
         """ Check if user has permission to access method on obj for the view.
 
         Used by both the DRF permission system and for returning permissions to the user.
         """
 
-        message = 'has_object_method_permission() must be implemented on {}'.format(self)
+        message = 'has_object_action_permission() must be implemented on {}'.format(self)
         raise NotImplementedError(message)
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         """ Check if user has permission to access method for the view.
 
         Used by both the DRF permission system and for returning permissions to the user.
         """
 
-        message = 'has_method_permission() must be implemented on {}'.format(self)
+        message = 'has_action_permission() must be implemented on {}'.format(self)
         raise NotImplementedError(message)
 
 
@@ -71,7 +71,7 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
         'DELETE': ['%(app_label)s.api_delete_%(model_name)s'],
     }
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         model_cls = None
         try:
             if hasattr(view, 'queryset'):
@@ -92,30 +92,30 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
         perms = self.get_required_permissions(method, model_cls)
         return user.has_perms(perms)
 
-    def has_object_method_permission(self, method, user, view, obj):
-        return self.has_method_permission(method, user, view)
+    def has_object_action_permission(self, method, user, view, obj):
+        return self.has_action_permission(method, user, view)
 
 
 class OwnerPermission(BasePermission):
     """ Allows access only to obj owner. """
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, method, user, view, obj):
         return user == obj.owner
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         return True
 
 
 class OwnerOrReadOnlyPermission(OwnerPermission):
     """ Allows access only to obj owner or read only. """
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, method, user, view, obj):
         if method in permissions.SAFE_METHODS:
             return True
 
         return user == obj.owner
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         return True
 
 
@@ -125,7 +125,7 @@ class OwnerOrAdminPermission(OwnerPermission):
     def check_permission(self, request, instance):
         pass
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, method, user, view, obj):
         return user == obj.owner or user.is_staff
 
 
@@ -142,10 +142,10 @@ class RelatedResourceOwnerPermission(BasePermission):
 
         raise NotImplementedError('get_parent_from_request() must be implemented')
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, method, user, view, obj):
         return user == obj.parent.owner
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         """ Read permissions are allowed to any request, so we'll< always allow
         GET, HEAD or OPTIONS requests.
         """
@@ -160,7 +160,7 @@ class RelatedResourceOwnerPermission(BasePermission):
 class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
     """ Allows access only to obj owner, parent owner and admin users. """
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, method, user, view, obj):
         result = (
             user == obj.owner or
             user.is_staff
@@ -175,7 +175,7 @@ class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
 class TenantConditionalOpenClose(BasePermission):
     """ Allows access only to authenticated users. """
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, method, user, view, obj):
         try:
             if get_tenant_properties('CLOSED_SITE'):
                 return user and user.is_authenticated()
@@ -183,7 +183,7 @@ class TenantConditionalOpenClose(BasePermission):
             pass
         return True
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         try:
             if get_tenant_properties('CLOSED_SITE'):
                 return user and user.is_authenticated()
@@ -195,17 +195,17 @@ class TenantConditionalOpenClose(BasePermission):
 class IsAuthenticated(BasePermission):
     """ Allow access if the user is authenticated. """
 
-    def has_object_method_permission(self, method, user, view, obj):
-        return self.has_method_permission(method, user, view)
+    def has_object_action_permission(self, method, user, view, obj):
+        return self.has_action_permission(method, user, view)
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         return user.is_authenticated and user.groups.filter(name='Authenticated').exists()
 
 
 class AuthenticatedOrReadOnlyPermission(IsAuthenticated):
     """ Allow access if the user is authenticated or the request uses a safe method. """
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         if method in permissions.SAFE_METHODS:
             return True
 

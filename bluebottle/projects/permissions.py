@@ -23,9 +23,9 @@ class RelatedProjectOwnerPermission(RelatedResourceOwnerPermission):
 
 class IsEditableOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
-        return self.has_object_method_permission(request.method, None, view, obj)
+        return self.has_object_action_permission(request.method, None, view, obj)
 
-    def has_object_method_permission(self, method, user, view, obj=None):
+    def has_object_action_permission(self, method, user, view, obj=None):
         # Read permissions are allowed to any request, so we'll always allow
         # GET, HEAD or OPTIONS requests.
         if method in permissions.SAFE_METHODS:
@@ -33,5 +33,5 @@ class IsEditableOrReadOnly(BasePermission):
 
         return obj.status.editable
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, method, user, view):
         return True

@@ -159,8 +159,7 @@ class ViewPermissionsMixin(object):
     base_permission_classes = ()
 
     def get_permissions(self):
-        """
-        Combine and return the base_permission_classes appended to the standard
+        """ Combine and return the base_permission_classes appended to the standard
         permission_classes
         """
 
@@ -169,8 +168,7 @@ class ViewPermissionsMixin(object):
         return [permission() for permission in all_permission_classes]
 
     def check_permissions(self, request):
-        """
-        Check if the request should be permitted.
+        """ Check if the request should be permitted.
         Raises an appropriate exception if the request is not permitted.
         """
 
@@ -181,8 +179,7 @@ class ViewPermissionsMixin(object):
                 )
 
     def check_object_permissions(self, request, obj):
-        """
-        Check if the request should be permitted for a given object.
+        """ Check if the request should be permitted for a given object.
         Raises an appropriate exception if the request is not permitted.
         """
 

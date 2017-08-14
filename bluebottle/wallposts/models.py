@@ -34,6 +34,7 @@ GROUP_PERMS = {
     'Authenticated': {
         'perms': (
             'api_read_mediawallpost', 'api_add_mediawallpost', 'api_change_mediawallpost', 'api_delete_mediawallpost',
+            'api_read_textwallpost', 'api_add_textwallpost', 'api_change_textwallpost', 'api_delete_mediawallpost',
             'api_read_mediawallpostphoto', 'api_add_mediawallpostphoto', 'api_change_mediawallpostphoto',
         )
     }
@@ -97,10 +98,6 @@ class Wallpost(PolymorphicModel):
     @property
     def owner(self):
         return self.author
-
-    @property
-    def parent(self):
-        return self.content_object
 
     class Analytics:
         type = 'wallpost'
@@ -176,7 +173,7 @@ class MediaWallpostPhoto(models.Model):
 
     @property
     def owner(self):
-        return self.mediawallpost.owner
+        return self.author
 
     @property
     def parent(self):
@@ -188,6 +185,14 @@ class TextWallpost(Wallpost):
     @property
     def wallpost_type(self):
         return 'text'
+
+    @property
+    def owner(self):
+        return self.author
+
+    @property
+    def parent(self):
+        return self.textwallpost
 
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH)
 

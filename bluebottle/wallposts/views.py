@@ -82,7 +82,7 @@ class TextWallpostList(SetAuthorMixin, ListCreateAPIView):
                           AuthenticatedOrReadOnlyPermission)
 
     def get_queryset(self, queryset=None):
-        queryset = super(TextWallpostList, self).get_queryset()
+        queryset = self.queryset
         # Some custom filtering projects slugs.
         parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)
@@ -92,7 +92,6 @@ class TextWallpostList(SetAuthorMixin, ListCreateAPIView):
             except Project.DoesNotExist:
                 return Wallpost.objects.none()
             queryset = queryset.filter(object_id=project.id)
-
         queryset = queryset.order_by('-created')
         return queryset
 

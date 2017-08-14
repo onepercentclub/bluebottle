@@ -220,8 +220,10 @@ class TaskMemberDetail(RetrieveUpdateAPIView):
     queryset = TaskMember.objects.all()
     serializer_class = BaseTaskMemberSerializer
 
-    permission_classes = (TenantConditionalOpenClose,
-                          MemberOrTaskOwnerOrReadOnlyPermission,)
+    permission_classes = (
+        TenantConditionalOpenClose,
+        MemberOrTaskOwnerOrReadOnlyPermission,
+    )
 
 
 class TaskMemberResumeView(PrivateFileView):

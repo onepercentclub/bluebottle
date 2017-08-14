@@ -222,32 +222,14 @@ class PermissionField(BasePermissionField):
 
     def _method_permissions(self, method, user, view, value):
         return all(perm.has_object_action_permission(
-            method, user, view, value
+            method, user, value
         ) for perm in view.get_permissions())
 
 
 class RelatedPermissionField(BasePermissionField):
-    """ Field that can be used to return permission for a related view.
-
-    `data_mappings`: A dict used to map fields on the request to data used by the
-    permission classes associated with the related objects.
-
-    For Example, a ProjectPermissionsSerializer has related `rewards`. To process
-    the rewards-list permissions the data_mappings is set to {'project': 'slug'}
-    as the `slug` field in the project request will be mapped to the `project`
-    property for use in the permissions of the RewardList view.
-    """
+    """ Field that can be used to return permission for a related view. """
 
     def _method_permissions(self, method, user, view, value):
-        request = FakePermissionRequest(self.context['request'], method)
-        data = {}
-
-        for key, attr in self.data_mappings.iteritems():
-            data[key] = getattr(value, attr)
-
-        request.data = data
-        view.request = request
-
         return all(perm.has_action_permission(
-            method, user, view
+            method, user, view.model, value
         ) for perm in view.get_permissions())

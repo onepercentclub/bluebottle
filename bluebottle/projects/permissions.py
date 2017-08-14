@@ -22,16 +22,22 @@ class RelatedProjectOwnerPermission(RelatedResourceOwnerPermission):
 
 
 class IsEditableOrReadOnly(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return self.has_object_action_permission(request.method, None, view, obj)
-
-    def has_object_action_permission(self, method, user, view, obj=None):
+    def has_object_action_permission(self, action, user, obj):
         # Read permissions are allowed to any request, so we'll always allow
         # GET, HEAD or OPTIONS requests.
-        if method in permissions.SAFE_METHODS:
+        if action in permissions.SAFE_METHODS:
             return True
 
         return obj.status.editable
 
-    def has_action_permission(self, method, user, view):
+    def has_action_permission(self, method, user, model_cls):
         return True
+
+
+class IsProjectWallOwner(permissions.BasePermission):
+    """
+    Allows access only to project owner.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return obj.mediawallpost.content_object.owner == request.user

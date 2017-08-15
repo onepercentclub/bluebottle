@@ -20,11 +20,20 @@ class RelatedManagementOrReadOnlyPermission(BasePermission):
         parent_id = request.data['parent_id']
         parent_type = request.data['parent_type']
         if parent_type == 'project':
-            return Project.objects.get(slug=parent_id)
+            try:
+                return Project.objects.get(slug=parent_id)
+            except Project.DoesNotExist:
+                return Project.objects.none()
         if parent_type == 'fundraiser':
-            return Fundraiser.objects.get(id=parent_id)
+            try:
+                return Fundraiser.objects.get(id=parent_id)
+            except Fundraiser.DoesNotExist:
+                return Fundraiser.objects.none()
         if parent_type == 'task':
-            return Task.objects.get(id=parent_id).project
+            try:
+                return Task.objects.get(id=parent_id).project
+            except Task.DoesNotExist:
+                return Project.objects.none()
 
     def has_object_method_permission(self, method, user, view, obj):
         return user in [

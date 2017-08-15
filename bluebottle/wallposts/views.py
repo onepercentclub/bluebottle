@@ -41,6 +41,10 @@ class WallpostList(ListAPIView):
     serializer_class = WallpostSerializer
     pagination_class = BluebottlePagination
 
+    # FIXME: figure out why it is necessary to include the TenantConditionalOpenClose
+    #        permission here when it is included in the BASE_PERMISSION_CLASSES
+    permission_classes = (TenantConditionalOpenClose,)
+
     def get_queryset(self, queryset=queryset):
         queryset = super(WallpostList, self).get_queryset()
 

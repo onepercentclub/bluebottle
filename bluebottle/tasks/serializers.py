@@ -62,7 +62,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
     author = UserPreviewSerializer()
     permissions = PermissionField('task_detail', view_args=('id',))
-    related_permissions = TaskPermissionsSerializer()
+    related_permissions = TaskPermissionsSerializer(read_only=True)
     status = serializers.ChoiceField(choices=Task.TaskStatuses.choices,
                                      default=Task.TaskStatuses.open)
     time_needed = serializers.DecimalField(min_value=0.0,

@@ -105,7 +105,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     people_needed = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
     permissions = PermissionField('project_detail', view_args=('slug',))
-    related_permissions = ProjectPermissionsSerializer()
+    related_permissions = ProjectPermissionsSerializer(read_only=True)
     story = SafeField()
     supporter_count = serializers.IntegerField()
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')

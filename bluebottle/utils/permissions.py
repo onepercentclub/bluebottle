@@ -1,6 +1,10 @@
+import logging
+
 from rest_framework import permissions
 
 from tenant_extras.utils import get_tenant_properties
+
+logger = logging.getLogger(__name__)
 
 
 class PermissionsException(Exception):
@@ -18,6 +22,19 @@ class BasePermission(permissions.BasePermission):
     particularly if the permission being checked is the ability to create an obj
 
     """
+
+    def get_view_model(self, view):
+        model_cls = None
+        try:
+            model_cls = view.model
+        except AttributeError:
+            message = (
+                'The related view `{}` does not have a model property.'.format(view.__class__.__name__),
+                'Is this a legacy view using ResourcePermissions?'
+            )
+            raise PermissionsException(' '.join(message))
+
+        return model_cls
 
     def has_object_permission(self, request, view, obj):
         """ This action is called from the views which include this permission.
@@ -41,19 +58,19 @@ class BasePermission(permissions.BasePermission):
         Return `True` if permission is granted, `False` otherwise.
         """
 
-        model_cls = None
         try:
-            model_cls = view.model
-        except AttributeError:
+            model_cls = self.get_view_model(view)
+            return self.has_action_permission(
+                request.method, request.user, model_cls
+            )
+        except TypeError as err:
             message = (
-                'The related view `{}` does not have a model property.'.format(view.__class__.__name__),
-                'Is this a legacy view using ResourcePermissions?'
+                '{} not implemented correctly.'.format(self.__class__.__name__),
+                'Error: {}'.format(err.message)
             )
             raise PermissionsException(' '.join(message))
-
-        return self.has_action_permission(
-            request.method, request.user, model_cls
-        )
+        except PermissionsException:
+            return super(BasePermission, self).has_permission(request, view)
 
     def has_object_action_permission(self, action, user, obj):
         """ Check if user has permission to access action on obj for the view.
@@ -129,6 +146,13 @@ class RelatedResourceOwnerPermission(BasePermission):
     This class assumes the child resource has a `parent` property which will return the parent object.
     """
 
+    def get_parent_from_request(self, request):
+        """ For requests to list endpoints, eg when creating an object then
+        get_parent needs to be defined to use this permission class.
+        """
+
+        raise NotImplementedError('get_parent_from_request() must be implemented')
+
     def has_permission(self, request, view):
         """ This action is called from the views which include this permission.
 
@@ -144,27 +168,20 @@ class RelatedResourceOwnerPermission(BasePermission):
             request.method, request.user, view.model, parent
         )
 
-    def get_parent_from_request(self, request):
-        """ For requests to list endpoints, eg when creating an object then
-        get_parent needs to be defined to use this permission class.
-        """
-
-        raise NotImplementedError('get_parent_from_request() must be implemented')
-
     def has_object_action_permission(self, action, user, obj):
         return user == obj.parent.owner
 
     def has_action_permission(self, action, user, model_cls, parent=None):
-        """ Read permissions are allowed to any request, so we'll< always allow
+        """ Read permissions are allowed to any request, so we'll always allow
         GET, HEAD or OPTIONS requests.
         """
+
+        if action != 'POST':
+            return True
 
         assert parent is not None, (
             'You must pass a parent when calling `has_action_permission` on RelatedResourceOwnerPermission'
         )
-
-        if action != 'POST':
-            return True
 
         return user == parent.owner
 
@@ -208,7 +225,7 @@ class IsAuthenticated(BasePermission):
     """ Allow access if the user is authenticated. """
 
     def has_object_action_permission(self, action, user, obj):
-        return self.has_action_permission(action, user, obj)
+        return self.has_action_permission(action, user, None)
 
     def has_action_permission(self, action, user, model_cls, parent=None):
         return user.is_authenticated and user.groups.filter(name='Authenticated').exists()

@@ -20,7 +20,7 @@ from bluebottle.utils.permissions import (OwnerOrReadOnlyPermission, Authenticat
 from bluebottle.utils.views import (PrivateFileView, ListAPIView, ListCreateAPIView,
                                     RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView)
 from .permissions import (ActiveProjectOrReadOnlyPermission, MemberOrTaskOwnerOrReadOnlyPermission,
-                          MemberOrTaskOwnerOrAdminPermission)
+                          MemberOrTaskOwnerOrAdminPermission, TaskMemberTimeSpentPermission)
 
 
 def day_start(date_str):
@@ -221,7 +221,8 @@ class TaskMemberDetail(RetrieveUpdateAPIView):
     serializer_class = BaseTaskMemberSerializer
 
     permission_classes = (TenantConditionalOpenClose,
-                          MemberOrTaskOwnerOrReadOnlyPermission,)
+                          MemberOrTaskOwnerOrReadOnlyPermission,
+                          TaskMemberTimeSpentPermission)
 
 
 class TaskMemberResumeView(PrivateFileView):

@@ -30,7 +30,7 @@ class IsEditableOrReadOnly(BasePermission):
 
         return obj.status.editable
 
-    def has_action_permission(self, method, user, model_cls):
+    def has_action_permission(self, action, user, model_cls, parent=None):
         return True
 
 

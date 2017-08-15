@@ -44,7 +44,7 @@ class TaskApiTestcase(BluebottleTestCase):
 
         self.previews_url = reverse('project_preview_list')
         self.task_preview_url = reverse('task_preview_list')
-        self.tasks_url = reverse('task_list')
+        self.tasks_url = reverse('task-list')
         self.task_member_url = reverse('task_member_list')
 
     def test_task_count(self):
@@ -611,7 +611,7 @@ class TestProjectTaskAPIPermissions(BluebottleTestCase):
         self.some_project = ProjectFactory.create(owner=self.user)
         self.projects_url = reverse('project_list')
 
-        self.tasks_url = reverse('task_list')
+        self.tasks_url = reverse('task-list')
         self.wallpost_url = reverse('wallpost_list')
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)

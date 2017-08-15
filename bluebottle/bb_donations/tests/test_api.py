@@ -55,7 +55,7 @@ class DonationApiTestCase(BluebottleTestCase, SessionTestMixin):
         self.project2 = ProjectFactory.create(amount_asked=3750)
         self.project2.set_status('campaign')
 
-        self.manage_order_list_url = reverse('manage-order-list')
+        self.manage_order_list_url = reverse('order-manage-list')
         self.manage_donation_list_url = reverse('manage-donation-list')
 
         self.user = BlueBottleUserFactory.create()

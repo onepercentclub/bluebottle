@@ -83,7 +83,7 @@ class ProjectPermissionsSerializer(serializers.Serializer):
     tasks = RelatedPermissionField('task-list', data_mappings={'project': 'slug'})
 
     class Meta:
-        fields = ('rewards', )
+        fields = ('rewards', 'donations', 'tasks')
 
 
 class ProjectSerializer(serializers.ModelSerializer):

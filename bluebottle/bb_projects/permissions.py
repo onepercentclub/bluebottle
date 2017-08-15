@@ -21,6 +21,8 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
     Ideally, this will grant only-reading access for all users and restrict
     data changes permissions to the project owner only.
     """
+    owner_field = 'owner'
+
     def _get_project_from_request(self, request):
         if request.data:
             project_slug = request.data.get('project', None)
@@ -62,7 +64,7 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
         # Get the project from the view if it was not available in the request.
         if not project:
             project = self._get_project_from_view(view)
-        return project and project.owner == request.user
+        return project and getattr(project, self.owner_field) == request.user
 
     def has_object_permission(self, request, view, obj):
         # Read permissions are allowed to any request, so we'll always allow
@@ -72,6 +74,13 @@ class IsProjectOwnerOrReadOnly(permissions.BasePermission):
 
         # Test for project model object-level permissions.
         if isinstance(obj, Project):
-            return obj.owner == request.user
+            return getattr(obj, self.owner_field) == request.user
         else:
-            return obj.project.owner == request.user
+            return getattr(obj.project, self.owner_field) == request.user
+
+
+class IsProjectTaskManagerOrReadOnly(IsProjectOwnerOrReadOnly):
+    """
+    Same as IsProjectOwnerOrReadOnly but uses 'task_manager' field.
+    """
+    owner_field = 'task_manager'

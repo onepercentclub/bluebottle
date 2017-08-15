@@ -462,6 +462,12 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.payout_status == 're_scheduled' and self.campaign_paid_out:
             self.campaign_paid_out = None
 
+        if not self.task_manager:
+            self.task_manager = self.owner
+
+        # Set all task.author to project.task_manager
+        self.task_set.exclude(author=self.task_manager).update(author=self.task_manager)
+
         super(Project, self).save(*args, **kwargs)
 
     def update_status_after_donation(self, save=True):

@@ -8,6 +8,6 @@ urlpatterns = [
     url(r'^(?P<pk>\d+)$', OrderDetail.as_view(), name='order-detail'),
 
     # My Orders
-    url(r'^my/$', ManageOrderList.as_view(), name='manage-order-list'),
-    url(r'^my/(?P<pk>\d+)$', ManageOrderDetail.as_view(), name='manage-order-detail'),
+    url(r'^my/$', ManageOrderList.as_view(), name='order-manage-list'),
+    url(r'^my/(?P<pk>\d+)$', ManageOrderDetail.as_view(), name='order-manage-detail'),
 ]

@@ -285,9 +285,8 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         # Test retrieving the first project detail from the list.
         project = response.data['results'][0]
         response = self.client.get(self.projects_url + str(project['id']))
-
         owner = response.data['owner']
-        self.assertEquals(owner['project_count'], 1)
+        self.assertEquals(owner['project_count'], 26)
         self.assertEquals(owner['task_count'], 0)
         self.assertEquals(owner['donation_count'], 0)
         self.assertTrue(owner.get('email', None) is None)

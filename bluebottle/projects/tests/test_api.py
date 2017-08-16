@@ -1127,15 +1127,15 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         super(ProjectWallpostApiIntegrationTest, self).setUp()
 
         self.init_projects()
-        self.some_project = ProjectFactory.create(slug='someproject')
-        self.another_project = ProjectFactory.create(slug='anotherproject')
 
         self.some_user = BlueBottleUserFactory.create()
         self.some_user_token = "JWT {0}".format(self.some_user.get_jwt_token())
 
         self.another_user = BlueBottleUserFactory.create()
-        self.another_user_token = "JWT {0}".format(
-            self.another_user.get_jwt_token())
+        self.another_user_token = "JWT {0}".format(self.another_user.get_jwt_token())
+
+        self.some_project = ProjectFactory.create(slug='someproject')
+        self.another_project = ProjectFactory.create(slug='anotherproject')
 
         self.some_photo = './bluebottle/projects/test_images/loading.gif'
         self.another_photo = './bluebottle/projects/test_images/upload.png'
@@ -1151,8 +1151,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         Tests for creating, retrieving, updating and deleting a Project
         Media Wallpost.
         """
-        self.owner_token = "JWT {0}".format(
-            self.some_project.owner.get_jwt_token())
+        self.owner_token = "JWT {0}".format(self.some_project.owner.get_jwt_token())
 
         # Create a Project Media Wallpost by Project Owner
         # Note: This test will fail when we require at least a video and/or a
@@ -1196,10 +1195,8 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                          u'<p>{0}</p>'.format(new_wallpost_text))
 
         # Delete Project Media Wallpost by author
-        response = self.client.delete(
-            project_wallpost_detail_url, token=self.owner_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_204_NO_CONTENT, response)
+        response = self.client.delete(project_wallpost_detail_url, token=self.owner_token)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response)
 
         # Check that creating a Wallpost with project slug that doesn't exist
         # reports an error.
@@ -1208,8 +1205,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                      'parent_type': 'project',
                                      'parent_id': 'allyourbasearebelongtous'},
                                     token=self.owner_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
         # Create Project Media Wallpost and retrieve by another user
         response = self.client.post(self.media_wallposts_url,
@@ -1217,14 +1213,11 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                      'parent_type': 'project',
                                      'parent_id': self.some_project.slug},
                                     token=self.owner_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
-        project_wallpost_detail_url = "{0}{1}".format(
-            self.wallposts_url, str(response.data['id']))
+        project_wallpost_detail_url = "{0}{1}".format(self.wallposts_url, str(response.data['id']))
 
-        response = self.client.get(
-            project_wallpost_detail_url, token=self.some_user_token)
+        response = self.client.get(project_wallpost_detail_url, token=self.some_user_token)
         self.assertEqual(response.status_code,
                          status.HTTP_200_OK,
                          response.data)
@@ -1240,24 +1233,19 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                      'parent_type': 'project',
                                      'parent_id': self.some_project.slug},
                                     token=self.owner_token)
-        self.assertEqual(response.status_code,
-                         status.HTTP_201_CREATED,
-                         response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
         response = self.client.put(project_wallpost_detail_url,
-                                   {'text': new_wallpost_text, 'parent_type':
-                                       'project',
+                                   {'text': new_wallpost_text,
+                                    'parent_type': 'project',
                                     'parent_id': self.some_project.slug},
                                    token=self.some_user_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
         # Deleting a Project Media Wallpost by non-author user should fail - by
         # some user
-        response = self.client.delete(
-            project_wallpost_detail_url, token=self.some_user_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_403_FORBIDDEN, response)
+        response = self.client.delete(project_wallpost_detail_url, token=self.some_user_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response)
 
         # Retrieve a list of the two Project Media Wallposts that we've just
         # added should work
@@ -1333,16 +1321,14 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 
         # Create a wallpost by another user
         wallpost_text = 'Muy project is waaaaaay better!'
-        response = self.client.post(self.media_wallposts_url,
+        response = self.client.post(self.text_wallposts_url,
                                     {'text': wallpost_text,
                                      'parent_type': 'project',
                                      'parent_id': self.another_project.slug,
                                      'email_followers': False},
                                     token=self.another_user_token)
-        self.assertEqual(
-            response.status_code, status.HTTP_201_CREATED, response.data)
-        self.assertEqual(
-            response.data['text'], "<p>{0}</p>".format(wallpost_text))
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(response.data['text'], "<p>{0}</p>".format(wallpost_text))
         another_wallpost_id = response.data['id']
 
         # The other shouldn't be able to use the photo of the first user

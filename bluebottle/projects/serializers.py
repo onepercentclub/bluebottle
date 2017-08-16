@@ -105,11 +105,11 @@ class ProjectSerializer(serializers.ModelSerializer):
     people_needed = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
     permissions = PermissionField('project_detail', view_args=('slug',))
-    promoter = UserProfileSerializer()
+    promoter = UserProfileSerializer(read_only=True)
     related_permissions = ProjectPermissionsSerializer(read_only=True)
     story = SafeField()
     supporter_count = serializers.IntegerField()
-    task_manager = UserProfileSerializer()
+    task_manager = UserProfileSerializer(read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     vote_count = serializers.IntegerField()
 

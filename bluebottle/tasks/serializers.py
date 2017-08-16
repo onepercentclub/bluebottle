@@ -7,7 +7,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.projects.serializers import ProjectPreviewSerializer
-from bluebottle.utils.serializers import RelatedPermissionField, PermissionField
+from bluebottle.utils.serializers import RelatedResourcePermissionField, ResourcePermissionField
 from bluebottle.wallposts.serializers import TextWallpostSerializer
 from bluebottle.projects.models import Project
 from bluebottle.members.models import Member
@@ -48,7 +48,7 @@ class TaskPermissionsSerializer(serializers.Serializer):
     def get_attribute(self, obj):
         return obj
 
-    task_members = RelatedPermissionField('task-member-list', data_mappings={'task': 'id'})
+    task_members = RelatedResourcePermissionField('task-member-list', data_mappings={'task': 'id'})
 
     class Meta:
         fields = ('task_members', )
@@ -61,7 +61,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
                                            queryset=Project.objects)
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
     author = UserPreviewSerializer()
-    permissions = PermissionField('task_detail', view_args=('id',))
+    permissions = ResourcePermissionField('task_detail', view_args=('id',))
     related_permissions = TaskPermissionsSerializer(read_only=True)
     status = serializers.ChoiceField(choices=Task.TaskStatuses.choices,
                                      default=Task.TaskStatuses.open)

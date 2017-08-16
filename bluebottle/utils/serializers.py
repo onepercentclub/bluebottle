@@ -158,14 +158,6 @@ class URLField(serializers.URLField):
         return value
 
 
-class FakePermissionRequest(object):
-    def __init__(self, request, method):
-        self.request = request
-        self.method = method
-
-    def __getattr__(self, attr):
-        return getattr(self.request, attr)
-
 
 class BasePermissionField(serializers.Field):
     """ Field that can be used to return permission of the current and related view.
@@ -218,6 +210,21 @@ class BasePermissionField(serializers.Field):
 
 
 class PermissionField(BasePermissionField):
+    """
+    Field that can be used to return permissions that are not directly related to the currunt view
+
+    (E.g.) the permissions field on the current user object
+    """
+    def _method_permissions(self, method, user, view, value):
+        return all(perm.has_action_permission(
+            method, user, view.model
+        ) for perm in view.get_permissions())
+
+
+
+
+
+class ResourcePermissionField(BasePermissionField):
     """ Field that can be used to return permissions for a view with object. """
 
     def _method_permissions(self, method, user, view, value):
@@ -226,7 +233,7 @@ class PermissionField(BasePermissionField):
         ) for perm in view.get_permissions())
 
 
-class RelatedPermissionField(BasePermissionField):
+class RelatedResourcePermissionField(BasePermissionField):
     """ Field that can be used to return permission for a related view. """
 
     def _method_permissions(self, method, user, view, value):

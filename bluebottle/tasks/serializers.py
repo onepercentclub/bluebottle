@@ -22,11 +22,22 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
     resume = PrivateFileSerializer(
         url_name='task-member-resume', required=False, allow_null=True
     )
+    permissions = ResourcePermissionField('task-member-detail', view_args=('id',))
 
     class Meta:
         model = TaskMember
         fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
-                  'externals', 'time_spent', 'resume')
+                  'externals', 'time_spent', 'resume', 'permissions')
+
+    def validate(self, data):
+        if 'time_spent' not in data or not self.instance:
+            return data
+
+        if (self.context['request'].user == self.instance.member and
+                self.instance.time_spent != data['time_spent']):
+            raise serializers.ValidationError('User can not update their own time spent')
+
+        return data
 
     def to_representation(self, obj):
         ret = super(BaseTaskMemberSerializer, self).to_representation(obj)

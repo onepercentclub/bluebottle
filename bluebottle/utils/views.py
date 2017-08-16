@@ -21,13 +21,10 @@ from bluebottle.utils.permissions import ResourcePermissions
 
 from .models import Language
 from .serializers import ShareSerializer, LanguageSerializer
-from .permissions import debug
 
 
 class TagList(views.APIView):
-    """
-    All tags in use on this system
-    """
+    """ All tags in use on this system """
 
     def get(self, request, format=None):
         data = [tag.name for tag in Tag.objects.all()[:20]]
@@ -43,9 +40,7 @@ class LanguageList(generics.ListAPIView):
 
 
 class TagSearch(views.APIView):
-    """
-    Search tags in use on this systemgit
-    """
+    """ Search tags in use on this system """
 
     def get(self, request, format=None, search=''):
         data = [tag.name for tag in
@@ -69,6 +64,7 @@ class ShareFlyer(views.APIView):
                                                            crop="center")))
         else:
             project_image = None
+
         args = dict(
             project_title=project.title,
             project_pitch=project.pitch,
@@ -78,10 +74,10 @@ class ShareFlyer(views.APIView):
         return args
 
     def get(self, request, *args, **kwargs):
+        """ Return the bare email as preview. We do not have access to the
+        logged in user so use fake data
         """
-            return the bare email as preview. We do not have access to the
-            logged in user so use fake data
-        """
+
         data = request.GET
 
         args = self.project_args(data.get('project'))
@@ -158,25 +154,24 @@ class ModelTranslationViewMixin(object):
 
 
 class ViewPermissionsMixin(object):
-    """ View mixin with permission checks added from the DRF APIView
-    """
+    """ View mixin with permission checks added from the DRF APIView """
+
     base_permission_classes = ()
 
     def get_permissions(self):
-        """
-        Combine and return the base_permission_classes appended to the standard
+        """ Combine and return the base_permission_classes appended to the standard
         permission_classes
         """
+
         all_permission_classes = (tuple(self.permission_classes) +
                                   self.base_permission_classes)
         return [permission() for permission in all_permission_classes]
 
     def check_permissions(self, request):
-        """
-        Check if the request should be permitted.
+        """ Check if the request should be permitted.
         Raises an appropriate exception if the request is not permitted.
         """
-        debug("ViewPermissionsMixin::{}::check_permissions".format(self.__class__.__name__))
+
         for permission in self.get_permissions():
             if not permission.has_permission(request, self):
                 self.permission_denied(
@@ -184,16 +179,28 @@ class ViewPermissionsMixin(object):
                 )
 
     def check_object_permissions(self, request, obj):
-        """
-        Check if the request should be permitted for a given object.
+        """ Check if the request should be permitted for a given object.
         Raises an appropriate exception if the request is not permitted.
         """
-        debug("ViewPermissionsMixin::{}::check_object_permissions".format(self.__class__.__name__))
+
         for permission in self.get_permissions():
             if not permission.has_object_permission(request, self, obj):
                 self.permission_denied(
                     request, message=getattr(permission, 'message', None)
                 )
+
+    @property
+    def model(self):
+        model_cls = None
+        try:
+            if hasattr(self, 'queryset'):
+                model_cls = self.queryset.model
+            elif hasattr(self, 'get_queryset'):
+                model_cls = self.get_queryset().model
+        except AttributeError:
+            pass
+
+        return model_cls
 
 
 class PermissionedView(View, ViewPermissionsMixin):
@@ -216,9 +223,8 @@ class PermissionedView(View, ViewPermissionsMixin):
 
 
 class PrivateFileView(PermissionedView):
-    """
-    Serve private files using X-sendfile header.
-    """
+    """ Serve private files using X-sendfile header. """
+
     queryset = None  # Queryset that is used for finding ojects
     field = None  # Field on the model that is the actual file
 
@@ -241,6 +247,10 @@ class PrivateFileView(PermissionedView):
         )
 
         return response
+
+
+class GenericAPIView(ViewPermissionsMixin, generics.GenericAPIView):
+    base_permission_classes = (ResourcePermissions,)
 
 
 class ListAPIView(ViewPermissionsMixin, generics.ListAPIView):

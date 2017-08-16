@@ -7,6 +7,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.projects.serializers import ProjectPreviewSerializer
+from bluebottle.utils.serializers import RelatedResourcePermissionField, ResourcePermissionField
 from bluebottle.wallposts.serializers import TextWallpostSerializer
 from bluebottle.projects.models import Project
 from bluebottle.members.models import Member
@@ -21,11 +22,22 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
     resume = PrivateFileSerializer(
         url_name='task-member-resume', required=False, allow_null=True
     )
+    permissions = ResourcePermissionField('task-member-detail', view_args=('id',))
 
     class Meta:
         model = TaskMember
         fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
-                  'externals', 'time_spent', 'resume')
+                  'externals', 'time_spent', 'resume', 'permissions')
+
+    def validate(self, data):
+        if 'time_spent' not in data or not self.instance:
+            return data
+
+        if (self.context['request'].user == self.instance.member and
+                self.instance.time_spent != data['time_spent']):
+            raise serializers.ValidationError('User can not update their own time spent')
+
+        return data
 
     def to_representation(self, obj):
         ret = super(BaseTaskMemberSerializer, self).to_representation(obj)
@@ -43,6 +55,16 @@ class TaskFileSerializer(serializers.ModelSerializer):
         model = TaskFile
 
 
+class TaskPermissionsSerializer(serializers.Serializer):
+    def get_attribute(self, obj):
+        return obj
+
+    task_members = RelatedResourcePermissionField('task-member-list')
+
+    class Meta:
+        fields = ('task_members', )
+
+
 class BaseTaskSerializer(serializers.ModelSerializer):
     members = BaseTaskMemberSerializer(many=True, read_only=True, source='members_applied')
     files = TaskFileSerializer(many=True, read_only=True)
@@ -50,6 +72,8 @@ class BaseTaskSerializer(serializers.ModelSerializer):
                                            queryset=Project.objects)
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
     author = UserPreviewSerializer()
+    permissions = ResourcePermissionField('task_detail', view_args=('id',))
+    related_permissions = TaskPermissionsSerializer(read_only=True)
     status = serializers.ChoiceField(choices=Task.TaskStatuses.choices,
                                      default=Task.TaskStatuses.open)
     time_needed = serializers.DecimalField(min_value=0.0,
@@ -75,10 +99,27 @@ class BaseTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ('id', 'members', 'files', 'project', 'skill',
-                  'author', 'status', 'description', 'type', 'accepting',
-                  'needs_motivation', 'location', 'deadline', 'deadline_to_apply',
-                  'time_needed', 'title', 'people_needed')
+        fields = (
+            'accepting',
+            'author',
+            'deadline',
+            'deadline_to_apply',
+            'description',
+            'files',
+            'id',
+            'location',
+            'members',
+            'needs_motivation',
+            'people_needed',
+            'permissions',
+            'project',
+            'related_permissions',
+            'skill',
+            'status',
+            'time_needed',
+            'title',
+            'type',
+        )
 
 
 class MyTaskPreviewSerializer(serializers.ModelSerializer):
@@ -100,9 +141,24 @@ class MyTasksSerializer(BaseTaskSerializer):
 
     class Meta:
         model = Task
-        fields = ('id', 'title', 'skill', 'project', 'time_needed',
-                  'people_needed', 'status', 'deadline', 'deadline_to_apply',
-                  'accepting', 'needs_motivation', 'description', 'location', 'type')
+        fields = (
+            'accepting',
+            'deadline',
+            'deadline_to_apply',
+            'description',
+            'id',
+            'location',
+            'needs_motivation',
+            'people_needed',
+            'permissions',
+            'project',
+            'related_permissions',
+            'skill',
+            'status',
+            'time_needed',
+            'title',
+            'type'
+        )
 
 
 # Task Wallpost serializers

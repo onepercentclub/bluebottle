@@ -29,6 +29,7 @@ class ProjectCurrencyValidator(object):
     """
     Validates that the currency of the field is the same as the projects currency
     """
+
     message = _('Currency does not match project any of the currencies')
 
     def __init__(self, fields=None, message=None):
@@ -157,26 +158,16 @@ class URLField(serializers.URLField):
         return value
 
 
-class FakePermissionRequest(object):
-    def __init__(self, request, method):
-        self.request = request
-        self.method = method
-
-    def __getattr__(self, attr):
-        return getattr(self.request, attr)
-
-
 class BasePermissionField(serializers.Field):
-    """
-    Field that can be used to return permission of the current and related view.
+    """ Field that can be used to return permission of the current and related view.
 
     `view_name`: The name of the view
     `view_args`: A list of attributes that are passed into the url for the view
     """
-    def __init__(self, view_name, view_args=None, data_mappings=None, *args, **kwargs):
+
+    def __init__(self, view_name, view_args=None, *args, **kwargs):
         self.view_name = view_name
         self.view_args = view_args or []
-        self.data_mappings = data_mappings or {}
 
         kwargs['read_only'] = True
 
@@ -196,14 +187,16 @@ class BasePermissionField(serializers.Field):
         return value  # Just pass the whole object back
 
     def to_representation(self, value):
-        """
-        Returns an dict with the permissions the current user has on the view and parent:
+        """ Return a dict with the permissions the current user has on the view and parent.
+
+        Example response:
         {
             "PATCH": True,
             "GET": True,
             "DELETE": False
         }
         """
+
         view = self._get_view(value)
 
         # Loop over all methods and check the permissions on the view
@@ -216,25 +209,29 @@ class BasePermissionField(serializers.Field):
 
 class PermissionField(BasePermissionField):
     """
-    Field that can be used to return permissions for a view with object.
+    Field that can be used to return permissions that are not directly related to the currunt view
+
+    (E.g.) the permissions field on the current user object
     """
     def _method_permissions(self, method, user, view, value):
-        return all(perm.has_object_method_permission(
-            method, user, view, value
+        return all(perm.has_action_permission(
+            method, user, view.model
         ) for perm in view.get_permissions())
 
 
-class RelatedPermissionField(BasePermissionField):
-    """
-    Field that can be used to return permission for a related view.
-    """
+class ResourcePermissionField(BasePermissionField):
+    """ Field that can be used to return permissions for a view with object. """
+
     def _method_permissions(self, method, user, view, value):
-        request = FakePermissionRequest(self.context['request'], method)
-        data = {}
-        for key, attr in self.data_mappings.iteritems():
-            data[key] = getattr(value, attr)
-        request.data = data
-        view.request = request
-        return all(perm.has_method_permission(
-            method, user, view
+        return all(perm.has_object_action_permission(
+            method, user, value
+        ) for perm in view.get_permissions())
+
+
+class RelatedResourcePermissionField(BasePermissionField):
+    """ Field that can be used to return permission for a related view. """
+
+    def _method_permissions(self, method, user, view, value):
+        return all(perm.has_action_permission(
+            method, user, view.model, value
         ) for perm in view.get_permissions())

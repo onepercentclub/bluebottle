@@ -338,7 +338,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
 
     @property
     def owner(self):
-        return self.task.owner
+        return self.member
 
     @property
     def time_applied_for(self):

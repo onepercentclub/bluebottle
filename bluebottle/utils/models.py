@@ -1,5 +1,7 @@
 import sys
 
+from bunch import bunchify
+
 from django.db import models
 from django.conf import settings
 
@@ -39,6 +41,22 @@ class Address(models.Model):
 
     def __unicode__(self):
         return self.line1[:80]
+
+
+class ModelMeta(type):
+    @property
+    def _meta(self):
+        return bunchify({
+            'model_name': self.model_name,
+            'app_label': self.app_label})
+
+
+class PermissionableModel(object):
+    """ PermissionableModel only implements the model_name and app_label to
+    allow instances of the class to work with the ResourcePermissions class.
+    Useful if permissions are needed on a model not extending django.models.model
+    """
+    __metaclass__ = ModelMeta
 
 
 # Below is test-only stuff

@@ -117,7 +117,7 @@ class TestEngagementMetricsXls(BluebottleTestCase):
 
         # Simulate user Login
         jwt_token = user1.get_jwt_token()
-        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member.id})
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
         self.client.get(task_member_url, token="JWT {0}".format(jwt_token))
 
         # xls export

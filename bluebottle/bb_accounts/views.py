@@ -17,7 +17,6 @@ from bluebottle.utils.views import RetrieveAPIView
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.bluebottle_drf2.permissions import IsCurrentUser
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 from bluebottle.members.serializers import (

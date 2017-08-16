@@ -86,7 +86,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         for field in excluded_fields:
             self.assertFalse(field in response.data)
 
-
     def test_user_profile_unauthenticated(self):
         user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
 

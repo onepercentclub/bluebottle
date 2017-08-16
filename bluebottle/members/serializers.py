@@ -19,9 +19,9 @@ BB_USER_MODEL = get_user_model()
 
 class PrivateProfileMixin(object):
     private_fields = (
-            'url', 'full_name', 'picture', 'about_me', 'location',
-            'avatar', 'website', 'twitter', 'facebook', 'skypename'
-        )
+        'url', 'full_name', 'picture', 'about_me', 'location',
+        'avatar', 'website', 'twitter', 'facebook', 'skypename'
+    )
 
     def to_representation(self, obj):
         data = super(PrivateProfileMixin, self).to_representation(obj)
@@ -32,7 +32,6 @@ class PrivateProfileMixin(object):
                     del data[field]
 
         return data
-
 
 
 class UserAddressSerializer(serializers.ModelSerializer):

@@ -34,3 +34,7 @@ class HomePage(PermissionableModel):
             self.projects = Project.objects.none()
 
         return self
+
+    class _meta(object):
+        app_label = 'homepage'
+        model_name = 'homepage'

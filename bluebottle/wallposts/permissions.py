@@ -1,14 +1,14 @@
 from rest_framework import permissions
 
 from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.projects.permissions import RelatedProjectOwnerPermission
 from bluebottle.tasks.models import Task
 from bluebottle.projects.models import Project
-from bluebottle.utils.permissions import BasePermission
 
 from .models import MediaWallpost
 
 
-class RelatedManagementOrReadOnlyPermission(BasePermission):
+class RelatedManagementOrReadOnlyPermission(RelatedProjectOwnerPermission):
     """
     Is the current user either Project.owner, Project.task_management, Project.promoter
     or Task.project.owner, Task.project.task_management, Task.project.promoter
@@ -35,21 +35,20 @@ class RelatedManagementOrReadOnlyPermission(BasePermission):
             except Task.DoesNotExist:
                 return Project.objects.none()
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, action, user, obj):
         return user in [
             getattr(obj.parent, 'owner', None),
             getattr(obj.parent, 'task_manager', None),
             getattr(obj.parent, 'promoter', None)
         ]
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, action, user, model_cls, parent=None):
         """ Read permissions are allowed to any request, so we'll< always allow
         GET, HEAD or OPTIONS requests.
         """
-        if method != 'POST':
+        if action != 'POST':
             return True
 
-        parent = self.get_parent_from_request(view.request)
         return user in [
             getattr(parent, 'owner', None),
             getattr(parent, 'task_manager', None),

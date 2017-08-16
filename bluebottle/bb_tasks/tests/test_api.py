@@ -382,7 +382,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         response2 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
                                     {'time_spent': 5, 'task': task.id},
                                     token=task_member_user_token)
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN, response2.data)
+        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Project owner cannot update the time_spent
         response3 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
@@ -414,7 +414,10 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id), token=self.some_token)
 
         # Fields as defined in the serializer
-        serializer_fields = ('id', 'member', 'status', 'created', 'motivation', 'task', 'externals', 'time_spent')
+        serializer_fields = (
+            'id', 'member', 'status', 'created', 'motivation', 'task',
+            'externals', 'time_spent', 'permissions'
+        )
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)

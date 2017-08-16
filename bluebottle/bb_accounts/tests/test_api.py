@@ -195,6 +195,8 @@ class UserApiIntegrationTest(BluebottleTestCase):
                          {u'OPTIONS': True, u'GET': True})
         self.assertEqual(response.data['permissions']['project_manage_list'],
                          {u'GET': True, u'OPTIONS': True, u'POST': True})
+        self.assertEqual(response.data['permissions']['homepage'],
+                         {u'GET': True, u'OPTIONS': True})
         self.client.logout()
 
     def test_user_create(self):

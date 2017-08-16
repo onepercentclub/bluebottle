@@ -7,7 +7,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.projects.serializers import ProjectPreviewSerializer
-from bluebottle.utils.serializers import RelatedPermissionField, PermissionField
+from bluebottle.utils.serializers import RelatedResourcePermissionField, ResourcePermissionField
 from bluebottle.wallposts.serializers import TextWallpostSerializer
 from bluebottle.projects.models import Project
 from bluebottle.members.models import Member
@@ -22,11 +22,22 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
     resume = PrivateFileSerializer(
         url_name='task-member-resume', required=False, allow_null=True
     )
+    permissions = ResourcePermissionField('task-member-detail', view_args=('id',))
 
     class Meta:
         model = TaskMember
         fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
-                  'externals', 'time_spent', 'resume')
+                  'externals', 'time_spent', 'resume', 'permissions')
+
+    def validate(self, data):
+        if 'time_spent' not in data or not self.instance:
+            return data
+
+        if (self.context['request'].user == self.instance.member and
+                self.instance.time_spent != data['time_spent']):
+            raise serializers.ValidationError('User can not update their own time spent')
+
+        return data
 
     def to_representation(self, obj):
         ret = super(BaseTaskMemberSerializer, self).to_representation(obj)
@@ -48,7 +59,7 @@ class TaskPermissionsSerializer(serializers.Serializer):
     def get_attribute(self, obj):
         return obj
 
-    task_members = RelatedPermissionField('task-member-list', data_mappings={'task': 'id'})
+    task_members = RelatedResourcePermissionField('task-member-list')
 
     class Meta:
         fields = ('task_members', )
@@ -61,7 +72,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
                                            queryset=Project.objects)
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
     author = UserPreviewSerializer()
-    permissions = PermissionField('task_detail', view_args=('id',))
+    permissions = ResourcePermissionField('task_detail', view_args=('id',))
     related_permissions = TaskPermissionsSerializer(read_only=True)
     status = serializers.ChoiceField(choices=Task.TaskStatuses.choices,
                                      default=Task.TaskStatuses.open)

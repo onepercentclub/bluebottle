@@ -7,6 +7,7 @@ from bluebottle.projects.serializers import (
     ProjectMediaSerializer,
     ProjectSupportSerializer, ProjectWallpostPhotoSerializer)
 from bluebottle.utils.utils import get_client_ip
+from bluebottle.utils.views import PrivateFileView
 from bluebottle.wallposts.models import MediaWallpostPhoto
 
 from .models import ProjectDocument, ProjectBudgetLine, Project
@@ -53,6 +54,14 @@ class ManageProjectDocumentDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))
+
+
+class ProjectDocumentFileView(PrivateFileView):
+    queryset = ProjectDocument.objects
+    field = 'file'
+
+    def check_permission(self, request, instance):
+        return request.user == instance.author or request.user.is_staff
 
 
 class ProjectMediaDetail(generics.RetrieveAPIView):

@@ -22,9 +22,11 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         self.init_projects()
 
+        campaign = ProjectPhase.objects.get(slug='campaign')
+
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
-        self.some_project = ProjectFactory.create(owner=self.some_user)
+        self.some_project = ProjectFactory.create(owner=self.some_user, status=campaign)
 
         self.another_user = BlueBottleUserFactory.create()
         self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())

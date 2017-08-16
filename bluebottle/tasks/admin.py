@@ -77,13 +77,28 @@ def mark_as_tm_realized(modeladmin, request, queryset):
 mark_as_tm_realized.short_description = _("Mark selected Task Members as Realised")
 
 
+def resume_link(obj):
+    if obj.resume:
+        url = reverse(
+            'task-member-resume',
+            args=[obj.id]
+        )
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url), _('Resume')
+        )
+
+
 class TaskMemberAdminInline(admin.StackedInline):
     model = TaskMember
     extra = 0
     raw_id_fields = ('member',)
     readonly_fields = ('created',)
     fields = readonly_fields + ('member', 'status', 'motivation',
-                                'time_spent', 'externals')
+                                'time_spent', 'externals', 'resume')
+
+    def resume_link(self, obj):
+        return resume_link(obj)
 
 
 class TaskFileAdminInline(admin.StackedInline):
@@ -122,6 +137,28 @@ class DeadlineToAppliedFilter(admin.SimpleListFilter):
             return queryset
 
 
+class OnlineOnLocationFilter(admin.SimpleListFilter):
+    title = _('Online or on location')
+    parameter_name = 'online'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('online', 'Online'),
+            ('on_location', 'On location'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+
+        if value == 'online':
+            queryset = queryset.filter(location__isnull=True)
+
+        if value == 'on_location':
+            queryset = queryset.filter(location__isnull=False)
+
+        return queryset
+
+
 class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
@@ -129,8 +166,11 @@ class TaskAdmin(admin.ModelAdmin):
 
     raw_id_fields = ('author', 'project')
     list_filter = ('status', 'type', 'skill__expertise',
+                   OnlineOnLocationFilter,
+                   ('skill', admin.RelatedOnlyFieldListFilter),
                    'deadline', ('deadline', DateRangeFilter),
-                   DeadlineToAppliedFilter, ('deadline_to_apply', DateRangeFilter)
+                   DeadlineToAppliedFilter, ('deadline_to_apply', DateRangeFilter),
+                   'accepting'
                    )
     list_display = ('title', 'project', 'status', 'created', 'deadline', 'expertise_based')
 
@@ -147,9 +187,11 @@ class TaskAdmin(admin.ModelAdmin):
         ('type', 'type'),
         ('status', 'status'),
         ('deadline', 'deadline'),
-        ('deadline_to_apply', 'deadline'),
+        ('deadline_to_apply', 'deadline to apply'),
+        ('accepting', 'accepting'),
+        ('needs_motivation', 'needs_motivation'),
+        ('date_realized', 'date realized'),
         ('skill', 'skill'),
-        ('skill__expertise', 'expertise based'),
         ('people_needed', 'people needed'),
         ('time_needed', 'time needed'),
         ('author', 'author'),
@@ -160,8 +202,9 @@ class TaskAdmin(admin.ModelAdmin):
                mark_as_realized, export_as_csv_action(fields=export_fields)]
 
     fields = ('title', 'description', 'skill', 'time_needed', 'status',
-              'date_status_change', 'people_needed', 'project', 'author',
-              'type', 'accepting', 'location', 'deadline', 'deadline_to_apply')
+              'accepting', 'needs_motivation', 'location',
+              'date_status_change', 'people_needed',
+              'project', 'author', 'type', 'deadline', 'deadline_to_apply')
 
 
 admin.site.register(Task, TaskAdmin)
@@ -192,7 +235,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     list_display = ('member_email', 'task', 'status', 'updated')
 
-    readonly_fields = ('updated',)
+    readonly_fields = ('updated', 'resume_link')
 
     search_fields = (
         'member__email',
@@ -202,7 +245,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
         'member', 'motivation',
         'status', 'updated',
         'time_spent', 'externals',
-        'task',
+        'task', 'resume_link'
     )
     export_fields = (
         ('member__email', 'member_email'),
@@ -224,6 +267,9 @@ class TaskMemberAdmin(admin.ModelAdmin):
 
     member_email.admin_order_field = 'member__email'
     member_email.short_description = "Member Email"
+
+    def resume_link(self, obj):
+        resume_link(obj)
 
     def lookup_allowed(self, key, value):
         if key in ('task__deadline__year',):

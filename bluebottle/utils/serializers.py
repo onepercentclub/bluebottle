@@ -158,7 +158,6 @@ class URLField(serializers.URLField):
         return value
 
 
-
 class BasePermissionField(serializers.Field):
     """ Field that can be used to return permission of the current and related view.
 
@@ -218,9 +217,6 @@ class PermissionField(BasePermissionField):
         return all(perm.has_action_permission(
             method, user, view.model
         ) for perm in view.get_permissions())
-
-
-
 
 
 class ResourcePermissionField(BasePermissionField):

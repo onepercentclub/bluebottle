@@ -38,4 +38,3 @@ class HomePage(PermissionableModel):
     class _meta(object):
         app_label = 'homepage'
         model_name = 'homepage'
-

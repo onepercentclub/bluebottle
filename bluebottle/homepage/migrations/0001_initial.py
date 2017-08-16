@@ -20,7 +20,7 @@ def add_group_permissions(apps, schema_editor):
         },
         'Authenticated': {
             'perms': ('api_read_homepage',)
-        }     
+        }
     }
     update_group_permissions(None, group_perms)
 

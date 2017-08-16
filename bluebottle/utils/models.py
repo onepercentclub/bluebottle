@@ -46,22 +46,6 @@ class Address(models.Model):
         return self.line1[:80]
 
 
-class ModelMeta(type):
-    @property
-    def _meta(self):
-        return bunchify({
-            'model_name': self.model_name,
-            'app_label': self.app_label})
-
-
-class PermissionableModel(object):
-    """ PermissionableModel only implements the model_name and app_label to
-    allow instances of the class to work with the ResourcePermissions class.
-    Useful if permissions are needed on a model not extending django.models.model
-    """
-    __metaclass__ = ModelMeta
-
-
 """
 Connecting signal handler here for populating permissions.
 This handler will work for any appname.models which defines

@@ -218,7 +218,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             ('api_delete_member', 'Can delete members through the API'),
         )
 
-
     def update_deleted_timestamp(self):
         """ Automatically set or unset the deleted timestamp."""
         if not self.is_active and self.deleted is None:

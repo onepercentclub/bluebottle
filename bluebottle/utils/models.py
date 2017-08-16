@@ -1,7 +1,5 @@
 import sys
 
-from bunch import bunchify
-
 from django.db import models
 from django.db.models.signals import post_migrate
 from django.conf import settings

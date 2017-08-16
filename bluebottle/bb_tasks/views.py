@@ -8,8 +8,8 @@ import django_filters
 from rest_framework import generics, filters, serializers
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
+from bluebottle.bb_projects.permissions import IsProjectTaskManagerOrReadOnly
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.projects.permissions import RelatedProjectOwnerPermission
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.tasks.serializers import (BaseTaskSerializer,
                                           BaseTaskMemberSerializer, TaskFileSerializer,
@@ -125,7 +125,7 @@ class TaskPreviewList(ListAPIView, FilterQSParams):
 class BaseTaskList(ListCreateAPIView):
     queryset = Task.objects.all()
     pagination_class = TaskPreviewPagination
-    permission_classes = (TenantConditionalOpenClose, RelatedProjectOwnerPermission,)
+    permission_classes = (TenantConditionalOpenClose, IsProjectTaskManagerOrReadOnly)
 
     def perform_create(self, serializer):
         if serializer.validated_data['project'].status.slug in (

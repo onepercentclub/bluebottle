@@ -7,6 +7,7 @@ from django.core import mail
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 
 from rest_framework import status
 
@@ -63,6 +64,28 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         for field in excluded_fields:
             self.assertFalse(field in response.data)
+
+    def test_user_profile_returned_private_fields(self):
+        group = Group.objects.get(name='Anonymous')
+        group.permissions.remove(Permission.objects.get(codename='api_read_full_member'))
+
+        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_1.id})
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['id'], self.user_1.id)
+
+        # Fields taken from the serializer
+        excluded_fields = ['last_name', 'avatar', 'about_me', 'twitter',
+                           'facebook', 'skypename', 'picture', 'url',
+                           'email', 'address', 'newsletter',
+                           'campaign_notifications',
+                           'birthdate', 'gender', 'first_name', 'last_name',
+                           'password']
+
+        for field in excluded_fields:
+            self.assertFalse(field in response.data)
+
 
     def test_user_profile_unauthenticated(self):
         user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})

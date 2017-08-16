@@ -16,7 +16,14 @@ GROUP_PERMS = {
         'perms': (
             'add_member', 'change_member', 'delete_member',
         )
+    },
+    'Anonymous': {
+        'perms': ('api_read_member', 'api_read_full_member', )
+    },
+    'Authenticated': {
+        'perms': ('api_read_member', 'api_read_full_member', 'api_add_member', 'api_change_member',)
     }
+
 }
 
 

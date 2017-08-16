@@ -78,9 +78,9 @@ class ProjectPermissionsSerializer(serializers.Serializer):
     def get_attribute(self, obj):
         return obj
 
-    rewards = RelatedResourcePermissionField('reward-list', data_mappings={'project': 'slug'})
+    rewards = RelatedResourcePermissionField('reward-list')
     donations = ResourcePermissionField('order-manage-list')
-    tasks = RelatedResourcePermissionField('task-list', data_mappings={'project': 'slug'})
+    tasks = RelatedResourcePermissionField('task-list')
 
     class Meta:
         fields = ('rewards', 'donations', 'tasks')

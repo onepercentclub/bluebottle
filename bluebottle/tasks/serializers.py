@@ -48,7 +48,7 @@ class TaskPermissionsSerializer(serializers.Serializer):
     def get_attribute(self, obj):
         return obj
 
-    task_members = RelatedResourcePermissionField('task-member-list', data_mappings={'task': 'id'})
+    task_members = RelatedResourcePermissionField('task-member-list')
 
     class Meta:
         fields = ('task_members', )

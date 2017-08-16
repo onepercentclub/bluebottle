@@ -166,10 +166,9 @@ class BasePermissionField(serializers.Field):
     `view_args`: A list of attributes that are passed into the url for the view
     """
 
-    def __init__(self, view_name, view_args=None, data_mappings=None, *args, **kwargs):
+    def __init__(self, view_name, view_args=None, *args, **kwargs):
         self.view_name = view_name
         self.view_args = view_args or []
-        self.data_mappings = data_mappings or {}
 
         kwargs['read_only'] = True
 

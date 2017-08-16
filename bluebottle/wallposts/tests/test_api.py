@@ -324,6 +324,10 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
                                        first_name='cname ',
                                        last_name='clast',
                                        primary_language='en')
+        self.user_d = self.create_user(email='d@example.com',
+                                       first_name='dname ',
+                                       last_name='dlast',
+                                       primary_language='en')
 
         # self.project = self.create_project(owner=self.user_a)
 
@@ -579,6 +583,23 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
 
         self.assertEqual(m.to, [self.user_a.email])
         self.assertEqual(m.activated_language, self.user_a.primary_language)
+
+    def test_new_wallpost_b_on_project_with_roles_by_a_c_d(self):
+        """
+        Project by A, with task manager C and promoter D + Wallpost by B => Mail to A, C and D.
+        """
+        # Object by A with task manager C + promoter D
+        # |
+        # +-- Wallpost by B
+
+        self.project_1.task_manager = self.user_c
+        self.project_1.promoter = self.user_d
+        self.project_1.save()
+
+        TextWallpostFactory.create(content_object=self.project_1, author=self.user_b)
+
+        # Mailbox should contain an email to author of reaction b.
+        self.assertEqual(len(mail.outbox), 3)
 
 
 class TestWallpostAPIPermissions(BluebottleTestCase):

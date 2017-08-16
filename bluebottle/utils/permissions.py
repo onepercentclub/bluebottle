@@ -208,5 +208,4 @@ class AuthenticatedOrReadOnlyPermission(IsAuthenticated):
     def has_method_permission(self, method, user, view):
         if method in permissions.SAFE_METHODS:
             return True
-
         return user.is_authenticated and user.groups.filter(name='Authenticated').exists()

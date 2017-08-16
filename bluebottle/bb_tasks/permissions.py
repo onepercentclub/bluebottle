@@ -25,25 +25,6 @@ class RelatedTaskOwnerPermission(RelatedResourceOwnerPermission):
         return user == obj.owner
 
 
-class TaskMemberTimeSpentPermission(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        if obj.member == request.user and request.data:
-            time_spent = request.data.get('time_spent', None)
-            if time_spent and obj.time_spent != time_spent:
-                return False
-
-        return True
-
-    def has_permission(self, request, view):
-        return True
-
-    def has_action_permission(self, action, user, model_cls, parent=None):
-        pass
-
-
 class MemberOrTaskOwnerOrReadOnlyPermission(BasePermission):
     def has_object_action_permission(self, action, user, obj):
         if action in permissions.SAFE_METHODS:

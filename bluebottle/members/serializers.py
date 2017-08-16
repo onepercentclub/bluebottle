@@ -17,6 +17,23 @@ from bluebottle.utils.serializers import PermissionField
 BB_USER_MODEL = get_user_model()
 
 
+class PrivateProfileMixin(object):
+    private_fields = (
+        'url', 'full_name', 'picture', 'about_me', 'location',
+        'avatar', 'website', 'twitter', 'facebook', 'skypename'
+    )
+
+    def to_representation(self, obj):
+        data = super(PrivateProfileMixin, self).to_representation(obj)
+
+        if not self.context['request'].user.has_perm('members.api_read_full_member'):
+            for field in self.private_fields:
+                if field in data:
+                    del data[field]
+
+        return data
+
+
 class UserAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAddress
@@ -24,7 +41,7 @@ class UserAddressSerializer(serializers.ModelSerializer):
                   'city', 'state', 'country', 'postal_code')
 
 
-class UserPreviewSerializer(serializers.ModelSerializer):
+class UserPreviewSerializer(serializers.ModelSerializer, PrivateProfileMixin):
     """
     Serializer for a subset of a member's public profile. This is usually
     embedded into other serializers.
@@ -85,7 +102,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'country', 'verified', 'permissions')
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """

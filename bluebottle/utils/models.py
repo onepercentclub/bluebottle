@@ -1,7 +1,5 @@
 import sys
 
-from bunch import bunchify
-
 from django.db import models
 from django.conf import settings
 

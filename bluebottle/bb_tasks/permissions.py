@@ -21,40 +21,48 @@ class RelatedTaskOwnerPermission(RelatedResourceOwnerPermission):
 
         return parent
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, action, user, obj):
         return user == obj.owner
 
 
-class MemberOrTaskOwnerOrReadOnlyPermission(BasePermission):
-    # TODO: Move this check to the serialiser
-    def _time_spent_updated(self, request, task_member):
-        if request.data:
-            time_spent = request.data.get('time_spent', None)
-            if time_spent and task_member.time_spent != time_spent:
-                return True
-        return False
+class TaskMemberTimeSpentPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
 
-    def has_object_method_permission(self, method, user, view, obj):
-        if method in permissions.SAFE_METHODS:
+        if obj.member == request.user and request.data:
+            time_spent = request.data.get('time_spent', None)
+            if time_spent and obj.time_spent != time_spent:
+                return False
+
+        return True
+
+    def has_permission(self, request, view):
+        return True
+
+    def has_action_permission(self, action, user, model_cls, parent=None):
+        pass
+
+
+class MemberOrTaskOwnerOrReadOnlyPermission(BasePermission):
+    def has_object_action_permission(self, action, user, obj):
+        if action in permissions.SAFE_METHODS:
             return True
 
         if isinstance(obj, TaskMember) and obj.task.owner == user:
             return True
 
         if isinstance(obj, TaskMember) and obj.member == user:
-            # Task member cannot update his/her own time_spent
-            if self._time_spent_updated(view.request, obj):
-                return False
             return True
 
         return False
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, action, user, model_cls, parent=None):
         return True
 
 
 class MemberOrTaskOwnerOrAdminPermission(BasePermission):
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, action, user, obj):
         # FIXME: when this permission is used with the update task member
         #        then the obj is still a Task. Why?
         if isinstance(obj, TaskMember):
@@ -66,19 +74,18 @@ class MemberOrTaskOwnerOrAdminPermission(BasePermission):
 
         return False
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, action, user, model_cls, parent=None):
         return True
 
 
 class ActiveProjectOrReadOnlyPermission(RelatedTaskOwnerPermission):
-    def has_method_object_permission(self, method, user, view, obj):
+    def has_method_object_permission(self, action, user, obj):
         pass
 
-    def has_method_permission(self, method, user, view):
-        if method in permissions.SAFE_METHODS:
+    def has_action_permission(self, action, user, model_cls, parent=None):
+        if action in permissions.SAFE_METHODS:
             return True
 
-        task = self.get_parent_from_request(view.request)
-        if task:
-            return task.project.status.slug == 'campaign'
+        if parent:
+            return parent.project.status.slug == 'campaign'
         return False

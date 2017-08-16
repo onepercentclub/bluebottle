@@ -189,6 +189,19 @@ class ViewPermissionsMixin(object):
                     request, message=getattr(permission, 'message', None)
                 )
 
+    @property
+    def model(self):
+        model_cls = None
+        try:
+            if hasattr(self, 'queryset'):
+                model_cls = self.queryset.model
+            elif hasattr(self, 'get_queryset'):
+                model_cls = self.get_queryset().model
+        except AttributeError:
+            pass
+
+        return model_cls
+
 
 class PermissionedView(View, ViewPermissionsMixin):
     def dispatch(self, request, *args, **kwargs):

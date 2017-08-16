@@ -52,11 +52,13 @@ class UserPermissionsSerializer(serializers.Serializer):
 
     project_list = PermissionField('project_list')
     project_manage_list = PermissionField('project_manage_list')
+    homepage = PermissionField('homepage', view_args=('primary_language', ))
 
     class Meta:
         fields = [
             'project_list',
-            'project_manage_list'
+            'project_manage_list',
+            'homepage'
         ]
 
 
@@ -73,14 +75,6 @@ class CurrentUserSerializer(UserPreviewSerializer):
     country = CountrySerializer(source='address.country')
     location = LocationSerializer()
     permissions = UserPermissionsSerializer(read_only=True)
-
-    def get_permissions(self, obj):
-        perms = []
-        for perm in settings.EXPOSED_PERMISSIONS:
-            perms.append(
-                PermissionField(perm).to_representation(perm)
-            )
-        return perms
 
     class Meta:
         model = BB_USER_MODEL

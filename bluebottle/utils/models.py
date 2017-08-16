@@ -54,7 +54,11 @@ class ModelMeta(type):
             'app_label': self.app_label})
 
 
-class FakeModel(object):
+class PermissionableModel(object):
+    """ PermissionableModel only implements the model_name and app_label to
+    allow instances of the class to work with the ResourcePermissions class.
+    Useful if permissions are needed on a model not extending django.models.model
+    """
     __metaclass__ = ModelMeta
 
 
@@ -64,7 +68,6 @@ This handler will work for any appname.models which defines
 a GROUP_PERMS property.
 TODO: Is this the correct place for a global signal handler.
 """
-
 ADDITIONAL_GROUP_PERMS = {
     'Staff': {
         'perms': (

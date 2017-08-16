@@ -44,8 +44,8 @@ class TaskApiTestcase(BluebottleTestCase):
 
         self.previews_url = reverse('project_preview_list')
         self.task_preview_url = reverse('task_preview_list')
-        self.tasks_url = reverse('task_list')
-        self.task_member_url = reverse('task_member_list')
+        self.tasks_url = reverse('task-list')
+        self.task_member_url = reverse('task-member-list')
 
     def test_task_count(self):
         """
@@ -212,7 +212,7 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member_id = response.data['id']
-        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member_id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.some_token)
@@ -234,7 +234,7 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member_id = response.data['id']
-        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member_id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.some_token)
@@ -259,7 +259,7 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member_id = response.data['id']
-        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member_id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.some_token)
@@ -294,14 +294,14 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member1_id = response.data['id']
-        task_member1_url = reverse('task_member_detail', kwargs={'pk': task_member1_id})
+        task_member1_url = reverse('task-member-detail', kwargs={'pk': task_member1_id})
 
         response = self.client.post(self.task_member_url,
                                     task_member_data,
                                     HTTP_AUTHORIZATION=self.yet_another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member2_id = response.data['id']
-        task_member2_url = reverse('task_member_detail', kwargs={'pk': task_member2_id})
+        task_member2_url = reverse('task-member-detail', kwargs={'pk': task_member2_id})
 
         # Check that if we don't specify time spent it uses the time_needed froem task.
         response = self.client.patch(task_member1_url,
@@ -680,7 +680,7 @@ class TestProjectTaskAPIPermissions(BluebottleTestCase):
         self.some_project = ProjectFactory.create(owner=self.user)
         self.projects_url = reverse('project_list')
 
-        self.tasks_url = reverse('task_list')
+        self.tasks_url = reverse('task-list')
         self.wallpost_url = reverse('wallpost_list')
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)

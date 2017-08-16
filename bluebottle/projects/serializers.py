@@ -74,6 +74,18 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
         fields = ('id', 'project', 'file')
 
 
+class ProjectPermissionsSerializer(serializers.Serializer):
+    def get_attribute(self, obj):
+        return obj
+
+    rewards = RelatedPermissionField('reward-list', data_mappings={'project': 'slug'})
+    donations = PermissionField('order-manage-list')
+    tasks = RelatedPermissionField('task-list', data_mappings={'project': 'slug'})
+
+    class Meta:
+        fields = ('rewards', 'donations', 'tasks')
+
+
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
     amount_asked = MoneySerializer()
@@ -94,6 +106,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     people_registered = serializers.ReadOnlyField()
     permissions = PermissionField('project_detail', view_args=('slug',))
     promoter = UserProfileSerializer()
+    related_permissions = ProjectPermissionsSerializer(read_only=True)
     story = SafeField()
     supporter_count = serializers.IntegerField()
     task_manager = UserProfileSerializer()
@@ -140,6 +153,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'project_type',
                   'promoter',
                   'realized_task_count',
+                  'related_permissions',
                   'status',
                   'status',
                   'story',
@@ -225,16 +239,6 @@ class ManageTaskSerializer(serializers.ModelSerializer):
                   'type',)
 
 
-class ProjectPermissionsSerializer(serializers.Serializer):
-    def get_attribute(self, obj):
-        return obj
-
-    rewards = RelatedPermissionField('reward-list', data_mappings={'project': 'slug'})
-
-    class Meta:
-        fields = ('rewards', )
-
-
 class ManageProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
@@ -253,11 +257,11 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     people_needed = serializers.IntegerField(read_only=True)
     people_registered = serializers.IntegerField(read_only=True)
     pitch = serializers.CharField(required=False, allow_null=True)
-    promoter = UserProfileSerializer()
+    promoter = UserProfileSerializer(read_only=True)
     slug = serializers.CharField(read_only=True)
     status = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=ProjectPhase.objects)
     story = SafeField(required=False, allow_blank=True)
-    task_manager = UserProfileSerializer()
+    task_manager = UserProfileSerializer(read_only=True)
     tasks = ManageTaskSerializer(many=True, source='task_set', read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='project_manage_detail', lookup_field='slug')
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')

@@ -21,6 +21,22 @@ class RelatedProjectOwnerPermission(RelatedResourceOwnerPermission):
         return parent
 
 
+class RelatedProjectTaskManagerPermission(RelatedProjectOwnerPermission):
+
+    def has_object_action_permission(self, action, user, obj):
+        return user == obj.parent.task_manager
+
+    def has_action_permission(self, action, user, model_cls, parent=None):
+        """ Read permissions are allowed to any request, so we'll< always allow
+        GET, HEAD or OPTIONS requests.
+        """
+
+        if action != 'POST':
+            return True
+
+        return user == parent.task_manager
+
+
 class IsEditableOrReadOnly(BasePermission):
     def has_object_action_permission(self, action, user, obj):
         # Read permissions are allowed to any request, so we'll always allow

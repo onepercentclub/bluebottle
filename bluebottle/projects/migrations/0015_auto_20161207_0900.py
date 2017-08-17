@@ -19,3 +19,5 @@ class Migration(migrations.Migration):
             field=select_multiple_field.models.SelectMultipleField(choices=[(b'EUR', 'Euro')], default=[], max_length=100),
         ),
     ]
+
+

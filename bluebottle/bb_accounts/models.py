@@ -212,7 +212,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
         permissions = (
             ('api_read_member', 'Can view members through the API'),
-            ('api_read_full_member', 'Can view members through the API'),
+            ('api_read_full_member', 'Can view full members through the API'),
             ('api_add_member', 'Can add members through the API'),
             ('api_change_member', 'Can change members through the API'),
             ('api_delete_member', 'Can delete members through the API'),

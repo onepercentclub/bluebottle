@@ -32,5 +32,8 @@ class HomePage(object):
         return self
 
     class _meta(object):
+        """ Properties `app_label` and `model_name` are present in django.models.model
+        are required for ResourcePermissions to work.
+        """
         app_label = 'homepage'
         model_name = 'homepage'

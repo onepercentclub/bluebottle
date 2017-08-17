@@ -384,7 +384,7 @@ class ManageProjectListRoleTests(BluebottleTestCase):
 
     def test_project_manage_list(self):
         # `some_user` can see two projects:
-        # 1) project1 and project2 because she is the author of the task
+        # 1) project1 and project2 because she is the owner of the projects
         response = self.client.get(reverse('project_manage_list'), token=self.some_token)
         self.assertEqual(len(response.data['results']), 2)
 
@@ -395,7 +395,7 @@ class ManageProjectListRoleTests(BluebottleTestCase):
 
         # `other_user` can see two projects:
         # 1) project2 because he is the task_manager
-        # 2) project3 because he is the other_user
+        # 2) project3 because he is the promoter
         response = self.client.get(reverse('project_manage_list'), token=self.other_token)
         self.assertEqual(len(response.data['results']), 2)
 

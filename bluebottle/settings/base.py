@@ -480,7 +480,7 @@ LOGGING = {
         },
         'payments.payment': {
             'handlers': ['mail_admins', 'payment_logs', 'sentry'],
-            'propagate': True,
+            'propagate': False,
             'level': 'INFO',
         },
     }

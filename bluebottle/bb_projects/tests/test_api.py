@@ -351,6 +351,55 @@ class TestManageProjectList(ProjectEndpointTestCase):
         self.assertEqual(response.data['amount_asked'], {'currency': 'EUR', 'amount': Decimal('0')})
 
 
+class ManageProjectListRoleTests(BluebottleTestCase):
+    """ Tests roles on manage project list results """
+
+    def setUp(self):
+        super(ManageProjectListRoleTests, self).setUp()
+
+        self.init_projects()
+
+        campaign = ProjectPhase.objects.get(slug='campaign')
+
+        self.other_user = BlueBottleUserFactory.create()
+        self.other_token = "JWT {0}".format(self.other_user.get_jwt_token())
+
+        self.some_user = BlueBottleUserFactory.create()
+        self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
+
+        self.another_user = BlueBottleUserFactory.create()
+        self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
+
+        self.project1 = ProjectFactory.create(owner=self.some_user,
+                                              status=campaign)
+
+        self.project2 = ProjectFactory.create(owner=self.some_user,
+                                              task_manager=self.other_user,
+                                              status=campaign)
+
+        self.project3 = ProjectFactory.create(owner=self.another_user,
+                                              task_manager=self.another_user,
+                                              promoter=self.other_user,
+                                              status=campaign)
+
+    def test_project_manage_list(self):
+        # `some_user` can see two projects:
+        # 1) project1 and project2 because she is the author of the task
+        response = self.client.get(reverse('project_manage_list'), token=self.some_token)
+        self.assertEqual(len(response.data['results']), 2)
+
+        # `another_user` can see one project:
+        # 1) project3 because he is the task_manager
+        response = self.client.get(reverse('project_manage_list'), token=self.another_token)
+        self.assertEqual(len(response.data['results']), 1)
+
+        # `other_user` can see two projects:
+        # 1) project2 because he is the task_manager
+        # 2) project3 because he is the other_user
+        response = self.client.get(reverse('project_manage_list'), token=self.other_token)
+        self.assertEqual(len(response.data['results']), 2)
+
+
 class TestManageProjectDetail(ProjectEndpointTestCase):
     """
     Test case for the ``ManageProjectDetail`` API view.

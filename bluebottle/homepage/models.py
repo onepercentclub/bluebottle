@@ -2,18 +2,14 @@ from bluebottle.quotes.models import Quote
 from bluebottle.slides.models import Slide
 from bluebottle.statistics.models import Statistic
 from bluebottle.projects.models import Project
-from bluebottle.utils.models import PermissionableModel
 
 
-class HomePage(PermissionableModel):
+class HomePage(object):
     """ HomePage is a class to combine Slide, Quote and Stats into a single object.
 
     PermissionableModel requires a model_name and app_label to work with the
     ResourcePermissions class
     """
-    model_name = 'homepage'
-    app_label = 'homepage'
-
     def get(self, language):
         self.id = language
         self.quotes = Quote.objects.published().filter(language=language)
@@ -34,3 +30,10 @@ class HomePage(PermissionableModel):
             self.projects = Project.objects.none()
 
         return self
+
+    class _meta(object):
+        """ Properties `app_label` and `model_name` are present in django.models.model
+        are required for ResourcePermissions to work.
+        """
+        app_label = 'homepage'
+        model_name = 'homepage'

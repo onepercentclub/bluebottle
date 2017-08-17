@@ -1,6 +1,14 @@
+import logging
+
 from rest_framework import permissions
 
 from tenant_extras.utils import get_tenant_properties
+
+logger = logging.getLogger(__name__)
+
+
+class PermissionsException(Exception):
+    pass
 
 
 class BasePermission(permissions.BasePermission):
@@ -9,14 +17,27 @@ class BasePermission(permissions.BasePermission):
 
     Currently the `view` is being passed which then gives access to the request.
 
-    TODO: it should be possible to get the permissions based on a `method`, `user`,
+    TODO: it should be possible to get the permissions based on a `action`, `user`,
     and an optional `obj` which might be a parent type rather than the actual obj
     particularly if the permission being checked is the ability to create an obj
 
     """
 
+    def get_view_model(self, view):
+        model_cls = None
+        try:
+            model_cls = view.model
+        except AttributeError:
+            message = (
+                'The related view `{}` does not have a model property.'.format(view.__class__.__name__),
+                'Is this a legacy view using ResourcePermissions?'
+            )
+            raise PermissionsException(' '.join(message))
+
+        return model_cls
+
     def has_object_permission(self, request, view, obj):
-        """ This method is called from the views which include this permission.
+        """ This action is called from the views which include this permission.
 
         The call happens after the referenced obj has been fetched and will not be
         called if no object was found.
@@ -24,12 +45,12 @@ class BasePermission(permissions.BasePermission):
         Return `True` if permission is granted, `False` otherwise.
         """
 
-        return self.has_object_method_permission(
-            request.method, request.user, view, obj
+        return self.has_object_action_permission(
+            request.method, request.user, obj
         )
 
     def has_permission(self, request, view):
-        """ This method is called from the views which include this permission.
+        """ This action is called from the views which include this permission.
 
         The call happens during view initalisation so it will be called with views returning
         a data set as well as a single object.
@@ -37,26 +58,36 @@ class BasePermission(permissions.BasePermission):
         Return `True` if permission is granted, `False` otherwise.
         """
 
-        return self.has_method_permission(
-            request.method, request.user, view
-        )
+        try:
+            model_cls = self.get_view_model(view)
+            return self.has_action_permission(
+                request.method, request.user, model_cls
+            )
+        except TypeError as err:
+            message = (
+                '{} not implemented correctly.'.format(self.__class__.__name__),
+                'Error: {}'.format(err.message)
+            )
+            raise PermissionsException(' '.join(message))
+        except PermissionsException:
+            return super(BasePermission, self).has_permission(request, view)
 
-    def has_object_method_permission(self, method, user, view, obj):
-        """ Check if user has permission to access method on obj for the view.
+    def has_object_action_permission(self, action, user, obj):
+        """ Check if user has permission to access action on obj for the view.
 
         Used by both the DRF permission system and for returning permissions to the user.
         """
 
-        message = 'has_object_method_permission() must be implemented on {}'.format(self)
+        message = 'has_object_action_permission() must be implemented on {}'.format(self)
         raise NotImplementedError(message)
 
-    def has_method_permission(self, method, user, view):
-        """ Check if user has permission to access method for the view.
+    def has_action_permission(self, action, user, model_cls, parent=None):
+        """ Check if user has permission to access action for the view.
 
         Used by both the DRF permission system and for returning permissions to the user.
         """
 
-        message = 'has_method_permission() must be implemented on {}'.format(self)
+        message = 'has_action_permission() must be implemented on {}'.format(self)
         raise NotImplementedError(message)
 
 
@@ -71,61 +102,41 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
         'DELETE': ['%(app_label)s.api_delete_%(model_name)s'],
     }
 
-    def has_method_permission(self, method, user, view):
-        model_cls = None
-        try:
-            if hasattr(view, 'queryset'):
-                model_cls = view.queryset.model
-            elif hasattr(view, 'get_queryset'):
-                model_cls = view.get_queryset().model
-        except AttributeError:
-            pass
+    def has_object_action_permission(self, action, user, obj):
+        return self.has_action_permission(action, user, obj.__class__)
 
-        if not model_cls and hasattr(view, 'model_class'):
-            model_cls = view.model_class
-
-        assert model_cls is not None, (
-            'Cannot apply DjangoModelPermissions on a view that '
-            'does not relate to a model class.'
-        )
-
-        perms = self.get_required_permissions(method, model_cls)
+    def has_action_permission(self, action, user, model_cls, parent=None):
+        perms = self.get_required_permissions(action, model_cls)
         return user.has_perms(perms)
-
-    def has_object_method_permission(self, method, user, view, obj):
-        return self.has_method_permission(method, user, view)
 
 
 class OwnerPermission(BasePermission):
     """ Allows access only to obj owner. """
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, action, user, obj):
         return user == obj.owner
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, action, user, model_cls, parent=None):
         return True
 
 
 class OwnerOrReadOnlyPermission(OwnerPermission):
     """ Allows access only to obj owner or read only. """
 
-    def has_object_method_permission(self, method, user, view, obj):
-        if method in permissions.SAFE_METHODS:
+    def has_object_action_permission(self, action, user, obj):
+        if action in permissions.SAFE_METHODS:
             return True
 
         return user == obj.owner
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, action, user, model_cls, parent=None):
         return True
 
 
 class OwnerOrAdminPermission(OwnerPermission):
     """ Allows access only to obj owner and admin users. """
 
-    def check_permission(self, request, instance):
-        pass
-
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, action, user, obj):
         return user == obj.owner or user.is_staff
 
 
@@ -142,25 +153,43 @@ class RelatedResourceOwnerPermission(BasePermission):
 
         raise NotImplementedError('get_parent_from_request() must be implemented')
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_permission(self, request, view):
+        """ This action is called from the views which include this permission.
+
+        The call happens during view initalisation so it will be called with views returning
+        a data set as well as a single object.
+
+        Return `True` if permission is granted, `False` otherwise.
+        """
+
+        parent = self.get_parent_from_request(request)
+
+        return self.has_action_permission(
+            request.method, request.user, view.model, parent
+        )
+
+    def has_object_action_permission(self, action, user, obj):
         return user == obj.parent.owner
 
-    def has_method_permission(self, method, user, view):
-        """ Read permissions are allowed to any request, so we'll< always allow
+    def has_action_permission(self, action, user, model_cls, parent=None):
+        """ Read permissions are allowed to any request, so we'll always allow
         GET, HEAD or OPTIONS requests.
         """
 
-        if method != 'POST':
+        if action != 'POST':
             return True
 
-        parent = self.get_parent_from_request(view.request)
+        assert parent is not None, (
+            'You must pass a parent when calling `has_action_permission` on RelatedResourceOwnerPermission'
+        )
+
         return user == parent.owner
 
 
 class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
     """ Allows access only to obj owner, parent owner and admin users. """
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, action, user, obj):
         result = (
             user == obj.owner or
             user.is_staff
@@ -175,7 +204,7 @@ class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
 class TenantConditionalOpenClose(BasePermission):
     """ Allows access only to authenticated users. """
 
-    def has_object_method_permission(self, method, user, view, obj):
+    def has_object_action_permission(self, action, user, obj):
         try:
             if get_tenant_properties('CLOSED_SITE'):
                 return user and user.is_authenticated()
@@ -183,7 +212,7 @@ class TenantConditionalOpenClose(BasePermission):
             pass
         return True
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, action, user, model_cls, parent=None):
         try:
             if get_tenant_properties('CLOSED_SITE'):
                 return user and user.is_authenticated()
@@ -195,18 +224,18 @@ class TenantConditionalOpenClose(BasePermission):
 class IsAuthenticated(BasePermission):
     """ Allow access if the user is authenticated. """
 
-    def has_object_method_permission(self, method, user, view, obj):
-        return self.has_method_permission(method, user, view)
+    def has_object_action_permission(self, action, user, obj):
+        return self.has_action_permission(action, user, None)
 
-    def has_method_permission(self, method, user, view):
+    def has_action_permission(self, action, user, model_cls, parent=None):
         return user.is_authenticated and user.groups.filter(name='Authenticated').exists()
 
 
 class AuthenticatedOrReadOnlyPermission(IsAuthenticated):
-    """ Allow access if the user is authenticated or the request uses a safe method. """
+    """ Allow access if the user is authenticated or the request uses a safe action. """
 
-    def has_method_permission(self, method, user, view):
-        if method in permissions.SAFE_METHODS:
+    def has_action_permission(self, action, user, model_cls, parent=None):
+        if action in permissions.SAFE_METHODS:
             return True
 
         return user.is_authenticated and user.groups.filter(name='Authenticated').exists()

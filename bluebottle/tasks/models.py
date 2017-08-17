@@ -267,6 +267,8 @@ class Task(models.Model, PreviousStatusMixin):
                 )
 
     def save(self, *args, **kwargs):
+        if self.accepting == self.TaskAcceptingChoices.automatic and self.needs_motivation:
+            self.needs_motivation = False
         if not self.author_id:
             self.author = self.project.owner
 

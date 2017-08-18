@@ -139,7 +139,10 @@ class ManageProjectList(ListCreateAPIView):
         """
         queryset = super(ManageProjectList, self).get_queryset()
         if not isinstance(self.request.user, AnonymousUser):
-            queryset = queryset.filter(owner=self.request.user)
+            user = self.request.user
+            queryset = queryset.filter(Q(owner=user) |
+                                       Q(task_manager=user) |
+                                       Q(promoter=user))
         queryset = queryset.order_by('-created')
         return queryset
 

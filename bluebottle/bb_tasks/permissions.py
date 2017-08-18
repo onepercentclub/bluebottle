@@ -8,21 +8,10 @@ from bluebottle.utils.permissions import BasePermission, RelatedResourceOwnerPer
 class RelatedTaskOwnerPermission(RelatedResourceOwnerPermission):
     parent_class = 'bluebottle.tasks.models.Task'
 
-    def get_parent_from_request(self, request):
-        if request.data:
-            task_pk = request.data.get('task', None)
-        else:
-            task_pk = request.query_params.get('task', None)
-        cls = get_class(self.parent_class)
-        try:
-            parent = cls.objects.get(pk=task_pk)
-        except cls.DoesNotExist:
-            return None
-
-        return parent
-
-    def has_object_action_permission(self, action, user, obj):
-        return user == obj.owner
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
+        if obj:
+            parent = obj.parent
+        return user == parent.owner
 
 
 class MemberOrTaskOwnerOrReadOnlyPermission(BasePermission):
@@ -43,7 +32,7 @@ class MemberOrTaskOwnerOrReadOnlyPermission(BasePermission):
 
 
 class MemberOrTaskOwnerOrAdminPermission(BasePermission):
-    def has_object_action_permission(self, action, user, obj):
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
         # FIXME: when this permission is used with the update task member
         #        then the obj is still a Task. Why?
         if isinstance(obj, TaskMember):

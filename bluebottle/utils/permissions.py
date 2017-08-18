@@ -72,7 +72,7 @@ class BasePermission(permissions.BasePermission):
         except PermissionsException:
             return super(BasePermission, self).has_permission(request, view)
 
-    def has_object_action_permission(self, action, user, obj):
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
         """ Check if user has permission to access action on obj for the view.
 
         Used by both the DRF permission system and for returning permissions to the user.
@@ -81,7 +81,7 @@ class BasePermission(permissions.BasePermission):
         message = 'has_object_action_permission() must be implemented on {}'.format(self)
         raise NotImplementedError(message)
 
-    def has_action_permission(self, action, user, model_cls, parent=None):
+    def has_action_permission(self, action, user, model_cls):
         """ Check if user has permission to access action for the view.
 
         Used by both the DRF permission system and for returning permissions to the user.
@@ -102,10 +102,10 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
         'DELETE': ['%(app_label)s.api_delete_%(model_name)s'],
     }
 
-    def has_object_action_permission(self, action, user, obj):
-        return self.has_action_permission(action, user, obj.__class__)
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
+        return True
 
-    def has_action_permission(self, action, user, model_cls, parent=None):
+    def has_action_permission(self, action, user, model_cls):
         perms = self.get_required_permissions(action, model_cls)
         return user.has_perms(perms)
 
@@ -113,30 +113,30 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
 class OwnerPermission(BasePermission):
     """ Allows access only to obj owner. """
 
-    def has_object_action_permission(self, action, user, obj):
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
         return user == obj.owner
 
-    def has_action_permission(self, action, user, model_cls, parent=None):
+    def has_action_permission(self, action, user, model_cls):
         return True
 
 
 class OwnerOrReadOnlyPermission(OwnerPermission):
     """ Allows access only to obj owner or read only. """
 
-    def has_object_action_permission(self, action, user, obj):
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
         if action in permissions.SAFE_METHODS:
             return True
 
         return user == obj.owner
 
-    def has_action_permission(self, action, user, model_cls, parent=None):
+    def has_action_permission(self, action, user, model_cls):
         return True
 
 
 class OwnerOrAdminPermission(OwnerPermission):
     """ Allows access only to obj owner and admin users. """
 
-    def has_object_action_permission(self, action, user, obj):
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
         return user == obj.owner or user.is_staff
 
 
@@ -145,57 +145,32 @@ class RelatedResourceOwnerPermission(BasePermission):
 
     This class assumes the child resource has a `parent` property which will return the parent object.
     """
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
+        if obj:
+            parent = obj.parent
 
-    def get_parent_from_request(self, request):
-        """ For requests to list endpoints, eg when creating an object then
-        get_parent needs to be defined to use this permission class.
-        """
+        return user == parent.owner
 
-        raise NotImplementedError('get_parent_from_request() must be implemented')
-
-    def has_permission(self, request, view):
-        """ This action is called from the views which include this permission.
-
-        The call happens during view initalisation so it will be called with views returning
-        a data set as well as a single object.
-
-        Return `True` if permission is granted, `False` otherwise.
-        """
-
-        parent = self.get_parent_from_request(request)
-
-        return self.has_action_permission(
-            request.method, request.user, view.model, parent
-        )
-
-    def has_object_action_permission(self, action, user, obj):
-        return user == obj.parent.owner
-
-    def has_action_permission(self, action, user, model_cls, parent=None):
+    def has_action_permission(self, action, user, model_cls):
         """ Read permissions are allowed to any request, so we'll always allow
         GET, HEAD or OPTIONS requests.
         """
-
-        if action != 'POST':
-            return True
-
-        assert parent is not None, (
-            'You must pass a parent when calling `has_action_permission` on RelatedResourceOwnerPermission'
-        )
-
-        return user == parent.owner
+        return True
 
 
 class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
     """ Allows access only to obj owner, parent owner and admin users. """
 
-    def has_object_action_permission(self, action, user, obj):
-        result = (
-            user == obj.owner or
-            user.is_staff
-        )
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
+        if obj:
+            parent = obj.parent
 
-        if hasattr(obj, 'parent'):
+        result = user.is_staff
+
+        if obj:
+            result = user == obj.owner or result
+
+        if parent:
             result = (obj == obj.parent or result)
 
         return result
@@ -204,7 +179,7 @@ class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
 class TenantConditionalOpenClose(BasePermission):
     """ Allows access only to authenticated users. """
 
-    def has_object_action_permission(self, action, user, obj):
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
         try:
             if get_tenant_properties('CLOSED_SITE'):
                 return user and user.is_authenticated()
@@ -212,7 +187,7 @@ class TenantConditionalOpenClose(BasePermission):
             pass
         return True
 
-    def has_action_permission(self, action, user, model_cls, parent=None):
+    def has_action_permission(self, action, user, model_cls):
         try:
             if get_tenant_properties('CLOSED_SITE'):
                 return user and user.is_authenticated()
@@ -224,17 +199,17 @@ class TenantConditionalOpenClose(BasePermission):
 class IsAuthenticated(BasePermission):
     """ Allow access if the user is authenticated. """
 
-    def has_object_action_permission(self, action, user, obj):
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
         return self.has_action_permission(action, user, None)
 
-    def has_action_permission(self, action, user, model_cls, parent=None):
+    def has_action_permission(self, action, user, model_cls):
         return user and user.is_authenticated
 
 
 class AuthenticatedOrReadOnlyPermission(IsAuthenticated):
     """ Allow access if the user is authenticated or the request uses a safe action. """
 
-    def has_action_permission(self, action, user, model_cls, parent=None):
+    def has_action_permission(self, action, user, model_cls):
         if action in permissions.SAFE_METHODS:
             return True
         return user and user.is_authenticated

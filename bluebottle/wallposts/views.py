@@ -1,22 +1,26 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models.query_utils import Q
 
 import django_filters
 from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
-from tenant_extras.drf_permissions import TenantConditionalOpenClose
+from tenant_extras.drf_permissions import TenantConditionalOpenClose as LegacyTenantConditionOpenClose
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
-from bluebottle.bluebottle_drf2.views import ListCreateAPIView, RetrieveUpdateDeleteAPIView, ListAPIView
+from bluebottle.bluebottle_drf2.views import (ListCreateAPIView as LegacyListCreateAPIView, ListAPIView,
+                                              RetrieveUpdateDeleteAPIView)
 from bluebottle.utils.utils import get_client_ip
+from bluebottle.utils.views import ListCreateAPIView
 from bluebottle.projects.models import Project
+from bluebottle.wallposts.permissions import RelatedManagementOrReadOnlyPermission
 
 from .models import TextWallpost, MediaWallpost, MediaWallpostPhoto, Wallpost, Reaction
 from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
                           MediaWallpostPhotoSerializer, ReactionSerializer,
                           WallpostSerializer)
-from .permissions import IsConnectedWallpostAuthorOrReadOnly, CanEmailFollowers
+from .permissions import IsConnectedWallpostAuthorOrReadOnly
 
 
 class WallpostFilter(django_filters.FilterSet):
@@ -36,14 +40,32 @@ class SetAuthorMixin(object):
         serializer.save(editor=self.request.user, ip_address=get_client_ip(self.request))
 
 
+class FilterQSParams(object):
+
+    def get_qs(self, qs):
+        parent_id = self.request.query_params.get('parent_id', None)
+        parent_type = self.request.query_params.get('parent_type', None)
+        if parent_type == 'project':
+            qs = qs.filter(conten_object__slug=parent_id)
+        elif parent_id:
+            qs = qs.filter(conten_object__id=parent_id)
+
+        text = self.request.query_params.get('text', None)
+        if text:
+            qs = qs.filter(Q(title__icontains=text) |
+                           Q(description__icontains=text))
+
+        status = self.request.query_params.get('status', None)
+        if status:
+            qs = qs.filter(status=status)
+        return qs
+
+
 class WallpostList(ListAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     pagination_class = BluebottlePagination
-
-    # FIXME: figure out why it is necessary to include the TenantConditionalOpenClose
-    #        permission here when it is included in the BASE_PERMISSION_CLASSES
-    permission_classes = (TenantConditionalOpenClose,)
+    permission_classes = (LegacyTenantConditionOpenClose, )
 
     def get_queryset(self, queryset=queryset):
         queryset = super(WallpostList, self).get_queryset()
@@ -76,17 +98,16 @@ class WallpostPagination(BluebottlePagination):
     page_size = 5
 
 
-class TextWallpostList(SetAuthorMixin, ListCreateAPIView):
+class TextWallpostList(SetAuthorMixin, ListCreateAPIView, FilterQSParams):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
     pagination_class = WallpostPagination
-    permission_classes = (TenantConditionalOpenClose,
-                          IsAuthenticatedOrReadOnly,
-                          CanEmailFollowers)
+    permission_classes = (LegacyTenantConditionOpenClose,
+                          IsAuthenticatedOrReadOnly)
 
     def get_queryset(self, queryset=None):
-        queryset = super(TextWallpostList, self).get_queryset()
+        queryset = self.queryset
         # Some custom filtering projects slugs.
         parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)
@@ -96,22 +117,24 @@ class TextWallpostList(SetAuthorMixin, ListCreateAPIView):
             except Project.DoesNotExist:
                 return Wallpost.objects.none()
             queryset = queryset.filter(object_id=project.id)
-
         queryset = queryset.order_by('-created')
         return queryset
 
 
-class TextWallpostDetail(SetAuthorMixin, RetrieveUpdateDeleteAPIView):
+class TextWallpostDetail(RetrieveUpdateDeleteAPIView, SetAuthorMixin):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
-    permission_classes = (TenantConditionalOpenClose, IsAuthenticatedOrReadOnly)
+    permission_classes = (LegacyTenantConditionOpenClose, IsAuthenticatedOrReadOnly)
 
 
-class MediaWallpostList(TextWallpostList):
+class MediaWallpostList(TextWallpostList, SetAuthorMixin):
     queryset = MediaWallpost.objects.all()
     serializer_class = MediaWallpostSerializer
     filter_class = WallpostFilter
     pagination_class = WallpostPagination
+    permission_classes = (LegacyTenantConditionOpenClose,
+                          RelatedManagementOrReadOnlyPermission,
+                          IsAuthenticatedOrReadOnly)
 
 
 class MediaWallpostDetail(TextWallpostDetail):
@@ -122,17 +145,18 @@ class MediaWallpostDetail(TextWallpostDetail):
 class WallpostDetail(RetrieveUpdateDeleteAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
-    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
+    permission_classes = (LegacyTenantConditionOpenClose, IsAuthorOrReadOnly,)
 
 
 class MediaWallpostPhotoPagination(BluebottlePagination):
     page_size = 4
 
 
-class MediaWallpostPhotoList(SetAuthorMixin, ListCreateAPIView):
+class MediaWallpostPhotoList(SetAuthorMixin, LegacyListCreateAPIView):
     queryset = MediaWallpostPhoto.objects.all()
     serializer_class = MediaWallpostPhotoSerializer
     pagination_class = MediaWallpostPhotoPagination
+    permission_classes = (LegacyTenantConditionOpenClose, IsAuthorOrReadOnly,)
 
     def create(self, request, *args, **kwargs):  # FIXME
         """
@@ -162,14 +186,14 @@ class MediaWallpostPhotoList(SetAuthorMixin, ListCreateAPIView):
 class MediaWallpostPhotoDetail(RetrieveUpdateDeleteAPIView):
     queryset = MediaWallpostPhoto.objects.all()
     serializer_class = MediaWallpostPhotoSerializer
-    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,
+    permission_classes = (LegacyTenantConditionOpenClose, IsAuthorOrReadOnly,
                           IsConnectedWallpostAuthorOrReadOnly)
 
 
-class ReactionList(SetAuthorMixin, ListCreateAPIView):
+class ReactionList(SetAuthorMixin, LegacyListCreateAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
-    permission_classes = (TenantConditionalOpenClose,
+    permission_classes = (LegacyTenantConditionOpenClose, IsAuthenticatedOrReadOnly,
                           permissions.IsAuthenticatedOrReadOnly)
     pagination_class = BluebottlePagination
     filter_fields = ('wallpost',)
@@ -178,4 +202,4 @@ class ReactionList(SetAuthorMixin, ListCreateAPIView):
 class ReactionDetail(SetAuthorMixin, RetrieveUpdateDeleteAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
-    permission_classes = (TenantConditionalOpenClose, IsAuthorOrReadOnly,)
+    permission_classes = (LegacyTenantConditionOpenClose, IsAuthorOrReadOnly,)

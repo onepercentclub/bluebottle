@@ -129,6 +129,18 @@ class BaseProject(models.Model, GetTweetMixin):
         null=True, blank=True
     )
 
+    task_manager = models.ForeignKey(
+        'members.Member', verbose_name=_('task manager'),
+        help_text=_('Project Task Manager'), related_name='task_manager',
+        null=True, blank=True
+    )
+
+    promoter = models.ForeignKey(
+        'members.Member', verbose_name=_('promoter'),
+        help_text=_('Project Promoter'), related_name='promoter',
+        null=True, blank=True
+    )
+
     organization = models.ForeignKey(
         'organizations.Organization', verbose_name=_(
             'organization'),

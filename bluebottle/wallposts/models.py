@@ -74,10 +74,6 @@ class Wallpost(PolymorphicModel):
     def owner(self):
         return self.author
 
-    @property
-    def parent(self):
-        return self.content_object
-
     class Analytics:
         type = 'wallpost'
         tags = {}
@@ -122,10 +118,16 @@ class MediaWallpost(Wallpost):
 
     class Meta(Wallpost.Meta):
         permissions = (
+            ('api_read_textwallpost', 'Can view text wallposts through the API'),
+            ('api_add_textwallpost', 'Can add text wallposts through the API'),
+            ('api_change_textwallpost', 'Can change text wallposts through the API'),
+            ('api_delete_textwallpost', 'Can delete text wallposts through the API'),
+
             ('api_read_mediawallpost', 'Can view media wallposts through the API'),
             ('api_add_mediawallpost', 'Can add media wallposts through the API'),
             ('api_change_mediawallpost', 'Can change media wallposts through the API'),
             ('api_delete_mediawallpost', 'Can delete media wallposts through the API'),
+
             ('api_read_mediawallpostphoto', 'Can view media wallpost photos through the API'),
             ('api_add_mediawallpostphoto', 'Can add media wallpost photos through the API'),
             ('api_change_mediawallpostphoto', 'Can change media wallpost photos through the API'),
@@ -152,7 +154,7 @@ class MediaWallpostPhoto(models.Model):
 
     @property
     def owner(self):
-        return self.mediawallpost.owner
+        return self.author
 
     @property
     def parent(self):
@@ -164,6 +166,14 @@ class TextWallpost(Wallpost):
     @property
     def wallpost_type(self):
         return 'text'
+
+    @property
+    def owner(self):
+        return self.author
+
+    @property
+    def parent(self):
+        return self.textwallpost
 
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH)
 

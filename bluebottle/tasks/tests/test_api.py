@@ -514,6 +514,75 @@ class TaskApiTestcase(BluebottleTestCase):
                          status.HTTP_201_CREATED,
                          "Can apply for tasks for campaigning projects")
 
+    def test_task_project_role_permissions(self):
+        """
+        Test task_manager and owner roles when creating tasks
+        """
+        self.some_project.owner = self.some_user
+        self.some_project.task_manager = self.another_user
+        self.some_project.save()
+
+        task_data = {
+            'people_needed': 1,
+            'deadline': '2016-08-09T12:45:14.134756',
+            'deadline_to_apply': '2016-08-04T12:45:14.134756',
+            'project': self.some_project.slug,
+            'title': 'Help me',
+            'description': 'I need help',
+            'location': '',
+            'skill': 1,
+            'time_needed': '4.00',
+            'type': 'event'
+        }
+
+        # Task manager should have rights to create a task
+        response = self.client.post(self.tasks_url, task_data,
+                                    HTTP_AUTHORIZATION=self.another_token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Project owner should be disallowed to create a task
+        response = self.client.post(self.tasks_url, task_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_taskmember_project_role_permissions(self):
+        """
+        Test task_manager and owner roles when accepting task members
+        """
+        self.some_project.owner = self.some_user
+        self.some_project.task_manager = self.another_user
+        self.some_project.save()
+
+        task = TaskFactory(project=self.some_project, author=self.another_user)
+        task_member = TaskMemberFactory(task=task, status='applied')
+
+        # Project owner should be disallowed to accept taskmember
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
+        response = self.client.patch(task_member_url,
+                                     {'status': 'accepted'},
+                                     HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Task manager should have rights to accept taskmember
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
+        response = self.client.patch(task_member_url,
+                                     {'status': 'accepted'},
+                                     HTTP_AUTHORIZATION=self.another_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        task = TaskFactory(project=self.some_project, author=self.another_user)
+        task_member = TaskMemberFactory(task=task, status='applied')
+
+        self.some_project.task_manager = self.some_user
+        self.some_project.save()
+
+        # Project owner should be disallowed to accept taskmember
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
+        response = self.client.patch(task_member_url,
+                                     {'status': 'accepted'},
+                                     HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class TaskMemberResumeTest(BluebottleTestCase):
     def setUp(self):

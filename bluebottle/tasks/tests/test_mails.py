@@ -9,6 +9,7 @@ from django.utils.timezone import now
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import TaskMember
 from bluebottle.tasks.taskmail import send_task_realized_mail
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.surveys import SurveyFactory
@@ -38,6 +39,36 @@ class TestTaskMemberMail(TaskMailTestBase):
         """
         Test emails for realized task with a task member
         """
+        self.task.status = "in progress"
+        self.assertEquals(len(mail.outbox), 0)
+        self.task.save()
+
+        self.task_member = TaskMemberFactory.create(task=self.task,
+                                                    status='applied')
+
+        # Task owner receives email about new task member
+        self.assertEquals(len(mail.outbox), 1)
+        body = mail.outbox[0].body
+        self.assertTrue('applied for your task' in body)
+        self.assertFalse('with the following motivation' in body)
+        self.assertTrue(self.task_member.member.full_name in body)
+        self.assertEquals(mail.outbox[0].to[0], self.task.author.email)
+
+        self.task_member.status = 'accepted'
+        self.task_member.save()
+
+        # Task member receives email that he is accepted
+        self.assertEquals(len(mail.outbox), 2)
+        self.assertNotEquals(mail.outbox[1].subject.find("assigned"), -1)
+        self.assertEquals(mail.outbox[1].to[0], self.task_member.member.email)
+
+    def test_member_applied_to_task_mail_not_to_project_owner(self):
+        """
+        Test emails for realized task with a task member
+        """
+        self.project.owner = BlueBottleUserFactory()
+        self.project.save()
+
         self.task.status = "in progress"
         self.assertEquals(len(mail.outbox), 0)
         self.task.save()

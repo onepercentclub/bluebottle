@@ -27,10 +27,12 @@ def add_group_permissions(apps, schema_editor):
         'Authenticated': {
             'perms': (
                 'api_read_mediawallpost', 'api_add_mediawallpost', 'api_change_mediawallpost', 'api_delete_mediawallpost',
+                'api_read_textwallpost', 'api_add_textwallpost', 'api_change_textwallpost', 'api_delete_mediawallpost',
                 'api_read_mediawallpostphoto', 'api_add_mediawallpostphoto', 'api_change_mediawallpostphoto',
             )
         }
     }
+
     update_group_permissions('wallposts', group_perms)
 
 

@@ -228,7 +228,7 @@ class IsAuthenticated(BasePermission):
         return self.has_action_permission(action, user, None)
 
     def has_action_permission(self, action, user, model_cls, parent=None):
-        return user.is_authenticated and user.groups.filter(name='Authenticated').exists()
+        return user and user.is_authenticated
 
 
 class AuthenticatedOrReadOnlyPermission(IsAuthenticated):
@@ -237,5 +237,4 @@ class AuthenticatedOrReadOnlyPermission(IsAuthenticated):
     def has_action_permission(self, action, user, model_cls, parent=None):
         if action in permissions.SAFE_METHODS:
             return True
-
-        return user.is_authenticated and user.groups.filter(name='Authenticated').exists()
+        return user and user.is_authenticated

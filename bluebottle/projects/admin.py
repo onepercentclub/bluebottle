@@ -279,7 +279,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     search_fields = ('title', 'owner__first_name', 'owner__last_name',
                      'organization__name')
 
-    raw_id_fields = ('owner', 'reviewer', 'organization',)
+    raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization',)
 
     prepopulated_fields = {'slug': ('title',)}
 
@@ -348,8 +348,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def get_list_filter(self, request):
         filters = ['status', 'is_campaign', ProjectThemeFilter, ProjectSkillFilter,
-                   ProjectReviewerFilter,
-                   'project_type', ('deadline', DateRangeFilter), ]
+                   ProjectReviewerFilter, 'project_type', ('deadline', DateRangeFilter), ]
 
         if request.user.has_perm('projects.approve_payout'):
             filters.insert(1, 'payout_status')
@@ -385,6 +384,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('owner', 'owner'),
         ('owner__remote_id', 'remote id'),
         ('reviewer', 'reviewer'),
+        ('task_manager', 'task_manager'),
+        ('promoter', 'promoter'),
         ('created', 'created'),
         ('status', 'status'),
         ('payout_status', 'payout status'),
@@ -421,7 +422,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return OrderedDict(reversed(actions.items()))
 
     def get_fieldsets(self, request, obj=None):
-        main = {'fields': ['owner', 'reviewer', 'organization',
+        main = {'fields': ['owner', 'reviewer', 'task_manager', 'promoter',
+                           'organization',
                            'status', 'title', 'slug', 'project_type',
                            'is_campaign', 'celebrate_results']}
 

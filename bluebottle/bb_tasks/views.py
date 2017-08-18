@@ -171,6 +171,7 @@ class MyTaskList(BaseTaskList):
         if self.request.user.is_authenticated():
             user = self.request.user
             return Task.objects.filter(Q(project__task_manager=user) |
+                                       Q(project__owner=user) |
                                        Q(author=self.request.user))
         return Task.objects.none()
 

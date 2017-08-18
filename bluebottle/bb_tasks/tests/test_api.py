@@ -625,21 +625,19 @@ class ManageTaskListTests(BluebottleTestCase):
 
         campaign = ProjectPhase.objects.get(slug='campaign')
 
-        self.other_user = BlueBottleUserFactory.create()
+        self.another_user = BlueBottleUserFactory.create()
+        self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
 
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
-        self.standard_project1 = ProjectFactory.create(owner=self.some_user,
-                                                       status=campaign)
-        self.standard_project2 = ProjectFactory.create(owner=self.some_user,
-                                                       task_manager=self.other_user,
-                                                       status=campaign)
 
-        self.another_user = BlueBottleUserFactory.create()
-        self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
-        self.task_managed_project = ProjectFactory.create(owner=self.some_user,
-                                                          task_manager=self.another_user,
-                                                          status=campaign)
+        self.standard_project1 = ProjectFactory.create(task_manager=self.some_user,
+                                                       status=campaign)
+        self.standard_project2 = ProjectFactory.create(status=campaign)
+        self.standard_project3 = ProjectFactory.create(task_manager=self.another_user,
+                                                       owner=self.some_user,
+                                                       status=campaign)
+        self.standard_project4 = ProjectFactory.create(status=campaign)
 
         self.task1 = TaskFactory.create(
             status=Task.TaskStatuses.in_progress,
@@ -648,27 +646,28 @@ class ManageTaskListTests(BluebottleTestCase):
 
         self.task2 = TaskFactory.create(
             status=Task.TaskStatuses.open,
-            author=self.standard_project2.owner,
+            author=self.some_user,
             project=self.standard_project2,
         )
 
         self.task3 = TaskFactory.create(
             status=Task.TaskStatuses.open,
-            project=self.task_managed_project,
+            project=self.standard_project3,
         )
 
         self.task4 = TaskFactory.create(
             status=Task.TaskStatuses.open,
             author=self.another_user,
-            project=self.task_managed_project,
+            project=self.standard_project4,
         )
 
     def test_task_managed_list(self):
-        # `some_user` can see two tasks:
-        # 1) task1 because he is the author of the task
+        # `some_user` can see three tasks:
+        # 1) task1 because he is the author of the task manager
         # 2) task2 because he is the author (although not the task_manager)
+        # 3) task3 because he is the project owner (although not the task owner or task_manager)
         response = self.client.get(reverse('my_task_list'), token=self.some_token)
-        self.assertEqual(len(response.data['results']), 2)
+        self.assertEqual(len(response.data['results']), 3)
 
         # `another_user` can see two tasks:
         # 1) task3 because he is the task_manager of the associated project

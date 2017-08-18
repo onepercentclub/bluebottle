@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.bluebottle_drf2.serializers import (
     PrimaryKeyGenericRelatedField, FileSerializer, PrivateFileSerializer
 )
-from bluebottle.members.serializers import UserPreviewSerializer
+from bluebottle.members.serializers import UserPreviewSerializer, UserProfileSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.utils.serializers import RelatedResourcePermissionField, ResourcePermissionField
@@ -71,7 +71,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug',
                                            queryset=Project.objects)
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
-    author = UserPreviewSerializer()
+    author = UserProfileSerializer(read_only=True)
     permissions = ResourcePermissionField('task_detail', view_args=('id',))
     related_permissions = TaskPermissionsSerializer(read_only=True)
     status = serializers.ChoiceField(choices=Task.TaskStatuses.choices,

@@ -15,31 +15,6 @@ WALLPOST_TEXT_MAX_LENGTH = getattr(settings, 'WALLPOST_TEXT_MAX_LENGTH', 300)
 WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH',
                                        300)
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_reaction', 'change_reaction', 'delete_reaction',
-            'add_wallpost', 'change_wallpost', 'delete_wallpost',
-            'add_mediawallpost', 'change_mediawallpost', 'delete_mediawallpost',
-            'add_textwallpost', 'change_textwallpost', 'delete_textwallpost',
-            'add_systemwallpost', 'change_systemwallpost',
-            'delete_systemwallpost',
-            'add_mediawallpostphoto', 'change_mediawallpostphoto',
-            'delete_mediawallpostphoto',
-        )
-    },
-    'Anonymous': {
-        'perms': ('api_read_mediawallpost',)
-    },
-    'Authenticated': {
-        'perms': (
-            'api_read_mediawallpost', 'api_add_mediawallpost', 'api_change_mediawallpost', 'api_delete_mediawallpost',
-            'api_read_textwallpost', 'api_add_textwallpost', 'api_change_textwallpost', 'api_delete_mediawallpost',
-            'api_read_mediawallpostphoto', 'api_add_mediawallpostphoto', 'api_change_mediawallpostphoto',
-        )
-    }
-}
-
 
 class Wallpost(PolymorphicModel):
     """

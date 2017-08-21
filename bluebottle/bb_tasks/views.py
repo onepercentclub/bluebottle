@@ -169,7 +169,10 @@ class MyTaskList(BaseTaskList):
 
     def get_queryset(self):
         if self.request.user.is_authenticated():
-            return Task.objects.filter(author=self.request.user)
+            user = self.request.user
+            return Task.objects.filter(Q(project__task_manager=user) |
+                                       Q(project__owner=user) |
+                                       Q(author=self.request.user))
         return Task.objects.none()
 
 

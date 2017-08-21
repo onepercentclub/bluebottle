@@ -22,7 +22,7 @@ def add_group_permissions(apps, schema_editor):
             'perms': ('api_read_homepage',)
         }
     }
-    update_group_permissions(None, group_perms)
+    update_group_permissions(content_type, group_perms, apps)
 
 
 class Migration(migrations.Migration):

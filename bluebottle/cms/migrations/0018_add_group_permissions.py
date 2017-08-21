@@ -28,7 +28,7 @@ def add_group_permissions(apps, schema_editor):
         }
     }
 
-    update_group_permissions('cms', group_perms)
+    update_group_permissions('cms', group_perms, apps)
 
 
 class Migration(migrations.Migration):

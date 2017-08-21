@@ -5,6 +5,7 @@ import pygeoip
 import socket
 
 from django.conf import settings
+from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.http import urlquote
@@ -257,7 +258,12 @@ def get_country_code_by_ip(ip_address=None):
     return gip.country_code_by_name(ip_address)
 
 
-def update_group_permissions(label, group_perms):
+def update_group_permissions(label, group_perms, apps):
+    for app_config in apps.get_app_configs():
+        app_config.models_module = True
+        create_permissions(app_config, apps=apps, verbosity=0)
+        app_config.models_module = None
+
     for group_name, permissions in group_perms.items():
         group, _ = Group.objects.get_or_create(name=group_name)
         for perm_codename in permissions['perms']:
@@ -267,6 +273,7 @@ def update_group_permissions(label, group_perms):
                 group.permissions.add(permissions.get())
             except Permission.DoesNotExist, err:
                 logging.debug(err)
+                raise Exception('Could not add permission: {}'.format(perm_codename))
         group.save()
 
 

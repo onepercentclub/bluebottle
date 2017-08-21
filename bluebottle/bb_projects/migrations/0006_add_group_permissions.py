@@ -3,27 +3,22 @@
 from __future__ import unicode_literals
 
 from django.db import migrations
+from django.contrib.auth.management import create_permissions
+
 
 from bluebottle.utils.utils import update_group_permissions
 
 
 def add_group_permissions(apps, schema_editor):
     group_perms = {
-        'Staff': {
-            'perms': (
-                'add_project', 'change_project', 'delete_project',
-                'add_projectdocument', 'change_projectdocument', 'delete_projectdocument',
-                'add_projectbudgetline', 'change_projectbudgetline', 'delete_projectbudgetline',
-            )
-        },
         'Anonymous': {
             'perms': ('api_read_projectphase', 'api_read_projecttheme',)
         },
         'Authenticated': {
             'perms': ('api_read_projectphase', 'api_read_projecttheme',)
-        }     
+        }
     }
-    update_group_permissions('bb_projects', group_perms)
+    update_group_permissions('bb_projects', group_perms, apps)
 
 
 class Migration(migrations.Migration):

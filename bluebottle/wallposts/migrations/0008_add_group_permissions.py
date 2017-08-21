@@ -33,13 +33,13 @@ def add_group_permissions(apps, schema_editor):
         }
     }
 
-    update_group_permissions('wallposts', group_perms)
+    update_group_permissions('wallposts', group_perms, apps)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('wallposts', '0007_add_api_permissions'),
+        ('wallposts', '0007_auto_20170821_1459'),
     ]
 
     operations = [

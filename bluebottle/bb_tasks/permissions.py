@@ -49,13 +49,11 @@ class MemberOrTaskOwnerOrAdminPermission(BasePermission):
 
 
 class ActiveProjectOrReadOnlyPermission(RelatedTaskOwnerPermission):
-    def has_method_object_permission(self, action, user, obj):
-        pass
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
+        if obj:
+            parent = obj.parent
 
-    def has_action_permission(self, action, user, model_cls, parent=None):
         if action in permissions.SAFE_METHODS:
             return True
 
-        if parent:
-            return parent.project.status.slug == 'campaign'
-        return False
+        return parent.project.status.slug == 'campaign'

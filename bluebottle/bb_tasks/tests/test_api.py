@@ -82,7 +82,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill2.id),
             'location': 'Tiel',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timedelta(days=1))
         }
         response = self.client.post(self.task_url, another_task_data,
                                     token=self.some_token)

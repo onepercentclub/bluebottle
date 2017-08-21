@@ -86,6 +86,10 @@ class Task(models.Model, PreviousStatusMixin):
         return self.author
 
     @property
+    def parent(self):
+        return self.project
+
+    @property
     def expertise_based(self):
         return self.skill.expertise if self.skill else False
 
@@ -339,6 +343,10 @@ class TaskMember(models.Model, PreviousStatusMixin):
     @property
     def owner(self):
         return self.member
+
+    @property
+    def parent(self):
+        return self.task
 
     @property
     def time_applied_for(self):

@@ -16,6 +16,14 @@ class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
     """
     def has_object_action_permission(self, action, user, obj=None, parent=None):
         if obj:
+            if not any([
+                obj.share_with_linkedin,
+                obj.share_with_twitter,
+                obj.share_with_facebook,
+                obj.email_followers
+            ]):
+                return True
+
             parent = obj.parent
 
         return user in [

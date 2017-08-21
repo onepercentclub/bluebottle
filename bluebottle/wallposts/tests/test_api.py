@@ -84,6 +84,25 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                          status.HTTP_403_FORBIDDEN,
                          'Only the task owner can share a wallpost.')
 
+    def test_permissions_on_task_wallpost_non_sharing(self):
+        """
+        Tests that only the task creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': str(self.task.id),
+                         'parent_type': 'task',
+                         'email_followers': False,
+                         'text': 'I can share stuff!'}
+
+        # Non-owner users can't share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.other_token)
+
+        self.assertEqual(
+            wallpost.status_code,
+            status.HTTP_201_CREATED
+        )
+
     def test_permissions_on_fundraiser_wallpost_sharing(self):
         """
         Tests that only the fundraiser creator can share a wallpost.

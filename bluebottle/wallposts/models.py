@@ -74,6 +74,10 @@ class Wallpost(PolymorphicModel):
     def owner(self):
         return self.author
 
+    @property
+    def parent(self):
+        return self.content_object
+
     class Analytics:
         type = 'wallpost'
         tags = {}
@@ -96,6 +100,12 @@ class Wallpost(PolymorphicModel):
     class Meta:
         ordering = ('created',)
         base_manager_name = 'objects_with_deleted'
+        permissions = (
+            ('api_read_wallpost', 'Can view wallposts through the API'),
+            ('api_add_wallpost', 'Can add wallposts through the API'),
+            ('api_change_wallpost', 'Can wallposts documents through the API'),
+            ('api_delete_wallpost', 'Can wallposts documents through the API'),
+        )
 
     def __unicode__(self):
         return str(self.id)
@@ -256,6 +266,14 @@ class Reaction(models.Model):
         base_manager_name = 'objects_with_deleted'
         verbose_name = _('Reaction')
         verbose_name_plural = _('Reactions')
+        permissions = (
+            ('api_read_reaction', 'Can view reactions through the API'),
+            ('api_add_reaction', 'Can add reactions through the API'),
+            ('api_change_reaction', 'Can reactions documents through the API'),
+            ('api_delete_reaction', 'Can reactions documents through the API'),
+        )
+
+
 
     def __unicode__(self):
         s = self.text

@@ -194,7 +194,7 @@ class CoFinancerSerializer(serializers.Serializer):
 
     def get_user(self, obj):
         user = Member.objects.get(pk=obj['user'])
-        return UserPreviewSerializer(user).to_representation(user)
+        return UserPreviewSerializer(user, context=self.context).to_representation(user)
 
     def get_id(self, obj):
         return obj['user']

@@ -275,6 +275,7 @@ class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView):
 
         serializer.save()
 
+
 class RetrieveUpdateAPIView(ViewPermissionsMixin, generics.RetrieveUpdateAPIView):
     base_permission_classes = (ResourcePermissions,)
 

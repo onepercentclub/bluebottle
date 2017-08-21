@@ -1,9 +1,6 @@
 from rest_framework import permissions
 
-from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.projects.permissions import RelatedResourceOwnerPermission
-from bluebottle.tasks.models import Task
-from bluebottle.projects.models import Project
 
 from .models import MediaWallpost
 

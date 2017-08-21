@@ -1,6 +1,5 @@
 from rest_framework import permissions
 
-from bluebottle.utils.utils import get_class
 from bluebottle.utils.permissions import BasePermission, RelatedResourceOwnerPermission
 
 
@@ -13,7 +12,6 @@ class RelatedProjectOwnerPermission(RelatedResourceOwnerPermission):
 
     def has_action_permissions(self, *args, **kwargs):
         return True
-
 
 
 class RelatedProjectTaskManagerPermission(RelatedResourceOwnerPermission):

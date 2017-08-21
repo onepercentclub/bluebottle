@@ -63,7 +63,7 @@ class WallpostList(ListAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     pagination_class = BluebottlePagination
-    permission_classes = (LegacyTenantConditionOpenClose,  )
+    permission_classes = (LegacyTenantConditionOpenClose, )
 
     def get_queryset(self, queryset=queryset):
         queryset = super(WallpostList, self).get_queryset()
@@ -140,6 +140,7 @@ class MediaWallpostList(TextWallpostList, SetAuthorMixin):
             serializer.Meta.model(**serializer.validated_data)
         )
         return super(MediaWallpostList, self).perform_create(serializer)
+
 
 class MediaWallpostDetail(TextWallpostDetail):
     queryset = MediaWallpost.objects.all()

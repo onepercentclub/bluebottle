@@ -273,8 +273,6 @@ class Reaction(models.Model):
             ('api_delete_reaction', 'Can reactions documents through the API'),
         )
 
-
-
     def __unicode__(self):
         s = self.text
         return Truncator(s).words(10)

@@ -1,7 +1,6 @@
 from rest_framework import permissions
 
 from bluebottle.tasks.models import TaskMember
-from bluebottle.utils.utils import get_class
 from bluebottle.utils.permissions import BasePermission, RelatedResourceOwnerPermission
 
 

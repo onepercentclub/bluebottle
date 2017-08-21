@@ -41,7 +41,7 @@ class UserAddressSerializer(serializers.ModelSerializer):
                   'city', 'state', 'country', 'postal_code')
 
 
-class UserPreviewSerializer(serializers.ModelSerializer, PrivateProfileMixin):
+class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a subset of a member's public profile. This is usually
     embedded into other serializers.

@@ -1204,7 +1204,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                      'parent_type': 'project',
                                      'parent_id': 'allyourbasearebelongtous'},
                                     token=self.owner_token)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
 
         # Create Project Media Wallpost and retrieve by another user
         response = self.client.post(self.media_wallposts_url,

@@ -132,6 +132,11 @@ class BaseTaskList(ListCreateAPIView):
                 'closed', 'done-complete', 'done-incomplete', 'voting-done'):
             raise serializers.ValidationError('It is not allowed to add tasks to closed projects')
 
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
         serializer.validated_data['deadline'] = get_midnight_datetime(serializer.validated_data['deadline'])
         serializer.save(author=self.request.user)
 
@@ -207,6 +212,11 @@ class TaskMemberList(ListCreateAPIView):
     queryset = TaskMember.objects.all()
 
     def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
         serializer.save(member=self.request.user, status=TaskMember.TaskMemberStatuses.applied)
 
 

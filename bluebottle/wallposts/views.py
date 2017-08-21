@@ -9,10 +9,8 @@ from tenant_extras.drf_permissions import TenantConditionalOpenClose as LegacyTe
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
-from bluebottle.bluebottle_drf2.views import (ListCreateAPIView as LegacyListCreateAPIView, ListAPIView,
-                                              RetrieveUpdateDeleteAPIView)
 from bluebottle.utils.utils import get_client_ip
-from bluebottle.utils.views import ListCreateAPIView
+from bluebottle.utils.views import (ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView)
 from bluebottle.projects.models import Project
 from bluebottle.wallposts.permissions import RelatedManagementOrReadOnlyPermission
 
@@ -121,7 +119,7 @@ class TextWallpostList(SetAuthorMixin, ListCreateAPIView, FilterQSParams):
         return queryset
 
 
-class TextWallpostDetail(RetrieveUpdateDeleteAPIView, SetAuthorMixin):
+class TextWallpostDetail(RetrieveUpdateDestroyAPIView, SetAuthorMixin):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     permission_classes = (LegacyTenantConditionOpenClose, IsAuthenticatedOrReadOnly)
@@ -136,13 +134,20 @@ class MediaWallpostList(TextWallpostList, SetAuthorMixin):
                           RelatedManagementOrReadOnlyPermission,
                           IsAuthenticatedOrReadOnly)
 
+    def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+        return super(MediaWallpostList, self).perform_create(serializer)
+
 
 class MediaWallpostDetail(TextWallpostDetail):
     queryset = MediaWallpost.objects.all()
     serializer_class = MediaWallpostSerializer
 
 
-class WallpostDetail(RetrieveUpdateDeleteAPIView):
+class WallpostDetail(RetrieveUpdateDestroyAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (LegacyTenantConditionOpenClose, IsAuthorOrReadOnly,)
@@ -152,7 +157,7 @@ class MediaWallpostPhotoPagination(BluebottlePagination):
     page_size = 4
 
 
-class MediaWallpostPhotoList(SetAuthorMixin, LegacyListCreateAPIView):
+class MediaWallpostPhotoList(SetAuthorMixin, ListCreateAPIView):
     queryset = MediaWallpostPhoto.objects.all()
     serializer_class = MediaWallpostPhotoSerializer
     pagination_class = MediaWallpostPhotoPagination
@@ -183,14 +188,14 @@ class MediaWallpostPhotoList(SetAuthorMixin, LegacyListCreateAPIView):
         return super(MediaWallpostPhotoList, self).create(request, *args, **kwargs)
 
 
-class MediaWallpostPhotoDetail(RetrieveUpdateDeleteAPIView):
+class MediaWallpostPhotoDetail(RetrieveUpdateDestroyAPIView):
     queryset = MediaWallpostPhoto.objects.all()
     serializer_class = MediaWallpostPhotoSerializer
     permission_classes = (LegacyTenantConditionOpenClose, IsAuthorOrReadOnly,
                           IsConnectedWallpostAuthorOrReadOnly)
 
 
-class ReactionList(SetAuthorMixin, LegacyListCreateAPIView):
+class ReactionList(SetAuthorMixin, ListCreateAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
     permission_classes = (LegacyTenantConditionOpenClose, IsAuthenticatedOrReadOnly,
@@ -199,7 +204,7 @@ class ReactionList(SetAuthorMixin, LegacyListCreateAPIView):
     filter_fields = ('wallpost',)
 
 
-class ReactionDetail(SetAuthorMixin, RetrieveUpdateDeleteAPIView):
+class ReactionDetail(SetAuthorMixin, RetrieveUpdateDestroyAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
     permission_classes = (LegacyTenantConditionOpenClose, IsAuthorOrReadOnly,)

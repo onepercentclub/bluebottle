@@ -1,53 +1,27 @@
 from rest_framework import permissions
 
-from bluebottle.fundraisers.models import Fundraiser
-from bluebottle.projects.permissions import RelatedProjectOwnerPermission
-from bluebottle.tasks.models import Task
-from bluebottle.projects.models import Project
+from bluebottle.projects.permissions import RelatedResourceOwnerPermission
 
 from .models import MediaWallpost
 
 
-class RelatedManagementOrReadOnlyPermission(RelatedProjectOwnerPermission):
+class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
     """
     Is the current user either Project.owner, Project.task_management, Project.promoter
     or Task.project.owner, Task.project.task_management, Task.project.promoter
     or Fundraiser.owner
     """
-    parent_class = 'bluebottle.projects.models.Project'
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
+        if obj:
+            if not any([
+                obj.share_with_linkedin,
+                obj.share_with_twitter,
+                obj.share_with_facebook,
+                obj.email_followers
+            ]):
+                return True
 
-    def get_parent_from_request(self, request):
-        parent_id = request.data['parent_id']
-        parent_type = request.data['parent_type']
-        if parent_type == 'project':
-            try:
-                return Project.objects.get(slug=parent_id)
-            except Project.DoesNotExist:
-                return Project.objects.none()
-        if parent_type == 'fundraiser':
-            try:
-                return Fundraiser.objects.get(id=parent_id)
-            except Fundraiser.DoesNotExist:
-                return Fundraiser.objects.none()
-        if parent_type == 'task':
-            try:
-                return Task.objects.get(id=parent_id).project
-            except Task.DoesNotExist:
-                return Project.objects.none()
-
-    def has_object_action_permission(self, action, user, obj):
-        return user in [
-            getattr(obj.parent, 'owner', None),
-            getattr(obj.parent, 'task_manager', None),
-            getattr(obj.parent, 'promoter', None)
-        ]
-
-    def has_action_permission(self, action, user, model_cls, parent=None):
-        """ Read permissions are allowed to any request, so we'll< always allow
-        GET, HEAD or OPTIONS requests.
-        """
-        if action != 'POST':
-            return True
+            parent = obj.parent
 
         return user in [
             getattr(parent, 'owner', None),

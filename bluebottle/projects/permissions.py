@@ -1,46 +1,35 @@
 from rest_framework import permissions
 
-from bluebottle.utils.utils import get_class
 from bluebottle.utils.permissions import BasePermission, RelatedResourceOwnerPermission
 
 
 class RelatedProjectOwnerPermission(RelatedResourceOwnerPermission):
-    parent_class = 'bluebottle.projects.models.Project'
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
+        if obj:
+            parent = obj.parent
 
-    def get_parent_from_request(self, request):
-        if request.data:
-            project_slug = request.data.get('project', None)
-        else:
-            project_slug = request.query_params.get('project', None)
-        cls = get_class(self.parent_class)
-        try:
-            parent = cls.objects.get(slug=project_slug)
-        except cls.DoesNotExist:
-            return None
+        return user == parent.owner
 
-        return parent
+    def has_action_permissions(self, *args, **kwargs):
+        return True
 
 
-class RelatedProjectTaskManagerPermission(RelatedProjectOwnerPermission):
+class RelatedProjectTaskManagerPermission(RelatedResourceOwnerPermission):
 
-    def has_object_action_permission(self, action, user, obj):
-        return user == obj.parent.task_manager
-
-    def has_action_permission(self, action, user, model_cls, parent=None):
-        """ Read permissions are allowed to any request, so we'll< always allow
-        GET, HEAD or OPTIONS requests.
-        """
-
-        if action != 'POST':
-            return True
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
+        if obj:
+            parent = obj.parent
 
         return user == parent.task_manager
 
 
 class IsEditableOrReadOnly(BasePermission):
-    def has_object_action_permission(self, action, user, obj):
+    def has_object_action_permission(self, action, user, obj=None, parent=None):
         # Read permissions are allowed to any request, so we'll always allow
         # GET, HEAD or OPTIONS requests.
+        if not obj:
+            return True
+
         if action in permissions.SAFE_METHODS:
             return True
 

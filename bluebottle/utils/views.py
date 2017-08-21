@@ -182,7 +182,6 @@ class ViewPermissionsMixin(object):
         """ Check if the request should be permitted for a given object.
         Raises an appropriate exception if the request is not permitted.
         """
-
         for permission in self.get_permissions():
             if not permission.has_object_permission(request, self, obj):
                 self.permission_denied(
@@ -267,6 +266,14 @@ class RetrieveAPIView(ViewPermissionsMixin, generics.RetrieveAPIView):
 
 class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView):
     base_permission_classes = (ResourcePermissions,)
+
+    def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        serializer.save()
 
 
 class RetrieveUpdateAPIView(ViewPermissionsMixin, generics.RetrieveUpdateAPIView):

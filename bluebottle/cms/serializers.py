@@ -194,7 +194,6 @@ class CoFinancerSerializer(serializers.Serializer):
 
     def get_user(self, obj):
         user = Member.objects.get(pk=obj['user'])
-        import ipdb; ipdb.set_trace()
         return UserPreviewSerializer(
             user, context=self.context
         ).to_representation(user)

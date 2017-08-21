@@ -15,14 +15,6 @@ from fluent_contents.rendering import render_placeholder
 from bluebottle.utils.serializers import MLStripper
 from bluebottle.clients import properties
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_page', 'change_page', 'delete_page',
-        )
-    }
-}
-
 
 def get_languages():
     return properties.LANGUAGES

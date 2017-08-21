@@ -194,7 +194,10 @@ class CoFinancerSerializer(serializers.Serializer):
 
     def get_user(self, obj):
         user = Member.objects.get(pk=obj['user'])
-        return UserPreviewSerializer(user).to_representation(user)
+        import ipdb; ipdb.set_trace()
+        return UserPreviewSerializer(
+            user, context=self.context
+        ).to_representation(user)
 
     def get_id(self, obj):
         return obj['user']
@@ -228,7 +231,9 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
             filter(user__is_co_financer=True). \
             values('user', 'total_currency'). \
             annotate(total=Sum('total'))
-        return CoFinancerSerializer(totals, many=True).to_representation(totals)
+        return CoFinancerSerializer(
+            totals, many=True, context=self.context
+        ).to_representation(totals)
 
     class Meta:
         model = SupporterTotalContent

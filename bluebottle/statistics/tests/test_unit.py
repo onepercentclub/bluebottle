@@ -6,11 +6,11 @@ from django.utils import timezone
 from moneyed.classes import Money
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.projects.models import Project
+# from bluebottle.projects.models import Project
 from bluebottle.statistics.participation import Statistics as ParticipationStatistics
 from bluebottle.statistics.views import Statistics
 from bluebottle.tasks.models import Task
-from bluebottle.tasks.models import TaskMember
+# from bluebottle.tasks.models import TaskMember
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -433,33 +433,36 @@ class ParticipationStatisticsTest(BluebottleTestCase):
         self.another_project = ProjectFactory.create(owner=self.user_2)
 
         # NOTE: auto_add_now datefields cannot be overridden in factory object creation methods
-        Project.objects.filter(id=self.some_project.id).update(created=pendulum.create(2016, 1, 20))
-        Project.objects.filter(id=self.another_project.id).update(created=pendulum.create(2016, 7, 20))
+        # Project.objects.filter(id=self.some_project.id).update(created=pendulum.create(2016, 1, 20))
+        # Project.objects.filter(id=self.another_project.id).update(created=pendulum.create(2016, 7, 20))
 
         self.some_task = TaskFactory.create(project=self.some_project,
-                                            author=self.user_1,
-                                            created=pendulum.create(2016, 1, 30))
+                                            author=self.user_1)
         self.another_task = TaskFactory.create(project=self.another_project,
-                                               author=self.user_2,
-                                               created=pendulum.create(2016, 7, 30))
+                                               author=self.user_2)
 
-        Task.objects.filter(id=self.some_task.id).update(created=pendulum.create(2016, 1, 30))
-        Task.objects.filter(id=self.another_task.id).update(created=pendulum.create(2016, 7, 30))
+        # Task.objects.filter(id=self.some_task.id).update(created=pendulum.create(2016, 1, 30))
+        # Task.objects.filter(id=self.another_task.id).update(created=pendulum.create(2016, 7, 30))
 
         self.some_task_member = TaskMemberFactory.create(member=self.user_1, task=self.some_task)
         self.another_task_member = TaskMemberFactory.create(member=self.user_2, task=self.another_task)
 
-        TaskMember.objects.filter(id=self.some_task_member.id).update(created=pendulum.create(2016, 1, 31))
-        TaskMember.objects.filter(id=self.another_task_member.id).update(created=pendulum.create(2016, 7, 31))
+        # TaskMember.objects.filter(id=self.some_task_member.id).update(created=pendulum.create(2016, 1, 31))
+        # TaskMember.objects.filter(id=self.another_task_member.id).update(created=pendulum.create(2016, 7, 31))
 
-        self.statistics = ParticipationStatistics(start=pendulum.create(2016, 1, 1, 0, 0, 0),
-                                                  end=pendulum.create(2016, 12, 31, 23, 59, 59))
+        start = pendulum.create().subtract(days=7)
+        end = pendulum.create().add(days=7)
+
+        # self.statistics = ParticipationStatistics(start=pendulum.create(2016, 1, 1, 0, 0, 0),
+        #                                           end=pendulum.create(2016, 12, 31, 23, 59, 59))
+        self.statistics = ParticipationStatistics(start=start,
+                                                  end=end)
 
     def test_participant_details(self):
-        # participant_details = self.statistics.participant_details()
         participant_count = self.statistics.participants_count
 
-        self.assertEqual(participant_count, 1)
+        # NOTE: Participants : One project creator with project status done complete and one task creator
+        self.assertEqual(participant_count, 2)
 
     def test_projects_total(self):
         count = self.statistics.projects_total

@@ -124,7 +124,8 @@ tests_requires = [
 ]
 
 dev_requires = [
-    'ipdb'
+    'ipdb',
+    'flake8'
 ]
 
 setup(

@@ -145,7 +145,7 @@ class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
         if obj:
             parent = obj.parent
 
-        return getattr(obj, 'owner') == user or getattr(parent, 'oiwner') == user
+        return getattr(obj, 'owner') == user or getattr(parent, 'owner') == user
 
 
 class TenantConditionalOpenClose(BasePermission):

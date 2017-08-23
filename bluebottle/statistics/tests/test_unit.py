@@ -446,6 +446,8 @@ class ParticipationStatisticsTest(BluebottleTestCase):
         start = pendulum.create().subtract(days=7)
         end = pendulum.create().add(days=7)
 
+        # TODO: Create atleast one project, task and task member outside the time range
+
         self.statistics = ParticipationStatistics(start=start,
                                                   end=end)
 
@@ -475,3 +477,23 @@ class ParticipationStatisticsTest(BluebottleTestCase):
     def test_projects_status_count_by_theme(self):
         count = self.statistics.get_projects_status_count_by_theme(theme='education', statuses='done-complete')
         self.assertEqual(count, 1)
+
+    def test_projects_by_location_group(self):
+        count = len(self.statistics.get_projects_by_location_group(location_group=self.location.group.name))
+        self.assertEqual(count, 1)
+
+    def test_project_successful(self):
+        count = self.statistics.projects_successful
+        self.assertEqual(count, 1)
+
+    def test_project_running(self):
+        count = self.statistics.projects_running
+        self.assertEqual(count, 0)
+
+    def test_project_complete(self):
+        count = self.statistics.projects_complete
+        self.assertEqual(count, 1)
+
+    def test_project_online(self):
+        count = self.statistics.projects_online
+        self.assertEqual(count, 0)

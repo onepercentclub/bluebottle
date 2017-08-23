@@ -2,11 +2,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.query_utils import Q
 
 import django_filters
-from rest_framework import permissions
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, OwnerListViewMixin

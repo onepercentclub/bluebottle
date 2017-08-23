@@ -5,7 +5,7 @@ from django.db.models.query_utils import Q
 from django.utils import timezone
 
 import django_filters
-from rest_framework import generics, filters, serializers
+from rest_framework import filters, serializers
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.permissions import RelatedProjectTaskManagerPermission

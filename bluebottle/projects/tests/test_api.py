@@ -1163,7 +1163,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                     {'text': wallpost_text,
                                      'parent_type': 'project',
                                      'parent_id': self.some_project.slug},
-                                     token=self.owner_token)
+                                    token=self.owner_token)
         self.assertEqual(response.status_code,
                          status.HTTP_201_CREATED,
                          response.data)

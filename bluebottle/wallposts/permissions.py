@@ -1,9 +1,6 @@
 from rest_framework import permissions
 
 from bluebottle.projects.permissions import RelatedResourceOwnerPermission
-from bluebottle.wallposts.models import MediaWallpost
-
-from .models import MediaWallpost
 
 
 class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):

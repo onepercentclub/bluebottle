@@ -91,7 +91,7 @@ class BasePermission(permissions.BasePermission):
         raise NotImplementedError(message)
 
 
-class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
+class ResourcePermission(BasePermission, permissions.DjangoModelPermissions):
     perms_map = {
         'GET': ['%(app_label)s.api_read_%(model_name)s'],
         'OPTIONS': [],
@@ -110,37 +110,23 @@ class ResourcePermissions(BasePermission, permissions.DjangoModelPermissions):
         return user.has_perms(perms)
 
 
-class OwnerPermission(BasePermission):
+class ResourceOwnerPermission(ResourcePermission):
     """ Allows access only to obj owner. """
+    perms_map = {
+        'GET': ['%(app_label)s.api_read_own_%(model_name)s'],
+        'OPTIONS': [],
+        'HEAD': [],
+        'POST': ['%(app_label)s.api_add_own_%(model_name)s'],
+        'PUT': ['%(app_label)s.api_change_own_%(model_name)s'],
+        'PATCH': ['%(app_label)s.api_change_own_%(model_name)s'],
+        'DELETE': ['%(app_label)s.api_delete_own_%(model_name)s'],
+    }
 
     def has_object_action_permission(self, action, user, obj=None, parent=None):
         return user == obj.owner
 
-    def has_action_permission(self, action, user, model_cls):
-        return True
 
-
-class OwnerOrReadOnlyPermission(OwnerPermission):
-    """ Allows access only to obj owner or read only. """
-
-    def has_object_action_permission(self, action, user, obj=None, parent=None):
-        if action in permissions.SAFE_METHODS:
-            return True
-
-        return user == obj.owner
-
-    def has_action_permission(self, action, user, model_cls):
-        return True
-
-
-class OwnerOrAdminPermission(OwnerPermission):
-    """ Allows access only to obj owner and admin users. """
-
-    def has_object_action_permission(self, action, user, obj=None, parent=None):
-        return user == obj.owner or user.is_staff
-
-
-class RelatedResourceOwnerPermission(BasePermission):
+class RelatedResourceOwnerPermission(ResourceOwnerPermission):
     """ Allows access only to obj owner of related resource.
 
     This class assumes the child resource has a `parent` property which will return the parent object.
@@ -151,12 +137,6 @@ class RelatedResourceOwnerPermission(BasePermission):
 
         return user == parent.owner
 
-    def has_action_permission(self, action, user, model_cls):
-        """ Read permissions are allowed to any request, so we'll always allow
-        GET, HEAD or OPTIONS requests.
-        """
-        return True
-
 
 class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
     """ Allows access only to obj owner, parent owner and admin users. """
@@ -165,15 +145,7 @@ class OwnerOrParentOwnerOrAdminPermission(RelatedResourceOwnerPermission):
         if obj:
             parent = obj.parent
 
-        result = user.is_staff
-
-        if obj:
-            result = user == obj.owner or result
-
-        if parent:
-            result = (obj == obj.parent or result)
-
-        return result
+        return getattr(obj, 'owner') == user or getattr(parent, 'oiwner') == user
 
 
 class TenantConditionalOpenClose(BasePermission):
@@ -213,3 +185,32 @@ class AuthenticatedOrReadOnlyPermission(IsAuthenticated):
         if action in permissions.SAFE_METHODS:
             return True
         return user and user.is_authenticated
+
+
+def OneOf(*permission_classes):
+    class OneOf(BasePermission):
+        permissions = permission_classes
+
+        def has_object_permission(self, request, view, obj):
+            action = request.method
+            user = request.user
+            return any(
+                (
+                    perm().has_object_action_permission(action, user, obj) and
+                    perm().has_action_permission(action, user, view.model)
+                ) for perm in self.permissions
+            )
+
+        def has_object_action_permission(self, *args, **kwargs):
+            return any(
+                perm().has_object_action_permission(*args, **kwargs) for
+                perm in self.permissions
+            )
+
+        def has_action_permission(self, *args, **kwargs):
+            return any(
+                perm().has_action_permission(*args, **kwargs) for
+                perm in self.permissions
+            )
+
+    return OneOf

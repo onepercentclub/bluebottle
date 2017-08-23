@@ -216,6 +216,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
             ('api_add_member', 'Can add members through the API'),
             ('api_change_member', 'Can change members through the API'),
             ('api_delete_member', 'Can delete members through the API'),
+
+            ('api_read_own_member', 'Can view own members through the API'),
+            ('api_change_own_member', 'Can change own members through the API'),
+            ('api_delete_own_member', 'Can delete own members through the API'),
         )
 
     def update_deleted_timestamp(self):

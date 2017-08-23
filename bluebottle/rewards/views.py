@@ -1,5 +1,7 @@
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.projects.permissions import RelatedProjectOwnerPermission
+from bluebottle.utils.permissions import (
+    OneOf, ResourcePermission, RelatedResourceOwnerPermission
+)
 from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
 from .models import Reward
@@ -14,7 +16,9 @@ class RewardPagination(BluebottlePagination):
 class RewardList(ListCreateAPIView):
     queryset = Reward.objects.all()
     serializer_class = RewardSerializer
-    permission_classes = (RelatedProjectOwnerPermission, )
+    permission_classes = (
+        OneOf(ResourcePermission, RelatedResourceOwnerPermission),
+    )
     pagination_class = RewardPagination
 
     def get_queryset(self):
@@ -28,4 +32,8 @@ class RewardList(ListCreateAPIView):
 class RewardDetail(RetrieveUpdateDestroyAPIView):
     queryset = Reward.objects.all()
     serializer_class = RewardSerializer
-    permission_classes = (RelatedProjectOwnerPermission, NoDonationsOrReadOnly)
+
+    permission_classes = (
+        OneOf(ResourcePermission, RelatedResourceOwnerPermission),
+        NoDonationsOrReadOnly
+    )

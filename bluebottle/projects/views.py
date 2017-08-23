@@ -10,10 +10,11 @@ from bluebottle.utils.views import (
     RetrieveAPIView, ListCreateAPIView,
     RetrieveUpdateDestroyAPIView, PrivateFileView
 )
-from bluebottle.utils.permissions import OwnerPermission, OwnerOrAdminPermission
+from bluebottle.utils.permissions import (
+    OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission
+)
 from bluebottle.wallposts.models import MediaWallpostPhoto
 from .models import ProjectDocument, ProjectBudgetLine, Project
-from .permissions import (RelatedProjectOwnerPermission, IsProjectWallOwner,)
 
 
 class BudgetLinePagination(BluebottlePagination):
@@ -24,13 +25,13 @@ class ManageProjectBudgetLineList(ListCreateAPIView):
     queryset = ProjectBudgetLine.objects.all()
     serializer_class = ProjectBudgetLineSerializer
     pagination_class = BudgetLinePagination
-    permission_classes = (RelatedProjectOwnerPermission,)
+    permission_classes = (RelatedResourceOwnerPermission,)
 
 
 class ManageProjectBudgetLineDetail(RetrieveUpdateDestroyAPIView):
     queryset = ProjectBudgetLine.objects.all()
     serializer_class = ProjectBudgetLineSerializer
-    permission_classes = (OwnerPermission,)
+    permission_classes = (ResourceOwnerPermission,)
 
 
 class DocumentPagination(BluebottlePagination):
@@ -41,7 +42,7 @@ class ManageProjectDocumentList(ListCreateAPIView):
     queryset = ProjectDocument.objects.all()
     serializer_class = ProjectDocumentSerializer
     pagination_class = DocumentPagination
-    permission_classes = (RelatedProjectOwnerPermission,)
+    permission_classes = (RelatedResourceOwnerPermission,)
 
     filter = ('project',)
 
@@ -53,7 +54,7 @@ class ManageProjectDocumentDetail(RetrieveUpdateDestroyAPIView):
     queryset = ProjectDocument.objects.all()
     serializer_class = ProjectDocumentSerializer
     pagination_class = DocumentPagination
-    permission_classes = (OwnerOrAdminPermission,)
+    permission_classes = (ResourceOwnerPermission,)
 
     filter = ('project',)
 
@@ -64,7 +65,9 @@ class ManageProjectDocumentDetail(RetrieveUpdateDestroyAPIView):
 class ProjectDocumentFileView(PrivateFileView):
     queryset = ProjectDocument.objects
     field = 'file'
-    permission_classes = (OwnerOrAdminPermission,)
+    permission_classes = (
+        OneOf(ResourcePermission, RelatedResourceOwnerPermission),
+    )
 
 
 class ProjectMediaDetail(RetrieveAPIView):
@@ -78,7 +81,7 @@ class ProjectMediaPhotoDetail(generics.UpdateAPIView):
     queryset = MediaWallpostPhoto.objects.all()
     pagination_class = BluebottlePagination
     serializer_class = ProjectWallpostPhotoSerializer
-    permission_classes = (IsProjectWallOwner,)
+    permission_classes = (RelatedResourceOwnerPermission,)
 
 
 class ProjectSupportDetail(RetrieveAPIView):

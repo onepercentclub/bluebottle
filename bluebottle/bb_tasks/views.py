@@ -6,7 +6,6 @@ from django.utils import timezone
 
 import django_filters
 from rest_framework import generics, filters, serializers
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.permissions import RelatedProjectTaskManagerPermission
@@ -15,12 +14,15 @@ from bluebottle.tasks.serializers import (BaseTaskSerializer,
                                           BaseTaskMemberSerializer, TaskFileSerializer,
                                           TaskPreviewSerializer, MyTaskMemberSerializer,
                                           SkillSerializer, MyTasksSerializer)
-from bluebottle.utils.permissions import (OwnerOrReadOnlyPermission, AuthenticatedOrReadOnlyPermission,
-                                          TenantConditionalOpenClose,)
+from bluebottle.utils.permissions import (
+    ResourceOwnerPermission, ResourcePermission, OneOf
+)
 from bluebottle.utils.views import (PrivateFileView, ListAPIView, ListCreateAPIView,
                                     RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView)
-from .permissions import (ActiveProjectOrReadOnlyPermission, MemberOrTaskOwnerOrReadOnlyPermission,
-                          MemberOrTaskOwnerOrAdminPermission)
+from bluebottle.bb_tasks.permissions import (
+    ActiveProjectOrReadOnlyPermission, MemberOrTaskOwnerResourcePermission,
+    ResumePermission
+)
 
 
 def day_start(date_str):
@@ -125,7 +127,9 @@ class TaskPreviewList(ListAPIView, FilterQSParams):
 class BaseTaskList(ListCreateAPIView):
     queryset = Task.objects.all()
     pagination_class = TaskPreviewPagination
-    permission_classes = (TenantConditionalOpenClose, RelatedProjectTaskManagerPermission)
+    permission_classes = (
+        OneOf(ResourcePermission, RelatedProjectTaskManagerPermission),
+    )
 
     def perform_create(self, serializer):
         if serializer.validated_data['project'].status.slug in (
@@ -183,14 +187,17 @@ class MyTaskList(BaseTaskList):
 
 class TaskDetail(RetrieveUpdateAPIView):
     queryset = Task.objects.all()
-    permission_classes = (TenantConditionalOpenClose,
-                          OwnerOrReadOnlyPermission,)
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
     serializer_class = BaseTaskSerializer
 
 
 class MyTaskDetail(RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
-    permission_classes = (TenantConditionalOpenClose, OwnerOrReadOnlyPermission,)
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
     serializer_class = MyTasksSerializer
 
     def perform_update(self, serializer):
@@ -206,15 +213,18 @@ class TaskMemberList(ListCreateAPIView):
     serializer_class = BaseTaskMemberSerializer
     pagination_class = TaskPagination
     filter_fields = ('task', 'status',)
-    permission_classes = (TenantConditionalOpenClose,
-                          ActiveProjectOrReadOnlyPermission,
-                          AuthenticatedOrReadOnlyPermission)
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+        ActiveProjectOrReadOnlyPermission,
+    )
     queryset = TaskMember.objects.all()
 
     def perform_create(self, serializer):
         self.check_object_permissions(
             self.request,
-            serializer.Meta.model(**serializer.validated_data)
+            serializer.Meta.model(
+                member=self.request.user, **serializer.validated_data
+            )
         )
 
         serializer.save(member=self.request.user, status=TaskMember.TaskMemberStatuses.applied)
@@ -223,6 +233,8 @@ class TaskMemberList(ListCreateAPIView):
 class MyTaskMemberList(generics.ListAPIView):
     queryset = TaskMember.objects.all()
     serializer_class = MyTaskMemberSerializer
+
+    permission_classes = (ResourceOwnerPermission, )
 
     def get_queryset(self):
         queryset = super(MyTaskMemberList, self).get_queryset()
@@ -234,15 +246,14 @@ class TaskMemberDetail(RetrieveUpdateAPIView):
     serializer_class = BaseTaskMemberSerializer
 
     permission_classes = (
-        TenantConditionalOpenClose,
-        MemberOrTaskOwnerOrReadOnlyPermission,
+        OneOf(ResourcePermission, MemberOrTaskOwnerResourcePermission),
     )
 
 
 class TaskMemberResumeView(PrivateFileView):
     queryset = TaskMember.objects
     field = 'resume'
-    permission_classes = (MemberOrTaskOwnerOrAdminPermission,)
+    permission_classes = (ResumePermission, )
 
 
 class TaskFileList(generics.ListCreateAPIView):
@@ -250,8 +261,10 @@ class TaskFileList(generics.ListCreateAPIView):
     serializer_class = TaskFileSerializer
     pagination_class = TaskPagination
     filter_fields = ('task',)
-    permission_classes = (TenantConditionalOpenClose,
-                          IsAuthenticatedOrReadOnly,)
+
+    permission_classes = (
+        OneOf(ResourcePermission, MemberOrTaskOwnerResourcePermission),
+    )
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -261,10 +274,12 @@ class TaskFileDetail(RetrieveUpdateAPIView):
     queryset = TaskFile.objects.all()
     serializer_class = TaskFileSerializer
 
-    permission_classes = (TenantConditionalOpenClose, OwnerOrReadOnlyPermission,)
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
 
 
-class SkillList(generics.ListAPIView):
+class SkillList(ListAPIView):
     queryset = Skill.objects.filter(disabled=False)
     serializer_class = SkillSerializer
 

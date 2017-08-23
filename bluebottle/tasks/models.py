@@ -272,6 +272,11 @@ class Task(models.Model, PreviousStatusMixin):
             ('api_add_task', 'Can add tasks through the API'),
             ('api_change_task', 'Can change tasks through the API'),
             ('api_delete_task', 'Can delete tasks through the API'),
+
+            ('api_read_own_task', 'Can view own tasks through the API'),
+            ('api_add_own_task', 'Can add own tasks through the API'),
+            ('api_change_own_task', 'Can change own tasks through the API'),
+            ('api_delete_own_task', 'Can delete own tasks through the API'),
         )
 
 
@@ -292,6 +297,9 @@ class Skill(models.Model):
 
     class Meta:
         ordering = ('id',)
+        permissions = (
+            ('api_read_skill', 'Can view skills through the API'),
+        )
 
 
 class TaskMember(models.Model, PreviousStatusMixin):
@@ -333,6 +341,14 @@ class TaskMember(models.Model, PreviousStatusMixin):
             ('api_add_taskmember', 'Can add taskmembers through the API'),
             ('api_change_taskmember', 'Can change taskmembers through the API'),
             ('api_delete_taskmember', 'Can delete taskmembers through the API'),
+
+            ('api_read_own_taskmember', 'Can view own taskmembers through the API'),
+            ('api_add_own_taskmember', 'Can add own taskmembers through the API'),
+            ('api_change_own_taskmember', 'Can change own taskmembers through the API'),
+            ('api_delete_own_taskmember', 'Can delete own taskmembers through the API'),
+
+            ('api_read_taskmember_resume', 'Can read taskmembers resumes through the API'),
+            ('api_read_own_taskmember_resume', 'Can read own taskmembers resumes through the API'),
         )
         verbose_name = _(u'task member')
         verbose_name_plural = _(u'task members')

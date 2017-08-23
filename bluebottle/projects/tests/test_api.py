@@ -3,6 +3,7 @@ import json
 from random import randint
 
 from django.test import RequestFactory
+from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.test.utils import override_settings
@@ -743,7 +744,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         file_url = reverse('project-document-file', args=[document.pk])
         response = self.client.get(file_url)
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
 
     def test_project_document_download_author(self):
         project = ProjectFactory(owner=self.some_user)
@@ -771,7 +772,9 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_project_document_staff_session_user(self):
-        self.another_user.is_staff = True
+        self.another_user.groups.add(
+            Group.objects.get(name='Staff')
+        )
         self.another_user.save()
 
         document = ProjectDocumentFactory.create(
@@ -1160,7 +1163,7 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
                                     {'text': wallpost_text,
                                      'parent_type': 'project',
                                      'parent_id': self.some_project.slug},
-                                    token=self.owner_token)
+                                     token=self.owner_token)
         self.assertEqual(response.status_code,
                          status.HTTP_201_CREATED,
                          response.data)
@@ -1364,10 +1367,10 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
 
         # Adding a photo to that should be denied.
         response = self.client.put(another_photo_detail_url,
-                                   {'mediawallpost': another_wallpost_id},
+                                   {'mediawallpost': response.data['id']},
                                    token=self.owner_token)
         self.assertEqual(
-            response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+            response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
 
         # Add that second photo to our first wallpost and verify that will now
         # contain two photos.

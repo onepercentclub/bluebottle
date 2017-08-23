@@ -1,6 +1,7 @@
 import mock
 
 from django.utils.timezone import now
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.core import mail
 
@@ -198,7 +199,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         response = self.client.delete(
             reaction_detail_url, token=self.another_token)
         self.assertEqual(
-            response.status_code, status.HTTP_403_FORBIDDEN, response)
+            response.status_code, status.HTTP_403_FORBIDDEN)
 
         # Create a Reaction by another user
         another_reaction_text = "I'm not so sure..."
@@ -638,13 +639,18 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
             author=self.user)
         self.wallpost_url = reverse('wallpost_list')
 
-    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_readonly_permission_noauth(self):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
+        anonymous = Group.objects.get(name='Anonymous')
+        anonymous.permissions.remove(
+            Permission.objects.get(codename='api_read_wallpost')
+        )
+
         response = self.client.get(self.wallpost_url,
                                    {'parent_id': self.some_project.slug,
                                     'parent_type': 'project'})
+
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', False)

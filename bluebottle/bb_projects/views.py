@@ -13,7 +13,9 @@ from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView
 )
-from bluebottle.utils.permissions import OwnerPermission, IsAuthenticated
+from bluebottle.utils.permissions import (
+    OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission
+)
 from bluebottle.projects.permissions import IsEditableOrReadOnly
 from .models import ProjectTheme, ProjectPhase
 
@@ -130,7 +132,7 @@ class ManageProjectList(ListCreateAPIView):
     queryset = Project.objects.all()
     pagination_class = ManageProjectPagination
     serializer_class = ManageProjectSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (ResourceOwnerPermission, )
 
     def get_queryset(self):
         """
@@ -147,6 +149,8 @@ class ManageProjectList(ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
+        self.check_permissions(self.request)
+
         serializer.save(
             owner=self.request.user, status=ProjectPhase.objects.order_by('sequence').all()[0]
         )
@@ -154,7 +158,10 @@ class ManageProjectList(ListCreateAPIView):
 
 class ManageProjectDetail(RetrieveUpdateAPIView):
     queryset = Project.objects.all()
-    permission_classes = (OwnerPermission, IsEditableOrReadOnly,)
+    permission_classes = (
+        ResourceOwnerPermission,
+        IsEditableOrReadOnly,
+    )
     serializer_class = ManageProjectSerializer
     lookup_field = 'slug'
 
@@ -195,8 +202,14 @@ class ManageProjectDocumentList(ListCreateAPIView):
     serializer_class = ProjectDocumentSerializer
     pagination_class = ManageProjectDocumentPagination
     filter = ('project', )
+    permission_classes = (RelatedResourceOwnerPermission, )
 
     def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
         serializer.save(
             author=self.request.user, ip_address=get_client_ip(self.request)
         )
@@ -207,6 +220,10 @@ class ManageProjectDocumentDetail(RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectDocumentSerializer
     pagination_class = ManageProjectDocumentPagination
     filter = ('project', )
+
+    permission_classes = (
+        OneOf(ResourcePermission, RelatedResourceOwnerPermission),
+    )
 
     def perform_update(self, serializer):
         serializer.save(

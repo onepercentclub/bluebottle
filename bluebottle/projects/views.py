@@ -1,5 +1,3 @@
-from rest_framework import generics
-
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import (
     ProjectBudgetLineSerializer, ProjectDocumentSerializer,
@@ -7,8 +5,8 @@ from bluebottle.projects.serializers import (
     ProjectSupportSerializer, ProjectWallpostPhotoSerializer)
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
-    RetrieveAPIView, ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView, PrivateFileView
+    RetrieveAPIView, ListCreateAPIView, OwnerListViewMixin,
+    RetrieveUpdateDestroyAPIView, PrivateFileView, UpdateAPIView
 )
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission
@@ -21,11 +19,21 @@ class BudgetLinePagination(BluebottlePagination):
     page_size = 50
 
 
-class ManageProjectBudgetLineList(ListCreateAPIView):
-    queryset = ProjectBudgetLine.objects.all()
+class ManageProjectBudgetLineList(OwnerListViewMixin, ListCreateAPIView):
+    queryset = ProjectBudgetLine.objects
     serializer_class = ProjectBudgetLineSerializer
     pagination_class = BudgetLinePagination
     permission_classes = (RelatedResourceOwnerPermission,)
+
+    owner_filter_field = 'project__owner'
+
+    def get_queryset(self):
+        qs = super(ManageProjectBudgetLineList, self).get_queryset()
+
+        if not self.request.user.has_perm('projects.api_read_budgetline'):
+            qs.filter(project__owner=self.request.user)
+
+        return qs
 
 
 class ManageProjectBudgetLineDetail(RetrieveUpdateDestroyAPIView):
@@ -38,16 +46,25 @@ class DocumentPagination(BluebottlePagination):
     page_size = 20
 
 
-class ManageProjectDocumentList(ListCreateAPIView):
+class ManageProjectDocumentList(OwnerListViewMixin, ListCreateAPIView):
     queryset = ProjectDocument.objects.all()
     serializer_class = ProjectDocumentSerializer
     pagination_class = DocumentPagination
     permission_classes = (RelatedResourceOwnerPermission,)
 
     filter = ('project',)
+    owner_filter_field = 'project__owner'
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))
+
+    def get_queryset(self):
+        qs = super(ManageProjectBudgetLineList, self).get_queryset()
+
+        if not self.request.user.has_perm('projects.api_read_projectdocument'):
+            qs.filter(project__owner=self.request.user)
+
+        return qs
 
 
 class ManageProjectDocumentDetail(RetrieveUpdateDestroyAPIView):
@@ -77,7 +94,7 @@ class ProjectMediaDetail(RetrieveAPIView):
     lookup_field = 'slug'
 
 
-class ProjectMediaPhotoDetail(generics.UpdateAPIView):
+class ProjectMediaPhotoDetail(UpdateAPIView):
     queryset = MediaWallpostPhoto.objects.all()
     pagination_class = BluebottlePagination
     serializer_class = ProjectWallpostPhotoSerializer

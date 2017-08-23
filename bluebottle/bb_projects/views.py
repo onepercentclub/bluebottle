@@ -11,7 +11,7 @@ from bluebottle.projects.serializers import (
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    RetrieveUpdateDestroyAPIView
+    RetrieveUpdateDestroyAPIView, OwnerListViewMixin
 )
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission
@@ -28,10 +28,12 @@ class TinyProjectPagination(BluebottlePagination):
     page_size = 10000
 
 
-class ProjectTinyPreviewList(ListAPIView):
+class ProjectTinyPreviewList(OwnerListViewMixin, ListAPIView):
     queryset = Project.objects.all()
     pagination_class = TinyProjectPagination
     serializer_class = ProjectTinyPreviewSerializer
+
+    owner_filter_field = 'owner'
 
     def get_queryset(self):
         query = self.request.query_params
@@ -40,10 +42,12 @@ class ProjectTinyPreviewList(ListAPIView):
         return qs.filter(status__viewable=True)
 
 
-class ProjectPreviewList(ListAPIView):
+class ProjectPreviewList(OwnerListViewMixin, ListAPIView):
     queryset = Project.objects.all()
     pagination_class = ProjectPagination
     serializer_class = ProjectPreviewSerializer
+
+    owner_filter_field = 'owner'
 
     def get_queryset(self):
         query = self.request.query_params
@@ -105,10 +109,12 @@ class ProjectPhaseLogDetail(RetrieveAPIView):
     serializer_class = ProjectPhaseLogSerializer
 
 
-class ProjectList(ListAPIView):
+class ProjectList(OwnerListViewMixin, ListAPIView):
     queryset = Project.objects.all()
     pagination_class = BluebottlePagination
     serializer_class = ProjectSerializer
+
+    owner_filter_field = 'owner'
 
     def get_queryset(self):
         qs = super(ProjectList, self).get_queryset()
@@ -197,12 +203,14 @@ class ManageProjectDocumentPagination(BluebottlePagination):
     page_size = 20
 
 
-class ManageProjectDocumentList(ListCreateAPIView):
+class ManageProjectDocumentList(OwnerListViewMixin, ListCreateAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectDocumentSerializer
     pagination_class = ManageProjectDocumentPagination
     filter = ('project', )
     permission_classes = (RelatedResourceOwnerPermission, )
+
+    owner_filter_field = 'project__owner'
 
     def perform_create(self, serializer):
         self.check_object_permissions(

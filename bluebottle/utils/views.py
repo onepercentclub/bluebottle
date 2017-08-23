@@ -234,3 +234,19 @@ class PrivateFileView(RetrieveAPIView):
         )
 
         return response
+
+
+class OwnerListViewMixin(object):
+    def get_queryset(self):
+        qs = super(OwnerListViewMixin, self).get_queryset()
+
+        model = super(OwnerListViewMixin, self).model
+        permission = '{}.api_read_{}'.format(
+            model._meta.app_label, model._meta.model_name
+        )
+
+        if not self.request.user.has_perm(permission):
+            user = self.request.user if self.request.user.is_authenticated else None
+            qs = qs.filter(**{self.owner_filter_field: user})
+
+        return qs

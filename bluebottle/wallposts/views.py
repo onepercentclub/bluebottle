@@ -8,7 +8,9 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.utils.utils import get_client_ip
-from bluebottle.utils.views import (ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView)
+from bluebottle.utils.views import (
+    ListCreateAPIView, ListAPIView, RetrieveUpdateDestroyAPIView, OwnerListViewMixin
+)
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, RelatedResourceOwnerPermission, ResourceOwnerPermission
 )
@@ -60,7 +62,7 @@ class FilterQSParams(object):
         return qs
 
 
-class WallpostList(ListAPIView):
+class WallpostList(OwnerListViewMixin, ListAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     pagination_class = BluebottlePagination
@@ -68,6 +70,8 @@ class WallpostList(ListAPIView):
         OneOf(ResourcePermission, RelatedResourceOwnerPermission),
         RelatedManagementOrReadOnlyPermission
     )
+
+    owner_filter_field = 'content_object__owner'
 
     def get_queryset(self, queryset=queryset):
         queryset = super(WallpostList, self).get_queryset()
@@ -100,7 +104,7 @@ class WallpostPagination(BluebottlePagination):
     page_size = 5
 
 
-class TextWallpostList(SetAuthorMixin, ListCreateAPIView, FilterQSParams):
+class TextWallpostList(OwnerListViewMixin, SetAuthorMixin, ListCreateAPIView, FilterQSParams):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
@@ -110,6 +114,8 @@ class TextWallpostList(SetAuthorMixin, ListCreateAPIView, FilterQSParams):
         OneOf(ResourcePermission, RelatedResourceOwnerPermission),
         RelatedManagementOrReadOnlyPermission
     )
+
+    owner_filter_field = 'content_object__owner'
 
     def get_queryset(self, queryset=None):
         queryset = self.queryset
@@ -169,11 +175,13 @@ class MediaWallpostPhotoPagination(BluebottlePagination):
     page_size = 4
 
 
-class MediaWallpostPhotoList(SetAuthorMixin, ListCreateAPIView):
+class MediaWallpostPhotoList(OwnerListViewMixin, SetAuthorMixin, ListCreateAPIView):
     queryset = MediaWallpostPhoto.objects.all()
     serializer_class = MediaWallpostPhotoSerializer
     pagination_class = MediaWallpostPhotoPagination
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
+
+    owner_filter_field = 'author'
 
     def create(self, request, *args, **kwargs):  # FIXME
         """
@@ -207,13 +215,15 @@ class MediaWallpostPhotoDetail(RetrieveUpdateDestroyAPIView):
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
 
 
-class ReactionList(SetAuthorMixin, ListCreateAPIView):
+class ReactionList(OwnerListViewMixin, SetAuthorMixin, ListCreateAPIView):
     queryset = Reaction.objects.all()
     serializer_class = ReactionSerializer
 
     permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
     pagination_class = BluebottlePagination
     filter_fields = ('wallpost',)
+
+    owner_filter_field = 'author'
 
 
 class ReactionDetail(SetAuthorMixin, RetrieveUpdateDestroyAPIView):

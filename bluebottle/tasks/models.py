@@ -392,6 +392,10 @@ class TaskFile(models.Model):
         verbose_name = _(u'task file')
         verbose_name_plural = _(u'task files')
 
+    @property
+    def owner(self):
+        return self.author
+
 
 class TaskStatusLog(models.Model):
     task = models.ForeignKey('tasks.Task')

@@ -17,8 +17,10 @@ from bluebottle.tasks.serializers import (BaseTaskSerializer,
 from bluebottle.utils.permissions import (
     ResourceOwnerPermission, ResourcePermission, OneOf
 )
-from bluebottle.utils.views import (PrivateFileView, ListAPIView, ListCreateAPIView,
-                                    RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView)
+from bluebottle.utils.views import (
+    PrivateFileView, ListAPIView, ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView, OwnerListViewMixin,
+)
 from bluebottle.bb_tasks.permissions import (
     ActiveProjectOrReadOnlyPermission, MemberOrTaskOwnerResourcePermission,
     ResumePermission
@@ -124,12 +126,14 @@ class TaskPreviewList(ListAPIView, FilterQSParams):
         return qs.filter(project__status__viewable=True)
 
 
-class BaseTaskList(ListCreateAPIView):
+class BaseTaskList(OwnerListViewMixin, ListCreateAPIView):
     queryset = Task.objects.all()
     pagination_class = TaskPreviewPagination
     permission_classes = (
         OneOf(ResourcePermission, RelatedProjectTaskManagerPermission),
     )
+
+    owner_filter_field = 'project__task_manager'
 
     def perform_create(self, serializer):
         if serializer.validated_data['project'].status.slug in (
@@ -209,7 +213,7 @@ class TaskPagination(BluebottlePagination):
     page_size = 50
 
 
-class TaskMemberList(ListCreateAPIView):
+class TaskMemberList(OwnerListViewMixin, ListCreateAPIView):
     serializer_class = BaseTaskMemberSerializer
     pagination_class = TaskPagination
     filter_fields = ('task', 'status',)
@@ -218,6 +222,8 @@ class TaskMemberList(ListCreateAPIView):
         ActiveProjectOrReadOnlyPermission,
     )
     queryset = TaskMember.objects.all()
+
+    owner_filter_field = 'member'
 
     def perform_create(self, serializer):
         self.check_object_permissions(
@@ -230,11 +236,12 @@ class TaskMemberList(ListCreateAPIView):
         serializer.save(member=self.request.user, status=TaskMember.TaskMemberStatuses.applied)
 
 
-class MyTaskMemberList(generics.ListAPIView):
+class MyTaskMemberList(OwnerListViewMixin, ListAPIView):
     queryset = TaskMember.objects.all()
     serializer_class = MyTaskMemberSerializer
 
     permission_classes = (ResourceOwnerPermission, )
+    owner_filter_field = 'member'
 
     def get_queryset(self):
         queryset = super(MyTaskMemberList, self).get_queryset()
@@ -256,15 +263,17 @@ class TaskMemberResumeView(PrivateFileView):
     permission_classes = (ResumePermission, )
 
 
-class TaskFileList(generics.ListCreateAPIView):
+class TaskFileList(OwnerListViewMixin, ListCreateAPIView):
     queryset = TaskFile.objects.all()
     serializer_class = TaskFileSerializer
     pagination_class = TaskPagination
     filter_fields = ('task',)
 
     permission_classes = (
-        OneOf(ResourcePermission, MemberOrTaskOwnerResourcePermission),
+        OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+
+    owner_filter_field = 'author'
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)

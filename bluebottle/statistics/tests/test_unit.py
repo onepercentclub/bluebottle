@@ -460,3 +460,11 @@ class ParticipationStatisticsTest(BluebottleTestCase):
         participant_count = self.statistics.participants_count
 
         self.assertEqual(participant_count, 1)
+
+    def test_projects_total(self):
+        count = self.statistics.projects_total
+        self.assertEqual(count, 2)
+
+    def test_projects_count_by_theme(self):
+        count = self.statistics.get_projects_count_by_theme(theme='education')
+        self.assertEqual(count, 2)

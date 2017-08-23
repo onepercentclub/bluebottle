@@ -471,11 +471,11 @@ class ParticipationStatisticsTest(BluebottleTestCase):
 
     def test_projects_status_count_by_location_group(self):
         count = self.statistics.get_projects_status_count_by_location_group(location_group=self.location.group.name,
-                                                                            statuses='done-complete')
+                                                                            statuses=['done-complete'])
         self.assertEqual(count, 1)
 
     def test_projects_status_count_by_theme(self):
-        count = self.statistics.get_projects_status_count_by_theme(theme='education', statuses='done-complete')
+        count = self.statistics.get_projects_status_count_by_theme(theme='education', statuses=['done-complete'])
         self.assertEqual(count, 1)
 
     def test_projects_by_location_group(self):
@@ -497,3 +497,35 @@ class ParticipationStatisticsTest(BluebottleTestCase):
     def test_project_online(self):
         count = self.statistics.projects_online
         self.assertEqual(count, 0)
+
+    def test_tasks_total(self):
+        count = self.statistics.tasks_total
+        self.assertEqual(count, 2)
+
+    def test_tasks_count_by_last_status(self):
+        count = self.statistics.get_tasks_count_by_last_status(statuses=['in progress'])
+        self.assertEqual(count, 2)
+
+    def test_tasks_status_count_by_location_group(self):
+        count = self.statistics.get_tasks_status_count_by_location_group(location_group=self.location.group.name,
+                                                                         statuses=['in progress'])
+        self.assertEqual(count, 1)
+
+    def test_tasks_status_count_by_theme(self):
+        count = self.statistics.get_tasks_status_count_by_theme(theme='education', statuses=['in progress'])
+        self.assertEqual(count, 2)
+
+    def test_task_members_total(self):
+        pass
+
+    def test_get_task_members_count_by_last_status(self):
+        pass
+
+    def test_task_members(self):
+        pass
+
+    def test_unconfirmed_task_members(self):
+        pass
+
+    def test_unconfirmed_task_members_task_count(self):
+        pass

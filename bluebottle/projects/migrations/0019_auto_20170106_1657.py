@@ -9,6 +9,7 @@ import select_multiple_field.models
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('members', '0016_auto_20170822_1104'),
         ('projects', '0018_merge_20170106_1627'),
     ]
 

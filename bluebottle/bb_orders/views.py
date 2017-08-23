@@ -7,7 +7,7 @@ from bluebottle.utils import views
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.orders.models import Order
-from bluebottle.orders.serializers import OrderSerializer, ManageOrderSerializer
+from bluebottle.orders.serializers import ManageOrderSerializer
 from bluebottle.payments.services import PaymentService
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission

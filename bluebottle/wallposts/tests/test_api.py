@@ -1,6 +1,7 @@
 import mock
 
 from django.utils.timezone import now
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.core import mail
 
@@ -83,6 +84,25 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(wallpost.status_code,
                          status.HTTP_403_FORBIDDEN,
                          'Only the task owner can share a wallpost.')
+
+    def test_permissions_on_task_wallpost_non_sharing(self):
+        """
+        Tests that only the task creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': str(self.task.id),
+                         'parent_type': 'task',
+                         'email_followers': False,
+                         'text': 'I can share stuff!'}
+
+        # Non-owner users can't share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.other_token)
+
+        self.assertEqual(
+            wallpost.status_code,
+            status.HTTP_201_CREATED
+        )
 
     def test_permissions_on_fundraiser_wallpost_sharing(self):
         """
@@ -179,7 +199,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         response = self.client.delete(
             reaction_detail_url, token=self.another_token)
         self.assertEqual(
-            response.status_code, status.HTTP_403_FORBIDDEN, response)
+            response.status_code, status.HTTP_403_FORBIDDEN)
 
         # Create a Reaction by another user
         another_reaction_text = "I'm not so sure..."
@@ -323,6 +343,10 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         self.user_c = self.create_user(email='c@example.com',
                                        first_name='cname ',
                                        last_name='clast',
+                                       primary_language='en')
+        self.user_d = self.create_user(email='d@example.com',
+                                       first_name='dname ',
+                                       last_name='dlast',
                                        primary_language='en')
 
         # self.project = self.create_project(owner=self.user_a)
@@ -580,6 +604,23 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(m.to, [self.user_a.email])
         self.assertEqual(m.activated_language, self.user_a.primary_language)
 
+    def test_new_wallpost_b_on_project_with_roles_by_a_c_d(self):
+        """
+        Project by A, with task manager C and promoter D + Wallpost by B => Mail to A, C and D.
+        """
+        # Object by A with task manager C + promoter D
+        # |
+        # +-- Wallpost by B
+
+        self.project_1.task_manager = self.user_c
+        self.project_1.promoter = self.user_d
+        self.project_1.save()
+
+        TextWallpostFactory.create(content_object=self.project_1, author=self.user_b)
+
+        # Mailbox should contain an email to author of reaction b.
+        self.assertEqual(len(mail.outbox), 3)
+
 
 class TestWallpostAPIPermissions(BluebottleTestCase):
     """ API endpoint test where endpoint (wallpost) has explicit
@@ -598,13 +639,18 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
             author=self.user)
         self.wallpost_url = reverse('wallpost_list')
 
-    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_readonly_permission_noauth(self):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
+        anonymous = Group.objects.get(name='Anonymous')
+        anonymous.permissions.remove(
+            Permission.objects.get(codename='api_read_wallpost')
+        )
+
         response = self.client.get(self.wallpost_url,
                                    {'parent_id': self.some_project.slug,
                                     'parent_type': 'project'})
+
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', False)

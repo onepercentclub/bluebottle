@@ -11,15 +11,6 @@ from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.utils import StatusDefinition
 
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_member', 'change_member', 'delete_member',
-        )
-    }
-}
-
-
 class Member(BlueBottleBaseUser):
     verified = models.BooleanField(default=False, blank=True)
     remote_id = models.CharField(_('remote_id'),
@@ -116,3 +107,6 @@ class Member(BlueBottleBaseUser):
     @property
     def is_supporter(self):
         return self.amount_donated > 0
+
+
+import signals # noqa

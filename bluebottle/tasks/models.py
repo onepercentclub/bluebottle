@@ -17,18 +17,6 @@ from bluebottle.utils.utils import PreviousStatusMixin
 from bluebottle.utils.email_backend import send_mail
 
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_task', 'change_task', 'delete_task',
-            'add_taskmember', 'change_taskmember', 'delete_taskmember',
-            'add_taskfile', 'change_taskfile', 'delete_taskfile',
-            'add_skill', 'change_skill', 'delete_skill',
-        )
-    }
-}
-
-
 class Task(models.Model, PreviousStatusMixin):
     class TaskStatuses(DjangoChoices):
         open = ChoiceItem('open', label=_('Open'))
@@ -90,14 +78,16 @@ class Task(models.Model, PreviousStatusMixin):
     created = CreationDateTimeField(_('created'), help_text=_('When this task was created?'))
     updated = ModificationDateTimeField(_('updated'))
 
-    class Meta:
-        verbose_name = _(u'task')
-        verbose_name_plural = _(u'tasks')
-
-        ordering = ['-created']
-
     def __unicode__(self):
         return self.title
+
+    @property
+    def owner(self):
+        return self.author
+
+    @property
+    def parent(self):
+        return self.project
 
     @property
     def expertise_based(self):
@@ -274,6 +264,23 @@ class Task(models.Model, PreviousStatusMixin):
 
         super(Task, self).save(*args, **kwargs)
 
+    class Meta:
+        verbose_name = _(u'task')
+        verbose_name_plural = _(u'tasks')
+        ordering = ['-created']
+
+        permissions = (
+            ('api_read_task', 'Can view tasks through the API'),
+            ('api_add_task', 'Can add tasks through the API'),
+            ('api_change_task', 'Can change tasks through the API'),
+            ('api_delete_task', 'Can delete tasks through the API'),
+
+            ('api_read_own_task', 'Can view own tasks through the API'),
+            ('api_add_own_task', 'Can add own tasks through the API'),
+            ('api_change_own_task', 'Can change own tasks through the API'),
+            ('api_delete_own_task', 'Can delete own tasks through the API'),
+        )
+
 
 class Skill(models.Model):
     name = models.CharField(_('english name'), max_length=100, unique=True)
@@ -292,6 +299,9 @@ class Skill(models.Model):
 
     class Meta:
         ordering = ('id',)
+        permissions = (
+            ('api_read_skill', 'Can view skills through the API'),
+        )
 
 
 class TaskMember(models.Model, PreviousStatusMixin):
@@ -328,11 +338,33 @@ class TaskMember(models.Model, PreviousStatusMixin):
     objects = UpdateSignalsQuerySet.as_manager()
 
     class Meta:
+        permissions = (
+            ('api_read_taskmember', 'Can view taskmembers through the API'),
+            ('api_add_taskmember', 'Can add taskmembers through the API'),
+            ('api_change_taskmember', 'Can change taskmembers through the API'),
+            ('api_delete_taskmember', 'Can delete taskmembers through the API'),
+
+            ('api_read_own_taskmember', 'Can view own taskmembers through the API'),
+            ('api_add_own_taskmember', 'Can add own taskmembers through the API'),
+            ('api_change_own_taskmember', 'Can change own taskmembers through the API'),
+            ('api_delete_own_taskmember', 'Can delete own taskmembers through the API'),
+
+            ('api_read_taskmember_resume', 'Can read taskmembers resumes through the API'),
+            ('api_read_own_taskmember_resume', 'Can read own taskmembers resumes through the API'),
+        )
         verbose_name = _(u'task member')
         verbose_name_plural = _(u'task members')
 
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
+
+    @property
+    def owner(self):
+        return self.member
+
+    @property
+    def parent(self):
+        return self.task
 
     @property
     def time_applied_for(self):
@@ -361,6 +393,10 @@ class TaskFile(models.Model):
     class Meta:
         verbose_name = _(u'task file')
         verbose_name_plural = _(u'task files')
+
+    @property
+    def owner(self):
+        return self.author
 
 
 class TaskStatusLog(models.Model):

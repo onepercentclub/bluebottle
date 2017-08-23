@@ -15,21 +15,6 @@ WALLPOST_TEXT_MAX_LENGTH = getattr(settings, 'WALLPOST_TEXT_MAX_LENGTH', 300)
 WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH',
                                        300)
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_reaction', 'change_reaction', 'delete_reaction',
-            'add_wallpost', 'change_wallpost', 'delete_wallpost',
-            'add_mediawallpost', 'change_mediawallpost', 'delete_mediawallpost',
-            'add_textwallpost', 'change_textwallpost', 'delete_textwallpost',
-            'add_systemwallpost', 'change_systemwallpost',
-            'delete_systemwallpost',
-            'add_mediawallpostphoto', 'change_mediawallpostphoto',
-            'delete_mediawallpostphoto',
-        )
-    }
-}
-
 
 class Wallpost(PolymorphicModel):
     """
@@ -41,10 +26,6 @@ class Wallpost(PolymorphicModel):
     possible to make this an abstract class
     and have the polymorphic behaviour of sorting on the common fields.
     """
-
-    @property
-    def wallpost_type(self):
-        return 'unknown'
 
     # The user who wrote the wall post. This can be empty to support wallposts
     # without users (e.g. anonymous
@@ -85,6 +66,18 @@ class Wallpost(PolymorphicModel):
     objects = WallpostManager()
     objects_with_deleted = models.Manager()
 
+    @property
+    def wallpost_type(self):
+        return 'unknown'
+
+    @property
+    def owner(self):
+        return self.author
+
+    @property
+    def parent(self):
+        return self.content_object
+
     class Analytics:
         type = 'wallpost'
         tags = {}
@@ -107,6 +100,16 @@ class Wallpost(PolymorphicModel):
     class Meta:
         ordering = ('created',)
         base_manager_name = 'objects_with_deleted'
+        permissions = (
+            ('api_read_wallpost', 'Can view wallposts through the API'),
+            ('api_add_wallpost', 'Can add wallposts through the API'),
+            ('api_change_wallpost', 'Can wallposts documents through the API'),
+            ('api_delete_wallpost', 'Can wallposts documents through the API'),
+
+            ('api_read_own_wallpost', 'Can view own wallposts through the API'),
+            ('api_change_own_wallpost', 'Can own wallposts documents through the API'),
+            ('api_delete_own_wallpost', 'Can own wallposts documents through the API'),
+        )
 
     def __unicode__(self):
         return str(self.id)
@@ -127,6 +130,36 @@ class MediaWallpost(Wallpost):
     def __unicode__(self):
         return Truncator(self.text).words(10)
 
+    class Meta(Wallpost.Meta):
+        permissions = (
+            ('api_read_own_textwallpost', 'Can view own text wallposts through the API'),
+            ('api_change_own_textwallpost', 'Can change text wallposts through the API'),
+            ('api_delete_own_textwallpost', 'Can delete own text wallposts through the API'),
+
+            ('api_read_textwallpost', 'Can view text wallposts through the API'),
+            ('api_add_textwallpost', 'Can add text wallposts through the API'),
+            ('api_change_textwallpost', 'Can change text wallposts through the API'),
+            ('api_delete_textwallpost', 'Can delete text wallposts through the API'),
+
+            ('api_read_mediawallpost', 'Can view media wallposts through the API'),
+            ('api_add_mediawallpost', 'Can add media wallposts through the API'),
+            ('api_change_mediawallpost', 'Can change media wallposts through the API'),
+            ('api_delete_mediawallpost', 'Can delete media wallposts through the API'),
+
+            ('api_read_own_mediawallpost', 'Can view own media wallposts through the API'),
+            ('api_change_own_mediawallpost', 'Can change own media wallposts through the API'),
+            ('api_delete_own_mediawallpost', 'Can delete own media wallposts through the API'),
+
+            ('api_read_mediawallpostphoto', 'Can view media wallpost photos through the API'),
+            ('api_add_mediawallpostphoto', 'Can add media wallpost photos through the API'),
+            ('api_change_mediawallpostphoto', 'Can change media wallpost photos through the API'),
+            ('api_delete_mediawallpostphoto', 'Can delete media wallpost photos through the API'),
+
+            ('api_read_own_mediawallpostphoto', 'Can view own media wallpost photos through the API'),
+            ('api_change_own_mediawallpostphoto', 'Can change own media wallpost photos through the API'),
+            ('api_delete_own_mediawallpostphoto', 'Can delete own media wallpost photos through the API'),
+        )
+
 
 class MediaWallpostPhoto(models.Model):
     mediawallpost = models.ForeignKey(MediaWallpost, related_name='photos',
@@ -145,12 +178,28 @@ class MediaWallpostPhoto(models.Model):
                                help_text=_(
                                    "The last user to edit this wallpost photo."))
 
+    @property
+    def owner(self):
+        return self.author
+
+    @property
+    def parent(self):
+        return self.mediawallpost.content_object
+
 
 class TextWallpost(Wallpost):
     # The content of the wall post.
     @property
     def wallpost_type(self):
         return 'text'
+
+    @property
+    def owner(self):
+        return self.author
+
+    @property
+    def parent(self):
+        return self.textwallpost
 
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH)
 
@@ -208,6 +257,10 @@ class Reaction(models.Model):
     objects = ReactionManager()
     objects_with_deleted = models.Manager()
 
+    @property
+    def owner(self):
+        return self.author
+
     class Analytics:
         type = 'wallpost'
         tags = {}
@@ -233,6 +286,17 @@ class Reaction(models.Model):
         base_manager_name = 'objects_with_deleted'
         verbose_name = _('Reaction')
         verbose_name_plural = _('Reactions')
+        permissions = (
+            ('api_read_reaction', 'Can view reactions through the API'),
+            ('api_add_reaction', 'Can add reactions through the API'),
+            ('api_change_reaction', 'Can reactions documents through the API'),
+            ('api_delete_reaction', 'Can reactions documents through the API'),
+
+            ('api_read_own_reaction', 'Can view own reactions through the API'),
+            ('api_add_own_reaction', 'Can add own reactions through the API'),
+            ('api_change_own_reaction', 'Can change own reactions documents through the API'),
+            ('api_delete_own_reaction', 'Can delete own reactions documents through the API'),
+        )
 
     def __unicode__(self):
         s = self.text

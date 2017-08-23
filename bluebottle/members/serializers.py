@@ -12,8 +12,26 @@ from bluebottle.clients import properties
 from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
 from bluebottle.geo.models import Location
 from bluebottle.tasks.models import Skill
+from bluebottle.utils.serializers import PermissionField
 
 BB_USER_MODEL = get_user_model()
+
+
+class PrivateProfileMixin(object):
+    private_fields = (
+        'url', 'full_name', 'picture', 'about_me', 'location',
+        'avatar', 'website', 'twitter', 'facebook', 'skypename'
+    )
+
+    def to_representation(self, obj):
+        data = super(PrivateProfileMixin, self).to_representation(obj)
+
+        if not self.context['request'].user.has_perm('members.api_read_full_member'):
+            for field in self.private_fields:
+                if field in data:
+                    del data[field]
+
+        return data
 
 
 class UserAddressSerializer(serializers.ModelSerializer):
@@ -23,7 +41,7 @@ class UserAddressSerializer(serializers.ModelSerializer):
                   'city', 'state', 'country', 'postal_code')
 
 
-class UserPreviewSerializer(serializers.ModelSerializer):
+class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a subset of a member's public profile. This is usually
     embedded into other serializers.
@@ -45,6 +63,22 @@ class UserPreviewSerializer(serializers.ModelSerializer):
                   'avatar', 'full_name', 'short_name')
 
 
+class UserPermissionsSerializer(serializers.Serializer):
+    def get_attribute(self, obj):
+        return obj
+
+    project_list = PermissionField('project_list')
+    project_manage_list = PermissionField('project_manage_list')
+    homepage = PermissionField('homepage', view_args=('primary_language', ))
+
+    class Meta:
+        fields = [
+            'project_list',
+            'project_manage_list',
+            'homepage'
+        ]
+
+
 class CurrentUserSerializer(UserPreviewSerializer):
     """
     Serializer for the current authenticated user. This is the same as the
@@ -57,6 +91,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     country = CountrySerializer(source='address.country')
     location = LocationSerializer()
+    permissions = UserPermissionsSerializer(read_only=True)
 
     class Meta:
         model = BB_USER_MODEL
@@ -64,10 +99,10 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'country', 'verified')
+            'country', 'verified', 'permissions')
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """

@@ -210,6 +210,18 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         verbose_name = _('member')
         verbose_name_plural = _('members')
 
+        permissions = (
+            ('api_read_member', 'Can view members through the API'),
+            ('api_read_full_member', 'Can view full members through the API'),
+            ('api_add_member', 'Can add members through the API'),
+            ('api_change_member', 'Can change members through the API'),
+            ('api_delete_member', 'Can delete members through the API'),
+
+            ('api_read_own_member', 'Can view own members through the API'),
+            ('api_change_own_member', 'Can change own members through the API'),
+            ('api_delete_own_member', 'Can delete own members through the API'),
+        )
+
     def update_deleted_timestamp(self):
         """ Automatically set or unset the deleted timestamp."""
         if not self.is_active and self.deleted is None:

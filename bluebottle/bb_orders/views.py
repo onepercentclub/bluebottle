@@ -2,13 +2,16 @@ import logging
 from django.http import Http404
 from bluebottle.bb_orders.permissions import IsOrderCreator, OrderIsNew
 from bluebottle.bb_orders.signals import order_requested
-from rest_framework import generics
+from bluebottle.utils import views
 
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.orders.models import Order
 from bluebottle.orders.serializers import OrderSerializer, ManageOrderSerializer
 from bluebottle.payments.services import PaymentService
+from bluebottle.utils.permissions import (
+    OneOf, ResourcePermission, ResourceOwnerPermission
+)
 from bluebottle.utils.utils import StatusDefinition
 
 logger = logging.getLogger(__name__)
@@ -16,21 +19,14 @@ logger = logging.getLogger(__name__)
 anonymous_order_id_session_key = 'new_order_id'
 
 
-class OrderList(generics.ListCreateAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
-
-
-class OrderDetail(generics.RetrieveUpdateAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
-
-
-class ManageOrderList(generics.ListCreateAPIView):
+class ManageOrderList(views.ListCreateAPIView):
     queryset = Order.objects.all()
     serializer_class = ManageOrderSerializer
     filter_fields = ('status',)
     pagination_class = BluebottlePagination
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
 
     def get_queryset(self):
         queryset = super(ManageOrderList, self).get_queryset()
@@ -51,9 +47,10 @@ class ManageOrderList(generics.ListCreateAPIView):
             self.request.session.save()
 
 
-class ManageOrderDetail(generics.RetrieveUpdateAPIView):
+class ManageOrderDetail(views.RetrieveUpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = ManageOrderSerializer
+
     permission_classes = (IsOrderCreator, OrderIsNew)
 
     def get(self, request, *args, **kwargs):

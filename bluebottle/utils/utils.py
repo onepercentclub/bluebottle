@@ -1,23 +1,21 @@
-import socket
-import logging
-from importlib import import_module
 import bleach
+from importlib import import_module
+import logging
+import pygeoip
+import socket
 
-
-from django.db import connection
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
+from django.contrib.auth.models import Permission, Group
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import Permission, Group
 
-from django_tools.middlewares import ThreadLocal
 from django_fsm import TransitionNotAllowed
-
-import pygeoip
+from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients import properties
+
 
 TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
         'br', 'pre', 'blockquote']
@@ -144,13 +142,13 @@ def get_client_ip(request=None):
         x_forwarded_for = None
 
     if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
+        ipa = x_forwarded_for.split(',')[0]
     else:
         try:
-            ip = request.META.get('REMOTE_ADDR')
+            ipa = request.META.get('REMOTE_ADDR')
         except AttributeError:
-            ip = None
-    return ip
+            ipa = None
+    return ipa
 
 
 def set_author_editor_ip(request, obj):
@@ -188,17 +186,17 @@ class GetClassError(Exception):
     pass
 
 
-def get_class(cl):
+def get_class(cls):
     # Get the class from dotted string
     try:
         # try to call handler
-        parts = cl.split('.')
+        parts = cls.split('.')
         module_path, class_name = '.'.join(parts[:-1]), parts[-1]
         module = import_module(module_path)
         return getattr(module, class_name)
 
-    except (ImportError, AttributeError, ValueError) as e:
-        error_message = "Could not import '%s'. %s: %s." % (cl, e.__class__.__name__, e)
+    except (ImportError, AttributeError, ValueError) as err:
+        error_message = "Could not import '%s'. %s: %s." % (cls, err.__class__.__name__, err)
         raise GetClassError(error_message)
 
 
@@ -238,8 +236,8 @@ def get_country_by_ip(ip_address=None):
     except socket.error:
         raise InvalidIpError("Invalid IP address")
 
-    gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
-    return gi.country_name_by_addr(ip_address)
+    gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
+    return gip.country_name_by_addr(ip_address)
 
 
 def get_country_code_by_ip(ip_address=None):
@@ -256,34 +254,29 @@ def get_country_code_by_ip(ip_address=None):
     except socket.error:
         raise InvalidIpError("Invalid IP address")
 
-    gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
-    return gi.country_code_by_name(ip_address)
+    gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
+    return gip.country_code_by_name(ip_address)
 
 
-def update_group_permissions(sender, group_perms=None):
-    # Return early if there is no group permissions table. This will happen when running tests.
-    if Group.objects.model._meta.db_table not in connection.introspection.table_names():
-        return
+def update_group_permissions(label, group_perms, apps):
+    for app_config in apps.get_app_configs():
+        app_config.models_module = True
+        create_permissions(app_config, apps=apps, verbosity=0)
+        app_config.models_module = None
 
-    try:
-        if not group_perms:
-            create_permissions(sender, verbosity=False)
+    for group_name, permissions in group_perms.items():
+        group, _ = Group.objects.get_or_create(name=group_name)
+        for perm_codename in permissions['perms']:
             try:
-                group_perms = sender.module.models.GROUP_PERMS
-            except AttributeError:
-                return
-
-        for group_name, permissions in group_perms.items():
-            group, _ = Group.objects.get_or_create(name=group_name)
-            for perm_codename in permissions['perms']:
                 permissions = Permission.objects.filter(codename=perm_codename)
-                if sender:
-                    permissions = permissions.filter(content_type__app_label=sender.label)
+                permissions = permissions.filter(content_type__app_label=label)
                 group.permissions.add(permissions.get())
-
-            group.save()
-    except Permission.DoesNotExist, e:
-        logging.debug(e)
+            except Permission.DoesNotExist, err:
+                logging.debug(err)
+                raise Exception(
+                    'Could not add permission: {}: {}'.format(perm_codename, err)
+                )
+        group.save()
 
 
 class PreviousStatusMixin(object):

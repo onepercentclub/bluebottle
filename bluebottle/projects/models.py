@@ -42,15 +42,6 @@ from .mails import (
 )
 from .signals import project_funded
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_project', 'change_project', 'delete_project',
-            'add_projectdocument', 'change_projectdocument', 'delete_projectdocument',
-            'add_projectbudgetline', 'change_projectbudgetline', 'delete_projectbudgetline',
-        )
-    }
-}
 
 logger = logging.getLogger(__name__)
 
@@ -201,6 +192,14 @@ class ProjectDocument(BaseProjectDocument):
         if self.pk is not None:
             return reverse('project-document-file', kwargs={'pk': self.pk})
         return None
+
+    @property
+    def owner(self):
+        return self.project.owner
+
+    @property
+    def parent(self):
+        return self.project
 
 
 class Project(BaseProject, PreviousStatusMixin):
@@ -445,6 +444,12 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.payout_status == 're_scheduled' and self.campaign_paid_out:
             self.campaign_paid_out = None
 
+        if not self.task_manager:
+            self.task_manager = self.owner
+
+        # Set all task.author to project.task_manager
+        self.task_set.exclude(author=self.task_manager).update(author=self.task_manager)
+
         super(Project, self).save(*args, **kwargs)
 
     def update_status_after_donation(self, save=True):
@@ -684,7 +689,39 @@ class Project(BaseProject, PreviousStatusMixin):
         return tweet
 
     class Meta(BaseProject.Meta):
-        permissions = (('approve_payout', 'Can approve payouts for projects'), )
+        permissions = (
+            ('approve_payout', 'Can approve payouts for projects'),
+            ('api_read_project', 'Can view projects through the API'),
+            ('api_add_project', 'Can add projects through the API'),
+            ('api_change_project', 'Can change projects through the API'),
+            ('api_delete_project', 'Can delete projects through the API'),
+
+            ('api_read_own_project', 'Can view own projects through the API'),
+            ('api_add_own_project', 'Can add own projects through the API'),
+            ('api_change_own_project', 'Can change own projects through the API'),
+            ('api_delete_own_project', 'Can delete own projects through the API'),
+
+            ('api_read_projectdocument', 'Can view project documents through the API'),
+            ('api_add_projectdocument', 'Can add project documents through the API'),
+            ('api_change_projectdocument', 'Can change project documents through the API'),
+            ('api_delete_projectdocument', 'Can delete project documents through the API'),
+
+            ('api_read_own_projectdocument', 'Can view project own documents through the API'),
+            ('api_add_own_projectdocument', 'Can add own project documents through the API'),
+            ('api_change_own_projectdocument', 'Can change own project documents through the API'),
+            ('api_delete_own_projectdocument', 'Can delete own project documents through the API'),
+
+            ('api_read_projectbudgetline', 'Can view project budget lines through the API'),
+            ('api_add_projectbudgetline', 'Can add project budget lines through the API'),
+            ('api_change_projectbudgetline', 'Can change project budget lines through the API'),
+            ('api_delete_projectbudgetline', 'Can delete project budget lines through the API'),
+
+            ('api_read_own_projectbudgetline', 'Can view own project budget lines through the API'),
+            ('api_add_own_projectbudgetline', 'Can add own project budget lines through the API'),
+            ('api_change_own_projectbudgetline', 'Can change own project budget lines through the API'),
+            ('api_delete_own_projectbudgetline', 'Can delete own project budget lines through the API'),
+
+        )
         ordering = ['title']
 
     def status_changed(self, old_status, new_status):
@@ -761,6 +798,14 @@ class ProjectBudgetLine(models.Model):
 
     created = CreationDateTimeField()
     updated = ModificationDateTimeField()
+
+    @property
+    def owner(self):
+        return self.project.owner
+
+    @property
+    def parent(self):
+        return self.project
 
     class Meta:
         verbose_name = _('budget line')

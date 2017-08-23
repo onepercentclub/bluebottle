@@ -1,14 +1,16 @@
 import datetime
 
+import pendulum
 from django.test.utils import override_settings
 from django.utils import timezone
 from moneyed.classes import Money
-import pendulum
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.statistics.views import Statistics
+from bluebottle.projects.models import Project
 from bluebottle.statistics.participation import Statistics as ParticipationStatistics
+from bluebottle.statistics.views import Statistics
 from bluebottle.tasks.models import Task
+from bluebottle.tasks.models import TaskMember
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -411,18 +413,12 @@ class ParticipationStatisticsTest(BluebottleTestCase):
     def setUp(self):
         super(ParticipationStatisticsTest, self).setUp()
 
-        self.statistics = ParticipationStatistics(start=pendulum.create(2016, 1, 1, 0, 0, 0),
-                                                  end=pendulum.create(2016, 12, 31, 23, 59, 59))
-
         # Required by Project model save method
         self.init_projects()
 
         self.user_1 = BlueBottleUserFactory.create()
         self.user_2 = BlueBottleUserFactory.create()
         self.user_3 = BlueBottleUserFactory.create()
-
-        self.some_project = ProjectFactory.create(owner=self.user_1, created=pendulum.create(2016, 1, 20))
-        self.another_project = ProjectFactory.create(owner=self.user_2, created=pendulum.create(2016, 7, 20))
 
         self.project_status_plan_new = ProjectPhase.objects.get(slug='plan-new')
         self.project_status_plan_submitted = ProjectPhase.objects.get(slug='plan-submitted')
@@ -433,17 +429,34 @@ class ParticipationStatisticsTest(BluebottleTestCase):
         self.project_status_done_incomplete = ProjectPhase.objects.get(slug='done-incomplete')
         self.project_status_closed = ProjectPhase.objects.get(slug='closed')
 
-        self.some_task = TaskFactory.create(project=self.some_project, author=self.user_1,
+        self.some_project = ProjectFactory.create(owner=self.user_1, status=self.project_status_done_complete)
+        self.another_project = ProjectFactory.create(owner=self.user_2)
+
+        # NOTE: auto_add_now datefields cannot be overridden in factory object creation methods
+        Project.objects.filter(id=self.some_project.id).update(created=pendulum.create(2016, 1, 20))
+        Project.objects.filter(id=self.another_project.id).update(created=pendulum.create(2016, 7, 20))
+
+        self.some_task = TaskFactory.create(project=self.some_project,
+                                            author=self.user_1,
                                             created=pendulum.create(2016, 1, 30))
         self.another_task = TaskFactory.create(project=self.another_project,
                                                author=self.user_2,
                                                created=pendulum.create(2016, 7, 30))
-        print(self.some_project.created)
+
+        Task.objects.filter(id=self.some_task.id).update(created=pendulum.create(2016, 1, 30))
+        Task.objects.filter(id=self.another_task.id).update(created=pendulum.create(2016, 7, 30))
+
         self.some_task_member = TaskMemberFactory.create(member=self.user_1, task=self.some_task)
         self.another_task_member = TaskMemberFactory.create(member=self.user_2, task=self.another_task)
+
+        TaskMember.objects.filter(id=self.some_task_member.id).update(created=pendulum.create(2016, 1, 31))
+        TaskMember.objects.filter(id=self.another_task_member.id).update(created=pendulum.create(2016, 7, 31))
+
+        self.statistics = ParticipationStatistics(start=pendulum.create(2016, 1, 1, 0, 0, 0),
+                                                  end=pendulum.create(2016, 12, 31, 23, 59, 59))
 
     def test_participant_details(self):
         # participant_details = self.statistics.participant_details()
         participant_count = self.statistics.participants_count
 
-        self.assertEqual(participant_count, 2)
+        self.assertEqual(participant_count, 1)

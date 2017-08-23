@@ -11,9 +11,11 @@ from bluebottle.projects.serializers import (
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    RetrieveUpdateDestroyAPIView
+    RetrieveUpdateDestroyAPIView, OwnerListViewMixin
 )
-from bluebottle.utils.permissions import OwnerPermission, IsAuthenticated
+from bluebottle.utils.permissions import (
+    OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission
+)
 from bluebottle.projects.permissions import IsEditableOrReadOnly
 from .models import ProjectTheme, ProjectPhase
 
@@ -26,10 +28,12 @@ class TinyProjectPagination(BluebottlePagination):
     page_size = 10000
 
 
-class ProjectTinyPreviewList(ListAPIView):
+class ProjectTinyPreviewList(OwnerListViewMixin, ListAPIView):
     queryset = Project.objects.all()
     pagination_class = TinyProjectPagination
     serializer_class = ProjectTinyPreviewSerializer
+
+    owner_filter_field = 'owner'
 
     def get_queryset(self):
         query = self.request.query_params
@@ -38,10 +42,12 @@ class ProjectTinyPreviewList(ListAPIView):
         return qs.filter(status__viewable=True)
 
 
-class ProjectPreviewList(ListAPIView):
+class ProjectPreviewList(OwnerListViewMixin, ListAPIView):
     queryset = Project.objects.all()
     pagination_class = ProjectPagination
     serializer_class = ProjectPreviewSerializer
+
+    owner_filter_field = 'owner'
 
     def get_queryset(self):
         query = self.request.query_params
@@ -103,10 +109,12 @@ class ProjectPhaseLogDetail(RetrieveAPIView):
     serializer_class = ProjectPhaseLogSerializer
 
 
-class ProjectList(ListAPIView):
+class ProjectList(OwnerListViewMixin, ListAPIView):
     queryset = Project.objects.all()
     pagination_class = BluebottlePagination
     serializer_class = ProjectSerializer
+
+    owner_filter_field = 'owner'
 
     def get_queryset(self):
         qs = super(ProjectList, self).get_queryset()
@@ -130,7 +138,7 @@ class ManageProjectList(ListCreateAPIView):
     queryset = Project.objects.all()
     pagination_class = ManageProjectPagination
     serializer_class = ManageProjectSerializer
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (ResourceOwnerPermission, )
 
     def get_queryset(self):
         """
@@ -147,6 +155,8 @@ class ManageProjectList(ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
+        self.check_permissions(self.request)
+
         serializer.save(
             owner=self.request.user, status=ProjectPhase.objects.order_by('sequence').all()[0]
         )
@@ -154,7 +164,10 @@ class ManageProjectList(ListCreateAPIView):
 
 class ManageProjectDetail(RetrieveUpdateAPIView):
     queryset = Project.objects.all()
-    permission_classes = (OwnerPermission, IsEditableOrReadOnly,)
+    permission_classes = (
+        ResourceOwnerPermission,
+        IsEditableOrReadOnly,
+    )
     serializer_class = ManageProjectSerializer
     lookup_field = 'slug'
 
@@ -190,13 +203,21 @@ class ManageProjectDocumentPagination(BluebottlePagination):
     page_size = 20
 
 
-class ManageProjectDocumentList(ListCreateAPIView):
+class ManageProjectDocumentList(OwnerListViewMixin, ListCreateAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectDocumentSerializer
     pagination_class = ManageProjectDocumentPagination
     filter = ('project', )
+    permission_classes = (RelatedResourceOwnerPermission, )
+
+    owner_filter_field = 'project__owner'
 
     def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
         serializer.save(
             author=self.request.user, ip_address=get_client_ip(self.request)
         )
@@ -207,6 +228,10 @@ class ManageProjectDocumentDetail(RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectDocumentSerializer
     pagination_class = ManageProjectDocumentPagination
     filter = ('project', )
+
+    permission_classes = (
+        OneOf(ResourcePermission, RelatedResourceOwnerPermission),
+    )
 
     def perform_update(self, serializer):
         serializer.save(

@@ -3,17 +3,6 @@ from rest_framework import permissions
 from bluebottle.utils.permissions import BasePermission, RelatedResourceOwnerPermission
 
 
-class RelatedProjectOwnerPermission(RelatedResourceOwnerPermission):
-    def has_object_action_permission(self, action, user, obj=None, parent=None):
-        if obj:
-            parent = obj.parent
-
-        return user == parent.owner
-
-    def has_action_permissions(self, *args, **kwargs):
-        return True
-
-
 class RelatedProjectTaskManagerPermission(RelatedResourceOwnerPermission):
 
     def has_object_action_permission(self, action, user, obj=None, parent=None):
@@ -37,12 +26,3 @@ class IsEditableOrReadOnly(BasePermission):
 
     def has_action_permission(self, action, user, model_cls, parent=None):
         return True
-
-
-class IsProjectWallOwner(permissions.BasePermission):
-    """
-    Allows access only to project owner.
-    """
-
-    def has_object_permission(self, request, view, obj):
-        return obj.mediawallpost.content_object.owner == request.user

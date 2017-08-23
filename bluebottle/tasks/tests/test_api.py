@@ -1,6 +1,7 @@
 from datetime import timedelta
 import mock
 
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
@@ -634,7 +635,7 @@ class TaskMemberResumeTest(BluebottleTestCase):
 
     def test_task_member_resume_download_task_anonymous(self):
         response = self.client.get(self.resume_url)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
 
     def test_task_member_resume_download_unrelated_user(self):
         response = self.client.get(
@@ -643,8 +644,9 @@ class TaskMemberResumeTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_task_member_resume_download_staff_session(self):
-        self.yet_another_user.is_staff = True
-        self.yet_another_user.save()
+        self.yet_another_user.groups.add(
+            Group.objects.get(name='Staff')
+        )
 
         self.client.force_login(self.yet_another_user)
         response = self.client.get(
@@ -683,10 +685,14 @@ class TestProjectTaskAPIPermissions(BluebottleTestCase):
         self.tasks_url = reverse('task-list')
         self.wallpost_url = reverse('wallpost_list')
 
-    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_readonly_permission_noauth(self):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
+        anonymous = Group.objects.get(name='Anonymous')
+        anonymous.permissions.remove(
+            Permission.objects.get(codename='api_read_task')
+        )
+
         response = self.client.get(self.tasks_url,
                                    {'project': self.some_project.slug})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -704,6 +710,11 @@ class TestProjectTaskAPIPermissions(BluebottleTestCase):
     def test_closed_api_readonly_permission_auth(self):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
+        anonymous = Group.objects.get(name='Anonymous')
+        anonymous.permissions.remove(
+            Permission.objects.get(codename='api_read_wallpost')
+        )
+
         response = self.client.get(self.tasks_url,
                                    {'project': self.some_project.slug},
                                    token=self.user_token)

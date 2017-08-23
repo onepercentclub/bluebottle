@@ -105,6 +105,10 @@ class Wallpost(PolymorphicModel):
             ('api_add_wallpost', 'Can add wallposts through the API'),
             ('api_change_wallpost', 'Can wallposts documents through the API'),
             ('api_delete_wallpost', 'Can wallposts documents through the API'),
+
+            ('api_read_own_wallpost', 'Can view own wallposts through the API'),
+            ('api_change_own_wallpost', 'Can own wallposts documents through the API'),
+            ('api_delete_own_wallpost', 'Can own wallposts documents through the API'),
         )
 
     def __unicode__(self):
@@ -128,6 +132,10 @@ class MediaWallpost(Wallpost):
 
     class Meta(Wallpost.Meta):
         permissions = (
+            ('api_read_own_textwallpost', 'Can view own text wallposts through the API'),
+            ('api_change_own_textwallpost', 'Can change text wallposts through the API'),
+            ('api_delete_own_textwallpost', 'Can delete own text wallposts through the API'),
+
             ('api_read_textwallpost', 'Can view text wallposts through the API'),
             ('api_add_textwallpost', 'Can add text wallposts through the API'),
             ('api_change_textwallpost', 'Can change text wallposts through the API'),
@@ -138,10 +146,18 @@ class MediaWallpost(Wallpost):
             ('api_change_mediawallpost', 'Can change media wallposts through the API'),
             ('api_delete_mediawallpost', 'Can delete media wallposts through the API'),
 
+            ('api_read_own_mediawallpost', 'Can view own media wallposts through the API'),
+            ('api_change_own_mediawallpost', 'Can change own media wallposts through the API'),
+            ('api_delete_own_mediawallpost', 'Can delete own media wallposts through the API'),
+
             ('api_read_mediawallpostphoto', 'Can view media wallpost photos through the API'),
             ('api_add_mediawallpostphoto', 'Can add media wallpost photos through the API'),
             ('api_change_mediawallpostphoto', 'Can change media wallpost photos through the API'),
             ('api_delete_mediawallpostphoto', 'Can delete media wallpost photos through the API'),
+
+            ('api_read_own_mediawallpostphoto', 'Can view own media wallpost photos through the API'),
+            ('api_change_own_mediawallpostphoto', 'Can change own media wallpost photos through the API'),
+            ('api_delete_own_mediawallpostphoto', 'Can delete own media wallpost photos through the API'),
         )
 
 
@@ -168,7 +184,7 @@ class MediaWallpostPhoto(models.Model):
 
     @property
     def parent(self):
-        return self.mediawallpost
+        return self.mediawallpost.content_object
 
 
 class TextWallpost(Wallpost):
@@ -241,6 +257,10 @@ class Reaction(models.Model):
     objects = ReactionManager()
     objects_with_deleted = models.Manager()
 
+    @property
+    def owner(self):
+        return self.author
+
     class Analytics:
         type = 'wallpost'
         tags = {}
@@ -271,6 +291,11 @@ class Reaction(models.Model):
             ('api_add_reaction', 'Can add reactions through the API'),
             ('api_change_reaction', 'Can reactions documents through the API'),
             ('api_delete_reaction', 'Can reactions documents through the API'),
+
+            ('api_read_own_reaction', 'Can view own reactions through the API'),
+            ('api_add_own_reaction', 'Can add own reactions through the API'),
+            ('api_change_own_reaction', 'Can change own reactions documents through the API'),
+            ('api_delete_own_reaction', 'Can delete own reactions documents through the API'),
         )
 
     def __unicode__(self):

@@ -273,7 +273,9 @@ def update_group_permissions(label, group_perms, apps):
                 group.permissions.add(permissions.get())
             except Permission.DoesNotExist, err:
                 logging.debug(err)
-                raise Exception('Could not add permission: {}'.format(perm_codename))
+                raise Exception(
+                    'Could not add permission: {}: {}'.format(perm_codename, err)
+                )
         group.save()
 
 

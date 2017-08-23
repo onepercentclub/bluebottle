@@ -75,6 +75,7 @@ install_requires = [
     'micawber==0.3.4',
     'mixpanel==4.3.2',
     'openpyxl==2.4.8',
+    'pendulum==1.2.4',
     'psycopg2==2.7.1',
     'pygeoip==0.3.2',
     'python-dateutil==2.6.1',

@@ -26,7 +26,10 @@ class PrivateProfileMixin(object):
     def to_representation(self, obj):
         data = super(PrivateProfileMixin, self).to_representation(obj)
 
-        if not self.context['request'].user.has_perm('members.api_read_full_member'):
+        user = self.context['request'].user
+        can_read_full_profile = self.context['request'].user.has_perm('members.api_read_full_member')
+
+        if obj != user and not can_read_full_profile:
             for field in self.private_fields:
                 if field in data:
                     del data[field]

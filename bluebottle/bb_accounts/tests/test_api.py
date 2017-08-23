@@ -69,11 +69,11 @@ class UserApiIntegrationTest(BluebottleTestCase):
         group = Group.objects.get(name='Anonymous')
         group.permissions.remove(Permission.objects.get(codename='api_read_full_member'))
 
-        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_1.id})
+        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_2.id})
         response = self.client.get(user_profile_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        self.assertEqual(response.data['id'], self.user_1.id)
+        self.assertEqual(response.data['id'], self.user_2.id)
 
         # Fields taken from the serializer
         excluded_fields = ['last_name', 'avatar', 'about_me', 'twitter',
@@ -213,6 +213,8 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.get(self.current_user_api_url, token=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['first_name'], self.user_1.first_name)
+        self.assertEqual(response.data['last_name'], self.user_1.first_name)
+
         self.assertEqual(response.data['permissions']['project_list'],
                          {u'OPTIONS': True, u'GET': True})
         self.assertEqual(response.data['permissions']['project_manage_list'],

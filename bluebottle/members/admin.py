@@ -122,7 +122,7 @@ class MemberAdmin(UserAdmin):
             [_('Personal info'),
              {'fields': ['first_name', 'last_name', 'username', 'gender', 'birthdate', 'phone_number']}],
             [_("Profile"),
-             {'fields': ['user_type', 'is_co_financer', 'picture', 'about_me', 'location']}],
+             {'fields': ['user_type', 'is_co_financer', 'picture', 'about_me', 'location', 'partner_organization']}],
             [_("Settings"),
              {'fields': ['primary_language', 'newsletter', 'campaign_notifications']}],
             [_('Skills & interests'),

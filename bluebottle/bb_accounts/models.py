@@ -11,9 +11,8 @@ from django.core.mail.message import EmailMessage
 from django.db import models
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import lazy
-
+from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from rest_framework_jwt.settings import api_settings
@@ -24,9 +23,9 @@ from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
 from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.utils.utils import StatusDefinition
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import Address
+from bluebottle.utils.utils import StatusDefinition
 
 
 # TODO: Make this generic for all user file uploads.

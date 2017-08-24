@@ -139,6 +139,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(partner_organization_data['name'], 'Partner Organization')
         self.assertEqual(partner_organization_data['slug'], 'partner-organization')
         self.assertEqual(partner_organization_data['website'], 'http://partnerorg.nl')
+        self.assertEqual(partner_organization_data['logo'], None)
 
     @override_settings(TOKEN_AUTH=ASSERTION_MAPPING)
     def test_user_profile_read_only_forbidden(self):

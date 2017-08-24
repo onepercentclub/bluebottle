@@ -7,6 +7,7 @@ from django.utils.html import format_html
 
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.projects.models import Project
+from bluebottle.members.models import Member
 from bluebottle.utils.admin import export_as_csv_action
 
 
@@ -81,8 +82,26 @@ class OrganizationContactInline(admin.TabularInline):
         return False
 
 
+class PartnerOrganizationMembersInline(admin.TabularInline):
+    model = Member
+    verbose_name = "Partner Organization Member"
+    verbose_name_plural = "Partner Organization Members"
+    readonly_fields = ('member', 'phone_number', 'date_joined')
+    fields = ('member', 'phone_number', 'date_joined')
+
+    def member(self, obj):
+        url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label, obj._meta.model_name), args=[obj.id])
+        return format_html(u"<a href='{}'>{}</a>", str(url), obj.full_name)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 class OrganizationAdmin(admin.ModelAdmin):
-    inlines = (OrganizationProjectInline, OrganizationContactInline,)
+    inlines = (OrganizationProjectInline, OrganizationContactInline, PartnerOrganizationMembersInline)
 
     list_display = ('name', 'email', 'website', 'phone_number', 'created')
     list_filter = (
@@ -90,7 +109,6 @@ class OrganizationAdmin(admin.ModelAdmin):
         ('projects__location', admin.RelatedOnlyFieldListFilter),
     )
     fields = ('name', 'email', 'phone_number', 'website')
-
     search_fields = ('name',)
     export_fields = [
         ('name', 'name'),

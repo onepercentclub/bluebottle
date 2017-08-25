@@ -541,10 +541,10 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # Project owner should be disallowed to create a task
+        # Project owner should be allowed to create a task
         response = self.client.post(self.tasks_url, task_data,
                                     HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_taskmember_project_role_permissions(self):
         """

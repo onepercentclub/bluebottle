@@ -134,13 +134,20 @@ class BaseTaskList(ListCreateAPIView):
     )
 
     def get_queryset(self):
-        qs = super(ListCreateAPIView, self).get_queryset()
+        qs = super(BaseTaskList, self).get_queryset()
 
         user = self.request.user
-
-        return qs.filter(
-            Q(project__owner=user) | Q(project__task_manager=user)
+        model = super(BaseTaskList, self).model
+        permission = '{}.api_read_{}'.format(
+            model._meta.app_label, model._meta.model_name
         )
+
+        if not self.request.user.has_perm(permission):
+            qs = qs.filter(
+                Q(project__owner=user) | Q(project__task_manager=user)
+            )
+
+        return qs
 
     owner_filter_field = 'project__task_manager'
 

@@ -17,6 +17,7 @@ class Organization(models.Model):
     """
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
+    description = models.TextField(_('description'), default='', blank=True)
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))

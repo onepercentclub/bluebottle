@@ -6,6 +6,7 @@ from bluebottle.utils.serializers import URLField
 
 
 class OrganizationPreviewSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(required=False)
     slug = serializers.SlugField(allow_null=True, required=False)
     name = serializers.CharField(required=True)
     website = URLField(allow_blank=True, required=False)
@@ -20,10 +21,11 @@ class OrganizationPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ('id', 'name', 'slug', 'website', 'logo', 'members', 'projects')
+        fields = ('id', 'name', 'slug', 'website', 'logo', 'members', 'projects', 'description')
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(required=False)
     slug = serializers.SlugField(allow_null=True, required=False)
     name = serializers.CharField(required=True)
     website = URLField(allow_blank=True, required=False)
@@ -53,7 +55,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'slug', 'address_line1', 'address_line2',
                   'city', 'state', 'country', 'postal_code', 'phone_number',
                   'website', 'email', 'contacts', 'partner_organizations',
-                  'created', 'updated', 'logo', 'members', 'projects')
+                  'created', 'updated', 'logo', 'members', 'projects', 'description')
 
 
 class OrganizationContactSerializer(serializers.ModelSerializer):

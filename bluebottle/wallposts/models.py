@@ -107,7 +107,7 @@ class Wallpost(PolymorphicModel):
             ('api_delete_wallpost', 'Can wallposts documents through the API'),
 
             ('api_read_own_wallpost', 'Can view own wallposts through the API'),
-            ('api_add__own_wallpost', 'Can add own wallposts through the API'),
+            ('api_add_own_wallpost', 'Can add own wallposts through the API'),
             ('api_change_own_wallpost', 'Can own wallposts documents through the API'),
             ('api_delete_own_wallpost', 'Can own wallposts documents through the API'),
         )

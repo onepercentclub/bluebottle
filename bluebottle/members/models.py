@@ -116,6 +116,7 @@ class Member(BlueBottleBaseUser):
         if self.last_name:
             initials += self.last_name[0]
 
-        return self.first_name[0] + self.last_name[0]
+        return initials
+
 
 import signals # noqa

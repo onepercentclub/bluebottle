@@ -21,7 +21,8 @@ def set_owner_permissions(apps, schema_editor):
                 'api_read_task', 'api_add_own_task', 'api_change_own_task',
                 'api_read_taskmember', 'api_add_own_taskmember',
                 'api_change_own_taskmember', 'api_delete_own_taskmember',
-                'api_read_own_taskmember_resume'
+                'api_read_own_taskmember_resume',
+                'api_read_skill'
             )
         }
     }

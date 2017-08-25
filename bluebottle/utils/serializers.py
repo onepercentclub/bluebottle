@@ -209,7 +209,7 @@ class BasePermissionField(serializers.Field):
 
 class PermissionField(BasePermissionField):
     """
-    Field that can be used to return permissions that are not directly related to the currunt view
+    Field that can be used to return permissions that are not directly related to the current view
 
     (E.g.) the permissions field on the current user object
     """
@@ -232,6 +232,6 @@ class RelatedResourcePermissionField(BasePermissionField):
     """ Field that can be used to return permission for a related view. """
 
     def _method_permissions(self, method, user, view, value):
-        return all(perm.has_object_action_permission(
-            method, user, obj=None, parent=value
+        return all((
+            perm.has_related_permission(method, user, parent=value, model=view.model)
         ) for perm in view.get_permissions())

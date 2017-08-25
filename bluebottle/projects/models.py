@@ -1,4 +1,3 @@
-from dateutil import parser
 import datetime
 import logging
 
@@ -7,7 +6,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Q, F
+from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save, pre_save
 from django.dispatch import receiver
@@ -76,112 +75,6 @@ class ProjectPhaseLog(models.Model):
         @staticmethod
         def timestamp(obj, created):
             return obj.start
-
-
-class ProjectManager(models.Manager):
-    def get_queryset(self):
-        return UpdateSignalsQuerySet(self.model, using=self._db)
-
-    def search(self, query):
-        qs = super(ProjectManager, self).get_queryset()
-
-        # Apply filters
-        status = query.getlist(u'status[]', None)
-        if status:
-            qs = qs.filter(status__slug__in=status)
-        else:
-            status = query.get('status', None)
-            if status:
-                qs = qs.filter(status__slug=status)
-
-        country = query.get('country', None)
-        if country:
-            qs = qs.filter(country=country)
-
-        location = query.get('location', None)
-        if location:
-            qs = qs.filter(location=location)
-
-        category = query.get('category', None)
-        if category:
-            qs = qs.filter(categories__slug=category)
-
-        theme = query.get('theme', None)
-        if theme:
-            qs = qs.filter(theme_id=theme)
-
-        money_needed = query.get('money_needed', None)
-        if money_needed:
-            qs = qs.filter(amount_needed__gt=0)
-
-        skill = query.get('skill', None)
-        if skill:
-            qs.select_related('task')
-            qs = qs.filter(task__skill=skill).distinct()
-
-        anywhere = query.get('anywhere', None)
-        if anywhere:
-            qs = qs.filter(Q(task__id__isnull=False), Q(task__location__isnull=True) | Q(task__location='')).distinct()
-
-        start = query.get('start', None)
-        if start:
-            qs.select_related('task')
-
-            tz = timezone.get_current_timezone()
-            start_date = tz.localize(
-                datetime.datetime.combine(parser.parse(start), datetime.datetime.min.time())
-            )
-
-            end = query.get('end', start)
-            end_date = tz.localize(
-                datetime.datetime.combine(parser.parse(end), datetime.datetime.max.time())
-            )
-
-            qs = qs.filter(
-                Q(task__type='event', task__deadline__range=[start_date, end_date]) |
-                Q(task__type='ongoing', task__deadline__gte=start_date)
-            ).distinct()
-
-        project_type = query.get('project_type', None)
-        if project_type == 'volunteering':
-            qs = qs.annotate(Count('task')).filter(task__count__gt=0)
-        elif project_type == 'funding':
-            qs = qs.filter(amount_asked__gt=0)
-        elif project_type == 'voting':
-            qs = qs.filter(status__slug__in=['voting', 'voting-done'])
-
-        text = query.get('text', None)
-        if text:
-            qs = qs.filter(Q(title__icontains=text) |
-                           Q(location__name__icontains=text) |
-                           Q(pitch__icontains=text) |
-                           Q(description__icontains=text))
-
-        return self._ordering(query.get('ordering', None), qs, status)
-
-    def _ordering(self, ordering, queryset, status):
-        if ordering == 'deadline':
-            queryset = queryset.order_by('status', 'deadline', 'id')
-        elif ordering == 'amount_needed':
-            # Add the percentage that is still needed to the query and sort on that.
-            # This way we do not have to take currencies into account
-            queryset = queryset.annotate(percentage_needed=F('amount_needed') / (F('amount_asked') + 1))
-            queryset = queryset.order_by('status', 'percentage_needed', 'id')
-            queryset = queryset.filter(amount_needed__gt=0)
-        elif ordering == 'newest':
-            queryset = queryset.extra(
-                select={'has_campaign_started': 'campaign_started is null'})
-            queryset = queryset.order_by('status', 'has_campaign_started',
-                                         '-campaign_started', '-created', 'id')
-        elif ordering == 'popularity':
-            queryset = queryset.order_by('status', '-popularity', 'id')
-            if status == 5:
-                queryset = queryset.filter(amount_needed__gt=0)
-
-        elif ordering:
-            queryset = queryset.order_by('status', ordering)
-
-        return queryset
 
 
 class ProjectDocument(BaseProjectDocument):
@@ -283,7 +176,7 @@ class Project(BaseProject, PreviousStatusMixin):
     payout_status = models.CharField(max_length=50, null=True, blank=True,
                                      choices=PAYOUT_STATUS_CHOICES)
 
-    objects = ProjectManager()
+    objects = UpdateSignalsQuerySet.as_manager()
 
     def __unicode__(self):
         if self.title:

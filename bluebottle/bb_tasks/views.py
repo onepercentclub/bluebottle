@@ -8,7 +8,7 @@ import django_filters
 from rest_framework import filters, serializers
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.projects.permissions import RelatedProjectTaskManagerPermission
+from bluebottle.projects.permissions import RelatedProjectTaskManagerOrOwnerPermission
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.tasks.serializers import (BaseTaskSerializer,
                                           BaseTaskMemberSerializer, TaskFileSerializer,
@@ -126,12 +126,21 @@ class TaskPreviewList(ListAPIView, FilterQSParams):
         return qs.filter(project__status__viewable=True)
 
 
-class BaseTaskList(OwnerListViewMixin, ListCreateAPIView):
+class BaseTaskList(ListCreateAPIView):
     queryset = Task.objects.all()
     pagination_class = TaskPreviewPagination
     permission_classes = (
-        OneOf(ResourcePermission, RelatedProjectTaskManagerPermission),
+        OneOf(ResourcePermission, RelatedProjectTaskManagerOrOwnerPermission),
     )
+
+    def get_queryset(self):
+        qs = super(ListCreateAPIView, self).get_queryset()
+
+        user = self.request.user
+
+        return qs.filter(
+            Q(project__owner=user) | Q(project__task_manager=user)
+        )
 
     owner_filter_field = 'project__task_manager'
 

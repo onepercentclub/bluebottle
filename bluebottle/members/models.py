@@ -108,5 +108,15 @@ class Member(BlueBottleBaseUser):
     def is_supporter(self):
         return self.amount_donated > 0
 
+    @property
+    def initials(self):
+        initials = ''
+        if self.first_name:
+            initials += self.first_name[0]
+        if self.last_name:
+            initials += self.last_name[0]
+
+        return initials
+
 
 import signals # noqa

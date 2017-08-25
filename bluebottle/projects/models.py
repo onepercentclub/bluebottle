@@ -30,6 +30,7 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
+from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     MediaWallpostPhoto, MediaWallpost, TextWallpost
@@ -174,6 +175,8 @@ class Project(BaseProject, PreviousStatusMixin):
 
     payout_status = models.CharField(max_length=50, null=True, blank=True,
                                      choices=PAYOUT_STATUS_CHOICES)
+
+    objects = UpdateSignalsQuerySet.as_manager()
 
     def __unicode__(self):
         if self.title:

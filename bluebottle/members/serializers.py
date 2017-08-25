@@ -19,7 +19,7 @@ BB_USER_MODEL = get_user_model()
 
 class PrivateProfileMixin(object):
     private_fields = (
-        'url', 'full_name', 'picture', 'about_me', 'location',
+        'url', 'full_name', 'picture', 'about_me', 'location', 'last_name',
         'avatar', 'website', 'twitter', 'facebook', 'skypename'
     )
 
@@ -62,7 +62,7 @@ class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'username',
+        fields = ('id', 'first_name', 'last_name', 'initials',
                   'avatar', 'full_name', 'short_name')
 
 
@@ -142,7 +142,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'url', 'full_name', 'short_name', 'picture',
+        fields = ('id', 'url', 'full_name', 'short_name', 'initials', 'picture',
                   'primary_language', 'about_me', 'location', 'avatar',
                   'project_count', 'donation_count', 'date_joined',
                   'fundraiser_count', 'task_count', 'time_spent',

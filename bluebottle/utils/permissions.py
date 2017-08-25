@@ -72,6 +72,12 @@ class BasePermission(permissions.BasePermission):
         except PermissionsException:
             return super(BasePermission, self).has_permission(request, view)
 
+    def has_related_permission(self, method, user, parent, model):
+        return (
+            self.has_object_action_permission(method, user, parent=parent) and
+            self.has_action_permission(method, user, model)
+        )
+
     def has_object_action_permission(self, action, user, obj=None, parent=None):
         """ Check if user has permission to access action on obj for the view.
 
@@ -123,7 +129,7 @@ class ResourceOwnerPermission(ResourcePermission):
     }
 
     def has_object_action_permission(self, action, user, obj=None, parent=None):
-        return user == obj.owner
+        return obj and user == obj.owner
 
 
 class RelatedResourceOwnerPermission(ResourceOwnerPermission):
@@ -198,6 +204,14 @@ def OneOf(*permission_classes):
                 (
                     perm().has_object_action_permission(action, user, obj) and
                     perm().has_action_permission(action, user, view.model)
+                ) for perm in self.permissions
+            )
+
+        def has_related_permission(self, action, user, parent, model):
+            return any(
+                (
+                    perm().has_object_action_permission(action, user, parent=parent) and
+                    perm().has_action_permission(action, user, model)
                 ) for perm in self.permissions
             )
 

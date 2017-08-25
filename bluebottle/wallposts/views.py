@@ -68,7 +68,7 @@ class WallpostList(OwnerListViewMixin, ListAPIView):
         RelatedManagementOrReadOnlyPermission
     )
 
-    owner_filter_field = 'content_object__owner'
+    owner_filter_field = 'author'
 
     def get_queryset(self, queryset=queryset):
         queryset = super(WallpostList, self).get_queryset()
@@ -112,7 +112,7 @@ class TextWallpostList(OwnerListViewMixin, SetAuthorMixin, ListCreateAPIView, Fi
         RelatedManagementOrReadOnlyPermission
     )
 
-    owner_filter_field = 'content_object__owner'
+    owner_filter_field = 'author'
 
     def get_queryset(self, queryset=None):
         queryset = self.queryset

@@ -262,6 +262,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     status = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=ProjectPhase.objects)
     story = SafeField(required=False, allow_blank=True)
     task_manager = UserProfileSerializer(read_only=True)
+    owner = UserProfileSerializer(read_only=True)
     tasks = ManageTaskSerializer(many=True, source='task_set', read_only=True)
     url = serializers.HyperlinkedIdentityField(view_name='project_manage_detail', lookup_field='slug')
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
@@ -374,6 +375,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'status',
                   'story',
                   'task_manager',
+                  'owner',
                   'tasks',
                   'theme',
                   'title',

@@ -107,6 +107,7 @@ class Wallpost(PolymorphicModel):
             ('api_delete_wallpost', 'Can wallposts documents through the API'),
 
             ('api_read_own_wallpost', 'Can view own wallposts through the API'),
+            ('api_add_own_wallpost', 'Can add own wallposts through the API'),
             ('api_change_own_wallpost', 'Can own wallposts documents through the API'),
             ('api_delete_own_wallpost', 'Can own wallposts documents through the API'),
         )
@@ -133,6 +134,7 @@ class MediaWallpost(Wallpost):
     class Meta(Wallpost.Meta):
         permissions = (
             ('api_read_own_textwallpost', 'Can view own text wallposts through the API'),
+            ('api_add_own_textwallpost', 'Can add own text wallposts through the API'),
             ('api_change_own_textwallpost', 'Can change text wallposts through the API'),
             ('api_delete_own_textwallpost', 'Can delete own text wallposts through the API'),
 
@@ -147,6 +149,7 @@ class MediaWallpost(Wallpost):
             ('api_delete_mediawallpost', 'Can delete media wallposts through the API'),
 
             ('api_read_own_mediawallpost', 'Can view own media wallposts through the API'),
+            ('api_add_own_mediawallpost', 'Can add own media wallposts through the API'),
             ('api_change_own_mediawallpost', 'Can change own media wallposts through the API'),
             ('api_delete_own_mediawallpost', 'Can delete own media wallposts through the API'),
 
@@ -156,6 +159,7 @@ class MediaWallpost(Wallpost):
             ('api_delete_mediawallpostphoto', 'Can delete media wallpost photos through the API'),
 
             ('api_read_own_mediawallpostphoto', 'Can view own media wallpost photos through the API'),
+            ('api_add_own_mediawallpostphoto', 'Can add own media wallpost photos through the API'),
             ('api_change_own_mediawallpostphoto', 'Can change own media wallpost photos through the API'),
             ('api_delete_own_mediawallpostphoto', 'Can delete own media wallpost photos through the API'),
         )

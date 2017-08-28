@@ -541,10 +541,15 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # Project owner should be allowed to create a task
+        # Project owner should be allowed to see the tasks
+        response = self.client.get(self.tasks_url,
+                                   HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Project owner should not be allowed to create a task
         response = self.client.post(self.tasks_url, task_data,
                                     HTTP_AUTHORIZATION=self.some_token)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_taskmember_project_role_permissions(self):
         """
@@ -556,6 +561,12 @@ class TaskApiTestcase(BluebottleTestCase):
 
         task = TaskFactory(project=self.some_project, author=self.another_user)
         task_member = TaskMemberFactory(task=task, status='applied')
+
+        # Project owner should be allowed to see taskmember
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
+        response = self.client.get(task_member_url,
+                                     HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Project owner should be disallowed to accept taskmember
         task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})

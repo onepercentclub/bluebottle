@@ -10,7 +10,9 @@ from rest_framework import status
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.tests.test_unit import UserTestsMixin
-from bluebottle.test.factory_models.wallposts import TextWallpostFactory
+from bluebottle.test.factory_models.wallposts import (
+    TextWallpostFactory, MediaWallpostFactory
+)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -121,6 +123,28 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(wallpost.status_code,
                          status.HTTP_403_FORBIDDEN,
                          'Only the fundraiser owner can share a wallpost.')
+
+    def test_filtering_on_wallpost_list(self):
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_mediawallpost')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_read_own_mediawallpost')
+        )
+
+        MediaWallpostFactory.create(content_object=self.task)
+        MediaWallpostFactory.create(content_object=self.project)
+        MediaWallpostFactory.create(content_object=self.fundraiser)
+        MediaWallpostFactory.create(content_object=ProjectFactory(owner=self.other_user))
+
+        response = self.client.get(
+            self.media_wallpost_url, token=self.owner_token)
+        self.assertEqual(response.data['count'], 3)
+
+        response = self.client.get(
+            self.media_wallpost_url, token=self.other_token)
+        self.assertEqual(response.data['count'], 1)
 
 
 class WallpostReactionApiIntegrationTest(BluebottleTestCase):

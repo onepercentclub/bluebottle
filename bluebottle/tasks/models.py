@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, connection
 from django.db.models import Sum
 from django.utils import timezone
@@ -15,6 +16,7 @@ from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
 from bluebottle.utils.email_backend import send_mail
+from bluebottle.wallposts.models import Wallpost
 
 
 class Task(models.Model, PreviousStatusMixin):
@@ -77,6 +79,8 @@ class Task(models.Model, PreviousStatusMixin):
     # internal usage
     created = CreationDateTimeField(_('created'), help_text=_('When this task was created?'))
     updated = ModificationDateTimeField(_('updated'))
+
+    wallposts = GenericRelation(Wallpost, related_query_name='task_wallposts')
 
     def __unicode__(self):
         return self.title

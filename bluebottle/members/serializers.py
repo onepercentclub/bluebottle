@@ -2,17 +2,17 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
-
 from rest_framework import serializers
 
 from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
-from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
 from bluebottle.geo.models import Location
+from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.serializers import PermissionField
+from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 
 BB_USER_MODEL = get_user_model()
 
@@ -95,6 +95,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
     country = CountrySerializer(source='address.country')
     location = LocationSerializer()
     permissions = UserPermissionsSerializer(read_only=True)
+    partner_organization = OrganizationPreviewSerializer(allow_null=True, read_only=True, required=False)
 
     class Meta:
         model = BB_USER_MODEL
@@ -102,7 +103,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'country', 'verified', 'permissions')
+            'country', 'verified', 'permissions', 'partner_organization')
 
 
 class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
@@ -137,6 +138,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     task_count = serializers.ReadOnlyField()
     time_spent = serializers.ReadOnlyField()
     tasks_performed = serializers.ReadOnlyField()
+    partner_organization = OrganizationPreviewSerializer(allow_null=True, read_only=True, required=False)
 
     class Meta:
         model = BB_USER_MODEL
@@ -145,7 +147,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
                   'project_count', 'donation_count', 'date_joined',
                   'fundraiser_count', 'task_count', 'time_spent',
                   'tasks_performed', 'website', 'twitter', 'facebook',
-                  'skypename', 'skill_ids', 'favourite_theme_ids')
+                  'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization')
 
 
 class ManageProfileSerializer(UserProfileSerializer):

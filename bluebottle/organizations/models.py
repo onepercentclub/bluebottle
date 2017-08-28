@@ -1,13 +1,14 @@
 from django.conf import settings
-from django.template.defaultfilters import slugify
-from django.db import models
-from django.utils.translation import ugettext as _
 from django.core.files.storage import FileSystemStorage
+from django.db import models
+from django.template.defaultfilters import slugify
+from django.utils.translation import ugettext as _
 from django_extensions.db.fields import (CreationDateTimeField,
                                          ModificationDateTimeField)
-
-from taggit.managers import TaggableManager
 from djchoices import DjangoChoices, ChoiceItem
+from taggit.managers import TaggableManager
+
+from bluebottle.utils.fields import ImageField
 
 
 class Organization(models.Model):
@@ -16,37 +17,39 @@ class Organization(models.Model):
     """
     name = models.CharField(_('name'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
+    description = models.TextField(_('description'), default='', blank=True)
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
-    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
+    deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
 
-    partner_organizations = models.TextField(_('partner organizations'),
-                                             blank=True)
+    partner_organizations = models.TextField(_('partner organizations'), blank=True)
 
     # Address
-    address_line1 = models.CharField(max_length=100, blank=True)
-    address_line2 = models.CharField(max_length=100, blank=True)
-    city = models.CharField(max_length=100, blank=True)
-    state = models.CharField(max_length=100, blank=True)
-    country = models.ForeignKey('geo.Country', blank=True, null=True,
-                                related_name='country')
-    postal_code = models.CharField(max_length=20, blank=True)
+    address_line1 = models.CharField(blank=True, max_length=100)
+    address_line2 = models.CharField(blank=True, max_length=100)
+    city = models.CharField(blank=True, max_length=100)
+    state = models.CharField(blank=True, max_length=100)
+    country = models.ForeignKey('geo.Country', blank=True, null=True, related_name='country')
+    postal_code = models.CharField(blank=True, max_length=20)
 
     # Contact
-    phone_number = models.CharField(_('phone number'), max_length=40,
-                                    blank=True)
+    phone_number = models.CharField(_('phone number'), blank=True, max_length=40)
     website = models.URLField(_('website'), blank=True)
-
     email = models.EmailField(blank=True)
-
     tags = TaggableManager(blank=True, verbose_name=_('tags'))
-
-    registration = models.FileField(upload_to='organizations/registrations',
-                                    storage=FileSystemStorage(
-                                        location=settings.PRIVATE_MEDIA_ROOT),
+    registration = models.FileField(blank=True,
                                     null=True,
-                                    blank=True)
+                                    storage=FileSystemStorage(location=settings.PRIVATE_MEDIA_ROOT),
+                                    upload_to='organizations/registrations'
+                                    )
+
+    logo = ImageField(_('image'),
+                      blank=True,
+                      help_text=_('Partner Organization Logo'),
+                      max_length=255,
+                      null=True,
+                      upload_to='partner_organization_logos/')
 
     def save(self, *args, **kwargs):
         if not self.slug:

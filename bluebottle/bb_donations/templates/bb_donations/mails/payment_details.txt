@@ -1,9 +1,13 @@
 {% load i18n %}
 
 {% block content %}
-    {{donation.user.full_name}} 
-    {{donation.user.address.line1}}
-    {{donation.user.address.postal_code}} {{donation.user.address.city}}
+    {% if 'members.api_read_full_member' in to.get_all_permissions %}
+        {{donation.user.full_name}}
+        {{donation.user.address.line1}}
+        {{donation.user.address.postal_code}} {{donation.user.address.city}}
+    {% else %}
+        {{donation.user.first_name}}
+    {% endif %}
 
     {% trans "Date" %}: {{donation.created}}
     {% trans "Method" %}: {{payment_method}}

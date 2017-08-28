@@ -11,9 +11,8 @@ from django.core.mail.message import EmailMessage
 from django.db import models
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import lazy
-
+from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from rest_framework_jwt.settings import api_settings
@@ -24,9 +23,9 @@ from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
 from bluebottle.tasks.models import Task, TaskMember
-from bluebottle.utils.utils import StatusDefinition
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import Address
+from bluebottle.utils.utils import StatusDefinition
 
 
 # TODO: Make this generic for all user file uploads.
@@ -115,95 +114,73 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         school = ChoiceItem('school', label=_('School'))
         group = ChoiceItem('group', label=_('Club / association'))
 
-    email = models.EmailField(_('email address'), max_length=254, unique=True,
-                              db_index=True)
-    username = models.CharField(_('username'), unique=True, max_length=254)
-    is_staff = models.BooleanField(
-        _('staff status'), default=False, help_text=_(
-            'Designates whether the user can log into this admin site.'))
-    is_active = models.BooleanField(
-        _('active'), default=False,
-        help_text=_(
-            'Designates whether this user should be treated as active. Unselect this instead of deleting '
-            'accounts.'))
+    email = models.EmailField(_('email address'), db_index=True, max_length=254, unique=True)
+    username = models.CharField(_('username'), max_length=254, unique=True)
+
+    is_staff = models.BooleanField(_('staff status'),
+                                   default=False,
+                                   help_text=_('Designates whether the user can log into this admin site.'))
+    is_active = models.BooleanField(_('active'),
+                                    default=False,
+                                    help_text=_('Designates whether this user should be treated as active. Unselect '
+                                                'this instead of deleting accounts.'))
+    disable_token = models.CharField(blank=True, max_length=32, null=True)
+
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
     updated = ModificationDateTimeField()
-    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
-    user_type = models.CharField(_('Member Type'), max_length=25,
-                                 choices=UserType.choices,
-                                 default=UserType.person)
+    last_seen = models.DateTimeField(_('Last Seen'), blank=True, null=True)
+    deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
 
-    # Public Profile
-    first_name = models.CharField(_('first name'), max_length=100, blank=True)
-    last_name = models.CharField(_('last name'), max_length=100, blank=True)
-    place = models.CharField(_('Location your at now'), max_length=100,
-                             blank=True)
-    location = models.ForeignKey('geo.Location', help_text=_('Location'),
-                                 null=True, blank=True)
+    user_type = models.CharField(_('Member Type'), choices=UserType.choices, default=UserType.person, max_length=25)
+
+    first_name = models.CharField(_('first name'), blank=True, max_length=100)
+    last_name = models.CharField(_('last name'), blank=True, max_length=100)
+    place = models.CharField(_('Location your at now'), blank=True, max_length=100)
+    location = models.ForeignKey('geo.Location', blank=True, help_text=_('Location'), null=True)
     favourite_themes = models.ManyToManyField(ProjectTheme, blank=True)
     skills = models.ManyToManyField('tasks.Skill', blank=True)
-
-    last_seen = models.DateTimeField(_('Last Seen'), null=True, blank=True)
-
+    phone_number = models.CharField(_('phone number'), blank=True, max_length=50)
+    gender = models.CharField(_('gender'), blank=True, choices=Gender.choices, max_length=6)
+    birthdate = models.DateField(_('birthdate'), blank=True, null=True)
+    about_me = models.TextField(_('about me'), blank=True, max_length=265)
     # TODO Use generate_picture_filename (or something) for upload_to
-    picture = ImageField(_('picture'), upload_to='profiles', blank=True)
+    picture = ImageField(_('picture'), blank=True, upload_to='profiles')
 
-    is_co_financer = models.BooleanField(
-        _('Co-financer'), default=False,
-        help_text=_(
-            'Donations by co-financers are shown in a separate list on the project page.'
-            'These donation will always be visible.'))
-
-    can_pledge = models.BooleanField(
-        _('Can pledge'), default=False,
-        help_text=_('User can create a pledge donation.'))
-
-    about_me = models.TextField(_('about me'), max_length=265, blank=True)
-
-    # Private Settings
+    is_co_financer = models.BooleanField(_('Co-financer'),
+                                         default=False,
+                                         help_text=_('Donations by co-financers are shown in a separate list on the '
+                                                     'project page. These donation will always be visible.'))
+    can_pledge = models.BooleanField(_('Can pledge'), default=False, help_text=_('User can create a pledge donation.'))
 
     # Use lazy for the choices and default, so that tenant properties
     # will be correctly loaded
-    primary_language = models.CharField(
-        _('primary language'), max_length=5,
-        help_text=_('Language used for website and emails.'),
-        choices=lazy(get_language_choices, tuple)(),
-        default=lazy(get_default_language, str)())
-    share_time_knowledge = models.BooleanField(_('share time and knowledge'),
-                                               default=False)
+    primary_language = models.CharField(_('primary language'),
+                                        choices=lazy(get_language_choices, tuple)(),
+                                        default=lazy(get_default_language, str)(),
+                                        help_text=_('Language used for website and emails.'),
+                                        max_length=5)
+    share_time_knowledge = models.BooleanField(_('share time and knowledge'), default=False)
     share_money = models.BooleanField(_('share money'), default=False)
-    newsletter = models.BooleanField(_('newsletter'),
-                                     help_text=_('Subscribe to newsletter.'),
-                                     default=True)
-    phone_number = models.CharField(_('phone number'), max_length=50,
-                                    blank=True)
-    gender = models.CharField(_('gender'), max_length=6, blank=True,
-                              choices=Gender.choices)
-    birthdate = models.DateField(_('birthdate'), null=True, blank=True)
-
-    disable_token = models.CharField(max_length=32, blank=True, null=True)
-
-    campaign_notifications = models.BooleanField(_('Project Notifications'),
-                                                 default=True)
-
-    objects = BlueBottleUserManager()
-
-    # The Fields are back again...
+    newsletter = models.BooleanField(_('newsletter'), default=True, help_text=_('Subscribe to newsletter.'))
+    campaign_notifications = models.BooleanField(_('Project Notifications'), default=True)
 
     website = models.URLField(_('website'), blank=True)
+    facebook = models.CharField(_('facebook profile'), blank=True, max_length=50)
+    twitter = models.CharField(_('twitter profile'), blank=True, max_length=15)
+    skypename = models.CharField(_('skype profile'), blank=True, max_length=32)
 
-    facebook = models.CharField(_('facebook profile'), max_length=50,
-                                blank=True)
-
-    twitter = models.CharField(_('twitter profile'), max_length=15, blank=True)
-
-    skypename = models.CharField(_('skype profile'), max_length=32, blank=True)
+    partner_organization = models.ForeignKey('organizations.Organization',
+                                             blank=True,
+                                             help_text=_('Partner Organization'),
+                                             null=True,
+                                             related_name='partner_organization_members',
+                                             verbose_name=_('Partner Organization'))
 
     USERNAME_FIELD = 'email'
-    # Only email and password is required to create a user account but this is how you'd require other fields.
-    # REQUIRED_FIELDS = ['first_name', 'last_name']
 
     slug_field = 'username'
+
+    objects = BlueBottleUserManager()
 
     class Meta:
         abstract = True

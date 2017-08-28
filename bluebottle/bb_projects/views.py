@@ -236,6 +236,9 @@ class ProjectList(OwnerListViewMixin, ListAPIView):
     serializer_class = ProjectSerializer
 
     owner_filter_field = 'owner'
+    permission_classes = (
+        OneOf(ResourcePermission, ResourceOwnerPermission),
+    )
 
     def get_queryset(self):
         qs = super(ProjectList, self).get_queryset()

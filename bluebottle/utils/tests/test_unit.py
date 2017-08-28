@@ -6,6 +6,7 @@ import uuid
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.management import call_command
 from django.test import TestCase
@@ -20,12 +21,19 @@ from fluent_contents.plugins.text.models import TextItem
 from moneyed import Money
 
 from bluebottle.clients import properties
+from bluebottle.projects.models import Project
+from bluebottle.rewards.models import Reward
 from bluebottle.contentplugins.models import PictureItem
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.models import MetaDataModel
 from bluebottle.utils.monkey_patch_parler import TenantAwareParlerAppsettings
 from bluebottle.utils.serializers import MoneySerializer
+from bluebottle.utils.permissions import (
+    ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission,
+    OneOf
+)
 from bluebottle.utils.utils import clean_for_hashtag
 from ..email_backend import send_mail, create_message
 
@@ -480,3 +488,198 @@ class TestTenantAwareParlerAppsettings(BluebottleTestCase):
     def test_default(self):
         self.assertEqual(self.appsettings.PARLER_SHOW_EXCLUDED_LANGUAGE_TABS, False)
         pass
+
+
+class TestResourcePermission(BluebottleTestCase):
+    def setUp(self):
+        self.permission = ResourcePermission()
+        self.user = BlueBottleUserFactory.create()
+        self.user.groups.clear()
+
+        self.user.user_permissions.add(
+            Permission.objects.get(codename='api_read_project')
+        )
+
+    def test_permission(self):
+        self.assertTrue(
+            self.permission.has_action_permission(
+                'GET', self.user, Project
+            )
+        )
+
+    def test_permission_create(self):
+        self.assertFalse(
+            self.permission.has_action_permission(
+                'POST', self.user, Project
+            )
+        )
+
+
+class TestResourceOwnerPermission(BluebottleTestCase):
+    def setUp(self):
+        self.permission = ResourceOwnerPermission()
+        self.user = BlueBottleUserFactory.create()
+        self.user.groups.clear()
+
+        self.user.user_permissions.add(
+            Permission.objects.get(codename='api_read_own_project')
+        )
+
+    def test_permission(self):
+        self.assertTrue(
+            self.permission.has_action_permission(
+                'GET', self.user, Project
+            )
+        )
+
+    def test_object_permission(self):
+        self.assertTrue(
+            self.permission.has_object_action_permission(
+                'GET', self.user, Project(owner=self.user)
+            )
+        )
+
+    def test_object_permission_non_owner(self):
+        other_user = BlueBottleUserFactory.create()
+        self.assertFalse(
+            self.permission.has_object_action_permission(
+                'GET', self.user, Project(owner=other_user)
+            )
+        )
+
+    def test_permission_create(self):
+        self.assertFalse(
+            self.permission.has_action_permission(
+                'POST', self.user, Project
+            )
+        )
+
+    def test_object_permission_create(self):
+        self.assertFalse(
+            self.permission.has_action_permission(
+                'POST', self.user, Project
+            )
+        )
+
+
+class TestRelatedResourceOwnerPermission(BluebottleTestCase):
+    def setUp(self):
+        self.permission = RelatedResourceOwnerPermission()
+        self.user = BlueBottleUserFactory.create()
+        self.project = ProjectFactory.create(owner=self.user)
+        self.user.groups.clear()
+
+        self.user.user_permissions.add(
+            Permission.objects.get(codename='api_read_own_reward')
+        )
+
+    def test_permission(self):
+        self.assertTrue(
+            self.permission.has_action_permission(
+                'GET', self.user, Reward
+            )
+        )
+
+    def test_object_permission(self):
+        self.assertTrue(
+            self.permission.has_object_action_permission(
+                'GET', self.user, obj=Reward(project=self.project)
+            )
+        )
+
+    def test_object_permission_non_owner(self):
+        other_project = ProjectFactory.create()
+        self.assertFalse(
+            self.permission.has_object_action_permission(
+                'GET', self.user, obj=Reward(project=other_project)
+            )
+        )
+
+    def test_object_permission_parent(self):
+        self.assertTrue(
+            self.permission.has_object_action_permission(
+                'GET', self.user, parent=self.project
+            )
+        )
+
+    def test_permission_create(self):
+        self.assertFalse(
+            self.permission.has_action_permission(
+                'POST', self.user, Reward
+            )
+        )
+
+    def test_object_permission_create(self):
+        self.assertFalse(
+            self.permission.has_action_permission(
+                'POST', self.user, Reward
+            )
+        )
+
+
+class TestOneOfPermission(BluebottleTestCase):
+    def setUp(self):
+        self.permission = OneOf(
+            ResourceOwnerPermission, ResourcePermission
+        )()
+        self.user = BlueBottleUserFactory.create()
+        self.project = ProjectFactory.create(owner=self.user)
+        self.user.groups.clear()
+
+    def test_permission_owner(self):
+        self.user.user_permissions.add(
+            Permission.objects.get(codename='api_read_own_project')
+        )
+
+        self.assertTrue(
+            self.permission.has_action_permission(
+                'GET', self.user, Project
+            )
+        )
+
+    def test_permission(self):
+        self.user.user_permissions.add(
+            Permission.objects.get(codename='api_read_project')
+        )
+
+        self.assertTrue(
+            self.permission.has_action_permission(
+                'GET', self.user, Project
+            )
+        )
+
+    def test_object_permission(self):
+        self.user.user_permissions.add(
+            Permission.objects.get(codename='api_read_own_project')
+        )
+
+        self.assertTrue(
+            self.permission.has_object_action_permission(
+                'GET', self.user, obj=self.project
+            )
+        )
+
+    def test_object_permission_no_owner_permission(self):
+        self.user.user_permissions.add(
+            Permission.objects.get(codename='api_read_project')
+        )
+
+        self.assertTrue(
+            self.permission.has_object_action_permission(
+                'GET', self.user, obj=self.project
+            )
+        )
+
+    def test_object_permission_no_owner(self):
+        self.project.owner = BlueBottleUserFactory.create()
+        self.project.save()
+
+        self.user.user_permissions.add(
+            Permission.objects.get(codename='api_read_own_project')
+        )
+
+        self.assertTrue(
+            self.permission.has_object_action_permission(
+                'GET', self.user, obj=self.project
+            )
+        )

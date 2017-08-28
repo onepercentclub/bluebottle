@@ -24,7 +24,8 @@ def add_group_permissions(apps, schema_editor):
             'perms': (
                 'api_read_task', 'api_add_task', 'api_change_task',
                 'api_read_taskmember', 'api_add_taskmember',
-                'api_change_taskmember', 'api_delete_taskmember'
+                'api_change_taskmember', 'api_delete_taskmember',
+                'api_read_skill'
             )
         }
     }

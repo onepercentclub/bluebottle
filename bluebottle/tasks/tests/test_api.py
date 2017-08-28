@@ -719,3 +719,26 @@ class TestProjectTaskAPIPermissions(BluebottleTestCase):
                                    {'project': self.some_project.slug},
                                    token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_related_permissions(self):
+        TaskFactory.create(project=self.some_project)
+        response = self.client.get(self.tasks_url,
+                                   token=self.user_token)
+
+        self.assertTrue(
+            response.data['results'][0]['related_permissions']['task_members']['POST']
+        )
+
+    def test_related_permissions_no_owner_permission(self):
+        TaskFactory.create(project=self.some_project)
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_add_own_taskmember')
+        )
+
+        response = self.client.get(self.tasks_url,
+                                   token=self.user_token)
+
+        self.assertFalse(
+            response.data['results'][0]['related_permissions']['task_members']['POST']
+        )

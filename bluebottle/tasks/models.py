@@ -164,18 +164,6 @@ class Task(models.Model, PreviousStatusMixin):
     def date_status_change(self):
         return TaskStatusLog.objects.filter(task=self).order_by('-start').first().start
 
-    def set_in_progress(self):
-        self.status = self.TaskStatuses.in_progress
-        self.save()
-
-    def set_full(self):
-        self.status = self.TaskStatuses.full
-        self.save()
-
-    def set_open(self):
-        self.status = self.TaskStatuses.open
-        self.save()
-
     def get_absolute_url(self):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
@@ -224,14 +212,14 @@ class Task(models.Model, PreviousStatusMixin):
         if (self.status == self.TaskStatuses.open and
                 self.people_needed <= people_accepted):
             if self.type == self.TaskTypes.ongoing:
-                self.set_in_progress()
+                self.status = self.TaskStatuses.in_progress
             else:
-                self.set_full()
+                self.status = self.TaskStatuses.full
 
         if (self.status in (self.TaskStatuses.in_progress, self.TaskStatuses.full) and
                 self.people_needed > people_accepted and
                 self.deadline_to_apply > timezone.now()):
-            self.set_open()
+            self.status = self.TaskStatuses.open
 
         if self.status == self.TaskStatuses.closed and self.members_realized:
             self.status = self.TaskStatuses.realized

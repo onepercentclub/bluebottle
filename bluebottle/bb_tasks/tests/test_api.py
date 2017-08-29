@@ -385,6 +385,16 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                                     token=task_member_user_token)
         self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
 
+        # Project owner cannot update the time_spent
+        self.some_project.task_manager = BlueBottleUserFactory.create()
+        self.some_project.save()
+        response3 = self.client.put(
+            '{0}{1}'.format(self.task_members_url, task_member.id),
+            {'time_spent': 5, 'task': task.id},
+            token=self.some_token)
+
+        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN, response3.data)
+
     def test_get_correct_base_task_fields(self):
         """ Test that the fields defined in the BaseTask serializer are returned in the response """
 

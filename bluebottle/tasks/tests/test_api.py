@@ -565,7 +565,7 @@ class TaskApiTestcase(BluebottleTestCase):
         # Project owner should be allowed to see taskmember
         task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
         response = self.client.get(task_member_url,
-                                     HTTP_AUTHORIZATION=self.some_token)
+                                   HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Project owner should be disallowed to accept taskmember

@@ -6,7 +6,7 @@ class NoDonationsOrReadOnly(BasePermission):
     """
     If a reward has no donations it should be editable/deletable
     """
-    def has_object_action_permission(self, method, view, obj=None, parent=None):
+    def has_object_action_permission(self, method, view, obj):
         if method in permissions.SAFE_METHODS:
             return True
 

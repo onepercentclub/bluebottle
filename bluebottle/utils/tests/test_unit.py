@@ -597,8 +597,8 @@ class TestRelatedResourceOwnerPermission(BluebottleTestCase):
 
     def test_object_permission_parent(self):
         self.assertTrue(
-            self.permission.has_object_action_permission(
-                'GET', self.user, parent=self.project
+            self.permission.has_parent_permission(
+                'GET', self.user, self.project
             )
         )
 
@@ -663,6 +663,7 @@ class TestOneOfPermission(BluebottleTestCase):
         self.user.user_permissions.add(
             Permission.objects.get(codename='api_read_project')
         )
+        self.user.save()
 
         self.assertTrue(
             self.permission.has_object_action_permission(
@@ -678,7 +679,7 @@ class TestOneOfPermission(BluebottleTestCase):
             Permission.objects.get(codename='api_read_own_project')
         )
 
-        self.assertTrue(
+        self.assertFalse(
             self.permission.has_object_action_permission(
                 'GET', self.user, obj=self.project
             )

@@ -4,7 +4,7 @@ from bluebottle.utils.permissions import BasePermission, RelatedResourceOwnerPer
 
 
 class MemberOrTaskOwnerResourcePermission(RelatedResourceOwnerPermission):
-    def has_parent_permission(self, action, user, parent):
+    def has_parent_permission(self, action, user, parent, model=None):
         return parent.owner == user
 
     def has_object_action_permission(self, action, user, obj):
@@ -12,7 +12,7 @@ class MemberOrTaskOwnerResourcePermission(RelatedResourceOwnerPermission):
 
 
 class ActiveProjectOrReadOnlyPermission(BasePermission):
-    def has_parent_permission(self, action, user, parent):
+    def has_parent_permission(self, action, user, parent, model=None):
         return parent.project.status.slug == 'campaign'
 
     def has_object_action_permission(self, action, user, obj):
@@ -26,7 +26,7 @@ class ActiveProjectOrReadOnlyPermission(BasePermission):
 
 
 class ResumePermission(BasePermission):
-    def has_parent_permission(self, action, user, parent):
+    def has_parent_permission(self, action, user, parent, model=None):
         return parent.owner == user
 
     def has_object_action_permission(self, action, user, obj):

@@ -9,7 +9,7 @@ class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
     or Task.project.owner, Task.project.task_management, Task.project.promoter
     or Fundraiser.owner
     """
-    def has_parent_permission(self, action, user, parent):
+    def has_parent_permission(self, action, user, parent, model=None):
         return user in [
             getattr(parent, 'owner', None),
             getattr(parent, 'task_manager', None),
@@ -37,7 +37,7 @@ class WallpostOwnerPermission(permissions.BasePermission):
     Model instances are expected to include an `mediawallpost` attribute.
     Also check if the user is the photo (or other object) author.
     """
-    def has_parent_permission(self, action, user, parent):
+    def has_parent_permission(self, action, user, parent, model=None):
         return parent.owner == user
 
     def has_object_action_permission(self, action, user, obj):

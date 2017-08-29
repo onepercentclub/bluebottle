@@ -59,7 +59,25 @@ class FilterQSParams(object):
         return qs
 
 
-class WallpostList(OwnerListViewMixin, ListAPIView):
+class WallpostOwnerFilterMixin(object):
+    def get_queryset(self):
+        qs = super(WallpostOwnerFilterMixin, self).get_queryset()
+        permission = '{}.api_read_{}'.format(
+            self.model._meta.app_label, self.model._meta.model_name
+        )
+
+        if not self.request.user.has_perm(permission):
+            user = self.request.user if self.request.user.is_authenticated else None
+            qs = qs.filter(
+                Q(project_wallposts__owner=user) |
+                Q(task_wallposts__author=user) |
+                Q(fundraiser_wallposts__owner=user)
+            )
+
+        return qs
+
+
+class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     pagination_class = BluebottlePagination
@@ -67,8 +85,6 @@ class WallpostList(OwnerListViewMixin, ListAPIView):
         OneOf(ResourcePermission, RelatedResourceOwnerPermission),
         RelatedManagementOrReadOnlyPermission
     )
-
-    owner_filter_field = 'author'
 
     def get_queryset(self, queryset=queryset):
         queryset = super(WallpostList, self).get_queryset()
@@ -101,7 +117,7 @@ class WallpostPagination(BluebottlePagination):
     page_size = 5
 
 
-class TextWallpostList(OwnerListViewMixin, SetAuthorMixin, ListCreateAPIView, FilterQSParams):
+class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIView, FilterQSParams):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
     filter_class = WallpostFilter
@@ -112,10 +128,8 @@ class TextWallpostList(OwnerListViewMixin, SetAuthorMixin, ListCreateAPIView, Fi
         RelatedManagementOrReadOnlyPermission
     )
 
-    owner_filter_field = 'author'
-
     def get_queryset(self, queryset=None):
-        queryset = self.queryset
+        queryset = super(TextWallpostList, self).get_queryset()
         # Some custom filtering projects slugs.
         parent_type = self.request.query_params.get('parent_type', None)
         parent_id = self.request.query_params.get('parent_id', None)

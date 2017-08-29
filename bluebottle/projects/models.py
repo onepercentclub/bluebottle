@@ -4,6 +4,7 @@ import logging
 import pytz
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
@@ -33,7 +34,7 @@ from bluebottle.utils.fields import MoneyField, get_currency_choices, get_defaul
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
-    MediaWallpostPhoto, MediaWallpost, TextWallpost
+    Wallpost, MediaWallpostPhoto, MediaWallpost, TextWallpost
 )
 from .mails import (
     mail_project_funded_internal, mail_project_complete,
@@ -175,7 +176,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     payout_status = models.CharField(max_length=50, null=True, blank=True,
                                      choices=PAYOUT_STATUS_CHOICES)
-
+    wallposts = GenericRelation(Wallpost, related_query_name='project_wallposts')
     objects = UpdateSignalsQuerySet.as_manager()
 
     def __unicode__(self):

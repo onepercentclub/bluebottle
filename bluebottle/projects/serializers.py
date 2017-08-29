@@ -171,7 +171,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 class ProjectPreviewSerializer(ProjectSerializer):
     categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
     image = ImageSerializer(required=False)
-    owner = UserPreviewSerializer()
+    owner = UserProfileSerializer()
     skills = serializers.SerializerMethodField()
     theme = ProjectThemeSerializer()
 

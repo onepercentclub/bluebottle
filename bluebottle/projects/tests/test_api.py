@@ -3,7 +3,7 @@ import json
 from random import randint
 
 from django.test import RequestFactory
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.test.utils import override_settings
@@ -81,6 +81,143 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         # view allowed
         response = self.client.get(self.project_url)
         self.assertEqual(response.status_code, 200)
+
+        # update denied
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'})
+        self.assertEqual(response.status_code, 401)
+
+        # create denied
+        response = self.client.post(self.project_manage_list_url, {'title': 'Title 2'})
+        self.assertEqual(response.status_code, 401)
+
+
+class OwnProjectPermissionsTestCase(BluebottleTestCase):
+    """
+    Tests for the Project API permissions.
+    """
+    def setUp(self):
+        super(OwnProjectPermissionsTestCase, self).setUp()
+        self.init_projects()
+        campaign = ProjectPhase.objects.get(slug='campaign')
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_project')
+        )
+
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_read_own_project')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_project')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_add_own_project')
+        )
+
+        anonymous = Group.objects.get(name='Anonymous')
+        anonymous.permissions.remove(
+            Permission.objects.get(codename='api_read_project')
+        )
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.not_owner = BlueBottleUserFactory.create()
+        self.not_owner_token = "JWT {0}".format(self.not_owner.get_jwt_token())
+        self.project = ProjectFactory.create(owner=self.owner)
+
+        ProjectFactory.create(owner=self.not_owner, status=campaign)
+
+        self.project_url = reverse(
+            'project_detail', kwargs={'slug': self.project.slug})
+        self.project_manage_url = reverse(
+            'project_manage_detail', kwargs={'slug': self.project.slug}
+        )
+        self.project_list_url = reverse('project_list')
+        self.project_preview_list_url = reverse('project_preview_list')
+        self.project_manage_list_url = reverse('project_manage_list')
+
+    def test_owner_permissions(self):
+        # view allowed
+        response = self.client.get(self.project_url, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        # update allowed
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
+                                   token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        # create allowed
+        response = self.client.post(self.project_manage_list_url, {'title': 'Title 2'},
+                                    token=self.owner_token)
+        self.assertEqual(response.status_code, 201)
+
+        # getting list allowed
+        response = self.client.get(self.project_manage_list_url,
+                                   token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        for project in response.data['results']:
+            self.assertEqual(
+                project['owner']['id'], self.owner.id
+            )
+
+        # getting list allowed
+        response = self.client.get(self.project_list_url,
+                                   token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        for project in response.data['results']:
+            self.assertEqual(
+                project['owner']['id'], self.owner.id
+            )
+
+        # getting list allowed
+        response = self.client.get(self.project_preview_list_url,
+                                   token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        for project in response.data['results']:
+            self.assertEqual(
+                project['owner']['id'], self.owner.id
+            )
+
+    def test_non_owner_permissions(self):
+        # view disallowed
+        response = self.client.get(self.project_url, token=self.not_owner_token)
+        self.assertEqual(response.status_code, 403)
+
+        # update denied
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
+                                   token=self.not_owner_token)
+        self.assertEqual(response.status_code, 403)
+
+        # getting list allowed
+        response = self.client.get(self.project_list_url,
+                                   token=self.not_owner_token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 1)
+
+        for project in response.data['results']:
+            self.assertEqual(
+                project['owner']['id'], self.not_owner.id
+            )
+
+        # getting list allowed
+        response = self.client.get(self.project_preview_list_url,
+                                   token=self.not_owner_token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['count'], 1)
+
+        for project in response.data['results']:
+            self.assertEqual(
+                project['owner']['id'], self.not_owner.id
+            )
+
+    def test_anon_permissions(self):
+        # view disallowed
+        response = self.client.get(self.project_url)
+        self.assertEqual(response.status_code, 401)
 
         # update denied
         response = self.client.put(self.project_manage_url, {'title': 'Title 1'})

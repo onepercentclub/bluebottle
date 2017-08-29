@@ -395,6 +395,19 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN, response3.data)
 
+    def test_task_member_set_time_spent_own_task_manager(self):
+        task = TaskFactory.create(status=Task.TaskStatuses.open,
+                                  project=self.some_project,
+                                  author=self.some_user)
+
+        task_member = TaskMemberFactory.create(member=self.some_user, task=task)
+
+        # Only task manager can set the time spent
+        response1 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
+                                    {'time_spent': 42, 'task': task.id},
+                                    token=self.some_token)
+        self.assertEqual(response1.status_code, status.HTTP_200_OK, response1.data)
+
     def test_get_correct_base_task_fields(self):
         """ Test that the fields defined in the BaseTask serializer are returned in the response """
 

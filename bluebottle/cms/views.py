@@ -2,13 +2,14 @@ from datetime import datetime, time
 from pytz import timezone
 
 from django.conf import settings
-from rest_framework import generics
 
 from bluebottle.cms.models import ResultPage
 from bluebottle.cms.serializers import ResultPageSerializer
 
+from bluebottle.utils.views import RetrieveAPIView
 
-class ResultPageDetail(generics.RetrieveAPIView):
+
+class ResultPageDetail(RetrieveAPIView):
     queryset = ResultPage.objects.all()
     serializer_class = ResultPageSerializer
 

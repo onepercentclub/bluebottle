@@ -4,6 +4,7 @@ import random
 
 import mock
 
+from django.contrib.auth.models import Permission, Group
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now, get_current_timezone
@@ -256,3 +257,23 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(block['type'], 'supporter_total')
         self.assertEqual(len(block['co_financers']), 1)
         self.assertEqual(block['co_financers'][0]['total']['amount'], 100)
+
+    def test_permission(self):
+        anonymous = Group.objects.get(name='Anonymous')
+        anonymous.permissions.remove(
+            Permission.objects.get(codename='api_read_resultpage')
+        )
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 401)
+
+    def test_authenticated_permission(self):
+        user = BlueBottleUserFactory.create()
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_resultpage')
+        )
+        response = self.client.get(
+            self.url,
+            token='JWT {0}'.format(user.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 403)

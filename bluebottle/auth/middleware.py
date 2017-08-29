@@ -10,6 +10,7 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render_to_response
 from django.utils import timezone
+from django.http.request import RawPostDataException
 
 from rest_framework import exceptions
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
@@ -282,7 +283,13 @@ authorization_logger = logging.getLogger(__name__)
 
 class LogAuthFailureMiddleWare:
     def process_request(self, request):
-        request.body  # touch the body so that we have access to it in process_response
+        # TODO: Handle this more cleanly. The exception is raised when using IE11.
+        #       Possibly related to the following issue:
+        #           https://github.com/encode/django-rest-framework/issues/2774
+        try:
+            request.body  # touch the body so that we have access to it in process_response
+        except RawPostDataException:
+            pass
 
     def process_response(self, request, response):
         """ Log a message for each failed login attempt. """

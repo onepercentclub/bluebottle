@@ -419,6 +419,17 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['count'], 1)
 
+    def test_project_list_filter_anywhere_empty_string(self):
+        self.projects[1].task_set.all().update(location='')
+
+        response = self.client.get(
+            self.projects_preview_url + '?anywhere=1'
+        )
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+        self.assertEqual(data['count'], 1)
+
     def test_project_list_search_location(self):
         self.projects[1].location = LocationFactory(name='Lyutidol')
         self.projects[1].save()
@@ -708,6 +719,46 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         """ Create project with bank details. Ensure they are returned """
         project_data = {
             'title': 'Project with bank details'
+        }
+
+        response = self.client.post(self.manage_projects_url, project_data,
+                                    token=self.some_user_token)
+
+        self.assertEquals(response.status_code,
+                          status.HTTP_201_CREATED,
+                          response)
+
+        bank_detail_fields = ['account_number', 'account_details', 'account_bic', 'account_bank_country']
+
+        for field in bank_detail_fields:
+            self.assertIn(field, response.data)
+
+    def test_create_project_contains_empty_account_details(self):
+        """ Create project with bank details. Ensure they are returned """
+        project_data = {
+            'title': 'Project with bank details',
+            'account_details': '',
+            'account_bic': ''
+        }
+
+        response = self.client.post(self.manage_projects_url, project_data,
+                                    token=self.some_user_token)
+
+        self.assertEquals(response.status_code,
+                          status.HTTP_201_CREATED,
+                          response)
+
+        bank_detail_fields = ['account_number', 'account_details', 'account_bic', 'account_bank_country']
+
+        for field in bank_detail_fields:
+            self.assertIn(field, response.data)
+
+    def test_create_project_contains_null_account_details(self):
+        """ Create project with bank details. Ensure they are returned """
+        project_data = {
+            'title': 'Project with bank details',
+            'account_details': None,
+            'account_bic': None
         }
 
         response = self.client.post(self.manage_projects_url, project_data,

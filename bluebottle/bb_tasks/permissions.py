@@ -23,12 +23,13 @@ class IsTaskAuthorOrReadOnly(permissions.BasePermission):
         return task
 
     def has_permission(self, request, view):
-        # Read permissions are allowed to any request, so we'll always allow GET, HEAD or OPTIONS requests.
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
             return True
 
         # Test for objects/lists related to a Task (e.g TaskMember).
-        # Get the project form the request
+        # Get the task form the request
 
         task = self._get_task_from_request(request)
         if task:
@@ -36,7 +37,8 @@ class IsTaskAuthorOrReadOnly(permissions.BasePermission):
         return False
 
     def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request, so we'll always allow GET, HEAD or OPTIONS requests.
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
             return True
 
@@ -50,7 +52,8 @@ class IsTaskAuthorOrReadOnly(permissions.BasePermission):
 
 class IsMemberOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request, so we'll always allow GET, HEAD or OPTIONS requests.
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
             return True
 
@@ -82,4 +85,35 @@ class IsMemberOrAuthorOrReadOnly(permissions.BasePermission):
                 return False
             return True
 
+        return False
+
+
+class IsRelatedToActiveProjectOrReadOnly(permissions.BasePermission):
+
+    def _get_task_from_request(self, request):
+        if request.data:
+            task_id = request.data.get('task', None)
+        else:
+            task_id = request.query_params.get('task', None)
+        if task_id:
+            try:
+                task = Task.objects.get(pk=task_id)
+            except Task.DoesNotExist:
+                return None
+        else:
+            return None
+        return task
+
+    def has_permission(self, request, view):
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Test for objects/lists related to a Task (e.g TaskMember).
+        # Get the task form the request
+
+        task = self._get_task_from_request(request)
+        if task:
+            return task.project.status.slug == 'campaign'
         return False

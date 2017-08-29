@@ -372,6 +372,10 @@ TENANT_APPS = (
     'taggit',
 
     'bluebottle.cms',
+
+    # Note: Fixes the incorrect formatting of money values in the back-office
+    # https://github.com/django-money/django-money/issues/232
+    'djmoney',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -718,22 +722,11 @@ EXPORTDB_EXPORT_CONF = {
             'resource_class': 'bluebottle.exports.resources.TaskMemberResource',
             'title': 'Supporters (Sourcing)',
         }),
-        # ('suggestions.Suggestion', {
-        #     'fields': (
-        #         'id',
-        #         ('get_status_display', 'Status'),
-        #         'title',
-        #         'org_email',
-        #         'project__location',
-        #         'created',
-        #         'updated',
-        #     ),
-        #     'title': 'Suggestions',
-        # })
     ])
 }
 EXPORTDB_CONFIRM_FORM = 'bluebottle.exports.forms.ExportDBForm'
 EXPORTDB_EXPORT_ROOT = os.path.join(MEDIA_ROOT, '%s', 'exports')
+EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
 
 # maximum delta between from/to date for exports
 EXPORT_MAX_DAYS = 366
@@ -769,8 +762,6 @@ SHARE_OPTIONS = {
 }
 
 SHOW_DONATION_AMOUNTS = True
-
-EXPORTDB_PERMISSION = rules.is_group_member('Staff') | rules.is_superuser
 
 # Salesforce connection settings
 SALESFORCE_QUERY_TIMEOUT = 15

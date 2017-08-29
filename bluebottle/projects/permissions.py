@@ -12,15 +12,6 @@ class RelatedProjectTaskManagerPermission(RelatedResourceOwnerPermission):
         return user == parent.task_manager
 
 
-class RelatedProjectTaskManagerOrOwnerPermission(RelatedResourceOwnerPermission):
-
-    def has_object_action_permission(self, action, user, obj=None, parent=None):
-        if obj:
-            parent = obj.parent
-
-        return user == parent.task_manager or user == parent.owner
-
-
 class IsEditableOrReadOnly(BasePermission):
     def has_object_action_permission(self, action, user, obj=None, parent=None):
         # Read permissions are allowed to any request, so we'll always allow

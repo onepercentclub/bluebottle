@@ -365,11 +365,9 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
 
     def test_task_member_set_time_spent(self):
-        task_user = BlueBottleUserFactory.create()
-        task_user_token = "JWT {0}".format(task_user.get_jwt_token())
         task = TaskFactory.create(status=Task.TaskStatuses.open,
                                   project=self.some_project,
-                                  author=task_user)
+                                  author=self.some_user)
 
         task_member_user = BlueBottleUserFactory.create()
         task_member_user_token = "JWT {0}".format(task_member_user.get_jwt_token())
@@ -378,7 +376,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         # Only task author can set the time spent
         response1 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
                                     {'time_spent': 42, 'task': task.id},
-                                    token=task_user_token)
+                                    token=self.some_token)
         self.assertEqual(response1.status_code, status.HTTP_200_OK, response1.data)
 
         # Task Member cannot update his/her own time_spent
@@ -388,9 +386,13 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Project owner cannot update the time_spent
-        response3 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
-                                    {'time_spent': 5, 'task': task.id},
-                                    token=self.some_token)
+        self.some_project.task_manager = BlueBottleUserFactory.create()
+        self.some_project.save()
+        response3 = self.client.put(
+            '{0}{1}'.format(self.task_members_url, task_member.id),
+            {'time_spent': 5, 'task': task.id},
+            token=self.some_token)
+
         self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN, response3.data)
 
     def test_get_correct_base_task_fields(self):

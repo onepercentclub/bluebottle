@@ -8,7 +8,7 @@ import django_filters
 from rest_framework import filters, serializers
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.projects.permissions import RelatedProjectTaskManagerOrOwnerPermission
+from bluebottle.tasks.permissions import TaskPermission, TaskMemberPermission
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.tasks.serializers import (BaseTaskSerializer,
                                           BaseTaskMemberSerializer, TaskFileSerializer,
@@ -22,7 +22,7 @@ from bluebottle.utils.views import (
     RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView, OwnerListViewMixin,
 )
 from bluebottle.bb_tasks.permissions import (
-    ActiveProjectOrReadOnlyPermission, MemberOrTaskOwnerResourcePermission,
+    ActiveProjectOrReadOnlyPermission,
     ResumePermission
 )
 
@@ -130,7 +130,7 @@ class BaseTaskList(ListCreateAPIView):
     queryset = Task.objects.all()
     pagination_class = TaskPreviewPagination
     permission_classes = (
-        OneOf(ResourcePermission, RelatedProjectTaskManagerOrOwnerPermission),
+        OneOf(ResourcePermission, TaskPermission),
     )
 
     def get_queryset(self):
@@ -148,8 +148,6 @@ class BaseTaskList(ListCreateAPIView):
             )
 
         return qs
-
-    owner_filter_field = 'project__task_manager'
 
     def perform_create(self, serializer):
         if serializer.validated_data['project'].status.slug in (
@@ -208,7 +206,7 @@ class MyTaskList(BaseTaskList):
 class TaskDetail(RetrieveUpdateAPIView):
     queryset = Task.objects.all()
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+        OneOf(ResourcePermission, TaskPermission),
     )
     serializer_class = BaseTaskSerializer
 
@@ -234,12 +232,26 @@ class TaskMemberList(OwnerListViewMixin, ListCreateAPIView):
     pagination_class = TaskPagination
     filter_fields = ('task', 'status',)
     permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+        OneOf(ResourcePermission, TaskMemberPermission),
         ActiveProjectOrReadOnlyPermission,
     )
     queryset = TaskMember.objects.all()
 
-    owner_filter_field = 'member'
+    def get_queryset(self):
+        qs = super(BaseTaskList, self).get_queryset()
+
+        user = self.request.user
+        model = super(BaseTaskList, self).model
+        permission = '{}.api_read_{}'.format(
+            model._meta.app_label, model._meta.model_name
+        )
+
+        if not self.request.user.has_perm(permission):
+            qs = qs.filter(
+                Q(task__project__owner=user) | Q(task__project__task_manager=user)
+            )
+
+        return qs
 
     def perform_create(self, serializer):
         self.check_object_permissions(
@@ -269,7 +281,7 @@ class TaskMemberDetail(RetrieveUpdateAPIView):
     serializer_class = BaseTaskMemberSerializer
 
     permission_classes = (
-        OneOf(ResourcePermission, MemberOrTaskOwnerResourcePermission),
+        OneOf(ResourcePermission, TaskMemberPermission),
     )
 
 

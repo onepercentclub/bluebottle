@@ -286,7 +286,7 @@ class BaseProjectPayout(PayoutBase):
     sender_account_number = models.CharField(max_length=100)
     receiver_account_number = models.CharField(max_length=100, blank=True)
     receiver_account_iban = models.CharField(max_length=100, blank=True)
-    receiver_account_bic = models.CharField(max_length=100, blank=True)
+    receiver_account_details = models.CharField(max_length=255, blank=True)
     receiver_account_name = models.CharField(max_length=100)
     receiver_account_city = models.CharField(max_length=100)
     receiver_account_country = models.CharField(max_length=100, null=True)

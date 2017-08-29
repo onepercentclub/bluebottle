@@ -38,7 +38,7 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
     title = serializers.CharField(required=False)
     receiver_account_name = serializers.CharField(source='account_holder_name', read_only=True)
     receiver_account_number = serializers.CharField(source='account_number', read_only=True)
-    receiver_account_bic = serializers.CharField(source='account_bic', read_only=True)
+    receiver_account_details = serializers.CharField(source='account_details', read_only=True)
     receiver_account_city = serializers.CharField(source='account_holder_city', read_only=True)
     receiver_account_address = serializers.CharField(source='account_holder_address', read_only=True)
     receiver_account_country = serializers.CharField(source='account_holder_country.name', read_only=True)
@@ -62,7 +62,7 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
                   'campaign_ended',
                   'target_reached',
                   'receiver_account_number',
-                  'receiver_account_bic',
+                  'receiver_account_details',
                   'receiver_account_name',
                   'receiver_account_city',
                   'receiver_account_address',

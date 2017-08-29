@@ -282,6 +282,49 @@ class TestStatusMC(BluebottleTestCase):
         task1 = Task.objects.get(title='task1')
         self.assertEquals(task1.status, 'open')
 
+    def test_task_status_changes(self):
+        """
+        Test that tasks changes status.
+        """
+        now = timezone.now()
+
+        project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'))
+
+        task1 = TaskFactory.create(title='My Task', people_needed=5,
+                                   project=project,
+                                   status='open', type='event',
+                                   deadline_to_apply=now - timezone.timedelta(days=5),
+                                   deadline=now + timezone.timedelta(days=5))
+
+        task2 = TaskFactory.create(title='My Task 2', people_needed=5,
+                                   project=project,
+                                   status='open', type='ongoing',
+                                   deadline_to_apply=now - timezone.timedelta(days=5),
+                                   deadline=now + timezone.timedelta(days=5))
+
+        TaskMemberFactory.create_batch(5, task=task1, status='accepted')
+        TaskMemberFactory.create_batch(5, task=task2, status='accepted')
+
+        task1 = Task.objects.get(title='My Task')
+        self.assertEqual(task1.status, 'full')
+
+        task2 = Task.objects.get(title='My Task 2')
+        self.assertEqual(task2.status, 'in progress')
+
+        task1.deadline = now - timezone.timedelta(days=5)
+        task1.save()
+
+        task2.deadline = now - timezone.timedelta(days=5)
+        task2.save()
+
+        call_command('cron_status_realised')
+
+        task1 = Task.objects.get(title='My Task')
+        self.assertEqual(task1.status, 'realized')
+
+        task2 = Task.objects.get(title='My Task 2')
+        self.assertEqual(task2.status, 'realized')
+
 
 @override_settings(SEND_WELCOME_MAIL=False)
 class TestMultiTenant(BluebottleTestCase):

@@ -129,3 +129,10 @@ class SafeField(serializers.CharField):
         data = data.replace("&lt;;", "<").replace("&gt;;", ">")
         data = data.replace("&lt;", "<").replace("&gt;", ">")
         return unicode(clean_html(data))
+
+
+class PrivateFileField(models.FileField):
+    def __init__(self, upload_to='', *args, **kwargs):
+        super(PrivateFileField, self).__init__(
+            upload_to='private/' + upload_to, *args, **kwargs
+        )

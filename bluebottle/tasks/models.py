@@ -1,20 +1,20 @@
 from datetime import timedelta
 
-from django.db import models, connection
 from django.conf import settings
+from django.db import models, connection
+from django.db.models import Sum
 from django.utils import timezone
 from django.utils.translation import ugettext, ugettext_lazy as _
-
-from django_extensions.db.fields import (
-    ModificationDateTimeField, CreationDateTimeField)
+from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
-from bluebottle.utils.email_backend import send_mail
+from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
+from bluebottle.utils.email_backend import send_mail
 
 
 GROUP_PERMS = {
@@ -49,47 +49,45 @@ class Task(models.Model, PreviousStatusMixin):
     description = models.TextField(_('description'))
     location = models.CharField(_('location'),
                                 help_text=_('Task location (leave empty for anywhere/online)'),
-                                max_length=200, null=True,
+                                max_length=200,
+                                null=True,
                                 blank=True)
     people_needed = models.PositiveIntegerField(_('people needed'), default=1)
-
     project = models.ForeignKey('projects.Project')
     # See Django docs on issues with related name and an (abstract) base class:
     # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
-    author = models.ForeignKey('members.Member',
-                               related_name='%(app_label)s_%(class)s_related')
-    status = models.CharField(_('status'), max_length=20,
+    author = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
+    status = models.CharField(_('status'),
+                              max_length=20,
                               choices=TaskStatuses.choices,
                               default=TaskStatuses.open)
-    type = models.CharField(_('type'), max_length=20,
+    type = models.CharField(_('type'),
+                            max_length=20,
                             choices=TaskTypes.choices,
                             default=TaskTypes.ongoing)
 
-    accepting = models.CharField(_('accepting'), max_length=20,
+    accepting = models.CharField(_('accepting'),
+                                 max_length=20,
                                  choices=TaskAcceptingChoices.choices,
                                  default=TaskAcceptingChoices.manual)
 
-    date_status_change = models.DateTimeField(_('date status change'),
-                                              blank=True, null=True)
+    needs_motivation = models.BooleanField(_('Needs motivation'),
+                                           default=False,
+                                           help_text=_('Indicates if a task candidate needs to submit a motivation'))
 
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
-    deadline_to_apply = models.DateTimeField(
-        _('Deadline to apply'), help_text=_('Deadline to apply')
-    )
+    deadline_to_apply = models.DateTimeField(_('Deadline to apply'), help_text=_('Deadline to apply'))
 
     objects = UpdateSignalsQuerySet.as_manager()
 
     # required resources
-    time_needed = models.FloatField(
-        _('time_needed'),
-        help_text=_('Estimated number of hours needed to perform this task.'))
+    time_needed = models.FloatField(_('time_needed'),
+                                    help_text=_('Estimated number of hours needed to perform this task.'))
 
-    skill = models.ForeignKey('tasks.Skill',
-                              verbose_name=_('Skill needed'), null=True)
+    skill = models.ForeignKey('tasks.Skill', verbose_name=_('Skill needed'), null=True)
 
     # internal usage
-    created = CreationDateTimeField(
-        _('created'), help_text=_('When this task was created?'))
+    created = CreationDateTimeField(_('created'), help_text=_('When this task was created?'))
     updated = ModificationDateTimeField(_('updated'))
 
     class Meta:
@@ -101,25 +99,14 @@ class Task(models.Model, PreviousStatusMixin):
     def __unicode__(self):
         return self.title
 
-    def set_in_progress(self):
-        self.status = self.TaskStatuses.in_progress
-        self.save()
-
-    def set_full(self):
-        self.status = self.TaskStatuses.full
-        self.save()
-
-    def set_open(self):
-        self.status = self.TaskStatuses.open
-        self.save()
-
     @property
     def expertise_based(self):
         return self.skill.expertise if self.skill else False
 
     @property
     def members_applied(self):
-        return self.members.exclude(status__in=['stopped', 'withdrew'])
+        return self.members.exclude(status__in=[TaskMember.TaskMemberStatuses.stopped,
+                                                TaskMember.TaskMemberStatuses.withdrew])
 
     @property
     def members_realized(self):
@@ -139,11 +126,50 @@ class Task(models.Model, PreviousStatusMixin):
 
     @property
     def people_accepted(self):
-        members = self.members.filter(status__in=['accepted', 'realized'])
+        members = self.members.filter(status__in=[TaskMember.TaskMemberStatuses.accepted,
+                                                  TaskMember.TaskMemberStatuses.realized])
         total_externals = 0
         for member in members:
             total_externals += member.externals
         return members.count() + total_externals
+
+    @property
+    def date_realized(self):
+        """The start date (creation date) of the last realized status entry from task status log"""
+        if self.status == self.TaskStatuses.realized:
+            return TaskStatusLog.objects\
+                .filter(task=self, status=self.TaskStatuses.realized)\
+                .order_by('-start')\
+                .first()\
+                .start
+        else:
+            return None
+
+    @property
+    def time_spent(self):
+        if self.status == self.TaskStatuses.realized:
+            queryset = TaskMember.objects\
+                .filter(task=self, status=TaskMember.TaskMemberStatuses.realized)\
+                .aggregate(time_spent=Sum('time_spent'))
+            return queryset.get('time_spent', 0)
+        else:
+            return None
+
+    @property
+    def date_status_change(self):
+        return TaskStatusLog.objects.filter(task=self).order_by('-start').first().start
+
+    def set_in_progress(self):
+        self.status = self.TaskStatuses.in_progress
+        self.save()
+
+    def set_full(self):
+        self.status = self.TaskStatuses.full
+        self.save()
+
+    def set_open(self):
+        self.status = self.TaskStatuses.open
+        self.save()
 
     def get_absolute_url(self):
         """ Get the URL for the current task. """
@@ -167,15 +193,15 @@ class Task(models.Model, PreviousStatusMixin):
                 else:
                     self.set_full()
             else:
-                self.status = 'closed'
+                self.status = self.TaskStatuses.closed
 
             self.save()
 
     def deadline_reached(self):
         if self.people_accepted:
-            self.status = 'realized'
+            self.status = self.TaskStatuses.realized
         else:
-            self.status = 'closed'
+            self.status = self.TaskStatuses.closed
             with TenantLanguage(self.author.primary_language):
                 subject = _("The status of your task '{0}' is set to closed").format(self.title)
             send_mail(
@@ -216,7 +242,9 @@ class Task(models.Model, PreviousStatusMixin):
         """ called by post_save signal handler, if status changed """
         # confirm everything with task owner
 
-        if oldstate in ("in progress", "open", "closed") and newstate == "realized":
+        if oldstate in (self.TaskStatuses.in_progress,
+                        self.TaskStatuses.open,
+                        self.TaskStatuses.closed) and newstate == self.TaskStatuses.realized:
             self.project.check_task_status()
 
             with TenantLanguage(self.author.primary_language):
@@ -239,6 +267,8 @@ class Task(models.Model, PreviousStatusMixin):
                 )
 
     def save(self, *args, **kwargs):
+        if self.accepting == self.TaskAcceptingChoices.automatic and self.needs_motivation:
+            self.needs_motivation = False
         if not self.author_id:
             self.author = self.project.owner
 
@@ -273,24 +303,22 @@ class TaskMember(models.Model, PreviousStatusMixin):
         withdrew = ChoiceItem('withdrew', label=_('Withdrew'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
-    member = models.ForeignKey('members.Member',
-                               related_name='%(app_label)s_%(class)s_related')
+    member = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
     task = models.ForeignKey('tasks.Task', related_name="members")
     status = models.CharField(_('status'), max_length=20,
                               choices=TaskMemberStatuses.choices,
                               default=TaskMemberStatuses.applied)
-    motivation = models.TextField(
-        _('Motivation'), help_text=_('Motivation by applicant.'), blank=True)
-    comment = models.TextField(_('Comment'),
-                               help_text=_('Comment by task owner.'),
-                               blank=True)
-    time_spent = models.PositiveSmallIntegerField(
-        _('time spent'), default=0,
-        help_text=_('Time spent executing this task.'))
+    motivation = models.TextField(_('Motivation'), help_text=_('Motivation by applicant.'), blank=True)
+    comment = models.TextField(_('Comment'), help_text=_('Comment by task owner.'), blank=True)
+    time_spent = models.PositiveSmallIntegerField(_('time spent'),
+                                                  default=0,
+                                                  help_text=_('Time spent executing this task.'))
 
-    externals = models.PositiveSmallIntegerField(
-        _('Externals'), default=0,
-        help_text=_('External people helping for this task'))
+    externals = models.PositiveSmallIntegerField(_('Externals'),
+                                                 default=0,
+                                                 help_text=_('External people helping for this task'))
+
+    resume = PrivateFileField(upload_to='task-members/resume', blank=True)
 
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('updated'))
@@ -323,8 +351,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
 
 
 class TaskFile(models.Model):
-    author = models.ForeignKey('members.Member',
-                               related_name='%(app_label)s_%(class)s_related')
+    author = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
     title = models.CharField(max_length=255)
     file = models.FileField(_('file'), upload_to='task_files/')
     created = CreationDateTimeField(_('created'))
@@ -339,8 +366,7 @@ class TaskFile(models.Model):
 class TaskStatusLog(models.Model):
     task = models.ForeignKey('tasks.Task')
     status = models.CharField(_('status'), max_length=20)
-    start = CreationDateTimeField(
-        _('created'), help_text=_('When this task entered in this status.'))
+    start = CreationDateTimeField(_('created'), help_text=_('When this task entered in this status.'))
 
     class Analytics:
         type = 'task'
@@ -369,8 +395,7 @@ class TaskStatusLog(models.Model):
 class TaskMemberStatusLog(models.Model):
     task_member = models.ForeignKey('tasks.TaskMember')
     status = models.CharField(_('status'), max_length=20)
-    start = CreationDateTimeField(
-        _('created'), help_text=_('When this task member entered in this status.'))
+    start = CreationDateTimeField(_('created'), help_text=_('When this task member entered in this status.'))
 
     class Analytics:
         type = 'task_member'

@@ -130,7 +130,7 @@ class ProjectManager(models.Manager):
 
         anywhere = query.get('anywhere', None)
         if anywhere:
-            qs = qs.filter(task__id__isnull=False, task__location__isnull=True).distinct()
+            qs = qs.filter(Q(task__id__isnull=False), Q(task__location__isnull=True) | Q(task__location='')).distinct()
 
         start = query.get('start', None)
         if start:
@@ -196,13 +196,10 @@ class ProjectManager(models.Manager):
 class ProjectDocument(BaseProjectDocument):
     @property
     def document_url(self):
-        content_type = ContentType.objects.get_for_model(ProjectDocument).id
         # pk may be unset if not saved yet, in which case no url can be
         # generated.
         if self.pk is not None:
-            return reverse('document_download_detail',
-                           kwargs={'content_type': content_type,
-                                   'pk': self.pk or 1})
+            return reverse('project-document-file', kwargs={'pk': self.pk})
         return None
 
 
@@ -291,7 +288,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     def __unicode__(self):
         if self.title:
-            return self.title
+            return u'{}'.format(self.title)
         return self.slug
 
     @classmethod

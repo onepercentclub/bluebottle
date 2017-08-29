@@ -9,10 +9,16 @@
         Good news! {{ sender_name }} applied for your task
         <i>{{ task_title }}</i>.
         <br><br>
-        {{ sender_name }} replied with the following motivation to your task:
-        <br>
+    {% endblocktrans %}
+    {% if motivation %}
+        {% blocktrans with sender_name=sender.full_name %}
+            {{ sender_name }} replied with the following motivation to your task:
+            <br>
+        {% endblocktrans %}
         {{ motivation }}
         <br><br>
+    {% endif %}
+    {% blocktrans %}
         Please accept or reject this application, he or she will receive an
         email when you have confirmed the status.
     {% endblocktrans %}

@@ -7,12 +7,11 @@ from django.utils.timezone import now
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
-from localflavor.generic.models import BICField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 
@@ -84,8 +83,10 @@ class BaseProjectDocument(models.Model):
 
     """ Document for an Project """
 
-    file = models.FileField(
-        upload_to='projects/documents')
+    file = PrivateFileField(
+        max_length=110,
+        upload_to='projects/documents'
+    )
     author = models.ForeignKey('members.Member',
                                verbose_name=_('author'), blank=True, null=True)
     project = models.ForeignKey('projects.Project',
@@ -187,7 +188,7 @@ class BaseProject(models.Model, GetTweetMixin):
     # Bank details
     account_number = models.CharField(_("Account number"), max_length=255,
                                       null=True, blank=True)
-    account_bic = BICField(_("account SWIFT-BIC"), null=True, blank=True)
+    account_details = models.CharField(_("account details"), max_length=255, null=True, blank=True)
     account_bank_country = models.ForeignKey(
         'geo.Country', blank=True, null=True,
         related_name="project_account_bank_country")
@@ -233,6 +234,14 @@ class BaseProject(models.Model, GetTweetMixin):
         ).aggregate(total=Count('members'), externals=Sum('members__externals'))
 
         return requested - counts['total'] + (counts['externals'] or 0)
+
+    @property
+    def account_bic(self):
+        return self.account_details
+
+    @account_bic.setter
+    def account_bic(self, value):
+        self.account_details = value
 
     _initial_status = None
 

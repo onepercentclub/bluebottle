@@ -8,6 +8,7 @@ import django_filters
 from rest_framework import generics, filters, serializers
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
+from bluebottle.bb_tasks.permissions import IsRelatedToActiveProjectOrReadOnly
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.bluebottle_drf2.permissions import IsAuthorOrReadOnly
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
@@ -16,6 +17,7 @@ from bluebottle.tasks.serializers import (BaseTaskSerializer,
                                           BaseTaskMemberSerializer, TaskFileSerializer,
                                           TaskPreviewSerializer, MyTaskMemberSerializer,
                                           SkillSerializer, MyTasksSerializer)
+from bluebottle.utils.views import PrivateFileView
 
 from .permissions import IsMemberOrAuthorOrReadOnly
 
@@ -197,6 +199,7 @@ class TaskMemberList(generics.ListCreateAPIView):
     pagination_class = TaskPagination
     filter_fields = ('task', 'status',)
     permission_classes = (TenantConditionalOpenClose,
+                          IsRelatedToActiveProjectOrReadOnly,
                           IsAuthenticatedOrReadOnly)
     queryset = TaskMember.objects.all()
 
@@ -219,6 +222,22 @@ class TaskMemberDetail(generics.RetrieveUpdateAPIView):
 
     permission_classes = (TenantConditionalOpenClose,
                           IsMemberOrAuthorOrReadOnly,)
+
+
+class TaskMemberResumeView(PrivateFileView):
+    queryset = TaskMember.objects
+    field = 'resume'
+
+    def check_permission(self, request, instance):
+        """
+        The task owner and task member can both see the files.
+        Staff members can also see these files.
+        """
+        return (
+            request.user == instance.member or
+            request.user == instance.task.author or
+            request.user.is_staff
+        )
 
 
 class TaskFileList(generics.ListCreateAPIView):

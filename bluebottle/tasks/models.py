@@ -1,12 +1,15 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, connection
 from django.db.models import Sum
 from django.utils import timezone
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
+
+from bluebottle.utils.models import MailLog
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients import properties
@@ -56,6 +59,7 @@ class Task(models.Model, PreviousStatusMixin):
     project = models.ForeignKey('projects.Project')
     # See Django docs on issues with related name and an (abstract) base class:
     # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
+
     author = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
     status = models.CharField(_('status'),
                               max_length=20,
@@ -90,10 +94,11 @@ class Task(models.Model, PreviousStatusMixin):
     created = CreationDateTimeField(_('created'), help_text=_('When this task was created?'))
     updated = ModificationDateTimeField(_('updated'))
 
+    mail_logs = GenericRelation(MailLog)
+
     class Meta:
         verbose_name = _(u'task')
         verbose_name_plural = _(u'tasks')
-
         ordering = ['-created']
 
     def __unicode__(self):
@@ -181,21 +186,19 @@ class Task(models.Model, PreviousStatusMixin):
                 "The deadline to apply for your task '{0}' has passed"
             ).format(self.title)
 
-        send_deadline_to_apply_passed_mail(self, subject, connection.tenant)
-
         if self.status == self.TaskStatuses.open:
             if self.people_applied:
                 if self.people_applied + self.externals_applied < self.people_needed:
                     self.people_needed = self.people_applied
-
                 if self.type == self.TaskTypes.ongoing:
-                    self.set_in_progress()
+                    self.status = self.TaskStatuses.in_progress
                 else:
-                    self.set_full()
+                    self.status = self.TaskStatuses.full
             else:
                 self.status = self.TaskStatuses.closed
-
             self.save()
+
+        send_deadline_to_apply_passed_mail(self, subject, connection.tenant)
 
     def deadline_reached(self):
         if self.people_accepted:

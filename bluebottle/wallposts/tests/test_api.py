@@ -60,6 +60,18 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
             wallpost.status_code, status.HTTP_201_CREATED,
             'Project owners can share a wallpost.')
 
+        self.project.promoter = BlueBottleUserFactory.create()
+        self.project.save()
+        promoter_token = "JWT {0}".format(self.project.promoter.get_jwt_token())
+
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=promoter_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Project promoters can share a wallpost.')
+
         # Non-owner users can't share a post
         wallpost = self.client.post(self.media_wallpost_url,
                                     wallpost_data,
@@ -85,6 +97,19 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.assertEqual(wallpost.status_code,
                          status.HTTP_403_FORBIDDEN,
+                         'Only the task owner can share a wallpost.')
+
+        self.task.project.promoter = BlueBottleUserFactory.create()
+        self.task.project.save()
+        promoter_token = "JWT {0}".format(self.task.project.promoter.get_jwt_token())
+
+        # Promoters users can share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=promoter_token)
+
+        self.assertEqual(wallpost.status_code,
+                         status.HTTP_201_CREATED,
                          'Only the task owner can share a wallpost.')
 
     def test_permissions_on_task_wallpost_non_sharing(self):

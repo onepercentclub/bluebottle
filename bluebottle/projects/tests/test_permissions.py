@@ -1,5 +1,4 @@
 from django.test import RequestFactory
-from django.contrib.auth.models import Permission
 from django.core.urlresolvers import reverse
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory

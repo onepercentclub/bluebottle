@@ -234,6 +234,6 @@ class RelatedResourcePermissionField(BasePermissionField):
 
     def _method_permissions(self, method, user, view, value):
         return all(
-            (perm.has_parent_permission(method, user, value) and
+            (perm.has_parent_permission(method, user, value, view.model) and
              perm.has_action_permission(method, user, view.model))
             for perm in view.get_permissions())

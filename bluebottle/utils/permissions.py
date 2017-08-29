@@ -72,7 +72,7 @@ class BasePermission(permissions.BasePermission):
         except PermissionsException:
             return super(BasePermission, self).has_permission(request, view)
 
-    def has_parent_permission(self, method, user, parent):
+    def has_parent_permission(self, method, user, parent, model=None):
         """
         Check if user has permission on the parent obj
 
@@ -139,7 +139,7 @@ class RelatedResourceOwnerPermission(ResourceOwnerPermission):
 
     This class assumes the child resource has a `parent` property which will return the parent object.
     """
-    def has_parent_permission(self, action, user, parent):
+    def has_parent_permission(self, action, user, parent, model=None):
         return user == parent.owner
 
     def has_object_action_permission(self, action, user, obj):
@@ -189,20 +189,12 @@ def OneOf(*permission_classes):
     class OneOf(BasePermission):
         permissions = permission_classes
 
-        def has_object_permission(self, request, view, obj):
-            action = request.method
-            user = request.user
+        def has_parent_permission(self, action, user, parent, model):
             return any(
                 (
-                    perm().has_object_action_permission(action, user, obj) and
-                    perm().has_action_permission(action, user, view.model)
+                    perm().has_parent_permission(action, user, parent, model) and
+                    perm().has_action_permission(action, user, model)
                 ) for perm in self.permissions
-            )
-
-        def has_parent_permission(self, action, user, parent):
-            return any(
-                perm().has_parent_permission(action, user, parent) for
-                perm in self.permissions
             )
 
         def has_object_action_permission(self, action, user, obj):

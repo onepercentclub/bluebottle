@@ -4,7 +4,7 @@ from bluebottle.utils.permissions import RelatedResourceOwnerPermission
 
 
 class TaskPermission(RelatedResourceOwnerPermission):
-    def has_parent_permission(self, action, user, parent):
+    def has_parent_permission(self, action, user, parent, model=None):
         return (
             user == parent.task_manager or
             (action in permissions.SAFE_METHODS and user == parent.owner)
@@ -12,7 +12,7 @@ class TaskPermission(RelatedResourceOwnerPermission):
 
 
 class TaskMemberPermission(RelatedResourceOwnerPermission):
-    def has_parent_permission(self, action, user, parent):
+    def has_parent_permission(self, action, user, parent, model=None):
         return (
             user == parent.project.task_manager or
             (action in permissions.SAFE_METHODS and user == parent.project.owner)

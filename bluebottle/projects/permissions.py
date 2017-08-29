@@ -4,7 +4,7 @@ from bluebottle.utils.permissions import BasePermission, RelatedResourceOwnerPer
 
 
 class RelatedProjectTaskManagerPermission(RelatedResourceOwnerPermission):
-    def has_parent_permission(self, action, user, parent):
+    def has_parent_permission(self, action, user, parent, model=None):
         return user == parent.task_manager
 
 
@@ -20,5 +20,5 @@ class IsEditableOrReadOnly(BasePermission):
 
         return obj.status.editable
 
-    def has_action_permission(self, action, user, model_cls, parent=None):
+    def has_action_permission(self, action, user, model_cls):
         return True

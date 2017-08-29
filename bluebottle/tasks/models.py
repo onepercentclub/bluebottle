@@ -186,6 +186,8 @@ class Task(models.Model, PreviousStatusMixin):
                 "The deadline to apply for your task '{0}' has passed"
             ).format(self.title)
 
+        send_deadline_to_apply_passed_mail(self, subject, connection.tenant)
+
         if self.status == self.TaskStatuses.open:
             if self.people_applied:
                 if self.people_applied + self.externals_applied < self.people_needed:
@@ -197,8 +199,6 @@ class Task(models.Model, PreviousStatusMixin):
             else:
                 self.status = self.TaskStatuses.closed
             self.save()
-
-        send_deadline_to_apply_passed_mail(self, subject, connection.tenant)
 
     def deadline_reached(self):
         if self.people_accepted:

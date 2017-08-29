@@ -223,15 +223,17 @@ class ResourcePermissionField(BasePermissionField):
     """ Field that can be used to return permissions for a view with object. """
 
     def _method_permissions(self, method, user, view, value):
-        return all(perm.has_object_action_permission(
-            method, user, value
-        ) for perm in view.get_permissions())
+        return all(
+            (perm.has_object_action_permission(method, user, value) and
+             perm.has_action_permission(method, user, view.model))
+            for perm in view.get_permissions())
 
 
 class RelatedResourcePermissionField(BasePermissionField):
     """ Field that can be used to return permission for a related view. """
 
     def _method_permissions(self, method, user, view, value):
-        return all((
-            perm.has_related_permission(method, user, parent=value, model=view.model)
-        ) for perm in view.get_permissions())
+        return all(
+            (perm.has_parent_permission(method, user, value) and
+             perm.has_action_permission(method, user, view.model))
+            for perm in view.get_permissions())

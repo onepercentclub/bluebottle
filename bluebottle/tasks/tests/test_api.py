@@ -545,6 +545,10 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.get(self.tasks_url,
                                    HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        permissions = response.data['results'][0]['permissions']
+
+        self.assertEqual(permissions['GET'], True)
+        self.assertEqual(permissions['PUT'], False)
 
         # Project owner should not be allowed to create a task
         response = self.client.post(self.tasks_url, task_data,

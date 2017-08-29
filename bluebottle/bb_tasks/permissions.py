@@ -4,43 +4,37 @@ from bluebottle.utils.permissions import BasePermission, RelatedResourceOwnerPer
 
 
 class MemberOrTaskOwnerResourcePermission(RelatedResourceOwnerPermission):
-    def has_object_action_permission(self, action, user, obj=None, parent=None):
-        if obj:
-            if obj.member == user:
-                return True
-
-            parent = obj.task
-
+    def has_parent_permission(self, action, user, parent):
         return parent.owner == user
+
+    def has_object_action_permission(self, action, user, obj):
+        return obj.member == user or self.has_parent_permission(action, user, obj.task)
 
 
 class ActiveProjectOrReadOnlyPermission(BasePermission):
-    def has_object_action_permission(self, action, user, obj=None, parent=None):
-        if obj:
-            parent = obj.parent
-
-        if action in permissions.SAFE_METHODS:
-            return True
-
+    def has_parent_permission(self, action, user, parent):
         return parent.project.status.slug == 'campaign'
+
+    def has_object_action_permission(self, action, user, obj):
+        return (
+            action in permissions.SAFE_METHODS or
+            self.has_parent_permission(action, user, obj.parent)
+        )
 
     def has_action_permission(self, action, user, model):
         return True
 
 
 class ResumePermission(BasePermission):
-    def has_object_action_permission(self, action, user, obj=None, parent=None):
+    def has_parent_permission(self, action, user, parent):
+        return parent.owner == user
+
+    def has_object_action_permission(self, action, user, obj):
         if user.has_perm('tasks.api_read_taskmember_resume'):
             return True
 
         if user.has_perm('tasks.api_read_own_taskmember_resume'):
-            if obj:
-                if obj.member == user:
-                    return True
-
-                parent = obj.task
-
-            return parent.owner == user
+            return obj.member == user or self.has_parent_permission(action, user, obj.task)
 
         return False
 

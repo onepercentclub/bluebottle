@@ -171,7 +171,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     partner_organization = models.ForeignKey('organizations.Organization',
                                              blank=True,
-                                             help_text=_('Partner Organization'),
+                                             help_text=_('When a partner is selected with the drop down or a new one is'
+                                                         ' added, that member profile is shown whenever that member '
+                                                         'does something on the platform.'),
                                              null=True,
                                              related_name='partner_organization_members',
                                              verbose_name=_('Partner Organization'))

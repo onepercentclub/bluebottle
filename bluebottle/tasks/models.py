@@ -1,12 +1,15 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, connection
 from django.db.models import Sum
 from django.utils import timezone
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
+
+from bluebottle.utils.models import MailLog
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients import properties
@@ -56,6 +59,7 @@ class Task(models.Model, PreviousStatusMixin):
     project = models.ForeignKey('projects.Project')
     # See Django docs on issues with related name and an (abstract) base class:
     # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
+
     author = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
     status = models.CharField(_('status'),
                               max_length=20,
@@ -90,10 +94,11 @@ class Task(models.Model, PreviousStatusMixin):
     created = CreationDateTimeField(_('created'), help_text=_('When this task was created?'))
     updated = ModificationDateTimeField(_('updated'))
 
+    mail_logs = GenericRelation(MailLog)
+
     class Meta:
         verbose_name = _(u'task')
         verbose_name_plural = _(u'tasks')
-
         ordering = ['-created']
 
     def __unicode__(self):
@@ -159,18 +164,6 @@ class Task(models.Model, PreviousStatusMixin):
     def date_status_change(self):
         return TaskStatusLog.objects.filter(task=self).order_by('-start').first().start
 
-    def set_in_progress(self):
-        self.status = self.TaskStatuses.in_progress
-        self.save()
-
-    def set_full(self):
-        self.status = self.TaskStatuses.full
-        self.save()
-
-    def set_open(self):
-        self.status = self.TaskStatuses.open
-        self.save()
-
     def get_absolute_url(self):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
@@ -187,14 +180,12 @@ class Task(models.Model, PreviousStatusMixin):
             if self.people_applied:
                 if self.people_applied + self.externals_applied < self.people_needed:
                     self.people_needed = self.people_applied
-
                 if self.type == self.TaskTypes.ongoing:
-                    self.set_in_progress()
+                    self.status = self.TaskStatuses.in_progress
                 else:
-                    self.set_full()
+                    self.status = self.TaskStatuses.full
             else:
                 self.status = self.TaskStatuses.closed
-
             self.save()
 
     def deadline_reached(self):
@@ -221,14 +212,14 @@ class Task(models.Model, PreviousStatusMixin):
         if (self.status == self.TaskStatuses.open and
                 self.people_needed <= people_accepted):
             if self.type == self.TaskTypes.ongoing:
-                self.set_in_progress()
+                self.status = self.TaskStatuses.in_progress
             else:
-                self.set_full()
+                self.status = self.TaskStatuses.full
 
         if (self.status in (self.TaskStatuses.in_progress, self.TaskStatuses.full) and
                 self.people_needed > people_accepted and
                 self.deadline_to_apply > timezone.now()):
-            self.set_open()
+            self.status = self.TaskStatuses.open
 
         if self.status == self.TaskStatuses.closed and self.members_realized:
             self.status = self.TaskStatuses.realized

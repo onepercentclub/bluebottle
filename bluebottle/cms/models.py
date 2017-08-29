@@ -26,6 +26,14 @@ class ResultPage(TranslatableModel):
         description=models.CharField(_('Description'), max_length=45, blank=True, null=True)
     )
 
+    class Meta:
+        permissions = (
+            ('api_read_resultpage', 'Can view result pages through the API'),
+            ('api_add_resultpage', 'Can add result pages through the API'),
+            ('api_change_resultpage', 'Can change result pages through the API'),
+            ('api_delete_resultpage', 'Can delete result pages through the API'),
+        )
+
 
 class Stats(models.Model):
     def __unicode__(self):

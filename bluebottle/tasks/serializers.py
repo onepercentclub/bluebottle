@@ -33,8 +33,11 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
         if 'time_spent' not in data or not self.instance:
             return data
 
-        if (self.context['request'].user == self.instance.member and
-                self.instance.time_spent != data['time_spent']):
+        if (
+            self.instance.time_spent != data['time_spent'] and
+            self.context['request'].user == self.instance.member and
+            self.instance.project.task_manager != self.instance.member
+        ):
             raise serializers.ValidationError('User can not update their own time spent')
 
         return data

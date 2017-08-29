@@ -1,6 +1,7 @@
 from rest_framework import permissions
 
 from bluebottle.projects.permissions import RelatedResourceOwnerPermission
+from bluebottle.tasks.models import Task
 
 
 class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
@@ -10,6 +11,9 @@ class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
     or Fundraiser.owner
     """
     def has_parent_permission(self, action, user, parent, model=None):
+        if isinstance(parent, Task):
+            parent = parent.project
+
         return user in [
             getattr(parent, 'owner', None),
             getattr(parent, 'task_manager', None),

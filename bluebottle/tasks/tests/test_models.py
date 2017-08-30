@@ -473,3 +473,23 @@ class TestTaskMemberStatusLog(BluebottleTestCase):
         self.assertEqual(TaskStatusLog.objects.count(), 1)
         self.assertEqual(log.status, 'applied')
         self.assertEqual(log.task_member_id, task_member.id)
+
+
+class TestTaskAutoAccepting(BluebottleTestCase):
+    def setUp(self):
+        self.init_projects()
+
+    def test_task_auto_accept_with_needs_motivation(self):
+        """
+        When saving a task with accepting=automatic should reset needs_motivation to False
+        """
+        task = TaskFactory(needs_motivation=True, accepting='automatic')
+        self.assertEqual(task.needs_motivation, False)
+
+    def test_task_auto_accept_taskmembers(self):
+        """
+        When saving a task with accepting=automatic new task members should be accepted instantly
+        """
+        task = TaskFactory(accepting='automatic')
+        task_member = TaskMemberFactory(task=task)
+        self.assertEqual(task_member.status, 'accepted')

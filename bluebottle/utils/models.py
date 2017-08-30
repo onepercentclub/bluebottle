@@ -1,5 +1,7 @@
 import sys
 
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.conf import settings
 
@@ -101,3 +103,13 @@ if 'test' in sys.argv or 'jenkins' in sys.argv or INCLUDE_TEST_MODELS:
                               if isinstance(item, PictureItem)]
             item = relevant_items.pop(0)
             return item.image
+
+
+class MailLog(models.Model):
+
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    type = models.CharField(max_length=200)
+
+    created = models.DateTimeField(auto_now_add=True)

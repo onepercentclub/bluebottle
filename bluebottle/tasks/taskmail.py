@@ -194,16 +194,18 @@ def send_deadline_to_apply_passed_mail(task, subject, tenant):
                 type=task.type, status=status
             )
 
-        send_mail(
-            template_name='tasks/mails/{}.mail'.format(template),
-            subject=subject,
-            task=task,
-            to=task.author,
-            site=tenant_url(),
-            edit_link='/tasks/{0}/edit'.format(task.id),
-            link='/tasks/{0}'.format(task.id),
+        if not task.mail_logs.filter(type='deadline_to_apply_passed').exists():
+            send_mail(
+                template_name='tasks/mails/{}.mail'.format(template),
+                subject=subject,
+                task=task,
+                to=task.author,
+                site=tenant_url(),
+                edit_link='/tasks/{0}/edit'.format(task.id),
+                link='/tasks/{0}'.format(task.id),
 
-        )
+            )
+            task.mail_logs.create(type='deadline_to_apply_passed')
 
 
 @receiver(post_save, weak=False, sender=TaskMember)

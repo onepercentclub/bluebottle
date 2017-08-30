@@ -139,6 +139,7 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             'address_line2': '1011 TG',
             'city': 'Amsterdam',
             'state': 'North Holland',
+            'description': 'some description',
             'country': self.organization_1.country.pk,
             'postal_code': '1011TG',
             'phone_number': '(+31) 20 715 8980',
@@ -186,6 +187,20 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
         self.assertEqual(organization.phone_number, post_data['phone_number'])
         self.assertEqual(organization.website, post_data['website'])
         self.assertEqual(organization.email, post_data['email'])
+
+    def test_api_manage_organizations_list_post_blank_description(self):
+        """
+        Tests POSTing new data to the endpoint.
+        """
+        post_data = self.post_data
+        post_data['description'] = ''
+
+        response = self.client.post(
+            reverse('organization_list'),
+            post_data,
+            token=self.user_1_token)
+
+        self.assertEqual(response.status_code, 201)
 
     @override_settings(CLOSED_SITE=False)
     def test_api_manage_organizations_membership(self):

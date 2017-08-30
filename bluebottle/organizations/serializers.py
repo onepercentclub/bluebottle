@@ -6,7 +6,7 @@ from bluebottle.utils.serializers import URLField
 
 
 class OrganizationPreviewSerializer(serializers.ModelSerializer):
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False, allow_blank=True)
     slug = serializers.SlugField(allow_null=True, required=False)
     name = serializers.CharField(required=True)
     website = URLField(allow_blank=True, required=False)
@@ -25,7 +25,7 @@ class OrganizationPreviewSerializer(serializers.ModelSerializer):
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
-    description = serializers.CharField(required=False)
+    description = serializers.CharField(required=False, allow_blank=True)
     slug = serializers.SlugField(allow_null=True, required=False)
     name = serializers.CharField(required=True)
     website = URLField(allow_blank=True, required=False)

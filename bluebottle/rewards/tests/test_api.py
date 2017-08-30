@@ -6,6 +6,7 @@ from rest_framework import status
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -165,3 +166,187 @@ class RewardTestCase(BluebottleTestCase):
         reward_url = reverse('reward-detail', kwargs={'pk': reward.id})
         response = self.client.delete(reward_url, token=self.user2_token)
         self.assertEqual(response.status_code, 403)
+
+
+class TestDonationRewardStock(BluebottleTestCase):
+    def setUp(self):
+        super(TestDonationRewardStock, self).setUp()
+
+        self.init_projects()
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.project = ProjectFactory.create(amount_asked=5000)
+        self.project.set_status('campaign')
+
+        self.reward = RewardFactory(project=self.project, limit=1)
+
+        self.donations_url = reverse('manage-donation-list')
+        self.reward_url = reverse('reward-detail', args=(self.reward.pk, ))
+
+        self.donor = BlueBottleUserFactory.create()
+        self.donor_token = "JWT {0}".format(self.donor.get_jwt_token())
+
+        self.order = OrderFactory.create(user=self.donor)
+
+        self.donation_data = {
+            'order': self.order.id,
+            'reward': self.reward.id,
+            'amount': {
+                'amount': self.reward.amount.amount,
+                'currency': str(self.reward.amount.currency)
+            },
+            'project': self.project.slug,
+        }
+
+    def test_stock(self):
+        # at first no rewards are taken
+        response = self.client.get(self.reward_url)
+        self.assertEqual(response.data['count'], 0)
+
+        response = self.client.post(
+            self.donations_url,
+            self.donation_data,
+            token=self.donor_token
+        )
+        self.assertEqual(response.status_code, 201)
+
+        # No we count one reward
+        response = self.client.get(self.reward_url)
+        self.assertEqual(response.data['count'], 1)
+
+    def test_out_of_stock(self):
+        # claim on reward
+        self.client.post(
+            self.donations_url,
+            self.donation_data,
+            token=self.donor_token
+        )
+
+        # and another one, now we should be out of stock
+        response = self.client.post(
+            self.donations_url,
+            self.donation_data,
+            token=self.donor_token
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue('stock' in response.data['reward'][0])
+
+    def test_failed_donations_returns_stock(self):
+        self.client.post(
+            self.donations_url,
+            self.donation_data,
+            token=self.donor_token
+        )
+
+        # Let the order fail, no the reward should not be counted
+        self.order.locked()
+        self.order.failed()
+        self.order.save()
+
+        self.assertEqual(
+            self.reward.count, 0
+        )
+
+    def test_remove_donation_returns_count(self):
+        response = self.client.post(
+            self.donations_url,
+            self.donation_data,
+            token=self.donor_token
+        )
+        data = response.data
+        data['reward'] = None
+
+        # update: remove reward, now it should not count anymore
+        response = self.client.put(
+            reverse('manage-donation-detail', args=(response.data.pop('id'), )),
+            data,
+            token=self.donor_token
+        )
+        self.assertEqual(
+            self.reward.count, 0
+        )
+
+    def test_add_reward_adds_count(self):
+        data = self.donation_data
+        del data['reward']
+
+        # do a donation without reward
+        response = self.client.post(
+            self.donations_url,
+            self.donation_data,
+            token=self.donor_token
+        )
+
+        # update: add reward. That one should count
+        data = response.data
+        data['reward'] = self.reward.id
+
+        response = self.client.put(
+            reverse('manage-donation-detail', args=(response.data.pop('id'), )),
+            data,
+            token=self.donor_token
+        )
+        self.assertEqual(
+            self.reward.count, 1
+        )
+
+    def test_add_reward_out_of_stock(self):
+        # already claim one reward
+        self.client.post(
+            self.donations_url,
+            self.donation_data,
+            token=self.donor_token
+        )
+        data = self.donation_data
+        del data['reward']
+
+        # do a donation without a reward
+        response = self.client.post(
+            self.donations_url,
+            self.donation_data,
+            token=self.donor_token
+        )
+
+        # update: add reward, now we should be out of stock
+        data = response.data
+        data['reward'] = self.reward.id
+
+        response = self.client.put(
+            reverse('manage-donation-detail', args=(response.data.pop('id'), )),
+            data,
+            token=self.donor_token
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue('stock' in response.data['reward'][0])
+
+    def test_update_without_changing_reward(self):
+        # Do one donation
+        response = self.client.post(
+            self.donations_url,
+            self.donation_data,
+            token=self.donor_token
+        )
+        data = response.data
+        data['amount'] = {'amount': 20, 'currency': 'EUR'}
+
+        # Now we are out of stock, but changing a current donation should still be possible
+        response = self.client.put(
+            reverse('manage-donation-detail', args=(response.data.pop('id'), )),
+            data,
+            token=self.donor_token
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_reward_without_limit(self):
+        reward = RewardFactory.create(project=self.project)
+        data = self.donation_data
+        data['reward'] = reward.pk
+
+        response = self.client.post(
+            self.donations_url,
+            self.donation_data,
+            token=self.donor_token
+        )
+        self.assertEqual(response.status_code, 201)

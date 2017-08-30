@@ -19,6 +19,16 @@ class ManageDonationSerializer(serializers.ModelSerializer):
 
     validators = [ProjectCurrencyValidator()]
 
+    def validate_reward(self, reward):
+        if (
+            reward and
+            not (self.instance and reward == self.instance.reward) and
+            (reward.limit and reward.count >= reward.limit)
+        ):
+            raise serializers.ValidationError('Reward out of stock')
+
+        return reward
+
     class Meta:
         model = Donation
         fields = ('id', 'project', 'fundraiser', 'amount', 'status', 'order',

@@ -29,6 +29,19 @@ class ManageDonationSerializer(serializers.ModelSerializer):
 
         return reward
 
+    def validate(self, data):
+        if 'reward' in data:
+            if data['reward'].amount.currency != data['amount'].currency:
+                raise serializers.ValidationError(
+                    'Currency must match reward currency'
+                )
+            if data['reward'].amount.amount > data['amount'].amount:
+                raise serializers.ValidationError(
+                    'Amounts can not be less than the reward amount'
+                )
+
+        return data
+
     class Meta:
         model = Donation
         fields = ('id', 'project', 'fundraiser', 'amount', 'status', 'order',

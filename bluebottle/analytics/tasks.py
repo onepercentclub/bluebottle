@@ -58,4 +58,8 @@ def generate_participation_metrics(tenant, email, start_year, end_year):
     logger.info("Generating Participation Metrics: Tenant: {} Email: {} Start Year: {} End Year: {}".format(
         tenant, email, start_year, end_year
     ))
-    call_command('export_participation_metrics', '--start', start_year, '--end', end_year, '--tenant', tenant)
+    call_command('export_participation_metrics',
+                 '--start', start_year,
+                 '--end', end_year,
+                 '--tenant', tenant,
+                 '--email', email)

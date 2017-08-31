@@ -28,8 +28,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.init_projects()
 
-        self.owner = BlueBottleUserFactory.create(
-            password='testing', first_name='someName', last_name='someLast')
+        self.owner = BlueBottleUserFactory.create(password='testing', first_name='someName', last_name='someLast')
         self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
 
         self.project = ProjectFactory.create(owner=self.owner)
@@ -41,6 +40,8 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
             self.other_user.get_jwt_token())
 
         self.media_wallpost_url = reverse('media_wallpost_list')
+        self.text_wallpost_url = reverse('text_wallpost_list')
+        self.wallpost_url = reverse('wallpost_list')
 
     def test_permissions_on_project_wallpost_sharing(self):
         """
@@ -170,6 +171,32 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         response = self.client.get(
             self.media_wallpost_url, token=self.other_token)
         self.assertEqual(response.data['count'], 1)
+
+    def test_filter_on_task_wallpost_list(self):
+        """
+        Tests that project initiator can post and view task wallposts
+        """
+        self.project.task_manager = BlueBottleUserFactory.create()
+        self.project.promoter = BlueBottleUserFactory.create()
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_wallpost')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_read_own_wallpost')
+        )
+
+        MediaWallpostFactory.create_batch(3, content_object=self.task)
+
+        response = self.client.get(self.wallpost_url,
+                                   {'parent_id': str(self.task.id), 'parent_type': 'task'},
+                                   token=self.owner_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 3)
 
 
 class WallpostReactionApiIntegrationTest(BluebottleTestCase):
@@ -672,8 +699,10 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
 
 
 class TestWallpostAPIPermissions(BluebottleTestCase):
-    """ API endpoint test where endpoint (wallpost) has explicit
-        permission_classes, overriding the global default """
+    """
+    API endpoint test where endpoint (wallpost) has explicit
+    permission_classes, overriding the global default
+    """
 
     def setUp(self):
         super(TestWallpostAPIPermissions, self).setUp()

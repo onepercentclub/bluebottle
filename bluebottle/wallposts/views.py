@@ -71,6 +71,8 @@ class WallpostOwnerFilterMixin(object):
             qs = qs.filter(
                 Q(project_wallposts__owner=user) |
                 Q(task_wallposts__author=user) |
+                Q(task_wallposts__project__owner=user) |
+                Q(task_wallposts__project__promoter=user) |
                 Q(fundraiser_wallposts__owner=user)
             )
 

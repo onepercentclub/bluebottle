@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 
 from django.db import migrations
-from django.contrib.auth.models import Permission, Group
 
 from bluebottle.utils.utils import update_group_permissions
 

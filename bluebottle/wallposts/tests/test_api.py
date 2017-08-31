@@ -699,8 +699,10 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
 
 
 class TestWallpostAPIPermissions(BluebottleTestCase):
-    """ API endpoint test where endpoint (wallpost) has explicit
-        permission_classes, overriding the global default """
+    """
+    API endpoint test where endpoint (wallpost) has explicit
+    permission_classes, overriding the global default
+    """
 
     def setUp(self):
         super(TestWallpostAPIPermissions, self).setUp()

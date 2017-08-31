@@ -235,6 +235,7 @@ class TaskMemberList(OwnerListViewMixin, ListCreateAPIView):
         OneOf(ResourcePermission, TaskMemberPermission),
         ActiveProjectOrReadOnlyPermission,
     )
+
     queryset = TaskMember.objects.all()
 
     def get_queryset(self):
@@ -267,7 +268,6 @@ class TaskMemberList(OwnerListViewMixin, ListCreateAPIView):
 class MyTaskMemberList(OwnerListViewMixin, ListAPIView):
     queryset = TaskMember.objects.all()
     serializer_class = MyTaskMemberSerializer
-
     permission_classes = (ResourceOwnerPermission, )
     owner_filter_field = 'member'
 

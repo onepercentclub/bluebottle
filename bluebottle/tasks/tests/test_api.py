@@ -683,9 +683,43 @@ class TaskMemberResumeTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 403)
 
 
+class TestMyTasksPermissions(BluebottleTestCase):
+    """
+    Test methods for getting tasks that you are a member of.
+    """
+
+    def setUp(self):
+        super(TestMyTasksPermissions, self).setUp()
+
+        self.init_projects()
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.project = ProjectFactory.create(task_manager=self.user)
+
+        self.my_task_member_url = reverse('my_task_member_list')
+
+    def test_closed_api_readonly_permission_task_manager(self):
+        """
+        External task manager should get empty list for own task membership, not 403.
+        """
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_taskmember')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_read_own_taskmember')
+        )
+
+        response = self.client.get(self.my_task_member_url, token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
 class TestProjectTaskAPIPermissions(BluebottleTestCase):
-    """ API endpoint test where endpoint has explicit
-        permission_classes, overriding the global default """
+    """
+    API endpoint test where endpoint has explicit
+    permission_classes, overriding the global default
+    """
 
     def setUp(self):
         super(TestProjectTaskAPIPermissions, self).setUp()

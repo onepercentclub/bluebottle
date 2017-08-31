@@ -784,6 +784,9 @@ class TestProjectTaskAPIPermissions(BluebottleTestCase):
         authenticated.permissions.remove(
             Permission.objects.get(codename='api_add_own_taskmember')
         )
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_add_taskmember')
+        )
 
         response = self.client.get(self.tasks_url,
                                    token=self.user_token)

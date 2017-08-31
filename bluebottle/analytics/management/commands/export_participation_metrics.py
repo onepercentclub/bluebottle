@@ -34,9 +34,7 @@ class Command(BaseCommand):
 
         self.tenant = None
 
-        self.all_tenants = []
-        for client in Client.objects.all():
-            self.all_tenants.append(client.client_name)
+        self.all_tenants = [client.client_name for client in Client.objects.all()]
 
         self.start_date = None
         self.end_date = None

@@ -1,14 +1,6 @@
 from bluebottle.bb_donations.models import BaseDonation
 from bluebottle.utils.utils import StatusDefinition
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_donation', 'change_donation', 'delete_donation',
-        )
-    }
-}
-
 
 class Donation(BaseDonation):
 

@@ -1,6 +1,7 @@
 import mock
 from decimal import Decimal
 
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
@@ -143,10 +144,14 @@ class TestDefaultAPI(BluebottleTestCase):
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_not_authenticated(self):
         """ request closed api, expect 403 ? if not authenticated """
+        anonymous = Group.objects.get(name='Anonymous')
+        anonymous.permissions.remove(
+            Permission.objects.get(codename='api_read_project')
+        )
+
         response = self.client.get(self.projects_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_authenticated(self):
         """ request closed api, expect projects if authenticated """
         response = self.client.get(self.projects_url, token=self.user_token)

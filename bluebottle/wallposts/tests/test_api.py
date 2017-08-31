@@ -1,6 +1,7 @@
 import mock
 
 from django.utils.timezone import now
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.core import mail
 
@@ -9,7 +10,9 @@ from rest_framework import status
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.tests.test_unit import UserTestsMixin
-from bluebottle.test.factory_models.wallposts import TextWallpostFactory
+from bluebottle.test.factory_models.wallposts import (
+    TextWallpostFactory, MediaWallpostFactory
+)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -25,8 +28,7 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
 
         self.init_projects()
 
-        self.owner = BlueBottleUserFactory.create(
-            password='testing', first_name='someName', last_name='someLast')
+        self.owner = BlueBottleUserFactory.create(password='testing', first_name='someName', last_name='someLast')
         self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
 
         self.project = ProjectFactory.create(owner=self.owner)
@@ -38,6 +40,8 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
             self.other_user.get_jwt_token())
 
         self.media_wallpost_url = reverse('media_wallpost_list')
+        self.text_wallpost_url = reverse('text_wallpost_list')
+        self.wallpost_url = reverse('wallpost_list')
 
     def test_permissions_on_project_wallpost_sharing(self):
         """
@@ -56,6 +60,18 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(
             wallpost.status_code, status.HTTP_201_CREATED,
             'Project owners can share a wallpost.')
+
+        self.project.promoter = BlueBottleUserFactory.create()
+        self.project.save()
+        promoter_token = "JWT {0}".format(self.project.promoter.get_jwt_token())
+
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=promoter_token)
+
+        self.assertEqual(
+            wallpost.status_code, status.HTTP_201_CREATED,
+            'Project promoters can share a wallpost.')
 
         # Non-owner users can't share a post
         wallpost = self.client.post(self.media_wallpost_url,
@@ -84,6 +100,38 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
                          status.HTTP_403_FORBIDDEN,
                          'Only the task owner can share a wallpost.')
 
+        self.task.project.promoter = BlueBottleUserFactory.create()
+        self.task.project.save()
+        promoter_token = "JWT {0}".format(self.task.project.promoter.get_jwt_token())
+
+        # Promoters users can share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=promoter_token)
+
+        self.assertEqual(wallpost.status_code,
+                         status.HTTP_201_CREATED,
+                         'Only the task owner can share a wallpost.')
+
+    def test_permissions_on_task_wallpost_non_sharing(self):
+        """
+        Tests that only the task creator can share a wallpost.
+        """
+        wallpost_data = {'parent_id': str(self.task.id),
+                         'parent_type': 'task',
+                         'email_followers': False,
+                         'text': 'I can share stuff!'}
+
+        # Non-owner users can't share a post
+        wallpost = self.client.post(self.media_wallpost_url,
+                                    wallpost_data,
+                                    token=self.other_token)
+
+        self.assertEqual(
+            wallpost.status_code,
+            status.HTTP_201_CREATED
+        )
+
     def test_permissions_on_fundraiser_wallpost_sharing(self):
         """
         Tests that only the fundraiser creator can share a wallpost.
@@ -101,6 +149,54 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(wallpost.status_code,
                          status.HTTP_403_FORBIDDEN,
                          'Only the fundraiser owner can share a wallpost.')
+
+    def test_filtering_on_wallpost_list(self):
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_mediawallpost')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_read_own_mediawallpost')
+        )
+
+        MediaWallpostFactory.create(content_object=self.task)
+        MediaWallpostFactory.create(content_object=self.project)
+        MediaWallpostFactory.create(content_object=self.fundraiser)
+        MediaWallpostFactory.create(content_object=ProjectFactory(owner=self.other_user))
+
+        response = self.client.get(
+            self.media_wallpost_url, token=self.owner_token)
+        self.assertEqual(response.data['count'], 3)
+
+        response = self.client.get(
+            self.media_wallpost_url, token=self.other_token)
+        self.assertEqual(response.data['count'], 1)
+
+    def test_filter_on_task_wallpost_list(self):
+        """
+        Tests that project initiator can post and view task wallposts
+        """
+        self.project.task_manager = BlueBottleUserFactory.create()
+        self.project.promoter = BlueBottleUserFactory.create()
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_wallpost')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_read_own_wallpost')
+        )
+
+        MediaWallpostFactory.create_batch(3, content_object=self.task)
+
+        response = self.client.get(self.wallpost_url,
+                                   {'parent_id': str(self.task.id), 'parent_type': 'task'},
+                                   token=self.owner_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 3)
 
 
 class WallpostReactionApiIntegrationTest(BluebottleTestCase):
@@ -179,7 +275,7 @@ class WallpostReactionApiIntegrationTest(BluebottleTestCase):
         response = self.client.delete(
             reaction_detail_url, token=self.another_token)
         self.assertEqual(
-            response.status_code, status.HTTP_403_FORBIDDEN, response)
+            response.status_code, status.HTTP_403_FORBIDDEN)
 
         # Create a Reaction by another user
         another_reaction_text = "I'm not so sure..."
@@ -323,6 +419,10 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         self.user_c = self.create_user(email='c@example.com',
                                        first_name='cname ',
                                        last_name='clast',
+                                       primary_language='en')
+        self.user_d = self.create_user(email='d@example.com',
+                                       first_name='dname ',
+                                       last_name='dlast',
                                        primary_language='en')
 
         # self.project = self.create_project(owner=self.user_a)
@@ -580,10 +680,29 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(m.to, [self.user_a.email])
         self.assertEqual(m.activated_language, self.user_a.primary_language)
 
+    def test_new_wallpost_b_on_project_with_roles_by_a_c_d(self):
+        """
+        Project by A, with task manager C and promoter D + Wallpost by B => Mail to A, C and D.
+        """
+        # Object by A with task manager C + promoter D
+        # |
+        # +-- Wallpost by B
+
+        self.project_1.task_manager = self.user_c
+        self.project_1.promoter = self.user_d
+        self.project_1.save()
+
+        TextWallpostFactory.create(content_object=self.project_1, author=self.user_b)
+
+        # Mailbox should contain an email to author of reaction b.
+        self.assertEqual(len(mail.outbox), 3)
+
 
 class TestWallpostAPIPermissions(BluebottleTestCase):
-    """ API endpoint test where endpoint (wallpost) has explicit
-        permission_classes, overriding the global default """
+    """
+    API endpoint test where endpoint (wallpost) has explicit
+    permission_classes, overriding the global default
+    """
 
     def setUp(self):
         super(TestWallpostAPIPermissions, self).setUp()
@@ -598,13 +717,18 @@ class TestWallpostAPIPermissions(BluebottleTestCase):
             author=self.user)
         self.wallpost_url = reverse('wallpost_list')
 
-    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_readonly_permission_noauth(self):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
+        anonymous = Group.objects.get(name='Anonymous')
+        anonymous.permissions.remove(
+            Permission.objects.get(codename='api_read_wallpost')
+        )
+
         response = self.client.get(self.wallpost_url,
                                    {'parent_id': self.some_project.slug,
                                     'parent_type': 'project'})
+
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @mock.patch('bluebottle.clients.properties.CLOSED_SITE', False)

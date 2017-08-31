@@ -13,15 +13,6 @@ from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
 
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_slide', 'change_slide', 'delete_slide',
-        )
-    }
-}
-
-
 def get_languages():
     return properties.LANGUAGES
 

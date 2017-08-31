@@ -94,7 +94,7 @@ class PaymentFlutterwaveApiTests(BluebottleTestCase):
             'total_amount': None,
             'user': None
         }
-        response = self.client.post(reverse('manage-order-list'), data,
+        response = self.client.post(reverse('order-manage-list'), data,
                                     token=self.user_token)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['status'], 'created')
@@ -162,7 +162,7 @@ class PaymentFlutterwaveApiTests(BluebottleTestCase):
             'total_amount': None,
             'user': None
         }
-        response = self.client.post(reverse('manage-order-list'), data,
+        response = self.client.post(reverse('order-manage-list'), data,
                                     token=self.user_token)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['status'], 'created')
@@ -229,7 +229,7 @@ class PaymentFlutterwaveApiTests(BluebottleTestCase):
             'total_amount': None,
             'user': None
         }
-        response = self.client.post(reverse('manage-order-list'), data,
+        response = self.client.post(reverse('order-manage-list'), data,
                                     token=self.user_token)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['status'], 'created')

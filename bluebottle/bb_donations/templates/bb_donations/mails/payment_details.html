@@ -4,9 +4,13 @@
     <tr class="donation-table-row">
         <tr class="donation-table-address">
             <td>
-                {{donation.user.full_name}} <br />
-                {{donation.user.address.line1}}<br />
-                {{donation.user.address.postal_code}} {{donation.user.address.city}}<br />
+                {% if 'members.api_read_full_member' in to.get_all_permissions %}
+                    {{donation.user.full_name}} <br />
+                    {{donation.user.address.line1}}<br />
+                    {{donation.user.address.postal_code}} {{donation.user.address.city}}<br />
+                {% else %}
+                    {{donation.user.first_name}} <br />
+                {% endif %}
             </td>
             <td>
                 <table>

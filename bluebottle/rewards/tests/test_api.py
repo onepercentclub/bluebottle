@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
@@ -59,6 +60,29 @@ class RewardTestCase(BluebottleTestCase):
         response = self.client.get(self.reward_url, {'project': self.project.slug})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 4)
+
+    def test_reward_list_only_own_projects(self):
+        """
+        Make sure only rewards for the given project are shown.
+        """
+        RewardFactory.create(project=self.project)
+        RewardFactory.create(project=self.project)
+        RewardFactory.create(project=self.project2)
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_reward')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_read_own_reward')
+        )
+
+        response = self.client.get(
+            self.reward_url,
+            token=self.user_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
 
     def test_reward_can_be_created_by_project_owner(self):
         """

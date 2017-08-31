@@ -11,11 +11,12 @@ from django.utils.http import base36_to_int, int_to_base36
 from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
-from tenant_extras.drf_permissions import TenantConditionalOpenClose
+
+from bluebottle.bb_accounts.permissions import CurrentUserPermission
+from bluebottle.utils.views import RetrieveAPIView
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.bluebottle_drf2.permissions import IsCurrentUser
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
 from bluebottle.members.serializers import (
@@ -27,12 +28,11 @@ from bluebottle.members.serializers import (
 USER_MODEL = get_user_model()
 
 
-class UserProfileDetail(generics.RetrieveAPIView):
+class UserProfileDetail(RetrieveAPIView):
     """
     Fetch User Details
 
     """
-    permission_classes = (TenantConditionalOpenClose,)
     queryset = USER_MODEL.objects.all()
     serializer_class = UserProfileSerializer
 
@@ -62,7 +62,7 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
     """
     documentable = True
     queryset = USER_MODEL.objects.all()
-    permission_classes = (TenantConditionalOpenClose, IsCurrentUser)
+    permission_classes = (CurrentUserPermission, )
     serializer_class = ManageProfileSerializer
 
     def get_serializer(self, *args, **kwargs):
@@ -88,13 +88,15 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
         super(ManageProfileDetail, self).perform_update(serializer)
 
 
-class CurrentUser(generics.RetrieveAPIView):
+class CurrentUser(RetrieveAPIView):
     """
     Fetch Current User
 
     """
     queryset = USER_MODEL.objects.all()
     serializer_class = CurrentUserSerializer
+
+    permission_classes = (CurrentUserPermission, )
 
     def get_object(self):
         if isinstance(self.request.user, AnonymousUser):

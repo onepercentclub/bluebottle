@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.http.response import HttpResponseForbidden, HttpResponseNotFound, HttpResponse
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
@@ -16,15 +17,14 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.clients import properties
 from bluebottle.projects.models import Project
 from bluebottle.utils.email_backend import send_mail
+from bluebottle.utils.permissions import ResourcePermission
 
 from .models import Language
 from .serializers import ShareSerializer, LanguageSerializer
 
 
 class TagList(views.APIView):
-    """
-    All tags in use on this system
-    """
+    """ All tags in use on this system """
 
     def get(self, request, format=None):
         data = [tag.name for tag in Tag.objects.all()[:20]]
@@ -40,9 +40,7 @@ class LanguageList(generics.ListAPIView):
 
 
 class TagSearch(views.APIView):
-    """
-    Search tags in use on this systemgit
-    """
+    """ Search tags in use on this system """
 
     def get(self, request, format=None, search=''):
         data = [tag.name for tag in
@@ -66,6 +64,7 @@ class ShareFlyer(views.APIView):
                                                            crop="center")))
         else:
             project_image = None
+
         args = dict(
             project_title=project.title,
             project_pitch=project.pitch,
@@ -75,10 +74,10 @@ class ShareFlyer(views.APIView):
         return args
 
     def get(self, request, *args, **kwargs):
+        """ Return the bare email as preview. We do not have access to the
+        logged in user so use fake data
         """
-            return the bare email as preview. We do not have access to the
-            logged in user so use fake data
-        """
+
         data = request.GET
 
         args = self.project_args(data.get('project'))
@@ -154,18 +153,67 @@ class ModelTranslationViewMixin(object):
         return super(ModelTranslationViewMixin, self).get(request, *args, **kwargs)
 
 
-class PrivateFileView(View):
-    """
-    Serve private files using X-sendfile header.
-    """
+class ViewPermissionsMixin(object):
+    """ View mixin with permission checks added from the DRF APIView """
+    @property
+    def model(self):
+        model_cls = None
+        try:
+            if hasattr(self, 'queryset'):
+                model_cls = self.queryset.model
+            elif hasattr(self, 'get_queryset'):
+                model_cls = self.get_queryset().model
+        except AttributeError:
+            pass
+
+        return model_cls
+
+
+class PermissionedView(View, ViewPermissionsMixin):
+    pass
+
+
+class GenericAPIView(ViewPermissionsMixin, generics.GenericAPIView):
+    permission_classes = (ResourcePermission,)
+
+
+class ListAPIView(ViewPermissionsMixin, generics.ListAPIView):
+    permission_classes = (ResourcePermission,)
+
+
+class UpdateAPIView(ViewPermissionsMixin, generics.UpdateAPIView):
+    permission_classes = (ResourcePermission,)
+
+
+class RetrieveAPIView(ViewPermissionsMixin, generics.RetrieveAPIView):
+    permission_classes = (ResourcePermission,)
+
+
+class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView):
+    permission_classes = (ResourcePermission,)
+
+    def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        serializer.save()
+
+
+class RetrieveUpdateAPIView(ViewPermissionsMixin, generics.RetrieveUpdateAPIView):
+    base_permission_classes = (ResourcePermission,)
+
+
+class RetrieveUpdateDestroyAPIView(ViewPermissionsMixin, generics.RetrieveUpdateDestroyAPIView):
+    base_permission_classes = (ResourcePermission,)
+
+
+class PrivateFileView(RetrieveAPIView):
+    """ Serve private files using X-sendfile header. """
+
     queryset = None  # Queryset that is used for finding ojects
     field = None  # Field on the model that is the actual file
-
-    def check_permission(self, request, instance):
-        """
-        Check if the request is allowed access to the file on instance
-        """
-        raise NotImplemented
 
     def get(self, request, pk):
         try:
@@ -173,13 +221,32 @@ class PrivateFileView(View):
         except self.queryset.DoesNotExist:
             return HttpResponseNotFound()
 
-        if self.check_permission(request, instance):
-            field = getattr(instance, self.field)
-            response = HttpResponse()
-            response['X-Accel-Redirect'] = field.url
-            response['Content-Disposition'] = 'attachment; filename={}'.format(
-                field.name
-            )
-            return response
-        else:
+        try:
+            self.check_object_permissions(request, instance)
+        except PermissionDenied:
             return HttpResponseForbidden()
+
+        field = getattr(instance, self.field)
+        response = HttpResponse()
+        response['X-Accel-Redirect'] = field.url
+        response['Content-Disposition'] = 'attachment; filename={}'.format(
+            field.name
+        )
+
+        return response
+
+
+class OwnerListViewMixin(object):
+    def get_queryset(self):
+        qs = super(OwnerListViewMixin, self).get_queryset()
+
+        model = super(OwnerListViewMixin, self).model
+        permission = '{}.api_read_{}'.format(
+            model._meta.app_label, model._meta.model_name
+        )
+
+        if not self.request.user.has_perm(permission):
+            user = self.request.user if self.request.user.is_authenticated else None
+            qs = qs.filter(**{self.owner_filter_field: user})
+
+        return qs

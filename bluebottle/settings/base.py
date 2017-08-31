@@ -165,10 +165,10 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.TokenAuthentication'
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'tenant_extras.drf_permissions.TenantConditionalOpenClose',
+        'bluebottle.utils.permissions.TenantConditionalOpenClose',
     ),
 }
 
@@ -208,6 +208,7 @@ AUTHENTICATION_BACKENDS = (
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'social.backends.facebook.FacebookAppOAuth2',
     'django.contrib.auth.backends.ModelBackend',
+    'bluebottle.utils.backends.AnonymousAuthenticationBackend'
 )
 
 SOCIAL_AUTH_PIPELINE = (
@@ -483,7 +484,7 @@ LOGGING = {
         },
         'payments.payment': {
             'handlers': ['mail_admins', 'payment_logs', 'sentry'],
-            'propagate': True,
+            'propagate': False,
             'level': 'INFO',
         },
     }

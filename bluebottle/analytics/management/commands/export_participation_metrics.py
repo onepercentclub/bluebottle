@@ -13,7 +13,10 @@ from bluebottle.clients.utils import LocalTenant
 from bluebottle.geo.models import LocationGroup
 from bluebottle.statistics.participation import Statistics
 from bluebottle.tasks.models import Task, TaskMember
+from bluebottle.utils.email_backend import send_mail
 from .utils import initialize_work_sheet
+import tempfile
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +36,8 @@ class Command(BaseCommand):
         super(Command, self).__init__(**kwargs)
 
         self.tenant = None
+        self.to_email = None
+        self.file_path = None
 
         self.all_tenants = [client.client_name for client in Client.objects.all()]
 
@@ -110,37 +115,52 @@ class Command(BaseCommand):
         parser.add_argument('--tenant', metavar='TENANT', action='store', dest='tenant', required=True,
                             choices=self.all_tenants, help="Name of the tenant to export")
 
-        parser.add_argument('--emails', metavar='EMAILS', action='store', dest='emails', required=False,
-                            help="Emails of the contact persons")
+        parser.add_argument('--email', metavar='EMAIL', action='store', dest='email', required=False,
+                            help="Email of the contact person")
 
     def handle(self, **options):
         self.tenant = options['tenant']
-
+        self.to_email = options['email']
         self.start_date = pendulum.create(options['start'], 1, 1, 0, 0, 0)
         self.end_date = pendulum.create(options['end'], 12, 31, 23, 59, 59)
 
         self.generate_participation_xls()
 
     def generate_participation_xls(self):
-        file_name = 'participation_metrics_{}_{}_{}_generated_{}.xlsx'.format(self.tenant,
-                                                                              self.start_date.to_date_string(),
-                                                                              self.end_date.to_date_string(),
-                                                                              pendulum.now().to_date_string())
+        now = pendulum.now()
+        file_name = 'participation_metrics_{}_{}_{}_generated_{}_{}.xlsx'.format(self.tenant,
+                                                                                 self.start_date.to_date_string(),
+                                                                                 self.end_date.to_date_string(),
+                                                                                 now.to_date_string(),
+                                                                                 now.int_timestamp)
 
         client = Client.objects.get(client_name=self.tenant)
         connection.set_tenant(client)
 
-        with xlsxwriter.Workbook(file_name, {'default_date_format': 'dd/mm/yy', 'remove_timezone': True}) as workbook:
+        self.file_path = os.path.join(tempfile.gettempdir(), file_name)
+        with xlsxwriter.Workbook(self.file_path,
+                                 {'default_date_format': 'dd/mm/yy', 'remove_timezone': True}) as workbook:
             with LocalTenant(client, clear_tenant=True):
                 logger.info('export participation metrics - tenant:{} start_date:{} end_date:{}'
                             .format(self.tenant,
                                     self.start_date.to_iso8601_string(),
                                     self.end_date.to_iso8601_string())
                             )
+                logger.info('file path: {}'.format(self.file_path))
                 self.generate_participants_worksheet(workbook)
                 self.generate_worksheet(workbook, 'aggregated')
                 self.generate_worksheet(workbook, 'location_segmentation')
                 self.generate_worksheet(workbook, 'theme_segmentation')
+
+        if self.to_email:
+            with open(self.file_path, 'r') as f:
+                User = namedtuple('User', 'email')
+                user = User(email=self.to_email)
+                send_mail(template_name='participation_metrics_email',
+                          subject='Participation Metrics',
+                          to=user,
+                          attachments=[(file_name, f.read())],
+                          connection=connection)
 
     @staticmethod
     def get_column_for_metric(row_data, metric_name):

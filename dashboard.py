@@ -5,7 +5,7 @@ import pendulum
 from admin_tools.dashboard.models import DashboardModule
 from admin_tools.dashboard.modules import LinkList
 from django.conf import settings
-from django.core.urlresolvers import reverse_lazy
+from django.core.urlresolvers import reverse_lazy, reverse
 from django.db.models import F, Count
 from django.db.models.aggregates import Sum
 from django.utils.timezone import now
@@ -164,6 +164,10 @@ class ParticipationMetricsModule(DashboardModule):
                     'title': _('Week Nr. {}'.format(week_nr)),
                     'value': statistics.participants_count
                 })
+        self.children.insert(0, {
+            'title': _('Request Complete Participation Metrics'),
+            'url': reverse('participation-metrics')
+        })
         super(ParticipationMetricsModule, self).__init__(**kwargs)
 
 

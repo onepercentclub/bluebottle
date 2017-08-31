@@ -24,6 +24,7 @@ urlpatterns = [
         name='password_reset_confirm'),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/exportdb/', include('exportdb.urls')),
+    url(r'^admin/analytics/', include('bluebottle.analytics.urls')),
     url(r'^admin/', include(admin.site.urls)),
 
     url(r'^admin/utils/tinymce/', include('tinymce.urls')),

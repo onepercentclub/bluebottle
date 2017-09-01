@@ -14,7 +14,7 @@ changes = ''
 
 dependency_links = [
     'git+https://github.com/onepercentclub/django-taggit-autocomplete-modified.git@8e7fbc2deae2f1fbb31b574bc8819d9ae7c644d6#egg=django-taggit-autocomplete-modified-0.1.1b1',
-    'git+https://github.com/jfterpstra/django-bb-salesforce.git@1.2.4#egg=django-bb-salesforce-1.2.4',
+    'git+https://github.com/onepercentclub/django-bb-salesforce.git@1.2.2#egg=django-bb-salesforce-1.2.2',
     'git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.12#egg=django-tenant-extras-2.0.12',
     'git+https://github.com/mariocesar/sorl-thumbnail.git@v12.3#egg=sorl-thumbnail-12.3-github',
     'git+https://github.com/onepercentclub/django-token-auth.git@0.3.4#egg=django-token-auth-0.3.4',
@@ -96,10 +96,9 @@ install_requires = [
     'openpyxl==2.4.8',
 
     # Github requirements
-    'django-bb-salesforce==1.2.4',
-    'django-cors-headers==1.1.0',
     'django-fluent-contents==1.1.11',
     'django-tenant-extras==2.0.12',
+    'django-bb-salesforce==1.2.2',
     'django-taggit-autocomplete-modified==0.1.1b1',
     'django-token-auth==0.3.4',
     'django-money-rates==0.3.1-github'

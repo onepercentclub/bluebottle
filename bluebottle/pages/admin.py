@@ -5,8 +5,9 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.rendering import render_placeholder
@@ -128,10 +129,10 @@ class PageAdmin(PlaceholderFieldAdmin):
                  rec[0] == status].pop()
         icon = self.STATUS_ICONS[status]
         admin = settings.STATIC_URL + 'admin/img/'
-        return u'<img src="{admin}{icon}" width="10" height="10" alt="{title}" title="{title}" />'.format(
-            admin=admin, icon=icon, title=title)
+        return format_html(
+            u'<img src="{}{}" width="10" height="10" alt="{}" title="{}" />',
+            admin, icon, title, title)
 
-    status_column.allow_tags = True
     status_column.short_description = _('Status')
 
     def make_published(self, request, queryset):

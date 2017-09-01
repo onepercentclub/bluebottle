@@ -55,7 +55,7 @@ class DonationApiTestCase(BluebottleTestCase, SessionTestMixin):
         self.project2 = ProjectFactory.create(amount_asked=3750)
         self.project2.set_status('campaign')
 
-        self.manage_order_list_url = reverse('manage-order-list')
+        self.manage_order_list_url = reverse('order-manage-list')
         self.manage_donation_list_url = reverse('manage-donation-list')
 
         self.user = BlueBottleUserFactory.create()
@@ -537,7 +537,7 @@ class TestProjectDonationList(DonationApiTestCase):
         donation = response.data['results'][0]
         self.assertEqual(donation['amount']['amount'], 1000.00)
         self.assertEqual(donation['amount']['currency'], 'EUR')
-        self.assertEqual(donation['project']['title'], self.project3.title)
+        self.assertEqual(donation['project'], self.project3.id)
 
     def test_successful_project_donation_list(self, check_status_psp):
         setattr(properties, 'SHOW_DONATION_AMOUNTS', True)
@@ -686,7 +686,7 @@ class TestMyProjectDonationList(DonationApiTestCase):
 
         donation = response.data['results'][0]
         self.assertEqual(donation['amount']['amount'], 1000.00)
-        self.assertEqual(donation['project']['title'], self.project3.title)
+        self.assertEqual(donation['project'], self.project3.id)
 
     def test_successful_my_project_donation_list(self, check_status_psp):
         # Unsuccessful donations should not be shown
@@ -748,7 +748,7 @@ class TestMyFundraiserDonationList(DonationApiTestCase):
         donation = response.data[0]
 
         self.assertEqual(donation['amount']['amount'], 1000.00)
-        self.assertEqual(donation['project']['title'], self.project4.title)
+        self.assertEqual(donation['project'], self.project4.id)
         self.assertEqual(donation['fundraiser'], self.fundraiser.pk)
 
     def test_successful_my_fundraiser_donation_list(self, check_status_psp):

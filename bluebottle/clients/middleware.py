@@ -81,7 +81,8 @@ class MediaMiddleware(object):
             connection.tenant.client_name not in request.path
         ):
             return redirect(
-                request.path.replace(settings.MEDIA_URL, urljoin(settings.MEDIA_URL, connection.tenant.client_name + '/'))
+                request.path.replace(settings.MEDIA_URL,
+                                     urljoin(settings.MEDIA_URL, connection.tenant.client_name + '/'))
             )
 
         return response

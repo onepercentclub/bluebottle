@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-from decimal import Decimal
 import math
 import logging
 from celery import shared_task
@@ -9,6 +8,8 @@ from moneyed import Money
 from django.db import connection
 from django.utils.timezone import now
 from django.utils import timezone
+
+from django_fsm import TransitionNotAllowed
 
 from rest_framework.exceptions import MethodNotAllowed
 
@@ -50,12 +51,29 @@ def process_monthly_batch(tenant, monthly_batch, send_email):
         if monthly_batch.status != 'new':
             raise MethodNotAllowed("Can only process monthlys batch with status 'New'")
         else:
+            results = []
             monthly_batch.status = 'processing'
             monthly_batch.save()
             for monthly_order in monthly_batch.orders.all():
-                _process_monthly_order(monthly_order, send_email)
+                result = _process_monthly_order(monthly_order, send_email)
+                results.append(result)
             monthly_batch.status = 'done'
             monthly_batch.save()
+
+        # post process the results
+        for result in results:
+            if 'order_payment_id' in result and not result['processed']:
+                order_payment = OrderPayment.objects.get(id=result['order_payment_id'])
+
+                # set the order payment to failed
+                try:
+                    order_payment.failed()
+                except TransitionNotAllowed:
+                    if order_payment.status == StatusDefinition.CREATED:
+                        order_payment.started()
+                        order_payment.failed()
+
+                order_payment.save()
 
 
 def prepare_monthly_batch():
@@ -234,11 +252,16 @@ def _process_monthly_order(monthly_order, send_email=False):
     if monthly_order.processed:
         logger.info(
             "Order for {0} already processed".format(monthly_order.user))
-        return False
+        return {
+            'order_payment_id': None,
+            'processed': True
+        }
 
+    order_success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS]
     ten_days_ago = timezone.now() + timezone.timedelta(days=-10)
     recent_orders = Order.objects.filter(user=monthly_order.user,
                                          order_type='recurring',
+                                         status__in=order_success,
                                          updated__gt=ten_days_ago)
 
     if recent_orders.count() > 0:
@@ -251,7 +274,10 @@ def _process_monthly_order(monthly_order, send_email=False):
         # Set an error on this monthly order
         monthly_order.error = message
         monthly_order.save()
-        return False
+        return {
+            'order_payment_id': None,
+            'processed': False
+        }
 
     order = Order.objects.create(status=StatusDefinition.LOCKED,
                                  user=monthly_order.user,
@@ -287,9 +313,10 @@ def _process_monthly_order(monthly_order, send_email=False):
         monthly_order.error = "{0}".format(e.message)
         monthly_order.save()
         logger.error(error_message)
-        order_payment.delete()
-        order.delete()
-        return False
+        return {
+            'order_payment_id': order_payment.id,
+            'processed': False
+        }
 
     logger.debug("Payment for '{0}' started.".format(monthly_order))
 
@@ -304,7 +331,10 @@ def _process_monthly_order(monthly_order, send_email=False):
     if send_email:
         mail_monthly_donation_processed_notification(monthly_order)
 
-    return True
+    return {
+        'order_payment_id': order_payment.id,
+        'processed': True
+    }
 
 
 def process_single_monthly_order(email, batch=None, send_email=False):

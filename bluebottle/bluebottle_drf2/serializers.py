@@ -1,16 +1,11 @@
-import decimal
-import json
 import logging
 import os
+from os.path import isfile
 import re
 import sys
-import types
-
-from os.path import isfile
 from urllib2 import URLError
 
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.template import defaultfilters
@@ -39,10 +34,20 @@ class RestrictedImageField(serializers.ImageField):
 
 
 class SorlImageField(RestrictedImageField):
-    def __init__(self, geometry_string, crop='center', colorspace='RGB', **kwargs):
+    def __init__(self, geometry_string, crop='center',
+                 colorspace='RGB', watermark=None, watermark_pos=None,
+                 watermark_size=None, **kwargs):
         self.geometry_string = geometry_string
-        self.crop = crop
-        self.colorspace = colorspace
+        self.sorl_options = {
+            'crop': crop,
+            'colorspace': colorspace,
+        }
+
+        if watermark:
+            self.sorl_options['watermark'] = watermark
+            self.sorl_options['watermark_pos'] = watermark_pos
+            self.sorl_options['watermark_size'] = watermark_size
+
         super(SorlImageField, self).__init__(**kwargs)
 
     def to_representation(self, value):
@@ -55,10 +60,16 @@ class SorlImageField(RestrictedImageField):
         if not os.path.exists(value.path):
             return ""
 
+        if 'watermark' in self.sorl_options:
+            try:
+                self.sorl_options['watermark'] = self.sorl_options['watermark']()
+            except TypeError:
+                pass
+
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         try:
-            thumbnail = unicode(get_thumbnail(value, self.geometry_string, crop=self.crop, colorspace=self.colorspace))
+            thumbnail = unicode(get_thumbnail(value, self.geometry_string, **self.sorl_options))
         except IOError:
             return ""
         except Exception:
@@ -288,16 +299,24 @@ class PhotoSerializer(RestrictedImageField):
 
 
 class PrivateFileSerializer(FileSerializer):
-    def field_to_native(self, obj, field_name):
-        if not obj:
+    def __init__(self, url_name, *args, **kwargs):
+        self.url_name = url_name
+        super(PrivateFileSerializer, self).__init__(*args, **kwargs)
+
+    def get_attribute(self, obj):
+        return obj
+
+    def to_representation(self, obj):
+        value = super(PrivateFileSerializer, self).get_attribute(obj)
+
+        if not value or not obj:
             return None
-        value = getattr(obj, self.source or field_name)
-        if not value:
-            return None
-        content_type = ContentType.objects.get_for_model(
-            self.parent.Meta.model).id
-        pk = obj.pk
-        url = reverse('document_download_detail',
-                      kwargs={'content_type': content_type, 'pk': pk})
-        return {'name': os.path.basename(value.name),
-                'url': url}
+
+        url = reverse(
+            self.url_name,
+            kwargs={'pk': obj.pk}
+        )
+        return {
+            'name': os.path.basename(value.name),
+            'url': url
+        }

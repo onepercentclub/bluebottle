@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
@@ -60,6 +61,29 @@ class RewardTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 4)
 
+    def test_reward_list_only_own_projects(self):
+        """
+        Make sure only rewards for the given project are shown.
+        """
+        RewardFactory.create(project=self.project)
+        RewardFactory.create(project=self.project)
+        RewardFactory.create(project=self.project2)
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_reward')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_read_own_reward')
+        )
+
+        response = self.client.get(
+            self.reward_url,
+            token=self.user_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+
     def test_reward_can_be_created_by_project_owner(self):
         """
         Project owner should be able to create a new reward for that project.
@@ -82,7 +106,6 @@ class RewardTestCase(BluebottleTestCase):
         self.assertEqual(
             response.data['amount'], [u'Ensure this amount is greater than or equal to 5.0.']
         )
-
 
     def test_reward_can_not_be_created_by_non_project_owner(self):
         """
@@ -109,7 +132,6 @@ class RewardTestCase(BluebottleTestCase):
             unicode(response.data['non_field_errors'][0]),
             u'Currency does not match project any of the currencies.'
         )
-
 
     def test_reward_can_be_deleted(self):
         """
@@ -143,5 +165,3 @@ class RewardTestCase(BluebottleTestCase):
         reward_url = reverse('reward-detail', kwargs={'pk': reward.id})
         response = self.client.delete(reward_url, token=self.user2_token)
         self.assertEqual(response.status_code, 403)
-
-

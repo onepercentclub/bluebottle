@@ -3,7 +3,7 @@ import json
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 from mock import patch
-from moneyed.classes import EUR, XOF, Money
+from moneyed.classes import XOF, Money
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
@@ -25,12 +25,10 @@ interswitch_settings = {
 }
 
 
-
-
 class MockResponse:
     def __init__(self, json_data, status_code):
-        self.json_data = json_data 
-        self.content = json.dumps(json_data) 
+        self.json_data = json_data
+        self.content = json.dumps(json_data)
         self.status_code = status_code
 
     def json(self):
@@ -90,8 +88,8 @@ def mocked_invalid_response(*args, **kwargs):
 
 
 @patch('bluebottle.payments_interswitch.adapters.get_current_host',
-        return_value='https://onepercentclub.com')
-@override_settings(**interswitch_settings) 
+       return_value='https://onepercentclub.com')
+@override_settings(**interswitch_settings)
 class InterswitchUpdateApiTest(BluebottleTestCase):
     def setUp(self):
         super(InterswitchUpdateApiTest, self).setUp()
@@ -107,13 +105,13 @@ class InterswitchUpdateApiTest(BluebottleTestCase):
 
         redirect_url = "http://testserver/orders/{}/success".format(self.order_payment.order.id)
         self.assertRedirects(response, redirect_url,
-                             fetch_redirect_response=False) 
+                             fetch_redirect_response=False)
 
     @patch('requests.get', side_effect=mocked_success_response)
     def test_payment_status_update(self, requests_get, get_current_host):
         payment_response_url = reverse('interswitch-payment-response',
                                        kwargs={'order_payment_id': self.order_payment.id})
-        response = self.client.get(payment_response_url)
+        self.client.get(payment_response_url)
 
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, StatusDefinition.SETTLED)
@@ -124,7 +122,7 @@ class InterswitchUpdateApiTest(BluebottleTestCase):
     def test_payment_failed_status(self, requests_get, get_current_host):
         payment_response_url = reverse('interswitch-payment-response',
                                        kwargs={'order_payment_id': self.order_payment.id})
-        response = self.client.get(payment_response_url)
+        self.client.get(payment_response_url)
 
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, StatusDefinition.FAILED)
@@ -135,7 +133,7 @@ class InterswitchUpdateApiTest(BluebottleTestCase):
     def test_payment_invalid_status_response(self, requests_get, get_current_host):
         payment_response_url = reverse('interswitch-payment-response',
                                        kwargs={'order_payment_id': self.order_payment.id})
-        response = self.client.get(payment_response_url)
+        self.client.get(payment_response_url)
 
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status, StatusDefinition.FAILED)
@@ -150,14 +148,13 @@ class InterswitchUpdateApiTest(BluebottleTestCase):
         # TODO: might be easier to call check_payment_status
         with patch('requests.get', side_effect=mocked_failed_response):
             payment_response_url = reverse('interswitch-payment-response',
-                                       kwargs={'order_payment_id': self.order_payment.id})
-            response = self.client.get(payment_response_url)
+                                           kwargs={'order_payment_id': self.order_payment.id})
+            self.client.get(payment_response_url)
             self.payment.refresh_from_db()
 
         order_payment_response_url = reverse('manage-order-payment-detail',
-                                       kwargs={'pk': self.order_payment.id})
-        response = self.client.get(order_payment_response_url,
-                                   token=user_token)
+                                             kwargs={'pk': self.order_payment.id})
+        self.client.get(order_payment_response_url, token=user_token)
 
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.status_description, "ESocket transaction error")

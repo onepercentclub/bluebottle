@@ -1,5 +1,7 @@
+import mock
 from decimal import Decimal
 
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
@@ -7,6 +9,8 @@ from rest_framework import status
 
 from bluebottle.clients import properties
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+
 
 class ClientSettingsTestCase(BluebottleTestCase):
 
@@ -14,14 +18,18 @@ class ClientSettingsTestCase(BluebottleTestCase):
         super(ClientSettingsTestCase, self).setUp()
         self.settings_url = reverse('settings')
 
-    @override_settings(CLOSED_SITE=False, TOP_SECRET="*****",EXPOSED_TENANT_PROPERTIES=['closed_site'])
+    @override_settings(PARENT={'child': True}, EXPOSED_TENANT_PROPERTIES=['parent.child'])
+    def test_nested_exposed_properties(self):
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.data['parent']['child'], True)
+
+    @override_settings(CLOSED_SITE=False, TOP_SECRET="*****", EXPOSED_TENANT_PROPERTIES=['closed_site'])
     def test_settings_show(self):
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['closedSite'], False)
         self.assertNotIn('topSecret', response.data)
-
 
         # Check that exposed setting gets overwritten by client property
         setattr(properties, 'CLOSED_SITE', True)
@@ -42,7 +50,6 @@ class ClientSettingsTestCase(BluebottleTestCase):
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['readOnlyFields'], {'user': ['first_name']})
-
 
     @override_settings(PAYMENT_METHODS=[{
         'provider': 'docdata',
@@ -83,8 +90,69 @@ class ClientSettingsTestCase(BluebottleTestCase):
 
         self.assertEqual(
             response.data['currencies'],
-            [{'symbol': u'CFA', 'code': 'XOF', 'name': u'West African CFA Franc', 'rate': Decimal(1000.0), 'minAmount': 5000},
-             {'symbol': u'\u20a6', 'code': 'NGN', 'name': u'Nigerian Naira', 'rate': Decimal(500.0), 'minAmount': 3000},
-             {'symbol': u'$', 'code': 'USD', 'name': u'US Dollar', 'rate': Decimal(1.0), 'minAmount': 5},
-             {'symbol': u'\u20ac', 'code': 'EUR', 'name': u'Euro', 'rate': Decimal(1.5), 'minAmount': 5}]
+            [
+                {
+                    'symbol': u'CFA',
+                    'code': 'XOF',
+                    'name': u'West African CFA Franc',
+                    'rate': Decimal(1000.0),
+                    'minAmount': 5000
+                },
+                {
+                    'symbol': u'\u20a6',
+                    'code': 'NGN',
+                    'name': u'Nigerian Naira',
+                    'rate': Decimal(500.0),
+                    'minAmount': 3000
+                },
+                {
+                    'symbol': u'$',
+                    'code': 'USD',
+                    'name': u'US Dollar',
+                    'rate': Decimal(1.0),
+                    'minAmount': 5
+                },
+                {
+                    'symbol': u'\u20ac',
+                    'code': 'EUR',
+                    'name': u'Euro',
+                    'rate': Decimal(1.5),
+                    'minAmount': 5
+                }
+            ]
         )
+
+
+class TestDefaultAPI(BluebottleTestCase):
+    """
+        Test the default API, open and closed, authenticated or not
+        with default permissions
+    """
+    def setUp(self):
+        super(TestDefaultAPI, self).setUp()
+
+        self.init_projects()
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.projects_url = reverse('project_list')
+
+    def test_open_api(self):
+        """ request open api, expect projects """
+        response = self.client.get(self.projects_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
+    def test_closed_api_not_authenticated(self):
+        """ request closed api, expect 403 ? if not authenticated """
+        anonymous = Group.objects.get(name='Anonymous')
+        anonymous.permissions.remove(
+            Permission.objects.get(codename='api_read_project')
+        )
+
+        response = self.client.get(self.projects_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_closed_api_authenticated(self):
+        """ request closed api, expect projects if authenticated """
+        response = self.client.get(self.projects_url, token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

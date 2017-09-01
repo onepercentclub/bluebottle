@@ -1,10 +1,7 @@
 import re
-import json
 
 from django.db import connection
 from django.conf import settings
-
-from bluebottle.clients import properties
 
 
 def sentry_dsn(request):

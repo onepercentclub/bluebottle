@@ -5,6 +5,7 @@ from django.contrib.admin.filters import SimpleListFilter
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.http.response import HttpResponseRedirect
+from django.utils.html import format_html
 from django.utils.translation import ugettext as _
 
 from bluebottle.recurring_donations.models import MonthlyProject
@@ -100,15 +101,14 @@ class MonthlyBatchAdmin(admin.ModelAdmin):
 
     def monthly_orders(self, obj):
         url = '/admin/recurring_donations/monthlyorder/?processed__exact={0}&batch={1}'
-        return "<a href='{3}'>{0} processed</a><br/><a href='{4}'>{1} unprocessed ({2} errored)</a>".format(
+        return format_html(
+            u"<a href='{}'>{} processed</a><br/><a href='{}'>{1} unprocessed ({} errored)</a>",
+            url.format(1, obj.id),
             obj.orders.filter(processed=True).count(),
+            url.format(0, obj.id),
             obj.orders.filter(processed=False).count(),
             obj.orders.filter(error__gt='').count(),
-            url.format(1, obj.id),
-            url.format(0, obj.id)
         )
-
-    monthly_orders.allow_tags = True
 
     def get_urls(self):
         urls = super(MonthlyBatchAdmin, self).get_urls()
@@ -121,7 +121,7 @@ class MonthlyBatchAdmin(admin.ModelAdmin):
     def process_batch(self, request, pk=None):
         batch = MonthlyBatch.objects.get(pk=pk)
         tenant = connection.tenant
-        if getattr(settings, 'BROKER_URL', None):
+        if getattr(settings, 'CELERY_RESULT_BACKEND', None):
             process_monthly_batch.delay(tenant=tenant, monthly_batch=batch, send_email=True)
         else:
             process_monthly_batch(tenant=tenant, monthly_batch=batch, send_email=True)
@@ -165,17 +165,17 @@ class MonthlyOrderAdmin(admin.ModelAdmin):
     ordering = ('-batch', 'user__email')
 
     def error_message(self, obj):
-        return "<span style='color:red; font-weight: bold'>{0}</span>".format(
-            obj.error)
-
-    error_message.allow_tags = True
+        return format_html(
+            u"<span style='color:red; font-weight: bold'>{}</span>",
+            obj.error
+        )
 
     def has_error(self, obj):
         if obj.error:
-            return "<span style='color:red; font-weight: bold'>ERROR!</span>"
+            return format_html(
+                u"<span style='color:red; font-weight: bold'>ERROR!</span>"
+            )
         return '-'
-
-    has_error.allow_tags = True
 
 
 admin.site.register(MonthlyOrder, MonthlyOrderAdmin)

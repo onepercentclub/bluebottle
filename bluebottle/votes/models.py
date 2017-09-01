@@ -16,7 +16,7 @@ class Vote(models.Model):
     voter = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('voter'))
 
     def __unicode__(self):
-        return "{0} -> {1}".format(self.voter, self.project)
+        return u'{0} -> {1}'.format(self.voter, self.project)
 
     class Analytics:
         type = 'vote'
@@ -32,6 +32,10 @@ class Vote(models.Model):
             'user_id': 'voter.id',
             'project_id': 'project.id'
         }
+
+        @staticmethod
+        def timestamp(obj, created):
+            return obj.created
 
     class Meta:
         unique_together = (('project', 'voter'),)

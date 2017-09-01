@@ -73,7 +73,7 @@ class PaymentInterswitchApiTests(BluebottleTestCase):
             'total_amount': None,
             'user': None
         }
-        response = self.client.post(reverse('manage-order-list'), data,
+        response = self.client.post(reverse('order-manage-list'), data,
                                     token=self.user_token)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['status'], 'created')
@@ -135,12 +135,6 @@ class PaymentInterswitchApiTests(BluebottleTestCase):
             'cust_name_desc': None
         }
         self.assertEqual(response.data['payment_method'], 'interswitchWebpay')
-
-        authorization_action = [
-            ('type', 'redirect'),
-            ('method', 'post'),
-            ('url', u'https://stageserv.interswitchng.com/test_paydirect/pay'),
-            ('payload', expected)]
 
         payload = ast.literal_eval(response.data['authorization_action']['payload'])
         self.assertEqual(payload['product_id'], expected['product_id'])

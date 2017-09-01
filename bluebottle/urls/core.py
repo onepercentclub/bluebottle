@@ -17,8 +17,6 @@ urlpatterns = [
         include('bluebottle.redirects.urls.api')),
     url(r'^api/users/',
         include('bluebottle.bb_accounts.urls.api')),
-    url(r'^api/bb_organizations/',
-        include('bluebottle.bb_organizations.urls.api')),
     url(r'^api/bb_projects/',
         include('bluebottle.bb_projects.urls.api')),
     url(r'^api/fundraisers/',
@@ -66,6 +64,8 @@ urlpatterns = [
         include('bluebottle.statistics.urls.api')),
     url(r'^api/bb_projects/',
         include('bluebottle.projects.urls.api')),
+    url(r'^api/cms/',
+        include('bluebottle.cms.urls.api')),
 
     url(r'^payments_mock/',
         include('bluebottle.payments_mock.urls.core')),
@@ -75,12 +75,12 @@ urlpatterns = [
         include('bluebottle.payments_interswitch.urls.core')),
     url(r'^payments_vitepay/',
         include('bluebottle.payments_vitepay.urls.core')),
+    url(r'^payments_flutterwave/',
+        include('bluebottle.payments_flutterwave.urls.core')),
 
     url(r'^surveys/',
         include('bluebottle.surveys.urls.core')),
 
-    url(r'^api/organizations/',
-        include('bluebottle.organizations.urls.api')),
     url(r'^api/suggestions/',
         include('bluebottle.suggestions.urls.api')),
 
@@ -94,6 +94,9 @@ urlpatterns = [
     url(r'^documents/',
         include('bluebottle.organizations.urls.documents')),
 
+    url(r'^api/organizations/',
+        include('bluebottle.organizations.urls.api')),
+
     url(r'^embed/', include('bluebottle.widget.urls.core')),
 
     # JSON Web Token based authentication for Django REST framework
@@ -106,6 +109,15 @@ urlpatterns = [
         include('bluebottle.social.urls.api')),
 
     url(r'token/', include('token_auth.urls')),
+
+    # urls for payout service
+    url(r'^api/projects/',
+        include('bluebottle.projects.urls.api')),
+    url(r'^api/payouts/',
+        include('bluebottle.payouts_dorado.urls')),
+
+    url(r'^downloads/', include('bluebottle.projects.urls.media')),
+    url(r'^downloads/', include('bluebottle.bb_tasks.urls.media')),
 ]
 
 

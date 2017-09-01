@@ -2,7 +2,10 @@ class FakeInfluxDBClient():
     def __init__(self, *args):
         pass
 
-    def write_points(self, **kwargs):
+    def client(self, *args, **kwargs):
+        pass
+
+    def write_points(self, *args, **kwargs):
         pass
 
 
@@ -11,6 +14,7 @@ class FakeModel():
         type = 'fake'
         tags = {}
         fields = {}
+
 
 class FakeModelTwo():
     class Analytics:

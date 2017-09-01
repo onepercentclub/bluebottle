@@ -45,6 +45,7 @@ class TestDeadlineStatus(BluebottleTestCase):
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.complete)
+        self.assertEquals(self.project.payout_status, 'needs_approval')
 
     def test_funding_notreached(self):
         """ less funded than asked means incomplete """
@@ -57,6 +58,7 @@ class TestDeadlineStatus(BluebottleTestCase):
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.incomplete)
+        self.assertEquals(self.project.payout_status, 'needs_approval')
 
     def test_sourcing_tasks_complete(self):
         """ one remaining open task """
@@ -75,6 +77,7 @@ class TestDeadlineStatus(BluebottleTestCase):
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.incomplete)
+        self.assertEquals(self.project.payout_status, None)
 
     def test_sourcing_tasks_incomplete_in_progress(self):
         self.project.amount_asked = 0  # makes it sourcing
@@ -83,6 +86,7 @@ class TestDeadlineStatus(BluebottleTestCase):
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.incomplete)
+        self.assertEquals(self.project.payout_status, None)
 
     def test_sourcing_tasks_incomplete_mix(self):
         """ A mix of realized, open, in progress tasks """
@@ -96,6 +100,7 @@ class TestDeadlineStatus(BluebottleTestCase):
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.incomplete)
+        self.assertEquals(self.project.payout_status, None)
 
     def test_funding_tasks_incomplete(self):
         """ a funding project with incomplete tasks is still complete """
@@ -108,3 +113,4 @@ class TestDeadlineStatus(BluebottleTestCase):
         self.project.deadline_reached()
 
         self.assertEquals(self.project.status, self.complete)
+        self.assertEquals(self.project.payout_status, 'needs_approval')

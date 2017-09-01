@@ -1,11 +1,10 @@
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
-from rest_framework.test import APITestCase
-from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.test.factory_models.quotes import QuoteFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class QuoteTestCase(BluebottleTestCase):

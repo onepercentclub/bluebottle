@@ -12,7 +12,7 @@ from bluebottle.payments_docdata.exceptions import (
 from bluebottle.payments_docdata.models import (
     DocdataTransaction, DocdataDirectdebitPayment)
 from bluebottle.utils.utils import (StatusDefinition, get_current_host,
-                                    get_client_ip, get_country_code_by_ip)
+                                    get_client_ip)
 
 from .models import DocdataPayment
 
@@ -90,19 +90,13 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             if user.address.country and hasattr(user.address.country,
                                                 'alpha2_code'):
                 user_data['country'] = user.address.country.alpha2_code
-            elif get_country_code_by_ip(ip_address):
-                user_data['country'] = get_country_code_by_ip(ip_address)
             else:
                 user_data['country'] = default_country_code
         else:
             user_data['postal_code'] = 'Unknown'
             user_data['street'] = 'Unknown'
             user_data['city'] = 'Unknown'
-            country = get_country_code_by_ip(ip_address)
-            if country:
-                user_data['country'] = country
-            else:
-                user_data['country'] = default_country_code
+            user_data['country'] = default_country_code
             user_data['house_number'] = 'Unknown'
 
         if not user_data['country']:
@@ -123,10 +117,10 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         if self.order_payment.payment_method == 'docdataDirectdebit':
             payment = DocdataDirectdebitPayment(
                 order_payment=self.order_payment,
-                **self.order_payment.integration_data)
+                **self.order_payment.card_data)
         else:
             payment = DocdataPayment(order_payment=self.order_payment,
-                                     **self.order_payment.integration_data)
+                                     **self.order_payment.card_data)
 
         payment.total_gross_amount = self.order_payment.amount.amount * 100
 
@@ -155,8 +149,8 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
 
         payment.city = user['city']
 
-        # payment.country = user['country']
-        # payment. = user['ip_address']
+        payment.country = user['country']
+        # payment.ip_address = user['ip_address']
 
         name = gateway.Name(
             first=user['first_name'],

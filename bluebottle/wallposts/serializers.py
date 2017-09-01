@@ -9,9 +9,7 @@ from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.projects.models import Project
 
-from .models import (
-    Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto,
-    Reaction)
+from .models import Wallpost, SystemWallpost, MediaWallpost, TextWallpost, MediaWallpostPhoto, Reaction
 
 
 class ReactionSerializer(serializers.ModelSerializer):
@@ -33,6 +31,7 @@ class WallpostContentTypeField(serializers.SlugRelatedField):
     """
     Field to save content_type on wall-posts.
     """
+
     def get_queryset(self):
         return ContentType.objects
 
@@ -63,8 +62,8 @@ class WallpostParentIdField(serializers.IntegerField):
 
 class WallpostSerializerBase(serializers.ModelSerializer):
     """
-        Base class serializer for Wallposts. This is not used directly;
-        please subclass it.
+    Base class serializer for Wallposts. This is not used directly;
+    please subclass it.
     """
     type = serializers.ReadOnlyField(source='wallpost_type', required=False)
     author = UserPreviewSerializer()
@@ -72,7 +71,6 @@ class WallpostSerializerBase(serializers.ModelSerializer):
                                            source='content_type')
     parent_id = WallpostParentIdField(source='object_id')
     reactions = ReactionSerializer(many=True, read_only=True, required=False)
-
 
     class Meta:
         fields = ('id', 'type', 'author', 'created', 'reactions',
@@ -82,7 +80,6 @@ class WallpostSerializerBase(serializers.ModelSerializer):
 
 
 class MediaWallpostPhotoSerializer(serializers.ModelSerializer):
-
     photo = PhotoSerializer(required=False)
     mediawallpost = serializers.PrimaryKeyRelatedField(required=False,
                                                        read_only=False,
@@ -137,6 +134,7 @@ class SystemWallpostSerializer(WallpostSerializerBase):
     model it's a Wallpost about. See ProjectTextWallpost for an example.
     """
     text = ContentTextField()
+
     # related_type = serializers.CharField(source='related_type.model')
     # related_object = WallpostRelatedField(source='related_object')
 
@@ -146,7 +144,6 @@ class SystemWallpostSerializer(WallpostSerializerBase):
 
 
 class WallpostSerializer(serializers.ModelSerializer):
-
     type = serializers.ReadOnlyField(source='wallpost_type', required=False)
 
     def to_representation(self, obj):
@@ -156,9 +153,9 @@ class WallpostSerializer(serializers.ModelSerializer):
         if isinstance(obj, TextWallpost):
             return TextWallpostSerializer(obj, context=self.context).to_representation(obj)
         elif isinstance(obj, MediaWallpost):
-           return MediaWallpostSerializer(obj, context=self.context).to_representation(obj)
+            return MediaWallpostSerializer(obj, context=self.context).to_representation(obj)
         elif isinstance(obj, SystemWallpost):
-           return SystemWallpostSerializer(obj, context=self.context).to_representation(obj)
+            return SystemWallpostSerializer(obj, context=self.context).to_representation(obj)
         return super(WallpostSerializer, self).to_representation(obj)
 
     class Meta:
@@ -166,4 +163,3 @@ class WallpostSerializer(serializers.ModelSerializer):
         fields = ('id', 'type', 'author', 'created',
                   'email_followers', 'share_with_facebook',
                   'share_with_twitter', 'share_with_linkedin')
-

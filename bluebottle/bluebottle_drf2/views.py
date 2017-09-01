@@ -18,6 +18,7 @@ class SoftDeleteModelMixin(object):
     def get_queryset(self, queryset=None):
         return super(SoftDeleteModelMixin, self).get_queryset()
 
+
 class NonDeletedModelMixin(object):
     """
     Filter the queryset to only show non-deleted items

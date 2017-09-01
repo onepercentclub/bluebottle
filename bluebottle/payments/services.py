@@ -4,7 +4,7 @@ import importlib
 from bluebottle.clients import properties
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
-from bluebottle.utils.utils import get_class
+from bluebottle.utils.utils import get_class, GetClassError
 
 
 def check_access_handler(handler, user):
@@ -77,16 +77,25 @@ class PaymentService(object):
         # FIXME: Check if payment_method is set.
         provider_name = re.sub('([a-z]+)([A-Z][a-z]+)', r'\1',
                                self.order_payment.payment_method)
+        method_name = re.sub('([a-z]+)([A-Z][a-z]+)', r'\2',
+                             self.order_payment.payment_method)
         app_name = 'payments_' + provider_name
-        class_name = provider_name.title() + 'PaymentAdapter'
-        class_path = 'bluebottle.' + app_name + '.adapters.' + class_name
 
+        # First try to load the specific profile adapter
+        class_name = provider_name.title() + method_name + 'PaymentAdapter'
+        class_path = 'bluebottle.' + app_name + '.adapters.' + class_name
         try:
             adapter_class = get_class(class_path)
-        except ImportError:
-            raise PaymentException(
-                "Couldn't find an adapter for payment method '{0}'".format(
-                    self.order_payment.payment_method))
+        except GetClassError:
+            # Now try to load the generic provider adapter
+            class_name = provider_name.title() + 'PaymentAdapter'
+            class_path = 'bluebottle.' + app_name + '.adapters.' + class_name
+            try:
+                adapter_class = get_class(class_path)
+            except GetClassError:
+                raise PaymentException(
+                    "Couldn't find an adapter for payment method '{0}'".format(
+                        self.order_payment.payment_method))
 
         adapter = adapter_class(self.order_payment)
         return adapter

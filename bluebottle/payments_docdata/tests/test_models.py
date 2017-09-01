@@ -5,7 +5,6 @@ from mock import patch
 
 from bluebottle.payments.models import OrderPayment, Transaction
 from bluebottle.payments.services import PaymentService
-from bluebottle.payments_docdata.gateway import DocdataClient
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 from bluebottle.payments_docdata.tests.factory_models import (
     DocdataDirectdebitPaymentFactory, DocdataPaymentFactory,
@@ -17,7 +16,6 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.utils import BluebottleTestCase, FsmTestMixin
 from bluebottle.utils.utils import StatusDefinition
-
 
 
 # Mock create_payment so we don't need to call the external docdata service
@@ -42,9 +40,7 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
         instance.create.return_value = {'order_key': 123, 'order_id': 123}
 
         # Mock create payment
-        patch.object(DocdataPaymentAdapter, 'create_payment',
-                     fake_create_payment)
-
+        patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='docdataIdeal',

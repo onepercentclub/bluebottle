@@ -1,14 +1,9 @@
-import json
-
 from django.core.urlresolvers import reverse
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 from rest_framework import status
 
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.test.factory_models.news import NewsItemFactory, \
-    DraftNewsItemFactory
+from bluebottle.test.factory_models.news import NewsItemFactory, DraftNewsItemFactory
 
 
 class NewsItemApiTestCase(BluebottleTestCase):

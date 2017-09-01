@@ -20,7 +20,8 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.terms.*',
             'bluebottle.contact.*',
             'bluebottle.statistics.*',
-            'bluebottle.redirects.*'
+            'bluebottle.redirects.*',
+            'bluebottle.cms.models.ResultPage'
         ],
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
@@ -30,9 +31,8 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.projects.*',
             'bluebottle.bb_projects.*',
             'bluebottle.fundraisers.*',
-            'bluebottle.organizations.*',
             'bluebottle.categories.*',
-            'bluebottle.bb_organizations.*',
+            'bluebottle.organizations.*',
             'bluebottle.votes.*',
             'bluebottle.geo.models.Location',
             'bluebottle.rewards.*',

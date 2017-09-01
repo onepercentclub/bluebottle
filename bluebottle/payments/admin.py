@@ -2,17 +2,21 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
+from django.utils.html import format_html
 
 from polymorphic.admin import (PolymorphicParentModelAdmin,
                                PolymorphicChildModelAdmin)
 
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
+from bluebottle.payments_flutterwave.admin import FlutterwavePaymentAdmin, FlutterwaveMpesaPaymentAdmin
 from bluebottle.payments_interswitch.admin import InterswitchPaymentAdmin
 from bluebottle.payments_docdata.admin import (
     DocdataPaymentAdmin,
     DocdataDirectdebitPaymentAdmin)
+from bluebottle.payments_lipisha.admin import LipishaPaymentAdmin
 from bluebottle.payments_logger.admin import PaymentLogEntryInline
+from bluebottle.payments_telesom.admin import TelesomPaymentAdmin
 from bluebottle.payments_vitepay.admin import VitepayPaymentAdmin
 from bluebottle.payments_voucher.admin import VoucherPaymentAdmin
 
@@ -59,20 +63,22 @@ class OrderPaymentAdmin(admin.ModelAdmin):
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
                                                     object._meta.model_name),
                       args=[object.id])
-        return "<a href='{0}'>Order: {1}</a>".format(str(url), object.id)
-
-    order_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>Order: {}</a>",
+            str(url), object.id
+        )
 
     def payment_link(self, obj):
         object = obj.payment
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
                                                     object._meta.model_name),
                       args=[object.id])
-        return "<a href='{0}'>{1}: {2}</a>".format(str(url),
-                                                   object.polymorphic_ctype,
-                                                   object.id)
-
-    payment_link.allow_tags = True
+        return format_html(
+            u"<a href='{}'>{}: {}</a>",
+            str(url),
+            object.polymorphic_ctype,
+            object.id
+        )
 
 
 admin.site.register(OrderPayment, OrderPaymentAdmin)
@@ -92,9 +98,7 @@ class OrderPaymentInline(admin.TabularInline):
         url = reverse('admin:{0}_{1}_change'.format(object._meta.app_label,
                                                     object._meta.model_name),
                       args=[object.id])
-        return "<a href='{0}'>OrderPayment {1}</a>".format(str(url), obj.id)
-
-    order_payment_link.allow_tags = True
+        return format_html("<a href='{0}'>OrderPayment {1}</a>", str(url), obj.id)
 
     def has_add_permission(self, request):
         return False
@@ -102,7 +106,8 @@ class OrderPaymentInline(admin.TabularInline):
 
 class PaymentAdmin(PolymorphicParentModelAdmin):
     base_model = Payment
-    list_display = ('created', 'order_payment_amount', 'polymorphic_ctype')
+    list_display = ('created', 'status', 'order_payment_amount', 'polymorphic_ctype')
+    list_filter = ('status', )
 
     inlines = (PaymentLogEntryInline,)
     ordering = ('-created',)
@@ -112,7 +117,8 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
             (admin.model, admin) for admin in (
                 DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin,
                 VoucherPaymentAdmin, InterswitchPaymentAdmin,
-                VitepayPaymentAdmin
+                FlutterwavePaymentAdmin, FlutterwaveMpesaPaymentAdmin,
+                LipishaPaymentAdmin, TelesomPaymentAdmin, VitepayPaymentAdmin
             )
         )
 

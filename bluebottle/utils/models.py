@@ -1,7 +1,13 @@
 import sys
+
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.db import models
 from django.conf import settings
 
-from django.db import models
+import bluebottle.utils.monkey_patch_migration  # noqa
+import bluebottle.utils.monkey_patch_corsheaders  # noqa
+import bluebottle.utils.monkey_patch_parler  # noqa
 
 
 class Language(models.Model):
@@ -35,46 +41,6 @@ class Address(models.Model):
 
     def __unicode__(self):
         return self.line1[:80]
-
-
-from django.dispatch.dispatcher import receiver
-from django.db.models.signals import post_migrate, pre_migrate
-from django.conf import settings
-
-from bluebottle.utils.utils import update_group_permissions
-
-"""
-Connecting signal handler here for populating permissions.
-This handler will work for any appname.models which defines
-a GROUP_PERMS property.
-TODO: Is this the correct place for a global signal handler.
-"""
-
-ADDITIONAL_GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_pictureitem', 'change_pictureitem', 'delete_pictureitem',
-            'add_contenttype', 'change_contenttype', 'delete_contenttype',
-            'add_oembeditem', 'change_oembeditem', 'delete_oembeditem',
-            'add_rawhtmlitem', 'change_rawhtmlitem', 'delete_rawhtmlitem',
-            'add_textitem', 'change_textitem', 'delete_textitem',
-            'add_placeholder', 'change_placeholder', 'delete_placeholder',
-            'add_contentitem', 'change_contentitem', 'delete_contentitem'
-        )
-    }
-}
-
-import bluebottle.utils.monkey_patch_migration
-import bluebottle.utils.monkey_patch_corsheaders
-
-@receiver(post_migrate)
-def _update_permissions(sender, **kwargs):
-    update_group_permissions(sender)
-
-    # Load additional permissions after all models have been synced
-    if sender.name == settings.INSTALLED_APPS[-1]:
-        update_group_permissions(sender, ADDITIONAL_GROUP_PERMS)
-
 
 
 # Below is test-only stuff
@@ -137,3 +103,13 @@ if 'test' in sys.argv or 'jenkins' in sys.argv or INCLUDE_TEST_MODELS:
                               if isinstance(item, PictureItem)]
             item = relevant_items.pop(0)
             return item.image
+
+
+class MailLog(models.Model):
+
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    type = models.CharField(max_length=200)
+
+    created = models.DateTimeField(auto_now_add=True)

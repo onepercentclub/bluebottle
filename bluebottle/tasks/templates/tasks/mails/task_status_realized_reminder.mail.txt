@@ -1,0 +1,16 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with receiver_name=to.short_name  %}
+
+Hello {{receiver_name}}
+
+Hopefully your task "{{ title }}" was a great success! 
+Make sure that all participants are marked as confirmed so we can show the results of your project.
+{% endblocktrans %}
+{% endblock %}
+
+{% block action %}
+{% trans 'Confirm participants' context 'email' %} {{ site }}{{ link }}
+{% endblock %}`

@@ -13,7 +13,7 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 from bluebottle.clients.utils import LocalTenant, tenant_url
 from bluebottle.wallposts.models import MediaWallpost
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 @shared_task

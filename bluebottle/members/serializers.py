@@ -1,25 +1,40 @@
-from bluebottle.bb_accounts.models import UserAddress
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX
-
 from rest_framework import serializers
 
-from bluebottle.bluebottle_drf2.serializers import (
-    SorlImageField, ImageSerializer)
-
+from bluebottle.bb_accounts.models import UserAddress
+from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
-from bluebottle.tasks.models import Skill
 from bluebottle.geo.models import Location
-from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
-from bluebottle.geo.models import Location
 from bluebottle.tasks.models import Skill
-from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.utils.serializers import PermissionField
+from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 
 BB_USER_MODEL = get_user_model()
+
+
+class PrivateProfileMixin(object):
+    private_fields = (
+        'url', 'full_name', 'picture', 'about_me', 'location', 'last_name',
+        'avatar', 'website', 'twitter', 'facebook', 'skypename'
+    )
+
+    def to_representation(self, obj):
+        data = super(PrivateProfileMixin, self).to_representation(obj)
+
+        user = self.context['request'].user
+        can_read_full_profile = self.context['request'].user.has_perm('members.api_read_full_member')
+
+        if obj != user and not can_read_full_profile:
+            for field in self.private_fields:
+                if field in data:
+                    del data[field]
+
+        return data
 
 
 class UserAddressSerializer(serializers.ModelSerializer):
@@ -29,7 +44,7 @@ class UserAddressSerializer(serializers.ModelSerializer):
                   'city', 'state', 'country', 'postal_code')
 
 
-class UserPreviewSerializer(serializers.ModelSerializer):
+class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a subset of a member's public profile. This is usually
     embedded into other serializers.
@@ -47,8 +62,24 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'username',
+        fields = ('id', 'first_name', 'last_name', 'initials',
                   'avatar', 'full_name', 'short_name')
+
+
+class UserPermissionsSerializer(serializers.Serializer):
+    def get_attribute(self, obj):
+        return obj
+
+    project_list = PermissionField('project_list')
+    project_manage_list = PermissionField('project_manage_list')
+    homepage = PermissionField('homepage', view_args=('primary_language', ))
+
+    class Meta:
+        fields = [
+            'project_list',
+            'project_manage_list',
+            'homepage'
+        ]
 
 
 class CurrentUserSerializer(UserPreviewSerializer):
@@ -63,6 +94,8 @@ class CurrentUserSerializer(UserPreviewSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     country = CountrySerializer(source='address.country')
     location = LocationSerializer()
+    permissions = UserPermissionsSerializer(read_only=True)
+    partner_organization = OrganizationPreviewSerializer(allow_null=True, read_only=True, required=False)
 
     class Meta:
         model = BB_USER_MODEL
@@ -70,10 +103,10 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'country', 'verified')
+            'country', 'verified', 'permissions', 'partner_organization')
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
@@ -105,15 +138,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
     task_count = serializers.ReadOnlyField()
     time_spent = serializers.ReadOnlyField()
     tasks_performed = serializers.ReadOnlyField()
+    partner_organization = OrganizationPreviewSerializer(allow_null=True, read_only=True, required=False)
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'url', 'full_name', 'short_name', 'picture',
+        fields = ('id', 'url', 'full_name', 'short_name', 'initials', 'picture',
                   'primary_language', 'about_me', 'location', 'avatar',
                   'project_count', 'donation_count', 'date_joined',
                   'fundraiser_count', 'task_count', 'time_spent',
                   'tasks_performed', 'website', 'twitter', 'facebook',
-                  'skypename', 'skill_ids', 'favourite_theme_ids')
+                  'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization')
 
 
 class ManageProfileSerializer(UserProfileSerializer):
@@ -140,9 +174,6 @@ class ManageProfileSerializer(UserProfileSerializer):
         return super(ManageProfileSerializer, self).update(instance, validated_data)
 
 
-
-
-
 # Thanks to Neamar Tucote for this code:
 # https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
 class PasswordField(serializers.CharField):
@@ -164,7 +195,6 @@ class PasswordField(serializers.CharField):
         return self.hidden_password_string
 
 
-
 class UserCreateSerializer(serializers.ModelSerializer):
     """
     Serializer for creating users. This can only be used for creating
@@ -179,7 +209,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     @property
     def errors(self):
-        errors =  super(UserCreateSerializer, self).errors
+        errors = super(UserCreateSerializer, self).errors
 
         if 'email' in errors and 'email' in self.data:
             user = self.Meta.model.objects.get(email=self.data['email'])
@@ -189,8 +219,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
                 'id': user.id
             }
 
-            # We assume if they have a social auth associated then they use
-            # it
+            # We assume if they have a social auth associated then they use it
             if user.social_auth.count() > 0:
                 social_auth = user.social_auth.all()[0]
                 conflict['provider'] = social_auth.provider

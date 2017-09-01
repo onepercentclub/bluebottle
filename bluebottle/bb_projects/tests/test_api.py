@@ -277,11 +277,9 @@ class TestManageProjectList(ProjectEndpointTestCase):
         Test login required for the API endpoint for manage Project list.
         """
         response = self.client.get(reverse('project_manage_list'))
-
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         data = json.loads(response.content)
-        self.assertEqual(
-            data['detail'], 'Authentication credentials were not provided.')
+        self.assertEqual(data['detail'], 'Authentication credentials were not provided.')
 
     def test_api_manage_project_list_endpoint_success(self):
         """
@@ -351,6 +349,55 @@ class TestManageProjectList(ProjectEndpointTestCase):
         response = self.client.post(reverse('project_manage_list'), post_data, token=self.user_token)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['amount_asked'], {'currency': 'EUR', 'amount': Decimal('0')})
+
+
+class ManageProjectListRoleTests(BluebottleTestCase):
+    """ Tests roles on manage project list results """
+
+    def setUp(self):
+        super(ManageProjectListRoleTests, self).setUp()
+
+        self.init_projects()
+
+        campaign = ProjectPhase.objects.get(slug='campaign')
+
+        self.other_user = BlueBottleUserFactory.create()
+        self.other_token = "JWT {0}".format(self.other_user.get_jwt_token())
+
+        self.some_user = BlueBottleUserFactory.create()
+        self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
+
+        self.another_user = BlueBottleUserFactory.create()
+        self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
+
+        self.project1 = ProjectFactory.create(owner=self.some_user,
+                                              status=campaign)
+
+        self.project2 = ProjectFactory.create(owner=self.some_user,
+                                              task_manager=self.other_user,
+                                              status=campaign)
+
+        self.project3 = ProjectFactory.create(owner=self.another_user,
+                                              task_manager=self.another_user,
+                                              promoter=self.other_user,
+                                              status=campaign)
+
+    def test_project_manage_list(self):
+        # `some_user` can see two projects:
+        # 1) project1 and project2 because she is the owner of the projects
+        response = self.client.get(reverse('project_manage_list'), token=self.some_token)
+        self.assertEqual(len(response.data['results']), 2)
+
+        # `another_user` can see one project:
+        # 1) project3 because he is the task_manager
+        response = self.client.get(reverse('project_manage_list'), token=self.another_token)
+        self.assertEqual(len(response.data['results']), 1)
+
+        # `other_user` can see two projects:
+        # 1) project2 because he is the task_manager
+        # 2) project3 because he is the promoter
+        response = self.client.get(reverse('project_manage_list'), token=self.other_token)
+        self.assertEqual(len(response.data['results']), 2)
 
 
 class TestManageProjectDetail(ProjectEndpointTestCase):
@@ -428,3 +475,36 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertTrue('permission' in response.content)
+
+
+class TestTinyProjectList(ProjectEndpointTestCase):
+    """
+    Test case for the ``TinyProjectList`` API view.
+    """
+
+    def setUp(self):
+        self.init_projects()
+        campaign = ProjectPhase.objects.get(slug='campaign')
+        incomplete = ProjectPhase.objects.get(slug='done-incomplete')
+        complete = ProjectPhase.objects.get(slug='done-complete')
+        self.project1 = ProjectFactory(status=complete)
+        self.project1.created = '2017-03-18 00:00:00.000000+00:00'
+        self.project1.save()
+        self.project2 = ProjectFactory(status=campaign)
+        self.project2.created = '2017-03-12 00:00:00.000000+00:00'
+        self.project2.save()
+        self.project3 = ProjectFactory(status=incomplete)
+        self.project3.created = '2017-03-01 00:00:00.000000+00:00'
+        self.project3.save()
+        self.project4 = ProjectFactory(status=campaign)
+        self.project4.created = '2017-03-20 00:00:00.000000+00:00'
+        self.project4.save()
+
+    def test_tiny_project_list(self):
+        response = self.client.get(reverse('project_tiny_preview_list'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = json.loads(response.content)
+        self.assertEqual(int(data['results'][0]['id']), self.project3.id)
+        self.assertEqual(int(data['results'][1]['id']), self.project2.id)
+        self.assertEqual(int(data['results'][2]['id']), self.project1.id)
+        self.assertEqual(int(data['results'][3]['id']), self.project4.id)

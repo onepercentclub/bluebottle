@@ -5,7 +5,7 @@ from django.utils import timezone
 import factory
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.projects.models import Project
+from bluebottle.projects.models import Project, ProjectDocument
 
 from .accounts import BlueBottleUserFactory
 from .geo import CountryFactory
@@ -48,7 +48,7 @@ class ProjectFactory(factory.DjangoModelFactory):
     amount_asked = 100
     allow_overfunding = True
 
-    account_bic = 'ABNANL2A'
+    account_details = 'ABNANL2AABNANL2AABNANL2A'
     account_number = 'NL18ABNA0484869868'
     account_bank_country = factory.SubFactory(CountryFactory)
 
@@ -58,3 +58,10 @@ class ProjectFactory(factory.DjangoModelFactory):
     account_holder_city = 'test'
     account_holder_country = factory.SubFactory(CountryFactory)
 
+
+class ProjectDocumentFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = ProjectDocument
+
+    author = factory.SubFactory(BlueBottleUserFactory)
+    project = factory.SubFactory(ProjectFactory)

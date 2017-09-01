@@ -1,6 +1,6 @@
 import urllib
 import itertools
-from collections import Counter
+from collections import Counter, defaultdict
 
 import bleach
 
@@ -24,6 +24,10 @@ class Survey(models.Model):
     @property
     def questions(self):
         return self.question_set.order_by('id')
+
+    @property
+    def visible_questions(self):
+        return self.question_set.filter(display=True).order_by('id')
 
     @classmethod
     def url(cls, project_or_task, user_type='task_member'):
@@ -217,6 +221,7 @@ class Question(models.Model):
     title = models.CharField(max_length=500, blank=True, null=True)
 
     display = models.BooleanField(default=True)
+    display_theme = models.CharField(max_length=50, blank=True, null=True)
     display_title = models.CharField(max_length=500, blank=True, null=True)
     display_style = models.CharField(max_length=500, blank=True, null=True)
     left_label = models.CharField(max_length=200, blank=True, null=True)
@@ -238,6 +243,25 @@ class Question(models.Model):
             except KeyError:
                 pass
         return super(Question, self).save(*args, **kwargs)
+
+    def get_platform_aggregate(self, start=None, end=None):
+        answers = self.aggregateanswer_set.filter(aggregation_type='combined').all()
+
+        if start:
+            answers = answers.filter(project__campaign_ended__gte=start)
+        if end:
+            answers = answers.filter(project__campaign_ended__lte=end)
+
+        if self.type in ('number', 'slider', 'percent'):
+            if (self.aggregation == 'average'):
+                return answers.aggregate(value=models.Avg('value'))['value']
+            else:
+                return answers.aggregate(value=models.Sum('value'))['value']
+        elif self.type in ('radio', 'checkbox', 'table-radio'):
+            values = defaultdict(list)
+            for answer in answers:
+                [values[key].append(value) for key, value in answer.options.items()]
+            return dict((key, float(sum(value)) / len(value)) for key, value in values.items())
 
     def __unicode__(self):
         return bleach.clean(self.title, strip=True, tags=[])

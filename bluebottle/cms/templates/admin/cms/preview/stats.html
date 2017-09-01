@@ -1,0 +1,8 @@
+</style>
+<h4>{{instance.title}}</h4>
+<dl>
+{% for stat in instance.stats.stat_set.all %}
+    <dt style="display: inline">{{ stat.title }}</dt>
+    <dd>{{ stat.value }}<dd>
+{% endfor %}
+</dl>

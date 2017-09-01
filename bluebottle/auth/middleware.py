@@ -10,25 +10,26 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render_to_response
 from django.utils import timezone
+from django.http.request import RawPostDataException
 
 from rest_framework import exceptions
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
 from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
-                                 _default_url_exceptions, _default_form)
+                                 compile_url_exceptions, get_lockdown_form)
 
 from lockdown import settings as lockdown_settings
 from bluebottle.utils.utils import get_client_ip
 
 
-LAST_SEEN_DELTA = 10 # in minutes
+LAST_SEEN_DELTA = 10  # in minutes
 
 
 def isAdminRequest(request):
     admin_base = reverse('admin:index')
 
-    return request.path.startswith(admin_base)
+    return request.path.startswith(admin_base) or request.path.startswith('/downloads')
 
 
 class UserJwtTokenMiddleware:
@@ -172,7 +173,7 @@ class AdminOnlyAuthenticationMiddleware(AuthenticationMiddleware):
     """
 
     def process_request(self, request):
-        if isAdminRequest(request):
+        if isAdminRequest(request) and not hasattr(request, 'user'):
             super(AdminOnlyAuthenticationMiddleware, self).process_request(
                 request)
 
@@ -204,10 +205,10 @@ class LockdownMiddleware(BaseLockdownMiddleware):
                                        'sessions framework')
 
         # Don't lock down if the URL matches an exception pattern.
-        if self.url_exceptions is None:
-            url_exceptions = _default_url_exceptions
+        if self.url_exceptions:
+            url_exceptions = compile_url_exceptions(self.url_exceptions)
         else:
-            url_exceptions = self.url_exceptions
+            url_exceptions = compile_url_exceptions(lockdown_settings.URL_EXCEPTIONS)
         for pattern in url_exceptions:
             if pattern.search(request.path):
                 return None
@@ -230,18 +231,12 @@ class LockdownMiddleware(BaseLockdownMiddleware):
             if not locked_date:
                 return None
 
-        if request.META.get('CONTENT_TYPE') == 'application/x-www-form-urlencoded' and request.method == 'POST':
-            form_data = request.POST
-        else:
-            form_data = {}
-
         passwords = (request.META['HTTP_X_LOCKDOWN'],)
-
-        if self.form is None:
-            form_class = _default_form
-        else:
+        form_data = request.method == 'POST' and request.POST or None
+        if self.form:
             form_class = self.form
-
+        else:
+            form_class = get_lockdown_form(lockdown_settings.FORM)
         form = form_class(passwords=passwords, data=form_data, **self.form_kwargs)
 
         authorized = False
@@ -282,28 +277,37 @@ class LockdownMiddleware(BaseLockdownMiddleware):
         response.status_code = 401
         return response
 
-authorization_logger = logging.getLogger('authorization')
+
+authorization_logger = logging.getLogger(__name__)
 
 
 class LogAuthFailureMiddleWare:
     def process_request(self, request):
-        request.body  # touch the body so that we have access to it in process_response
+        # TODO: Handle this more cleanly. The exception is raised when using IE11.
+        #       Possibly related to the following issue:
+        #           https://github.com/encode/django-rest-framework/issues/2774
+        try:
+            request.body  # touch the body so that we have access to it in process_response
+        except RawPostDataException:
+            pass
 
     def process_response(self, request, response):
         """ Log a message for each failed login attempt. """
         if reverse('admin:login') == request.path and request.method == 'POST' and response.status_code != 302:
-            authorization_logger.error('Authorization failed: {username} {ip}'.format(
-               ip=get_client_ip(request), username=request.POST.get('username')
-            ))
+            error = 'Authorization failed: {username} {ip}'.format(
+                ip=get_client_ip(request), username=request.POST.get('username')
+            )
+            authorization_logger.error(error)
 
         if reverse('token-auth') == request.path and request.method == 'POST' and response.status_code != 200:
             try:
                 data = json.loads(request.body)
             except ValueError:
-                data  = request.POST
+                data = request.POST
 
-            authorization_logger.error('Authorization failed: {username} {ip}'.format(
-               ip=get_client_ip(request), username=data.get('email')
-            ))
+            error = 'Authorization failed: {username} {ip}'.format(
+                ip=get_client_ip(request), username=data.get('email')
+            )
+            authorization_logger.error(error)
 
         return response

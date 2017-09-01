@@ -7,12 +7,11 @@ from django.utils.timezone import now
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
-from localflavor.generic.models import BICField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 
@@ -27,11 +26,6 @@ class ProjectTheme(models.Model):
     description = models.TextField(_('description'), blank=True)
     disabled = models.BooleanField(_('disabled'), default=False)
 
-    class Meta:
-        ordering = ['name']
-        verbose_name = _('project theme')
-        verbose_name_plural = _('project themes')
-
     def __unicode__(self):
         return self.name
 
@@ -40,6 +34,14 @@ class ProjectTheme(models.Model):
             self.slug = slugify(self.name)
 
         super(ProjectTheme, self).save(**kwargs)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = _('project theme')
+        verbose_name_plural = _('project themes')
+        permissions = (
+            ('api_read_projecttheme', 'Can view project theme through API'),
+        )
 
 
 class ProjectPhase(models.Model):
@@ -70,6 +72,9 @@ class ProjectPhase(models.Model):
 
     class Meta():
         ordering = ['sequence']
+        permissions = (
+            ('api_read_projectphase', 'Can view project phase through API'),
+        )
 
     def __unicode__(self):
         return u'{0} - {1}'.format(self.sequence, _(self.name))
@@ -84,8 +89,10 @@ class BaseProjectDocument(models.Model):
 
     """ Document for an Project """
 
-    file = models.FileField(
-        upload_to='projects/documents')
+    file = PrivateFileField(
+        max_length=110,
+        upload_to='projects/documents'
+    )
     author = models.ForeignKey('members.Member',
                                verbose_name=_('author'), blank=True, null=True)
     project = models.ForeignKey('projects.Project',
@@ -116,19 +123,36 @@ class BaseProject(models.Model, GetTweetMixin):
         'members.Member', verbose_name=_('initiator'),
         help_text=_('Project owner'), related_name='owner')
 
+    reviewer = models.ForeignKey(
+        'members.Member', verbose_name=_('reviewer'),
+        help_text=_('Project Reviewer'), related_name='reviewer',
+        null=True, blank=True
+    )
+
+    task_manager = models.ForeignKey(
+        'members.Member', verbose_name=_('task manager'),
+        help_text=_('Project Task Manager'), related_name='task_manager',
+        null=True, blank=True
+    )
+
+    promoter = models.ForeignKey(
+        'members.Member', verbose_name=_('promoter'),
+        help_text=_('Project Promoter'), related_name='promoter',
+        null=True, blank=True
+    )
+
     organization = models.ForeignKey(
         'organizations.Organization', verbose_name=_(
             'organization'),
         help_text=_('Project organization'),
-        related_name='organization', null=True, blank=True)
+        related_name='projects', null=True, blank=True)
 
     project_type = models.CharField(_('Project type'), max_length=50,
                                     choices=Type.choices, null=True, blank=True)
 
     # Basics
-    created = CreationDateTimeField(
-        _('created'), help_text=_('When this project was created.'))
-    updated = ModificationDateTimeField(_('updated'))
+    created = models.DateTimeField(_('created'), help_text=_('When this project was created.'), auto_now_add=True)
+    updated = models.DateTimeField(_('updated'), auto_now=True)
     title = models.CharField(_('title'), max_length=255, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     pitch = models.TextField(
@@ -182,7 +206,7 @@ class BaseProject(models.Model, GetTweetMixin):
     # Bank details
     account_number = models.CharField(_("Account number"), max_length=255,
                                       null=True, blank=True)
-    account_bic = BICField(_("account SWIFT-BIC"), null=True, blank=True)
+    account_details = models.CharField(_("account details"), max_length=255, null=True, blank=True)
     account_bank_country = models.ForeignKey(
         'geo.Country', blank=True, null=True,
         related_name="project_account_bank_country")
@@ -205,21 +229,37 @@ class BaseProject(models.Model, GetTweetMixin):
 
     @property
     def people_registered(self):
+        # Number of people that where accepted for tasks of this project.
         counts = self.task_set.filter(
-            status='open',
-            deadline__gt=now(),
+            status__in=['open', 'in_progress', 'realized'],
             members__status__in=['accepted', 'realized']
         ).aggregate(total=Count('members'), externals=Sum('members__externals'))
 
-        # If there are no members, externals is None
+        # If there are no members, externals is None return 0
         return counts['total'] + (counts['externals'] or 0)
 
     @property
-    def people_requested(self):
-        return self.task_set.filter(
+    def people_needed(self):
+        # People still needed for tasks of this project.
+        # This can only be tasks that are open en in the future.
+        requested = self.task_set.filter(
             status='open',
             deadline__gt=now(),
-        ).aggregate(total=Sum('people_needed'))['total']
+        ).aggregate(total=Sum('people_needed'))['total'] or 0
+        counts = self.task_set.filter(
+            status='open',
+            members__status__in=['accepted', 'realized']
+        ).aggregate(total=Count('members'), externals=Sum('members__externals'))
+
+        return requested - counts['total'] + (counts['externals'] or 0)
+
+    @property
+    def account_bic(self):
+        return self.account_details
+
+    @account_bic.setter
+    def account_bic(self, value):
+        self.account_details = value
 
     _initial_status = None
 

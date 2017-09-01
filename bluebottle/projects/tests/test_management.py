@@ -14,11 +14,12 @@ from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.tasks.models import Task
 from bluebottle.clients.utils import LocalTenant
 
 
+@override_settings(SEND_WELCOME_MAIL=False)
 class TestStatusMC(BluebottleTestCase):
     def setUp(self):
         super(TestStatusMC, self).setUp()
@@ -217,22 +218,112 @@ class TestStatusMC(BluebottleTestCase):
         their deadline get the status 'realized'
         """
         now = timezone.now()
+        project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'))
 
-        task = TaskFactory.create(title='task1', status='in progress',
-                                  deadline=now - timezone.timedelta(days=5))
-        task2 = TaskFactory.create(title='task2', status='open',
-                                   deadline=now - timezone.timedelta(days=5))
+        task1 = TaskFactory.create(title='task1', people_needed=5,
+                                   project=project,
+                                   deadline=now + timezone.timedelta(days=5))
+        task2 = TaskFactory.create(title='task2', people_needed=5,
+                                   project=project,
+                                   deadline=now + timezone.timedelta(days=5))
+        task3 = TaskFactory.create(title='task3', people_needed=5,
+                                   project=project, type='event',
+                                   deadline=now + timezone.timedelta(days=5))
 
-        self.assertEqual(task.status, 'in progress')
+        TaskMemberFactory.create(task=task1, status='accepted')
+        TaskMemberFactory.create_batch(5, task=task3, status='accepted')
+        self.assertEquals(len(mail.outbox), 6)
+
+        task1 = Task.objects.get(title='task1')
+        task2 = Task.objects.get(title='task2')
+        task3 = Task.objects.get(title='task3')
+
+        # Check task statuses
+        self.assertEqual(task1.status, 'open')
         self.assertEqual(task2.status, 'open')
+        self.assertEqual(task3.status, 'full')
+
+        # Change deadline so we can finish the tasks
+        Task.objects.update(deadline=now - timezone.timedelta(days=5))
 
         call_command('cron_status_realised')
 
         task1 = Task.objects.get(title='task1')
         task2 = Task.objects.get(title='task2')
+        task3 = Task.objects.get(title='task3')
 
         self.assertEqual(task1.status, 'realized')
         self.assertEqual(task2.status, 'closed')
+        self.assertEqual(task3.status, 'realized')
+
+        # Expect two extra mails for task owners
+        self.assertEquals(len(mail.outbox), 8)
+
+    def test_task_ignored_non_active_project(self):
+        """
+        Task that are connected to a project that hasn't started yet should be ignored.
+        """
+        now = timezone.now()
+        project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='plan-new'))
+
+        task = TaskFactory.create(title='task1', people_needed=2,
+                                  project=project, status='open',
+                                  deadline=now - timezone.timedelta(days=5))
+
+        TaskMemberFactory.create(task=task, status='accepted')
+        self.assertEquals(len(mail.outbox), 1)
+
+        call_command('cron_status_realised')
+
+        # There should not be additional mails
+        self.assertEquals(len(mail.outbox), 1)
+
+        # Task should still be open
+        task1 = Task.objects.get(title='task1')
+        self.assertEquals(task1.status, 'open')
+
+    def test_task_status_changes(self):
+        """
+        Test that tasks changes status.
+        """
+        now = timezone.now()
+
+        project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='campaign'))
+
+        task1 = TaskFactory.create(title='My Task', people_needed=5,
+                                   project=project,
+                                   status='open', type='event',
+                                   deadline_to_apply=now - timezone.timedelta(days=5),
+                                   deadline=now + timezone.timedelta(days=5))
+
+        task2 = TaskFactory.create(title='My Task 2', people_needed=5,
+                                   project=project,
+                                   status='open', type='ongoing',
+                                   deadline_to_apply=now - timezone.timedelta(days=5),
+                                   deadline=now + timezone.timedelta(days=5))
+
+        TaskMemberFactory.create_batch(5, task=task1, status='accepted')
+        TaskMemberFactory.create_batch(5, task=task2, status='accepted')
+
+        task1 = Task.objects.get(title='My Task')
+        self.assertEqual(task1.status, 'full')
+
+        task2 = Task.objects.get(title='My Task 2')
+        self.assertEqual(task2.status, 'in progress')
+
+        task1.deadline = now - timezone.timedelta(days=5)
+        task1.save()
+
+        task2.deadline = now - timezone.timedelta(days=5)
+        task2.save()
+
+        call_command('cron_status_realised')
+
+        task1 = Task.objects.get(title='My Task')
+        self.assertEqual(task1.status, 'realized')
+
+        task2 = Task.objects.get(title='My Task 2')
+        self.assertEqual(task2.status, 'realized')
 
 
 @override_settings(SEND_WELCOME_MAIL=False)
@@ -249,6 +340,7 @@ class TestMultiTenant(BluebottleTestCase):
         self.project = ProjectFactory.create(
             status=ProjectPhase.objects.get(slug='campaign'),
             deadline=now - timezone.timedelta(days=5),
+            campaign_started=now - timezone.timedelta(days=5),
             amount_asked=0)
 
         # Create a second tenant
@@ -259,6 +351,7 @@ class TestMultiTenant(BluebottleTestCase):
         self.project2 = ProjectFactory.create(
             status=ProjectPhase.objects.get(slug='campaign'),
             deadline=now - timezone.timedelta(days=5),
+            campaign_started=now - timezone.timedelta(days=5),
             amount_asked=0)
 
     def test_realized_email_multiple_tenants(self):

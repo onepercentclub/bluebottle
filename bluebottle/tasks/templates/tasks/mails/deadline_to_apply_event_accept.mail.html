@@ -1,0 +1,19 @@
+{% extends "tasks/mails/deadline_to_apply_base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    {{ block.super }}
+    {% blocktrans with title=task.title people_applied=task.people_applied %}
+        The deadline to apply for your task "{{ title }}" has been reached.
+        <br><br>
+        {{ people_applied }} candidates applied to your task. Your task has been set to 'full'. 
+        <br><br>
+        You still have to accept your candidates.
+        <br><br>
+        If you didn't find the right candidates for your task you can <a href="{{ site }}{{ edit_link }}">change the date to apply</a> and look for other candidates. 
+    {% endblocktrans %}
+{% endblock %}
+{% block action %}
+    <a href="{{ site }}{{ link }}"
+       class="action-email">{% trans 'Accept candidates' context 'email' %}</a>
+{% endblock %}

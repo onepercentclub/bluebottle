@@ -1,6 +1,6 @@
 from datetime import date
 from rest_framework import generics, status, response
-from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
+from rest_framework.permissions import IsAuthenticated, BasePermission
 
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.suggestions.serializers import SuggestionSerializer
@@ -10,19 +10,23 @@ class IsPostOrAuthenticated(BasePermission):
     """
     Permission for POST only
     """
+
     def has_permission(self, request, view):
         if request.method == 'POST' or (request.user and request.user.is_authenticated()):
             return True
         return False
 
+
 class isPut(BasePermission):
     """
     Permission for PUT only
     """
+
     def has_permission(self, request, view):
         if request.method == 'PUT':
             return True
         return False
+
 
 class SuggestionList(generics.ListCreateAPIView):
     queryset = Suggestion.objects.all()

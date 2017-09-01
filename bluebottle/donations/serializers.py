@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.projects.serializers import \
-    ProjectPreviewSerializer as BaseProjectPreviewSerializer, ProjectPreviewSerializer
+    ProjectPreviewSerializer as BaseProjectPreviewSerializer
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.orders.models import Order
 from bluebottle.projects.models import Project
@@ -28,7 +28,7 @@ class ManageDonationSerializer(serializers.ModelSerializer):
 
 
 class PreviewDonationSerializer(serializers.ModelSerializer):
-    project = ProjectPreviewSerializer()
+    project = serializers.PrimaryKeyRelatedField(read_only=True)
     fundraiser = serializers.PrimaryKeyRelatedField(required=False,
                                                     queryset=Fundraiser.objects)
     payment_method = serializers.SerializerMethodField()
@@ -87,4 +87,3 @@ class LatestDonationSerializer(serializers.ModelSerializer):
 
     def get_payment_method(self, obj):
         return obj.get_payment_method()
-

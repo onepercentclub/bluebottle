@@ -1,6 +1,10 @@
+import uuid
+
 from rest_framework import serializers
+
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.projects.models import Project
+
 
 class DateField(serializers.CharField):
     def to_internal_value(self, value):
@@ -8,9 +12,6 @@ class DateField(serializers.CharField):
             return value.split('T')[0]
         except IndexError:
             return value
-
-
-import uuid
 
 
 def generate_token():

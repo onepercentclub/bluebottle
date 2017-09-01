@@ -127,7 +127,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
             'fields': (
                 'receiver_account_name', 'receiver_account_country',
                 'receiver_account_number', 'receiver_account_iban',
-                'receiver_account_bic', 'description_line1',
+                'receiver_account_details', 'description_line1',
                 'description_line2', 'description_line3', 'description_line4'
             )
         })
@@ -171,7 +171,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
         'admin:projects_project_change',
         view_args=lambda obj: (obj.project.id,),
         short_description=_('project'),
-        truncate=50
+        truncate=25
     )
 
     # Link to organization
@@ -183,7 +183,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
     )
 
     def admin_has_iban(self, obj):
-        if obj.receiver_account_iban and obj.receiver_account_bic:
+        if obj.receiver_account_iban and obj.receiver_account_details:
             return True
 
         return False
@@ -192,7 +192,7 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
     admin_has_iban.boolean = True
 
     def payout(self, obj):
-        return "View/Edit"
+        return "View"
 
     def has_add_permission(self, request):
         return False
@@ -345,7 +345,8 @@ admin.site.register(OrganizationPayout, OrganizationPayoutAdmin)
 class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
     list_display = ['payout', 'status', 'admin_project', 'amount_pending',
                     'amount_raised', 'amount_pledged', 'amount_payable',
-                    'rule', 'percent', 'admin_has_iban', 'created_date',
+                    # 'percent',
+                    'admin_has_iban', 'created_date',
                     'submitted_date', 'completed_date']
 
     export_fields = [

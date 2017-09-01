@@ -1,12 +1,37 @@
 from datetime import timedelta
-from django.conf import settings
 
 from celery.schedules import crontab
+from django.conf import settings
+
+
+CELERY_ANNOTATIONS = {
+    'bluebottle.analytics.tasks.queue_analytics_record': {'rate_limit': '50/s'}
+}
 
 CELERYBEAT_SCHEDULE = {
+    'generate_engagement_metrics': {
+        'task': 'bluebottle.analytics.tasks.generate_engagement_metrics',
+        'schedule': crontab(minute='*/30')
+    },
     'set_status_realised': {
         'task': 'bluebottle.projects.tasks.set_status_realised',
         'schedule': crontab(minute=0, hour=0)
+    },
+    'update_popularity': {
+        'task': 'bluebottle.projects.tasks.update_popularity',
+        'schedule': timedelta(hours=1),
+    },
+    'update_exchange_rates': {
+        'task': 'bluebottle.projects.tasks.update_exchange_rates',
+        'schedule': crontab(minute=1, hour=3),
+    },
+    'update_project_status_stats': {
+        'task': 'bluebottle.projects.tasks.update_project_status_stats',
+        'schedule': crontab(hour=0, minute=0),
+    },
+    'sync_surveys': {
+        'task': 'bluebottle.surveys.tasks.sync_surveys',
+        'schedule': timedelta(hours=1),
     },
     'update_salesforce_30': {
         'task': 'bluebottle.common.tasks.update_salesforce',
@@ -27,20 +52,6 @@ CELERYBEAT_SCHEDULE = {
             'log_to_salesforce': True
         }
     },
-    'update-popularity': {
-        'task': 'bluebottle.projects.tasks.update_popularity',
-        'schedule': timedelta(hours=1),
-    },
-    'sync-surveys': {
-        'task': 'bluebottle.surveys.tasks.sync_surveys',
-        'schedule': timedelta(hours=1),
-    },
-    'update-exchange-rates': {
-        'task': 'bluebottle.projects.tasks.update_exchange_rates',
-        'schedule': crontab(minute=1, hour=3),
-    },
-
-
 }
 
 CELERY_TIMEZONE = 'Europe/Amsterdam'

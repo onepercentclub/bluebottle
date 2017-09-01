@@ -1,20 +1,29 @@
-import socket
+import bleach
 from importlib import import_module
+import logging
+import pygeoip
+import socket
 
-from django.db import connection
-from django_fsm import TransitionNotAllowed
-from django_tools.middlewares import ThreadLocal
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
+from django.contrib.auth.models import Permission, Group
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.http import urlquote
 from django.utils.translation import ugettext as _
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.models import Permission, Group
 
-import pygeoip
-import logging
+from django_fsm import TransitionNotAllowed
+from django_tools.middlewares import ThreadLocal
 
 from bluebottle.clients import properties
+
+
+TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'b', 'i', 'ul', 'li', 'ol', 'a',
+        'br', 'pre', 'blockquote']
+ATTRIBUTES = {'a': ['target', 'href']}
+
+
+def clean_html(content):
+    return bleach.clean(content, tags=TAGS, attributes=ATTRIBUTES)
 
 
 def get_languages():
@@ -58,19 +67,25 @@ class StatusDefinition(object):
     NEW = 'new'
     IN_PROGRESS = 'in_progress'
     PENDING = 'pending'
+    NEEDS_APPROVAL = 'needs_approval'
     CREATED = 'created'
     LOCKED = 'locked'
     PLEDGED = 'pledged'
+    APPROVED = 'approved'
     SUCCESS = 'success'
     STARTED = 'started'
+    SCHEDULED = 'scheduled'
+    RE_SCHEDULED = 're_scheduled'
     CANCELLED = 'cancelled'
     AUTHORIZED = 'authorized'
     SETTLED = 'settled'
+    CONFIRMED = 'confirmed'
     CHARGED_BACK = 'charged_back'
     REFUNDED = 'refunded'
     PAID = 'paid'
     FAILED = 'failed'
     RETRY = 'retry'
+    PARTIAL = 'partial'
     UNKNOWN = 'unknown'
 
 
@@ -127,13 +142,13 @@ def get_client_ip(request=None):
         x_forwarded_for = None
 
     if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
+        ipa = x_forwarded_for.split(',')[0]
     else:
         try:
-            ip = request.META.get('REMOTE_ADDR')
+            ipa = request.META.get('REMOTE_ADDR')
         except AttributeError:
-            ip = None
-    return ip
+            ipa = None
+    return ipa
 
 
 def set_author_editor_ip(request, obj):
@@ -166,18 +181,23 @@ def clean_for_hashtag(text):
     return " #".join(tags)
 
 
-# Get the class from dotted string
-def get_class(cl): 
+class GetClassError(Exception):
+    """ Custom exception for an GetClass """
+    pass
+
+
+def get_class(cls):
+    # Get the class from dotted string
     try:
         # try to call handler
-        parts = cl.split('.')
+        parts = cls.split('.')
         module_path, class_name = '.'.join(parts[:-1]), parts[-1]
         module = import_module(module_path)
         return getattr(module, class_name)
 
-    except (ImportError, AttributeError) as e:
-        error_message = "Could not import '%s'. %s: %s." % (cl, e.__class__.__name__, e)
-        raise Exception(error_message)
+    except (ImportError, AttributeError, ValueError) as err:
+        error_message = "Could not import '%s'. %s: %s." % (cls, err.__class__.__name__, err)
+        raise GetClassError(error_message)
 
 
 def get_current_host():
@@ -216,8 +236,8 @@ def get_country_by_ip(ip_address=None):
     except socket.error:
         raise InvalidIpError("Invalid IP address")
 
-    gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
-    return gi.country_name_by_addr(ip_address)
+    gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
+    return gip.country_name_by_addr(ip_address)
 
 
 def get_country_code_by_ip(ip_address=None):
@@ -234,31 +254,29 @@ def get_country_code_by_ip(ip_address=None):
     except socket.error:
         raise InvalidIpError("Invalid IP address")
 
-    gi = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
-    return gi.country_code_by_name(ip_address)
+    gip = pygeoip.GeoIP(settings.PROJECT_ROOT + '/GeoIP.dat')
+    return gip.country_code_by_name(ip_address)
 
 
-def update_group_permissions(sender, group_perms=None):
-    # Return early if there is no group permissions table. This will happen when running tests.
-    if Group.objects.model._meta.db_table not in connection.introspection.table_names():
-        return
+def update_group_permissions(label, group_perms, apps):
+    for app_config in apps.get_app_configs():
+        app_config.models_module = True
+        create_permissions(app_config, apps=apps, verbosity=0)
+        app_config.models_module = None
 
-    create_permissions(sender, verbosity=False)
-    try:
-        if not group_perms:
-            group_perms = sender.module.models.GROUP_PERMS
-
-        for group_name, permissions in group_perms.items():
-            group, _ = Group.objects.get_or_create(name=group_name)
-            for perm_codename in permissions['perms']:
-                perm = Permission.objects.get(codename=perm_codename)
-                group.permissions.add(perm)
-
-            group.save()
-    except AttributeError:
-        pass
-    except Permission.DoesNotExist, e:
-        logging.debug(e)
+    for group_name, permissions in group_perms.items():
+        group, _ = Group.objects.get_or_create(name=group_name)
+        for perm_codename in permissions['perms']:
+            try:
+                permissions = Permission.objects.filter(codename=perm_codename)
+                permissions = permissions.filter(content_type__app_label=label)
+                group.permissions.add(permissions.get())
+            except Permission.DoesNotExist, err:
+                logging.debug(err)
+                raise Exception(
+                    'Could not add permission: {}: {}'.format(perm_codename, err)
+                )
+        group.save()
 
 
 class PreviousStatusMixin(object):

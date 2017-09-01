@@ -3,7 +3,7 @@ import json
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 from mock import patch
-from moneyed.classes import EUR, XOF, Money
+from moneyed.classes import XOF, Money
 
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -23,7 +23,7 @@ vitepay_settings = {
 
 
 @patch('bluebottle.payments_vitepay.adapters.get_current_host',
-        return_value='https://onepercentclub.com')
+       return_value='https://onepercentclub.com')
 @override_settings(**vitepay_settings)
 class VitepayUpdateApiTest(BluebottleTestCase):
     def setUp(self):
@@ -104,4 +104,3 @@ class VitepayUpdateApiTest(BluebottleTestCase):
         data = json.loads(response.content)
         self.assertEqual(data['status'], '1')
         self.assertEqual(self.payment.status, 'failed')
-

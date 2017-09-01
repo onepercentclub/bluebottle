@@ -1,5 +1,8 @@
 *.py[co]
 
+# Ignore engagement analysis excel reports
+*.xlsx
+
 .ruby-*
 
 # Packages
@@ -97,3 +100,13 @@ GeoIP.dat
 
 #locale
 locale/en/
+
+# Analytics Testing
+analytics/*
+
+# logs
+*.log
+*.log.*
+
+# tenants
+tenants

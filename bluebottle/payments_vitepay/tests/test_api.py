@@ -1,4 +1,3 @@
-import ast
 from collections import OrderedDict
 from decimal import Decimal
 
@@ -13,7 +12,6 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
-
 
 vitepay_settings = {
     'MERCHANT_ACCOUNTS': [
@@ -43,6 +41,8 @@ vitepay_settings = {
         }
     }]
 }
+
+
 @override_settings(**vitepay_settings)
 class PaymentVitepayApiTests(BluebottleTestCase):
     """
@@ -60,7 +60,8 @@ class PaymentVitepayApiTests(BluebottleTestCase):
                                       status=campaign)
 
     @patch('bluebottle.payments_vitepay.adapters.requests.post',
-           return_value=type('obj', (object,), {'status_code': 200, 'content': 'https://vitepay.com/some-path-to-pay'}))
+           return_value=type('obj', (object,),
+                             {'status_code': 200, 'content': 'https://vitepay.com/some-path-to-pay'}))
     @patch('bluebottle.payments_vitepay.adapters.VitepayPaymentAdapter._create_payment_hash',
            return_value='123123')
     def test_vitepay_donation_api(self, create_hash, mock_post):
@@ -73,7 +74,7 @@ class PaymentVitepayApiTests(BluebottleTestCase):
             'total_amount': None,
             'user': None
         }
-        response = self.client.post(reverse('manage-order-list'), data,
+        response = self.client.post(reverse('order-manage-list'), data,
                                     token=self.user_token)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['status'], 'created')
@@ -128,9 +129,10 @@ class PaymentVitepayApiTests(BluebottleTestCase):
                 ('type', 'redirect'),
                 ('method', 'get'),
                 ('url', u'https://vitepay.com/some-path-to-pay'),
-                ('payload', u'')
+                ('payload', u''),
+                ('data', u'')
             ]),
-            'integration_data': {u'payment_method': u'orangemoney'},
+            'integration_data': {},
             'id': order_payment.id
         }
         self.assertEqual(response.data, expected)

@@ -3,7 +3,10 @@ Project Bluebottle
 
 .. image:: https://travis-ci.org/onepercentclub/bluebottle.png?branch=master
    :target: https://travis-ci.org/onepercentclub/bluebottle
-
+.. image:: https://coveralls.io/repos/github/onepercentclub/bluebottle/badge.svg?branch=develop
+   :target: https://coveralls.io/github/onepercentclub/bluebottle?branch=develop
+.. image:: https://requires.io/github/onepercentclub/bluebottle/requirements.svg?branch=master
+   :target: https://requires.io/github/onepercentclub/bluebottle/requirements/?branch=master
 
 The repository for Project Bluebottle, the crowdsourcing framework initiated
 by the 1%Club.
@@ -27,7 +30,7 @@ started:
 
 #. Install the project::
 
-    $ python setup.py setup
+    $ pip install -e .[test] --process-dependency-links --trusted-host github.com
     $ python manage.py sync_schemas --shared --settings=bluebottle.settings.testing
     $ python manage.py migrate_schemas --shared --settings=bluebottle.settings.testing
     $ ... createtenant

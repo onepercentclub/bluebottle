@@ -23,12 +23,20 @@ class Reward(models.Model):
     updated = ModificationDateTimeField(_('last modification'))
 
     @property
+    def owner(self):
+        return self.project.owner
+
+    @property
+    def parent(self):
+        return self.project
+
+    @property
     def count(self):
         from bluebottle.donations.models import Donation
-        return Donation.objects\
-            .filter(project=self.project)\
-            .filter(reward=self)\
-            .filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS])\
+        return Donation.objects \
+            .filter(project=self.project) \
+            .filter(reward=self) \
+            .filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS]) \
             .count()
 
     def __unicode__(self):
@@ -38,3 +46,15 @@ class Reward(models.Model):
         ordering = ['-project__created', 'amount']
         verbose_name = _("Gift")
         verbose_name_plural = _("Gifts")
+        permissions = (
+            ('api_read_reward', 'Can view reward through the API'),
+            ('api_add_reward', 'Can add reward through the API'),
+            ('api_change_reward', 'Can change reward through the API'),
+            ('api_delete_reward', 'Can delete reward through the API'),
+
+            ('api_read_own_reward', 'Can view own reward through the API'),
+            ('api_add_own_reward', 'Can add own reward through the API'),
+            ('api_change_own_reward', 'Can change own reward through the API'),
+            ('api_delete_own_reward', 'Can delete own reward through the API'),
+
+        )

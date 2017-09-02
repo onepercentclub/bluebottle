@@ -9,7 +9,7 @@ from django.utils import translation
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_projects.models import BaseProject
-from bluebottle.bb_donations.models import BaseDonation
+from bluebottle.donations.models import Donation
 from bluebottle.bb_fundraisers.models import BaseFundraiser
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
@@ -72,7 +72,7 @@ def create_follow(sender, instance, created, **kwargs):
         return
 
     # A user does a donation
-    if isinstance(instance, BaseDonation):
+    if isinstance(instance, Donation):
         # Create a Follow to the specific Project or Task if a donation was
         # made
 

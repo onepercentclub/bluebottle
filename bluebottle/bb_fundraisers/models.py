@@ -1,5 +1,6 @@
 from moneyed import Money
 
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models.aggregates import Sum
 from django.utils.translation import ugettext as _
@@ -11,6 +12,7 @@ from django_extensions.db.fields import (ModificationDateTimeField,
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import ImageField, MoneyField
 from bluebottle.utils.utils import GetTweetMixin, StatusDefinition
+from bluebottle.wallposts.models import Wallpost
 
 
 class BaseFundraiser(models.Model, GetTweetMixin):
@@ -36,6 +38,8 @@ class BaseFundraiser(models.Model, GetTweetMixin):
     deleted = models.DateTimeField(_('deleted'), blank=True, null=True)
 
     location = models.ForeignKey('geo.Location', null=True, blank=True)
+
+    wallposts = GenericRelation(Wallpost, related_query_name='fundraiser_wallposts')
 
     def __unicode__(self):
         return self.title

@@ -1,17 +1,20 @@
 import json
-import urlparse
 import re
+import urlparse
+
 import httmock
-
-from django.core import mail
-from django.test.utils import override_settings
 from django.contrib.auth import get_user_model
-
+from django.contrib.auth.models import Group, Permission
+from django.core import mail
+from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 from rest_framework import status
 
-from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.organizations import (OrganizationFactory, OrganizationContactFactory,
+                                                          OrganizationMemberFactory)
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 ASSERTION_MAPPING = {
     'assertion_mapping': {
@@ -35,17 +38,24 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.user_2 = BlueBottleUserFactory.create()
         self.user_2_token = "JWT {0}".format(self.user_2.get_jwt_token())
 
-        self.current_user_api_url = '/api/users/current'
-        self.user_create_api_url = '/api/users/'
-        self.user_profile_api_url = '/api/users/profiles/'
-        self.user_private_profile_api_url = '/api/users/profiles/manage/'
-        self.user_activation_api_url = '/api/users/activate/'
-        self.user_password_reset_api_url = '/api/users/passwordreset'
-        self.user_password_set_api_url = '/api/users/passwordset/'
+        # User with partner organization
+        self.user_with_partner_organization = BlueBottleUserFactory.create()
+        self.user_with_partner_organization_token = "JWT {0}".format(self.user_with_partner_organization.get_jwt_token()
+                                                                     )
+        self.organization = OrganizationFactory.create(name='Partner Organization',
+                                                       slug='partner-organization',
+                                                       website='http://partnerorg.nl')
+        self.organization_contact = OrganizationContactFactory.create(organization=self.organization)
+        self.organization_member = OrganizationMemberFactory.create(organization=self.organization)
+        self.user_with_partner_organization.partner_organization = self.organization
+        self.user_with_partner_organization.save()
+
+        self.current_user_api_url = reverse('user-current')
+        self.user_create_api_url = reverse('user-user-create')
+        self.user_password_reset_api_url = reverse('password-reset')
 
     def test_user_profile_returned_fields(self):
-        user_profile_url = "{0}{1}".format(self.user_profile_api_url,
-                                           self.user_1.id)
+        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_1.id})
         response = self.client.get(user_profile_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -56,7 +66,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'primary_language', 'about_me', 'location',
                              'project_count', 'donation_count', 'date_joined',
                              'fundraiser_count', 'task_count', 'time_spent',
-                             'website', 'twitter', 'facebook', 'skypename', ]
+                             'website', 'twitter', 'facebook', 'skypename', 'partner_organization']
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)
@@ -69,15 +79,35 @@ class UserApiIntegrationTest(BluebottleTestCase):
         for field in excluded_fields:
             self.assertFalse(field in response.data)
 
+    def test_user_profile_returned_private_fields(self):
+        group = Group.objects.get(name='Anonymous')
+        group.permissions.remove(Permission.objects.get(codename='api_read_full_member'))
+
+        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_2.id})
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['id'], self.user_2.id)
+
+        # Fields taken from the serializer
+        excluded_fields = ['last_name', 'avatar', 'about_me', 'twitter',
+                           'facebook', 'skypename', 'picture', 'url',
+                           'email', 'address', 'newsletter',
+                           'campaign_notifications',
+                           'birthdate', 'gender', 'first_name', 'last_name',
+                           'password']
+
+        for field in excluded_fields:
+            self.assertFalse(field in response.data)
+
     def test_user_profile_unauthenticated(self):
-        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
-                                           self.user_1.id)
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
+
         response = self.client.get(user_profile_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_private_user_profile_returned_fields(self):
-        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
-                                           self.user_1.id)
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
         response = self.client.get(user_profile_url, token=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -91,18 +121,32 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'website', 'twitter', 'facebook', 'skypename',
                              'email',
                              'address', 'newsletter', 'campaign_notifications',
-                             'birthdate', 'gender', 'first_name', 'last_name']
-
+                             'birthdate', 'gender', 'first_name', 'last_name', 'partner_organization']
         for field in serializer_fields:
             self.assertTrue(field in response.data)
+
+        self.assertEqual(response.data['partner_organization'], None)
+
+    def test_user_with_partner_organization(self):
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_with_partner_organization.id})
+        response = self.client.get(user_profile_url, token=self.user_with_partner_organization_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['id'], self.user_with_partner_organization.id)
+
+        self.assertTrue('partner_organization' in response.data)
+        partner_organization_data = response.data['partner_organization']
+        self.assertEqual(partner_organization_data['name'], 'Partner Organization')
+        self.assertEqual(partner_organization_data['slug'], 'partner-organization')
+        self.assertEqual(partner_organization_data['website'], 'http://partnerorg.nl')
+        self.assertEqual(partner_organization_data['logo'], None)
 
     @override_settings(TOKEN_AUTH=ASSERTION_MAPPING)
     def test_user_profile_read_only_forbidden(self):
         """
         Test read only fields can't be updated.
         """
-        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
-                                           self.user_1.id)
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
 
         full_name = {'first_name': 'Nijntje', 'last_name': 'het Konijntje'}
 
@@ -119,8 +163,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
         Test other fields can be updated when tenant has read-only fields.
         """
-        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
-                                           self.user_1.id)
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
 
         email_field = {'email': 'user_allowed@onepercentclub.com'}
 
@@ -136,8 +179,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
         Test retrieving a public user profile by id.
         """
-        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
-                                           self.user_1.id)
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
         response = self.client.get(user_profile_url, token=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.user_1.id)
@@ -156,16 +198,12 @@ class UserApiIntegrationTest(BluebottleTestCase):
                          response.data)
 
         # Profile should not be able to be updated by a different user.
-        response = self.client.put(user_profile_url, data,
-                                   token=self.user_2_token)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN,
-                         response.data)
+        response = self.client.put(user_profile_url, data, token=self.user_2_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
         # Profile should be able to be updated by logged in user.
-        response = self.client.put(user_profile_url, data,
-                                   token=self.user_1_token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK,
-                         response.data)
+        response = self.client.put(user_profile_url, data, token=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['first_name'], data['first_name'])
         self.assertEqual(response.data['last_name'], data['last_name'])
         self.assertEqual(response.data['address']['line1'], data['address']['line1'])
@@ -178,8 +216,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
         country = CountryFactory.create()
         location = LocationFactory.create(country=country)
-        user_profile_url = "{0}{1}".format(self.user_private_profile_api_url,
-                                           self.user_1.id)
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
         changes = {'location': location.id}
 
         # Profile should not be able to be updated by anonymous users.
@@ -202,12 +239,17 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
         Test retrieving the currently logged in user after login.
         """
-        response = self.client.get(self.current_user_api_url,
-                                   token=self.user_1_token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK,
-                         response.data)
+        response = self.client.get(self.current_user_api_url, token=self.user_1_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['first_name'], self.user_1.first_name)
+        self.assertEqual(response.data['last_name'], self.user_1.first_name)
 
+        self.assertEqual(response.data['permissions']['project_list'],
+                         {u'OPTIONS': True, u'GET': True})
+        self.assertEqual(response.data['permissions']['project_manage_list'],
+                         {u'GET': True, u'OPTIONS': True, u'POST': True})
+        self.assertEqual(response.data['permissions']['homepage'],
+                         {u'GET': True, u'OPTIONS': True})
         self.client.logout()
 
     def test_user_create(self):
@@ -218,35 +260,30 @@ class UserApiIntegrationTest(BluebottleTestCase):
         new_user_email = 'nijntje27@hetkonijntje.nl'
         new_user_password = 'testing'
         response = self.client.post(self.user_create_api_url,
-                                    {'email': new_user_email,
-                                     'password': new_user_password})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED,
-                         response.data)
+                                    {'email': new_user_email, 'password': new_user_password})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         "JWT {0}".format(response.data['jwt_token'])
 
         # Test that the email field is required on user create.
-        response = self.client.post(self.user_create_api_url,
-                                    {'password': new_user_password})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
-                         response.data)
+        response = self.client.post(self.user_create_api_url, {'password': new_user_password})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEqual(response.data['email'][0], 'This field is required.')
 
     def test_duplicate_user_create(self):
         """
         Test creating a user when a user already exists with the same email.
         """
-        user_1 = BlueBottleUserFactory.create(email='nijntje27@hetkonijntje.nl')
+        new_user_email = 'nijntje27@hetkonijntje.nl'
+        new_user_password = 'testing'
+
+        user_1 = BlueBottleUserFactory.create(email=new_user_email)
         user_1.save()
 
         # Create a user.
-        new_user_email = 'nijntje27@hetkonijntje.nl'
-        new_user_password = 'testing'
         response = self.client.post(self.user_create_api_url,
-                                    {'email': new_user_email,
-                                     'password': new_user_password})
+                                    {'email': new_user_email, 'password': new_user_password})
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
-                         response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
 
         self.assertEqual(response.data['non_field_errors'][0]['type'], 'email')
         self.assertEqual(response.data['non_field_errors'][0]['email'], 'nijntje27@hetkonijntje.nl')
@@ -279,13 +316,10 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.user_create_api_url,
                                     {'email': new_user_email,
                                      'password': new_user_password})
-        "JWT {0}".format(response.data['jwt_token'])
 
         # Test: resetting the password should be allowed.
-        response = self.client.put(self.user_password_reset_api_url,
-                                   {'email': new_user_email})
-        self.assertEqual(response.status_code, status.HTTP_200_OK,
-                         response.data)
+        response = self.client.put(self.user_password_reset_api_url, {'email': new_user_email})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(len(mail.outbox), 1)
 
         # Setup: get the password reset token and url.
@@ -293,8 +327,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
             '\/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})\/',
             re.DOTALL)
         m = c.search(mail.outbox[0].body)
-        password_set_url = '{0}{1}-{2}'.format(self.user_password_set_api_url,
-                                               m.group(1), m.group(2))
+        password_set_url = reverse('password-set', kwargs={'uidb36': m.group(1), 'token': m.group(2)})
 
         # Test: check that non-matching passwords produce a validation error.
         passwords = {'new_password1': 'rabbit', 'new_password2': 'rabbitt'}

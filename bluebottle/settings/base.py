@@ -165,10 +165,10 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.TokenAuthentication'
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'tenant_extras.drf_permissions.TenantConditionalOpenClose',
+        'bluebottle.utils.permissions.TenantConditionalOpenClose',
     ),
 }
 
@@ -208,6 +208,7 @@ AUTHENTICATION_BACKENDS = (
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'social.backends.facebook.FacebookAppOAuth2',
     'django.contrib.auth.backends.ModelBackend',
+    'bluebottle.utils.backends.AnonymousAuthenticationBackend'
 )
 
 SOCIAL_AUTH_PIPELINE = (
@@ -372,6 +373,10 @@ TENANT_APPS = (
     'taggit',
 
     'bluebottle.cms',
+
+    # Note: Fixes the incorrect formatting of money values in the back-office
+    # https://github.com/django-money/django-money/issues/232
+    'djmoney',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -479,7 +484,7 @@ LOGGING = {
         },
         'payments.payment': {
             'handlers': ['mail_admins', 'payment_logs', 'sentry'],
-            'propagate': True,
+            'propagate': False,
             'level': 'INFO',
         },
     }

@@ -1,14 +1,6 @@
 from bluebottle.bb_fundraisers.models import BaseFundraiser
 from bluebottle.clients import properties
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_fundraiser', 'change_fundraiser', 'delete_fundraiser',
-        )
-    }
-}
-
 
 class Fundraiser(BaseFundraiser):
     def get_absolute_url(self):

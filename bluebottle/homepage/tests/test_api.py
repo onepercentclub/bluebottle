@@ -189,7 +189,7 @@ class HomepageEndpointTestCase(BluebottleTestCase):
         StatisticFactory.create(type='manual', title='Rating', value='9.3', language='en')
 
     def test_homepage_stats(self):
-        response = self.client.get(reverse('stats', kwargs={'language': 'en'}))
+        response = self.client.get(reverse('homepage', kwargs={'language': 'en'}))
 
         self.assertEqual(len(response.data['projects']), 4)
 

@@ -1,11 +1,13 @@
 from datetime import timedelta, datetime
 
-from bluebottle.projects.models import Project, ProjectPhase
-from bluebottle.tasks.models import Task, Skill
-from bluebottle.test.utils import BluebottleTestCase
+from django.core.urlresolvers import reverse
 from django.utils import timezone
 
 from rest_framework import status
+
+from bluebottle.projects.models import Project, ProjectPhase
+from bluebottle.tasks.models import Task, Skill
+from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, \
@@ -22,9 +24,11 @@ class TaskApiIntegrationTests(BluebottleTestCase):
 
         self.init_projects()
 
+        campaign = ProjectPhase.objects.get(slug='campaign')
+
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
-        self.some_project = ProjectFactory.create(owner=self.some_user)
+        self.some_project = ProjectFactory.create(owner=self.some_user, status=campaign)
 
         self.another_user = BlueBottleUserFactory.create()
         self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
@@ -78,7 +82,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             'time_needed': 5,
             'skill': '{0}'.format(self.skill2.id),
             'location': 'Tiel',
-            'deadline': str(future_date)
+            'deadline': str(future_date),
+            'deadline_to_apply': str(future_date - timedelta(days=1))
         }
         response = self.client.post(self.task_url, another_task_data,
                                     token=self.some_token)
@@ -360,11 +365,9 @@ class TaskApiIntegrationTests(BluebottleTestCase):
                          response.data)
 
     def test_task_member_set_time_spent(self):
-        task_user = BlueBottleUserFactory.create()
-        task_user_token = "JWT {0}".format(task_user.get_jwt_token())
         task = TaskFactory.create(status=Task.TaskStatuses.open,
                                   project=self.some_project,
-                                  author=task_user)
+                                  author=self.some_user)
 
         task_member_user = BlueBottleUserFactory.create()
         task_member_user_token = "JWT {0}".format(task_member_user.get_jwt_token())
@@ -373,20 +376,37 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         # Only task author can set the time spent
         response1 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
                                     {'time_spent': 42, 'task': task.id},
-                                    token=task_user_token)
+                                    token=self.some_token)
         self.assertEqual(response1.status_code, status.HTTP_200_OK, response1.data)
 
         # Task Member cannot update his/her own time_spent
         response2 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
                                     {'time_spent': 5, 'task': task.id},
                                     token=task_member_user_token)
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN, response2.data)
+        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Project owner cannot update the time_spent
-        response3 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
-                                    {'time_spent': 5, 'task': task.id},
-                                    token=self.some_token)
+        self.some_project.task_manager = BlueBottleUserFactory.create()
+        self.some_project.save()
+        response3 = self.client.put(
+            '{0}{1}'.format(self.task_members_url, task_member.id),
+            {'time_spent': 5, 'task': task.id},
+            token=self.some_token)
+
         self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN, response3.data)
+
+    def test_task_member_set_time_spent_own_task_manager(self):
+        task = TaskFactory.create(status=Task.TaskStatuses.open,
+                                  project=self.some_project,
+                                  author=self.some_user)
+
+        task_member = TaskMemberFactory.create(member=self.some_user, task=task)
+
+        # Only task manager can set the time spent
+        response1 = self.client.put('{0}{1}'.format(self.task_members_url, task_member.id),
+                                    {'time_spent': 42, 'task': task.id},
+                                    token=self.some_token)
+        self.assertEqual(response1.status_code, status.HTTP_200_OK, response1.data)
 
     def test_get_correct_base_task_fields(self):
         """ Test that the fields defined in the BaseTask serializer are returned in the response """
@@ -412,7 +432,10 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id), token=self.some_token)
 
         # Fields as defined in the serializer
-        serializer_fields = ('id', 'member', 'status', 'created', 'motivation', 'task', 'externals', 'time_spent')
+        serializer_fields = (
+            'id', 'member', 'status', 'created', 'motivation', 'task',
+            'externals', 'time_spent', 'permissions'
+        )
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)
@@ -426,6 +449,7 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         another_user_response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id),
                                                 token=self.another_token)
 
+        self.assertEqual(another_user_response.status_code, 200)
         self.assertEquals(another_user_response.data['motivation'], '')
 
         some_user_response = self.client.get('{0}{1}'.format(self.task_members_url, task_member.id),
@@ -605,6 +629,67 @@ class TestTaskSearchCase(BluebottleTestCase):
         self.assertIn(response.data['results'][0]['id'], ids)
         self.assertIn(response.data['results'][1]['id'], ids)
         self.assertIn(response.data['results'][2]['id'], ids)
+
+
+class ManageTaskListTests(BluebottleTestCase):
+    """ Tests manage task list results """
+
+    def setUp(self):
+        super(ManageTaskListTests, self).setUp()
+
+        self.init_projects()
+
+        campaign = ProjectPhase.objects.get(slug='campaign')
+
+        self.another_user = BlueBottleUserFactory.create()
+        self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
+
+        self.some_user = BlueBottleUserFactory.create()
+        self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
+
+        self.standard_project1 = ProjectFactory.create(task_manager=self.some_user,
+                                                       status=campaign)
+        self.standard_project2 = ProjectFactory.create(status=campaign)
+        self.standard_project3 = ProjectFactory.create(task_manager=self.another_user,
+                                                       owner=self.some_user,
+                                                       status=campaign)
+        self.standard_project4 = ProjectFactory.create(status=campaign)
+
+        self.task1 = TaskFactory.create(
+            status=Task.TaskStatuses.in_progress,
+            project=self.standard_project1,
+        )
+
+        self.task2 = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.some_user,
+            project=self.standard_project2,
+        )
+
+        self.task3 = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            project=self.standard_project3,
+        )
+
+        self.task4 = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.another_user,
+            project=self.standard_project4,
+        )
+
+    def test_task_managed_list(self):
+        # `some_user` can see three tasks:
+        # 1) task1 because he is the author of the task manager
+        # 2) task2 because he is the author (although not the task_manager)
+        # 3) task3 because he is the project owner (although not the task owner or task_manager)
+        response = self.client.get(reverse('my_task_list'), token=self.some_token)
+        self.assertEqual(len(response.data['results']), 3)
+
+        # `another_user` can see two tasks:
+        # 1) task3 because he is the task_manager of the associated project
+        # 2) task4 because he is the author (although not the task_manager)
+        response = self.client.get(reverse('my_task_list'), token=self.another_token)
+        self.assertEqual(len(response.data['results']), 2)
 
 
 class SkillListApiTests(BluebottleTestCase):

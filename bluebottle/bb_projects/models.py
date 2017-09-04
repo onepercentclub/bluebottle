@@ -15,23 +15,6 @@ from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
 
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_project', 'change_project', 'delete_project',
-            'add_projectdocument', 'change_projectdocument', 'delete_projectdocument',
-            'add_projectbudgetline', 'change_projectbudgetline', 'delete_projectbudgetline',
-        )
-    },
-    'Anonymous': {
-        'perms': ('api_read_projectphase', 'api_read_projecttheme',)
-    },
-    'Authenticated': {
-        'perms': ('api_read_projectphase', 'api_read_projecttheme',)
-    }
-}
-
-
 class ProjectTheme(models.Model):
 
     """ Themes for Projects. """
@@ -143,6 +126,18 @@ class BaseProject(models.Model, GetTweetMixin):
     reviewer = models.ForeignKey(
         'members.Member', verbose_name=_('reviewer'),
         help_text=_('Project Reviewer'), related_name='reviewer',
+        null=True, blank=True
+    )
+
+    task_manager = models.ForeignKey(
+        'members.Member', verbose_name=_('task manager'),
+        help_text=_('Project Task Manager'), related_name='task_manager',
+        null=True, blank=True
+    )
+
+    promoter = models.ForeignKey(
+        'members.Member', verbose_name=_('promoter'),
+        help_text=_('Project Promoter'), related_name='promoter',
         null=True, blank=True
     )
 

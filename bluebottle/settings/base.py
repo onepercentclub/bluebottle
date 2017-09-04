@@ -373,6 +373,10 @@ TENANT_APPS = (
     'taggit',
 
     'bluebottle.cms',
+
+    # Note: Fixes the incorrect formatting of money values in the back-office
+    # https://github.com/django-money/django-money/issues/232
+    'djmoney',
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
@@ -480,7 +484,7 @@ LOGGING = {
         },
         'payments.payment': {
             'handlers': ['mail_admins', 'payment_logs', 'sentry'],
-            'propagate': True,
+            'propagate': False,
             'level': 'INFO',
         },
     }

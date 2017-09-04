@@ -8,23 +8,6 @@ from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
 
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_reward', 'change_reward', 'delete_reward',
-        )
-    },
-    'Anonymous': {
-        'perms': ('api_read_reward',)
-    },
-    'Authenticated': {
-        'perms': (
-            'api_read_reward', 'api_add_reward', 'api_change_reward', 'api_delete_reward',
-        )
-    }
-}
-
-
 class Reward(models.Model):
     """
     Rewards for donations
@@ -68,4 +51,10 @@ class Reward(models.Model):
             ('api_add_reward', 'Can add reward through the API'),
             ('api_change_reward', 'Can change reward through the API'),
             ('api_delete_reward', 'Can delete reward through the API'),
+
+            ('api_read_own_reward', 'Can view own reward through the API'),
+            ('api_add_own_reward', 'Can add own reward through the API'),
+            ('api_change_own_reward', 'Can change own reward through the API'),
+            ('api_delete_own_reward', 'Can delete own reward through the API'),
+
         )

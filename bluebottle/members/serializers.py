@@ -2,19 +2,39 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
-
 from rest_framework import serializers
 
 from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
-from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
 from bluebottle.geo.models import Location
+from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.serializers import PermissionField
+from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 
 BB_USER_MODEL = get_user_model()
+
+
+class PrivateProfileMixin(object):
+    private_fields = (
+        'url', 'full_name', 'picture', 'about_me', 'location', 'last_name',
+        'avatar', 'website', 'twitter', 'facebook', 'skypename'
+    )
+
+    def to_representation(self, obj):
+        data = super(PrivateProfileMixin, self).to_representation(obj)
+
+        user = self.context['request'].user
+        can_read_full_profile = self.context['request'].user.has_perm('members.api_read_full_member')
+
+        if obj != user and not can_read_full_profile:
+            for field in self.private_fields:
+                if field in data:
+                    del data[field]
+
+        return data
 
 
 class UserAddressSerializer(serializers.ModelSerializer):
@@ -24,7 +44,7 @@ class UserAddressSerializer(serializers.ModelSerializer):
                   'city', 'state', 'country', 'postal_code')
 
 
-class UserPreviewSerializer(serializers.ModelSerializer):
+class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a subset of a member's public profile. This is usually
     embedded into other serializers.
@@ -42,7 +62,7 @@ class UserPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'first_name', 'last_name', 'username',
+        fields = ('id', 'first_name', 'last_name', 'initials',
                   'avatar', 'full_name', 'short_name')
 
 
@@ -52,11 +72,13 @@ class UserPermissionsSerializer(serializers.Serializer):
 
     project_list = PermissionField('project_list')
     project_manage_list = PermissionField('project_manage_list')
+    homepage = PermissionField('homepage', view_args=('primary_language', ))
 
     class Meta:
         fields = [
             'project_list',
-            'project_manage_list'
+            'project_manage_list',
+            'homepage'
         ]
 
 
@@ -73,14 +95,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
     country = CountrySerializer(source='address.country')
     location = LocationSerializer()
     permissions = UserPermissionsSerializer(read_only=True)
-
-    def get_permissions(self, obj):
-        perms = []
-        for perm in settings.EXPOSED_PERMISSIONS:
-            perms.append(
-                PermissionField(perm).to_representation(perm)
-            )
-        return perms
+    partner_organization = OrganizationPreviewSerializer(allow_null=True, read_only=True, required=False)
 
     class Meta:
         model = BB_USER_MODEL
@@ -88,10 +103,10 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'country', 'verified', 'permissions')
+            'country', 'verified', 'permissions', 'partner_organization')
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     """
     Serializer for a member's public profile.
     """
@@ -123,15 +138,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
     task_count = serializers.ReadOnlyField()
     time_spent = serializers.ReadOnlyField()
     tasks_performed = serializers.ReadOnlyField()
+    partner_organization = OrganizationPreviewSerializer(allow_null=True, read_only=True, required=False)
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'url', 'full_name', 'short_name', 'picture',
+        fields = ('id', 'url', 'full_name', 'short_name', 'initials', 'picture',
                   'primary_language', 'about_me', 'location', 'avatar',
                   'project_count', 'donation_count', 'date_joined',
                   'fundraiser_count', 'task_count', 'time_spent',
                   'tasks_performed', 'website', 'twitter', 'facebook',
-                  'skypename', 'skill_ids', 'favourite_theme_ids')
+                  'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization')
 
 
 class ManageProfileSerializer(UserProfileSerializer):

@@ -1,18 +1,20 @@
 import json
-import urlparse
 import re
-import httmock
+import urlparse
 
+import httmock
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
-from django.contrib.auth import get_user_model
-
 from rest_framework import status
 
-from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.organizations import (OrganizationFactory, OrganizationContactFactory,
+                                                          OrganizationMemberFactory)
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
+from bluebottle.test.utils import BluebottleTestCase
 
 ASSERTION_MAPPING = {
     'assertion_mapping': {
@@ -29,11 +31,24 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
     def setUp(self):
         super(UserApiIntegrationTest, self).setUp()
+
         self.user_1 = BlueBottleUserFactory.create()
         self.user_1_token = "JWT {0}".format(self.user_1.get_jwt_token())
 
         self.user_2 = BlueBottleUserFactory.create()
         self.user_2_token = "JWT {0}".format(self.user_2.get_jwt_token())
+
+        # User with partner organization
+        self.user_with_partner_organization = BlueBottleUserFactory.create()
+        self.user_with_partner_organization_token = "JWT {0}".format(self.user_with_partner_organization.get_jwt_token()
+                                                                     )
+        self.organization = OrganizationFactory.create(name='Partner Organization',
+                                                       slug='partner-organization',
+                                                       website='http://partnerorg.nl')
+        self.organization_contact = OrganizationContactFactory.create(organization=self.organization)
+        self.organization_member = OrganizationMemberFactory.create(organization=self.organization)
+        self.user_with_partner_organization.partner_organization = self.organization
+        self.user_with_partner_organization.save()
 
         self.current_user_api_url = reverse('user-current')
         self.user_create_api_url = reverse('user-user-create')
@@ -51,12 +66,33 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'primary_language', 'about_me', 'location',
                              'project_count', 'donation_count', 'date_joined',
                              'fundraiser_count', 'task_count', 'time_spent',
-                             'website', 'twitter', 'facebook', 'skypename', ]
+                             'website', 'twitter', 'facebook', 'skypename', 'partner_organization']
 
         for field in serializer_fields:
             self.assertTrue(field in response.data)
 
         excluded_fields = ['email', 'address', 'newsletter',
+                           'campaign_notifications',
+                           'birthdate', 'gender', 'first_name', 'last_name',
+                           'password']
+
+        for field in excluded_fields:
+            self.assertFalse(field in response.data)
+
+    def test_user_profile_returned_private_fields(self):
+        group = Group.objects.get(name='Anonymous')
+        group.permissions.remove(Permission.objects.get(codename='api_read_full_member'))
+
+        user_profile_url = reverse('user-profile-detail', kwargs={'pk': self.user_2.id})
+        response = self.client.get(user_profile_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['id'], self.user_2.id)
+
+        # Fields taken from the serializer
+        excluded_fields = ['last_name', 'avatar', 'about_me', 'twitter',
+                           'facebook', 'skypename', 'picture', 'url',
+                           'email', 'address', 'newsletter',
                            'campaign_notifications',
                            'birthdate', 'gender', 'first_name', 'last_name',
                            'password']
@@ -85,10 +121,25 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'website', 'twitter', 'facebook', 'skypename',
                              'email',
                              'address', 'newsletter', 'campaign_notifications',
-                             'birthdate', 'gender', 'first_name', 'last_name']
-
+                             'birthdate', 'gender', 'first_name', 'last_name', 'partner_organization']
         for field in serializer_fields:
             self.assertTrue(field in response.data)
+
+        self.assertEqual(response.data['partner_organization'], None)
+
+    def test_user_with_partner_organization(self):
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_with_partner_organization.id})
+        response = self.client.get(user_profile_url, token=self.user_with_partner_organization_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(response.data['id'], self.user_with_partner_organization.id)
+
+        self.assertTrue('partner_organization' in response.data)
+        partner_organization_data = response.data['partner_organization']
+        self.assertEqual(partner_organization_data['name'], 'Partner Organization')
+        self.assertEqual(partner_organization_data['slug'], 'partner-organization')
+        self.assertEqual(partner_organization_data['website'], 'http://partnerorg.nl')
+        self.assertEqual(partner_organization_data['logo'], None)
 
     @override_settings(TOKEN_AUTH=ASSERTION_MAPPING)
     def test_user_profile_read_only_forbidden(self):
@@ -191,10 +242,14 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.get(self.current_user_api_url, token=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['first_name'], self.user_1.first_name)
+        self.assertEqual(response.data['last_name'], self.user_1.first_name)
+
         self.assertEqual(response.data['permissions']['project_list'],
                          {u'OPTIONS': True, u'GET': True})
         self.assertEqual(response.data['permissions']['project_manage_list'],
                          {u'GET': True, u'OPTIONS': True, u'POST': True})
+        self.assertEqual(response.data['permissions']['homepage'],
+                         {u'GET': True, u'OPTIONS': True})
         self.client.logout()
 
     def test_user_create(self):

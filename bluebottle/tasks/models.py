@@ -1,12 +1,15 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, connection
 from django.db.models import Sum
 from django.utils import timezone
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
+
+from bluebottle.utils.models import MailLog
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients import properties
@@ -15,24 +18,7 @@ from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.utils import PreviousStatusMixin
 from bluebottle.utils.email_backend import send_mail
-
-
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_task', 'change_task', 'delete_task',
-            'add_taskmember', 'change_taskmember', 'delete_taskmember',
-            'add_taskfile', 'change_taskfile', 'delete_taskfile',
-            'add_skill', 'change_skill', 'delete_skill',
-        )
-    },
-    'Anonymous': {
-        'perms': ('api_read_task',)
-    },
-    'Authenticated': {
-        'perms': ('api_read_task', 'api_add_tasks', 'api_add_taskmember')
-    }
-}
+from bluebottle.wallposts.models import Wallpost
 
 
 class Task(models.Model, PreviousStatusMixin):
@@ -62,6 +48,7 @@ class Task(models.Model, PreviousStatusMixin):
     project = models.ForeignKey('projects.Project')
     # See Django docs on issues with related name and an (abstract) base class:
     # https://docs.djangoproject.com/en/dev/topics/db/models/#be-careful-with-related-name
+
     author = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
     status = models.CharField(_('status'),
                               max_length=20,
@@ -96,8 +83,19 @@ class Task(models.Model, PreviousStatusMixin):
     created = CreationDateTimeField(_('created'), help_text=_('When this task was created?'))
     updated = ModificationDateTimeField(_('updated'))
 
+    wallposts = GenericRelation(Wallpost, related_query_name='task_wallposts')
+    mail_logs = GenericRelation(MailLog)
+
     def __unicode__(self):
         return self.title
+
+    @property
+    def owner(self):
+        return self.author
+
+    @property
+    def parent(self):
+        return self.project
 
     @property
     def expertise_based(self):
@@ -159,18 +157,6 @@ class Task(models.Model, PreviousStatusMixin):
     def date_status_change(self):
         return TaskStatusLog.objects.filter(task=self).order_by('-start').first().start
 
-    def set_in_progress(self):
-        self.status = self.TaskStatuses.in_progress
-        self.save()
-
-    def set_full(self):
-        self.status = self.TaskStatuses.full
-        self.save()
-
-    def set_open(self):
-        self.status = self.TaskStatuses.open
-        self.save()
-
     def get_absolute_url(self):
         """ Get the URL for the current task. """
         return 'https://{}/tasks/{}'.format(properties.tenant.domain_url, self.id)
@@ -187,14 +173,12 @@ class Task(models.Model, PreviousStatusMixin):
             if self.people_applied:
                 if self.people_applied + self.externals_applied < self.people_needed:
                     self.people_needed = self.people_applied
-
                 if self.type == self.TaskTypes.ongoing:
-                    self.set_in_progress()
+                    self.status = self.TaskStatuses.in_progress
                 else:
-                    self.set_full()
+                    self.status = self.TaskStatuses.full
             else:
                 self.status = self.TaskStatuses.closed
-
             self.save()
 
     def deadline_reached(self):
@@ -221,14 +205,14 @@ class Task(models.Model, PreviousStatusMixin):
         if (self.status == self.TaskStatuses.open and
                 self.people_needed <= people_accepted):
             if self.type == self.TaskTypes.ongoing:
-                self.set_in_progress()
+                self.status = self.TaskStatuses.in_progress
             else:
-                self.set_full()
+                self.status = self.TaskStatuses.full
 
         if (self.status in (self.TaskStatuses.in_progress, self.TaskStatuses.full) and
                 self.people_needed > people_accepted and
                 self.deadline_to_apply > timezone.now()):
-            self.set_open()
+            self.status = self.TaskStatuses.open
 
         if self.status == self.TaskStatuses.closed and self.members_realized:
             self.status = self.TaskStatuses.realized
@@ -267,6 +251,8 @@ class Task(models.Model, PreviousStatusMixin):
                 )
 
     def save(self, *args, **kwargs):
+        if self.accepting == self.TaskAcceptingChoices.automatic and self.needs_motivation:
+            self.needs_motivation = False
         if not self.author_id:
             self.author = self.project.owner
 
@@ -282,6 +268,11 @@ class Task(models.Model, PreviousStatusMixin):
             ('api_add_task', 'Can add tasks through the API'),
             ('api_change_task', 'Can change tasks through the API'),
             ('api_delete_task', 'Can delete tasks through the API'),
+
+            ('api_read_own_task', 'Can view own tasks through the API'),
+            ('api_add_own_task', 'Can add own tasks through the API'),
+            ('api_change_own_task', 'Can change own tasks through the API'),
+            ('api_delete_own_task', 'Can delete own tasks through the API'),
         )
 
 
@@ -302,6 +293,9 @@ class Skill(models.Model):
 
     class Meta:
         ordering = ('id',)
+        permissions = (
+            ('api_read_skill', 'Can view skills through the API'),
+        )
 
 
 class TaskMember(models.Model, PreviousStatusMixin):
@@ -343,12 +337,28 @@ class TaskMember(models.Model, PreviousStatusMixin):
             ('api_add_taskmember', 'Can add taskmembers through the API'),
             ('api_change_taskmember', 'Can change taskmembers through the API'),
             ('api_delete_taskmember', 'Can delete taskmembers through the API'),
+
+            ('api_read_own_taskmember', 'Can view own taskmembers through the API'),
+            ('api_add_own_taskmember', 'Can add own taskmembers through the API'),
+            ('api_change_own_taskmember', 'Can change own taskmembers through the API'),
+            ('api_delete_own_taskmember', 'Can delete own taskmembers through the API'),
+
+            ('api_read_taskmember_resume', 'Can read taskmembers resumes through the API'),
+            ('api_read_own_taskmember_resume', 'Can read own taskmembers resumes through the API'),
         )
         verbose_name = _(u'task member')
         verbose_name_plural = _(u'task members')
 
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
+
+    @property
+    def owner(self):
+        return self.member
+
+    @property
+    def parent(self):
+        return self.task
 
     @property
     def time_applied_for(self):
@@ -377,6 +387,10 @@ class TaskFile(models.Model):
     class Meta:
         verbose_name = _(u'task file')
         verbose_name_plural = _(u'task files')
+
+    @property
+    def owner(self):
+        return self.author
 
 
 class TaskStatusLog(models.Model):

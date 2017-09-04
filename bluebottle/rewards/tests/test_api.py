@@ -329,7 +329,7 @@ class TestDonationRewardStock(BluebottleTestCase):
             token=self.donor_token
         )
         data = response.data
-        data['amount'] = {'amount': 20, 'currency': 'EUR'}
+        data['amount'] = {'amount': 100, 'currency': 'EUR'}
 
         # Now we are out of stock, but changing a current donation should still be possible
         response = self.client.put(

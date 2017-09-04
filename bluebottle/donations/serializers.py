@@ -31,11 +31,11 @@ class ManageDonationSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if 'reward' in data:
-            if data['reward'].amount.currency != data['amount'].currency:
+            if data['reward'] and data['reward'].amount.currency != data['amount'].currency:
                 raise serializers.ValidationError(
                     'Currency must match reward currency'
                 )
-            if data['reward'].amount.amount > data['amount'].amount:
+            if data['reward'] and data['reward'].amount.amount > data['amount'].amount:
                 raise serializers.ValidationError(
                     'Amounts can not be less than the reward amount'
                 )

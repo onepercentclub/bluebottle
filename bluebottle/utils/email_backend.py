@@ -96,7 +96,7 @@ class TestMailBackend(EmailBackend):
 
 
 def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
-                   from_email=None, reply_to=None, **kwargs):
+                   from_email=None, reply_to=None, attachments=None, **kwargs):
 
     if hasattr(to, 'primary_language') and to.primary_language:
         language = to.primary_language
@@ -126,6 +126,7 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
 
         # even if it's None
         args['from_email'] = from_email
+        args['attachments'] = attachments
 
         # Calling force_unicode on the subject below in case the subject
         # is being translated using ugettext_lazy.
@@ -137,7 +138,7 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
 
 # We need a wrapper outside of Celery to prepare the email because
 # Celery is not tenant aware.
-def send_mail(template_name=None, subject=None, to=None, **kwargs):
+def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwargs):
     from bluebottle.common.tasks import _send_celery_mail
 
     if not to:
@@ -160,6 +161,7 @@ def send_mail(template_name=None, subject=None, to=None, **kwargs):
         msg = create_message(template_name=template_name,
                              to=to,
                              subject=subject,
+                             attachments=attachments,
                              **kwargs)
     except Exception as e:
         msg = None

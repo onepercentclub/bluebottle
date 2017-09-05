@@ -140,6 +140,8 @@ class TestProjectAnalytics(BluebottleTestCase):
         project.title = 'A new title'
         project.save()
 
+        self.assertEqual(project.status, self.status,
+                         'Project status should not have changed.')
         self.assertEqual(previous_call_count, queue_mock.call_count,
                          'Analytics should only be sent when status changes')
 
@@ -152,13 +154,6 @@ class TestProjectAnalytics(BluebottleTestCase):
 
         self.assertEqual(queue_mock.call_count, previous_call_count + len(Project.objects.all()),
                          'Analytics should be sent when update is called')
-
-        # Get the last updated project as this will be the last project to
-        # trigger the analytics queue task
-        project = Project.objects.latest('updated')
-        self.expected_tags['id'] = project.id
-        args, kwargs = queue_mock.call_args
-        self.assertEqual(kwargs['tags'], self.expected_tags)
 
 
 @override_settings(ANALYTICS_ENABLED=True)

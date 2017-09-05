@@ -263,12 +263,6 @@ class ProjectAdminForm(forms.ModelForm):
         super(ProjectAdminForm, self).__init__(*args, **kwargs)
         self.fields['currencies'].required = False
 
-        # self.fields['amount_donated'].disabled = True
-        # self.fields['amount_donated'].required = False
-        #
-        # self.fields['amount_needed'].disabled = True
-        # self.fields['amount_needed'].required = False
-
         self.fields['reviewer'].widget = ReviewerWidget(
             rel=Project._meta.get_field('reviewer').rel,
             admin_site=admin.sites.site

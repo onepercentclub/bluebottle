@@ -257,12 +257,17 @@ class ProjectAdminForm(forms.ModelForm):
             'currencies': forms.CheckboxSelectMultiple
         }
 
-    theme = forms.ModelChoiceField(
-        queryset=ProjectTheme.objects.all().filter(disabled=False))
+    theme = forms.ModelChoiceField(queryset=ProjectTheme.objects.all().filter(disabled=False))
 
     def __init__(self, *args, **kwargs):
         super(ProjectAdminForm, self).__init__(*args, **kwargs)
         self.fields['currencies'].required = False
+
+        # self.fields['amount_donated'].disabled = True
+        # self.fields['amount_donated'].required = False
+        #
+        # self.fields['amount_needed'].disabled = True
+        # self.fields['amount_needed'].required = False
 
         self.fields['reviewer'].widget = ReviewerWidget(
             rel=Project._meta.get_field('reviewer').rel,
@@ -283,6 +288,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                ProjectPhaseLogInline)
 
     list_filter = ('country__subregion__region', )
+
+    # readonly_fields = ['vote_count', 'amount_donated', 'amount_needed', 'popularity', 'payout_status']
 
     export_fields = [
         ('title', 'title'),
@@ -374,9 +381,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     expertise_based.boolean = True
 
-    def amount_donated(self, obj):
-        return 'Help'
-
     def approve_payout(self, request, pk=None):
         project = Project.objects.get(pk=pk)
         if not request.user.has_perm('projects.approve_payout'):
@@ -418,9 +422,19 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)
 
+    def amount_donated_i18n(self, obj):
+        return obj.amount_donated
+
+    amount_donated_i18n.short_description = _('Amount Donated')
+
+    def amount_needed_i18n(self, obj):
+        return obj.amount_needed
+
+    amount_needed_i18n.short_description = _('Amount Needed')
+
     # Setup
     def get_readonly_fields(self, request, obj=None):
-        fields = ['vote_count', 'amount_donated', 'amount_needed', 'popularity', 'payout_status']
+        fields = ['vote_count', 'amount_donated_i18n', 'amount_needed_i18n', 'popularity', 'payout_status']
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status', )
         return fields
@@ -486,8 +500,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             (_('Details'), {'fields': ('language', 'theme', 'categories', 'image', 'video_url', 'country', 'latitude',
                                        'longitude', 'location', 'place')}),
 
-            (_('Goal'), {'fields': ('amount_asked', 'amount_extra', 'amount_donated', 'amount_needed', 'currencies',
-                                    'popularity', 'vote_count')}),
+            (_('Goal'), {'fields': ('amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
+                                    'currencies', 'popularity', 'vote_count')}),
 
             (_('Dates'), {'fields': ('voting_deadline', 'deadline', 'date_submitted', 'campaign_started',
                                      'campaign_ended', 'campaign_funded', 'campaign_paid_out')}),

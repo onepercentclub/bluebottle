@@ -257,8 +257,7 @@ class ProjectAdminForm(forms.ModelForm):
             'currencies': forms.CheckboxSelectMultiple
         }
 
-    theme = forms.ModelChoiceField(
-        queryset=ProjectTheme.objects.all().filter(disabled=False))
+    theme = forms.ModelChoiceField(queryset=ProjectTheme.objects.all().filter(disabled=False))
 
     def __init__(self, *args, **kwargs):
         super(ProjectAdminForm, self).__init__(*args, **kwargs)
@@ -275,33 +274,104 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     date_hierarchy = 'created'
     ordering = ('-created',)
     save_on_top = True
-
-    search_fields = ('title', 'owner__first_name', 'owner__last_name',
-                     'organization__name')
-
+    search_fields = ('title', 'owner__first_name', 'owner__last_name', 'organization__name')
     raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization',)
-
     prepopulated_fields = {'slug': ('title',)}
 
     inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
                ProjectPhaseLogInline)
 
-    def get_readonly_fields(self, request, obj=None):
-        fields = ['vote_count',
-                  'amount_donated', 'amount_needed',
-                  'popularity', 'payout_status']
-        if obj and obj.payout_status and obj.payout_status != 'needs_approval':
-            fields += ('status', )
-        return fields
+    list_filter = ('country__subregion__region', )
 
-    def get_urls(self):
-        urls = super(ProjectAdmin, self).get_urls()
-        process_urls = [
-            url(r'^approve_payout/(?P<pk>\d+)/$',
-                self.approve_payout,
-                name="projects_project_approve_payout"),
-        ]
-        return process_urls + urls
+    export_fields = [
+        ('title', 'title'),
+        ('owner', 'owner'),
+        ('owner__remote_id', 'remote id'),
+        ('reviewer', 'reviewer'),
+        ('task_manager', 'task_manager'),
+        ('promoter', 'promoter'),
+        ('created', 'created'),
+        ('status', 'status'),
+        ('payout_status', 'payout status'),
+        ('theme', 'theme'),
+        ('location__group', 'region'),
+        ('country', 'country'),
+        ('location', 'location'),
+        ('deadline', 'deadline'),
+        ('date_submitted', 'date submitted'),
+        ('campaign_started', 'campaign started'),
+        ('campaign_ended', 'campaign ended'),
+        ('campaign_funded', 'campaign funded'),
+        ('campaign_paid_out', 'campaign paid out'),
+        ('task_count', 'task count'),
+        ('supporters', 'supporters'),
+        ('time_spent', 'time spent'),
+        ('amount_asked', 'amount asked'),
+        ('amount_donated', 'amount donated'),
+        ('organization__name', 'organization'),
+        ('amount_extra', 'amount matched'),
+        ('expertise_based', 'expertise based'),
+    ]
+
+    actions = [export_as_csv_action(fields=export_fields),
+               mark_as_closed, mark_as_done_incomplete,
+               mark_as_done_complete, mark_as_campaign,
+               mark_as_voting_done, mark_as_voting,
+               mark_as_plan_needs_work, mark_as_plan_submitted,
+               mark_as_plan_new]
+
+    # Fields
+    def num_votes(self, obj):
+        self.queryset(None)
+        return obj.admin_vote_count
+
+    num_votes.short_description = _('Vote Count')
+    num_votes.admin_order_field = 'admin_vote_count'
+
+    def get_title_display(self, obj):
+        if len(obj.title) > 35:
+            return format_html(
+                u'<span title="{}">{} &hellip;</span>',
+                obj.title, obj.title[:45]
+            )
+        return obj.title
+
+    get_title_display.admin_order_field = 'title'
+    get_title_display.short_description = _('title')
+
+    def get_owner_display(self, obj):
+        owner_name = obj.owner.get_full_name()
+        if owner_name:
+            owner_name = u' ({name})'.format(name=owner_name)
+        return u'{email}{name}'.format(name=owner_name, email=obj.owner.email)
+
+    get_owner_display.admin_order_field = 'owner__last_name'
+    get_owner_display.short_description = _('owner')
+
+    def project_owner(self, obj):
+        object = obj.owner
+        url = reverse('admin:{0}_{1}_change'.format(
+            object._meta.app_label, object._meta.model_name), args=[object.id])
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url),
+            object.first_name + ' ' + object.last_name
+        )
+
+    def vote_count(self, obj):
+        return obj.vote_set.count()
+
+    def donated_percentage(self, obj):
+        try:
+            percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
+            return "{0} %".format(percentage)
+        except (AttributeError, InvalidOperation):
+            return '-'
+
+    def expertise_based(self, obj):
+        return obj.expertise_based
+
+    expertise_based.boolean = True
 
     def approve_payout(self, request, pk=None):
         project = Project.objects.get(pk=pk)
@@ -344,7 +414,31 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)
 
-    list_filter = ('country__subregion__region', )
+    def amount_donated_i18n(self, obj):
+        return obj.amount_donated
+
+    amount_donated_i18n.short_description = _('Amount Donated')
+
+    def amount_needed_i18n(self, obj):
+        return obj.amount_needed
+
+    amount_needed_i18n.short_description = _('Amount Needed')
+
+    # Setup
+    def get_readonly_fields(self, request, obj=None):
+        fields = ['vote_count', 'amount_donated_i18n', 'amount_needed_i18n', 'popularity', 'payout_status']
+        if obj and obj.payout_status and obj.payout_status != 'needs_approval':
+            fields += ('status', )
+        return fields
+
+    def get_urls(self):
+        urls = super(ProjectAdmin, self).get_urls()
+        process_urls = [
+            url(r'^approve_payout/(?P<pk>\d+)/$',
+                self.approve_payout,
+                name="projects_project_approve_payout"),
+        ]
+        return process_urls + urls
 
     def get_list_filter(self, request):
         filters = ['status', 'is_campaign', ProjectThemeFilter, ProjectSkillFilter,
@@ -361,9 +455,8 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         return filters
 
     def get_list_display(self, request):
-        fields = ['get_title_display', 'get_owner_display', 'created',
-                  'status', 'deadline', 'donated_percentage', 'amount_extra',
-                  'expertise_based']
+        fields = ['get_title_display', 'get_owner_display', 'created', 'status', 'deadline', 'donated_percentage',
+                  'amount_extra', 'expertise_based']
 
         if request.user.has_perm('projects.approve_payout'):
             fields.insert(4, 'payout_status')
@@ -379,53 +472,14 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     def get_list_editable(self, request):
         return ('is_campaign',)
 
-    export_fields = [
-        ('title', 'title'),
-        ('owner', 'owner'),
-        ('owner__remote_id', 'remote id'),
-        ('reviewer', 'reviewer'),
-        ('task_manager', 'task_manager'),
-        ('promoter', 'promoter'),
-        ('created', 'created'),
-        ('status', 'status'),
-        ('payout_status', 'payout status'),
-        ('theme', 'theme'),
-        ('location__group', 'region'),
-        ('country', 'country'),
-        ('location', 'location'),
-        ('deadline', 'deadline'),
-        ('date_submitted', 'date submitted'),
-        ('campaign_started', 'campaign started'),
-        ('campaign_ended', 'campaign ended'),
-        ('campaign_funded', 'campaign funded'),
-        ('campaign_paid_out', 'campaign paid out'),
-        ('task_count', 'task count'),
-        ('supporters', 'supporters'),
-        ('time_spent', 'time spent'),
-        ('amount_asked', 'amount asked'),
-        ('amount_donated', 'amount donated'),
-        ('organization__name', 'organization'),
-        ('amount_extra', 'amount matched'),
-        ('expertise_based', 'expertise based'),
-    ]
-
-    actions = [export_as_csv_action(fields=export_fields),
-               mark_as_closed, mark_as_done_incomplete,
-               mark_as_done_complete, mark_as_campaign,
-               mark_as_voting_done, mark_as_voting,
-               mark_as_plan_needs_work, mark_as_plan_submitted,
-               mark_as_plan_new]
-
     def get_actions(self, request):
         """Order the action in reverse (delete at the bottom)."""
         actions = super(ProjectAdmin, self).get_actions(request)
         return OrderedDict(reversed(actions.items()))
 
     def get_fieldsets(self, request, obj=None):
-        main = {'fields': ['owner', 'reviewer', 'task_manager', 'promoter',
-                           'organization',
-                           'status', 'title', 'slug', 'project_type',
-                           'is_campaign', 'celebrate_results']}
+        main = {'fields': ['owner', 'reviewer', 'task_manager', 'promoter', 'organization', 'status', 'title', 'slug',
+                           'project_type', 'is_campaign', 'celebrate_results']}
 
         if request.user.has_perm('projects.approve_payout'):
             main['fields'].insert(3, 'payout_status')
@@ -435,18 +489,13 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
             (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
 
-            (_('Details'), {'fields': ('language', 'theme', 'categories', 'image',
-                                       'video_url', 'country',
-                                       'latitude', 'longitude',
-                                       'location', 'place')}),
+            (_('Details'), {'fields': ('language', 'theme', 'categories', 'image', 'video_url', 'country', 'latitude',
+                                       'longitude', 'location', 'place')}),
 
-            (_('Goal'), {'fields': ('amount_asked', 'amount_extra',
-                                    'amount_donated', 'amount_needed',
-                                    'currencies',
-                                    'popularity', 'vote_count')}),
+            (_('Goal'), {'fields': ('amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
+                                    'currencies', 'popularity', 'vote_count')}),
 
-            (_('Dates'), {'fields': ('voting_deadline', 'deadline',
-                                     'date_submitted', 'campaign_started',
+            (_('Dates'), {'fields': ('voting_deadline', 'deadline', 'date_submitted', 'campaign_started',
                                      'campaign_ended', 'campaign_funded', 'campaign_paid_out')}),
 
             (_('Bank details'), {'fields': ('account_holder_name',
@@ -458,21 +507,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                                             'account_details',
                                             'account_bank_country')})
         )
-
-    def vote_count(self, obj):
-        return obj.vote_set.count()
-
-    def donated_percentage(self, obj):
-        try:
-            percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
-            return "{0} %".format(percentage)
-        except (AttributeError, InvalidOperation):
-            return '-'
-
-    def expertise_based(self, obj):
-        return obj.expertise_based
-
-    expertise_based.boolean = True
 
     def get_queryset(self, request):
         # Optimization: Select related fields that are used in admin specific
@@ -486,43 +520,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         )
 
         return queryset
-
-    def num_votes(self, obj):
-        self.queryset(None)
-        return obj.admin_vote_count
-
-    num_votes.short_description = _('Vote Count')
-    num_votes.admin_order_field = 'admin_vote_count'
-
-    def get_title_display(self, obj):
-        if len(obj.title) > 35:
-            return format_html(
-                u'<span title="{}">{} &hellip;</span>',
-                obj.title, obj.title[:45]
-            )
-        return obj.title
-
-    get_title_display.admin_order_field = 'title'
-    get_title_display.short_description = _('title')
-
-    def get_owner_display(self, obj):
-        owner_name = obj.owner.get_full_name()
-        if owner_name:
-            owner_name = u' ({name})'.format(name=owner_name)
-        return u'{email}{name}'.format(name=owner_name, email=obj.owner.email)
-
-    get_owner_display.admin_order_field = 'owner__last_name'
-    get_owner_display.short_description = _('owner')
-
-    def project_owner(self, obj):
-        object = obj.owner
-        url = reverse('admin:{0}_{1}_change'.format(
-            object._meta.app_label, object._meta.model_name), args=[object.id])
-        return format_html(
-            u"<a href='{}'>{}</a>",
-            str(url),
-            object.first_name + ' ' + object.last_name
-        )
 
 
 admin.site.register(Project, ProjectAdmin)

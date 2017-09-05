@@ -32,12 +32,9 @@ class Reward(models.Model):
 
     @property
     def count(self):
-        from bluebottle.donations.models import Donation
-        return Donation.objects \
-            .filter(project=self.project) \
-            .filter(reward=self) \
-            .filter(order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS]) \
-            .count()
+        return self.donations.exclude(
+            order__status=StatusDefinition.FAILED
+        ).count()
 
     def __unicode__(self):
         return self.title

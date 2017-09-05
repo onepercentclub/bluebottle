@@ -447,6 +447,60 @@ class TestCreateDonation(DonationApiTestCase):
                                    token=self.user1_token)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_create_reward_lower_donation_amount(self, check_status_psp):
+        """
+        Test donation in the current donation flow where we have just one donation that can't be deleted.
+        """
+
+        # Create an order
+        response = self.client.post(self.manage_order_list_url, {},
+                                    token=self.user1_token)
+        order_id = response.data['id']
+
+        reward = RewardFactory.create(project=self.project, amount=100)
+
+        donation = {
+            "reward": reward.pk,
+            "project": self.project.slug,
+            "order": order_id,
+            "amount": 50
+        }
+
+        response = self.client.post(self.manage_donation_list_url, donation,
+                                    token=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(
+            'less than the reward amount' in response.data['non_field_errors'][0]
+        )
+
+    def test_create_reward_different_currency(self, check_status_psp):
+        """
+        Test donation in the current donation flow where we have just one donation that can't be deleted.
+        """
+        self.project.currencies = ['EUR', 'USD']
+        self.project.save()
+
+        # Create an order
+        response = self.client.post(self.manage_order_list_url, {},
+                                    token=self.user1_token)
+
+        order_id = response.data['id']
+        reward = RewardFactory.create(project=self.project, amount=100)
+
+        donation = {
+            "reward": reward.pk,
+            "project": self.project.slug,
+            "order": order_id,
+            "amount": {'amount': 200, 'currency': 'USD'}
+        }
+
+        response = self.client.post(self.manage_donation_list_url, donation,
+                                    token=self.user1_token)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(
+            'must match reward currency' in response.data['non_field_errors'][0]
+        )
+
 
 class TestAnonymousAuthenicatedDonationCreate(DonationApiTestCase):
     def test_create_anonymous_donation(self):

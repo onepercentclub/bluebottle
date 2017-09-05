@@ -516,16 +516,21 @@ class ParticipationStatisticsTest(BluebottleTestCase):
         self.assertEqual(count, 2)
 
     def test_task_members_total(self):
-        pass
+        count = self.statistics.task_members_total
+        self.assertEqual(count, 2)
 
     def test_get_task_members_count_by_last_status(self):
-        pass
+        count = self.statistics.get_task_members_count_by_last_status(['accepted'])
+        self.assertEqual(count, 2)
 
     def test_task_members(self):
-        pass
+        count = self.statistics.task_members
+        self.assertEqual(count, 0)
 
     def test_unconfirmed_task_members(self):
-        pass
+        count = self.statistics.unconfirmed_task_members
+        self.assertEqual(count, 0)
 
     def test_unconfirmed_task_members_task_count(self):
-        pass
+        count = self.statistics.unconfirmed_task_members_task_count
+        self.assertEqual(count, 0)

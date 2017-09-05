@@ -283,8 +283,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     list_filter = ('country__subregion__region', )
 
-    # readonly_fields = ['vote_count', 'amount_donated', 'amount_needed', 'popularity', 'payout_status']
-
     export_fields = [
         ('title', 'title'),
         ('owner', 'owner'),

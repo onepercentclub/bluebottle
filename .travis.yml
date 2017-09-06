@@ -12,7 +12,7 @@ cache:
   - "$HOME/.pip-cache/"
   - "$HOME/virtualenv/python2.7.9/lib/python2.7/site-packages"
 python:
-- 2.7.9
+- 2.7.3
 env:
   global:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'

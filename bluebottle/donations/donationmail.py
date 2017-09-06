@@ -63,7 +63,7 @@ def successful_donation_fundraiser_mail(instance):
                 donor_name = _('a guest')
 
     send_mail(
-        template_name='bb_donations/mails/new_oneoff_donation_fundraiser.mail',
+        template_name='donations/mails/new_oneoff_donation_fundraiser.mail',
         subject=subject,
         site=tenant_url(),
         to=receiver,
@@ -114,7 +114,7 @@ def new_oneoff_donation(instance):
 
         # Send email to the project owner.
         send_mail(
-            template_name='bb_donations/mails/new_oneoff_donation.mail',
+            template_name='donations/mails/new_oneoff_donation.mail',
             subject=subject,
             to=receiver,
             link=project_url,
@@ -135,7 +135,7 @@ def new_oneoff_donation(instance):
         payment_method = get_payment_method(donation)
 
         send_mail(
-            template_name="bb_donations/mails/confirmation.mail",
+            template_name="donations/mails/confirmation.mail",
             subject=subject,
             to=donor,
             link=project_url,

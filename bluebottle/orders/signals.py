@@ -3,7 +3,7 @@ from django.db.models.signals import post_save
 
 from django_fsm.signals import post_transition
 
-from bluebottle.bb_donations.donationmail import (
+from bluebottle.donations.donationmail import (
     new_oneoff_donation, successful_donation_fundraiser_mail)
 from bluebottle.orders.models import Order
 from bluebottle.utils.utils import StatusDefinition

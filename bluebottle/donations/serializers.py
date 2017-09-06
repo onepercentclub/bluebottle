@@ -76,9 +76,9 @@ class PreviewDonationWithoutAmountSerializer(PreviewDonationSerializer):
             'fundraiser',
             'id',
             'name',
-            'payment_method'
+            'payment_method',
             'project',
-            'user',
+            'user'
         )
 
     def get_payment_method(self, obj):

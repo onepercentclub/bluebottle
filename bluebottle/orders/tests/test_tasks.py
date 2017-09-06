@@ -2,6 +2,7 @@ from datetime import timedelta
 import mock
 
 from django.db import connection
+from django.test.utils import override_settings
 from django.utils import timezone
 
 from bluebottle.orders.models import Order
@@ -19,6 +20,7 @@ class TestOrderTimeout(BluebottleTestCase):
 
         self.init_projects()
 
+    @override_settings(CELERY_RESULT_BACKEND='amqp')
     def test_order_time_out(self):
         with mock.patch.object(timeout_new_order, 'apply_async') as apply_async:
             order = OrderFactory.create()
@@ -32,6 +34,7 @@ class TestOrderTimeout(BluebottleTestCase):
                 kwargs['eta'] - timezone.now() > timedelta(minutes=9, seconds=59)
             )
 
+    @override_settings(CELERY_RESULT_BACKEND='amqp')
     def test_order_time_out_called_once(self):
         with mock.patch.object(timeout_new_order, 'apply_async') as apply_async:
             order = OrderFactory.create()
@@ -40,25 +43,27 @@ class TestOrderTimeout(BluebottleTestCase):
 
             apply_async.assert_called_once()
 
+    @override_settings(CELERY_RESULT_BACKEND='amqp')
     def test_locked_order_timeout(self):
         with mock.patch.object(timeout_locked_order, 'apply_async') as apply_async:
-            order = OrderFactory.create()
-            PaymentFactory.create(
-                order_payment=OrderPaymentFactory.create(order=order)
-            )
-            self.assertEqual(
-                order.status, StatusDefinition.LOCKED
-            )
+            with mock.patch.object(timeout_new_order, 'apply_async'):
+                order = OrderFactory.create()
+                PaymentFactory.create(
+                    order_payment=OrderPaymentFactory.create(order=order)
+                )
+                self.assertEqual(
+                    order.status, StatusDefinition.LOCKED
+                )
 
-            args, kwargs = apply_async.call_args
-            self.assertEqual(args[0], [order, connection.tenant])
+                args, kwargs = apply_async.call_args
+                self.assertEqual(args[0], [order, connection.tenant])
 
-            self.assertTrue(
-                kwargs['eta'] - timezone.now() < timedelta(hours=3)
-            )
-            self.assertTrue(
-                kwargs['eta'] - timezone.now() > timedelta(hours=2, minutes=59)
-            )
+                self.assertTrue(
+                    kwargs['eta'] - timezone.now() < timedelta(hours=3)
+                )
+                self.assertTrue(
+                    kwargs['eta'] - timezone.now() > timedelta(hours=2, minutes=59)
+                )
 
     def test_timeout_task_new_order(self):
         order = OrderFactory.create()

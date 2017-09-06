@@ -1,6 +1,7 @@
 import logging
 
 from celery import shared_task
+
 from django.db import connection
 
 from bluebottle.clients.utils import LocalTenant

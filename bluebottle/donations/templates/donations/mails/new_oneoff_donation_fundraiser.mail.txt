@@ -9,5 +9,5 @@
         {% endblocktrans %}
     </p>
     
-    {% include 'bb_donations/mails/donation.html' %}
+    {% include 'donations/mails/donation.html' %}
 {% endblock content %} 

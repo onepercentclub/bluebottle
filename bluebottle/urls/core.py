@@ -47,7 +47,7 @@ urlpatterns = [
     url(r'^api/orders/',
         include('bluebottle.bb_orders.urls.api')),
     url(r'^api/donations/',
-        include('bluebottle.bb_donations.urls.api')),
+        include('bluebottle.donations.urls.api')),
     url(r'^api/order_payments/', include(
         'bluebottle.payments.urls.order_payments_api')),
     url(r'^api/payments/',

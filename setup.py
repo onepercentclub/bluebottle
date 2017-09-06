@@ -99,7 +99,7 @@ install_requires = [
     'transifex-client==0.12.4',
     'unicodecsv==0.14.1',
     'wheel==0.29.0',
-    'xlsxwriter==0.9.8',
+    'xlsxwriter==0.9.9',
 
     # Github requirements
     'django-tenant-extras==2.0.14',

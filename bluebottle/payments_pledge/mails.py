@@ -8,7 +8,7 @@ from tenant_extras.utils import TenantLanguage
 
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.clients import properties
-from bluebottle.bb_donations.donationmail import get_payment_method
+from bluebottle.donations.donationmail import get_payment_method
 
 logger = logging.getLogger(__name__)
 

@@ -25,7 +25,7 @@ dependency_links = [
 
 install_requires = [
     'Babel==2.4.0',
-    'Django==1.10.7',
+    'Django==1.10.8',
     'Flutterwave==1.0.7',
     'Pillow==4.1.1',
     'South==1.0.2',
@@ -74,6 +74,8 @@ install_requires = [
     'lxml==3.7.3',
     'micawber==0.3.4',
     'mixpanel==4.3.2',
+    'openpyxl==2.4.8',
+    'pendulum==1.2.4',
     'psycopg2==2.7.1',
     'pygeoip==0.3.2',
     'python-dateutil==2.6.1',
@@ -93,7 +95,6 @@ install_requires = [
     'unicodecsv==0.14.1',
     'wheel==0.29.0',
     'xlsxwriter==0.9.8',
-    'openpyxl==2.4.8',
 
     # Github requirements
     'django-fluent-contents==1.1.11',
@@ -123,7 +124,8 @@ tests_requires = [
 ]
 
 dev_requires = [
-    'ipdb'
+    'ipdb',
+    'flake8'
 ]
 
 setup(

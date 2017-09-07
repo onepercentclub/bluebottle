@@ -10,6 +10,7 @@ from django.db.models import Count, Sum
 from django.utils import dateparse
 from django.conf import settings
 
+from .utils import validate_date
 from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -47,13 +48,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-        # TODO: Add arguments to select export destination
         parser.add_argument('--start', metavar='YYYY-MM-DD', action='store', dest='start', required=True,
-                            type=self._validate_date, help="Start date (YYYY-MM-DD) for dump. UTC is the default \
+                            type=validate_date, help="Start date (YYYY-MM-DD) for dump. UTC is the default \
                             time zone")
 
         parser.add_argument('--end', metavar='YYYY-MM-DD', action='store', dest='end', required=True,
-                            type=self._validate_date,
+                            type=validate_date,
                             help="End date (YYYY-MM-DD) for dump. UTC is the default time zone")
 
         parser.add_argument('--tenants', metavar='TENANTS', action='store', dest='tenants', required=False, nargs='*',

@@ -1,0 +1,15 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    <p class="donation-intro">
+        {% blocktrans with donor_name=donation.user.first_name first_name=receiver.first_name slug=donation.project.slug%}
+
+        Hello {{ first_name }}, you received a donation from {{ donor_name }}. Quickly thank your supporter by posting a personal message on your <a href="{{ site }}{{ link }}" class="action">fundraiser page</a>.
+        {% endblocktrans %}
+    </p>
+    
+    <table class="donation-table twelve columns">
+        {% include 'donations/mails/donation.html' %}
+    </table>
+{% endblock content %} 

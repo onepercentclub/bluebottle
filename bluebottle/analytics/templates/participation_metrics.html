@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="/admin/">{% trans "Home" %}</a> &rsaquo; {%  trans "Participation Metrics" %}
+</div>
+{% endblock %}
+
+{% block content %}
+    <h1>{% trans "Participation Metrics" %}</h1>
+    <div id="content-main">
+        <form action="" method="post">
+            <fieldset class="module aligned">
+                {% csrf_token %}
+                {{ form.as_p }}
+            </fieldset>
+            <div class="submit-row"><input type="submit" value="{% trans 'Request Metrics' %}" /></div>
+        </form>
+    </div>
+{% endblock %}

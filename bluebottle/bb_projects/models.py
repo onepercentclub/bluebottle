@@ -26,11 +26,6 @@ class ProjectTheme(models.Model):
     description = models.TextField(_('description'), blank=True)
     disabled = models.BooleanField(_('disabled'), default=False)
 
-    class Meta:
-        ordering = ['name']
-        verbose_name = _('project theme')
-        verbose_name_plural = _('project themes')
-
     def __unicode__(self):
         return self.name
 
@@ -39,6 +34,14 @@ class ProjectTheme(models.Model):
             self.slug = slugify(self.name)
 
         super(ProjectTheme, self).save(**kwargs)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = _('project theme')
+        verbose_name_plural = _('project themes')
+        permissions = (
+            ('api_read_projecttheme', 'Can view project theme through API'),
+        )
 
 
 class ProjectPhase(models.Model):
@@ -69,6 +72,9 @@ class ProjectPhase(models.Model):
 
     class Meta():
         ordering = ['sequence']
+        permissions = (
+            ('api_read_projectphase', 'Can view project phase through API'),
+        )
 
     def __unicode__(self):
         return u'{0} - {1}'.format(self.sequence, _(self.name))
@@ -120,6 +126,18 @@ class BaseProject(models.Model, GetTweetMixin):
     reviewer = models.ForeignKey(
         'members.Member', verbose_name=_('reviewer'),
         help_text=_('Project Reviewer'), related_name='reviewer',
+        null=True, blank=True
+    )
+
+    task_manager = models.ForeignKey(
+        'members.Member', verbose_name=_('task manager'),
+        help_text=_('Project Task Manager'), related_name='task_manager',
+        null=True, blank=True
+    )
+
+    promoter = models.ForeignKey(
+        'members.Member', verbose_name=_('promoter'),
+        help_text=_('Project Promoter'), related_name='promoter',
         null=True, blank=True
     )
 

@@ -92,7 +92,7 @@ class RewardTestCase(BluebottleTestCase):
         response = self.client.post(self.reward_url,
                                     self.reward_data,
                                     token=self.user_token)
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['title'], self.reward_data['title'])
 
     def test_reward_cannot_have_an_amount_below_5(self):
@@ -103,7 +103,7 @@ class RewardTestCase(BluebottleTestCase):
         response = self.client.post(self.reward_url,
                                     dict(self.reward_data, amount=1),
                                     token=self.user_token)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data['amount'], [u'Ensure this amount is greater than or equal to 5.0.']
         )
@@ -116,7 +116,7 @@ class RewardTestCase(BluebottleTestCase):
         response = self.client.post(self.reward_url,
                                     self.reward_data,
                                     token=self.user2_token)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_reward_cannot_have_different_currency_from_project(self):
         """
@@ -127,7 +127,7 @@ class RewardTestCase(BluebottleTestCase):
         response = self.client.post(self.reward_url,
                                     dict(self.reward_data, amount=amount),
                                     token=self.user_token)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         self.assertEqual(
             unicode(response.data['non_field_errors'][0]),
@@ -141,7 +141,7 @@ class RewardTestCase(BluebottleTestCase):
         reward = RewardFactory.create(project=self.project)
         reward_url = reverse('reward-detail', kwargs={'pk': reward.id})
         response = self.client.delete(reward_url, token=self.user_token)
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_reward_with_donations_can_not_be_deleted(self):
         """
@@ -156,7 +156,7 @@ class RewardTestCase(BluebottleTestCase):
         donation.order.save()
         donation.save()
         response = self.client.delete(reward_url, token=self.user_token)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_reward_can_only_be_deleted_by_project_owner(self):
         """
@@ -165,7 +165,7 @@ class RewardTestCase(BluebottleTestCase):
         reward = RewardFactory.create(project=self.project)
         reward_url = reverse('reward-detail', kwargs={'pk': reward.id})
         response = self.client.delete(reward_url, token=self.user2_token)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class TestDonationRewardStock(BluebottleTestCase):
@@ -210,7 +210,7 @@ class TestDonationRewardStock(BluebottleTestCase):
             self.donation_data,
             token=self.donor_token
         )
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # No we count one reward
         response = self.client.get(self.reward_url)
@@ -230,11 +230,11 @@ class TestDonationRewardStock(BluebottleTestCase):
             self.donation_data,
             token=self.donor_token
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue('stock' in response.data['reward'][0])
 
     def test_failed_donations_returns_stock(self):
-        self.client.post(
+        response = self.client.post(
             self.donations_url,
             self.donation_data,
             token=self.donor_token
@@ -244,6 +244,8 @@ class TestDonationRewardStock(BluebottleTestCase):
         self.order.locked()
         self.order.failed()
         self.order.save()
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.assertEqual(
             self.reward.count, 0
@@ -264,6 +266,8 @@ class TestDonationRewardStock(BluebottleTestCase):
             data,
             token=self.donor_token
         )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         self.assertEqual(
             self.reward.count, 0
         )

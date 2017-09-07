@@ -16,7 +16,7 @@ class ManageDonationSerializer(serializers.ModelSerializer):
     order = serializers.PrimaryKeyRelatedField(queryset=Order.objects)
     amount = MoneySerializer()
     status = serializers.CharField(read_only=True)
-    name = serializers.CharField(required=False)
+    name = serializers.CharField(required=False, allow_null=True)
 
     validators = [ProjectCurrencyValidator()]
 

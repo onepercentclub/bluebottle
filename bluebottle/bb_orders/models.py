@@ -90,7 +90,7 @@ class BaseOrder(models.Model, FSMTransition):
         self.completed = now()
 
     @transition(field=status,
-                source=[StatusDefinition.LOCKED, StatusDefinition.PENDING,
+                source=[StatusDefinition.CREATED, StatusDefinition.LOCKED, StatusDefinition.PENDING,
                         StatusDefinition.SUCCESS],
                 target=StatusDefinition.FAILED)
     def failed(self):

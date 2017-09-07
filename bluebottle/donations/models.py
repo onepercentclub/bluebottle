@@ -26,7 +26,7 @@ class Donation(models.Model):
 
     reward = models.ForeignKey('rewards.Reward',
                                verbose_name=_("Reward"),
-                               related_name='reward',
+                               related_name='donations',
                                null=True, blank=True)
 
     created = CreationDateTimeField(_("Created"))

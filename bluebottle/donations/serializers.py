@@ -16,6 +16,7 @@ class ManageDonationSerializer(serializers.ModelSerializer):
     order = serializers.PrimaryKeyRelatedField(queryset=Order.objects)
     amount = MoneySerializer()
     status = serializers.CharField(read_only=True)
+    name = serializers.CharField(required=False, allow_null=True)
 
     validators = [ProjectCurrencyValidator()]
 
@@ -44,10 +45,19 @@ class ManageDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Donation
-        fields = ('id', 'project', 'fundraiser', 'amount', 'status', 'order',
-                  'anonymous', 'completed', 'created', 'reward')
-
-        # FIXME Add validations for amount and project phase
+        fields = (
+            'amount',
+            'anonymous',
+            'completed',
+            'created',
+            'fundraiser',
+            'id',
+            'name',
+            'order',
+            'project',
+            'reward',
+            'status'
+        )
 
 
 class PreviewDonationSerializer(serializers.ModelSerializer):
@@ -57,26 +67,41 @@ class PreviewDonationSerializer(serializers.ModelSerializer):
     payment_method = serializers.SerializerMethodField()
     user = UserPreviewSerializer(source='public_user')
     amount = MoneySerializer()
+    name = serializers.CharField(required=False)
 
     class Meta:
         model = Donation
-        fields = ('id', 'project', 'fundraiser', 'user', 'created',
-                  'anonymous', 'amount', 'reward', 'payment_method')
+        fields = (
+            'amount',
+            'anonymous',
+            'created',
+            'fundraiser',
+            'id',
+            'name',
+            'payment_method',
+            'project',
+            'reward',
+            'user'
+        )
 
     def get_payment_method(self, obj):
         return obj.get_payment_method()
 
 
 class PreviewDonationWithoutAmountSerializer(PreviewDonationSerializer):
-    payment_method = serializers.SerializerMethodField()
 
     class Meta:
         model = Donation
-        fields = ('id', 'project', 'fundraiser', 'user', 'created',
-                  'anonymous', 'payment_method')
-
-    def get_payment_method(self, obj):
-        return obj.get_payment_method()
+        fields = (
+            'anonymous',
+            'created',
+            'fundraiser',
+            'id',
+            'name',
+            'payment_method',
+            'project',
+            'user'
+        )
 
 
 class DefaultDonationSerializer(PreviewDonationSerializer):
@@ -91,10 +116,23 @@ class LatestDonationProjectSerializer(BaseProjectPreviewSerializer):
 
     class Meta(BaseProjectPreviewSerializer):
         model = BaseProjectPreviewSerializer.Meta.model
-        fields = ('id', 'title', 'image', 'status', 'pitch', 'country',
-                  'task_count', 'allow_overfunding', 'is_campaign',
-                  'amount_asked', 'amount_donated', 'amount_needed',
-                  'deadline', 'status', 'owner')
+        fields = (
+            'allow_overfunding',
+            'amount_asked',
+            'amount_donated',
+            'amount_needed',
+            'country',
+            'deadline',
+            'id',
+            'image',
+            'is_campaign',
+            'owner',
+            'pitch',
+            'status',
+            'status',
+            'task_count',
+            'title'
+        )
 
 
 class LatestDonationSerializer(serializers.ModelSerializer):
@@ -105,8 +143,17 @@ class LatestDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Donation
-        fields = ('id', 'project', 'fundraiser', 'user', 'created',
-                  'anonymous', 'amount', 'payment_method')
+        fields = (
+            'amount',
+            'anonymous',
+            'created',
+            'fundraiser',
+            'id',
+            'name',
+            'payment_method',
+            'project',
+            'user'
+        )
 
     def get_payment_method(self, obj):
         return obj.get_payment_method()

@@ -262,7 +262,8 @@ SHARED_APPS = (
     'djmoney_rates',
     'parler',
     'daterange_filter',
-    'adminsortable'
+    'adminsortable',
+    'django_summernote'
 
 )
 
@@ -814,4 +815,16 @@ TASKS = {
     'accepting': 'manual',
     'plus_one': False,
     'show_accepting': True
+}
+
+
+SUMMERNOTE_CONFIG = {
+    # Using SummernoteWidget - iframe mode
+    'toolbar': [
+        ['style', ['style']],
+        ['style', ['bold', 'italic', 'underline', 'clear']],
+        ['para', ['ul', 'ol']],
+        ['insert', ['link', 'picture']],
+    ],
+    'disable_upload': True,
 }

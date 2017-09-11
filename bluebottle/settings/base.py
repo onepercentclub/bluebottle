@@ -571,13 +571,14 @@ TENANT_MAIL_PROPERTIES = {
 CLOSED_SITE = False
 PARTNER_LOGIN = False
 
-EXPOSED_TENANT_PROPERTIES = ['closed_site', 'mixpanel', 'analytics', 'maps_api_key',
-                             'git_commit', 'social_auth_facebook_key', 'date_format',
-                             'bb_apps', 'donation_amounts', 'facebook_sharing_reviewed',
-                             'project_create_flow', 'project_create_types', 'project_contact_types',
-                             'closed_site', 'partner_login', 'share_options', 'sso_url',
-                             'project_suggestions', 'readOnlyFields', 'search_options',
-                             'tasks']
+EXPOSED_TENANT_PROPERTIES = [
+    'mixpanel', 'analytics', 'maps_api_key', 'git_commit',
+    'social_auth_facebook_key', 'date_format', 'bb_apps', 'donation_amounts',
+    'facebook_sharing_reviewed', 'project_create_flow', 'project_create_types',
+    'project_contact_types', 'project_contact_method', 'closed_site',
+    'partner_login', 'share_options', 'sso_url', 'project_suggestions',
+    'readOnlyFields', 'search_options', 'tasks'
+]
 
 DEFAULT_FILE_STORAGE = 'bluebottle.utils.storage.TenantFileSystemStorage'
 

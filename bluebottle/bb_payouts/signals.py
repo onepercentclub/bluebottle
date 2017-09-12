@@ -56,10 +56,12 @@ def create_payout_finished_project(sender, instance, created, **kwargs):
                         "IBAN error payout {0}, project: {1}: {2}".format(
                             payout.id, project.id, e.message))
 
-                payout.receiver_account_details = project.account_details
-                payout.receiver_account_number = project.account_number
-                payout.receiver_account_name = project.account_holder_name
-                payout.receiver_account_city = project.account_holder_city
-                payout.receiver_account_country = project.account_bank_country.name
-
+                payout.receiver_account_details = project.account_details or ''
+                payout.receiver_account_number = project.account_number or ''
+                payout.receiver_account_name = project.account_holder_name or ''
+                payout.receiver_account_city = project.account_holder_city or ''
+                try:
+                    payout.receiver_account_country = project.account_bank_country.name
+                except AttributeError:
+                    payout.receiver_account_country = ''
                 payout.save()

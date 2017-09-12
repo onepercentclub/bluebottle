@@ -161,7 +161,8 @@ class Command(BaseCommand):
         project.title = data['title'] or data['slug']
         project.created = data['created'] + 'T12:00:00+01:00'
         project.campaign_started = data['created'] + 'T12:00:00+01:00'
-        project.amount_asked = Money(data['goal'], 'EUR')
+        goal = data['goal'] or 0.0
+        project.amount_asked = Money(goal, 'EUR')
         project.deadline = deadline
         project.video_url = data['video']
 

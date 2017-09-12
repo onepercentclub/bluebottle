@@ -286,6 +286,7 @@ class Command(BaseCommand):
                     reward = None
                 donation = Donation.objects.create(project=project,
                                                    reward=reward,
+                                                   name=don['name'],
                                                    order=order,
                                                    amount=Money(don['amount'], 'EUR'))
                 donation.save()

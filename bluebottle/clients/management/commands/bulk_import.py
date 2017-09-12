@@ -302,7 +302,7 @@ class Command(BaseCommand):
                     reward = None
                 donation = Donation.objects.create(project=project,
                                                    reward=reward,
-                                                   name=don['name'],
+                                                   name=getattr(don, 'name', None),
                                                    order=order,
                                                    amount=Money(don['amount'], 'EUR'))
                 donation.save()

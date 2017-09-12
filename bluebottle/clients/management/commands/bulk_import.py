@@ -1,11 +1,11 @@
 import sys
-import urllib
 import datetime
 import json
 import logging
 from urlparse import urlparse
 
 import pytz
+from django.db.utils import IntegrityError
 from moneyed.classes import Money
 
 from django.core.files import File
@@ -50,6 +50,7 @@ class Counter(object):
 
 class Command(BaseCommand):
     help = 'Import data from json'
+    upload = None
     models = [
         'users',
         'categories',
@@ -64,6 +65,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--file', '-f', action='store', dest='file',
                             help="JSON import file.")
+        parser.add_argument('--upload', '-u', action='store', dest='upload',
+                            required=False, help="Path to uploaded media.")
         parser.add_argument('--tenant', '-t', action='store', dest='tenant',
                             help="The tenant to run the recurring donations for.")
         parser.add_argument('--models', '-m', action='store', dest='models',
@@ -74,6 +77,8 @@ class Command(BaseCommand):
 
         client = Client.objects.get(client_name=options['tenant'])
         connection.set_tenant(client)
+
+        self.upload = options['upload']
 
         with LocalTenant(client, clear_tenant=True):
 
@@ -161,20 +166,31 @@ class Command(BaseCommand):
         project.title = data['title'] or data['slug']
         project.created = data['created'] + 'T12:00:00+01:00'
         project.campaign_started = data['created'] + 'T12:00:00+01:00'
-        project.amount_asked = Money(data['goal'], 'EUR')
+        goal = data['goal'] or 0.0
+        project.amount_asked = Money(goal, 'EUR')
         project.deadline = deadline
         project.video_url = data['video']
 
         self._generic_import(project, data,
                              excludes=['deadline', 'slug', 'user', 'created',
                                        'status', 'goal', 'categories', 'image', 'video'])
-        project.save()
+        try:
+            project.save()
+        except IntegrityError:
+            project.title = project.title + '*'
         project.categories = Category.objects.filter(slug__in=data['categories'])
 
         if 'image' in data and data['image'].startswith('http'):
-            content = urllib.urlretrieve(data['image'])
-            name = urlparse(data['image']).path.split('/')[-1]
-            project.image.save(name, File(open(content[0])), save=True)
+            parts = urlparse(data['image']).path.split('/')
+            name = "/".join(parts[3:])
+            if not self.upload:
+                logger.warn("Upload path not set, can't store project image. Please use -u")
+            file_name = u"{}{}".format(self.upload, name)
+            try:
+                file = open(file_name, 'rb')
+                project.image.save(name, File(file), save=True)
+            except IOError:
+                logger.warn("Couldn't find file {}".format(file_name))
 
     def _handle_tasks(self, data):
         """Expected fields for Tasks import:
@@ -286,6 +302,7 @@ class Command(BaseCommand):
                     reward = None
                 donation = Donation.objects.create(project=project,
                                                    reward=reward,
+                                                   name=getattr(don, 'name', None),
                                                    order=order,
                                                    amount=Money(don['amount'], 'EUR'))
                 donation.save()

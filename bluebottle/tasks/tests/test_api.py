@@ -1,6 +1,7 @@
 from datetime import timedelta
 import mock
 
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
@@ -44,8 +45,8 @@ class TaskApiTestcase(BluebottleTestCase):
 
         self.previews_url = reverse('project_preview_list')
         self.task_preview_url = reverse('task_preview_list')
-        self.tasks_url = reverse('task_list')
-        self.task_member_url = reverse('task_member_list')
+        self.tasks_url = reverse('task-list')
+        self.task_member_url = reverse('task-member-list')
 
     def test_task_count(self):
         """
@@ -212,7 +213,7 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member_id = response.data['id']
-        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member_id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.some_token)
@@ -234,7 +235,7 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member_id = response.data['id']
-        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member_id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.some_token)
@@ -259,7 +260,7 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member_id = response.data['id']
-        task_member_url = reverse('task_member_detail', kwargs={'pk': task_member_id})
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member_id})
         response = self.client.patch(task_member_url,
                                      {'status': 'accepted'},
                                      HTTP_AUTHORIZATION=self.some_token)
@@ -294,14 +295,14 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member1_id = response.data['id']
-        task_member1_url = reverse('task_member_detail', kwargs={'pk': task_member1_id})
+        task_member1_url = reverse('task-member-detail', kwargs={'pk': task_member1_id})
 
         response = self.client.post(self.task_member_url,
                                     task_member_data,
                                     HTTP_AUTHORIZATION=self.yet_another_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         task_member2_id = response.data['id']
-        task_member2_url = reverse('task_member_detail', kwargs={'pk': task_member2_id})
+        task_member2_url = reverse('task-member-detail', kwargs={'pk': task_member2_id})
 
         # Check that if we don't specify time spent it uses the time_needed froem task.
         response = self.client.patch(task_member1_url,
@@ -514,6 +515,90 @@ class TaskApiTestcase(BluebottleTestCase):
                          status.HTTP_201_CREATED,
                          "Can apply for tasks for campaigning projects")
 
+    def test_task_project_role_permissions(self):
+        """
+        Test task_manager and owner roles when creating tasks
+        """
+        self.some_project.owner = self.some_user
+        self.some_project.task_manager = self.another_user
+        self.some_project.save()
+
+        task_data = {
+            'people_needed': 1,
+            'deadline': '2016-08-09T12:45:14.134756',
+            'deadline_to_apply': '2016-08-04T12:45:14.134756',
+            'project': self.some_project.slug,
+            'title': 'Help me',
+            'description': 'I need help',
+            'location': '',
+            'skill': 1,
+            'time_needed': '4.00',
+            'type': 'event'
+        }
+
+        # Task manager should have rights to create a task
+        response = self.client.post(self.tasks_url, task_data,
+                                    HTTP_AUTHORIZATION=self.another_token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # Project owner should be allowed to see the tasks
+        response = self.client.get(self.tasks_url,
+                                   HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        permissions = response.data['results'][0]['permissions']
+
+        self.assertEqual(permissions['GET'], True)
+        self.assertEqual(permissions['PUT'], False)
+
+        # Project owner should not be allowed to create a task
+        response = self.client.post(self.tasks_url, task_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_taskmember_project_role_permissions(self):
+        """
+        Test task_manager and owner roles when accepting task members
+        """
+        self.some_project.owner = self.some_user
+        self.some_project.task_manager = self.another_user
+        self.some_project.save()
+
+        task = TaskFactory(project=self.some_project, author=self.another_user)
+        task_member = TaskMemberFactory(task=task, status='applied')
+
+        # Project owner should be allowed to see taskmember
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
+        response = self.client.get(task_member_url,
+                                   HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Project owner should be disallowed to accept taskmember
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
+        response = self.client.patch(task_member_url,
+                                     {'status': 'accepted'},
+                                     HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Task manager should have rights to accept taskmember
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
+        response = self.client.patch(task_member_url,
+                                     {'status': 'accepted'},
+                                     HTTP_AUTHORIZATION=self.another_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        task = TaskFactory(project=self.some_project, author=self.another_user)
+        task_member = TaskMemberFactory(task=task, status='applied')
+
+        self.some_project.task_manager = self.some_user
+        self.some_project.save()
+
+        # Project owner should be disallowed to accept taskmember
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.id})
+        response = self.client.patch(task_member_url,
+                                     {'status': 'accepted'},
+                                     HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class TaskMemberResumeTest(BluebottleTestCase):
     def setUp(self):
@@ -565,7 +650,7 @@ class TaskMemberResumeTest(BluebottleTestCase):
 
     def test_task_member_resume_download_task_anonymous(self):
         response = self.client.get(self.resume_url)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
 
     def test_task_member_resume_download_unrelated_user(self):
         response = self.client.get(
@@ -574,8 +659,9 @@ class TaskMemberResumeTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_task_member_resume_download_staff_session(self):
-        self.yet_another_user.is_staff = True
-        self.yet_another_user.save()
+        self.yet_another_user.groups.add(
+            Group.objects.get(name='Staff')
+        )
 
         self.client.force_login(self.yet_another_user)
         response = self.client.get(
@@ -597,9 +683,43 @@ class TaskMemberResumeTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 403)
 
 
+class TestMyTasksPermissions(BluebottleTestCase):
+    """
+    Test methods for getting tasks that you are a member of.
+    """
+
+    def setUp(self):
+        super(TestMyTasksPermissions, self).setUp()
+
+        self.init_projects()
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+        self.project = ProjectFactory.create(task_manager=self.user)
+
+        self.my_task_member_url = reverse('my_task_member_list')
+
+    def test_closed_api_readonly_permission_task_manager(self):
+        """
+        External task manager should get empty list for own task membership, not 403.
+        """
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_read_taskmember')
+        )
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_read_own_taskmember')
+        )
+
+        response = self.client.get(self.my_task_member_url, token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
 class TestProjectTaskAPIPermissions(BluebottleTestCase):
-    """ API endpoint test where endpoint has explicit
-        permission_classes, overriding the global default """
+    """
+    API endpoint test where endpoint has explicit
+    permission_classes, overriding the global default
+    """
 
     def setUp(self):
         super(TestProjectTaskAPIPermissions, self).setUp()
@@ -611,13 +731,17 @@ class TestProjectTaskAPIPermissions(BluebottleTestCase):
         self.some_project = ProjectFactory.create(owner=self.user)
         self.projects_url = reverse('project_list')
 
-        self.tasks_url = reverse('task_list')
+        self.tasks_url = reverse('task-list')
         self.wallpost_url = reverse('wallpost_list')
 
-    @mock.patch('bluebottle.clients.properties.CLOSED_SITE', True)
     def test_closed_api_readonly_permission_noauth(self):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
+        anonymous = Group.objects.get(name='Anonymous')
+        anonymous.permissions.remove(
+            Permission.objects.get(codename='api_read_task')
+        )
+
         response = self.client.get(self.tasks_url,
                                    {'project': self.some_project.slug})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -635,7 +759,38 @@ class TestProjectTaskAPIPermissions(BluebottleTestCase):
     def test_closed_api_readonly_permission_auth(self):
         """ an endpoint with an explicit *OrReadOnly permission
             should still be closed """
+        anonymous = Group.objects.get(name='Anonymous')
+        anonymous.permissions.remove(
+            Permission.objects.get(codename='api_read_wallpost')
+        )
+
         response = self.client.get(self.tasks_url,
                                    {'project': self.some_project.slug},
                                    token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_related_permissions(self):
+        TaskFactory.create(project=self.some_project)
+        response = self.client.get(self.tasks_url,
+                                   token=self.user_token)
+
+        self.assertTrue(
+            response.data['results'][0]['related_permissions']['task_members']['POST']
+        )
+
+    def test_related_permissions_no_owner_permission(self):
+        TaskFactory.create(project=self.some_project)
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_add_own_taskmember')
+        )
+        authenticated.permissions.remove(
+            Permission.objects.get(codename='api_add_taskmember')
+        )
+
+        response = self.client.get(self.tasks_url,
+                                   token=self.user_token)
+
+        self.assertFalse(
+            response.data['results'][0]['related_permissions']['task_members']['POST']
+        )

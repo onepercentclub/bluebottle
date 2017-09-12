@@ -1,10 +1,11 @@
-import json
 from HTMLParser import HTMLParser
+import json
+from moneyed import Money
 import re
 
-from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import resolve, reverse
 from django.core.validators import BaseValidator
-from moneyed import Money
+from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
@@ -28,6 +29,7 @@ class ProjectCurrencyValidator(object):
     """
     Validates that the currency of the field is the same as the projects currency
     """
+
     message = _('Currency does not match project any of the currencies')
 
     def __init__(self, fields=None, message=None):
@@ -154,3 +156,84 @@ class URLField(serializers.URLField):
         if not m:  # no scheme
             value = "http://%s" % value
         return value
+
+
+class BasePermissionField(serializers.Field):
+    """ Field that can be used to return permission of the current and related view.
+
+    `view_name`: The name of the view
+    `view_args`: A list of attributes that are passed into the url for the view
+    """
+
+    def __init__(self, view_name, view_args=None, *args, **kwargs):
+        self.view_name = view_name
+        self.view_args = view_args or []
+
+        kwargs['read_only'] = True
+
+        super(BasePermissionField, self).__init__(*args, **kwargs)
+
+    def _get_view(self, value):
+        args = [getattr(value, arg) for arg in self.view_args]
+        view_func = resolve(reverse(self.view_name, args=args)).func
+
+        return view_func.view_class(**view_func.view_initkwargs)
+
+    def _method_permissions(self, method, user, view, value):
+        message = '_method_permissions() must be implemented on {}'.format(self)
+        raise NotImplementedError(message)
+
+    def get_attribute(self, value):
+        return value  # Just pass the whole object back
+
+    def to_representation(self, value):
+        """ Return a dict with the permissions the current user has on the view and parent.
+
+        Example response:
+        {
+            "PATCH": True,
+            "GET": True,
+            "DELETE": False
+        }
+        """
+
+        view = self._get_view(value)
+
+        # Loop over all methods and check the permissions on the view
+        permissions = {}
+        user = self.context['request'].user
+        for method in view.allowed_methods:
+            permissions[method] = self._method_permissions(method, user, view, value)
+        return permissions
+
+
+class PermissionField(BasePermissionField):
+    """
+    Field that can be used to return permissions that are not directly related to the current view
+
+    (E.g.) the permissions field on the current user object
+    """
+    def _method_permissions(self, method, user, view, value):
+        return all(perm.has_action_permission(
+            method, user, view.model
+        ) for perm in view.get_permissions())
+
+
+class ResourcePermissionField(BasePermissionField):
+    """ Field that can be used to return permissions for a view with object. """
+
+    def _method_permissions(self, method, user, view, value):
+        return all(
+            (perm.has_object_action_permission(method, user, value) and
+             perm.has_action_permission(method, user, view.model))
+            for perm in view.get_permissions())
+
+
+class RelatedResourcePermissionField(BasePermissionField):
+    """ Field that can be used to return permission for a related view. """
+
+    def _method_permissions(self, method, user, view, value):
+        return all(
+            (perm.has_parent_permission(method, user, value, view.model) and
+             perm.has_action_permission(method, user, view.model))
+            for perm in view.get_permissions())

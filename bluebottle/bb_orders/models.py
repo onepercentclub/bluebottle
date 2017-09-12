@@ -57,6 +57,10 @@ class BaseOrder(models.Model, FSMTransition):
 
     total = MoneyField(_("Amount"), )
 
+    @property
+    def owner(self):
+        return self.user
+
     @transition(field=status,
                 source=[StatusDefinition.PLEDGED, StatusDefinition.CREATED,
                         StatusDefinition.FAILED],
@@ -86,7 +90,7 @@ class BaseOrder(models.Model, FSMTransition):
         self.completed = now()
 
     @transition(field=status,
-                source=[StatusDefinition.LOCKED, StatusDefinition.PENDING,
+                source=[StatusDefinition.CREATED, StatusDefinition.LOCKED, StatusDefinition.PENDING,
                         StatusDefinition.SUCCESS],
                 target=StatusDefinition.FAILED)
     def failed(self):
@@ -128,6 +132,18 @@ class BaseOrder(models.Model, FSMTransition):
 
     class Meta:
         abstract = True
+        permissions = (
+            ('api_read_order', 'Can view order through the API'),
+            ('api_add_order', 'Can add order through the API'),
+            ('api_change_order', 'Can change order through the API'),
+            ('api_delete_order', 'Can delete order through the API'),
+
+            ('api_read_own_order', 'Can view own order through the API'),
+            ('api_add_own_order', 'Can add own order through the API'),
+            ('api_change_own_order', 'Can change own order through the API'),
+            ('api_delete_own_order', 'Can delete own order through the API'),
+
+        )
 
 
 import signals  # noqa

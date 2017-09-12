@@ -12,27 +12,6 @@ from adminsortable.models import SortableMixin
 from adminsortable.fields import SortableForeignKey
 
 
-GROUP_PERMS = {
-    'Staff': {
-        'perms': (
-            'add_resultpage', 'change_resultpage', 'delete_resultpage',
-            'add_stats', 'change_stats', 'delete_stats',
-            'add_statscontent', 'change_statscontent', 'delete_statscontent',
-            'add_stat', 'change_stat', 'delete_stat',
-            'add_quotes', 'change_quotes', 'delete_quotes',
-            'add_quote', 'change_quote', 'delete_quote',
-            'add_quotescontent', 'change_quotescontent', 'delete_quotescontent',
-            'add_projects', 'change_projects', 'delete_projects',
-            'add_projectscontent', 'change_projectscontent', 'delete_projectscontent',
-            'add_shareresultscontent', 'change_shareresultscontent', 'delete_shareresultscontent',
-            'add_projectimagescontent', 'change_projectimagescontent', 'delete_projectimagescontent',
-            'add_projectsmapcontent', 'change_projectsmapcontent', 'delete_projectsmapcontent',
-            'add_supportertotalcontent', 'change_supportertotalcontent', 'delete_supportertotalcontent',
-        )
-    }
-}
-
-
 class ResultPage(TranslatableModel):
     image = models.ImageField(_('Header image'), blank=True, null=True)
 
@@ -46,6 +25,14 @@ class ResultPage(TranslatableModel):
         slug=models.SlugField(_('Slug'), max_length=40),
         description=models.CharField(_('Description'), max_length=45, blank=True, null=True)
     )
+
+    class Meta:
+        permissions = (
+            ('api_read_resultpage', 'Can view result pages through the API'),
+            ('api_add_resultpage', 'Can add result pages through the API'),
+            ('api_change_resultpage', 'Can change result pages through the API'),
+            ('api_delete_resultpage', 'Can delete result pages through the API'),
+        )
 
 
 class Stats(models.Model):

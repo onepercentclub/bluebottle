@@ -107,3 +107,11 @@ analytics/*
 # logs
 *.log
 *.log.*
+
+
+# celery
+celerybeat.pid
+
+# tenants
+tenants
+

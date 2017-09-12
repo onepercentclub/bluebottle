@@ -1,0 +1,33 @@
+{% load i18n %}
+
+{% block content %}
+    <tr class="donation-table-row">
+        <tr class="donation-table-address">
+            <td>
+                {% if 'members.api_read_full_member' in to.get_all_permissions %}
+                    {{donation.user.full_name}} <br />
+                    {{donation.user.address.line1}}<br />
+                    {{donation.user.address.postal_code}} {{donation.user.address.city}}<br />
+                {% else %}
+                    {{donation.user.first_name}} <br />
+                {% endif %}
+            </td>
+            <td>
+                <table>
+                    <tr class="order-block">
+                        <td>{% trans "Date" %}</td>
+                        <td nowrap="true">{{donation.created}}</td>
+                    </tr>
+                    <tr class="order-block">
+                        <td>{% trans "Method" %}</td>
+                        <td>{{payment_method}}</td>
+                    </tr>
+                    <tr class="order-block">
+                        <td>{% trans "Order" %}</td>
+                        <td>{{donation.order.id}}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </tr>
+{% endblock content %}

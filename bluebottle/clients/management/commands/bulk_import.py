@@ -2,13 +2,11 @@ import sys
 import datetime
 import json
 import logging
-from urlparse import urlparse
 
 import pytz
 from django.db.utils import IntegrityError
 from moneyed.classes import Money
 
-from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.db import connection
 from django.utils.text import slugify
@@ -121,6 +119,7 @@ class Command(BaseCommand):
         """
         if 'remote_id' in data:
             user, _ = Member.objects.get_or_create(remote_id=data['remote_id'])
+            user.email = data['email'] or 'info+' + data['username'] + '@example.com'
         else:
             user, _ = Member.objects.get_or_create(email=data['email'])
         self._generic_import(user, data, excludes=['email', 'remote_id'])
@@ -134,7 +133,11 @@ class Command(BaseCommand):
         """
         cat, _ = Category.objects.get_or_create(slug=data['slug'])
         self._generic_import(cat, data, excludes=['slug'])
-        cat.save()
+        try:
+            cat.save()
+        except IntegrityError:
+            cat.title = cat.title + '*'
+            cat.save()
 
     def _handle_themes(self, data):
         """Expected fields for Theme import:
@@ -174,8 +177,8 @@ class Command(BaseCommand):
             # If we don't have a status, then it should be set in admin, so plan-new seems best.
             project.status = ProjectPhase.objects.get(slug='plan-new')
         project.title = data['title'] or data['slug']
-        project.created = data['created'] + 'T12:00:00+01:00'
-        project.campaign_started = data['created'] + 'T12:00:00+01:00'
+        project.created = data['created']
+        project.campaign_started = data['created']
         goal = data['goal'] or 0.0
         project.amount_asked = Money(goal, 'EUR')
         project.deadline = deadline
@@ -216,7 +219,7 @@ class Command(BaseCommand):
         description     (string)
         people_needed   (int)
         """
-        project = Project.objects.get(slug=data['project'])
+        project = Project.objects.get(title=data['project'])
         task, _ = Task.objects.get_or_create(
             project=project,
             time_needed="8",
@@ -225,7 +228,7 @@ class Command(BaseCommand):
             status=Task.TaskStatuses.realized,
             deadline_to_apply=project.deadline,
             title=data['title'],
-            people_needed=data['people_needed']
+            people_needed=data['people_needed'] or 1
         )
         self._generic_import(task, data, excludes=['project', 'title', 'people_needed'])
         task.save()
@@ -291,16 +294,13 @@ class Command(BaseCommand):
         except (TypeError, Member.DoesNotExist):
             user = None
         order = Order.objects.create(user=user)
-        if data['completed']:
-            try:
-                completed = data['completed'] + '+01:00'
-            except AttributeError:
-                completed = now()
-            order.locked()
-            order.success()
-            order.created = completed
-            order.completed = completed
-            order.confirmed = completed
+        completed = data.get('completed', None)
+        created = data.get('created', now())
+        order.created = created
+        order.completed = completed
+        order.confirmed = completed
+        order.locked()
+        order.success()
         order.save()
 
         if data['donations']:
@@ -311,9 +311,9 @@ class Command(BaseCommand):
                     print "Could not find project {0}".format(don['project'])
                     continue
                 try:
-                    reward = Reward.objects.get(project=project, title=don['reward'])
+                    reward = project.reward_set.get(title=don['reward'])
                 except Reward.MultipleObjectsReturned:
-                    reward = Reward.objects.filter(project=project, title=don['reward']).all()[0]
+                    reward = project.reward_set.filter(title=don['reward']).all()[0]
                 except (Reward.DoesNotExist, KeyError):
                     reward = None
                 donation = Donation.objects.create(project=project,
@@ -322,8 +322,8 @@ class Command(BaseCommand):
                                                    order=order,
                                                    amount=Money(don['amount'], 'EUR'))
 
-                donation.created = completed
-                donation.update = completed
+                donation.created = created
+                donation.update = completed or created
                 donation.save()
 
     def _handle_pages(self, data):

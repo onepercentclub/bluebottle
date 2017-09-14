@@ -20,7 +20,7 @@ from fluent_contents.plugins.text.models import TextItem
 from bluebottle.categories.models import Category
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
-from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
 from bluebottle.donations.models import Donation
 from bluebottle.members.models import Member
 from bluebottle.orders.models import Order
@@ -54,6 +54,7 @@ class Command(BaseCommand):
     models = [
         'users',
         'categories',
+        'themes',
         'projects',
         'tasks',
         'rewards',
@@ -135,6 +136,15 @@ class Command(BaseCommand):
         self._generic_import(cat, data, excludes=['slug'])
         cat.save()
 
+    def _handle_themes(self, data):
+        """Expected fields for Theme import:
+        name       (string)
+        slug        (string)
+        """
+        theme, _ = ProjectTheme.objects.get_or_create(slug=data['slug'])
+        self._generic_import(theme, data, excludes=['slug'])
+        theme.save()
+
     def _handle_projects(self, data):
         """Expected fields for Projects import:
         slug        (string)
@@ -172,8 +182,15 @@ class Command(BaseCommand):
         project.video_url = data['video']
 
         self._generic_import(project, data,
-                             excludes=['deadline', 'slug', 'user', 'created',
+                             excludes=['deadline', 'slug', 'user', 'created', 'theme',
                                        'status', 'goal', 'categories', 'image', 'video'])
+
+        if data.get('theme'):
+            try:
+                project.theme = ProjectTheme.objects.get(slug=data['theme'])
+            except ProjectTheme.DoesNotExist:
+                logger.warn("Couldn't find theme {}".format(data['theme']))
+
         try:
             project.save()
         except IntegrityError:
@@ -256,7 +273,7 @@ class Command(BaseCommand):
             self._generic_import(wallpost, data, excludes=['project', 'author', 'email'])
             wallpost.save()
         except (Project.DoesNotExist, Member.DoesNotExist, ValueError) as err:
-            print(err)
+            logger.warn(err)
 
     def _handle_orders(self, data):
         """Expected fields for Order import:
@@ -267,6 +284,7 @@ class Command(BaseCommand):
             project     (string<title>)
             amount      (float)
             reward      (string<title>)
+            name        (string)
         """
         try:
             user = Member.objects.get(email=data['user'])
@@ -276,9 +294,7 @@ class Command(BaseCommand):
         if data['completed']:
             try:
                 completed = data['completed'] + '+01:00'
-            except AttributeError as err:
-                print(err)
-                print(data['completed'])
+            except AttributeError:
                 completed = now()
             order.locked()
             order.success()
@@ -302,9 +318,12 @@ class Command(BaseCommand):
                     reward = None
                 donation = Donation.objects.create(project=project,
                                                    reward=reward,
-                                                   name=getattr(don, 'name', None),
+                                                   name=don.get('name', '')[:199],
                                                    order=order,
                                                    amount=Money(don['amount'], 'EUR'))
+
+                donation.created = completed
+                donation.update = completed
                 donation.save()
 
     def _handle_pages(self, data):

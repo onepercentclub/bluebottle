@@ -2,11 +2,13 @@ import sys
 import datetime
 import json
 import logging
+from urlparse import urlparse
 
 import pytz
 from django.db.utils import IntegrityError
 from moneyed.classes import Money
 
+from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.db import connection
 from django.utils.text import slugify
@@ -198,6 +200,8 @@ class Command(BaseCommand):
             project.save()
         except IntegrityError:
             project.title = project.title + '*'
+            project.save()
+
         project.categories = Category.objects.filter(slug__in=data['categories'])
 
         if 'image' in data and data['image'].startswith('http'):
@@ -230,7 +234,7 @@ class Command(BaseCommand):
             title=data['title'],
             people_needed=data['people_needed'] or 1
         )
-        self._generic_import(task, data, excludes=['project', 'title', 'people_needed'])
+        self._generic_import(task, data, excludes=['project', 'title', 'people_needed', 'time_needed'])
         task.save()
 
     def _handle_rewards(self, data):

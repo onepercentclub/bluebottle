@@ -223,7 +223,11 @@ class Command(BaseCommand):
         description     (string)
         people_needed   (int)
         """
-        project = Project.objects.get(title=data['project'])
+        try:
+            project = Project.objects.get(title=data['project'])
+        except Project.DoesNotExist:
+            logger.warn("Couldn't find project {}".format(data['project']))
+            return
         task, _ = Task.objects.get_or_create(
             project=project,
             time_needed="8",
@@ -232,7 +236,7 @@ class Command(BaseCommand):
             status=Task.TaskStatuses.realized,
             deadline_to_apply=project.deadline,
             title=data['title'],
-            people_needed=data['people_needed'] or 1
+            people_needed=data['people_needed']
         )
         self._generic_import(task, data, excludes=['project', 'title', 'people_needed', 'time_needed'])
         task.save()

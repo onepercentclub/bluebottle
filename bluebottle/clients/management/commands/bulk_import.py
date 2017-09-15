@@ -22,6 +22,7 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
 from bluebottle.donations.models import Donation
+from bluebottle.geo.models import Country
 from bluebottle.members.models import Member
 from bluebottle.orders.models import Order
 from bluebottle.pages.models import Page
@@ -185,9 +186,28 @@ class Command(BaseCommand):
         project.amount_asked = Money(goal, 'EUR')
         project.deadline = deadline
         project.video_url = data['video']
+        if data.get('country'):
+            project.country = Country.objects.get(alpha2_code=data['country'])
+        else:
+            project.country = Country.objects.get(alpha2_code='NL')
+
+        if data.get('place') and not data.get('latitude'):
+            import requests
+            address = data['place'] + ", " + project.country.name
+            api_key = properties.GOOGLE_LOCATION_API_KEY
+            if not api_key:
+                print "Darn!"
+                logger.warn("GOOGLE_LOCATION_API_KEY not set, can't find location.")
+            else:
+                api_response = requests.get(
+                    u'https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}'.format(address, api_key))
+                api_response_dict = api_response.json()
+                if api_response_dict['status'] == 'OK':
+                    project.latitude = api_response_dict['results'][0]['geometry']['location']['lat']
+                    project.longitude = api_response_dict['results'][0]['geometry']['location']['lng']
 
         self._generic_import(project, data,
-                             excludes=['deadline', 'slug', 'user', 'created', 'theme',
+                             excludes=['deadline', 'slug', 'user', 'created', 'theme', 'country',
                                        'status', 'goal', 'categories', 'image', 'video'])
 
         if data.get('theme'):

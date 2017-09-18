@@ -184,27 +184,12 @@ class Command(BaseCommand):
         project.campaign_started = data['created']
         goal = data['goal'] or 0.0
         project.amount_asked = Money(goal, 'EUR')
-        project.deadline = deadline
+        project.deadline = deadline or None
         project.video_url = data['video']
         if data.get('country'):
             project.country = Country.objects.get(alpha2_code=data['country'])
         else:
             project.country = Country.objects.get(alpha2_code='NL')
-
-        if data.get('place') and not data.get('latitude'):
-            import requests
-            address = data['place'] + ", " + project.country.name
-            api_key = properties.GOOGLE_LOCATION_API_KEY
-            if not api_key:
-                print "Darn!"
-                logger.warn("GOOGLE_LOCATION_API_KEY not set, can't find location.")
-            else:
-                api_response = requests.get(
-                    u'https://maps.googleapis.com/maps/api/geocode/json?address={0}&key={1}'.format(address, api_key))
-                api_response_dict = api_response.json()
-                if api_response_dict['status'] == 'OK':
-                    project.latitude = api_response_dict['results'][0]['geometry']['location']['lat']
-                    project.longitude = api_response_dict['results'][0]['geometry']['location']['lng']
 
         self._generic_import(project, data,
                              excludes=['deadline', 'slug', 'user', 'created', 'theme', 'country',

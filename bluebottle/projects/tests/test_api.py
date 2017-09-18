@@ -2244,7 +2244,7 @@ class ProjectImageApiTest(BluebottleTestCase):
         self.image_path = './bluebottle/projects/test_images/upload.png'
 
         self.project = ProjectFactory.create(owner=self.user, task_manager=self.user)
-        self.url = reverse('project-image-create', args=(self.project.slug, ))
+        self.url = reverse('project-image-create')
 
     def test_create(self):
         with open(self.image_path, mode='rb') as image_file:

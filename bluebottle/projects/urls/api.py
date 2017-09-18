@@ -36,7 +36,7 @@ urlpatterns = [
         ManageProjectDocumentDetail.as_view(),
         name='manage-project-document-detail'),
 
-    url(r'^project-images/(?P<slug>[\w-]+)$',
+    url(r'^project-images/$',
         ProjectImageCreate.as_view(),
         name='project-image-create'),
 

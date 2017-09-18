@@ -4,7 +4,7 @@ from ..views import (
     ManageProjectBudgetLineDetail, ManageProjectBudgetLineList,
     ManageProjectDocumentList, ManageProjectDocumentDetail,
     ProjectMediaDetail, ProjectSupportDetail,
-    ProjectMediaPhotoDetail,
+    ProjectMediaPhotoDetail, ProjectImageCreate
 )
 
 
@@ -35,4 +35,10 @@ urlpatterns = [
     url(r'^documents/manage/(?P<pk>\d+)$',
         ManageProjectDocumentDetail.as_view(),
         name='manage-project-document-detail'),
+
+    url(r'^project-images/(?P<slug>[\w-]+)$',
+        ProjectImageCreate.as_view(),
+        name='project-image-create'),
+
+
 ]

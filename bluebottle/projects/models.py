@@ -21,6 +21,8 @@ from django_extensions.db.fields import ModificationDateTimeField, CreationDateT
 from moneyed.classes import Money
 from select_multiple_field.models import SelectMultipleField
 
+from sorl.thumbnail import ImageField
+
 from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.bb_projects.models import (
@@ -707,6 +709,42 @@ class ProjectBudgetLine(models.Model):
 
     def __unicode__(self):
         return u'{0} - {1}'.format(self.description, self.amount)
+
+
+class ProjectImage(models.Model):
+    """
+    Project Image: Image that is directly associated with the project.
+
+    Can for example be used in project descriptions
+
+    """
+    project = models.ForeignKey('projects.Project')
+    image = ImageField(
+        _('image'), max_length=255, blank=True, upload_to='project_images/',
+        help_text=_('Project image')
+    )
+
+    created = CreationDateTimeField()
+    updated = ModificationDateTimeField()
+
+    class Meta:
+        verbose_name = _('project image')
+        verbose_name_plural = _('project images')
+        permissions = (
+            ('api_read_projectimage', 'Can view project imagesthrough the API'),
+            ('api_add_projectimage', 'Can add project images through the API'),
+            ('api_change_projectimage', 'Can change project images through the API'),
+            ('api_delete_projectimage', 'Can delete project images through the API'),
+
+            ('api_read_own_projectimage', 'Can view own project images through the API'),
+            ('api_add_own_projectimage', 'Can add own project images through the API'),
+            ('api_change_own_projectimage', 'Can change own project images through the API'),
+            ('api_delete_own_projectimage', 'Can delete own project images through the API'),
+        )
+
+    @property
+    def parent(self):
+        return self.project
 
 
 @receiver(project_funded, weak=False, sender=Project,

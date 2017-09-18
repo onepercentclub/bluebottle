@@ -93,7 +93,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         excluded_fields = ['last_name', 'avatar', 'about_me', 'twitter',
                            'facebook', 'skypename', 'picture', 'url',
                            'email', 'address', 'newsletter',
-                           'campaign_notifications',
+                           'campaign_notifications', 'phone_number',
                            'birthdate', 'gender', 'first_name', 'last_name',
                            'password']
 
@@ -119,7 +119,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'project_count', 'donation_count', 'date_joined',
                              'fundraiser_count', 'task_count', 'time_spent',
                              'website', 'twitter', 'facebook', 'skypename',
-                             'email',
+                             'email', 'phone_number',
                              'address', 'newsletter', 'campaign_notifications',
                              'birthdate', 'gender', 'first_name', 'last_name', 'partner_organization']
         for field in serializer_fields:

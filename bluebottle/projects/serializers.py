@@ -484,7 +484,7 @@ class ProjectImageSerializer(serializers.ModelSerializer):
     """
     Members that wrote a wallpost
     """
-    image = ImageSerializer()
+    image = ImageSerializer(source='file')
     project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
 
     class Meta:

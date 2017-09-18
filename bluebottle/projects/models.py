@@ -18,6 +18,8 @@ from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+
+from django_summernote.models import AbstractAttachment
 from moneyed.classes import Money
 from select_multiple_field.models import SelectMultipleField
 
@@ -711,7 +713,7 @@ class ProjectBudgetLine(models.Model):
         return u'{0} - {1}'.format(self.description, self.amount)
 
 
-class ProjectImage(models.Model):
+class ProjectImage(AbstractAttachment):
     """
     Project Image: Image that is directly associated with the project.
 
@@ -719,13 +721,6 @@ class ProjectImage(models.Model):
 
     """
     project = models.ForeignKey('projects.Project')
-    image = ImageField(
-        _('image'), max_length=255, blank=True, upload_to='project_images/',
-        help_text=_('Project image')
-    )
-
-    created = CreationDateTimeField()
-    updated = ModificationDateTimeField()
 
     class Meta:
         verbose_name = _('project image')
@@ -745,6 +740,12 @@ class ProjectImage(models.Model):
     @property
     def parent(self):
         return self.project
+
+    def save(self, project_id=None, *args, **kwargs):
+        if project_id:
+            self.project_id = int(project_id[0])
+
+        super(ProjectImage, self).save(*args, **kwargs)
 
 
 @receiver(project_funded, weak=False, sender=Project,

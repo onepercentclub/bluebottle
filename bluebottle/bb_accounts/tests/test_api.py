@@ -252,6 +252,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                          {u'GET': True, u'OPTIONS': True})
         self.client.logout()
 
+    @override_settings(SEND_WELCOME_MAIL=True)
     def test_user_create(self):
         """
         Test creating a user with the api and activating the new user.
@@ -268,6 +269,10 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.post(self.user_create_api_url, {'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEqual(response.data['email'][0], 'This field is required.')
+
+        welcome_email = mail.outbox[0]
+        self.assertEqual(welcome_email.to, [new_user_email])
+        self.assertTrue('Let\'s get started' in welcome_email.body)
 
     def test_duplicate_user_create(self):
         """

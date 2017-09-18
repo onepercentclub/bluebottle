@@ -1,6 +1,8 @@
 import re
 
 from django.utils.translation import ugettext_lazy as _
+from django.utils.http import int_to_base36
+from django.contrib.auth.tokens import default_token_generator
 
 from bluebottle.clients.utils import tenant_url, tenant_name
 from bluebottle.utils.email_backend import send_mail
@@ -20,15 +22,26 @@ def send_welcome_mail(user=None):
         'site_name': tenant_name(),
         'user': user,
         'first_name': user.first_name,
+        'token': default_token_generator.make_token(user),
+        'uid': int_to_base36(user.pk),
         'LANGUAGE_CODE': user.primary_language,
     }
 
-    send_mail(
-        template_name='bb_accounts/activation_email',
-        subject=subject,
-        to=user,
-        **c
-    )
+    # If there is no password set then use the welcome + password set template
+    if not user.password:
+        send_mail(
+            template_name='bb_accounts/activation_email_no_password',
+            subject=subject,
+            to=user,
+            **c
+        )
+    else:
+        send_mail(
+            template_name='bb_accounts/activation_email',
+            subject=subject,
+            to=user,
+            **c
+        )
 
 
 def valid_email(email=None):

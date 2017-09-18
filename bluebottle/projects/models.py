@@ -125,7 +125,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     allow_overfunding = models.BooleanField(default=True)
     story = models.TextField(
-        _("story"), help_text=_("This is the help text for the story field"),
+        _("story"), help_text=_("Describe the project in detail"),
         blank=True, null=True)
 
     # TODO: Remove these fields?

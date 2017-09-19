@@ -115,5 +115,3 @@ class ProjectImageCreate(CreateAPIView):
 
     queryset = ProjectImage.objects.all()
     serializer_class = ProjectImageSerializer
-
-

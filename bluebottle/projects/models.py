@@ -23,8 +23,6 @@ from django_summernote.models import AbstractAttachment
 from moneyed.classes import Money
 from select_multiple_field.models import SelectMultipleField
 
-from sorl.thumbnail import ImageField
-
 from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.bb_projects.models import (

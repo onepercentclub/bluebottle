@@ -2256,5 +2256,3 @@ class ProjectImageApiTest(BluebottleTestCase):
             )
             self.assertEqual(response.status_code, 201)
             self.assertTrue(response.data['image']['large'].startswith('http'))
-
-

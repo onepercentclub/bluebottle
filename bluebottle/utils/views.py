@@ -201,6 +201,18 @@ class ListCreateAPIView(ViewPermissionsMixin, generics.ListCreateAPIView):
         serializer.save()
 
 
+class CreateAPIView(ViewPermissionsMixin, generics.CreateAPIView):
+    permission_classes = (ResourcePermission,)
+
+    def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(**serializer.validated_data)
+        )
+
+        serializer.save()
+
+
 class RetrieveUpdateAPIView(ViewPermissionsMixin, generics.RetrieveUpdateAPIView):
     base_permission_classes = (ResourcePermission,)
 

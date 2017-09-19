@@ -2227,3 +2227,32 @@ class ProjectCurrenciesApiTest(BluebottleTestCase):
         response = self.client.get(self.project_url)
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertListEqual(response.data['currencies'], [u'NGN', u'USD'])
+
+
+class ProjectImageApiTest(BluebottleTestCase):
+    """
+    Integration tests currencies in the Project API.
+    """
+
+    def setUp(self):
+        super(ProjectImageApiTest, self).setUp()
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.init_projects()
+        self.image_path = './bluebottle/projects/test_images/upload.png'
+
+        self.project = ProjectFactory.create(owner=self.user, task_manager=self.user)
+        self.url = reverse('project-image-create')
+
+    def test_create(self):
+        with open(self.image_path, mode='rb') as image_file:
+            response = self.client.post(
+                self.url,
+                {'project': self.project.slug, 'image': image_file},
+                token=self.user_token,
+                format='multipart'
+            )
+            self.assertEqual(response.status_code, 201)
+            self.assertTrue(response.data['image']['large'].startswith('http'))

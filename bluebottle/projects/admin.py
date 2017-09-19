@@ -14,6 +14,7 @@ from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.utils.translation import ugettext_lazy as _
 
 from daterange_filter.filter import DateRangeFilter
+from django_summernote.widgets import SummernoteWidget
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -254,7 +255,8 @@ class ReviewerWidget(admin.widgets.ForeignKeyRawIdWidget):
 class ProjectAdminForm(forms.ModelForm):
     class Meta:
         widgets = {
-            'currencies': forms.CheckboxSelectMultiple
+            'currencies': forms.CheckboxSelectMultiple,
+            'story': SummernoteWidget()
         }
 
     theme = forms.ModelChoiceField(queryset=ProjectTheme.objects.all().filter(disabled=False))
@@ -267,6 +269,7 @@ class ProjectAdminForm(forms.ModelForm):
             rel=Project._meta.get_field('reviewer').rel,
             admin_site=admin.sites.site
         )
+        self.fields['story'].widget.attrs = {'data-project_id': self.instance.pk}
 
 
 class ProjectAdmin(AdminImageMixin, ImprovedModelForm):

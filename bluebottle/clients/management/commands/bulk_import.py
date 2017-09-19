@@ -1,5 +1,6 @@
 import sys
 import datetime
+from dateutil import parser
 import json
 import logging
 from urlparse import urlparse
@@ -165,9 +166,6 @@ class Command(BaseCommand):
         image       (string<url>)
         categories  (array<category-slug>)
         """
-        deadline = datetime.datetime.strptime(data['deadline'], '%Y-%m-%d')
-        deadline = pytz.utc.localize(deadline)
-
         try:
             project = Project.objects.get(slug=data['slug'])
         except Project.DoesNotExist:
@@ -179,12 +177,16 @@ class Command(BaseCommand):
         except (ProjectPhase.DoesNotExist, KeyError):
             # If we don't have a status, then it should be set in admin, so plan-new seems best.
             project.status = ProjectPhase.objects.get(slug='plan-new')
+        deadline = data['deadline']
+        if deadline:
+            deadline = parser.parse(deadline)
+
         project.title = data['title'] or data['slug']
         project.created = data['created']
         project.campaign_started = data['created']
         goal = data['goal'] or 0.0
         project.amount_asked = Money(goal, 'EUR')
-        project.deadline = deadline or None
+        project.deadline = deadline
         project.video_url = data['video']
         if data.get('country'):
             project.country = Country.objects.get(alpha2_code=data['country'])
@@ -229,7 +231,7 @@ class Command(BaseCommand):
         people_needed   (int)
         """
         try:
-            project = Project.objects.get(title=data['project'])
+            project = Project.objects.get(slug=data['project'])
         except Project.DoesNotExist:
             logger.warn("Couldn't find project {}".format(data['project']))
             return
@@ -312,8 +314,9 @@ class Command(BaseCommand):
         order.created = created
         order.completed = completed
         order.confirmed = completed
-        order.locked()
-        order.success()
+        if completed:
+            order.locked()
+            order.success()
         order.save()
 
         if data['donations']:

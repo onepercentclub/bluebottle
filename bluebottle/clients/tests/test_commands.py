@@ -11,6 +11,7 @@ from bluebottle.categories.models import Category
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
 from bluebottle.rewards.models import Reward
+from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.wallposts.models import Wallpost
 from bluebottle.orders.models import Order
 from bluebottle.pages.models import Page
@@ -60,8 +61,8 @@ class BulkImportTests(TestCase):
     def setUp(self):
         from ..management.commands.bulk_import import Command as BulkImportCommand
         self.cmd = BulkImportCommand()
-
         super(BulkImportTests, self).setUp()
+        CountryFactory.create(alpha2_code='NL')
 
     def test_bulk_import_args(self):
         json_file = '/tmp/empty.json'

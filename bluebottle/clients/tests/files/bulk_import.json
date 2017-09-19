@@ -29,9 +29,9 @@
 	"projects": [{
 		"title": "F/X3 - Their effects had _better_ be special!",
 		"slug": "f-x3",
-		"deadline": "2017-12-31",
+		"deadline": "2017-12-31T00:00:00+01:00",
 		"user": "bryan@brown.com",
-		"created": "2017-01-01",
+		"created": "2017-01-01T00:00:00+01:00",
 		"description": "Outgunned by the mob, outmanned by the cops..... their effects had _better_ be special!",
 		"pitch": "F/X man Rollie Tyler (Bryan Brown) is now a toy maker. Mike Brandon (Tom Mason), the ex-husband of Rolly's girlfriend Kim(Rachel Ticotin), is a cop. He asks Rollie to help catch a killer. The operation goes well until some unknown man kills both the killer and Mike.",
 		"goal": 10000000,

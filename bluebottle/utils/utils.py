@@ -18,8 +18,8 @@ from bluebottle.clients import properties
 
 
 TAGS = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'strong', 'em', 'b', 'i', 'ul', 'li', 'ol', 'a',
-        'br', 'pre', 'blockquote', 'img']
-ATTRIBUTES = {'a': ['target', 'href'], 'img': ['src', 'alt', 'width', 'height', 'align', 'class']}
+        'br', 'pre', 'blockquote', 'img', 'hr', 'span']
+ATTRIBUTES = {'a': ['target', 'href'], 'img': ['src', 'alt', 'width', 'height', 'align']}
 
 
 def clean_html(content):

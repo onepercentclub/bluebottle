@@ -269,6 +269,7 @@ class ProjectAdminForm(forms.ModelForm):
             rel=Project._meta.get_field('reviewer').rel,
             admin_site=admin.sites.site
         )
+        self.fields['story'].widget.attrs = {'data-project_id': self.instance.pk}
 
 
 class ProjectAdmin(AdminImageMixin, ImprovedModelForm):

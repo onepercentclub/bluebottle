@@ -63,12 +63,3 @@ def send_new_role_email(sender, instance, **kwargs):
                 link=link
 
             )
-
-
-
-
-
-
-
-
-

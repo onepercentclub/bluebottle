@@ -53,8 +53,7 @@ class Command(BaseCommand):
         'tasks',
         'rewards',
         'wallposts',
-        'orders',
-        'pages'
+        'orders'
     ]
 
     def add_arguments(self, parser):

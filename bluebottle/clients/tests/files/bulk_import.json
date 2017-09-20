@@ -57,7 +57,7 @@
 	
 	"wallposts": [{
 		"project": "f-x3",
-		"date": "2017-06-06 11:11:11",
+		"date": "2017-06-06T11:11:11+03:00",
 		"author": "bryan",
 		"email": "bryan@brown.com",
 		"text": "Best movie ever!"

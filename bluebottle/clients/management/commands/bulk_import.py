@@ -2,7 +2,6 @@ import sys
 from dateutil import parser
 import json
 import logging
-from urlparse import urlparse
 
 from django.db.utils import IntegrityError
 from moneyed.classes import Money
@@ -208,9 +207,9 @@ class Command(BaseCommand):
 
         project.categories = Category.objects.filter(slug__in=data['categories'])
 
-        if 'image' in data and data['image'].startswith('http'):
-            parts = urlparse(data['image']).path.split('/')
-            name = "/".join(parts[3:])
+        if 'image' in data:
+            parts = data['image'].split('/')
+            name = "/".join(parts[5:])
             if not self.upload:
                 logger.warn("Upload path not set, can't store project image. Please use -u")
             file_name = u"{}{}".format(self.upload, name)

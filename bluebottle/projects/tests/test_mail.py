@@ -1,8 +1,10 @@
 from django.core import mail
+from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.surveys.models import Survey
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.surveys import SurveyFactory
@@ -80,3 +82,77 @@ class TestProjectMails(BluebottleTestCase):
         self.project.save()
 
         self.assertEquals(len(mail.outbox), 0)
+
+
+@override_settings(SEND_WELCOME_MAIL=False)
+class TestProjectRoleMails(BluebottleTestCase):
+    """
+    Test the sending of email notifications when a Task' status changes
+    """
+
+    def setUp(self):
+        super(TestProjectRoleMails, self).setUp()
+
+        self.init_projects()
+        self.project = ProjectFactory.create()
+        self.user = BlueBottleUserFactory.create()
+
+    def test_manager(self):
+        self.project.task_manager = self.user
+        self.project.save()
+        self.assertEqual(len(mail.outbox), 1)
+
+        email = mail.outbox[0]
+        self.assertTrue('Task manager' in str(email.subject))
+        self.assertTrue(self.project.title in str(email.subject))
+        self.assertTrue(self.user.email in email.recipients())
+        self.assertTrue(self.user.short_name in email.body)
+        self.assertTrue('/projects/{}'.format(self.project.slug) in email.body)
+        self.assertTrue('Task manager' in email.body)
+        self.assertTrue(self.project.title in email.body)
+
+    def test_reviewer(self):
+        self.project.reviewer = self.user
+        self.project.save()
+        self.assertEqual(len(mail.outbox), 1)
+
+        email = mail.outbox[0]
+        self.assertTrue('Project reviewer' in str(email.subject))
+        self.assertTrue(self.project.title in str(email.subject))
+        self.assertTrue(self.user.email in email.recipients())
+        self.assertTrue(self.user.short_name in email.body)
+        self.assertTrue(
+            reverse('admin:projects_project_change', args=(self.project.pk, )) in email.body
+        )
+        self.assertTrue('Project reviewer' in email.body)
+        self.assertTrue(self.project.title in email.body)
+
+    def test_promoter(self):
+        self.project.promoter = self.user
+        self.project.save()
+        self.assertEqual(len(mail.outbox), 1)
+
+        email = mail.outbox[0]
+        self.assertTrue('Project promoter' in str(email.subject))
+        self.assertTrue(self.project.title in str(email.subject))
+        self.assertTrue(self.user.email in email.recipients())
+        self.assertTrue(self.user.short_name in email.body)
+        self.assertTrue('/projects/{}'.format(self.project.slug) in email.body)
+        self.assertTrue('Project promoter' in email.body)
+        self.assertTrue(self.project.title in email.body)
+
+    def test_set_twice(self):
+        self.project.promoter = self.user
+        self.project.save()
+        self.project.promoter = self.user
+        self.project.save()
+
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_multiple(self):
+        self.project.promoter = self.user
+        self.project.task_manager = self.user
+        self.project.reviewer = self.user
+        self.project.save()
+
+        self.assertEqual(len(mail.outbox), 3)

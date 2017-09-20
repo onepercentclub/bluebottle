@@ -204,6 +204,18 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
 
+
+PASSWORD_HASHERS = (
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    'django.contrib.auth.hashers.BCryptPasswordHasher',
+    'django.contrib.auth.hashers.SHA1PasswordHasher',
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+    'django.contrib.auth.hashers.CryptPasswordHasher',
+    'hashers_passlib.phpass',
+)
+
 AUTHENTICATION_BACKENDS = (
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'social.backends.facebook.FacebookAppOAuth2',
@@ -351,7 +363,6 @@ TENANT_APPS = (
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
     'bluebottle.bb_fundraisers',
-    'bluebottle.bb_donations',
     'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
@@ -826,5 +837,10 @@ SUMMERNOTE_CONFIG = {
         ['para', ['ul', 'ol']],
         ['insert', ['link', 'picture']],
     ],
-    'disable_upload': True,
+    'disable_upload': False,
+    'attachment_model': 'projects.ProjectImage',
+    'attachment_upload_to': 'project_images/',
+    'summernote': {
+        'disableResizeImage': True
+    }
 }

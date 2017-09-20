@@ -90,7 +90,7 @@ class BaseOrder(models.Model, FSMTransition):
         self.completed = now()
 
     @transition(field=status,
-                source=[StatusDefinition.LOCKED, StatusDefinition.PENDING,
+                source=[StatusDefinition.CREATED, StatusDefinition.LOCKED, StatusDefinition.PENDING,
                         StatusDefinition.SUCCESS],
                 target=StatusDefinition.FAILED)
     def failed(self):
@@ -104,7 +104,8 @@ class BaseOrder(models.Model, FSMTransition):
         total = [Money(data['amount__sum'], data['amount_currency']) for data in donations]
         if len(total) > 1:
             raise ValueError('Multiple currencies in one order')
-        self.total = total[0]
+        if len(total) == 1:
+            self.total = total[0]
         if save:
             self.save()
 

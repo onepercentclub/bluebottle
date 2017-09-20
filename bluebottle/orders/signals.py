@@ -1,11 +1,17 @@
+from datetime import timedelta
+from django.conf import settings
+from django.db import connection
 from django.dispatch.dispatcher import receiver
 from django.db.models.signals import post_save
+from django.utils import timezone
 
 from django_fsm.signals import post_transition
 
-from bluebottle.bb_donations.donationmail import (
+from bluebottle.donations.donationmail import (
     new_oneoff_donation, successful_donation_fundraiser_mail)
 from bluebottle.orders.models import Order
+from bluebottle.orders.tasks import timeout_new_order, timeout_locked_order
+from bluebottle.payments.models import OrderPayment
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.wallposts.models import SystemWallpost, TextWallpost
 
@@ -78,3 +84,27 @@ def _order_status_post_transition(sender, instance, **kwargs):
                     fr_post.author = author
                     fr_post.ip = '127.0.0.1'
                     fr_post.save()
+
+
+@receiver(post_save, sender=Order)
+def _timeout_new_order(sender, instance, created=None, **kwargs):
+    """
+    Fail new order after 10 minutes
+    """
+    if created and getattr(settings, 'CELERY_RESULT_BACKEND', None):
+        timeout_new_order.apply_async(
+            [instance, connection.tenant],
+            eta=timezone.now() + timedelta(minutes=10)
+        )
+
+
+@receiver(post_save, sender=OrderPayment)
+def _timeout_locked_order(sender, instance, created=None, **kwargs):
+    """
+    Fail locked order after 3 hours
+    """
+    if created and getattr(settings, 'CELERY_RESULT_BACKEND', None):
+        timeout_locked_order.apply_async(
+            [instance.order, connection.tenant],
+            eta=timezone.now() + timedelta(hours=3)
+        )

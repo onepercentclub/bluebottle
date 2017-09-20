@@ -1,22 +1,17 @@
 import sys
-import datetime
 from dateutil import parser
 import json
 import logging
 from urlparse import urlparse
 
-import pytz
 from django.db.utils import IntegrityError
 from moneyed.classes import Money
 
 from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.db import connection
-from django.utils.text import slugify
 from django.utils.timezone import now
 from django.contrib.contenttypes.models import ContentType
-
-from fluent_contents.plugins.text.models import TextItem
 
 from bluebottle.categories.models import Category
 from bluebottle.clients.models import Client
@@ -26,12 +21,10 @@ from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
 from bluebottle.members.models import Member
 from bluebottle.orders.models import Order
-from bluebottle.pages.models import Page
 from bluebottle.projects.models import Project
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.models import Task
 from bluebottle.wallposts.models import TextWallpost
-from bluebottle.clients import properties
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +143,11 @@ class Command(BaseCommand):
         """
         theme, _ = ProjectTheme.objects.get_or_create(slug=data['slug'])
         self._generic_import(theme, data, excludes=['slug'])
-        theme.save()
+        try:
+            theme.save()
+        except IntegrityError:
+            theme.name = theme.name + '*'
+            theme.save()
 
     def _handle_projects(self, data):
         """Expected fields for Projects import:
@@ -266,6 +263,7 @@ class Command(BaseCommand):
                     limit=data['limit'] or 0
                 )
                 self._generic_import(reward, data, excludes=['amount', 'limit', 'project'])
+                reward.description = reward.description[:500]
                 reward.save()
             except (Project.DoesNotExist, ValueError):
                 pass
@@ -280,8 +278,7 @@ class Command(BaseCommand):
         try:
             project = Project.objects.get(slug=data['project'])
             author = Member.objects.get(email=data['email'])
-            created = datetime.datetime.strptime(data['date'], '%Y-%m-%d %H:%M:%S')
-            created = pytz.utc.localize(created)
+            created = data['date']
             wallpost, _ = TextWallpost.objects.get_or_create(
                 object_id=project.id,
                 content_type=ContentType.objects.get_for_model(Project),
@@ -341,37 +338,3 @@ class Command(BaseCommand):
                 donation.created = created
                 donation.update = completed or created
                 donation.save()
-
-    def _handle_pages(self, data):
-        """Expected fields for Page import:
-        slug     (string)
-        title    (string)
-        author   (string<email>)
-        content  (string)
-        language (string, optional)
-        """
-        author = Member.objects.get(email=data['author'])
-        try:
-            language = data['language']
-        except KeyError:
-            language = properties.LANGUAGE_CODE
-
-        page, created = Page.objects.get_or_create(
-            author=author,
-            status=Page.PageStatus.published,
-            publication_date=now(),
-            language=language
-        )
-
-        # TODO: add the slug generation to the Page model
-        data['slug'] = data["slug"] or slugify(data['title'] + author.username)
-
-        self._generic_import(page, data, excludes=['author', 'content'])
-        page.save()
-
-        if created:
-            text = TextItem.objects.create(
-                parent=page,
-                text=data['content']
-            )
-            text.save()

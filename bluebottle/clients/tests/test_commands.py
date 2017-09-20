@@ -14,8 +14,6 @@ from bluebottle.rewards.models import Reward
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.wallposts.models import Wallpost
 from bluebottle.orders.models import Order
-from bluebottle.pages.models import Page
-from fluent_contents.plugins.text.models import TextItem
 
 
 @override_settings(TENANT_APPS=('django_nose',),
@@ -133,11 +131,3 @@ class BulkImportTests(TestCase):
         self.assertEqual(order.user, user)
         self.assertEqual(order.donations.count(), 1)
         self.assertEqual(order.donations.first().project, project)
-
-        # pages
-        self.assertEqual(Page.objects.count(), 1)
-        page = Page.objects.first()
-        text = TextItem.objects.first()
-        self.assertEqual(page.slug, 'the-road')
-        self.assertEqual(page.author, user)
-        self.assertTrue(text.text.startswith('Although set in New York'))

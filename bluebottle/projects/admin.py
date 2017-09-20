@@ -4,6 +4,7 @@ from decimal import InvalidOperation
 
 from bluebottle.tasks.models import Skill
 from django import forms
+from django.db import connection
 from django.conf.urls import url
 from django.contrib import admin, messages
 from django.core.exceptions import ImproperlyConfigured
@@ -31,7 +32,7 @@ from bluebottle.votes.models import Vote
 from .forms import ProjectDocumentForm
 from .models import (ProjectBudgetLine, Project,
                      ProjectDocument, ProjectPhaseLog)
-
+from .tasks import refund_project
 
 logger = logging.getLogger(__name__)
 
@@ -414,6 +415,16 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)
 
+    def refund(self, request, pk=None):
+        project = Project.objects.get(pk=pk)
+
+        if not request.user.has_perm('payments.refund_orderpayment') or not project.can_refund:
+            return HttpResponseForbidden('Missing permission: payments.refund_orderpayment')
+
+        refund_project.delay(connection.tenant, project)
+        project_url = reverse('admin:projects_project_change', args=(project.id,))
+        return HttpResponseRedirect(project_url)
+
     def amount_donated_i18n(self, obj):
         return obj.amount_donated
 
@@ -437,6 +448,9 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             url(r'^approve_payout/(?P<pk>\d+)/$',
                 self.approve_payout,
                 name="projects_project_approve_payout"),
+            url(r'^refund/(?P<pk>\d+)/$',
+                self.refund,
+                name="projects_project_refund"),
         ]
         return process_urls + urls
 

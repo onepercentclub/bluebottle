@@ -825,3 +825,5 @@ TASKS = {
     'plus_one': False,
     'show_accepting': True
 }
+
+ENABLE_REFUNDS = True

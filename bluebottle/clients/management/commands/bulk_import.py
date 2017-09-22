@@ -166,7 +166,11 @@ class Command(BaseCommand):
         except Project.DoesNotExist:
             project = Project(slug=data['slug'])
 
-        project.owner = Member.objects.get(email=data['user'])
+        try:
+            project.owner = Member.objects.get(email=data['user'])
+        except Member.DoesNotExist:
+            project.owner = Member.objects.all()[0]
+
         try:
             project.status = ProjectPhase.objects.get(slug=data['status'])
         except (ProjectPhase.DoesNotExist, KeyError):
@@ -336,3 +340,7 @@ class Command(BaseCommand):
                 donation.created = created
                 donation.update = completed or created
                 donation.save()
+
+                if project.deadline < now():
+                    project.campaign_ended = None
+                    project.save()

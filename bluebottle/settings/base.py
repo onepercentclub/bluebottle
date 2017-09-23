@@ -278,7 +278,6 @@ SHARED_APPS = (
     'django_summernote'
 
 )
-
 TENANT_APPS = (
     'polymorphic',
     'modeltranslation',
@@ -391,6 +390,7 @@ TENANT_APPS = (
     # https://github.com/django-money/django-money/issues/232
     'djmoney',
 )
+
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 

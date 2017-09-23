@@ -1,4 +1,8 @@
 import sys
+
+from bluebottle.payments.services import PaymentService
+
+from bluebottle.payments.models import OrderPayment
 from dateutil import parser
 import json
 import logging
@@ -307,15 +311,11 @@ class Command(BaseCommand):
             user = Member.objects.get(email=data['user'])
         except (TypeError, Member.DoesNotExist):
             user = None
-        order = Order.objects.create(user=user)
         completed = data.get('completed', None)
         created = data.get('created', now())
-        order.created = created
+        order, _ = Order.objects.get_or_create(user=user, created=created, completed=completed)
         order.completed = completed
         order.confirmed = completed
-        if completed:
-            order.locked()
-            order.success()
         order.save()
 
         if data['donations']:
@@ -344,3 +344,13 @@ class Command(BaseCommand):
                 if project.deadline < now():
                     project.campaign_ended = None
                     project.save()
+
+        order.save()
+        order_payment, _ = OrderPayment.objects.get_or_create(order=order)
+        order_payment.payment_method = 'externalCash'
+        order_payment.started()
+        PaymentService(order_payment)
+        order_payment.created = created
+        if completed:
+            order_payment.closed = completed
+        order_payment.save()

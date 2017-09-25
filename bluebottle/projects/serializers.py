@@ -81,7 +81,7 @@ class ProjectPermissionsSerializer(serializers.Serializer):
         return obj
 
     rewards = RelatedResourcePermissionField('reward-list')
-    donations = ResourcePermissionField('order-manage-list')
+    donations = RelatedResourcePermissionField('order-manage-list')
     tasks = RelatedResourcePermissionField('task-list')
 
     class Meta:

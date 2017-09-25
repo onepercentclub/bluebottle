@@ -1,7 +1,7 @@
 # REF: Full .travis.yml spec. (https://github.com/travis-ci/travis-yaml/blob/master/SPEC.md)
 language: python
 
-dist: precise
+dist: trusty
 sudo: required
 
 python: 2.7.13

@@ -20,7 +20,7 @@ BB_USER_MODEL = get_user_model()
 class PrivateProfileMixin(object):
     private_fields = (
         'url', 'full_name', 'picture', 'about_me', 'location', 'last_name',
-        'avatar', 'website', 'twitter', 'facebook', 'skypename'
+        'phone_number', 'avatar', 'website', 'twitter', 'facebook', 'skypename'
     )
 
     def to_representation(self, obj):
@@ -100,7 +100,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = UserPreviewSerializer.Meta.fields + (
-            'id_for_ember', 'primary_language', 'email', 'full_name',
+            'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
             'country', 'verified', 'permissions', 'partner_organization')
@@ -161,7 +161,7 @@ class ManageProfileSerializer(UserProfileSerializer):
         model = BB_USER_MODEL
         fields = UserProfileSerializer.Meta.fields + (
             'email', 'address', 'newsletter', 'campaign_notifications', 'location',
-            'birthdate', 'gender', 'first_name', 'last_name'
+            'birthdate', 'gender', 'first_name', 'last_name', 'phone_number',
         )
 
     def update(self, instance, validated_data):

@@ -204,6 +204,18 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
 
+
+PASSWORD_HASHERS = (
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    'django.contrib.auth.hashers.BCryptPasswordHasher',
+    'django.contrib.auth.hashers.SHA1PasswordHasher',
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+    'django.contrib.auth.hashers.CryptPasswordHasher',
+    'hashers_passlib.phpass',
+)
+
 AUTHENTICATION_BACKENDS = (
     'bluebottle.social.backends.NoStateFacebookOAuth2',
     'social.backends.facebook.FacebookAppOAuth2',
@@ -262,7 +274,8 @@ SHARED_APPS = (
     'djmoney_rates',
     'parler',
     'daterange_filter',
-    'adminsortable'
+    'adminsortable',
+    'django_summernote'
 
 )
 
@@ -350,7 +363,6 @@ TENANT_APPS = (
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
     'bluebottle.bb_fundraisers',
-    'bluebottle.bb_donations',
     'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
@@ -571,13 +583,14 @@ TENANT_MAIL_PROPERTIES = {
 CLOSED_SITE = False
 PARTNER_LOGIN = False
 
-EXPOSED_TENANT_PROPERTIES = ['closed_site', 'mixpanel', 'analytics', 'maps_api_key',
-                             'git_commit', 'social_auth_facebook_key', 'date_format',
-                             'bb_apps', 'donation_amounts', 'facebook_sharing_reviewed',
-                             'project_create_flow', 'project_create_types', 'project_contact_types',
-                             'closed_site', 'partner_login', 'share_options', 'sso_url',
-                             'project_suggestions', 'readOnlyFields', 'search_options',
-                             'tasks']
+EXPOSED_TENANT_PROPERTIES = [
+    'mixpanel', 'analytics', 'maps_api_key', 'git_commit',
+    'social_auth_facebook_key', 'date_format', 'bb_apps', 'donation_amounts',
+    'facebook_sharing_reviewed', 'project_create_flow', 'project_create_types',
+    'project_contact_types', 'project_contact_method', 'closed_site',
+    'partner_login', 'share_options', 'sso_url', 'project_suggestions',
+    'readOnlyFields', 'search_options', 'tasks'
+]
 
 DEFAULT_FILE_STORAGE = 'bluebottle.utils.storage.TenantFileSystemStorage'
 
@@ -813,4 +826,21 @@ TASKS = {
     'accepting': 'manual',
     'plus_one': False,
     'show_accepting': True
+}
+
+
+SUMMERNOTE_CONFIG = {
+    # Using SummernoteWidget - iframe mode
+    'toolbar': [
+        ['style', ['style']],
+        ['style', ['bold', 'italic', 'underline', 'clear']],
+        ['para', ['ul', 'ol']],
+        ['insert', ['link', 'picture']],
+    ],
+    'disable_upload': False,
+    'attachment_model': 'projects.ProjectImage',
+    'attachment_upload_to': 'project_images/',
+    'summernote': {
+        'disableResizeImage': True
+    }
 }

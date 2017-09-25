@@ -44,7 +44,7 @@ class Organization(models.Model):
                                     upload_to='organizations/registrations'
                                     )
 
-    logo = ImageField(_('image'),
+    logo = ImageField(_('logo'),
                       blank=True,
                       help_text=_('Partner Organization Logo'),
                       max_length=255,
@@ -85,8 +85,8 @@ class Organization(models.Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = _("organization")
-        verbose_name_plural = _("organizations")
+        verbose_name = _("partner organization")
+        verbose_name_plural = _("partner organizations")
 
 
 class OrganizationContact(models.Model):

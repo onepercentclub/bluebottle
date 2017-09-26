@@ -63,7 +63,6 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
             response.data['related_permissions']['donations']['POST'], True
         )
 
-
     def test_manage_non_owner_permissions(self):
         # view allowed
         response = self.client.get(self.project_manage_url, token=self.not_owner_token)
@@ -85,7 +84,6 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         self.assertEqual(
             response.data['related_permissions']['rewards']['POST'], True
         )
-
 
     def test_non_owner_permissions(self):
         # view allowed
@@ -127,5 +125,3 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         self.assertEqual(
             response.data['related_permissions']['donations']['POST'], True
         )
-
-

@@ -41,4 +41,6 @@ notifications:
     secure: TOveMBh9HePYKWuGTrWF+hTXzxGZvbVsa3KU0sB1yv6qkcixb5/ggvmkTeRddYEd/zyWyMenicFsrXVBgsP0SmbNgke6kq5+EN0U5oJWse998lvCVCpwmJQMdwDHvYsOtbFEOppQrbRK4vmH8qibx3x2YVg+u+61ePHvWYF9z6U=
 
 after_success:
-  - coverage combine; coverage report --omit **/migrations/**; coveralls
+  - bash post_travis.sh
+  - python -m coverage combine; python -m coverage report --omit **/migrations/**; coveralls
+

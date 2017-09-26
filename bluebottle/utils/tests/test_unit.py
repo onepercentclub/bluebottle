@@ -154,14 +154,6 @@ class MetaTestCase(BluebottleTestCase):
             sort_order=3
         )
 
-        # Imgur
-        self.imgur = OEmbedItem.objects.create(
-            embed_url='https://i.imgur.com/ZtRTS9h.jpg',
-            parent=self.object,
-            placeholder=self.ph,
-            sort_order=4
-        )
-
         # set up the client
         self.client = Client()
 
@@ -171,7 +163,7 @@ class MetaTestCase(BluebottleTestCase):
         items = self.object.contents.get_content_items()
 
         self.assertEqual(len(
-            items), 4,
+            items), 3,
             'Error in the setUp function: not all items arecorrectly created.')
 
 

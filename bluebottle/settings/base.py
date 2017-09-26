@@ -828,6 +828,7 @@ TASKS = {
     'show_accepting': True
 }
 
+ENABLE_REFUNDS = False
 
 SUMMERNOTE_CONFIG = {
     # Using SummernoteWidget - iframe mode

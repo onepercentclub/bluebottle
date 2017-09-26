@@ -151,6 +151,11 @@ class OrderPayment(models.Model, FSMTransition):
     previous_status = None
     card_data = None
 
+    class Meta:
+        permissions = (
+            ('refund_orderpayment', 'Can refund order payments'),
+        )
+
     @classmethod
     def get_latest_by_order(cls, order):
         order_payments = cls.objects.order_by(

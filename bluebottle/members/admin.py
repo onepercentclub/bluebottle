@@ -191,15 +191,11 @@ class MemberAdmin(UserAdmin):
             'email', 'first_name', 'last_name', 'is_staff', 'date_joined',
             'is_active', 'login_as_link')
 
-    def set_inlines(self, request, obj):
-        """ set inlines models based on whether accessing an existing """
-        self.inlines = []
-        if obj:
-            self.inlines = [UserAddressInline, MemberVotesInline]
-
-    def get_fieldsets(self, request, obj=None):
-        self.set_inlines(request, obj)
-        return super(MemberAdmin, self).get_fieldsets(request, obj)
+    def get_inline_instances(self, request, obj=None):
+        """ Override get_inline_instances so that the add form does not show inlines """
+        if not obj:
+            return []
+        return super(MemberAdmin, self).get_inline_instances(request, obj)
 
     def get_urls(self):
         urls = super(MemberAdmin, self).get_urls()

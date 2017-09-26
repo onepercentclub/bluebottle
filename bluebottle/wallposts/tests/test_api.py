@@ -691,6 +691,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         self.project_1.task_manager = self.user_c
         self.project_1.promoter = self.user_d
         self.project_1.save()
+        mail.outbox = []
 
         TextWallpostFactory.create(content_object=self.project_1, author=self.user_b)
 

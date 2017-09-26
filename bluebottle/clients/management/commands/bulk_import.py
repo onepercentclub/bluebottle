@@ -292,6 +292,7 @@ class Command(BaseCommand):
                 author=author
             )
             self._generic_import(wallpost, data, excludes=['project', 'author', 'email'])
+            wallpost.created = created
             wallpost.save()
         except (Project.DoesNotExist, Member.DoesNotExist, ValueError) as err:
             logger.warn(err)
@@ -313,7 +314,7 @@ class Command(BaseCommand):
             user = None
         completed = data.get('completed', None)
         created = data.get('created', now())
-        order, _ = Order.objects.get_or_create(user=user, created=created, completed=completed)
+        order = Order.objects.create(user=user, created=created, completed=completed)
         order.completed = completed
         order.confirmed = completed
         order.save()
@@ -331,23 +332,19 @@ class Command(BaseCommand):
                     reward = project.reward_set.filter(title=don['reward']).all()[0]
                 except (Reward.DoesNotExist, KeyError):
                     reward = None
-                donation = Donation.objects.create(project=project,
-                                                   reward=reward,
-                                                   name=don.get('name', '')[:199],
-                                                   order=order,
-                                                   amount=Money(don['amount'], 'EUR'))
-
+                donation = Donation.objects.create(
+                    project=project,
+                    reward=reward,
+                    name=don.get('name', '')[:199],
+                    order=order,
+                    amount=Money(don['amount'], 'EUR'))
                 donation.created = created
                 donation.update = completed or created
                 donation.save()
 
-                if project.deadline < now():
-                    project.campaign_ended = None
-                    project.save()
-
         order.save()
-        order_payment, _ = OrderPayment.objects.get_or_create(order=order)
-        order_payment.payment_method = 'externalCash'
+        order_payment = OrderPayment.objects.create(order=order)
+        order_payment.payment_method = 'externalLegacy'
         order_payment.started()
         PaymentService(order_payment)
         order_payment.created = created

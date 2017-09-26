@@ -56,6 +56,14 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
             response.data['related_permissions']['rewards']['POST'], True
         )
 
+        self.assertEqual(
+            response.data['related_permissions']['donations']['GET'], True
+        )
+        self.assertEqual(
+            response.data['related_permissions']['donations']['POST'], True
+        )
+
+
     def test_manage_non_owner_permissions(self):
         # view allowed
         response = self.client.get(self.project_manage_url, token=self.not_owner_token)
@@ -78,6 +86,7 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
             response.data['related_permissions']['rewards']['POST'], True
         )
 
+
     def test_non_owner_permissions(self):
         # view allowed
         response = self.client.get(self.project_detail_url, token=self.not_owner_token)
@@ -94,3 +103,29 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         self.assertEqual(
             response.data['related_permissions']['rewards']['POST'], False
         )
+
+    def test_anonymous_permissions(self):
+        # view allowed
+        response = self.client.get(self.project_detail_url)
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.data['permissions']['GET'], True
+        )
+
+        self.assertEqual(
+            response.data['related_permissions']['rewards']['GET'], True
+        )
+
+        self.assertEqual(
+            response.data['related_permissions']['rewards']['POST'], False
+        )
+
+        self.assertEqual(
+            response.data['related_permissions']['donations']['GET'], False
+        )
+        self.assertEqual(
+            response.data['related_permissions']['donations']['POST'], True
+        )
+
+

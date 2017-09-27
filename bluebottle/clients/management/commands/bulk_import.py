@@ -172,7 +172,13 @@ class Command(BaseCommand):
         try:
             project.owner = Member.objects.get(email=data['user'])
         except Member.DoesNotExist:
-            project.owner = Member.objects.all()[0]
+            project.owner, new = Member.objects.get_or_create(email='admin@example.com')
+            if new:
+                project.owner.is_active = True
+                project.owner.username = 'Admin'
+                project.owner.first_name = 'Admin'
+                project.owner.last_name = 'Example'
+                project.owner.save()
 
         try:
             project.status = ProjectPhase.objects.get(slug=data['status'])

@@ -2017,9 +2017,16 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
         DonationFactory.create(project=self.project,
                                order=OrderFactory(status='success', user=self.user1))
         DonationFactory.create(project=self.project,
-                               order=OrderFactory(status='success', user=self.user1))
+                               order=OrderFactory(status='success', user=self.user1),
+                               name='test-name'
+                               )
         DonationFactory.create(project=self.project,
-                               order=OrderFactory(status='pending', user=self.user2))
+                               order=OrderFactory(status='success', user=self.user1),
+                               name='test-other-name'
+                               )
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='pending', user=self.user2),
+                               name='test-name')
         DonationFactory.create(project=self.project,
                                order=OrderFactory(status='success', user=self.user3))
         DonationFactory.create(project=self.project, anonymous=True,
@@ -2046,7 +2053,7 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
         response = self.client.get(self.project_supporters_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
-        self.assertEqual(len(response.data['donors']), 3)
+        self.assertEqual(len(response.data['donors']), 5)
         self.assertEqual(len(response.data['posters']), 3)
         self.assertEqual(len(response.data['task_members']), 2)
 
@@ -2057,7 +2064,7 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
         response = self.client.get(self.project_supporters_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
-        self.assertEqual(len(response.data['donors']), 3)
+        self.assertEqual(len(response.data['donors']), 5)
         self.assertEqual(len(response.data['posters']), 3)
         self.assertEqual(len(response.data['task_members']), 2)
 

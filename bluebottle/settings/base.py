@@ -278,7 +278,6 @@ SHARED_APPS = (
     'django_summernote'
 
 )
-
 TENANT_APPS = (
     'polymorphic',
     'modeltranslation',
@@ -338,13 +337,14 @@ TENANT_APPS = (
     'bluebottle.quotes',
     'bluebottle.payments',
     'bluebottle.payments_docdata',
-    'bluebottle.payments_interswitch',
+    'bluebottle.payments_external',
     'bluebottle.payments_flutterwave',
+    'bluebottle.payments_interswitch',
     'bluebottle.payments_lipisha',
+    'bluebottle.payments_logger',
+    'bluebottle.payments_pledge',
     'bluebottle.payments_telesom',
     'bluebottle.payments_vitepay',
-    'bluebottle.payments_pledge',
-    'bluebottle.payments_logger',
     'bluebottle.payments_voucher',
     'bluebottle.redirects',
     'bluebottle.statistics',
@@ -390,6 +390,7 @@ TENANT_APPS = (
     # https://github.com/django-money/django-money/issues/232
     'djmoney',
 )
+
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 

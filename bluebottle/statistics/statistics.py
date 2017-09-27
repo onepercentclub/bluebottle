@@ -76,6 +76,13 @@ class Statistics(object):
             user_id=None,
             status__in=(StatusDefinition.PENDING, StatusDefinition.SUCCESS)
         ))
+        # Add donations on behalve of another person
+        people_count += len(Order.objects.filter(
+            self.date_filter('completed'),
+            user__isnull=False,
+            donations__name__isnull=False,
+            status__in=(StatusDefinition.PENDING, StatusDefinition.SUCCESS)
+        ).order_by('donations__name').distinct('donations__name'))
 
         # Add "plus one"
         people_count += TaskMember.objects.filter(

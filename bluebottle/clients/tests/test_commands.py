@@ -118,15 +118,15 @@ class BulkImportTests(TestCase):
         self.assertEqual(reward.amount.amount, 100000.00)
 
         # wallposts
-        self.assertEqual(Wallpost.objects.count(), 1)
-        wallpost = Wallpost.objects.get(object_id=project.id)
+        self.assertEqual(Wallpost.objects.count(), 2)
+        wallpost = Wallpost.objects.filter(object_id=project.id).all()[0]
         self.assertEqual(wallpost.author, user)
         self.assertEqual(wallpost.text, 'Best movie ever!')
 
         # orders
         self.assertEqual(Order.objects.count(), 1)
         order = Order.objects.first()
-        self.assertEqual(order.status, 'created')
+        self.assertEqual(order.status, 'success')
         self.assertEqual(order.total.amount, 35.00)
         self.assertEqual(order.user, user)
         self.assertEqual(order.donations.count(), 1)

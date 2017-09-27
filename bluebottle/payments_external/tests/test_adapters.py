@@ -18,7 +18,7 @@ external_settings = {
     'PAYMENT_METHODS': [
         {
             'provider': 'docdata',
-            'id': 'external-cash',
+            'id': 'external-money',
             'profile': 'cash',
             'name': 'Externa;',
             'supports_recurring': False,
@@ -56,6 +56,7 @@ class ExternalPaymentAdapterTestCase(BluebottleTestCase):
         order = OrderFactory.create()
         DonationFactory.create(amount=Money(70, EUR), order=order)
         order_payment = OrderPaymentFactory.create(payment_method='externalMoney', order=order)
+        order_payment.started()
         adapter = ExternalPaymentAdapter(order_payment)
         adapter.check_payment_status()
         self.assertEqual(adapter.payment.status, 'settled')

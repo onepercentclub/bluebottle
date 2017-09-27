@@ -225,7 +225,6 @@ class StatisticsTest(BluebottleTestCase):
         self.assertEqual(self.stats.people_involved, 3)
         self.assertEqual(self.stats.participants, 1)
 
-
     def test_donation_pledged_stats(self):
         self.some_project.status = self.campaign_status
         self.some_project.save()

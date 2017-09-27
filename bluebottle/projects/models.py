@@ -531,7 +531,7 @@ class Project(BaseProject, PreviousStatusMixin):
                                       StatusDefinition.SUCCESS]). \
             filter(anonymous=False). \
             filter(order__user__isnull=False). \
-            order_by('order__user', '-created').distinct('order__user')[:limit]
+            order_by('order__user', 'name', '-created').distinct('order__user', 'name')[:limit]
 
     @property
     def task_members(self, limit=20):

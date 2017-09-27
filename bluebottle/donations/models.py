@@ -33,7 +33,7 @@ class Donation(models.Model):
     updated = ModificationDateTimeField(_("Updated"))
     completed = models.DateTimeField(_("Ready"), blank=True, editable=False, null=True)
     anonymous = models.BooleanField(_("Anonymous"), default=False)
-    name = models.CharField(_("Name of donor"), max_length=200, blank=True, null=True)
+    name = models.CharField(_("Name of donor"), max_length=200, blank=True, null=True, db_index=True)
 
     @property
     def status(self):

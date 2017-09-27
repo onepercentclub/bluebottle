@@ -199,6 +199,33 @@ class StatisticsTest(BluebottleTestCase):
         self.assertEqual(self.stats.people_involved, 2)
         self.assertEqual(self.stats.participants, 1)
 
+    def test_donation_stats_named_donation(self):
+        self.some_project.status = self.campaign_status
+        self.some_project.save()
+
+        order = OrderFactory.create(
+            user=self.another_user,
+            status=StatusDefinition.SUCCESS)
+        self.donation = DonationFactory.create(amount=Money(1000, 'EUR'), order=order,
+                                               project=self.some_project,
+                                               fundraiser=None)
+        order = OrderFactory.create(
+            user=self.another_user,
+            status=StatusDefinition.SUCCESS)
+        self.donation = DonationFactory.create(amount=Money(1000, 'EUR'), order=order,
+                                               project=self.some_project,
+                                               name='test-name',
+                                               fundraiser=None)
+
+        self.assertEqual(self.stats.donated_total, Money(2000, 'EUR'))
+        # People involved:
+        # - campaigner
+        # - donator (another_user)
+        # - donator (another_user on behalve of somebody else)
+        self.assertEqual(self.stats.people_involved, 3)
+        self.assertEqual(self.stats.participants, 1)
+
+
     def test_donation_pledged_stats(self):
         self.some_project.status = self.campaign_status
         self.some_project.save()

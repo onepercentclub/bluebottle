@@ -169,7 +169,6 @@ class Command(BaseCommand):
             project = Project.objects.get(slug=data['slug'])
         except Project.DoesNotExist:
             project = Project(slug=data['slug'])
-
         try:
             project.owner = Member.objects.get(email=data['user'])
         except Member.DoesNotExist:
@@ -291,7 +290,7 @@ class Command(BaseCommand):
                 created=created,
                 author=author
             )
-            self._generic_import(wallpost, data, excludes=['project', 'author', 'email'])
+            self._generic_import(wallpost, data, excludes=['project', 'author', 'email', 'created'])
             wallpost.created = created
             wallpost.save()
         except (Project.DoesNotExist, Member.DoesNotExist, ValueError) as err:
@@ -313,41 +312,48 @@ class Command(BaseCommand):
         except (TypeError, Member.DoesNotExist):
             user = None
         completed = data.get('completed', None)
-        created = data.get('created', now())
-        order = Order.objects.create(user=user, created=created, completed=completed)
-        order.completed = completed
-        order.confirmed = completed
-        order.save()
+        created = data['created']
+        order, new = Order.objects.get_or_create(user=user, created=created, completed=completed)
+        if new:
+            order.completed = completed
+            order.confirmed = completed
+            order.created = created
+            order.update = completed or created
+            order.save()
 
-        if data['donations']:
-            for don in data['donations']:
-                try:
-                    project = Project.objects.get(slug=don['project'])
-                except Project.DoesNotExist:
-                    print "Could not find project {0}".format(don['project'])
-                    continue
-                try:
-                    reward = project.reward_set.get(title=don['reward'])
-                except Reward.MultipleObjectsReturned:
-                    reward = project.reward_set.filter(title=don['reward']).all()[0]
-                except (Reward.DoesNotExist, KeyError):
-                    reward = None
-                donation = Donation.objects.create(
-                    project=project,
-                    reward=reward,
-                    name=don.get('name', '')[:199],
-                    order=order,
-                    amount=Money(don['amount'], 'EUR'))
-                donation.created = created
-                donation.update = completed or created
-                donation.save()
+            if data['donations']:
+                for don in data['donations']:
+                    try:
+                        project = Project.objects.get(slug=don['project'])
+                    except Project.DoesNotExist:
+                        print "Could not find project {0}".format(don['project'])
+                        continue
+                    try:
+                        reward = project.reward_set.get(title=don['reward'])
+                    except Reward.MultipleObjectsReturned:
+                        reward = project.reward_set.filter(title=don['reward']).all()[0]
+                    except (Reward.DoesNotExist, KeyError):
+                        reward = None
+                    donation = Donation.objects.create(
+                        project=project,
+                        reward=reward,
+                        name=don.get('name', '')[:199],
+                        order=order,
+                        amount=Money(don['amount'], 'EUR'))
+                    donation.created = created
+                    donation.update = completed or created
+                    donation.save()
 
-        order.save()
-        order_payment = OrderPayment.objects.create(order=order)
-        order_payment.payment_method = 'externalLegacy'
-        order_payment.started()
-        PaymentService(order_payment)
-        order_payment.created = created
-        if completed:
-            order_payment.closed = completed
-        order_payment.save()
+                    if project.deadline < now():
+                        project.campaign_ended = None
+                        project.save()
+
+            order.save()
+            order_payment = OrderPayment.objects.create(order=order)
+            order_payment.payment_method = 'externalLegacy'
+            order_payment.started()
+            PaymentService(order_payment)
+            order_payment.created = created
+            if completed:
+                order_payment.closed = completed
+            order_payment.save()

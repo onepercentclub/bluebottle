@@ -1,5 +1,7 @@
-# TODO: Use alpine/ slim version to reduce memory footprint ?
+# TODO: Use alpine/ slim version to reduce memory/ image footprint
 # TODO: Create a local user, dont't use root
+# TODO: Do not copy SQL into docker image
+# TODO: Setup postgres credentials via env file
 FROM ubuntu:16.04
 
 #The ARG instruction defines a variable that users can pass at build-time to the builder with the docker build
@@ -55,6 +57,8 @@ RUN rm /bin/sh \
                     libxmlsec1-dev \
                     autotools-dev \
                     automake \
+                    ssh-client \
+                    postgresql-client \
     && rm --recursive --force /var/lib/apt/lists/* \
     && apt-get --assume-yes autoclean
 
@@ -83,4 +87,4 @@ EXPOSE 8000
 WORKDIR /home/bluebottle
 
 ENTRYPOINT ["python"]
-CMD ["./manage.py", "test", "--settings", "bluebottle.settings.testing"]
+CMD ["./manage.py", "runserver", "--settings", "bluebottle.settings.testing"]

@@ -1,5 +1,7 @@
 import sys
 
+from bluebottle.utils.utils import StatusDefinition
+
 from bluebottle.payments.services import PaymentService
 
 from bluebottle.payments.models import OrderPayment
@@ -96,6 +98,13 @@ class Command(BaseCommand):
                         method_to_call = getattr(self, '_handle_{}'.format(key))
                         method_to_call(value)
                     logger.info(" Done!\n")
+
+            if 'orders' in self.models:
+                for project in Project.objects.all():
+                    if project.deadline < now():
+                        project.campaign_ended = None
+                        project.payout_status = StatusDefinition.SUCCESS
+                        project.save()
 
     def _generic_import(self, instance, data, excludes=False):
         excludes = excludes or []
@@ -317,16 +326,11 @@ class Command(BaseCommand):
             user = Member.objects.get(email=data['user'])
         except (TypeError, Member.DoesNotExist):
             user = None
-        completed = data.get('completed', None)
+        completed = data['completed']
         created = data['created']
-        order, new = Order.objects.get_or_create(user=user, created=created, completed=completed)
+        total = data['total']
+        order, new = Order.objects.get_or_create(user=user, created=created, total=total, completed=completed)
         if new:
-            order.completed = completed
-            order.confirmed = completed
-            order.created = created
-            order.update = completed or created
-            order.save()
-
             if data['donations']:
                 for don in data['donations']:
                     try:
@@ -350,11 +354,6 @@ class Command(BaseCommand):
                     donation.update = completed or created
                     donation.save()
 
-                    if project.deadline < now():
-                        project.campaign_ended = None
-                        project.save()
-
-            order.save()
             order_payment = OrderPayment.objects.create(order=order)
             order_payment.payment_method = 'externalLegacy'
             order_payment.started()
@@ -363,3 +362,9 @@ class Command(BaseCommand):
             if completed:
                 order_payment.closed = completed
             order_payment.save()
+
+            order.created = created
+            order.update = completed or created
+            order.confirmed = completed
+            order.completed = completed
+            order.save()

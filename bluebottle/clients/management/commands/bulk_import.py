@@ -1,9 +1,5 @@
 import sys
 
-from bluebottle.utils.utils import StatusDefinition
-
-from bluebottle.payments.services import PaymentService
-
 from bluebottle.payments.models import OrderPayment
 from dateutil import parser
 import json
@@ -100,10 +96,10 @@ class Command(BaseCommand):
                     logger.info(" Done!\n")
 
             if 'orders' in self.models:
-                for project in Project.objects.all():
+                for project in Project.objects.exclude(status__slug='plan-new').all():
                     if project.deadline < now():
+                        project.status = ProjectPhase.objects.get(slug='campaign')
                         project.campaign_ended = None
-                        project.payout_status = StatusDefinition.SUCCESS
                         project.save()
 
     def _generic_import(self, instance, data, excludes=False):
@@ -350,21 +346,24 @@ class Command(BaseCommand):
                         name=don.get('name', '')[:199],
                         order=order,
                         amount=Money(don['amount'], 'EUR'))
-                    donation.created = created
-                    donation.update = completed or created
-                    donation.save()
+                    Donation.objects.filter(pk=donation.pk).update(
+                        created=created,
+                        updated=completed or created
+                    )
 
             order_payment = OrderPayment.objects.create(order=order)
             order_payment.payment_method = 'externalLegacy'
-            order_payment.started()
-            PaymentService(order_payment)
-            order_payment.created = created
-            if completed:
-                order_payment.closed = completed
-            order_payment.save()
 
-            order.created = created
-            order.update = completed or created
-            order.confirmed = completed
-            order.completed = completed
-            order.save()
+            OrderPayment.objects.filter(pk=order_payment.pk).update(
+                created=created,
+                status='settled',
+                closed=completed
+            )
+
+            Order.objects.filter(pk=order.pk).update(
+                created=created,
+                status='success',
+                updated=completed or created,
+                confirmed=completed,
+                completed=completed
+            )

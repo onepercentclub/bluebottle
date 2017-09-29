@@ -838,5 +838,10 @@ SUMMERNOTE_CONFIG = {
         ['para', ['ul', 'ol']],
         ['insert', ['link', 'picture']],
     ],
-    'disable_upload': True,
+    'disable_upload': False,
+    'attachment_model': 'projects.ProjectImage',
+    'attachment_upload_to': 'project_images/',
+    'summernote': {
+        'disableResizeImage': True
+    }
 }

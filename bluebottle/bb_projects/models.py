@@ -153,7 +153,7 @@ class BaseProject(models.Model, GetTweetMixin):
     # Basics
     created = models.DateTimeField(_('created'), help_text=_('When this project was created.'), auto_now_add=True)
     updated = models.DateTimeField(_('updated'), auto_now=True)
-    title = models.CharField(_('title'), max_length=255, unique=True)
+    title = models.CharField(_('title'), max_length=255, unique=True, db_index=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
     pitch = models.TextField(
         _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
@@ -167,7 +167,7 @@ class BaseProject(models.Model, GetTweetMixin):
 
     location = models.ForeignKey('geo.Location', null=True, blank=True)
     place = models.CharField(help_text=_('Geographical location'),
-                             max_length=100, null=True, blank=True)
+                             max_length=200, null=True, blank=True)
 
     # Extended Description
     description = models.TextField(_('why, what and how'), help_text=_(
@@ -206,7 +206,7 @@ class BaseProject(models.Model, GetTweetMixin):
     # Bank details
     account_number = models.CharField(_("Account number"), max_length=255,
                                       null=True, blank=True)
-    account_details = models.CharField(_("account details"), max_length=255, null=True, blank=True)
+    account_details = models.CharField(_("account details"), max_length=500, null=True, blank=True)
     account_bank_country = models.ForeignKey(
         'geo.Country', blank=True, null=True,
         related_name="project_account_bank_country")

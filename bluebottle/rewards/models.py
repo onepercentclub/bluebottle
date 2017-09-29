@@ -13,8 +13,8 @@ class Reward(models.Model):
     Rewards for donations
     """
     amount = MoneyField(_('Amount'))
-    title = models.CharField(_('Title'), max_length=30)
-    description = models.CharField(_('Description'), max_length=200)
+    title = models.CharField(_('Title'), max_length=200)
+    description = models.CharField(_('Description'), max_length=500)
     project = models.ForeignKey('projects.Project', verbose_name=_('Project'))
     limit = models.IntegerField(_('Limit'), null=True, blank=True,
                                 help_text=_('How many of this rewards are available'))

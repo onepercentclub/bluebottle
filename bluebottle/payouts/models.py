@@ -97,32 +97,20 @@ class ProjectPayout(BaseProjectPayout):
         """
         Override this if you want different payout rules for different circumstances.
         e.g. project target reached, minimal amount reached.
-
-        Default is just payout rule 5.
         """
         assert self.project
 
-        # 1st of January 2014
-        start_2014 = timezone.datetime(2014, 1, 1, tzinfo=timezone.utc)
-
         threshold = properties.MINIMAL_PAYOUT_AMOUNT
 
-        if self.project.created >= start_2014:
-            # New rules per 2014
-
-            if self.project.amount_donated.amount <= threshold:
-                # Funding less then minimal payment amount.
-                return self.PayoutRules.beneath_threshold
-            elif self.project.amount_donated >= self.project.amount_asked:
-                # Fully funded
-                return self.PayoutRules.fully_funded
-            else:
-                # Not fully funded
-                return self.PayoutRules.not_fully_funded
-
-        # Campaign started before 2014
-        # Always 5 percent
-        return self.PayoutRules.five
+        if self.project.amount_donated.amount <= threshold:
+            # Funding less then minimal payment amount.
+            return self.PayoutRules.beneath_threshold
+        elif self.project.amount_donated >= self.project.amount_asked:
+            # Fully funded
+            return self.PayoutRules.fully_funded
+        else:
+            # Not fully funded
+            return self.PayoutRules.not_fully_funded
 
     @classmethod
     def create_sepa_xml(cls, qs):

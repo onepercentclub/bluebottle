@@ -15,7 +15,9 @@ from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
-from bluebottle.projects.models import ProjectBudgetLine, ProjectDocument, Project
+from bluebottle.projects.models import (
+    ProjectBudgetLine, ProjectDocument, Project, ProjectImage
+)
 from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.utils.serializers import (MoneySerializer, ResourcePermissionField,
                                           RelatedResourcePermissionField)
@@ -79,7 +81,7 @@ class ProjectPermissionsSerializer(serializers.Serializer):
         return obj
 
     rewards = RelatedResourcePermissionField('reward-list')
-    donations = ResourcePermissionField('order-manage-list')
+    donations = RelatedResourcePermissionField('order-manage-list')
     tasks = RelatedResourcePermissionField('task-list')
 
     class Meta:
@@ -150,6 +152,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'people_registered',
                   'permissions',
                   'pitch',
+                  'place',
                   'project_type',
                   'promoter',
                   'realized_task_count',
@@ -202,6 +205,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'people_needed',
                   'people_registered',
                   'pitch',
+                  'place',
                   'project_type',
                   'realized_task_count',
                   'skills',
@@ -476,3 +480,15 @@ class ProjectSupportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id', 'title', 'donors', 'task_members', 'posters')
+
+
+class ProjectImageSerializer(serializers.ModelSerializer):
+    """
+    Members that wrote a wallpost
+    """
+    image = ImageSerializer(source='file')
+    project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
+
+    class Meta:
+        model = ProjectImage
+        fields = ('id', 'image', 'project')

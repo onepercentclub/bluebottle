@@ -118,7 +118,7 @@ class BulkImportTests(TestCase):
         self.assertEqual(reward.amount.amount, 100000.00)
 
         # wallposts
-        self.assertEqual(Wallpost.objects.count(), 2)
+        self.assertEqual(Wallpost.objects.count(), 1)
         wallpost = Wallpost.objects.filter(object_id=project.id).all()[0]
         self.assertEqual(wallpost.author, user)
         self.assertEqual(wallpost.text, 'Best movie ever!')

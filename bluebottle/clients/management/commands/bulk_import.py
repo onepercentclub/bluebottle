@@ -1,4 +1,6 @@
 import sys
+
+from bluebottle.payments.models import OrderPayment
 from dateutil import parser
 import json
 import logging
@@ -93,6 +95,13 @@ class Command(BaseCommand):
                         method_to_call(value)
                     logger.info(" Done!\n")
 
+            if 'orders' in self.models:
+                for project in Project.objects.exclude(status__slug='plan-new').all():
+                    if project.deadline < now():
+                        project.status = ProjectPhase.objects.get(slug='campaign')
+                        project.campaign_ended = None
+                        project.save()
+
     def _generic_import(self, instance, data, excludes=False):
         excludes = excludes or []
         for k in data:
@@ -165,8 +174,17 @@ class Command(BaseCommand):
             project = Project.objects.get(slug=data['slug'])
         except Project.DoesNotExist:
             project = Project(slug=data['slug'])
+        try:
+            project.owner = Member.objects.get(email=data['user'])
+        except Member.DoesNotExist:
+            project.owner, new = Member.objects.get_or_create(email='admin@example.com')
+            if new:
+                project.owner.is_active = True
+                project.owner.username = 'Admin'
+                project.owner.first_name = 'Admin'
+                project.owner.last_name = 'Example'
+                project.owner.save()
 
-        project.owner = Member.objects.get(email=data['user'])
         try:
             project.status = ProjectPhase.objects.get(slug=data['status'])
         except (ProjectPhase.DoesNotExist, KeyError):
@@ -283,7 +301,8 @@ class Command(BaseCommand):
                 created=created,
                 author=author
             )
-            self._generic_import(wallpost, data, excludes=['project', 'author', 'email'])
+            self._generic_import(wallpost, data, excludes=['project', 'author', 'email', 'created'])
+            wallpost.created = created
             wallpost.save()
         except (Project.DoesNotExist, Member.DoesNotExist, ValueError) as err:
             logger.warn(err)
@@ -303,36 +322,48 @@ class Command(BaseCommand):
             user = Member.objects.get(email=data['user'])
         except (TypeError, Member.DoesNotExist):
             user = None
-        order = Order.objects.create(user=user)
-        completed = data.get('completed', None)
-        created = data.get('created', now())
-        order.created = created
-        order.completed = completed
-        order.confirmed = completed
-        if completed:
-            order.locked()
-            order.success()
-        order.save()
+        completed = data['completed']
+        created = data['created']
+        total = data['total']
+        order, new = Order.objects.get_or_create(user=user, created=created, total=total, completed=completed)
+        if new:
+            if data['donations']:
+                for don in data['donations']:
+                    try:
+                        project = Project.objects.get(slug=don['project'])
+                    except Project.DoesNotExist:
+                        print "Could not find project {0}".format(don['project'])
+                        continue
+                    try:
+                        reward = project.reward_set.get(title=don['reward'])
+                    except Reward.MultipleObjectsReturned:
+                        reward = project.reward_set.filter(title=don['reward']).all()[0]
+                    except (Reward.DoesNotExist, KeyError):
+                        reward = None
+                    donation = Donation.objects.create(
+                        project=project,
+                        reward=reward,
+                        name=don.get('name', '')[:199],
+                        order=order,
+                        amount=Money(don['amount'], 'EUR'))
+                    Donation.objects.filter(pk=donation.pk).update(
+                        created=created,
+                        updated=completed or created
+                    )
 
-        if data['donations']:
-            for don in data['donations']:
-                try:
-                    project = Project.objects.get(slug=don['project'])
-                except Project.DoesNotExist:
-                    print "Could not find project {0}".format(don['project'])
-                    continue
-                try:
-                    reward = project.reward_set.get(title=don['reward'])
-                except Reward.MultipleObjectsReturned:
-                    reward = project.reward_set.filter(title=don['reward']).all()[0]
-                except (Reward.DoesNotExist, KeyError):
-                    reward = None
-                donation = Donation.objects.create(project=project,
-                                                   reward=reward,
-                                                   name=don.get('name', '')[:199],
-                                                   order=order,
-                                                   amount=Money(don['amount'], 'EUR'))
+            order_payment = OrderPayment.objects.create(order=order)
+            order_payment.payment_method = 'externalLegacy'
 
-                donation.created = created
-                donation.update = completed or created
-                donation.save()
+            OrderPayment.objects.filter(pk=order_payment.pk).update(
+                created=created,
+                status='settled',
+                closed=completed
+            )
+
+            Order.objects.filter(pk=order.pk).update(
+                created=created,
+                status='success',
+                updated=completed or created,
+                confirmed=completed,
+                completed=completed
+            )

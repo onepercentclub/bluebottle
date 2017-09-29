@@ -8,10 +8,10 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.models import Count, Sum
 from django.utils import dateparse
-from django.conf import settings
 
 from .utils import validate_date
 from bluebottle.analytics.tasks import queue_analytics_record
+from bluebottle.clients import properties
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.members.models import Member
@@ -124,7 +124,7 @@ class Command(BaseCommand):
 
             fields['engagement_number'] = data['total_engaged'] + data['donations_anonymous']
 
-            if getattr(settings, 'CELERY_RESULT_BACKEND', None):
+            if getattr(properties, 'CELERY_RESULT_BACKEND', None):
                 queue_analytics_record.delay(timestamp=self.end_date, tags=tags, fields=fields)
             else:
                 queue_analytics_record(timestamp=self.end_date, tags=tags, fields=fields)
@@ -144,7 +144,7 @@ class Command(BaseCommand):
         fields['engagement_number'] = aggregated_engagement_data['total_engaged'] + \
             aggregated_engagement_data['donations_anonymous']
 
-        if getattr(settings, 'CELERY_RESULT_BACKEND', None):
+        if getattr(properties, 'CELERY_RESULT_BACKEND', None):
             queue_analytics_record.delay(timestamp=self.end_date, tags=tags, fields=fields)
         else:
             queue_analytics_record(timestamp=self.end_date, tags=tags, fields=fields)

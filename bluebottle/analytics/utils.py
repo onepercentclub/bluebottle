@@ -132,7 +132,7 @@ def process(instance, created):
     _merge_attrs(fields, analytics.fields)
 
     # If enabled, use celery to queue task
-    if getattr(settings, 'CELERY_RESULT_BACKEND', None):
+    if getattr(properties, 'CELERY_RESULT_BACKEND', None):
         queue_analytics_record.delay(timestamp=timestamp, tags=tags, fields=fields)
     else:
         queue_analytics_record(timestamp=timestamp, tags=tags, fields=fields)

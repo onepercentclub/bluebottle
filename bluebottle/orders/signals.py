@@ -1,5 +1,4 @@
 from datetime import timedelta
-from django.conf import settings
 from django.db import connection
 from django.dispatch.dispatcher import receiver
 from django.db.models.signals import post_save
@@ -7,6 +6,7 @@ from django.utils import timezone
 
 from django_fsm.signals import post_transition
 
+from bluebottle.clients import properties
 from bluebottle.donations.donationmail import (
     new_oneoff_donation, successful_donation_fundraiser_mail)
 from bluebottle.orders.models import Order
@@ -91,7 +91,7 @@ def _timeout_new_order(sender, instance, created=None, **kwargs):
     """
     Fail new order after 10 minutes
     """
-    if created and getattr(settings, 'CELERY_RESULT_BACKEND', None):
+    if created and getattr(properties, 'CELERY_RESULT_BACKEND', None):
         timeout_new_order.apply_async(
             [instance, connection.tenant],
             eta=timezone.now() + timedelta(minutes=10)
@@ -103,7 +103,7 @@ def _timeout_locked_order(sender, instance, created=None, **kwargs):
     """
     Fail locked order after 3 hours
     """
-    if created and getattr(settings, 'CELERY_RESULT_BACKEND', None):
+    if created and getattr(properties, 'CELERY_RESULT_BACKEND', None):
         timeout_locked_order.apply_async(
             [instance.order, connection.tenant],
             eta=timezone.now() + timedelta(hours=3)

@@ -93,7 +93,7 @@ install_requires = [
     'South==1.0.2',
     'Sphinx==1.6.4',
     'suds-jurko==0.6',
-    'SurveyGizmo==1.2.2',
+    'SurveyGizmo==1.2.3',
     'transifex-client==0.12.4',
     'unicodecsv==0.14.1',
     'wheel==0.30.0',

@@ -27,7 +27,7 @@ install_requires = [
     'Babel==2.5.1',
     'Django==1.11.5',
     'Flutterwave==1.0.7',
-    'Pillow==4.2.1',
+    'Pillow==4.3.0',
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
     'bleach==2.1',

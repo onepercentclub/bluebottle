@@ -1,5 +1,7 @@
+import csv
 import json
 import mock
+import StringIO
 
 from django.db import connection
 import requests
@@ -22,6 +24,7 @@ from bluebottle.projects.tasks import refund_project
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.test.utils import BluebottleTestCase, override_settings
@@ -242,6 +245,40 @@ class TestProjectAdmin(BluebottleTestCase):
         self.assertTrue(
             'status' in self.project_admin.get_readonly_fields(request, obj=project)
         )
+
+    def test_export_rewards(self):
+        request = self.request_factory.get('/')
+        request.user = MockUser(['rewards.read_reward'])
+
+        project = ProjectFactory.create()
+        reward = RewardFactory.create(project=project)
+
+        reward_order = OrderFactory.create(status='success')
+        DonationFactory.create(project=project, reward=reward, order=reward_order)
+
+        order = OrderFactory.create(status='success')
+        DonationFactory.create(project=project, order=order)
+
+        response = self.project_admin.export_rewards(request, project.id)
+        reader = csv.DictReader(StringIO.StringIO(response.content))
+
+        result = [line for line in reader]
+        self.assertEqual(len(result), 1)
+        line = result[0]
+
+        self.assertEqual(line['Email'], reward_order.user.email)
+        self.assertEqual(line['Name'], reward_order.user.full_name)
+        self.assertEqual(line['Order id'], str(reward_order.id))
+        self.assertEqual(line['Reward'], reward.title)
+
+    def test_export_rewards_forbidden(self):
+        request = self.request_factory.get('/')
+        request.user = MockUser([])
+
+        project = ProjectFactory.create()
+        response = self.project_admin.export_rewards(request, project.id)
+
+        self.assertEqual(response.status_code, 403)
 
 
 @override_settings(ENABLE_REFUNDS=True)

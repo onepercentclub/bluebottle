@@ -87,7 +87,7 @@ class PartnerOrganizationMembersInline(admin.TabularInline):
     verbose_name = "Partner Organization Member"
     verbose_name_plural = "Partner Organization Members"
     readonly_fields = ('member', 'phone_number', 'date_joined')
-    fields = ('member', 'phone_number', 'date_joined')
+    fields = ('member', 'email', 'phone_number', 'date_joined')
 
     def member(self, obj):
         url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label, obj._meta.model_name), args=[obj.id])
@@ -116,6 +116,12 @@ class OrganizationAdmin(admin.ModelAdmin):
         ('phone_number', 'phone_number'),
         ('created', 'created'),
     ]
+
+    def get_inline_instances(self, request, obj=None):
+        """ Override get_inline_instances so that add form do not show inlines """
+        if not obj:
+            return []
+        return super(OrganizationAdmin, self).get_inline_instances(request, obj)
 
     actions = (export_as_csv_action(fields=export_fields), merge)
 

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import csv
 import logging
 from decimal import InvalidOperation
 
@@ -11,7 +12,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.db.models import Count, Sum
 from django.utils.html import format_html
-from django.http.response import HttpResponseRedirect, HttpResponseForbidden
+from django.http.response import HttpResponseRedirect, HttpResponseForbidden, HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
 from daterange_filter.filter import DateRangeFilter
@@ -27,7 +28,7 @@ from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
-from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.admin import export_as_csv_action, prep_field
 from bluebottle.votes.models import Vote
 
 from .forms import ProjectDocumentForm
@@ -270,6 +271,7 @@ class ProjectAdminForm(forms.ModelForm):
             rel=Project._meta.get_field('reviewer').rel,
             admin_site=admin.sites.site
         )
+        self.fields['story'].widget.attrs = {'data-project_id': self.instance.pk}
 
 
 class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
@@ -427,6 +429,38 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)
 
+    reward_export_fields = (
+        ('reward__title', 'Reward'),
+        ('order__id', 'Order id'),
+        ('created', 'Donation Date'),
+        ('order__user__email', 'Email'),
+        ('order__user__full_name', 'Name'),
+    )
+
+    def export_rewards(self, request, pk=None):
+        """ Export all donations that include a reward.
+
+        This allows the project initiator to contact all recipients.
+        """
+        project = Project.objects.get(pk=pk)
+        if not request.user.has_perm('rewards.read_reward'):
+            return HttpResponseForbidden('Missing permission: rewards.read_reward')
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=%s.csv' % (
+            unicode(project.title).replace('.', '_')
+        )
+
+        writer = csv.writer(response)
+
+        writer.writerow([field[1] for field in self.reward_export_fields])
+
+        for reward in project.donations.filter(reward__isnull=False):
+            writer.writerow([
+                prep_field(request, reward, field[0]) for field in self.reward_export_fields
+            ])
+        return response
+
     def amount_donated_i18n(self, obj):
         return obj.amount_donated
 
@@ -453,6 +487,9 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             url(r'^refund/(?P<pk>\d+)/$',
                 self.refund,
                 name="projects_project_refund"),
+            url(r'^export_rewards/(?P<pk>\d+)/$',
+                self.export_rewards,
+                name="projects_project_export_rewards"),
         ]
         return process_urls + urls
 

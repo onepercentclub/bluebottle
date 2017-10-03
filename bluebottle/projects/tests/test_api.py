@@ -2017,9 +2017,16 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
         DonationFactory.create(project=self.project,
                                order=OrderFactory(status='success', user=self.user1))
         DonationFactory.create(project=self.project,
-                               order=OrderFactory(status='success', user=self.user1))
+                               order=OrderFactory(status='success', user=self.user1),
+                               name='test-name'
+                               )
         DonationFactory.create(project=self.project,
-                               order=OrderFactory(status='pending', user=self.user2))
+                               order=OrderFactory(status='success', user=self.user1),
+                               name='test-other-name'
+                               )
+        DonationFactory.create(project=self.project,
+                               order=OrderFactory(status='pending', user=self.user2),
+                               name='test-name')
         DonationFactory.create(project=self.project,
                                order=OrderFactory(status='success', user=self.user3))
         DonationFactory.create(project=self.project, anonymous=True,
@@ -2046,7 +2053,7 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
         response = self.client.get(self.project_supporters_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
-        self.assertEqual(len(response.data['donors']), 3)
+        self.assertEqual(len(response.data['donors']), 5)
         self.assertEqual(len(response.data['posters']), 3)
         self.assertEqual(len(response.data['task_members']), 2)
 
@@ -2057,7 +2064,7 @@ class ProjectSupportersApi(ProjectEndpointTestCase):
         response = self.client.get(self.project_supporters_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
-        self.assertEqual(len(response.data['donors']), 3)
+        self.assertEqual(len(response.data['donors']), 5)
         self.assertEqual(len(response.data['posters']), 3)
         self.assertEqual(len(response.data['task_members']), 2)
 
@@ -2227,3 +2234,32 @@ class ProjectCurrenciesApiTest(BluebottleTestCase):
         response = self.client.get(self.project_url)
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.assertListEqual(response.data['currencies'], [u'NGN', u'USD'])
+
+
+class ProjectImageApiTest(BluebottleTestCase):
+    """
+    Integration tests currencies in the Project API.
+    """
+
+    def setUp(self):
+        super(ProjectImageApiTest, self).setUp()
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.init_projects()
+        self.image_path = './bluebottle/projects/test_images/upload.png'
+
+        self.project = ProjectFactory.create(owner=self.user, task_manager=self.user)
+        self.url = reverse('project-image-create')
+
+    def test_create(self):
+        with open(self.image_path, mode='rb') as image_file:
+            response = self.client.post(
+                self.url,
+                {'project': self.project.slug, 'image': image_file},
+                token=self.user_token,
+                format='multipart'
+            )
+            self.assertEqual(response.status_code, 201)
+            self.assertTrue(response.data['image']['large'].startswith('http'))

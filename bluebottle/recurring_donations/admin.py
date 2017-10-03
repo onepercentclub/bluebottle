@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.filters import SimpleListFilter
@@ -8,6 +7,7 @@ from django.http.response import HttpResponseRedirect
 from django.utils.html import format_html
 from django.utils.translation import ugettext as _
 
+from bluebottle.clients import properties
 from bluebottle.recurring_donations.models import MonthlyProject
 from bluebottle.recurring_donations.tasks import prepare_monthly_batch, process_monthly_batch
 
@@ -121,7 +121,7 @@ class MonthlyBatchAdmin(admin.ModelAdmin):
     def process_batch(self, request, pk=None):
         batch = MonthlyBatch.objects.get(pk=pk)
         tenant = connection.tenant
-        if getattr(settings, 'CELERY_RESULT_BACKEND', None):
+        if getattr(properties, 'CELERY_RESULT_BACKEND', None):
             process_monthly_batch.delay(tenant=tenant, monthly_batch=batch, send_email=True)
         else:
             process_monthly_batch(tenant=tenant, monthly_batch=batch, send_email=True)

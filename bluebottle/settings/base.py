@@ -837,6 +837,7 @@ SUMMERNOTE_CONFIG = {
         ['style', ['bold', 'italic', 'underline', 'clear']],
         ['para', ['ul', 'ol']],
         ['insert', ['link', 'picture']],
+        ['view', ['codeview']],
     ],
     'disable_upload': False,
     'attachment_model': 'projects.ProjectImage',

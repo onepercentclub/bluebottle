@@ -118,12 +118,6 @@ mark_as_closed.short_description = _("Mark selected projects as status Rejected 
 class ProjectThemeAdmin(admin.ModelAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled',)
 
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request):
-        return False
-
 
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
 

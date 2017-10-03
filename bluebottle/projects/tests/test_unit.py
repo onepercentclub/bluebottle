@@ -13,7 +13,7 @@ from bluebottle.suggestions.models import Suggestion
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
@@ -371,3 +371,20 @@ class TestModel(BluebottleTestCase):
         TaskFactory.create(skill=skill, project=self.project)
 
         self.assertFalse(self.project.expertise_based)
+
+
+class TestProjectTheme(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectTheme, self).setUp()
+
+        self.init_projects()
+        self.theme = ProjectThemeFactory.create()
+        self.project = ProjectFactory.create(theme=self.theme)
+
+    def test_removing_theme_should_not_remove_project(self):
+        """
+        Removing the theme should not cascade and remove project.
+        """
+        self.assertTrue(Project.objects.filter(pk=self.project.id).exists())
+        self.theme.delete()
+        self.assertTrue(Project.objects.filter(pk=self.project.id).exists())

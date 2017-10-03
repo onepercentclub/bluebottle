@@ -20,6 +20,12 @@
             </a>
         {% endif %}
     </li>
-
+    {% if perms.rewards.read_reward and original.reward_set.count %}
+    <li>
+        <a href="{% url 'admin:projects_project_export_rewards' object_id %}" style="background-color: darkgreen">
+            {% trans  "Export Rewards" %}
+        </a>
+    </li>
+    {% endif %}
     {{ block.super }}
 {% endblock %}

@@ -18,6 +18,8 @@ from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
+
+from django_summernote.models import AbstractAttachment
 from moneyed.classes import Money
 from select_multiple_field.models import SelectMultipleField
 
@@ -257,7 +259,7 @@ class Project(BaseProject, PreviousStatusMixin):
             fields = {
                 'total': count,
             }
-            if getattr(settings, 'CELERY_RESULT_BACKEND', None):
+            if getattr(properties, 'CELERY_RESULT_BACKEND', None):
                 queue_analytics_record.delay(timestamp=timestamp, tags=tags, fields=fields)
             else:
                 queue_analytics_record(timestamp=timestamp, tags=tags, fields=fields)
@@ -529,7 +531,7 @@ class Project(BaseProject, PreviousStatusMixin):
                                       StatusDefinition.SUCCESS]). \
             filter(anonymous=False). \
             filter(order__user__isnull=False). \
-            order_by('order__user', '-created').distinct('order__user')[:limit]
+            order_by('order__user', 'name', '-created').distinct('order__user', 'name')[:limit]
 
     @property
     def task_members(self, limit=20):
@@ -715,6 +717,41 @@ class ProjectBudgetLine(models.Model):
 
     def __unicode__(self):
         return u'{0} - {1}'.format(self.description, self.amount)
+
+
+class ProjectImage(AbstractAttachment):
+    """
+    Project Image: Image that is directly associated with the project.
+
+    Can for example be used in project descriptions
+
+    """
+    project = models.ForeignKey('projects.Project')
+
+    class Meta:
+        verbose_name = _('project image')
+        verbose_name_plural = _('project images')
+        permissions = (
+            ('api_read_projectimage', 'Can view project imagesthrough the API'),
+            ('api_add_projectimage', 'Can add project images through the API'),
+            ('api_change_projectimage', 'Can change project images through the API'),
+            ('api_delete_projectimage', 'Can delete project images through the API'),
+
+            ('api_read_own_projectimage', 'Can view own project images through the API'),
+            ('api_add_own_projectimage', 'Can add own project images through the API'),
+            ('api_change_own_projectimage', 'Can change own project images through the API'),
+            ('api_delete_own_projectimage', 'Can delete own project images through the API'),
+        )
+
+    @property
+    def parent(self):
+        return self.project
+
+    def save(self, project_id=None, *args, **kwargs):
+        if project_id:
+            self.project_id = int(project_id[0])
+
+        super(ProjectImage, self).save(*args, **kwargs)
 
 
 @receiver(project_funded, weak=False, sender=Project,

@@ -239,7 +239,7 @@ class Task(models.Model, PreviousStatusMixin):
             # Immediately send email about realized task
             send_task_realized_mail(self, 'task_status_realized', subject, connection.tenant)
 
-            if getattr(settings, 'CELERY_RESULT_BACKEND', None):
+            if getattr(properties, 'CELERY_RESULT_BACKEND', None):
                 #  And schedule two more mails (in  3 and 6 days)
                 send_task_realized_mail.apply_async(
                     [self, 'task_status_realized_reminder', second_subject, connection.tenant],

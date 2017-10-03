@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import datetime
 
 from django.db import migrations
+from django.utils import timezone
 
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
@@ -13,7 +14,7 @@ def mark_as_failed(apps, schema_editor):
 
     orders = Order.objects.filter(
         status=StatusDefinition.CREATED,
-        created__lte=datetime.date.today() - datetime.timedelta(days=5)
+        created__lte=timezone.now() - datetime.timedelta(days=5)
     )
 
     orders.update(status=StatusDefinition.FAILED)

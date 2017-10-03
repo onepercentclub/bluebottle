@@ -18,10 +18,13 @@ def order_payment_refund_mail(instance):
     except IndexError:
         return
 
-    if donation.fundraiser:
-        project = donation.fundraiser.project
-    else:
-        project = donation.project
+    try:
+        if donation.fundraiser:
+            project = donation.fundraiser.project
+        else:
+            project = donation.project
+    except AttributeError:
+        return
 
     with TenantLanguage(receiver.primary_language):
         subject = _('Donation Refund')

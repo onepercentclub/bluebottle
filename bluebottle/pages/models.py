@@ -31,8 +31,11 @@ class Page(models.Model):
 
     title = models.CharField(_('Title'), max_length=200)
     slug = models.SlugField(_('Slug'), unique=False)
-    full_page = models.BooleanField(default=False, help_text=_(
-        'Show this page in full page width.'))
+    full_page = models.BooleanField(
+        _('Page without sub-navigation'),
+        default=False,
+        help_text=_('Show this page in full width and hide the sub-navigation')
+    )
 
     # Contents
     language = models.CharField(

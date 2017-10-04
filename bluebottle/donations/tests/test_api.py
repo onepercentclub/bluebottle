@@ -554,6 +554,7 @@ class TestAnonymousAuthenicatedDonationCreate(DonationApiTestCase):
         response = self.client.post(donation_url, {'order': self.order.pk,
                                                    'project': self.project.slug,
                                                    'amount': 50,
+                                                   'name': 'test-name',
                                                    'anonymous': True},
                                     token=self.user_token)
         self.assertEqual(response.status_code, 201)
@@ -583,6 +584,7 @@ class TestAnonymousAuthenicatedDonationCreate(DonationApiTestCase):
 
         # Check that user is NOT shown in public API
         self.assertEqual(None, response.data['user'])
+        self.assertEqual(None, response.data['name'])
 
 
 class TestUnauthenticatedDonationCreate(DonationApiTestCase):

@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Count, Sum
+from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
@@ -159,8 +160,7 @@ class BaseProject(models.Model, GetTweetMixin):
         _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
         blank=True)
     status = models.ForeignKey('bb_projects.ProjectPhase')
-    theme = models.ForeignKey(
-        'bb_projects.ProjectTheme', null=True, blank=True)
+    theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True, on_delete=SET_NULL)
     favorite = models.BooleanField(default=True)
 
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)

@@ -1,19 +1,21 @@
-from bluebottle.common.admin_utils import ImprovedModelForm
-
 from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
+from django.utils.translation import ugettext_lazy as _
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.extensions import plugin_pool
+from fluent_contents.extensions.pluginbase import ContentPlugin
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
 from nested_inline.admin import NestedStackedInline
 
 from bluebottle.cms.models import (
-    Stats, Stat, Quotes, Quote, ResultPage, ResultsContentPlugin, TasksContent,
+    Stats, Stat, Quotes, Quote, ResultPage, TasksContent,
     MetricsContent, Metric,
-    Projects)
+    Projects, QuotesContent, StatsContent, SurveyContent, ProjectsContent, ProjectImagesContent, ShareResultsContent,
+    ProjectsMapContent, SupporterTotalContent)
+from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.statistics.statistics import Statistics
 
 
@@ -73,6 +75,54 @@ admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
 
 
+class ResultsContentPlugin(ContentPlugin):
+    admin_form_template = 'admin/cms/content_item.html'
+    category = _('Results')
+
+
+@plugin_pool.register
+class QuotesBlockPlugin(ResultsContentPlugin):
+    model = QuotesContent
+    fieldsets = (
+        (None, {'fields': ('quotes',), }),
+    )
+
+
+@plugin_pool.register
+class StatsBlockPlugin(ResultsContentPlugin):
+    model = StatsContent
+
+
+@plugin_pool.register
+class SurveyBlockPlugin(ResultsContentPlugin):
+    model = SurveyContent
+
+
+@plugin_pool.register
+class ProjectsBlockPlugin(ResultsContentPlugin):
+    model = ProjectsContent
+
+
+@plugin_pool.register
+class ProjectImagesBlockPlugin(ResultsContentPlugin):
+    model = ProjectImagesContent
+
+
+@plugin_pool.register
+class ShareResultsBlockPlugin(ResultsContentPlugin):
+    model = ShareResultsContent
+
+
+@plugin_pool.register
+class ProjectMapBlockPlugin(ResultsContentPlugin):
+    model = ProjectsMapContent
+
+
+@plugin_pool.register
+class SupporterTotalBlockPlugin(ResultsContentPlugin):
+    model = SupporterTotalContent
+
+
 @plugin_pool.register
 class TasksBlockPlugin(ResultsContentPlugin):
     model = TasksContent
@@ -88,4 +138,4 @@ class MetricInline(TranslatableStackedInline, NestedStackedInline):
 @plugin_pool.register
 class MetricsBlockPlugin(ResultsContentPlugin):
     model = MetricsContent
-    inlines = [MetricInline]
+    inlines = [MetricInline, ]

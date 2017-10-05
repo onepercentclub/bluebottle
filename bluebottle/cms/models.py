@@ -2,7 +2,6 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from fluent_contents.models import PlaceholderField, ContentItem
-from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from parler.models import TranslatableModel, TranslatedFields
 
@@ -287,51 +286,3 @@ class SupporterTotalContent(ResultsContent):
 
     def __unicode__(self):
         return 'Supporter total'
-
-
-class ResultsContentPlugin(ContentPlugin):
-    admin_form_template = 'admin/cms/content_item.html'
-    category = _('Results')
-
-
-@plugin_pool.register
-class QuotesBlockPlugin(ResultsContentPlugin):
-    model = QuotesContent
-    fieldsets = (
-        (None, {'fields': ('quotes',), }),
-    )
-
-
-@plugin_pool.register
-class StatsBlockPlugin(ResultsContentPlugin):
-    model = StatsContent
-
-
-@plugin_pool.register
-class SurveyBlockPlugin(ResultsContentPlugin):
-    model = SurveyContent
-
-
-@plugin_pool.register
-class ProjectsBlockPlugin(ResultsContentPlugin):
-    model = ProjectsContent
-
-
-@plugin_pool.register
-class ProjectImagesBlockPlugin(ResultsContentPlugin):
-    model = ProjectImagesContent
-
-
-@plugin_pool.register
-class ShareResultsBlockPlugin(ResultsContentPlugin):
-    model = ShareResultsContent
-
-
-@plugin_pool.register
-class ProjectMapBlockPlugin(ResultsContentPlugin):
-    model = ProjectsMapContent
-
-
-@plugin_pool.register
-class SupporterTotalBlockPlugin(ResultsContentPlugin):
-    model = SupporterTotalContent

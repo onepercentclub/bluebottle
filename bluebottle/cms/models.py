@@ -11,6 +11,8 @@ from bluebottle.projects.models import Project
 from adminsortable.models import SortableMixin
 from adminsortable.fields import SortableForeignKey
 
+from bluebottle.tasks.models import Task
+
 
 class ResultPage(TranslatableModel):
     image = models.ImageField(_('Header image'), blank=True, null=True)
@@ -69,6 +71,50 @@ class Stat(TranslatableModel, SortableMixin):
     translations = TranslatedFields(
         title=models.CharField(max_length=63)
     )
+
+    @property
+    def name(self):
+        return self.title
+
+    class Meta:
+        ordering = ['sequence']
+
+
+class Metric(TranslatableModel, SortableMixin):
+    STAT_CHOICES = [
+        ('manual', _('Manual input')),
+        ('people_involved', _('People involved')),
+        ('participants', _('Participants')),
+        ('projects_realized', _('Projects realised')),
+        ('projects_complete', _('Projects complete')),
+        ('tasks_realized', _('Tasks realised')),
+        ('task_members', _('Taskmembers')),
+        ('donated_total', _('Donated total')),
+        ('pledged_total', _('Pledged total')),
+        ('amount_matched', _('Amount matched')),
+        ('projects_online', _('Projects Online')),
+        ('votes_cast', _('Votes casts')),
+        ('time_spent', _('Time spent')),
+    ]
+
+    type = models.CharField(
+        max_length=25,
+        choices=STAT_CHOICES
+    )
+    value = models.CharField(max_length=63, null=True, blank=True,
+                             help_text=_('Use this for \'manual\' input or the override the calculated value.'))
+
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    block = SortableForeignKey('cms.MetricsContent', related_name='metrics')
+
+    translations = TranslatedFields(
+        title=models.CharField(max_length=63)
+    )
+
+    @property
+    def name(self):
+        return self.title
 
     class Meta:
         ordering = ['sequence']
@@ -193,6 +239,32 @@ class ShareResultsContent(ResultsContent):
         return 'Share results block'
 
 
+class TasksContent(ResultsContent):
+    type = 'tasks'
+    preview_template = 'admin/cms/preview/tasks.html'
+    action_text = models.CharField(max_length=40, blank=True, null=True)
+    action_link = models.CharField(max_length=100, blank=True, null=True)
+
+    tasks = models.ManyToManyField(Task, db_table='cms_taskscontent_tasks')
+
+    class Meta:
+        verbose_name = _('Tasks')
+
+    def __unicode__(self):
+        return 'Tasks'
+
+
+class MetricsContent(ResultsContent):
+    type = 'statistics'
+    preview_template = 'admin/cms/preview/metrics.html'
+
+    class Meta:
+        verbose_name = _('Metrics')
+
+    def __unicode__(self):
+        return 'Metrics'
+
+
 class ProjectsMapContent(ResultsContent):
     type = 'projects-map'
     preview_template = 'admin/cms/preview/projects_map.html'
@@ -219,7 +291,6 @@ class SupporterTotalContent(ResultsContent):
 
 class ResultsContentPlugin(ContentPlugin):
     admin_form_template = 'admin/cms/content_item.html'
-
     category = _('Results')
 
 

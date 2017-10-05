@@ -1,14 +1,19 @@
+from bluebottle.common.admin_utils import ImprovedModelForm
+
 from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
+from fluent_contents.extensions import plugin_pool
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
+from nested_inline.admin import NestedStackedInline
 
-
-from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.cms.models import Stats, Stat, Quotes, Quote, ResultPage, Projects
+from bluebottle.cms.models import (
+    Stats, Stat, Quotes, Quote, ResultPage, ResultsContentPlugin, TasksContent,
+    MetricsContent, Metric,
+    Projects)
 from bluebottle.statistics.statistics import Statistics
 
 
@@ -66,3 +71,21 @@ admin.site.register(Stats, StatsAdmin)
 admin.site.register(Quotes, QuotesAdmin)
 admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
+
+
+@plugin_pool.register
+class TasksBlockPlugin(ResultsContentPlugin):
+    model = TasksContent
+    raw_id_fields = ('tasks', )
+
+
+class MetricInline(TranslatableStackedInline, NestedStackedInline):
+    model = Metric
+    extra = 1
+    fields = ('type', 'title', 'value')
+
+
+@plugin_pool.register
+class MetricsBlockPlugin(ResultsContentPlugin):
+    model = MetricsContent
+    inlines = [MetricInline]

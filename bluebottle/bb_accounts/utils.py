@@ -16,7 +16,7 @@ def send_welcome_mail(user=None):
         with TenantLanguage(user.primary_language):
             subject = _("Welcome to %(site_name)s") % {'site_name': tenant_name()}
 
-    c = {
+    data = {
         'email': user.email,
         'site': tenant_url(),
         'site_name': tenant_name(),
@@ -27,20 +27,21 @@ def send_welcome_mail(user=None):
         'LANGUAGE_CODE': user.primary_language,
     }
 
-    # If there is no password set then use the welcome + password set template
-    if not user.password:
+    # If there is no password and no remote_id (SSO) then use the
+    # welcome + password template, and then set a random password
+    if not user.password and not user.remote_id:
         send_mail(
             template_name='bb_accounts/activation_email_no_password',
             subject=subject,
             to=user,
-            **c
+            **data
         )
     else:
         send_mail(
             template_name='bb_accounts/activation_email',
             subject=subject,
             to=user,
-            **c
+            **data
         )
 
 
@@ -49,7 +50,7 @@ def valid_email(email=None):
     if not email:
         return False
     pattern = r"[^@]+@[^@]+\.[^@]+"
-    p = re.compile(pattern)
-    if p.match(email):
+    pat = re.compile(pattern)
+    if pat.match(email):
         return True
     return False

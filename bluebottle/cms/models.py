@@ -2,8 +2,6 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from fluent_contents.models import PlaceholderField, ContentItem
-from fluent_contents.extensions import plugin_pool, ContentPlugin
-
 from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.surveys.models import Survey

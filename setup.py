@@ -67,7 +67,7 @@ install_requires = [
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.8.0',
     'djangorestframework-jwt==1.11.0',
-    'djangorestframework==3.6.4',
+    'djangorestframework==3.7.0',
     'dkimpy==0.6.2',
     'gunicorn==19.7.1',
     'html5lib==0.999999999',

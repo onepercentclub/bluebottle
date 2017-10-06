@@ -16,7 +16,7 @@ from rest_framework import serializers
 from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent, MetricsContent, TasksContent)
+    SupporterTotalContent, TasksContent)
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
 
@@ -66,22 +66,12 @@ class StatSerializer(serializers.ModelSerializer):
 
 
 class StatsContentSerializer(serializers.ModelSerializer):
-    stats = StatSerializer(source='stats.stat_set', many=True)
+    stats = StatSerializer(source='stats', many=True)
     title = serializers.CharField()
     sub_title = serializers.CharField()
 
     class Meta:
         model = QuotesContent
-        fields = ('id', 'type', 'stats', 'title', 'sub_title')
-
-
-class MetricsContentSerializer(serializers.ModelSerializer):
-    stats = StatSerializer(many=True, source='metrics')
-    title = serializers.CharField()
-    sub_title = serializers.CharField()
-
-    class Meta:
-        model = MetricsContent
         fields = ('id', 'type', 'stats', 'title', 'sub_title')
 
 
@@ -92,7 +82,7 @@ class QuoteSerializer(serializers.ModelSerializer):
 
 
 class QuotesContentSerializer(serializers.ModelSerializer):
-    quotes = QuoteSerializer(source='quotes.quote_set', many=True)
+    quotes = QuoteSerializer(source='quotes', many=True)
 
     class Meta:
         model = QuotesContent
@@ -279,8 +269,6 @@ class BlockSerializer(serializers.Serializer):
             serializer = ProjectsMapContentSerializer
         if isinstance(obj, SupporterTotalContent):
             serializer = SupporterTotalContentSerializer
-        if isinstance(obj, MetricsContent):
-            serializer = MetricsContentSerializer
         if isinstance(obj, TasksContent):
             serializer = TasksContentSerializer
 

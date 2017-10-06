@@ -6,13 +6,6 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
-def migrate_quotes(apps, schema_editor):
-    Quote = apps.get_model('cms', 'Quote')
-    for quote in Quote.objects.all():
-        quote.block = quote.quotes.quote_list.get()
-        quote.save()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -34,23 +27,5 @@ class Migration(migrations.Migration):
             model_name='quotescontent',
             name='quotes',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='quote_list', to='cms.Quotes'),
-        ),
-        migrations.RunPython(migrate_quotes),
-        migrations.RemoveField(
-            model_name='quote',
-            name='quotes',
-        ),
-        migrations.RemoveField(
-            model_name='quotescontent',
-            name='quotes',
-        ),
-        migrations.AlterField(
-            model_name='quote',
-            name='block',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='quotes',
-                                    to='cms.QuotesContent'),
-        ),
-        migrations.DeleteModel(
-            name='Quotes',
         ),
     ]

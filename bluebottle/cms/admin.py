@@ -7,21 +7,22 @@ from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from fluent_contents.extensions import plugin_pool
 from fluent_contents.extensions.pluginbase import ContentPlugin
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
-from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
+from adminsortable.admin import SortableStackedInline
 from nested_inline.admin import NestedStackedInline
 
 from bluebottle.cms.models import (
-    Stats, Stat, Quote, ResultPage, TasksContent,
-    MetricsContent, Metric,
-    Projects, QuotesContent, StatsContent, SurveyContent, ProjectsContent, ProjectImagesContent, ShareResultsContent,
+    Stat, Quote, ResultPage, TasksContent,
+    Projects, QuotesContent, StatsContent,
+    SurveyContent, ProjectsContent, ProjectImagesContent, ShareResultsContent,
     ProjectsMapContent, SupporterTotalContent)
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.statistics.statistics import Statistics
 
 
-class StatInline(TranslatableStackedInline, SortableStackedInline):
+class StatInline(TranslatableStackedInline, NestedStackedInline, SortableStackedInline):
     model = Stat
     extra = 1
+    fields = ('type', 'definition', 'title', 'value')
 
     readonly_fields = ['definition']
 
@@ -29,19 +30,9 @@ class StatInline(TranslatableStackedInline, SortableStackedInline):
         return getattr(Statistics, obj.type).__doc__
 
 
-class StatsAdmin(ImprovedModelForm, NonSortableParentAdmin):
-    inlines = [StatInline]
-
-
 class QuoteInline(TranslatableStackedInline, NestedStackedInline):
     model = Quote
     extra = 1
-
-
-class MetricInline(TranslatableStackedInline, NestedStackedInline):
-    model = Metric
-    extra = 1
-    fields = ('type', 'title', 'value')
 
 
 class ProjectInline(admin.StackedInline):
@@ -71,7 +62,6 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
-admin.site.register(Stats, StatsAdmin)
 admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
 
@@ -90,6 +80,7 @@ class QuotesBlockPlugin(ResultsContentPlugin):
 @plugin_pool.register
 class StatsBlockPlugin(ResultsContentPlugin):
     model = StatsContent
+    inlines = [StatInline]
 
 
 @plugin_pool.register
@@ -126,15 +117,3 @@ class SupporterTotalBlockPlugin(ResultsContentPlugin):
 class TasksBlockPlugin(ResultsContentPlugin):
     model = TasksContent
     raw_id_fields = ('tasks', )
-
-
-@plugin_pool.register
-class MetricsBlockPlugin(ResultsContentPlugin):
-    model = MetricsContent
-    inlines = [MetricInline]
-
-    class Media:
-        css = {
-            "all": ('admin/css/forms-nested.css',)
-        }
-        js = ('admin/js/inlines-nested.js',)

@@ -1,15 +1,12 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from adminsortable.models import SortableMixin
 from fluent_contents.models import PlaceholderField, ContentItem
-
 from parler.models import TranslatableModel, TranslatedFields
 
-from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
-from adminsortable.models import SortableMixin
-from adminsortable.fields import SortableForeignKey
-
+from bluebottle.surveys.models import Survey
 from bluebottle.tasks.models import Task
 
 
@@ -19,17 +16,14 @@ class ResultPage(TranslatableModel):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     content = PlaceholderField('content', plugins=[
-        'MetricsBlockPlugin',
         'ProjectImagesBlockPlugin',
         'ProjectMapBlockPlugin',
         'ProjectsBlockPlugin',
         'QuotesBlockPlugin',
         'ShareResultsBlockPlugin',
+        'StatsBlockPlugin',
         'SurveyBlockPlugin',
         'TasksBlockPlugin',
-
-        # Phase out
-        'StatsBlockPlugin',
     ])
 
     translations = TranslatedFields(
@@ -45,11 +39,6 @@ class ResultPage(TranslatableModel):
             ('api_change_resultpage', 'Can change result pages through the API'),
             ('api_delete_resultpage', 'Can delete result pages through the API'),
         )
-
-
-class Stats(models.Model):
-    def __unicode__(self):
-        return u"List of statistics #{0}".format(self.id)
 
 
 class Stat(TranslatableModel, SortableMixin):
@@ -75,48 +64,8 @@ class Stat(TranslatableModel, SortableMixin):
     )
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
-    stats = SortableForeignKey(Stats)
+    block = models.ForeignKey('cms.StatsContent', related_name='stats', null=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
-
-    translations = TranslatedFields(
-        title=models.CharField(max_length=63)
-    )
-
-    @property
-    def name(self):
-        return self.title
-
-    class Meta:
-        ordering = ['sequence']
-
-
-class Metric(TranslatableModel, SortableMixin):
-    STAT_CHOICES = [
-        ('manual', _('Manual input')),
-        ('people_involved', _('People involved')),
-        ('participants', _('Participants')),
-        ('projects_realized', _('Projects realised')),
-        ('projects_complete', _('Projects complete')),
-        ('tasks_realized', _('Tasks realised')),
-        ('task_members', _('Taskmembers')),
-        ('donated_total', _('Donated total')),
-        ('pledged_total', _('Pledged total')),
-        ('amount_matched', _('Amount matched')),
-        ('projects_online', _('Projects Online')),
-        ('votes_cast', _('Votes casts')),
-        ('time_spent', _('Time spent')),
-    ]
-
-    type = models.CharField(
-        max_length=25,
-        choices=STAT_CHOICES
-    )
-    value = models.CharField(max_length=63, null=True, blank=True,
-                             help_text=_('Use this for \'manual\' input or the override the calculated value.'))
-
-    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
-
-    block = SortableForeignKey('cms.MetricsContent', related_name='metrics')
 
     translations = TranslatedFields(
         title=models.CharField(max_length=63)
@@ -159,7 +108,6 @@ class QuotesContent(ResultsContent):
 
 class StatsContent(ResultsContent):
     type = 'statistics'
-    stats = models.ForeignKey(Stats)
     preview_template = 'admin/cms/preview/stats.html'
 
     class Meta:
@@ -256,17 +204,6 @@ class TasksContent(ResultsContent):
 
     def __unicode__(self):
         return 'Tasks'
-
-
-class MetricsContent(ResultsContent):
-    type = 'statistics'
-    preview_template = 'admin/cms/preview/metrics.html'
-
-    class Meta:
-        verbose_name = _('Metrics')
-
-    def __unicode__(self):
-        return 'Metrics'
 
 
 class ProjectsMapContent(ResultsContent):

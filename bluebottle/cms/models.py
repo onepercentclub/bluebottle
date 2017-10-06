@@ -18,9 +18,20 @@ class ResultPage(TranslatableModel):
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
-    content = PlaceholderField('content')
+    content = PlaceholderField('content', plugins=[
+        'MetricsBlockPlugin',
+        'ProjectImagesBlockPlugin',
+        'ProjectMapBlockPlugin',
+        'ProjectsBlockPlugin',
+        'QuotesBlockPlugin',
+        'ShareResultsBlockPlugin',
+        'SurveyBlockPlugin',
+        'TasksBlockPlugin',
 
-    image = models.ImageField(_('Header image'), blank=True, null=True)
+        # Phase out
+        'StatsBlockPlugin',
+    ])
+
     translations = TranslatedFields(
         title=models.CharField(_('Title'), max_length=40),
         slug=models.SlugField(_('Slug'), max_length=40),
@@ -119,13 +130,8 @@ class Metric(TranslatableModel, SortableMixin):
         ordering = ['sequence']
 
 
-class Quotes(models.Model):
-    def __unicode__(self):
-        return u"List of quotes #{0}".format(self.id)
-
-
 class Quote(TranslatableModel):
-    quotes = models.ForeignKey(Quotes)
+    block = models.ForeignKey('cms.QuotesContent', related_name='quotes')
     translations = TranslatedFields(
         name=models.CharField(max_length=30),
         quote=models.CharField(max_length=60)
@@ -142,7 +148,6 @@ class ResultsContent(ContentItem):
 
 class QuotesContent(ResultsContent):
     type = 'quotes'
-    quotes = models.ForeignKey(Quotes)
     preview_template = 'admin/cms/preview/quotes.html'
 
     class Meta:

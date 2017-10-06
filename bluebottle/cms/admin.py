@@ -11,7 +11,7 @@ from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
 from nested_inline.admin import NestedStackedInline
 
 from bluebottle.cms.models import (
-    Stats, Stat, Quotes, Quote, ResultPage, TasksContent,
+    Stats, Stat, Quote, ResultPage, TasksContent,
     MetricsContent, Metric,
     Projects, QuotesContent, StatsContent, SurveyContent, ProjectsContent, ProjectImagesContent, ShareResultsContent,
     ProjectsMapContent, SupporterTotalContent)
@@ -33,19 +33,21 @@ class StatsAdmin(ImprovedModelForm, NonSortableParentAdmin):
     inlines = [StatInline]
 
 
-class QuoteInline(TranslatableStackedInline):
+class QuoteInline(TranslatableStackedInline, NestedStackedInline):
     model = Quote
     extra = 1
+
+
+class MetricInline(TranslatableStackedInline, NestedStackedInline):
+    model = Metric
+    extra = 1
+    fields = ('type', 'title', 'value')
 
 
 class ProjectInline(admin.StackedInline):
     model = Projects.projects.through
     raw_id_fields = ('project', )
     extra = 1
-
-
-class QuotesAdmin(ImprovedModelForm, admin.ModelAdmin):
-    inlines = [QuoteInline]
 
 
 class ProjectsAdmin(ImprovedModelForm, admin.ModelAdmin):
@@ -70,7 +72,6 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
 
 
 admin.site.register(Stats, StatsAdmin)
-admin.site.register(Quotes, QuotesAdmin)
 admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
 
@@ -83,9 +84,7 @@ class ResultsContentPlugin(ContentPlugin):
 @plugin_pool.register
 class QuotesBlockPlugin(ResultsContentPlugin):
     model = QuotesContent
-    fieldsets = (
-        (None, {'fields': ('quotes',), }),
-    )
+    inlines = [QuoteInline]
 
 
 @plugin_pool.register
@@ -129,13 +128,13 @@ class TasksBlockPlugin(ResultsContentPlugin):
     raw_id_fields = ('tasks', )
 
 
-class MetricInline(TranslatableStackedInline, NestedStackedInline):
-    model = Metric
-    extra = 1
-    fields = ('type', 'title', 'value')
-
-
 @plugin_pool.register
 class MetricsBlockPlugin(ResultsContentPlugin):
     model = MetricsContent
-    inlines = [MetricInline, ]
+    inlines = [MetricInline]
+
+    class Media:
+        css = {
+            "all": ('admin/css/forms-nested.css',)
+        }
+        js = ('admin/js/inlines-nested.js',)

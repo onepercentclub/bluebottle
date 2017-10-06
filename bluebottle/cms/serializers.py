@@ -66,7 +66,7 @@ class StatSerializer(serializers.ModelSerializer):
 
 
 class StatsContentSerializer(serializers.ModelSerializer):
-    stats = StatSerializer(source='stats', many=True)
+    stats = StatSerializer(many=True)
     title = serializers.CharField()
     sub_title = serializers.CharField()
 
@@ -82,7 +82,7 @@ class QuoteSerializer(serializers.ModelSerializer):
 
 
 class QuotesContentSerializer(serializers.ModelSerializer):
-    quotes = QuoteSerializer(source='quotes', many=True)
+    quotes = QuoteSerializer(many=True)
 
     class Meta:
         model = QuotesContent

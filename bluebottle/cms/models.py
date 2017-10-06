@@ -1,15 +1,13 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from adminsortable.models import SortableMixin
 from fluent_contents.models import PlaceholderField, ContentItem
-from fluent_contents.extensions import plugin_pool, ContentPlugin
-
 from parler.models import TranslatableModel, TranslatedFields
 
-from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
-from adminsortable.models import SortableMixin
-from adminsortable.fields import SortableForeignKey
+from bluebottle.surveys.models import Survey
+from bluebottle.tasks.models import Task
 
 
 class ResultPage(TranslatableModel):
@@ -17,9 +15,17 @@ class ResultPage(TranslatableModel):
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
-    content = PlaceholderField('content')
+    content = PlaceholderField('content', plugins=[
+        'ProjectImagesBlockPlugin',
+        'ProjectMapBlockPlugin',
+        'ProjectsBlockPlugin',
+        'QuotesBlockPlugin',
+        'ShareResultsBlockPlugin',
+        'StatsBlockPlugin',
+        'SurveyBlockPlugin',
+        'TasksBlockPlugin',
+    ])
 
-    image = models.ImageField(_('Header image'), blank=True, null=True)
     translations = TranslatedFields(
         title=models.CharField(_('Title'), max_length=40),
         slug=models.SlugField(_('Slug'), max_length=40),
@@ -33,11 +39,6 @@ class ResultPage(TranslatableModel):
             ('api_change_resultpage', 'Can change result pages through the API'),
             ('api_delete_resultpage', 'Can delete result pages through the API'),
         )
-
-
-class Stats(models.Model):
-    def __unicode__(self):
-        return u"List of statistics #{0}".format(self.id)
 
 
 class Stat(TranslatableModel, SortableMixin):
@@ -63,24 +64,23 @@ class Stat(TranslatableModel, SortableMixin):
     )
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
-    stats = SortableForeignKey(Stats)
+    block = models.ForeignKey('cms.StatsContent', related_name='stats', null=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     translations = TranslatedFields(
         title=models.CharField(max_length=63)
     )
 
+    @property
+    def name(self):
+        return self.title
+
     class Meta:
         ordering = ['sequence']
 
 
-class Quotes(models.Model):
-    def __unicode__(self):
-        return u"List of quotes #{0}".format(self.id)
-
-
 class Quote(TranslatableModel):
-    quotes = models.ForeignKey(Quotes)
+    block = models.ForeignKey('cms.QuotesContent', related_name='quotes')
     translations = TranslatedFields(
         name=models.CharField(max_length=30),
         quote=models.CharField(max_length=60)
@@ -97,7 +97,6 @@ class ResultsContent(ContentItem):
 
 class QuotesContent(ResultsContent):
     type = 'quotes'
-    quotes = models.ForeignKey(Quotes)
     preview_template = 'admin/cms/preview/quotes.html'
 
     class Meta:
@@ -109,7 +108,6 @@ class QuotesContent(ResultsContent):
 
 class StatsContent(ResultsContent):
     type = 'statistics'
-    stats = models.ForeignKey(Stats)
     preview_template = 'admin/cms/preview/stats.html'
 
     class Meta:
@@ -193,6 +191,21 @@ class ShareResultsContent(ResultsContent):
         return 'Share results block'
 
 
+class TasksContent(ResultsContent):
+    type = 'tasks'
+    preview_template = 'admin/cms/preview/tasks.html'
+    action_text = models.CharField(max_length=40, blank=True, null=True)
+    action_link = models.CharField(max_length=100, blank=True, null=True)
+
+    tasks = models.ManyToManyField(Task, db_table='cms_taskscontent_tasks')
+
+    class Meta:
+        verbose_name = _('Tasks')
+
+    def __unicode__(self):
+        return 'Tasks'
+
+
 class ProjectsMapContent(ResultsContent):
     type = 'projects-map'
     preview_template = 'admin/cms/preview/projects_map.html'
@@ -215,52 +228,3 @@ class SupporterTotalContent(ResultsContent):
 
     def __unicode__(self):
         return 'Supporter total'
-
-
-class ResultsContentPlugin(ContentPlugin):
-    admin_form_template = 'admin/cms/content_item.html'
-
-    category = _('Results')
-
-
-@plugin_pool.register
-class QuotesBlockPlugin(ResultsContentPlugin):
-    model = QuotesContent
-    fieldsets = (
-        (None, {'fields': ('quotes',), }),
-    )
-
-
-@plugin_pool.register
-class StatsBlockPlugin(ResultsContentPlugin):
-    model = StatsContent
-
-
-@plugin_pool.register
-class SurveyBlockPlugin(ResultsContentPlugin):
-    model = SurveyContent
-
-
-@plugin_pool.register
-class ProjectsBlockPlugin(ResultsContentPlugin):
-    model = ProjectsContent
-
-
-@plugin_pool.register
-class ProjectImagesBlockPlugin(ResultsContentPlugin):
-    model = ProjectImagesContent
-
-
-@plugin_pool.register
-class ShareResultsBlockPlugin(ResultsContentPlugin):
-    model = ShareResultsContent
-
-
-@plugin_pool.register
-class ProjectMapBlockPlugin(ResultsContentPlugin):
-    model = ProjectsMapContent
-
-
-@plugin_pool.register
-class SupporterTotalBlockPlugin(ResultsContentPlugin):
-    model = SupporterTotalContent

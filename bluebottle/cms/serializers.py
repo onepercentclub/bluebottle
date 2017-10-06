@@ -1,3 +1,4 @@
+from bluebottle.tasks.serializers import TaskPreviewSerializer
 from django.db import connection
 from django.db.models import Sum
 
@@ -15,7 +16,7 @@ from rest_framework import serializers
 from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent)
+    SupporterTotalContent, TasksContent)
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
 
@@ -65,7 +66,7 @@ class StatSerializer(serializers.ModelSerializer):
 
 
 class StatsContentSerializer(serializers.ModelSerializer):
-    stats = StatSerializer(source='stats.stat_set', many=True)
+    stats = StatSerializer(many=True)
     title = serializers.CharField()
     sub_title = serializers.CharField()
 
@@ -81,7 +82,7 @@ class QuoteSerializer(serializers.ModelSerializer):
 
 
 class QuotesContentSerializer(serializers.ModelSerializer):
-    quotes = QuoteSerializer(source='quotes.quote_set', many=True)
+    quotes = QuoteSerializer(many=True)
 
     class Meta:
         model = QuotesContent
@@ -157,6 +158,15 @@ class ProjectsContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectsContent
         fields = ('id', 'type', 'title', 'sub_title', 'projects',
+                  'action_text', 'action_link')
+
+
+class TasksContentSerializer(serializers.ModelSerializer):
+    tasks = TaskPreviewSerializer(many=True)
+
+    class Meta:
+        model = TasksContent
+        fields = ('id', 'type', 'title', 'sub_title', 'tasks',
                   'action_text', 'action_link')
 
 
@@ -259,6 +269,8 @@ class BlockSerializer(serializers.Serializer):
             serializer = ProjectsMapContentSerializer
         if isinstance(obj, SupporterTotalContent):
             serializer = SupporterTotalContentSerializer
+        if isinstance(obj, TasksContent):
+            serializer = TasksContentSerializer
 
         return serializer(obj, context=self.context).to_representation(obj)
 

@@ -13,7 +13,7 @@ from bluebottle.statistics.statistics import Statistics
 from rest_framework import serializers
 
 from bluebottle.cms.models import (
-    Stat, StatsContent, ResultPage, QuotesContent, SurveyContent, Quote,
+    Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent)
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
@@ -241,24 +241,34 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
                   'supporters', 'co_financers')
 
 
+class DefaultBlockSerializer(serializers.Serializer):
+    def to_representation(self, obj):
+        return {
+            'type': obj.__class__._meta.model_name,
+            'content': str(obj)
+        }
+
+
 class BlockSerializer(serializers.Serializer):
     def to_representation(self, obj):
         if isinstance(obj, StatsContent):
             serializer = StatsContentSerializer
-        if isinstance(obj, QuotesContent):
+        elif isinstance(obj, QuotesContent):
             serializer = QuotesContentSerializer
-        if isinstance(obj, ProjectImagesContent):
+        elif isinstance(obj, ProjectImagesContent):
             serializer = ProjectImagesContentSerializer
-        if isinstance(obj, SurveyContent):
+        elif isinstance(obj, SurveyContent):
             serializer = SurveyContentSerializer
-        if isinstance(obj, ProjectsContent):
+        elif isinstance(obj, ProjectsContent):
             serializer = ProjectsContentSerializer
-        if isinstance(obj, ShareResultsContent):
+        elif isinstance(obj, ShareResultsContent):
             serializer = ShareResultsContentSerializer
-        if isinstance(obj, ProjectsMapContent):
+        elif isinstance(obj, ProjectsMapContent):
             serializer = ProjectsMapContentSerializer
-        if isinstance(obj, SupporterTotalContent):
+        elif isinstance(obj, SupporterTotalContent):
             serializer = SupporterTotalContentSerializer
+        else:
+            serializer = DefaultBlockSerializer
 
         return serializer(obj, context=self.context).to_representation(obj)
 
@@ -280,3 +290,11 @@ class ResultPageSerializer(serializers.ModelSerializer):
         model = ResultPage
         fields = ('id', 'title', 'slug', 'start_date', 'image', 'share_image',
                   'end_date', 'description', 'blocks')
+
+
+class HomePageSerializer(serializers.ModelSerializer):
+    blocks = BlockSerializer(source='content.contentitems.all.translated', many=True)
+
+    class Meta:
+        model = HomePage
+        fields = ('id', 'blocks')

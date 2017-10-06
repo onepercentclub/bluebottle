@@ -8,7 +8,7 @@ from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
 
 
 from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.cms.models import Stats, Stat, Quotes, Quote, ResultPage, Projects
+from bluebottle.cms.models import Stats, Stat, Quotes, Quote, ResultPage, Projects, HomePage
 from bluebottle.statistics.statistics import Statistics
 
 
@@ -62,7 +62,16 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
+class HomePageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
+    }
+
+    fields = ('content', )
+
+
 admin.site.register(Stats, StatsAdmin)
 admin.site.register(Quotes, QuotesAdmin)
 admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
+admin.site.register(HomePage, HomePageAdmin)

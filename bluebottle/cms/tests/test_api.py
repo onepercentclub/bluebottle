@@ -12,6 +12,7 @@ from moneyed.classes import Money
 
 from rest_framework import status
 from fluent_contents.models import Placeholder
+from fluent_contents.plugins.rawhtml.models import RawHtmlItem
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import (
@@ -25,8 +26,8 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.cms import (
-    ResultPageFactory, StatFactory, StatsFactory, QuotesFactory, QuoteFactory,
-    ProjectsFactory,
+    ResultPageFactory, HomePageFactory, StatFactory, StatsFactory,
+    QuotesFactory, QuoteFactory, ProjectsFactory,
 )
 from bluebottle.test.utils import BluebottleTestCase
 from sorl_watermarker.engines.pil_engine import Engine
@@ -277,3 +278,25 @@ class ResultPageTestCase(BluebottleTestCase):
             token='JWT {0}'.format(user.get_jwt_token())
         )
         self.assertEqual(response.status_code, 403)
+
+
+class HomePageTestCase(BluebottleTestCase):
+    """
+    Integration tests for the Results Page API.
+    """
+
+    def setUp(self):
+        super(HomePageTestCase, self).setUp()
+        self.init_projects()
+        self.page = HomePageFactory(pk=1)
+        self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
+        self.url = reverse('home-page-detail')
+
+    def test_results(self):
+        RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(response.data['blocks'][0]['type'], 'rawhtmlitem')
+        self.assertEqual(response.data['blocks'][0]['content'], 'Test content')

@@ -4,7 +4,7 @@ import factory
 from django.utils.timezone import now
 
 from bluebottle.cms.models import (
-    ResultPage, Stats, Stat, Quotes, Quote, Projects
+    ResultPage, HomePage, Stats, Stat, Quotes, Quote, Projects
 )
 
 
@@ -17,6 +17,11 @@ class ResultPageFactory(factory.DjangoModelFactory):
     description = factory.Sequence(lambda n: 'Results description {0}'.format(n))
     start_date = now() - timedelta(days=300)
     end_date = now() + timedelta(days=65)
+
+
+class HomePageFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = HomePage
 
 
 class StatsFactory(factory.DjangoModelFactory):

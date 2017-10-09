@@ -16,7 +16,7 @@ class ParticipationMetricsForm(forms.Form):
     START_YEAR_CHOICES = ((year, '{}'.format(year)) for year in range(CURRENT_YEAR - 3, CURRENT_YEAR + 1))
     END_YEAR_CHOICES = ((year, '{}'.format(year)) for year in range(CURRENT_YEAR - 3, CURRENT_YEAR + 1))
 
-    email = forms.EmailField(disabled=True, required=True)
+    email = forms.EmailField(required=True)
     start_year = forms.ChoiceField(choices=START_YEAR_CHOICES,
                                    initial=CURRENT_YEAR - 3,
                                    label=_('Start Year'),

@@ -6,7 +6,7 @@ from .serializers import RedirectSerializer
 
 
 class RedirectPagination(BluebottlePagination):
-    page_size = 100
+    page_size = 200
 
 
 class RedirectListView(generics.ListAPIView):

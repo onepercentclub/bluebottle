@@ -275,7 +275,8 @@ SHARED_APPS = (
     'parler',
     'daterange_filter',
     'adminsortable',
-    'django_summernote'
+    'django_summernote',
+    'nested_inline'
 
 )
 TENANT_APPS = (
@@ -838,6 +839,7 @@ SUMMERNOTE_CONFIG = {
         ['style', ['bold', 'italic', 'underline', 'clear']],
         ['para', ['ul', 'ol']],
         ['insert', ['link', 'picture']],
+        ['view', ['codeview']],
     ],
     'disable_upload': False,
     'attachment_model': 'projects.ProjectImage',

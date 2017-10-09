@@ -5,7 +5,7 @@ from fluent_contents.extensions import plugin_pool, ContentPlugin
 from bluebottle.cms.models import (
     QuotesContent, StatsContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent
+    SupporterTotalContent, TasksContent
 )
 
 
@@ -63,3 +63,9 @@ class ProjectMapBlockPlugin(CMSContentPlugin):
 class SupporterTotalBlockPlugin(CMSContentPlugin):
     model = SupporterTotalContent
     category = _('Results')
+
+
+@plugin_pool.register
+class TasksBlockPlugin(CMSContentPlugin):
+    model = TasksContent
+    raw_id_fields = ('tasks', )

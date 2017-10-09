@@ -67,7 +67,7 @@ class PreviewDonationSerializer(serializers.ModelSerializer):
     payment_method = serializers.SerializerMethodField()
     user = UserPreviewSerializer(source='public_user')
     amount = MoneySerializer()
-    name = serializers.CharField(required=False)
+    name = serializers.CharField(source='public_name', required=False)
 
     class Meta:
         model = Donation

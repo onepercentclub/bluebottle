@@ -44,6 +44,11 @@ class Donation(models.Model):
         return self.order.user
 
     @property
+    def public_name(self):
+        if not self.anonymous:
+            return self.name
+
+    @property
     def public_user(self):
         if self.anonymous or self.name:
             return None

@@ -26,8 +26,8 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.cms import (
-    ResultPageFactory, HomePageFactory, StatFactory, StatsFactory,
-    QuotesFactory, QuoteFactory, ProjectsFactory,
+    ResultPageFactory, HomePageFactory, StatFactory,
+    QuoteFactory, ProjectsFactory,
 )
 from bluebottle.test.utils import BluebottleTestCase
 from sorl_watermarker.engines.pil_engine import Engine
@@ -60,11 +60,10 @@ class ResultPageTestCase(BluebottleTestCase):
             self.assertEqual(watermark_mock.call_args[0][1]['watermark'], 'test/logo-overlay.png')
 
     def test_results_stats(self):
-        self.stats = StatsFactory()
-        self.stat1 = StatFactory(stats=self.stats, type='manual', title='Poffertjes', value=3500)
-        self.stat2 = StatFactory(stats=self.stats, type='donated_total', title='Donations', value=None)
+        self.stat1 = StatFactory(type='manual', title='Poffertjes', value=3500)
+        self.stat2 = StatFactory(type='donated_total', title='Donations', value=None)
 
-        StatsContent.objects.create_for_placeholder(self.placeholder, stats=self.stats, title='Look at us!')
+        StatsContent.objects.create_for_placeholder(self.placeholder, title='Look at us!')
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -78,10 +77,9 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(stats['stats'][1]['value'], {"amount": Decimal('0'), "currency": "EUR"})
 
     def test_results_quotes(self):
-        self.quotes = QuotesFactory()
-        self.quote = QuoteFactory(quotes=self.quotes)
+        self.quote = QuoteFactory()
 
-        QuotesContent.objects.create_for_placeholder(self.placeholder, quotes=self.quotes)
+        QuotesContent.objects.create_for_placeholder(self.placeholder, self.quote)
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -222,12 +220,10 @@ class ResultPageTestCase(BluebottleTestCase):
         survey = SurveyFactory.create()
         SurveyContent.objects.create_for_placeholder(self.placeholder, survey=survey)
 
-        self.quotes = QuotesFactory()
-        self.quote = QuoteFactory(quotes=self.quotes)
+        self.quote = QuoteFactory()
         QuotesContent.objects.create_for_placeholder(self.placeholder, quotes=self.quotes)
 
-        self.stats = StatsFactory()
-        self.stat = StatFactory(stats=self.stats)
+        self.stat = StatFactory()
         StatsContent.objects.create_for_placeholder(self.placeholder, stats=self.stats)
 
         response = self.client.get(self.url)

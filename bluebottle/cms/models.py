@@ -1,13 +1,13 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from adminsortable.models import SortableMixin
 from fluent_contents.models import PlaceholderField, ContentItem
 from parler.models import TranslatableModel, TranslatedFields
 
-from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
-from adminsortable.models import SortableMixin
-from adminsortable.fields import SortableForeignKey
+from bluebottle.surveys.models import Survey
+from bluebottle.tasks.models import Task
 
 
 class ResultPage(TranslatableModel):
@@ -15,9 +15,17 @@ class ResultPage(TranslatableModel):
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
-    content = PlaceholderField('content')
+    content = PlaceholderField('content', plugins=[
+        'ProjectImagesBlockPlugin',
+        'ProjectMapBlockPlugin',
+        'ProjectsBlockPlugin',
+        'QuotesBlockPlugin',
+        'ShareResultsBlockPlugin',
+        'StatsBlockPlugin',
+        'SurveyBlockPlugin',
+        'TasksBlockPlugin',
+    ])
 
-    image = models.ImageField(_('Header image'), blank=True, null=True)
     translations = TranslatedFields(
         title=models.CharField(_('Title'), max_length=40),
         slug=models.SlugField(_('Slug'), max_length=40),
@@ -46,11 +54,6 @@ class HomePage(TranslatableModel):
         )
 
 
-class Stats(models.Model):
-    def __unicode__(self):
-        return u"List of statistics #{0}".format(self.id)
-
-
 class Stat(TranslatableModel, SortableMixin):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
@@ -74,24 +77,23 @@ class Stat(TranslatableModel, SortableMixin):
     )
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
-    stats = SortableForeignKey(Stats)
+    block = models.ForeignKey('cms.StatsContent', related_name='stats', null=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     translations = TranslatedFields(
         title=models.CharField(max_length=63)
     )
 
+    @property
+    def name(self):
+        return self.title
+
     class Meta:
         ordering = ['sequence']
 
 
-class Quotes(models.Model):
-    def __unicode__(self):
-        return u"List of quotes #{0}".format(self.id)
-
-
 class Quote(TranslatableModel):
-    quotes = models.ForeignKey(Quotes)
+    block = models.ForeignKey('cms.QuotesContent', related_name='quotes')
     translations = TranslatedFields(
         name=models.CharField(max_length=30),
         quote=models.CharField(max_length=60)
@@ -108,7 +110,6 @@ class TitledContent(ContentItem):
 
 class QuotesContent(TitledContent):
     type = 'quotes'
-    quotes = models.ForeignKey(Quotes)
     preview_template = 'admin/cms/preview/quotes.html'
 
     class Meta:
@@ -120,7 +121,6 @@ class QuotesContent(TitledContent):
 
 class StatsContent(TitledContent):
     type = 'statistics'
-    stats = models.ForeignKey(Stats)
     preview_template = 'admin/cms/preview/stats.html'
 
     class Meta:
@@ -202,6 +202,21 @@ class ShareResultsContent(TitledContent):
 
     def __unicode__(self):
         return 'Share results block'
+
+
+class TasksContent(TitledContent):
+    type = 'tasks'
+    preview_template = 'admin/cms/preview/tasks.html'
+    action_text = models.CharField(max_length=40, blank=True, null=True)
+    action_link = models.CharField(max_length=100, blank=True, null=True)
+
+    tasks = models.ManyToManyField(Task, db_table='cms_taskscontent_tasks')
+
+    class Meta:
+        verbose_name = _('Tasks')
+
+    def __unicode__(self):
+        return 'Tasks'
 
 
 class ProjectsMapContent(TitledContent):

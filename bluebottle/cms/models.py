@@ -41,6 +41,19 @@ class ResultPage(TranslatableModel):
         )
 
 
+class HomePage(TranslatableModel):
+    content = PlaceholderField('content')
+    translations = TranslatedFields()
+
+    class Meta:
+        permissions = (
+            ('api_read_homepage', 'Can view homepages through the API'),
+            ('api_add_homepage', 'Can add homepages through the API'),
+            ('api_change_homepage', 'Can change homepages through the API'),
+            ('api_delete_homepage', 'Can delete homepages through the API'),
+        )
+
+
 class Stat(TranslatableModel, SortableMixin):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
@@ -87,7 +100,7 @@ class Quote(TranslatableModel):
     )
 
 
-class ResultsContent(ContentItem):
+class TitledContent(ContentItem):
     title = models.CharField(max_length=40, blank=True, null=True)
     sub_title = models.CharField(max_length=70, blank=True, null=True)
 
@@ -95,7 +108,7 @@ class ResultsContent(ContentItem):
         abstract = True
 
 
-class QuotesContent(ResultsContent):
+class QuotesContent(TitledContent):
     type = 'quotes'
     preview_template = 'admin/cms/preview/quotes.html'
 
@@ -106,7 +119,7 @@ class QuotesContent(ResultsContent):
         return unicode(self.quotes)
 
 
-class StatsContent(ResultsContent):
+class StatsContent(TitledContent):
     type = 'statistics'
     preview_template = 'admin/cms/preview/stats.html'
 
@@ -117,7 +130,7 @@ class StatsContent(ResultsContent):
         return unicode(self.stats)
 
 
-class SurveyContent(ResultsContent):
+class SurveyContent(TitledContent):
     type = 'survey'
     preview_template = 'admin/cms/preview/results.html'
     survey = models.ForeignKey(Survey, null=True)
@@ -136,7 +149,7 @@ class Projects(models.Model):
         return u"List of projects #{0}".format(self.id)
 
 
-class ProjectsContent(ResultsContent):
+class ProjectsContent(TitledContent):
     action_text = models.CharField(max_length=40,
                                    default=_('Start your own project'),
                                    blank=True, null=True)
@@ -155,7 +168,7 @@ class ProjectsContent(ResultsContent):
         return unicode(self.projects)
 
 
-class ProjectImagesContent(ResultsContent):
+class ProjectImagesContent(TitledContent):
     type = 'project_images'
     preview_template = 'admin/cms/preview/project_images.html'
 
@@ -173,7 +186,7 @@ class ProjectImagesContent(ResultsContent):
         return 'Project images block'
 
 
-class ShareResultsContent(ResultsContent):
+class ShareResultsContent(TitledContent):
     type = 'share-results'
     preview_template = 'admin/cms/preview/share_results.html'
 
@@ -191,7 +204,7 @@ class ShareResultsContent(ResultsContent):
         return 'Share results block'
 
 
-class TasksContent(ResultsContent):
+class TasksContent(TitledContent):
     type = 'tasks'
     preview_template = 'admin/cms/preview/tasks.html'
     action_text = models.CharField(max_length=40, blank=True, null=True)
@@ -206,7 +219,7 @@ class TasksContent(ResultsContent):
         return 'Tasks'
 
 
-class ProjectsMapContent(ResultsContent):
+class ProjectsMapContent(TitledContent):
     type = 'projects-map'
     preview_template = 'admin/cms/preview/projects_map.html'
 
@@ -217,7 +230,7 @@ class ProjectsMapContent(ResultsContent):
         return 'Projects Map'
 
 
-class SupporterTotalContent(ResultsContent):
+class SupporterTotalContent(TitledContent):
     type = 'supporter_total'
     preview_template = 'admin/cms/preview/supporter_total.html'
 

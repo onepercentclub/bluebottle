@@ -11,7 +11,7 @@ from adminsortable.admin import SortableStackedInline
 from nested_inline.admin import NestedStackedInline
 
 from bluebottle.cms.models import (
-    Stat, Quote, ResultPage, TasksContent,
+    Stat, Quote, ResultPage, HomePage, TasksContent,
     Projects, QuotesContent, StatsContent,
     SurveyContent, ProjectsContent, ProjectImagesContent, ShareResultsContent,
     ProjectsMapContent, SupporterTotalContent)
@@ -62,58 +62,14 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
+class HomePageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
+    }
+
+    fields = ('content', )
+
+
 admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
-
-
-class ResultsContentPlugin(ContentPlugin):
-    admin_form_template = 'admin/cms/content_item.html'
-    category = _('Results')
-
-
-@plugin_pool.register
-class QuotesBlockPlugin(ResultsContentPlugin):
-    model = QuotesContent
-    inlines = [QuoteInline]
-
-
-@plugin_pool.register
-class StatsBlockPlugin(ResultsContentPlugin):
-    model = StatsContent
-    inlines = [StatInline]
-
-
-@plugin_pool.register
-class SurveyBlockPlugin(ResultsContentPlugin):
-    model = SurveyContent
-
-
-@plugin_pool.register
-class ProjectsBlockPlugin(ResultsContentPlugin):
-    model = ProjectsContent
-
-
-@plugin_pool.register
-class ProjectImagesBlockPlugin(ResultsContentPlugin):
-    model = ProjectImagesContent
-
-
-@plugin_pool.register
-class ShareResultsBlockPlugin(ResultsContentPlugin):
-    model = ShareResultsContent
-
-
-@plugin_pool.register
-class ProjectMapBlockPlugin(ResultsContentPlugin):
-    model = ProjectsMapContent
-
-
-@plugin_pool.register
-class SupporterTotalBlockPlugin(ResultsContentPlugin):
-    model = SupporterTotalContent
-
-
-@plugin_pool.register
-class TasksBlockPlugin(ResultsContentPlugin):
-    model = TasksContent
-    raw_id_fields = ('tasks', )
+admin.site.register(HomePage, HomePageAdmin)

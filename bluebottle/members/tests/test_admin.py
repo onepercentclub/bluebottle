@@ -54,6 +54,8 @@ class MemberAdminTest(BluebottleAdminTestCase):
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
         self.assertTrue('Set password' in welcome_email.body)
+        self.assertTrue('admin@example.com' in welcome_email.body,
+                        'Tenant contact email should be present.')
 
 
 class InlineModelTestCase(BluebottleAdminTestCase):

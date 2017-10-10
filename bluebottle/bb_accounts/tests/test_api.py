@@ -272,7 +272,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [new_user_email])
-        self.assertTrue('Let\'s get started' in welcome_email.body)
+        self.assertTrue('Take me there' in welcome_email.body)
 
     def test_duplicate_user_create(self):
         """

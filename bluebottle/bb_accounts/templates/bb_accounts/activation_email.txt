@@ -4,10 +4,18 @@
 {% block content %}
 {% blocktrans %}
 Welcome {{ first_name }}
-You're officially part of {{ site_name }}
+
+You’re now officially part of the {{ site_name }} community. Connect, share and work with others on projects that you care about.
+
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
-{% trans "Let's get started" context 'email' %}: {{ site }}
+{% trans "Take me there" context 'email' %}: {{ site }}
+{% endblock %}
+
+{% block content %}
+{% blocktrans %}
+If you have any questions please don’t hesitate to contact {{ contact_email }}.
+{% endblocktrans %}
 {% endblock %}

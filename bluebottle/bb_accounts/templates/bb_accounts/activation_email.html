@@ -4,11 +4,17 @@
 {% block content %}
 {% blocktrans %}
 <h1>Welcome {{ first_name }}</h1>
-<p class="lead">You're officially part of {{ site_name }}</p>
+<p class="lead">You’re now officially part of the {{ site_name }} community. Connect, share and work with others on projects that you care about.</p>
 {% endblocktrans %}
 {% endblock %}
 
 {% block action %}
     <a href="{{ site }}"
-       class="action-email">{% trans "Let's get started" context 'email' %}</a>
+       class="action-email">{% trans "Take me there" context 'email' %}</a>
+{% endblock %}
+
+{% block content %}
+{% blocktrans %}
+<p>If you have any questions please don’t hesitate to contact {{ contact_email }}</p>
+{% endblocktrans %}
 {% endblock %}

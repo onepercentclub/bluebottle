@@ -1,6 +1,9 @@
 # coding=utf-8
+import os
+
 from django.core import mail
 from django.test.utils import override_settings
+from django.conf import settings
 
 from tenant_schemas.urlresolvers import reverse
 
@@ -40,7 +43,10 @@ class MemberAdminTest(BluebottleAdminTestCase):
         response = self.client.post(self.member_url, data)
         self.assertIn('Please correct the errors below.', response.content)
 
-    @override_settings(SEND_WELCOME_MAIL=True)
+    @override_settings(
+        SEND_WELCOME_MAIL=True,
+        MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
+                                      'properties'))
     def test_valid_form(self):
         response = self.client.get(self.member_url)
         csrf = self.get_csrf_token(response)
@@ -54,6 +60,8 @@ class MemberAdminTest(BluebottleAdminTestCase):
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
         self.assertTrue('Set password' in welcome_email.body)
+        self.assertTrue('test@example.com' in welcome_email.body,
+                        'Tenant contact email should be present.')
 
 
 class InlineModelTestCase(BluebottleAdminTestCase):

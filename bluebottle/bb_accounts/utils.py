@@ -6,6 +6,7 @@ from django.contrib.auth.tokens import default_token_generator
 
 from bluebottle.clients.utils import tenant_url, tenant_name
 from bluebottle.utils.email_backend import send_mail
+from bluebottle.clients import properties
 
 from tenant_extras.utils import TenantLanguage
 
@@ -22,6 +23,7 @@ def send_welcome_mail(user=None):
         'site_name': tenant_name(),
         'user': user,
         'first_name': user.first_name,
+        'contact_email': properties.CONTACT_EMAIL,
         'token': default_token_generator.make_token(user),
         'uid': int_to_base36(user.pk),
         'LANGUAGE_CODE': user.primary_language,

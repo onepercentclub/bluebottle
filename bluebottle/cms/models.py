@@ -158,7 +158,7 @@ class ProjectsContent(TitledContent):
         verbose_name = _('Projects')
 
     def __unicode__(self):
-        return unicode(self.projects)
+        return unicode(self.title)
 
 
 class ProjectImagesContent(TitledContent):

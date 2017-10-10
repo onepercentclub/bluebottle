@@ -153,7 +153,7 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
 
 class ProjectsContentSerializer(serializers.ModelSerializer):
-    projects = ProjectPreviewSerializer(many=True, source='projects.projects')
+    projects = ProjectPreviewSerializer(many=True)
 
     class Meta:
         model = ProjectsContent

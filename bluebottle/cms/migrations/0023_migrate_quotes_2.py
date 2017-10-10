@@ -15,6 +15,9 @@ def migrate_quotes(apps, schema_editor):
         for block in quote.quotes.quote_list.all():
             quote.pk = None
             quote.block = block
+            trans = quote.translations.filter(language_code=block.language_code)
+            if trans.exists():
+                quote.title = trans.get().title
             quote.save()
         Quote.objects.filter(pk=pk).all().delete()
 

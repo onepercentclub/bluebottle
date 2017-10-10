@@ -1,20 +1,13 @@
 from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
-from django.utils.translation import ugettext_lazy as _
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
-from fluent_contents.extensions import plugin_pool
-from fluent_contents.extensions.pluginbase import ContentPlugin
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
 from adminsortable.admin import SortableStackedInline
 from nested_inline.admin import NestedStackedInline
 
-from bluebottle.cms.models import (
-    Stat, Quote, ResultPage, HomePage, TasksContent,
-    Projects, QuotesContent, StatsContent,
-    SurveyContent, ProjectsContent, ProjectImagesContent, ShareResultsContent,
-    ProjectsMapContent, SupporterTotalContent)
+from bluebottle.cms.models import Stat, Quote, ResultPage, HomePage, Projects
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.statistics.statistics import Statistics
 

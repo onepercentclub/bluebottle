@@ -60,10 +60,10 @@ class ResultPageTestCase(BluebottleTestCase):
             self.assertEqual(watermark_mock.call_args[0][1]['watermark'], 'test/logo-overlay.png')
 
     def test_results_stats(self):
-        self.stat1 = StatFactory(type='manual', title='Poffertjes', value=3500)
-        self.stat2 = StatFactory(type='donated_total', title='Donations', value=None)
 
-        StatsContent.objects.create_for_placeholder(self.placeholder, title='Look at us!')
+        block = StatsContent.objects.create_for_placeholder(self.placeholder, title='Look at us!')
+        self.stat1 = StatFactory(type='manual', title='Poffertjes', value=3500, block=block)
+        self.stat2 = StatFactory(type='donated_total', title='Donations', value=None, block=block)
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -77,9 +77,8 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(stats['stats'][1]['value'], {"amount": Decimal('0'), "currency": "EUR"})
 
     def test_results_quotes(self):
-        self.quote = QuoteFactory()
-
-        QuotesContent.objects.create_for_placeholder(self.placeholder, self.quote)
+        block = QuotesContent.objects.create_for_placeholder(self.placeholder)
+        self.quote = QuoteFactory(block=block)
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
@@ -220,11 +219,11 @@ class ResultPageTestCase(BluebottleTestCase):
         survey = SurveyFactory.create()
         SurveyContent.objects.create_for_placeholder(self.placeholder, survey=survey)
 
-        self.quote = QuoteFactory()
-        QuotesContent.objects.create_for_placeholder(self.placeholder, quotes=self.quotes)
+        quote_block = QuotesContent.objects.create_for_placeholder(self.placeholder)
+        self.quote = QuoteFactory(block=quote_block)
 
-        self.stat = StatFactory()
-        StatsContent.objects.create_for_placeholder(self.placeholder, stats=self.stats)
+        stat_block = StatsContent.objects.create_for_placeholder(self.placeholder)
+        self.stat = StatFactory(block=stat_block)
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)

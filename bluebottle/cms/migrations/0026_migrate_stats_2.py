@@ -13,9 +13,13 @@ def migrate_stats(apps, schema_editor):
         # There might be multiple pages using the same list
         # so we iterate and make copies and then delete the original
         for block in stat.stats.stats_content.all():
-            stat.pk = None
-            stat.block = block
-            stat.save()
+            new_stat = stat
+            new_stat.pk = None
+            new_stat.block = block
+            trans = stat.translations.filter(language_code=block.language_code)
+            if trans.exists():
+                new_stat.title = trans.get().title
+            new_stat.save()
         Stat.objects.filter(pk=pk).all().delete()
 
 

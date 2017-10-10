@@ -16,7 +16,7 @@ from bluebottle.tasks.serializers import (
     MyTasksSerializer, TaskMemberStatusSerializer
 )
 from bluebottle.utils.permissions import (
-    RelatedResourceOwnerPermission, ResourceOwnerPermission, ResourcePermission, OneOf
+    ResourceOwnerPermission, ResourcePermission, OneOf
 )
 from bluebottle.utils.views import (
     PrivateFileView, ListAPIView, ListCreateAPIView,

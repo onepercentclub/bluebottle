@@ -28,4 +28,3 @@ class TaskMemberPermission(RelatedResourceOwnerPermission):
 class TaskManagerPermission(RelatedResourceOwnerPermission):
     def has_parent_permission(self, action, user, parent, model=None):
         return user == parent.project.task_manager
-

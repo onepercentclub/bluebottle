@@ -142,23 +142,16 @@ class SurveyContent(TitledContent):
         return unicode(self.survey)
 
 
-class Projects(models.Model):
-    projects = models.ManyToManyField(Project)
-
-    def __unicode__(self):
-        return u"List of projects #{0}".format(self.id)
-
-
 class ProjectsContent(TitledContent):
+    type = 'projects'
     action_text = models.CharField(max_length=40,
                                    default=_('Start your own project'),
                                    blank=True, null=True)
     action_link = models.CharField(max_length=100, default="/start-project",
                                    blank=True, null=True)
 
-    projects = models.ForeignKey(Projects, null=True)
+    projects = models.ManyToManyField(Project, db_table='cms_projectscontent_projects')
 
-    type = 'projects'
     preview_template = 'admin/cms/preview/projects.html'
 
     class Meta:

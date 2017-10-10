@@ -7,8 +7,7 @@ from parler.admin import TranslatableAdmin, TranslatableStackedInline
 from adminsortable.admin import SortableStackedInline
 from nested_inline.admin import NestedStackedInline
 
-from bluebottle.cms.models import Stat, Quote, ResultPage, HomePage, Projects
-from bluebottle.common.admin_utils import ImprovedModelForm
+from bluebottle.cms.models import Stat, Quote, ResultPage, HomePage
 from bluebottle.statistics.statistics import Statistics
 
 
@@ -26,17 +25,6 @@ class StatInline(TranslatableStackedInline, NestedStackedInline, SortableStacked
 class QuoteInline(TranslatableStackedInline, NestedStackedInline):
     model = Quote
     extra = 1
-
-
-class ProjectInline(admin.StackedInline):
-    model = Projects.projects.through
-    raw_id_fields = ('project', )
-    extra = 1
-
-
-class ProjectsAdmin(ImprovedModelForm, admin.ModelAdmin):
-    inlines = [ProjectInline]
-    exclude = ('projects', )
 
 
 class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
@@ -63,6 +51,5 @@ class HomePageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     fields = ('content', )
 
 
-admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
 admin.site.register(HomePage, HomePageAdmin)

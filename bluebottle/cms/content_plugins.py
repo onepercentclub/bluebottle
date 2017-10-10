@@ -37,6 +37,7 @@ class SurveyBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class ProjectsBlockPlugin(CMSContentPlugin):
     model = ProjectsContent
+    raw_id_fields = ('projects', )
     category = _('Projects')
 
 

@@ -22,9 +22,6 @@ def migrate_stats(apps, schema_editor):
             new_stat.save()
         Stat.objects.filter(pk=pk).all().delete()
 
-def dummy(apps, schema_editor):
-    pass
-
 
 class Migration(migrations.Migration):
 
@@ -33,5 +30,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_stats, dummy),
+        migrations.RunPython(migrate_stats),
     ]

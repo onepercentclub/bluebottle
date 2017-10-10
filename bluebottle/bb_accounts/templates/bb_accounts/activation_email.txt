@@ -14,7 +14,7 @@ You’re now officially part of the {{ site_name }} community. Connect, share an
 {% trans "Take me there" context 'email' %}: {{ site }}
 {% endblock %}
 
-{% block content %}
+{% block post_action %}
 {% blocktrans %}
 If you have any questions please don’t hesitate to contact {{ contact_email }}.
 {% endblocktrans %}

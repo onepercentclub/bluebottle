@@ -1,3 +1,5 @@
+from django.core.urlresolvers import reverse
+from django.http.response import HttpResponseRedirect
 from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
@@ -8,8 +10,39 @@ from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
 
 
 from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.cms.models import Stats, Stat, Quotes, Quote, ResultPage, Projects
+from bluebottle.cms.models import SiteLinks, Link, LinkPermission, Stats, Stat, Quotes, Quote, ResultPage, Projects
 from bluebottle.statistics.statistics import Statistics
+
+
+class LinkPermissionAdmin(admin.ModelAdmin):
+    pass
+
+
+class LinkPermissionInline(admin.TabularInline):
+    model = LinkPermission
+
+
+class LinkInline(TranslatableStackedInline, SortableStackedInline):
+    model = Link
+    extra = 1
+    inlines = [
+        LinkPermissionInline,
+    ]
+
+
+class SiteLinksAdmin(ImprovedModelForm, NonSortableParentAdmin):
+    model = SiteLinks
+    inlines = [LinkInline]
+
+    def changelist_view(self, request, extra_context=None):
+        # There is only one SiteLinks object per platform so redirect if users visits list view
+        if self.model.objects.all().count() == 0:
+            url = "admin:%s_%s_add" % (self.model._meta.app_label, self.model._meta.model_name)
+            return HttpResponseRedirect(reverse(url))
+
+        url = "admin:%s_%s_change" % (self.model._meta.app_label, self.model._meta.model_name)
+        obj = self.model.objects.all()[0]
+        return HttpResponseRedirect(reverse(url, args=(obj.id,)))
 
 
 class StatInline(TranslatableStackedInline, SortableStackedInline):
@@ -66,3 +99,5 @@ admin.site.register(Stats, StatsAdmin)
 admin.site.register(Quotes, QuotesAdmin)
 admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
+admin.site.register(SiteLinks, SiteLinksAdmin)
+admin.site.register(LinkPermission, LinkPermissionAdmin)

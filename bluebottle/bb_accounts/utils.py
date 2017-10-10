@@ -4,9 +4,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.http import int_to_base36
 from django.contrib.auth.tokens import default_token_generator
 
+from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url, tenant_name
 from bluebottle.utils.email_backend import send_mail
-from bluebottle.clients import properties
 
 from tenant_extras.utils import TenantLanguage
 

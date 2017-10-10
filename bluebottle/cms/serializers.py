@@ -4,7 +4,9 @@ from django.db.models import Sum
 
 from memoize import memoize
 
-from bluebottle.bluebottle_drf2.serializers import ImageSerializer, SorlImageField
+from bluebottle.bluebottle_drf2.serializers import (
+    ImageSerializer, SorlImageField, OEmbedField
+)
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.orders.models import Order
@@ -13,10 +15,14 @@ from bluebottle.statistics.statistics import Statistics
 
 from rest_framework import serializers
 
+from bluebottle.categories.serializers import CategorySerializer
 from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent, TasksContent)
+    SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
+    SlidesContent, Slide, Step
+)
+from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
 
@@ -170,6 +176,55 @@ class TasksContentSerializer(serializers.ModelSerializer):
                   'action_text', 'action_link')
 
 
+class SlideSerializer(serializers.ModelSerializer):
+    image = SorlImageField('800x600', crop='center')
+    background_image = SorlImageField('1600x1200', crop='center')
+    video = OEmbedField('video_url')
+
+    class Meta:
+        model = Slide
+
+
+class SlidesContentSerializer(serializers.ModelSerializer):
+    slides = SlideSerializer(many=True)
+
+    class Meta:
+        model = SlidesContent
+        fields = ('id', 'type', 'slides',)
+
+
+class CategoriesContentSerializer(serializers.ModelSerializer):
+    categories = CategorySerializer(many=True)
+
+    class Meta:
+        model = CategoriesContent
+        fields = ('id', 'type', 'title', 'sub_title', 'categories',)
+
+
+class StepSerializer(serializers.ModelSerializer):
+    image = SorlImageField('800x600', crop='center')
+
+    class Meta:
+        model = Step
+        fields = ('image', 'header', 'text', )
+
+
+class StepsContentSerializer(serializers.ModelSerializer):
+    steps = StepSerializer(many=True)
+
+    class Meta:
+        model = StepsContent
+        fields = ('id', 'type', 'title', 'sub_title', 'steps',)
+
+
+class LocationsContentSerializer(serializers.ModelSerializer):
+    steps = LocationSerializer(many=True)
+
+    class Meta:
+        model = LocationsContent
+        fields = ('id', 'type', 'title', 'sub_title', 'locations',)
+
+
 class ShareResultsContentSerializer(serializers.ModelSerializer):
     statistics = serializers.SerializerMethodField()
 
@@ -279,6 +334,14 @@ class BlockSerializer(serializers.Serializer):
             serializer = SupporterTotalContentSerializer
         elif isinstance(obj, TasksContent):
             serializer = TasksContentSerializer
+        elif isinstance(obj, CategoriesContent):
+            serializer = CategoriesContentSerializer
+        elif isinstance(obj, SlidesContent):
+            serializer = SlidesContentSerializer
+        elif isinstance(obj, StepsContent):
+            serializer = StepsContentSerializer
+        elif isinstance(obj, LocationsContent):
+            serializer = LocationsContentSerializer
         else:
             serializer = DefaultBlockSerializer
 

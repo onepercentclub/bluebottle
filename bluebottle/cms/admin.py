@@ -7,7 +7,9 @@ from parler.admin import TranslatableAdmin, TranslatableStackedInline
 from adminsortable.admin import SortableStackedInline
 from nested_inline.admin import NestedStackedInline
 
-from bluebottle.cms.models import Stat, Quote, ResultPage, HomePage, Projects
+from bluebottle.cms.models import (
+    Stat, Quote, Slide, Step, ResultPage, HomePage, Projects
+)
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.statistics.statistics import Statistics
 
@@ -25,6 +27,16 @@ class StatInline(TranslatableStackedInline, NestedStackedInline, SortableStacked
 
 class QuoteInline(TranslatableStackedInline, NestedStackedInline):
     model = Quote
+    extra = 1
+
+
+class SlideInline(TranslatableStackedInline, NestedStackedInline):
+    model = Slide
+    extra = 1
+
+
+class StepInline(TranslatableStackedInline, NestedStackedInline):
+    model = Step
     extra = 1
 
 

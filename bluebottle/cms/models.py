@@ -5,9 +5,12 @@ from adminsortable.models import SortableMixin
 from fluent_contents.models import PlaceholderField, ContentItem
 from parler.models import TranslatableModel, TranslatedFields
 
+from bluebottle.geo.models import Location
 from bluebottle.projects.models import Project
 from bluebottle.surveys.models import Survey
 from bluebottle.tasks.models import Task
+from bluebottle.utils.fields import ImageField
+from bluebottle.categories.models import Category
 
 
 class ResultPage(TranslatableModel):
@@ -241,3 +244,101 @@ class SupporterTotalContent(TitledContent):
 
     def __unicode__(self):
         return 'Supporter total'
+
+
+class Slide(TranslatableModel):
+    block = models.ForeignKey('cms.SlidesContent', related_name='slides')
+    translations = TranslatedFields(
+        tab_text=models.CharField(
+            _("Tab text"), max_length=100,
+            help_text=_("This is shown on tabs beneath the banner.")
+        ),
+        title=models.CharField(_("Title"), max_length=100, blank=True),
+        body=models.TextField(_("Body text"), blank=True),
+        image=ImageField(
+            _("Image"), max_length=255, blank=True, null=True,
+            upload_to='banner_slides/'
+        ),
+        background_image=ImageField(
+            _("Background image"), max_length=255, blank=True,
+            null=True, upload_to='banner_slides/'
+        ),
+        video_url=models.URLField(
+            _("Video url"), max_length=100, blank=True, default=''
+        ),
+        link_text=models.CharField(
+            _("Link text"), max_length=400,
+            help_text=_("This is the text on the button inside the banner."),
+            blank=True
+        ),
+        link_url=models.CharField(
+            _("Link url"), max_length=400,
+            help_text=_("This is the link for the button inside the banner."),
+            blank=True
+        ),
+    )
+
+
+class SlidesContent(ContentItem):
+    type = 'slides'
+    preview_template = 'admin/cms/preview/slides.html'
+
+    class Meta:
+        verbose_name = _('Slides')
+
+    def __unicode__(self):
+        return unicode(self.slides)
+
+
+class Step(TranslatableModel):
+    block = models.ForeignKey('cms.StepsContent', related_name='steps')
+    image = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='step_images/'
+    )
+
+    translations = TranslatedFields(
+        header=models.CharField(_("Header"), max_length=100),
+        text=models.CharField(_("Text"), max_length=400),
+    )
+
+
+class StepsContent(TitledContent):
+    action_text = models.CharField(max_length=40,
+                                   default=_('Start your own project'),
+                                   blank=True, null=True)
+    action_link = models.CharField(max_length=100, default="/start-project",
+                                   blank=True, null=True)
+
+    type = 'steps'
+    preview_template = 'admin/cms/preview/steps.html'
+
+    class Meta:
+        verbose_name = _('Steps')
+
+    def __unicode__(self):
+        return unicode(self.steps)
+
+
+class LocationsContent(TitledContent):
+    type = 'locations'
+    preview_template = 'admin/cms/preview/locations.html'
+    locations = models.ManyToManyField(Location, db_table='cms_taskscontent_locations')
+
+    class Meta:
+        verbose_name = _('Locations')
+
+    def __unicode__(self):
+        return unicode(self.locations)
+
+
+class CategoriesContent(TitledContent):
+    type = 'categories'
+    preview_template = 'admin/cms/preview/categories.html'
+    categories = models.ManyToManyField(Category, db_table='cms_taskscontent_categories')
+
+    class Meta:
+        verbose_name = _('Categories')
+
+    def __unicode__(self):
+        return unicode(self.categories)

@@ -12,13 +12,14 @@ def migrate_quotes(apps, schema_editor):
         pk = quote.pk
         # There might be multiple pages using the same list
         # so we iterate and make copies and then delete the original
+        translations = quote.translations.all()
         for block in quote.quotes.quote_list.all():
-            quote.pk = None
-            quote.block = block
-            trans = quote.translations.filter(language_code=block.language_code)
-            if trans.exists():
-                quote.title = trans.get().title
-            quote.save()
+            new_quote = quote
+            new_quote.block = block
+            new_quote.pk = None
+            new_quote.save()
+            new_quote.translations = translations
+            new_quote.save()
         Quote.objects.filter(pk=pk).all().delete()
 
 

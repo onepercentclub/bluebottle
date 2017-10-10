@@ -12,15 +12,18 @@ def migrate_stats(apps, schema_editor):
         pk = stat.pk
         # There might be multiple pages using the same list
         # so we iterate and make copies and then delete the original
+        translations = stat.translations.all()
         for block in stat.stats.stats_content.all():
             new_stat = stat
-            new_stat.pk = None
             new_stat.block = block
-            trans = stat.translations.filter(language_code=block.language_code)
-            if trans.exists():
-                new_stat.title = trans.get().title
+            new_stat.pk = None
+            new_stat.save()
+            new_stat.translations = translations
             new_stat.save()
         Stat.objects.filter(pk=pk).all().delete()
+
+def dummy(apps, schema_editor):
+    pass
 
 
 class Migration(migrations.Migration):
@@ -30,5 +33,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_stats),
+        migrations.RunPython(migrate_stats, dummy),
     ]

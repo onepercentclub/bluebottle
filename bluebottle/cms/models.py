@@ -35,6 +35,57 @@ class ResultPage(TranslatableModel):
         )
 
 
+class LinkPermission(models.Model):
+    permission = models.CharField(max_length=255, null=False,
+                                  help_text=_('A dot separated app name and permission codename.'))
+    present = models.BooleanField(null=False, default=True,
+                                  help_text=_('Should the permission be present or not to access the link?'))
+
+    def __unicode__(self):
+        return u"{0} - {1}".format(self.permission, self.present)
+
+
+class SiteLinks(models.Model):
+    has_copyright = models.BooleanField(null=False, default=True)
+
+    class Meta:
+        verbose_name_plural = _("Site links")
+
+
+class Link(TranslatableModel, SortableMixin):
+    GROUP_CHOICES = (
+        ('main', _('Main')),
+        ('about', _('About')),
+        ('info', _('Info')),
+        ('discover', _('Discover')),
+        ('social', _('Social')),
+    )
+
+    COMPONENT_CHOICES = (
+        ('page', _('Page')),
+        ('project', _('Project')),
+        ('task', _('Task')),
+        ('fundraiser', _('Fundraiser')),
+        ('results', _('Results')),
+        ('news', _('News')),
+    )
+
+    site_links = SortableForeignKey(SiteLinks, related_name='links')
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+    group = models.CharField(max_length=25, choices=GROUP_CHOICES, default='main')
+    link_permissions = models.ManyToManyField(LinkPermission, blank=True)
+    highlight = models.BooleanField(default=False)
+    translations = TranslatedFields(
+        title=models.CharField(_('Title'), null=False, max_length=100),
+        component=models.CharField(_('Component'), choices=COMPONENT_CHOICES, max_length=50, blank=True),
+        component_id=models.CharField(_('Component ID'), max_length=100, blank=True),
+        external_link=models.CharField(_('External Link'), max_length=2000, blank=True)
+    )
+
+    class Meta:
+        ordering = ['sequence']
+
+
 class Stats(models.Model):
     def __unicode__(self):
         return u"List of statistics #{0}".format(self.id)

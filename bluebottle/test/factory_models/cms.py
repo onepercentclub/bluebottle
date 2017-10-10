@@ -4,7 +4,8 @@ import factory
 from django.utils.timezone import now
 
 from bluebottle.cms.models import (
-    ResultPage, Stats, Stat, Quotes, Quote, Projects
+    ResultPage, Stats, Stat, Quotes, Quote, Projects,
+    SiteLinks, Link, LinkPermission
 )
 
 
@@ -50,3 +51,20 @@ class QuoteFactory(factory.DjangoModelFactory):
 class ProjectsFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Projects
+
+
+class SiteLinksFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = SiteLinks
+
+
+class LinkFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = Link
+
+    title = factory.Sequence(lambda n: 'Title {}'.format(n))
+
+
+class LinkPermissionFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = LinkPermission

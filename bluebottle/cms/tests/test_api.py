@@ -27,7 +27,7 @@ from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory,
-    QuoteFactory, ProjectsFactory,
+    QuoteFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
 from sorl_watermarker.engines.pil_engine import Engine
@@ -93,10 +93,8 @@ class ResultPageTestCase(BluebottleTestCase):
 
     def test_results_projects(self):
         self.project = ProjectFactory()
-        self.projects = ProjectsFactory()
-        self.projects.projects.add(self.project)
-
-        ProjectsContent.objects.create_for_placeholder(self.placeholder, projects=self.projects)
+        block = ProjectsContent.objects.create_for_placeholder(self.placeholder)
+        block.projects.add(self.project)
 
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)

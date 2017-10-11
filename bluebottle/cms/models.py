@@ -145,30 +145,23 @@ class SurveyContent(TitledContent):
         return unicode(self.survey)
 
 
-class Projects(models.Model):
-    projects = models.ManyToManyField(Project)
-
-    def __unicode__(self):
-        return u"List of projects #{0}".format(self.id)
-
-
 class ProjectsContent(TitledContent):
+    type = 'projects'
     action_text = models.CharField(max_length=40,
                                    default=_('Start your own project'),
                                    blank=True, null=True)
     action_link = models.CharField(max_length=100, default="/start-project",
                                    blank=True, null=True)
 
-    projects = models.ForeignKey(Projects, null=True)
+    projects = models.ManyToManyField(Project, db_table='cms_projectscontent_projects')
 
-    type = 'projects'
     preview_template = 'admin/cms/preview/projects.html'
 
     class Meta:
         verbose_name = _('Projects')
 
     def __unicode__(self):
-        return unicode(self.projects)
+        return unicode(self.title)
 
 
 class ProjectImagesContent(TitledContent):
@@ -323,7 +316,7 @@ class StepsContent(TitledContent):
 class LocationsContent(TitledContent):
     type = 'locations'
     preview_template = 'admin/cms/preview/locations.html'
-    locations = models.ManyToManyField(Location, db_table='cms_taskscontent_locations')
+    locations = models.ManyToManyField(Location, db_table='cms_locationscontent_locations')
 
     class Meta:
         verbose_name = _('Locations')
@@ -335,7 +328,7 @@ class LocationsContent(TitledContent):
 class CategoriesContent(TitledContent):
     type = 'categories'
     preview_template = 'admin/cms/preview/categories.html'
-    categories = models.ManyToManyField(Category, db_table='cms_taskscontent_categories')
+    categories = models.ManyToManyField(Category, db_table='cms_categoriescontent_categories')
 
     class Meta:
         verbose_name = _('Categories')

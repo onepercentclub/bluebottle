@@ -279,6 +279,7 @@ SHARED_APPS = (
     'nested_inline'
 
 )
+
 TENANT_APPS = (
     'polymorphic',
     'modeltranslation',

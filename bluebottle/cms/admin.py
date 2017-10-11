@@ -8,9 +8,8 @@ from adminsortable.admin import SortableStackedInline
 from nested_inline.admin import NestedStackedInline
 
 from bluebottle.cms.models import (
-    Stat, Quote, Slide, Step, ResultPage, HomePage, Projects
+    Stat, Quote, Slide, Step, ResultPage, HomePage
 )
-from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.statistics.statistics import Statistics
 
 
@@ -40,17 +39,6 @@ class StepInline(TranslatableStackedInline, NestedStackedInline):
     extra = 1
 
 
-class ProjectInline(admin.StackedInline):
-    model = Projects.projects.through
-    raw_id_fields = ('project', )
-    extra = 1
-
-
-class ProjectsAdmin(ImprovedModelForm, admin.ModelAdmin):
-    inlines = [ProjectInline]
-    exclude = ('projects', )
-
-
 class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
@@ -75,6 +63,5 @@ class HomePageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     fields = ('content', )
 
 
-admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
 admin.site.register(HomePage, HomePageAdmin)

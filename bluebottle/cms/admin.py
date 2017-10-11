@@ -20,13 +20,15 @@ class LinkPermissionAdmin(admin.ModelAdmin):
 
 class LinkInline(TranslatableStackedInline, SortableStackedInline):
     model = Link
+    template = 'adminsortable/edit_inline/stacked-1.10.x.html'
+
     raw_id_fields = ('link_permissions',)
     fields = (
-        ('group', 'highlight'),
+        ('group', 'title', 'highlight'),
         'link_permissions',
-        'title',
+        'external_link',
         ('component', 'component_id'),
-        'external_link'
+
     )
     extra = 1
 

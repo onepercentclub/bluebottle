@@ -8,12 +8,13 @@ import django_filters
 from rest_framework import filters, serializers
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.tasks.permissions import TaskPermission, TaskMemberPermission
+from bluebottle.tasks.permissions import TaskPermission, TaskMemberPermission, TaskManagerPermission
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
-from bluebottle.tasks.serializers import (BaseTaskSerializer,
-                                          BaseTaskMemberSerializer, TaskFileSerializer,
-                                          TaskPreviewSerializer, MyTaskMemberSerializer,
-                                          SkillSerializer, MyTasksSerializer)
+from bluebottle.tasks.serializers import (
+    BaseTaskSerializer, BaseTaskMemberSerializer, TaskFileSerializer,
+    TaskPreviewSerializer, MyTaskMemberSerializer, SkillSerializer,
+    MyTasksSerializer, TaskMemberStatusSerializer
+)
 from bluebottle.utils.permissions import (
     ResourceOwnerPermission, ResourcePermission, OneOf
 )
@@ -282,6 +283,15 @@ class TaskMemberDetail(RetrieveUpdateAPIView):
 
     permission_classes = (
         OneOf(ResourcePermission, TaskMemberPermission),
+    )
+
+
+class TaskMemberStatus(RetrieveUpdateAPIView):
+    queryset = TaskMember.objects.all()
+    serializer_class = TaskMemberStatusSerializer
+
+    permission_classes = (
+        OneOf(TaskManagerPermission, ResourcePermission),
     )
 
 

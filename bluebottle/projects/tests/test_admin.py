@@ -4,6 +4,7 @@ import mock
 import StringIO
 
 import requests
+from moneyed import Money
 from bluebottle.test.factory_models.tasks import TaskFactory
 
 from bluebottle.tasks.models import Skill
@@ -16,8 +17,6 @@ from bluebottle.projects.admin import (
     LocationFilter, ProjectReviewerFilter, ProjectAdminForm,
     ReviewerWidget, ProjectAdmin,
     ProjectSkillFilter)
-
-from moneyed import Money
 from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.rewards import RewardFactory

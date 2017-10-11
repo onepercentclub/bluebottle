@@ -6,10 +6,16 @@
 
 Hi {{ receiver_name }},
 
+{% endblocktrans %}
+{% if message %}
+{{ message }}
+{% else %}
+{% blocktrans with sender_name=sender.short_name receiver_name=receiver.short_name project_title=task.project.title task_title=task.title site_name=site.name %}
 You did it! The project owner {{ sender_name }} marked the task '{{ task_title }}' as realized. Good job!
 
 Let's celebrate with a short comment!
 {% endblocktrans %}
+{% endif %}
 
 {% if survey_link %}
 {% blocktrans with link=survey_link %}

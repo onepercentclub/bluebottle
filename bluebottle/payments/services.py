@@ -112,3 +112,6 @@ class PaymentService(object):
 
     def check_payment_status(self, **integration_details):
         self.adapter.check_payment_status()
+
+    def refund_payment(self):
+        self.adapter.refund_payment()

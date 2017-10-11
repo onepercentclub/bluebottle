@@ -357,6 +357,17 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
         for transaction in response.payment:
             self._store_payment_transaction(transaction)
 
+    def refund_payment(self):
+        client = gateway.DocdataClient(self.credentials, self.live_mode)
+
+        logger.warn(
+            'Attempting to refund payment {0}.'.format(self.payment.id)
+        )
+
+        client.refund(
+            self.order_payment.payment.payment_cluster_key,
+        )
+
     def _store_payment_transaction(self, transaction):
         dd_transaction, _created = DocdataTransaction.objects.get_or_create(
             docdata_id=transaction.id, payment=self.payment

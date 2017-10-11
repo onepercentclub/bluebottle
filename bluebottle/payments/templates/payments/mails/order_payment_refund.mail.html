@@ -1,0 +1,15 @@
+{% extends "base.mail.html" %}
+{% load i18n %}
+
+{% block content %}
+    <p class="donation-intro">
+        {% blocktrans with first_name=receiver.first_name slug=project.slug project_title=project.title %}
+	Hello {{ first_name }}, Your donation to {{ projec_title }} will be fully refunded within 3 days. Either you requested this refund or the project didn’t reach its funding goal. If you have any questions about this refund, please contact {{ admin_email }}.
+        {% endblocktrans %}
+    </p>
+{% endblock content %} 
+
+{% block action %}
+    <a href="{{ site }}/projects/{{project.slug}}>
+       class="action-email">{% trans "Visit project" context 'email' %}</a>
+{% endblock %}

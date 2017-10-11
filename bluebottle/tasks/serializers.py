@@ -6,6 +6,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 )
 from bluebottle.members.serializers import UserPreviewSerializer, UserProfileSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
+from bluebottle.tasks.taskmail import TaskMemberMailAdapter
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.utils.serializers import PermissionField, ResourcePermissionField
 from bluebottle.wallposts.serializers import TextWallpostSerializer
@@ -48,6 +49,27 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
                 and self.context['request'].user not in [obj.member, obj.task.author, obj.task.project.owner]:
             ret['motivation'] = ''
         return ret
+
+
+class TaskMemberStatusSerializer(serializers.ModelSerializer):
+    member = UserPreviewSerializer(read_only=True)
+    permissions = ResourcePermissionField('task-member-status', view_args=('id',))
+    message = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = TaskMember
+        fields = ('id', 'member', 'status', 'permissions', 'message')
+
+    def update(self, instance, validated_data):
+        message = validated_data.pop('message')
+        instance.skip_mail = True
+
+        result = super(TaskMemberStatusSerializer, self).update(instance, validated_data)
+
+        if instance._original_status != instance.status:
+            TaskMemberMailAdapter(self.instance, message=message).send_mail()
+
+        return result
 
 
 class TaskFileSerializer(serializers.ModelSerializer):

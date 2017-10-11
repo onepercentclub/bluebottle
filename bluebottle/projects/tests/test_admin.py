@@ -5,7 +5,6 @@ import StringIO
 
 from django.db import connection
 import requests
-from moneyed import Money
 from bluebottle.test.factory_models.tasks import TaskFactory
 
 from bluebottle.tasks.models import Skill

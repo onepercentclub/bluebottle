@@ -316,7 +316,7 @@ class StepsContent(TitledContent):
 class LocationsContent(TitledContent):
     type = 'locations'
     preview_template = 'admin/cms/preview/locations.html'
-    locations = models.ManyToManyField(Location, db_table='cms_taskscontent_locations')
+    locations = models.ManyToManyField(Location, db_table='cms_locationscontent_locations')
 
     class Meta:
         verbose_name = _('Locations')
@@ -328,7 +328,7 @@ class LocationsContent(TitledContent):
 class CategoriesContent(TitledContent):
     type = 'categories'
     preview_template = 'admin/cms/preview/categories.html'
-    categories = models.ManyToManyField(Category, db_table='cms_taskscontent_categories')
+    categories = models.ManyToManyField(Category, db_table='cms_categoriescontent_categories')
 
     class Meta:
         verbose_name = _('Categories')

@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('tasks', '0037_auto_20171010_1554'),
-        ('cms', '0029_auto_20171010_1320'),
+        ('cms', '0029_auto_20171010_0931'),
     ]
 
     operations = [

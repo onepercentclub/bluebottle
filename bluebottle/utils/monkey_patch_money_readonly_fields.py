@@ -16,6 +16,7 @@ def display_for_field(value, field, empty):
 
     return original_display_for_field(value, field, empty)
 
+
 # FIXME: Do not monkeypatch this when django-money is fixed
 for mod in MODULES_TO_PATCH:
     setattr(mod, 'display_for_field', display_for_field)

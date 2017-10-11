@@ -18,16 +18,17 @@ class LinkPermissionAdmin(admin.ModelAdmin):
     pass
 
 
-class LinkPermissionInline(admin.TabularInline):
-    model = LinkPermission
-
-
-class LinkInline(TranslatableStackedInline, SortableStackedInline):
+class LinkInline(SortableStackedInline, TranslatableStackedInline):
     model = Link
+    raw_id_fields = ('link_permissions',)
+    fields = (
+        ('group', 'highlight'),
+        'link_permissions',
+        'title',
+        ('component', 'component_id'),
+        'external_link'
+    )
     extra = 1
-    inlines = [
-        LinkPermissionInline,
-    ]
 
 
 class SiteLinksAdmin(ImprovedModelForm, NonSortableParentAdmin):

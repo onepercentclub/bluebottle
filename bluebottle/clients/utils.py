@@ -104,6 +104,11 @@ def get_user_site_links(user):
     from bluebottle.cms.models import SiteLinks, Link
 
     site_links = SiteLinks.objects.first()
+
+    # If no site links set, just return empty
+    if not site_links:
+        return {}
+
     response = {
         'hasCopyright': site_links.has_copyright
     }

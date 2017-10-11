@@ -13,6 +13,13 @@
             </a>
         {% endif %}
     </li>
+    <li>
+        {% if perms.payments.refund_orderpayment and original.can_refund %}
+            <a href="{% url 'admin:projects_project_refund' object_id %}" style="background-color: darkred">
+                {% trans  "Refund donations" %}
+            </a>
+        {% endif %}
+    </li>
     {% if perms.rewards.read_reward and original.reward_set.count %}
     <li>
         <a href="{% url 'admin:projects_project_export_rewards' object_id %}" style="background-color: darkgreen">
@@ -20,6 +27,5 @@
         </a>
     </li>
     {% endif %}
-
     {{ block.super }}
 {% endblock %}

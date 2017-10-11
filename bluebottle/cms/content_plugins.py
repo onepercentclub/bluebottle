@@ -2,11 +2,14 @@ from django.utils.translation import ugettext_lazy as _
 
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
-from bluebottle.cms.admin import QuoteInline, StatInline
+from bluebottle.cms.admin import (
+    QuoteInline, StatInline, SlideInline, StepInline
+)
 from bluebottle.cms.models import (
     QuotesContent, StatsContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent, TasksContent
+    SupporterTotalContent, TasksContent, StepsContent, SlidesContent,
+    CategoriesContent, LocationsContent
 )
 
 
@@ -70,3 +73,32 @@ class TasksBlockPlugin(CMSContentPlugin):
     model = TasksContent
     raw_id_fields = ('tasks', )
     category = _('Tasks')
+
+
+@plugin_pool.register
+class SlidesBlockPlugin(CMSContentPlugin):
+    model = SlidesContent
+    inlines = [SlideInline]
+
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class StepsBlockPlugin(CMSContentPlugin):
+    model = StepsContent
+    inlines = [StepInline]
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class CategoriesBlockPlugin(CMSContentPlugin):
+    model = CategoriesContent
+    raw_id_fields = ('categories', )
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class LocationsBlockPlugin(CMSContentPlugin):
+    model = LocationsContent
+    raw_id_fields = ('locations', )
+    category = _('Homepage')

@@ -125,8 +125,8 @@ def get_user_site_links(user):
                 # no        no      yes
                 allowed = (user.has_perm(perm.permission) == perm.present) and allowed
 
-        # if not allowed:
-        #     continue
+        if not allowed:
+            continue
 
         if link.group not in response:
             response[link.group] = []

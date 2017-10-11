@@ -70,7 +70,7 @@ install_requires = [
     'djangorestframework==3.3.3',
     'dkimpy==0.6.1',
     'gunicorn==19.7.1',
-    'html5lib==0.9999999',
+    'html5lib==1.0b10',
     'influxdb==4.1.1',
     'lipisha==0.2.4',
     'lxml==3.7.3',

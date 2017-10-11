@@ -101,7 +101,7 @@ def get_currencies():
 
 
 def get_user_site_links(user):
-    from bluebottle.cms.models import SiteLinks, Link
+    from bluebottle.cms.models import SiteLinks
 
     site_links = SiteLinks.objects.first()
 
@@ -115,7 +115,7 @@ def get_user_site_links(user):
 
     for link in site_links.links.all():
         allowed = True
-        if link.link_permissions.count() > 0:
+        if link.link_permissions.exists():
             # Check permissions
             for perm in link.link_permissions.all():
                 # has_perm  present allowed
@@ -125,28 +125,26 @@ def get_user_site_links(user):
                 # no        no      yes
                 allowed = (user.has_perm(perm.permission) == perm.present) and allowed
 
-        if not allowed:
-            continue
+        # if not allowed:
+        #     continue
 
-        try:
-            if link.group not in response:
-                response[link.group] = []
+        if link.group not in response:
+            response[link.group] = []
 
-            link_data = {
-                'title': link.title,
-                'isHighlighted': link.highlight
-            }
+        link_data = {
+            'title': link.title,
+            'isHighlighted': link.highlight
+        }
 
-            if link.component:
-                link_data['route'] = link.component
-                link_data['param'] = link.component_id
-            elif link.external_link:
-                link_data['route'] = link.external_link
-                link_data['external'] = True
+        if link.component:
+            link_data['route'] = link.component
+        if link.component_id:
+            link_data['param'] = link.component_id
+        elif link.external_link:
+            link_data['route'] = link.external_link
+            link_data['external'] = True
 
-            response[link.group].append(link_data)
-        except Link.DoesNotExist:
-            pass
+        response[link.group].append(link_data)
 
     return response
 

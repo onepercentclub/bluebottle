@@ -18,7 +18,7 @@ class LinkPermissionAdmin(admin.ModelAdmin):
     pass
 
 
-class LinkInline(SortableStackedInline, TranslatableStackedInline):
+class LinkInline(TranslatableStackedInline, SortableStackedInline):
     model = Link
     raw_id_fields = ('link_permissions',)
     fields = (

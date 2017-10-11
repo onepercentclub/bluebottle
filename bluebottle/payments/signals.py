@@ -6,6 +6,7 @@ from django_fsm.signals import post_transition
 
 from bluebottle.utils.utils import StatusDefinition
 from .models import Payment, OrderPayment
+from .mails import order_payment_refund_mail
 
 payment_status_fetched = Signal(providing_args=['new_authorized_status'])
 
@@ -61,6 +62,20 @@ def payment_status_changed(sender, instance, **kwargs):
 
     # Trigger status transition for OrderPayment
     order_payment.transition_to(new_order_payment_status)
+
+
+@receiver(post_transition, weak=False, dispatch_uid='order_payment_refund')
+def _order_payment_refund(sender, instance, **kwargs):
+    """
+    Handle Order Payment refund status.
+    """
+    if not isinstance(instance, OrderPayment):
+        return
+
+    if dict.get(kwargs, 'source', None) is not StatusDefinition.REFUNDED and \
+       kwargs['target'] is StatusDefinition.REFUNDED:
+
+        order_payment_refund_mail(instance)
 
 
 @receiver(post_save, weak=False, dispatch_uid='default_status')

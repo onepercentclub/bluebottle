@@ -95,7 +95,6 @@ class DocdataClient(object):
         """
         Initialize the client.
         """
-
         self.client = get_suds_client(live_mode)
         self.live_mode = live_mode
 
@@ -215,7 +214,6 @@ class DocdataClient(object):
             else:
                 raise DocdataPaymentException(
                     'Received unknown reply from DocData. Remote Payment not created.')
-
         return {'order_id': merchant_order_reference, 'order_key': order_key}
 
     def start_remote_payment(self, order_key, payment=None,
@@ -300,6 +298,25 @@ class DocdataClient(object):
             # FIXME Log ERROR here
             raise NotImplementedError(
                 'Received unknown reply from DocData. No status processed from Docdata.')
+
+    def refund(self, order_key):
+        status = self.status(order_key)
+
+        for payment in status.payment:
+            if not hasattr(payment.authorization, 'refund'):
+                reply = self.client.service.refund(self.merchant, payment.id)
+
+                if hasattr(reply, 'refundSuccess'):
+                    continue
+                elif hasattr(reply, 'refundError'):
+                    error = reply.refundError.error
+                    # FIXME Log ERROR here
+                    raise DocdataPaymentStatusException(error._code, error.value)
+                else:
+                    logger.error("Unexpected response node from docdata!")
+                    # FIXME Log ERROR here
+                    raise NotImplementedError(
+                        'Received unknown reply from DocData. No refund processed from Docdata.')
 
     def get_payment_menu_url(self, order_key, order_id, credentials, return_url=None,
                              client_language=None, **extra_url_args):

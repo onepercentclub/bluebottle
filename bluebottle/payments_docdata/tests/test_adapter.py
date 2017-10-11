@@ -1,11 +1,15 @@
 from bluebottle.test.factory_models.geo import CountryFactory
 
+from bunch import bunchify
+
 from django.test.utils import override_settings
 
-from mock import patch
+from mock import patch, Mock
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
+from bluebottle.payments_docdata.exceptions import DocdataPaymentStatusException
+from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.utils import BluebottleTestCase, FsmTestMixin
 
@@ -82,3 +86,72 @@ class PaymentsDocdataAdapterTestCase(BluebottleTestCase, FsmTestMixin):
         self.adapter = DocdataPaymentAdapter(order_payment=order_payment)
         payment = self.adapter.payment
         self.assertEqual(payment.country, 'NL')
+
+
+class DocdataClientMock():
+    class service():
+        @staticmethod
+        def status(*args, **kwargs):
+            return bunchify({
+                'statusSuccess': {
+                    'report': {
+                        'payment': [
+                            bunchify({'id': 'test-id', 'authorization': {}}),
+                            bunchify({'id': 'test-id-2', 'authorization': {'refund': {}}})
+                        ]
+                    }
+                }
+            })
+
+        def refund(*args, **kwargs):
+            pass
+
+    class factory:
+        @staticmethod
+        def create(ns):
+            return Mock()
+
+
+@override_settings(
+    DOCDATA_FEES={'payment_methods': {'ideal': 0.20}, 'transaction': 0.20}
+)
+@patch('bluebottle.payments_docdata.gateway.Client', return_value=DocdataClientMock())
+class PaymentsDocdataAdapterRefundTestCase(BluebottleTestCase, FsmTestMixin):
+    def setUp(self):
+        super(PaymentsDocdataAdapterRefundTestCase, self).setUp()
+        self.order_payment = OrderPaymentFactory.create(
+            payment_method='docdataIdeal',
+            integration_data={'default_pm': 'ideal'},
+        )
+        DocdataPaymentFactory.create(
+            order_payment=self.order_payment,
+            payment_cluster_key='123-4',
+            default_pm='ideal',
+            total_gross_amount=100
+        )
+        self.adapter = DocdataPaymentAdapter(self.order_payment)
+
+    def test_refund(self, mock_client):
+        refund_reply = bunchify({
+            'refundSuccess': True
+        })
+
+        with patch.object(
+            DocdataClientMock.service, 'refund', return_value=refund_reply
+        ) as refund_mock:
+            self.adapter.refund_payment()
+            self.assertEqual(refund_mock.call_count, 1)
+            self.assertEqual(
+                refund_mock.call_args[0][1], 'test-id'
+            )
+
+    def test_refund_failure(self, mock_client):
+        refund_reply = bunchify({
+            'refundError': {'error': {'_code': 'some code', 'value': 'some value'}}
+        })
+
+        with patch.object(
+            DocdataClientMock.service, 'refund', return_value=refund_reply
+        ):
+            with self.assertRaises(DocdataPaymentStatusException):
+                self.adapter.refund_payment()

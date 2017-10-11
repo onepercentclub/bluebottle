@@ -1,12 +1,13 @@
 from django.conf.urls import url
 from django.contrib import admin
 from django.core.urlresolvers import reverse
-from django.http.response import HttpResponseRedirect
+from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.utils.html import format_html
 
 from polymorphic.admin import (PolymorphicParentModelAdmin,
                                PolymorphicChildModelAdmin)
 
+from bluebottle.clients import properties
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments_external.admin import ExternalPaymentAdmin
@@ -40,7 +41,8 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super(OrderPaymentAdmin, self).get_urls()
         process_urls = [
-            url(r'^check/(?P<pk>\d+)/$', self.check_status, name="payments_orderpayment_check")
+            url(r'^check/(?P<pk>\d+)/$', self.check_status, name="payments_orderpayment_check"),
+            url(r'^refund/(?P<pk>\d+)/$', self.refund, name="payments_orderpayment_refund"),
         ]
         return process_urls + urls
 
@@ -56,6 +58,26 @@ class OrderPaymentAdmin(admin.ModelAdmin):
         for order_payment in queryset:
             service = PaymentService(order_payment)
             service.check_payment_status()
+
+    def refund(self, request, pk=None):
+        if not request.user.has_perm('payments.refund_orderpayment') or not properties.ENABLE_REFUNDS:
+            return HttpResponseForbidden('Missing permission: payments.refund_orderpayment')
+
+        order_payment = OrderPayment.objects.get(pk=pk)
+
+        service = PaymentService(order_payment)
+
+        service.refund_payment()
+
+        self.message_user(
+            request,
+            'Refund is requested. It may take a while for this to be visble here'
+        )
+
+        order_payment_url = reverse('admin:payments_orderpayment_change', args=(order_payment.id,))
+        response = HttpResponseRedirect(order_payment_url)
+
+        return response
 
     batch_check_status.short_description = 'Check status at PSP'
 

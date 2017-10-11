@@ -546,6 +546,14 @@ class Project(BaseProject, PreviousStatusMixin):
             content_type=ContentType.objects.get_for_model(self.__class__)
         ).order_by('author', '-created').distinct('author')[:limit]
 
+    @property
+    def can_refund(self):
+        return (
+            properties.ENABLE_REFUNDS and
+            self.amount_donated.amount > 0 and
+            self.status.slug == 'closed'
+        )
+
     def get_absolute_url(self):
         """ Get the URL for the current project. """
         return 'https://{}/projects/{}'.format(properties.tenant.domain_url, self.slug)

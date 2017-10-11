@@ -3,6 +3,7 @@ import json
 import mock
 import StringIO
 
+from django.db import connection
 import requests
 from moneyed import Money
 from bluebottle.test.factory_models.tasks import TaskFactory
@@ -13,15 +14,18 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib import messages
 from django.test.client import RequestFactory
 
+from moneyed import Money
+
 from bluebottle.projects.admin import (
     LocationFilter, ProjectReviewerFilter, ProjectAdminForm,
     ReviewerWidget, ProjectAdmin,
     ProjectSkillFilter)
-from bluebottle.projects.models import Project
+from bluebottle.projects.models import Project, ProjectPhase
+from bluebottle.projects.tasks import refund_project
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.test.utils import BluebottleTestCase, override_settings
@@ -317,6 +321,81 @@ class TestProjectAdmin(BluebottleTestCase):
         response = self.project_admin.export_rewards(request, project.id)
 
         self.assertEqual(response.status_code, 403)
+
+
+@override_settings(ENABLE_REFUNDS=True)
+class TestProjectRefundAdmin(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectRefundAdmin, self).setUp()
+        self.site = AdminSite()
+        self.request_factory = RequestFactory()
+
+        self.init_projects()
+        self.project_admin = ProjectAdmin(Project, self.site)
+
+        self.project = ProjectFactory.create(
+            status=ProjectPhase.objects.get(slug='closed'),
+        )
+
+        self.order = OrderFactory.create(
+            status='success'
+        )
+
+        DonationFactory.create(
+            project=self.project,
+            order=self.order,
+            amount=Money(100, 'EUR'),
+        )
+
+        self.request = self.request_factory.post('/')
+        self.request.user = MockUser(['payments.refund_orderpayment'])
+
+    def test_refunds(self):
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            response = self.project_admin.refund(self.request, self.project.pk)
+
+            self.assertEqual(response.status_code, 302)
+
+            refund_mock.assert_called_with(connection.tenant, self.project)
+
+    @override_settings(ENABLE_REFUNDS=True)
+    def test_refunds_not_closed(self):
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            response = self.project_admin.refund(self.request, self.project.pk)
+
+            self.assertEqual(response.status_code, 403)
+            refund_mock.assert_not_called()
+
+    @override_settings(ENABLE_REFUNDS=True)
+    def test_refunds_no_amount(self):
+        self.order.transition_to('failed')
+        self.order.save()
+
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            response = self.project_admin.refund(self.request, self.project.pk)
+
+            self.assertEqual(response.status_code, 403)
+            refund_mock.assert_not_called()
+
+    @override_settings(ENABLE_REFUNDS=True)
+    def test_refunds_no_permission(self):
+        self.request.user.perms = []
+
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            response = self.project_admin.refund(self.request, self.project.pk)
+            self.assertEqual(response.status_code, 403)
+            refund_mock.assert_not_called()
+
+    @override_settings(ENABLE_REFUNDS=False)
+    def test_refunds_disabled(self):
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            response = self.project_admin.refund(self.request, self.project.pk)
+
+            self.assertEqual(response.status_code, 403)
+            refund_mock.assert_not_called()
 
 
 class LocationFilterTest(BluebottleTestCase):

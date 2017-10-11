@@ -416,8 +416,11 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         ('reward__title', 'Reward'),
         ('order__id', 'Order id'),
         ('created', 'Donation Date'),
+        ('reward__amount', 'Amount'),
+        ('amount', 'Actual Amount'),
         ('order__user__email', 'Email'),
         ('order__user__full_name', 'Name'),
+        ('name', 'Name on Donation')
     )
 
     def export_rewards(self, request, pk=None):

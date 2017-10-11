@@ -4,6 +4,7 @@ import mock
 import StringIO
 
 import requests
+from moneyed import Money
 from bluebottle.test.factory_models.tasks import TaskFactory
 
 from bluebottle.tasks.models import Skill
@@ -247,10 +248,15 @@ class TestProjectAdmin(BluebottleTestCase):
         request.user = MockUser(['rewards.read_reward'])
 
         project = ProjectFactory.create()
-        reward = RewardFactory.create(project=project)
+        reward = RewardFactory.create(project=project, amount=Money(10, 'EUR'))
 
         reward_order = OrderFactory.create(status='success')
-        DonationFactory.create(project=project, reward=reward, order=reward_order)
+        donation = DonationFactory.create(
+            project=project,
+            reward=reward,
+            order=reward_order,
+            amount=Money(100, 'EUR')
+        )
 
         order = OrderFactory.create(status='success')
         DonationFactory.create(project=project, order=order)
@@ -266,6 +272,42 @@ class TestProjectAdmin(BluebottleTestCase):
         self.assertEqual(line['Name'], reward_order.user.full_name)
         self.assertEqual(line['Order id'], str(reward_order.id))
         self.assertEqual(line['Reward'], reward.title)
+        self.assertEqual(line['Amount'], str(reward.amount))
+        self.assertEqual(line['Actual Amount'], str(donation.amount))
+
+    def test_export_rewards_anonymous(self):
+        request = self.request_factory.get('/')
+        request.user = MockUser(['rewards.read_reward'])
+
+        project = ProjectFactory.create()
+        reward = RewardFactory.create(project=project, amount=Money(10, 'EUR'))
+
+        reward_order = OrderFactory.create(status='success', user=None)
+        donation = DonationFactory.create(
+            project=project,
+            reward=reward,
+            order=reward_order,
+            name='test',
+            amount=Money(100, 'EUR')
+        )
+
+        order = OrderFactory.create(status='success')
+        DonationFactory.create(project=project, order=order)
+
+        response = self.project_admin.export_rewards(request, project.id)
+        reader = csv.DictReader(StringIO.StringIO(response.content))
+
+        result = [line for line in reader]
+        self.assertEqual(len(result), 1)
+        line = result[0]
+
+        self.assertEqual(line['Email'], '')
+        self.assertEqual(line['Name'], '')
+        self.assertEqual(line['Order id'], str(reward_order.id))
+        self.assertEqual(line['Reward'], reward.title)
+        self.assertEqual(line['Amount'], str(reward.amount))
+        self.assertEqual(line['Actual Amount'], str(donation.amount))
+        self.assertEqual(line['Name on Donation'], donation.name)
 
     def test_export_rewards_forbidden(self):
         request = self.request_factory.get('/')

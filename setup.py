@@ -97,7 +97,7 @@ install_requires = [
     'transifex-client==0.12.4',
     'unicodecsv==0.14.1',
     'wheel==0.30.0',
-    'xlsxwriter==1.0.1',
+    'xlsxwriter==1.0.2',
 
     # Github requirements
     'django-fluent-contents==1.2.1',

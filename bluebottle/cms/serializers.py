@@ -20,7 +20,7 @@ from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
-    SlidesContent, Slide, Step
+    SlidesContent, Slide, Step, Logo, LogosContent
 )
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
@@ -53,8 +53,8 @@ class StatSerializer(serializers.ModelSerializer):
             return obj.value
 
         statistics = Statistics(
-            start=self.context['start_date'],
-            end=self.context['end_date'],
+            start=self.context.get('start_date'),
+            end=self.context.get('end_date'),
         )
 
         value = getattr(statistics, obj.type, 0)
@@ -82,9 +82,10 @@ class StatsContentSerializer(serializers.ModelSerializer):
 
 
 class QuoteSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
     class Meta:
         model = Quote
-        fields = ('id', 'name', 'quote')
+        fields = ('id', 'name', 'quote', 'image')
 
 
 class QuotesContentSerializer(serializers.ModelSerializer):
@@ -202,7 +203,7 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
 
 
 class StepSerializer(serializers.ModelSerializer):
-    image = SorlImageField('800x600', crop='center')
+    image = ImageSerializer()
 
     class Meta:
         model = Step
@@ -217,8 +218,24 @@ class StepsContentSerializer(serializers.ModelSerializer):
         fields = ('id', 'type', 'title', 'sub_title', 'steps',)
 
 
+class LogoSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+
+    class Meta:
+        model = Logo
+        fields = ('image', )
+
+
+class LogosContentSerializer(serializers.ModelSerializer):
+    logos = LogoSerializer(many=True)
+
+    class Meta:
+        model = LogosContent
+        fields = ('id', 'type', 'title', 'sub_title', 'logos', 'action_text', )
+
+
 class LocationsContentSerializer(serializers.ModelSerializer):
-    steps = LocationSerializer(many=True)
+    locations = LocationSerializer(many=True)
 
     class Meta:
         model = LocationsContent
@@ -342,6 +359,8 @@ class BlockSerializer(serializers.Serializer):
             serializer = StepsContentSerializer
         elif isinstance(obj, LocationsContent):
             serializer = LocationsContentSerializer
+        elif isinstance(obj, LogosContent):
+            serializer = LogosContentSerializer
         else:
             serializer = DefaultBlockSerializer
 

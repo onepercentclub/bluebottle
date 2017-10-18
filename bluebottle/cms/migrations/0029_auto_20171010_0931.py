@@ -8,6 +8,9 @@ import django.db.models.deletion
 import django.db.models.manager
 import parler.models
 
+from fluent_contents.models.managers import ContentItemManager
+from parler.managers import TranslatableManager
+
 
 class Migration(migrations.Migration):
 
@@ -32,7 +35,7 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
                 ('base_objects', django.db.models.manager.Manager()),
             ],
         ),
@@ -51,7 +54,7 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
                 ('base_objects', django.db.models.manager.Manager()),
             ],
         ),
@@ -63,7 +66,11 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
-            bases=(parler.models.TranslatableModelMixin, models.Model),
+            bases=(models.Model, ),
+            managers=[
+                ('objects', TranslatableManager()),
+                ('base_objects', django.db.models.manager.Manager()),
+            ],
         ),
         migrations.CreateModel(
             name='SlidesContent',
@@ -76,7 +83,7 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
                 ('base_objects', django.db.models.manager.Manager()),
             ],
         ),
@@ -112,7 +119,7 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
-            bases=(parler.models.TranslatableModelMixin, models.Model),
+            bases=(models.Model, ),
         ),
         migrations.CreateModel(
             name='StepsContent',
@@ -129,7 +136,7 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
                 ('base_objects', django.db.models.manager.Manager()),
             ],
         ),

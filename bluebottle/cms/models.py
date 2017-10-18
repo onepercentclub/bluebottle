@@ -57,7 +57,7 @@ class HomePage(TranslatableModel):
         )
 
 
-class Stat(TranslatableModel, SortableMixin):
+class Stat(models.Model):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
@@ -82,10 +82,7 @@ class Stat(TranslatableModel, SortableMixin):
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
     block = models.ForeignKey('cms.StatsContent', related_name='stats', null=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
-
-    translations = TranslatedFields(
-        title=models.CharField(max_length=63)
-    )
+    title = models.CharField(max_length=63)
 
     @property
     def name(self):
@@ -95,11 +92,13 @@ class Stat(TranslatableModel, SortableMixin):
         ordering = ['sequence']
 
 
-class Quote(TranslatableModel):
+class Quote(models.Model):
     block = models.ForeignKey('cms.QuotesContent', related_name='quotes')
-    translations = TranslatedFields(
-        name=models.CharField(max_length=30),
-        quote=models.CharField(max_length=60)
+    name = models.CharField(max_length=60)
+    quote = models.CharField(max_length=90)
+    image = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='quote_images/'
     )
 
 
@@ -154,6 +153,8 @@ class ProjectsContent(TitledContent):
                                    blank=True, null=True)
 
     projects = models.ManyToManyField(Project, db_table='cms_projectscontent_projects')
+    from_homepage = models.BooleanField(default=False)
+
 
     preview_template = 'admin/cms/preview/projects.html'
 
@@ -239,40 +240,38 @@ class SupporterTotalContent(TitledContent):
         return 'Supporter total'
 
 
-class Slide(TranslatableModel):
+class Slide(models.Model):
     block = models.ForeignKey('cms.SlidesContent', related_name='slides')
-    translations = TranslatedFields(
-        tab_text=models.CharField(
-            _("Tab text"), max_length=100,
-            help_text=_("This is shown on tabs beneath the banner.")
-        ),
-        title=models.CharField(_("Title"), max_length=100, blank=True),
-        body=models.TextField(_("Body text"), blank=True),
-        image=ImageField(
-            _("Image"), max_length=255, blank=True, null=True,
-            upload_to='banner_slides/'
-        ),
-        background_image=ImageField(
-            _("Background image"), max_length=255, blank=True,
-            null=True, upload_to='banner_slides/'
-        ),
-        video_url=models.URLField(
-            _("Video url"), max_length=100, blank=True, default=''
-        ),
-        link_text=models.CharField(
-            _("Link text"), max_length=400,
-            help_text=_("This is the text on the button inside the banner."),
-            blank=True
-        ),
-        link_url=models.CharField(
-            _("Link url"), max_length=400,
-            help_text=_("This is the link for the button inside the banner."),
-            blank=True
-        ),
+    tab_text = models.CharField(
+        _("Tab text"), max_length=100,
+        help_text=_("This is shown on tabs beneath the banner.")
+    )
+    title = models.CharField(_("Title"), max_length=100, blank=True)
+    body = models.TextField(_("Body text"), blank=True)
+    image = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='banner_slides/'
+    )
+    background_image = ImageField(
+        _("Background image"), max_length=255, blank=True,
+        null=True, upload_to='banner_slides/'
+    )
+    video_url = models.URLField(
+        _("Video url"), max_length=100, blank=True, default=''
+    )
+    link_text = models.CharField(
+        _("Link text"), max_length=400,
+        help_text=_("This is the text on the button inside the banner."),
+        blank=True
+    )
+    link_url = models.CharField(
+        _("Link url"), max_length=400,
+        help_text=_("This is the link for the button inside the banner."),
+        blank=True
     )
 
 
-class SlidesContent(ContentItem):
+class SlidesContent(TitledContent):
     type = 'slides'
     preview_template = 'admin/cms/preview/slides.html'
 
@@ -289,11 +288,8 @@ class Step(TranslatableModel):
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='step_images/'
     )
-
-    translations = TranslatedFields(
-        header=models.CharField(_("Header"), max_length=100),
-        text=models.CharField(_("Text"), max_length=400),
-    )
+    header = models.CharField(_("Header"), max_length=100)
+    text = models.CharField(_("Text"), max_length=400)
 
 
 class StepsContent(TitledContent):
@@ -335,3 +331,25 @@ class CategoriesContent(TitledContent):
 
     def __unicode__(self):
         return unicode(self.categories)
+
+
+class Logo(models.Model):
+    block = models.ForeignKey('cms.LogosContent', related_name='logos')
+    image = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='logo_images/'
+    )
+
+
+class LogosContent(TitledContent):
+    type = 'logos'
+    preview_template = 'admin/cms/preview/logos.html'
+    action_text = models.CharField(max_length=40)
+    action_link = models.CharField(max_length=100, default="/start-project",
+                                   blank=True, null=True)
+
+    class Meta:
+        verbose_name = _('Logos')
+
+    def __unicode__(self):
+        return unicode(self.logos)

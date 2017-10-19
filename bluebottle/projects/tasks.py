@@ -8,6 +8,7 @@ from django.db import connection
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
+from bluebottle.payments.services import PaymentService
 from bluebottle.projects.models import Project
 
 logger = logging.getLogger(__name__)
@@ -61,3 +62,12 @@ def update_project_status_stats():
         connection.set_tenant(tenant)
         with LocalTenant(tenant, clear_tenant=True):
             Project.update_status_stats(tenant=tenant)
+
+
+@shared_task
+def refund_project(tenant, project):
+    connection.set_tenant(tenant)
+    with LocalTenant(tenant, clear_tenant=True):
+        for donation in project.donations:
+            service = PaymentService(donation.order.order_payment)
+            service.refund_payment()

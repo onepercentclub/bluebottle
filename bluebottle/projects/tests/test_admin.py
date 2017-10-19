@@ -3,6 +3,7 @@ import json
 import mock
 import StringIO
 
+from django.db import connection
 import requests
 from bluebottle.test.factory_models.tasks import TaskFactory
 
@@ -12,15 +13,18 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib import messages
 from django.test.client import RequestFactory
 
+from moneyed import Money
+
 from bluebottle.projects.admin import (
     LocationFilter, ProjectReviewerFilter, ProjectAdminForm,
     ReviewerWidget, ProjectAdmin,
     ProjectSkillFilter)
-from bluebottle.projects.models import Project
+from bluebottle.projects.models import Project, ProjectPhase
+from bluebottle.projects.tasks import refund_project
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.test.utils import BluebottleTestCase, override_settings
@@ -247,10 +251,15 @@ class TestProjectAdmin(BluebottleTestCase):
         request.user = MockUser(['rewards.read_reward'])
 
         project = ProjectFactory.create()
-        reward = RewardFactory.create(project=project)
+        reward = RewardFactory.create(project=project, amount=Money(10, 'EUR'))
 
         reward_order = OrderFactory.create(status='success')
-        DonationFactory.create(project=project, reward=reward, order=reward_order)
+        donation = DonationFactory.create(
+            project=project,
+            reward=reward,
+            order=reward_order,
+            amount=Money(100, 'EUR')
+        )
 
         order = OrderFactory.create(status='success')
         DonationFactory.create(project=project, order=order)
@@ -266,6 +275,42 @@ class TestProjectAdmin(BluebottleTestCase):
         self.assertEqual(line['Name'], reward_order.user.full_name)
         self.assertEqual(line['Order id'], str(reward_order.id))
         self.assertEqual(line['Reward'], reward.title)
+        self.assertEqual(line['Amount'], str(reward.amount))
+        self.assertEqual(line['Actual Amount'], str(donation.amount))
+
+    def test_export_rewards_anonymous(self):
+        request = self.request_factory.get('/')
+        request.user = MockUser(['rewards.read_reward'])
+
+        project = ProjectFactory.create()
+        reward = RewardFactory.create(project=project, amount=Money(10, 'EUR'))
+
+        reward_order = OrderFactory.create(status='success', user=None)
+        donation = DonationFactory.create(
+            project=project,
+            reward=reward,
+            order=reward_order,
+            name='test',
+            amount=Money(100, 'EUR')
+        )
+
+        order = OrderFactory.create(status='success')
+        DonationFactory.create(project=project, order=order)
+
+        response = self.project_admin.export_rewards(request, project.id)
+        reader = csv.DictReader(StringIO.StringIO(response.content))
+
+        result = [line for line in reader]
+        self.assertEqual(len(result), 1)
+        line = result[0]
+
+        self.assertEqual(line['Email'], '')
+        self.assertEqual(line['Name'], '')
+        self.assertEqual(line['Order id'], str(reward_order.id))
+        self.assertEqual(line['Reward'], reward.title)
+        self.assertEqual(line['Amount'], str(reward.amount))
+        self.assertEqual(line['Actual Amount'], str(donation.amount))
+        self.assertEqual(line['Name on Donation'], donation.name)
 
     def test_export_rewards_forbidden(self):
         request = self.request_factory.get('/')
@@ -275,6 +320,81 @@ class TestProjectAdmin(BluebottleTestCase):
         response = self.project_admin.export_rewards(request, project.id)
 
         self.assertEqual(response.status_code, 403)
+
+
+@override_settings(ENABLE_REFUNDS=True)
+class TestProjectRefundAdmin(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectRefundAdmin, self).setUp()
+        self.site = AdminSite()
+        self.request_factory = RequestFactory()
+
+        self.init_projects()
+        self.project_admin = ProjectAdmin(Project, self.site)
+
+        self.project = ProjectFactory.create(
+            status=ProjectPhase.objects.get(slug='closed'),
+        )
+
+        self.order = OrderFactory.create(
+            status='success'
+        )
+
+        DonationFactory.create(
+            project=self.project,
+            order=self.order,
+            amount=Money(100, 'EUR'),
+        )
+
+        self.request = self.request_factory.post('/')
+        self.request.user = MockUser(['payments.refund_orderpayment'])
+
+    def test_refunds(self):
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            response = self.project_admin.refund(self.request, self.project.pk)
+
+            self.assertEqual(response.status_code, 302)
+
+            refund_mock.assert_called_with(connection.tenant, self.project)
+
+    @override_settings(ENABLE_REFUNDS=True)
+    def test_refunds_not_closed(self):
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            response = self.project_admin.refund(self.request, self.project.pk)
+
+            self.assertEqual(response.status_code, 403)
+            refund_mock.assert_not_called()
+
+    @override_settings(ENABLE_REFUNDS=True)
+    def test_refunds_no_amount(self):
+        self.order.transition_to('failed')
+        self.order.save()
+
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            response = self.project_admin.refund(self.request, self.project.pk)
+
+            self.assertEqual(response.status_code, 403)
+            refund_mock.assert_not_called()
+
+    @override_settings(ENABLE_REFUNDS=True)
+    def test_refunds_no_permission(self):
+        self.request.user.perms = []
+
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            response = self.project_admin.refund(self.request, self.project.pk)
+            self.assertEqual(response.status_code, 403)
+            refund_mock.assert_not_called()
+
+    @override_settings(ENABLE_REFUNDS=False)
+    def test_refunds_disabled(self):
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            response = self.project_admin.refund(self.request, self.project.pk)
+
+            self.assertEqual(response.status_code, 403)
+            refund_mock.assert_not_called()
 
 
 class LocationFilterTest(BluebottleTestCase):

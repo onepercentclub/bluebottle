@@ -8,6 +8,7 @@ from django.conf import settings
 import bluebottle.utils.monkey_patch_migration  # noqa
 import bluebottle.utils.monkey_patch_corsheaders  # noqa
 import bluebottle.utils.monkey_patch_parler  # noqa
+import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
 
 
 class Language(models.Model):

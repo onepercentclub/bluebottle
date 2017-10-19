@@ -114,7 +114,10 @@ def get_user_site_links(user):
     }
 
     for group in site_links.link_groups.all():
-        response[group.name] = []
+        response[group.name] = {
+            'title': group.title,
+            'links': []
+        }
 
         for link in group.links.all():
             allowed = True
@@ -144,7 +147,7 @@ def get_user_site_links(user):
                 link_data['route'] = link.external_link
                 link_data['external'] = True
 
-            response[group.name].append(link_data)
+            response[group.name]['links'].append(link_data)
 
     return response
 

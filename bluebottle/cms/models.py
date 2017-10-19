@@ -66,7 +66,7 @@ class LinkGroup(models.Model):
     )
 
     site_links = models.ForeignKey(SiteLinks, related_name='link_groups')
-    name = models.CharField(max_length=25, unique=True, choices=GROUP_CHOICES, default='main')
+    name = models.CharField(max_length=25, choices=GROUP_CHOICES, default='main')
     title = models.CharField(_('Title'), blank=True, max_length=50)
 
 
@@ -85,9 +85,9 @@ class Link(SortableMixin):
     highlight = models.BooleanField(default=False)
     title = models.CharField(_('Title'), null=False, max_length=100)
     component = models.CharField(_('Component'), choices=COMPONENT_CHOICES, max_length=50,
-                                 blank=True)
-    component_id = models.CharField(_('Component ID'), max_length=100, blank=True)
-    external_link = models.CharField(_('External Link'), max_length=2000, blank=True)
+                                 blank=True, null=True)
+    component_id = models.CharField(_('Component ID'), max_length=100, blank=True, null=True)
+    external_link = models.CharField(_('External Link'), max_length=2000, blank=True, null=True)
     link_order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:

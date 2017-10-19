@@ -45,13 +45,17 @@ class LinkPermission(models.Model):
 
 
 class SiteLinks(models.Model):
+    language = models.OneToOneField('utils.Language', null=False)
     has_copyright = models.BooleanField(null=False, default=True)
 
     class Meta:
         verbose_name_plural = _("Site links")
 
+    def __unicode__(self):
+        return u"Site Links {0}".format(self.language.code.upper())
 
-class Link(TranslatableModel, SortableMixin):
+
+class LinkGroup(models.Model):
     GROUP_CHOICES = (
         ('main', _('Main')),
         ('about', _('About')),
@@ -60,6 +64,12 @@ class Link(TranslatableModel, SortableMixin):
         ('social', _('Social')),
     )
 
+    site_links = models.ForeignKey(SiteLinks, related_name='link_groups')
+    name = models.CharField(max_length=25, unique=True, choices=GROUP_CHOICES, default='main')
+    title = models.CharField(_('Title'), blank=True, max_length=50)
+
+
+class Link(SortableMixin):
     COMPONENT_CHOICES = (
         ('page', _('Page')),
         ('project', _('Project')),
@@ -69,20 +79,18 @@ class Link(TranslatableModel, SortableMixin):
         ('news', _('News')),
     )
 
-    site_links = SortableForeignKey(SiteLinks, related_name='links')
-    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
-    group = models.CharField(max_length=25, choices=GROUP_CHOICES, default='main')
+    link_group = SortableForeignKey(LinkGroup, related_name='links')
     link_permissions = models.ManyToManyField(LinkPermission, blank=True)
     highlight = models.BooleanField(default=False)
-    translations = TranslatedFields(
-        title=models.CharField(_('Title'), null=False, max_length=100),
-        component=models.CharField(_('Component'), choices=COMPONENT_CHOICES, max_length=50, blank=True),
-        component_id=models.CharField(_('Component ID'), max_length=100, blank=True),
-        external_link=models.CharField(_('External Link'), max_length=2000, blank=True)
-    )
+    title = models.CharField(_('Title'), null=False, max_length=100)
+    component = models.CharField(_('Component'), choices=COMPONENT_CHOICES, max_length=50,
+                                 blank=True)
+    component_id = models.CharField(_('Component ID'), max_length=100, blank=True)
+    external_link = models.CharField(_('External Link'), max_length=2000, blank=True)
+    link_order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:
-        ordering = ['sequence']
+        ordering = ['link_order']
 
 
 class Stats(models.Model):

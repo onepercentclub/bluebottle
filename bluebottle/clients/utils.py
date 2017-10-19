@@ -113,38 +113,38 @@ def get_user_site_links(user):
         'hasCopyright': site_links.has_copyright
     }
 
-    for link in site_links.links.all():
-        allowed = True
-        if link.link_permissions.exists():
-            # Check permissions
-            for perm in link.link_permissions.all():
-                # has_perm  present allowed
-                # yes       yes     yes
-                # yes       no      no
-                # no        yes     no
-                # no        no      yes
-                allowed = (user.has_perm(perm.permission) == perm.present) and allowed
+    for group in site_links.link_groups.all():
+        response[group.name] = []
 
-        if not allowed:
-            continue
+        for link in group.links.all():
+            allowed = True
+            if link.link_permissions.exists():
+                # Check permissions
+                for perm in link.link_permissions.all():
+                    # has_perm  present allowed
+                    # yes       yes     yes
+                    # yes       no      no
+                    # no        yes     no
+                    # no        no      yes
+                    allowed = (user.has_perm(perm.permission) == perm.present) and allowed
 
-        if link.group not in response:
-            response[link.group] = []
+            if not allowed:
+                continue
 
-        link_data = {
-            'title': link.title,
-            'isHighlighted': link.highlight
-        }
+            link_data = {
+                'title': link.title,
+                'isHighlighted': link.highlight
+            }
 
-        if link.component:
-            link_data['route'] = link.component
-        if link.component_id:
-            link_data['param'] = link.component_id
-        elif link.external_link:
-            link_data['route'] = link.external_link
-            link_data['external'] = True
+            if link.component:
+                link_data['route'] = link.component
+            if link.component_id:
+                link_data['param'] = link.component_id
+            elif link.external_link:
+                link_data['route'] = link.external_link
+                link_data['external'] = True
 
-        response[link.group].append(link_data)
+            response[group.name].append(link_data)
 
     return response
 

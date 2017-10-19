@@ -1,8 +1,8 @@
 from django.core.urlresolvers import reverse
-from django.http.response import HttpResponseRedirect
 from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
+from django.utils.html import format_html
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
@@ -10,41 +10,62 @@ from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
 
 
 from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.cms.models import SiteLinks, Link, LinkPermission, Stats, Stat, Quotes, Quote, ResultPage, Projects
+from bluebottle.cms.models import (
+    SiteLinks, Link, LinkGroup, LinkPermission, Stats, Stat, Quotes, Quote, ResultPage, Projects
+)
 from bluebottle.statistics.statistics import Statistics
 
 
 class LinkPermissionAdmin(admin.ModelAdmin):
-    pass
+    model = LinkPermission
+
+    def get_model_perms(self, request):
+        return {}
 
 
-class LinkInline(TranslatableStackedInline, SortableStackedInline):
+class LinkInline(SortableStackedInline):
     model = Link
+    extra = 1
 
-    raw_id_fields = ('link_permissions',)
     fields = (
-        ('group', 'title', 'highlight'),
+        ('title', 'highlight'),
         'link_permissions',
-        'external_link',
         ('component', 'component_id'),
+        'external_link',
 
     )
+
+
+class LinkGroupAdmin(NonSortableParentAdmin):
+    model = LinkGroup
+    inlines = [LinkInline]
+
+    def get_model_perms(self, request):
+        return {}
+
+
+class LinkGroupInline(admin.TabularInline):
+    model = LinkGroup
+    readonly_fields = ('name', 'edit_url',)
+    fields = (('name', 'edit_url'),)
     extra = 1
+
+    def edit_url(self, obj):
+        url = ''
+
+        if url is not None:
+            url = "admin:%s_%s_change" % (self.model._meta.app_label,
+                                          self.model._meta.model_name)
+            return format_html(
+                u"<a href='{}'>{}</a>",
+                str(reverse(url, args=(obj.id,))), 'Edit'
+            )
+        return '(None)'
 
 
 class SiteLinksAdmin(ImprovedModelForm, NonSortableParentAdmin):
     model = SiteLinks
-    inlines = [LinkInline]
-
-    def changelist_view(self, request, extra_context=None):
-        # There is only one SiteLinks object per platform so redirect if users visits list view
-        if self.model.objects.all().count() == 0:
-            url = "admin:%s_%s_add" % (self.model._meta.app_label, self.model._meta.model_name)
-            return HttpResponseRedirect(reverse(url))
-
-        url = "admin:%s_%s_change" % (self.model._meta.app_label, self.model._meta.model_name)
-        obj = self.model.objects.all()[0]
-        return HttpResponseRedirect(reverse(url, args=(obj.id,)))
+    inlines = [LinkGroupInline]
 
 
 class StatInline(TranslatableStackedInline, SortableStackedInline):
@@ -102,4 +123,5 @@ admin.site.register(Quotes, QuotesAdmin)
 admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
 admin.site.register(SiteLinks, SiteLinksAdmin)
+admin.site.register(LinkGroup, LinkGroupAdmin)
 admin.site.register(LinkPermission, LinkPermissionAdmin)

@@ -60,7 +60,8 @@ class Command(BaseCommand):
                                                                     highlight=link.get('highlighted', False),
                                                                     title=link.get('title', 'N/A'),
                                                                     component=link.get('component', None),
-                                                                    component_id=link.get('component_id', None))
+                                                                    component_id=link.get('component_id', None),
+                                                                    external_link=link.get('external_link', None))
 
     def handle(self, *args, **options):
         if options['all'] and options['tenant']:

@@ -3,11 +3,11 @@ from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
 from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
-from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
-
+from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
 
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.cms.models import (
@@ -25,7 +25,7 @@ class LinkPermissionAdmin(admin.ModelAdmin):
 
 class LinkInline(SortableStackedInline):
     model = Link
-    extra = 1
+    extra = 0
 
     fields = (
         ('title', 'highlight'),
@@ -44,26 +44,27 @@ class LinkGroupAdmin(NonSortableParentAdmin):
         return {}
 
 
-class LinkGroupInline(admin.TabularInline):
+class LinkGroupInline(SortableTabularInline):
     model = LinkGroup
-    readonly_fields = ('name', 'edit_url',)
-    fields = (('name', 'edit_url'),)
-    extra = 1
+    readonly_fields = ('edit_url',)
+    fields = ('name', 'edit_url', )
+    extra = 0
 
     def edit_url(self, obj):
         url = ''
 
-        if url is not None:
+        if obj.id is not None:
             url = "admin:%s_%s_change" % (self.model._meta.app_label,
                                           self.model._meta.model_name)
             return format_html(
                 u"<a href='{}'>{}</a>",
-                str(reverse(url, args=(obj.id,))), 'Edit'
+                str(reverse(url, args=(obj.id,))), _('Edit this group')
             )
-        return '(None)'
+        return _('First save to edit this group')
+    edit_url.short_name = 'Edit group'
 
 
-class SiteLinksAdmin(ImprovedModelForm, NonSortableParentAdmin):
+class SiteLinksAdmin(NonSortableParentAdmin):
     model = SiteLinks
     inlines = [LinkGroupInline]
 

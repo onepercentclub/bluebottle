@@ -19,7 +19,6 @@ class ResultPage(TranslatableModel):
     end_date = models.DateField(null=True, blank=True)
     content = PlaceholderField('content')
 
-    image = models.ImageField(_('Header image'), blank=True, null=True)
     translations = TranslatedFields(
         title=models.CharField(_('Title'), max_length=40),
         slug=models.SlugField(_('Slug'), max_length=40),
@@ -56,7 +55,7 @@ class SiteLinks(models.Model):
         return u"Site Links {0}".format(self.language.code.upper())
 
 
-class LinkGroup(models.Model):
+class LinkGroup(SortableMixin):
     GROUP_CHOICES = (
         ('main', _('Main')),
         ('about', _('About')),
@@ -68,6 +67,10 @@ class LinkGroup(models.Model):
     site_links = models.ForeignKey(SiteLinks, related_name='link_groups')
     name = models.CharField(max_length=25, choices=GROUP_CHOICES, default='main')
     title = models.CharField(_('Title'), blank=True, max_length=50)
+    group_order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['group_order']
 
 
 class Link(SortableMixin):

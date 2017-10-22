@@ -2,6 +2,7 @@ from django.core.urlresolvers import reverse
 from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
+from django.shortcuts import redirect
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
@@ -43,11 +44,17 @@ class LinkGroupAdmin(NonSortableParentAdmin):
     def get_model_perms(self, request):
         return {}
 
+    def response_add(self, request, obj, post_url_continue=None):
+        return redirect(reverse('admin:cms_sitelinks_change', args=(obj.site_links_id, )))
+
+    def response_change(self, request, obj):
+        return redirect(reverse('admin:cms_sitelinks_change', args=(obj.site_links_id, )))
+
 
 class LinkGroupInline(SortableTabularInline):
     model = LinkGroup
-    readonly_fields = ('edit_url',)
-    fields = ('name', 'edit_url', )
+    readonly_fields = ('title', 'edit_url',)
+    fields = ('name', 'title', 'edit_url', )
     extra = 0
 
     def edit_url(self, obj):

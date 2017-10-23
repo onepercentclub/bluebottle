@@ -5,6 +5,7 @@ from django.forms import Textarea
 from django.shortcuts import redirect
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from django_singleton_admin.admin import SingletonAdmin
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
@@ -126,6 +127,13 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
+from bluebottle.cms.models import SiteContentSettings
+
+
+class SiteContentSettingsAdmin(SingletonAdmin):
+    pass
+
+
 admin.site.register(Stats, StatsAdmin)
 admin.site.register(Quotes, QuotesAdmin)
 admin.site.register(Projects, ProjectsAdmin)
@@ -133,3 +141,4 @@ admin.site.register(ResultPage, ResultPageAdmin)
 admin.site.register(SiteLinks, SiteLinksAdmin)
 admin.site.register(LinkGroup, LinkGroupAdmin)
 admin.site.register(LinkPermission, LinkPermissionAdmin)
+admin.site.register(SiteContentSettings, SiteContentSettingsAdmin)

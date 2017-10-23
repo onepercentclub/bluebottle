@@ -58,7 +58,7 @@ class TenantAwareBackend(EmailBackend):
             self.connection.sendmail(
                 email_message.from_email, email_message.recipients(),
                 signature + message_string)
-        except:
+        except Exception:
             if not self.fail_silently:
                 raise
             return False
@@ -76,7 +76,7 @@ class TestMailBackend(EmailBackend):
         try:
             request.user.is_authenticated()
             recipient = request.user.email
-        except:
+        except Exception:
             recipient = str(email_message.recipients()[0])
             if '+test' not in recipient:
                 return False
@@ -88,7 +88,7 @@ class TestMailBackend(EmailBackend):
 
             self.connection.sendmail(
                 email_message.from_email, recipient, message_string)
-        except:
+        except Exception:
             if not self.fail_silently:
                 raise
             return False

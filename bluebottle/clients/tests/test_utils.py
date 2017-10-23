@@ -9,6 +9,11 @@ from bluebottle.test.factory_models.cms import (
 from bluebottle.clients.utils import get_user_site_links
 
 
+def _group_by_name(results, name):
+    groups = results['groups']
+    return (group for group in groups if group['name'] == name).next()
+
+
 class TestSiteLinks(BluebottleTestCase):
     def setUp(self):
         super(TestSiteLinks, self).setUp()
@@ -31,23 +36,25 @@ class TestSiteLinks(BluebottleTestCase):
     def test_user_site_links_response(self):
         results = get_user_site_links(self.user1)
 
-        self.assertEqual(len(results['main']['links']), 2)
-        self.assertEqual(len(results['about']['links']), 1)
+        main = _group_by_name(results, 'main')
+        main_links = main['links']
+        self.assertEqual(len(main_links), 2)
+        self.assertEqual(len(_group_by_name(results, 'about')['links']), 1)
 
-        link1 = results['main']['links'][0]
+        link1 = main_links[0]
         expected1 = {
             'route': 'project',
             'isHighlighted': False,
-            'title': 'Project List'
+            'title': 'Project List',
+            'sequence': 1
         }
-        self.assertEqual(results['main']['title'], 'main Group')
+        self.assertEqual(main['title'], 'main Group')
         self.assertEqual(link1, expected1)
 
     def test_user_site_links_external(self):
         results = get_user_site_links(self.user1)
-        print(results)
 
-        link = results['about']['links'][0]
+        link = _group_by_name(results, 'about')['links'][0]
         self.assertTrue(link['external'])
 
     def test_user_site_links_perm(self):
@@ -59,7 +66,7 @@ class TestSiteLinks(BluebottleTestCase):
 
         # User can't access link with permissions
         results = get_user_site_links(self.user1)
-        self.assertEqual(len(results['main']['links']), 2)
+        self.assertEqual(len(_group_by_name(results, 'main')['links']), 2)
 
         # Add resultpage permission to User
         resultpage_perm = Permission.objects.get(codename='api_change_resultpage')
@@ -68,7 +75,7 @@ class TestSiteLinks(BluebottleTestCase):
 
         # User can now access link with resultpage permission
         results = get_user_site_links(self.user1)
-        self.assertEqual(len(results['main']['links']), 3)
+        self.assertEqual(len(_group_by_name(results, 'main')['links']), 3)
 
     def test_user_site_links_missing_perm(self):
         # Add link with absent resultpage permission
@@ -79,7 +86,7 @@ class TestSiteLinks(BluebottleTestCase):
 
         # User can access link without permission
         results = get_user_site_links(self.user1)
-        self.assertEqual(len(results['main']['links']), 3)
+        self.assertEqual(len(_group_by_name(results, 'main')['links']), 3)
 
         # Add resultpage permission to User
         resultpage_perm = Permission.objects.get(codename='api_change_resultpage')
@@ -88,4 +95,4 @@ class TestSiteLinks(BluebottleTestCase):
 
         # User can not access link with absent resultpage permission
         results = get_user_site_links(self.user1)
-        self.assertEqual(len(results['main']['links']), 2)
+        self.assertEqual(len(_group_by_name(results, 'main')['links']), 2)

@@ -38,7 +38,7 @@ class RealizedTaskModule(TaskModule):
             qs = Task.objects.filter(status='realized').exclude(
                 members__status__in=['realized']).distinct().order_by(
                 self.order_by)
-        except:
+        except Exception:
             qs = []
 
         self.children = qs[:self.limit]

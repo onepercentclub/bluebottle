@@ -194,8 +194,20 @@ def get_public_properties(request):
 
     # First load tenant settings that should always be exposed
     if connection.tenant:
+        from bluebottle.cms.models import SiteContentSettings
+        from bluebottle.cms.serializers import SiteContentSettingsSerializer
+        from bluebottle.projects.models import ProjectPlatformSettings
+        from bluebottle.projects.serializers import ProjectPlatformSettingsSerializer
+
         current_tenant = connection.tenant
         properties = get_tenant_properties()
+
+        site_content = SiteContentSettings.objects.get()
+        site_content_ser = SiteContentSettingsSerializer(site_content).to_representation(site_content)
+
+        project_settings = ProjectPlatformSettings.objects.get()
+        project_settings_ser = ProjectPlatformSettingsSerializer(project_settings).to_representation(project_settings)
+
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
@@ -207,7 +219,11 @@ def get_public_properties(request):
             'siteName': current_tenant.name,
             'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')],
             'languageCode': get_language(),
-            'siteLinks': get_user_site_links(request.user)
+            'siteLinks': get_user_site_links(request.user),
+            'platform': {
+                'content': site_content_ser,
+                'projects': project_settings_ser
+            }
         }
         try:
             config['readOnlyFields'] = {

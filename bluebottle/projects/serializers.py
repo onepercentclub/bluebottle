@@ -16,8 +16,8 @@ from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import (
-    ProjectBudgetLine, ProjectDocument, Project, ProjectImage
-)
+    ProjectBudgetLine, ProjectDocument, Project, ProjectImage,
+    ProjectPlatformSettings, ProjectSearchFilter)
 from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.utils.serializers import (MoneySerializer, ResourcePermissionField,
                                           RelatedResourcePermissionField)
@@ -492,3 +492,30 @@ class ProjectImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectImage
         fields = ('id', 'image', 'project')
+
+
+class ProjectSearchFilterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectSearchFilter
+        fields = (
+            'name',
+            'default',
+            'values',
+            'sequence'
+        )
+
+
+class ProjectPlatformSettingsSerializer(serializers.ModelSerializer):
+
+    filters = ProjectSearchFilterSerializer(many=True)
+
+    class Meta:
+        model = ProjectPlatformSettings
+        fields = (
+            'create_types',
+            'create_flow',
+            'suggestions',
+            'contact_method',
+            'filters'
+        )

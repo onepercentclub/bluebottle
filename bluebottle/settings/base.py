@@ -275,7 +275,8 @@ SHARED_APPS = (
     'parler',
     'daterange_filter',
     'adminsortable',
-    'django_summernote'
+    'django_summernote',
+    'django_singleton_admin'
 
 )
 TENANT_APPS = (

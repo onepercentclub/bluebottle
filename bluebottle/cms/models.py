@@ -1,15 +1,15 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from adminsortable.models import SortableMixin
+from adminsortable.fields import SortableForeignKey
 from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
-
 from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
-from adminsortable.models import SortableMixin
-from adminsortable.fields import SortableForeignKey
+from bluebottle.utils.models import BasePlatformSettings
 
 
 class ResultPage(TranslatableModel):
@@ -326,3 +326,16 @@ class ProjectMapBlockPlugin(ResultsContentPlugin):
 @plugin_pool.register
 class SupporterTotalBlockPlugin(ResultsContentPlugin):
     model = SupporterTotalContent
+
+
+class SiteContentSettings(BasePlatformSettings):
+    contact_email = models.EmailField(null=True, blank=True)
+    contact_phone = models.CharField(max_length=100, null=True, blank=True)
+    copyright = models.CharField(max_length=100, null=True, blank=True)
+    powered_by_text = models.CharField(max_length=100, null=True, blank=True)
+    powered_by_link = models.CharField(max_length=100, null=True, blank=True)
+    powered_by_logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
+
+    class Meta:
+        verbose_name_plural = _('Site content settings')
+        verbose_name = _('Site content settings')

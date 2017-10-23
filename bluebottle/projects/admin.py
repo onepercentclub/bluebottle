@@ -3,6 +3,10 @@ import csv
 import logging
 from decimal import InvalidOperation
 
+from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from django_singleton_admin.admin import SingletonAdmin
+
+from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
 from bluebottle.tasks.models import Skill
 from django import forms
 from django.db import connection
@@ -581,3 +585,15 @@ class ProjectPhaseAdmin(admin.ModelAdmin):
 
 
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)
+
+
+class ProjectSearchFilterAdmin(SortableTabularInline):
+    model = ProjectSearchFilter
+    extra = 1
+
+
+class ProjectPlatformSettingsAdmin(SingletonAdmin, NonSortableParentAdmin):
+
+    inlines = [ProjectSearchFilterAdmin]
+
+admin.site.register(ProjectPlatformSettings, ProjectPlatformSettingsAdmin)

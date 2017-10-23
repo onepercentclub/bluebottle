@@ -15,7 +15,7 @@ from rest_framework import serializers
 from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent)
+    SupporterTotalContent, SiteContentSettings)
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
 
@@ -280,3 +280,17 @@ class ResultPageSerializer(serializers.ModelSerializer):
         model = ResultPage
         fields = ('id', 'title', 'slug', 'start_date', 'image', 'share_image',
                   'end_date', 'description', 'blocks')
+
+
+class SiteContentSettingsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SiteContentSettings
+        fields = (
+            'contact_email',
+            'contact_phone',
+            'copyright',
+            'powered_by_link',
+            'powered_by_logo',
+            'powered_by_text'
+        )

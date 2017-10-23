@@ -278,7 +278,7 @@ class PayoutListFilter(admin.SimpleListFilter):
             value = re.search(r'\d+', label)
             try:
                 return int(value.group(0))
-            except:
+            except Exception:
                 return None
 
         def _label(v, k):

@@ -23,7 +23,7 @@ def handler500(request, template_name='500.html'):
     # Try returning using a RequestContext
     try:
         context = RequestContext(request)
-    except:
+    except Exception:
         logger.warn('Error getting RequestContext for ServerError page.')
         context = Context({'request': request})
 

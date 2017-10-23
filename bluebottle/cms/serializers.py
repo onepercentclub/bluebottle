@@ -20,7 +20,7 @@ from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
-    SlidesContent, Slide, Step, Logo, LogosContent
+    SlidesContent, Slide, Step, Logo, LogosContent, Link, LinksContent
 )
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
@@ -234,6 +234,22 @@ class LogosContentSerializer(serializers.ModelSerializer):
         fields = ('id', 'type', 'title', 'sub_title', 'logos', 'action_text', )
 
 
+class LinkSerializer(serializers.ModelSerializer):
+    image = ImageSerializer()
+
+    class Meta:
+        model = Link
+        fields = ('image', 'title', 'link', )
+
+
+class LinksContentSerializer(serializers.ModelSerializer):
+    links = LinkSerializer(many=True)
+
+    class Meta:
+        model = LinksContent
+        fields = ('id', 'type', 'title', 'sub_title', 'links', )
+
+
 class LocationsContentSerializer(serializers.ModelSerializer):
     locations = LocationSerializer(many=True)
 
@@ -361,6 +377,8 @@ class BlockSerializer(serializers.Serializer):
             serializer = LocationsContentSerializer
         elif isinstance(obj, LogosContent):
             serializer = LogosContentSerializer
+        elif isinstance(obj, LinksContent):
+            serializer = LinksContentSerializer
         else:
             serializer = DefaultBlockSerializer
 

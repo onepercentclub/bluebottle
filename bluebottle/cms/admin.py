@@ -8,7 +8,7 @@ from adminsortable.admin import SortableStackedInline
 from nested_inline.admin import NestedStackedInline
 
 from bluebottle.cms.models import (
-    Stat, Quote, Slide, Step, ResultPage, HomePage
+    Stat, Quote, Slide, Step, Logo, Link, ResultPage, HomePage
 )
 from bluebottle.statistics.statistics import Statistics
 
@@ -36,6 +36,16 @@ class SlideInline(TranslatableStackedInline, NestedStackedInline):
 
 class StepInline(TranslatableStackedInline, NestedStackedInline):
     model = Step
+    extra = 1
+
+
+class LogoInline(TranslatableStackedInline, NestedStackedInline):
+    model = Logo
+    extra = 1
+
+
+class LinkInline(TranslatableStackedInline, NestedStackedInline):
+    model = Link
     extra = 1
 
 

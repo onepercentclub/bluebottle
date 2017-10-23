@@ -353,3 +353,26 @@ class LogosContent(TitledContent):
 
     def __unicode__(self):
         return unicode(self.logos)
+
+
+class Link(models.Model):
+    block = models.ForeignKey('cms.LinksContent', related_name='links')
+    image = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='link_images/'
+    )
+    action_text = models.CharField(max_length=40)
+    action_link = models.CharField(
+        max_length=100, blank=True, null=True
+    )
+
+
+class LinksContent(TitledContent):
+    type = 'links'
+    preview_template = 'admin/cms/preview/links.html'
+
+    class Meta:
+        verbose_name = _('Links')
+
+    def __unicode__(self):
+        return unicode(self.links)

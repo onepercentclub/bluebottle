@@ -592,7 +592,17 @@ class ProjectSearchFilterAdmin(SortableTabularInline):
     extra = 1
 
 
+class ProjectPlatformSettingsAdminForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            'create_types': forms.CheckboxSelectMultiple,
+            'contact_types': forms.CheckboxSelectMultiple,
+        }
+
+
 class ProjectPlatformSettingsAdmin(SingletonAdmin, NonSortableParentAdmin):
+
+    form = ProjectPlatformSettingsAdminForm
 
     inlines = [ProjectSearchFilterAdmin]
 

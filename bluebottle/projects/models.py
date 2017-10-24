@@ -787,6 +787,11 @@ class ProjectPlatformSettings(BasePlatformSettings):
         ('funding', _('Funding')),
     )
 
+    PROJECT_CONTACT_TYPE_OPTIONS = (
+        ('organization', _('Organization')),
+        ('personal', _('Personal')),
+    )
+
     PROJECT_CREATE_FLOW_OPTIONS = (
         ('combined', _('Combined')),
         ('choose', _('Choose')),
@@ -798,8 +803,8 @@ class ProjectPlatformSettings(BasePlatformSettings):
     )
 
     create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
+    contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
-    suggestions = models.BooleanField(default=True)
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)
 
     class Meta:

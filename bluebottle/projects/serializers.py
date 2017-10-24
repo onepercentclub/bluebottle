@@ -515,7 +515,7 @@ class ProjectPlatformSettingsSerializer(serializers.ModelSerializer):
         fields = (
             'create_types',
             'create_flow',
-            'suggestions',
             'contact_method',
+            'contact_types',
             'filters'
         )

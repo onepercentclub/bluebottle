@@ -101,7 +101,7 @@ FLUENT_DASHBOARD_APP_GROUPS = (
     }),
     (_('Settings'), {
         'models': (
-            'bluebottle.cms.models.SiteContentSettings',
+            'bluebottle.cms.models.SitePlatformSettings',
             'bluebottle.projects.models.ProjectPlatformSettings',
         ),
         'module': 'fluent_dashboard.modules.AppIconList',

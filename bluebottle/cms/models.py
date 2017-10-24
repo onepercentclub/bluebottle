@@ -328,7 +328,7 @@ class SupporterTotalBlockPlugin(ResultsContentPlugin):
     model = SupporterTotalContent
 
 
-class SiteContentSettings(BasePlatformSettings):
+class SitePlatformSettings(BasePlatformSettings):
     contact_email = models.EmailField(null=True, blank=True)
     contact_phone = models.CharField(max_length=100, null=True, blank=True)
     copyright = models.CharField(max_length=100, null=True, blank=True)
@@ -337,5 +337,5 @@ class SiteContentSettings(BasePlatformSettings):
     powered_by_logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
 
     class Meta:
-        verbose_name_plural = _('Site content settings')
-        verbose_name = _('Site content settings')
+        verbose_name_plural = _('site platform settings')
+        verbose_name = _('site platform settings')

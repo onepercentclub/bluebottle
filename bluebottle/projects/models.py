@@ -803,8 +803,8 @@ class ProjectPlatformSettings(BasePlatformSettings):
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)
 
     class Meta:
-        verbose_name_plural = _('Project Settings')
-        verbose_name = _('Project Settings')
+        verbose_name_plural = _('project platform settings')
+        verbose_name = _('project platform settings')
 
 
 @receiver(project_funded, weak=False, sender=Project,

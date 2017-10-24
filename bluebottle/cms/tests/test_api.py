@@ -17,7 +17,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent)
+    SupporterTotalContent, SitePlatformSettings)
 from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -277,3 +277,29 @@ class ResultPageTestCase(BluebottleTestCase):
             token='JWT {0}'.format(user.get_jwt_token())
         )
         self.assertEqual(response.status_code, 403)
+
+
+class SitePlatformSettingsTestCase(BluebottleTestCase):
+    """
+    Integration tests for the SitePlatformSettings API.
+    """
+
+    def setUp(self):
+        super(SitePlatformSettingsTestCase, self).setUp()
+        self.init_projects()
+
+    def test_site_platform_settings_header(self):
+        SitePlatformSettings.objects.create(
+            contact_email='info@example.com',
+            contact_phone='+31207158980',
+            copyright='GoodUp',
+            powered_by_text='Powered by',
+            powered_by_link='https://goodup.com'
+        )
+
+        response = self.client.get(reverse('settings'))
+        self.assertEqual(response.data['platform']['content']['contact_email'], 'info@example.com')
+        self.assertEqual(response.data['platform']['content']['contact_phone'], '+31207158980')
+        self.assertEqual(response.data['platform']['content']['copyright'], 'GoodUp')
+        self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
+        self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://goodup.com')

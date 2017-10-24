@@ -21,9 +21,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('update', models.DateTimeField(auto_now=True)),
                 ('project_create_types', select_multiple_field.models.SelectMultipleField(choices=[(b'sourcing', 'Sourcing'), (b'funding', 'Funding')], max_length=100)),
-                ('project_create_flow', models.CharField(choices=[(b'combined', 'Combined'), (b'choose', 'Choose')], max_length=100)),
+                ('project_create_flow', models.CharField(choices=[(b'combined', 'Combined'), (b'choice', 'Choice')], max_length=100)),
                 ('project_suggestions', models.BooleanField(default=True)),
-                ('project_contact_method', models.CharField(choices=[(b'email', 'E-mail'), (b'phone', 'Choose')], max_length=100)),
+                ('project_contact_method', models.CharField(choices=[(b'mail', 'E-mail'), (b'phone', 'Choose')], max_length=100)),
             ],
             options={
                 'verbose_name': 'Project Settings',

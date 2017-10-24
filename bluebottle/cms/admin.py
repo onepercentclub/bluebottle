@@ -1,15 +1,72 @@
+from django.core.urlresolvers import reverse
 from django.contrib import admin
 from django.db import models
 from django.forms import Textarea
+from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
-from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin
-
+from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
 
 from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.cms.models import Stats, Stat, Quotes, Quote, ResultPage, Projects
+from bluebottle.cms.models import (
+    SiteLinks, Link, LinkGroup, LinkPermission, Stats, Stat, Quotes, Quote, ResultPage, Projects
+)
 from bluebottle.statistics.statistics import Statistics
+
+
+class LinkPermissionAdmin(admin.ModelAdmin):
+    model = LinkPermission
+
+    def get_model_perms(self, request):
+        return {}
+
+
+class LinkInline(SortableStackedInline):
+    model = Link
+    extra = 0
+
+    fields = (
+        ('title', 'highlight'),
+        'link_permissions',
+        ('component', 'component_id'),
+        'external_link',
+
+    )
+
+
+class LinkGroupAdmin(NonSortableParentAdmin):
+    model = LinkGroup
+    inlines = [LinkInline]
+
+    def get_model_perms(self, request):
+        return {}
+
+
+class LinkGroupInline(SortableTabularInline):
+    model = LinkGroup
+    readonly_fields = ('edit_url',)
+    fields = ('name', 'edit_url', )
+    extra = 0
+
+    def edit_url(self, obj):
+        url = ''
+
+        if obj.id is not None:
+            url = "admin:%s_%s_change" % (self.model._meta.app_label,
+                                          self.model._meta.model_name)
+            return format_html(
+                u"<a href='{}'>{}</a>",
+                str(reverse(url, args=(obj.id,))), _('Edit this group')
+            )
+        return _('First save to edit this group')
+    edit_url.short_name = 'Edit group'
+
+
+class SiteLinksAdmin(NonSortableParentAdmin):
+    model = SiteLinks
+    inlines = [LinkGroupInline]
 
 
 class StatInline(TranslatableStackedInline, SortableStackedInline):
@@ -66,3 +123,6 @@ admin.site.register(Stats, StatsAdmin)
 admin.site.register(Quotes, QuotesAdmin)
 admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
+admin.site.register(SiteLinks, SiteLinksAdmin)
+admin.site.register(LinkGroup, LinkGroupAdmin)
+admin.site.register(LinkPermission, LinkPermissionAdmin)

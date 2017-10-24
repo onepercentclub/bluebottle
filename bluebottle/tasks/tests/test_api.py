@@ -733,7 +733,9 @@ class TestTaskMemberStatusAPI(BluebottleTestCase):
 
         self.project = ProjectFactory.create(task_manager=self.user)
         self.task = TaskFactory.create(project=self.project, people_needed=2)
-        self.task_member = TaskMemberFactory.create(task=self.task, member=self.member)
+        self.task_member = TaskMemberFactory.create(
+            task=self.task, member=self.member, status='applied'
+        )
 
         self.url = reverse('task-member-status', args=(self.task_member.pk, ))
 
@@ -745,19 +747,19 @@ class TestTaskMemberStatusAPI(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.keys(), ['id', 'member', 'status', 'permissions'])
 
-    def test_set_status_realized(self):
+    def test_set_status_accepted(self):
         """
         Task mamangers can read the status
         """
         mail.outbox = []
         data = {
-            'status': 'realized',
+            'status': 'accepted',
             'message': 'Just a test message'
         }
         response = self.client.put(self.url, data=data, token=self.user_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'realized')
+        self.assertEqual(response.data['status'], 'accepted')
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertTrue(
@@ -767,13 +769,13 @@ class TestTaskMemberStatusAPI(BluebottleTestCase):
             data['message'] in mail.outbox[0].body
         )
 
-    def test_set_status_realized_twice(self):
+    def test_set_status_accepted_twice(self):
         """
         Task mamangers can read the status
         """
         mail.outbox = []
         data = {
-            'status': 'realized',
+            'status': 'accepted',
             'message': 'Just a test message'
         }
         response = self.client.put(self.url, data=data, token=self.user_token)
@@ -810,7 +812,7 @@ class TestTaskMemberStatusAPI(BluebottleTestCase):
         Task mamangers can read the status
         """
         data = {
-            'status': 'realized',
+            'status': 'accepted',
             'message': 'Just a test message'
         }
 

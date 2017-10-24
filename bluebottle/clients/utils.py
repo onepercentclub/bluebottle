@@ -194,7 +194,7 @@ def get_public_properties(request):
 
     # First load tenant settings that should always be exposed
     if connection.tenant:
-        from bluebottle.cms.models import SiteContentSettings
+        from bluebottle.cms.models import SitePlatformSettings
         from bluebottle.cms.serializers import SiteContentSettingsSerializer
         from bluebottle.projects.models import ProjectPlatformSettings
         from bluebottle.projects.serializers import ProjectPlatformSettingsSerializer
@@ -202,7 +202,7 @@ def get_public_properties(request):
         current_tenant = connection.tenant
         properties = get_tenant_properties()
 
-        site_content = SiteContentSettings.objects.get()
+        site_content = SitePlatformSettings.objects.get()
         site_content_ser = SiteContentSettingsSerializer(site_content).to_representation(site_content)
 
         project_settings = ProjectPlatformSettings.objects.get()

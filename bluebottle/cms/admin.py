@@ -128,7 +128,7 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
-class SiteContentSettingsAdmin(SingletonAdmin):
+class SitePlatformSettingsAdmin(SingletonAdmin):
     pass
 
 
@@ -139,4 +139,4 @@ admin.site.register(ResultPage, ResultPageAdmin)
 admin.site.register(SiteLinks, SiteLinksAdmin)
 admin.site.register(LinkGroup, LinkGroupAdmin)
 admin.site.register(LinkPermission, LinkPermissionAdmin)
-admin.site.register(SitePlatformSettings, SiteContentSettingsAdmin)
+admin.site.register(SitePlatformSettings, SitePlatformSettingsAdmin)

@@ -603,7 +603,7 @@ class ProjectPlatformSettingsAdminForm(forms.ModelForm):
 class ProjectPlatformSettingsAdmin(SingletonAdmin, NonSortableParentAdmin):
 
     form = ProjectPlatformSettingsAdminForm
-
     inlines = [ProjectSearchFilterAdmin]
+
 
 admin.site.register(ProjectPlatformSettings, ProjectPlatformSettingsAdmin)

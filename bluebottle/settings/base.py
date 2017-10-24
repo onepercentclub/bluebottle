@@ -544,6 +544,10 @@ PARTICIPATION_BACKOFFICE_ENABLED = False
 # If only one project type is set then project create should be set to 'combined'
 PROJECT_CREATE_TYPES = ['funding']
 PROJECT_CREATE_FLOW = 'combined'
+PROJECT_CONTACT_TYPES = [
+    'organization',
+]
+PROJECT_CONTACT_METHOD = 'mail'
 
 # For building frontend code
 BB_APPS = []

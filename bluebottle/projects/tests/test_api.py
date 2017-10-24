@@ -1209,7 +1209,7 @@ class ProjectStoryXssTest(BluebottleTestCase):
         story = '''
         <p onmouseover=\"alert('Persistent_XSS');\"></p>
         <br size="&{alert('Injected')}">
-        <div style="background-image: url(javascript:alert('Injected'))">
+        <div style="background-image: url(javascript:alert('Injected'))"></div>
         <script>alert('Injected!');</script>
         '''
 
@@ -1225,7 +1225,7 @@ class ProjectStoryXssTest(BluebottleTestCase):
         escaped_story = '''
         <p></p>
         <br>
-        &lt;div style="background-image: url(javascript:alert(\'Injected\'))"&gt;
+        &lt;div style="background-image: url(javascript:alert(\'Injected\'))"&gt;&lt;/div&gt;
         &lt;script&gt;alert(\'Injected!\');&lt;/script&gt;
         '''
         self.assertEqual(response.data['story'], escaped_story)

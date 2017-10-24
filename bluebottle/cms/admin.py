@@ -11,10 +11,11 @@ from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from parler.admin import TranslatableAdmin, TranslatableStackedInline
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
 
-from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.cms.models import (
-    SiteLinks, Link, LinkGroup, LinkPermission, Stats, Stat, Quotes, Quote, ResultPage, Projects
+    SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
+    Stats, Stat, Quotes, Quote, ResultPage, Projects
 )
+from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.statistics.statistics import Statistics
 
 
@@ -127,9 +128,6 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
-from bluebottle.cms.models import SiteContentSettings
-
-
 class SiteContentSettingsAdmin(SingletonAdmin):
     pass
 
@@ -141,4 +139,4 @@ admin.site.register(ResultPage, ResultPageAdmin)
 admin.site.register(SiteLinks, SiteLinksAdmin)
 admin.site.register(LinkGroup, LinkGroupAdmin)
 admin.site.register(LinkPermission, LinkPermissionAdmin)
-admin.site.register(SiteContentSettings, SiteContentSettingsAdmin)
+admin.site.register(SitePlatformSettings, SiteContentSettingsAdmin)

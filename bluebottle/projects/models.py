@@ -794,11 +794,11 @@ class ProjectPlatformSettings(BasePlatformSettings):
 
     PROJECT_CREATE_FLOW_OPTIONS = (
         ('combined', _('Combined')),
-        ('choose', _('Choose')),
+        ('choice', _('Choice')),
     )
 
     PROJECT_CONTACT_OPTIONS = (
-        ('email', _('E-mail')),
+        ('mail', _('E-mail')),
         ('phone', _('Phone')),
     )
 

@@ -25,6 +25,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='projectplatformsettings',
             name='project_contact_method',
-            field=models.CharField(choices=[(b'email', 'E-mail'), (b'phone', 'Phone')], max_length=100),
+            field=models.CharField(choices=[(b'mail', 'E-mail'), (b'phone', 'Phone')], max_length=100),
         ),
     ]

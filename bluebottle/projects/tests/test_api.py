@@ -14,6 +14,8 @@ from rest_framework import status
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.cms.models import SitePlatformSettings
+from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -2263,3 +2265,55 @@ class ProjectImageApiTest(BluebottleTestCase):
             )
             self.assertEqual(response.status_code, 201)
             self.assertTrue(response.data['image']['large'].startswith('http'))
+
+
+class ProjectPlatformSettingsTestCase(BluebottleTestCase):
+    """
+    Integration tests for the ProjectPlatformSettings API.
+    """
+
+    def setUp(self):
+        super(ProjectPlatformSettingsTestCase, self).setUp()
+        self.init_projects()
+
+    def test_site_platform_settings_header(self):
+        SitePlatformSettings.objects.create()
+        project_settings = ProjectPlatformSettings.objects.create(
+            contact_method='mail',
+            contact_types=['organization'],
+            create_flow='choice',
+            create_types=["funding", "sourcing"]
+        )
+
+        ProjectSearchFilter.objects.create(
+            project_settings=project_settings,
+            name='location'
+        )
+        ProjectSearchFilter.objects.create(
+            project_settings=project_settings,
+            name='type',
+            values='volunteering,funding'
+        )
+        ProjectSearchFilter.objects.create(
+            project_settings=project_settings,
+            name='status',
+            default='campaign,voting'
+        )
+
+        response = self.client.get(reverse('settings'))
+        self.assertEqual(response.data['platform']['projects']['contact_method'], 'mail')
+        self.assertEqual(response.data['platform']['projects']['contact_types'], ['organization'])
+        self.assertEqual(response.data['platform']['projects']['create_flow'], 'choice')
+        self.assertEqual(response.data['platform']['projects']['create_types'], ["funding", "sourcing"])
+
+        self.assertEqual(response.data['platform']['projects']['filters'][0]['name'], 'location')
+        self.assertEqual(response.data['platform']['projects']['filters'][0]['values'], None)
+        self.assertEqual(response.data['platform']['projects']['filters'][0]['default'], None)
+
+        self.assertEqual(response.data['platform']['projects']['filters'][1]['name'], 'type')
+        self.assertEqual(response.data['platform']['projects']['filters'][1]['values'], 'volunteering,funding')
+        self.assertEqual(response.data['platform']['projects']['filters'][1]['default'], None)
+
+        self.assertEqual(response.data['platform']['projects']['filters'][2]['name'], 'status')
+        self.assertEqual(response.data['platform']['projects']['filters'][2]['values'], None)
+        self.assertEqual(response.data['platform']['projects']['filters'][2]['default'], 'campaign,voting')

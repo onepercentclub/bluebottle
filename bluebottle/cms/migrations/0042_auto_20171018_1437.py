@@ -14,7 +14,7 @@ def set_default_translation(apps, schema_editor):
         try:
             translation = QuoteTranslation.objects.get(
                 language_code=quote.block.language_code,
-                master=stat
+                master=quote
             )
             quote.temp_name = translation.name
             quote.temp_quote = translation.quote

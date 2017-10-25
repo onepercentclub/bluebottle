@@ -849,3 +849,5 @@ SUMMERNOTE_CONFIG = {
         'disableResizeImage': True
     }
 }
+
+HOMEPAGE = {}

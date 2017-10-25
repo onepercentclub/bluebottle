@@ -104,7 +104,7 @@ class Quote(models.Model):
 
 class TitledContent(ContentItem):
     title = models.CharField(max_length=40, blank=True, null=True)
-    sub_title = models.CharField(max_length=70, blank=True, null=True)
+    sub_title = models.CharField(max_length=400, blank=True, null=True)
 
     class Meta:
         abstract = True
@@ -146,7 +146,7 @@ class SurveyContent(TitledContent):
 
 class ProjectsContent(TitledContent):
     type = 'projects'
-    action_text = models.CharField(max_length=40,
+    action_text = models.CharField(max_length=80,
                                    default=_('Start your own project'),
                                    blank=True, null=True)
     action_link = models.CharField(max_length=100, default="/start-project",
@@ -282,7 +282,7 @@ class SlidesContent(TitledContent):
         return unicode(self.slides)
 
 
-class Step(TranslatableModel):
+class Step(models.Model):
     block = models.ForeignKey('cms.StepsContent', related_name='steps')
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,

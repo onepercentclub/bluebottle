@@ -10,7 +10,7 @@ from bluebottle.clients import properties
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 
-from fluent_contents.models import Placeholder
+from fluent_contents.models import Placeholder, ContentItem
 
 from bluebottle.cms.models import (
     HomePage,
@@ -119,7 +119,8 @@ class Command(BaseCommand):
                     slot='content',
                     role='m'
                 )
-                placeholder.contentitems.clear()
+                for item in ContentItem.objects.filter(parent_id=page.pk, parent_type=page_type):
+                    item.delete()
 
                 for lang, blocks in properties.HOMEPAGE.items():
                     for (block_type, block) in reversed(blocks):

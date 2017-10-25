@@ -7,6 +7,7 @@ from parler.admin import TranslatableAdmin, TranslatableStackedInline
 from adminsortable.admin import SortableStackedInline
 from nested_inline.admin import NestedStackedInline
 
+from django_singleton_admin.admin import SingletonAdmin
 from bluebottle.cms.models import (
     Stat, Quote, Slide, Step, Logo, Link, ResultPage, HomePage
 )
@@ -65,7 +66,7 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
-class HomePageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
+class HomePageAdmin(SingletonAdmin, PlaceholderFieldAdmin, TranslatableAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }

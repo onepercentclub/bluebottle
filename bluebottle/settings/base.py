@@ -391,6 +391,7 @@ TENANT_APPS = (
     # Note: Fixes the incorrect formatting of money values in the back-office
     # https://github.com/django-money/django-money/issues/232
     'djmoney',
+    'django_singleton_admin',
 )
 
 

@@ -39,11 +39,7 @@ from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     Wallpost, MediaWallpostPhoto, MediaWallpost, TextWallpost
 )
-from .mails import (
-    mail_project_funded_internal, mail_project_complete,
-    mail_project_incomplete
-)
-from .signals import project_funded
+from .mails import mail_project_complete, mail_project_incomplete
 
 
 logger = logging.getLogger(__name__)
@@ -762,12 +758,12 @@ class ProjectImage(AbstractAttachment):
 
         super(ProjectImage, self).save(*args, **kwargs)
 
-
-@receiver(project_funded, weak=False, sender=Project,
-          dispatch_uid="email-project-team-project-funded")
-def email_project_team_project_funded(sender, instance, first_time_funded,
-                                      **kwargs):
-    mail_project_funded_internal(instance)
+# OBSOLETE!
+# @receiver(project_funded, weak=False, sender=Project,
+#           dispatch_uid="email-project-team-project-funded")
+# def email_project_team_project_funded(sender, instance, first_time_funded,
+#                                       **kwargs):
+#     mail_project_funded_internal(instance)
 
 
 @receiver(post_init, sender=Project,

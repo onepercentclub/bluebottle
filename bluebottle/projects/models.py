@@ -21,6 +21,7 @@ from django_extensions.db.fields import ModificationDateTimeField, CreationDateT
 
 from django_summernote.models import AbstractAttachment
 from moneyed.classes import Money
+from polymorphic.models import PolymorphicModel
 from select_multiple_field.models import SelectMultipleField
 
 from bluebottle.analytics.tasks import queue_analytics_record
@@ -717,6 +718,14 @@ class ProjectBudgetLine(models.Model):
 
     def __unicode__(self):
         return u'{0} - {1}'.format(self.description, self.amount)
+
+
+class ProjectAddOn(PolymorphicModel):
+
+    type = 'base'
+
+    project = models.ForeignKey('projects.Project', related_name='addons')
+    serializer = 'bluebottle.projects.serializers.BaseProjectAddOnSerializer'
 
 
 class ProjectImage(AbstractAttachment):

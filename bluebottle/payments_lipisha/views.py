@@ -1,20 +1,30 @@
-from django.shortcuts import get_object_or_404
-from django.views.generic.base import RedirectView
+from django.http.response import HttpResponse
+from django.views.generic.base import View
 
-from bluebottle.payments.models import OrderPayment
-from bluebottle.payments.services import PaymentService
-from bluebottle.utils.utils import get_current_host
+from bluebottle.payments_lipisha.adapters import LipishaPaymentInterface
 
 
-class PaymentResponseView(RedirectView):
+class PaymentInitiateView(View):
 
     permanent = False
     query_string = True
-    pattern_name = 'telesom-payment-response'
+    pattern_name = 'lipisha-payment-initiate'
 
-    def get_redirect_url(self, *args, **kwargs):
-        order_payment = get_object_or_404(OrderPayment, id=kwargs['order_payment_id'])
-        service = PaymentService(order_payment)
-        service.check_payment_status()
+    def post(self, request):
 
-        return "{0}/orders/{1}/success".format(get_current_host(), order_payment.order.id)
+        if request.POST['transaction_type'] == 'Payment':
+
+            interface = LipishaPaymentInterface()
+            payment_response = interface.initiate_payment(request.POST)
+            # Hand order/payment over to Adapter to handle it normally
+
+        data = payment_response
+
+        return HttpResponse(data)
+
+
+class PaymentAcknowledgeView(View):
+
+    permanent = False
+    query_string = True
+    pattern_name = 'lipisha-payment-acknowledge'

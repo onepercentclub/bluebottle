@@ -12,6 +12,7 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.geo.models import LocationGroup
 from bluebottle.statistics.participation import Statistics
+from bluebottle.surveys.models import Survey
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.email_backend import send_mail
 from .utils import initialize_work_sheet
@@ -87,6 +88,11 @@ class Command(BaseCommand):
         return initialize_work_sheet(workbook, name)
 
     @staticmethod
+    def create_impact_survey_worksheet(workbook, year):
+        name = 'Impact Survey - {}'.format(year)
+        return initialize_work_sheet(workbook, name)
+
+    @staticmethod
     def create_location_segmentation_worksheet(workbook, year):
         name = 'Location Segmentation - {}'.format(year)
         return initialize_work_sheet(workbook, name)
@@ -123,7 +129,6 @@ class Command(BaseCommand):
         self.to_email = options['email']
         self.start_date = pendulum.create(options['start'], 1, 1, 0, 0, 0)
         self.end_date = pendulum.create(options['end'], 12, 31, 23, 59, 59)
-
         self.generate_participation_xls()
 
     def generate_participation_xls(self):
@@ -151,6 +156,7 @@ class Command(BaseCommand):
                 self.generate_worksheet(workbook, 'aggregated')
                 self.generate_worksheet(workbook, 'location_segmentation')
                 self.generate_worksheet(workbook, 'theme_segmentation')
+                self.generate_worksheet(workbook, 'impact_survey')
 
         if self.to_email:
             with open(self.file_path, 'r') as f:
@@ -501,6 +507,47 @@ class Command(BaseCommand):
         # Write row data
         self.write_row(worksheet, row, row_data)
 
+    def write_impact_survey_stats(self, worksheet, row, statistic_type, start_date, end_date):
+        row_data = OrderedDict()
+        self.create_time_row_data(worksheet, row_data, statistic_type, end_date)
+
+        for survey in Survey.objects.all():
+            count = survey.response_set.filter(project__campaign_ended__gte=start_date,
+                                               project__campaign_ended__lte=end_date).count()
+            print count
+            row_data['Number responses for {}'.format(survey.title)] = self.RowData(
+                metric=count,
+                is_formula=False,
+                hide_column=False,
+                definition='Number of responses filled out for survey "{}" in this period.'.format(survey.title))
+            for question in survey.visible_questions:
+                metric = question.get_platform_aggregate(start=start_date, end=end_date)
+                if metric is None:
+                    metric = 0
+                if metric == {}:
+                    metric = ''
+                try:
+                    metric = int(metric)
+                except (ValueError, TypeError):
+                    pass
+                try:
+                    metric = "{0:.1f} -> {1:.1f}".format(metric['Prior'], metric['After'])
+                except (KeyError, TypeError):
+                    pass
+                row_data[question.display_title] = self.RowData(
+                    metric=str(metric),
+                    is_formula=False,
+                    hide_column=False,
+                    definition='Aggregated survey results for "{} - {}".'.format(survey.title,
+                                                                                 question.display_title))
+
+        # Write Headers, if the first row is being written
+        if row == 2:
+            self.write_headers(worksheet, row_data)
+
+        # Write row data
+        self.write_row(worksheet, row, row_data)
+
     def write_location_segmentation_stats(self, worksheet, row, statistic_type, start_date, end_date):
         statistics = Statistics(start=start_date, end=end_date)
 
@@ -559,6 +606,9 @@ class Command(BaseCommand):
         elif stats_type == 'theme_segmentation':
             write = self.write_theme_segmentation_stats
             create_worksheet = self.create_theme_segmentation_worksheet
+        elif stats_type == 'impact_survey':
+            write = self.write_impact_survey_stats
+            create_worksheet = self.create_impact_survey_worksheet
 
         for year in range(self.start_date.year, self.end_date.year + 1):
             statistics_start_date = pendulum.create(year, 1, 1, 0, 0, 0)

@@ -96,7 +96,7 @@ class Command(BaseCommand):
             tenants = Client.objects.all()
 
         if options['tenant']:
-            tenants = Client.objects.filter(client_name=options['tenant'])
+            tenants = [Client.objects.get(schema_name=options['tenant'])]
 
         for client in tenants:
             print "\n\nCreating homepage for {}".format(client.name)

@@ -169,6 +169,13 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
         self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
         self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
 
+    def get_csrf_token(self, response):
+        csrf = "name='csrfmiddlewaretoken' value='"
+        start = response.content.find(csrf) + len(csrf)
+        end = response.content.find("'", start)
+
+        return response.content[start:end]
+
 
 class SessionTestMixin(object):
     def create_session(self):

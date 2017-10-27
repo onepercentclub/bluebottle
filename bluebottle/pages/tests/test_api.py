@@ -84,3 +84,29 @@ class PageDetailTestCase(PageTestCase):
         self.assertEqual(results['body'],
                          '<!-- no items in placeholder \'blog_contents\' -->')
         self.assertEqual(results['full_page'], self.page2.full_page)
+
+    def test_api_pages_detail_content_fallback(self):
+        """
+        Ensure get request returns record with correct data.
+        """
+        self.page1.delete()
+        response = self.client.get(reverse('page_detail',
+                                           kwargs={'language': 'nl',
+                                                   'slug': self.page2.slug}))
+
+        results = response.data
+        self.assertEqual(results['title'], self.page2.title)
+        self.assertEqual(results['language'], self.page2.language)
+        self.assertEqual(results['body'],
+                         '<!-- no items in placeholder \'blog_contents\' -->')
+        self.assertEqual(results['full_page'], self.page2.full_page)
+
+    def test_api_pages_detail_content_doesnotexist(self):
+        """
+        Ensure get request returns record with correct data.
+        """
+        response = self.client.get(reverse('page_detail',
+                                           kwargs={'language': 'nl',
+                                                   'slug': 'does-not-exist'}))
+
+        self.assertEquals(response.status_code, 404)

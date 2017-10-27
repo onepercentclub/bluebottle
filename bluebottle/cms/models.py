@@ -57,7 +57,7 @@ class HomePage(TranslatableModel):
         )
 
 
-class Stat(models.Model):
+class Stat(SortableMixin, models.Model):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),

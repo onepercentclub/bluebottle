@@ -17,6 +17,12 @@ from bluebottle.cms.models import (
 class CMSContentPlugin(ContentPlugin):
     admin_form_template = 'admin/cms/content_item.html'
 
+    class Media:
+        css = {
+            "all": ('admin/css/forms-nested.css',)
+        }
+        js = ('admin/js/inlines-nested.js',)
+
 
 @plugin_pool.register
 class QuotesBlockPlugin(CMSContentPlugin):

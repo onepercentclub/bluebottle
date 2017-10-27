@@ -14,7 +14,7 @@ from bluebottle.cms.models import (
 from bluebottle.statistics.statistics import Statistics
 
 
-class StatInline(TranslatableStackedInline, NestedStackedInline, SortableStackedInline):
+class StatInline(NestedStackedInline, SortableStackedInline):
     model = Stat
     extra = 1
     fields = ('type', 'definition', 'title', 'value')
@@ -25,27 +25,27 @@ class StatInline(TranslatableStackedInline, NestedStackedInline, SortableStacked
         return getattr(Statistics, obj.type).__doc__
 
 
-class QuoteInline(TranslatableStackedInline, NestedStackedInline):
+class QuoteInline(NestedStackedInline):
     model = Quote
     extra = 1
 
 
-class SlideInline(TranslatableStackedInline, NestedStackedInline):
+class SlideInline(NestedStackedInline):
     model = Slide
     extra = 1
 
 
-class StepInline(TranslatableStackedInline, NestedStackedInline):
+class StepInline(NestedStackedInline):
     model = Step
     extra = 1
 
 
-class LogoInline(TranslatableStackedInline, NestedStackedInline):
+class LogoInline(NestedStackedInline):
     model = Logo
     extra = 1
 
 
-class LinkInline(TranslatableStackedInline, NestedStackedInline):
+class LinkInline(NestedStackedInline):
     model = Link
     extra = 1
 

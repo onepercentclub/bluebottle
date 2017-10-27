@@ -83,6 +83,7 @@ class StatsContentSerializer(serializers.ModelSerializer):
 
 class QuoteSerializer(serializers.ModelSerializer):
     image = ImageSerializer()
+
     class Meta:
         model = Quote
         fields = ('id', 'name', 'quote', 'image')

@@ -260,7 +260,7 @@ class OrderPayment(models.Model, FSMTransition):
             # 10 chars for ' donation ' and 6 chars for the payment id
             max_tenant_chars = docdata_max_length - 10 - len(str(self.id))
         else:
-            info_text = _('%(tenant_url)s via onepercentclub %(payment_id)s')
+            info_text = _('%(tenant_url)s via goodup %(payment_id)s')
             # 20 chars for ' via onepercentclub ' and 6 chars
             # for the payment id
             max_tenant_chars = docdata_max_length - 20 - len(str(self.id))

@@ -465,7 +465,7 @@ class TestTaskSearchCase(BluebottleTestCase):
         """Setup reusable data."""
         self.init_projects()
 
-        self.now = datetime.combine(timezone.now(), datetime.min.time())
+        self.now = datetime.combine(timezone.now(), datetime.min.time()) + timezone.timedelta(hours=3)
         self.now = timezone.get_current_timezone().localize(self.now)
         self.tomorrow = self.now + timezone.timedelta(days=1)
         self.week = self.now + timezone.timedelta(days=7)
@@ -516,8 +516,7 @@ class TestTaskSearchCase(BluebottleTestCase):
             'start': str((self.now + timezone.timedelta(days=3)))
         }
 
-        response = self.client.get(self.task_url, search_date,
-                                   token=self.some_token)
+        response = self.client.get(self.task_url, search_date, token=self.some_token)
 
         # The result should include ongoing_task_1, ongoing_task_3 but
         # no event_tasks
@@ -533,17 +532,18 @@ class TestTaskSearchCase(BluebottleTestCase):
         Search for tasks taking place on a specific date
         when there is an event-type task.
         """
+        later = self.now + timezone.timedelta(days=3)
         event_task_3 = TaskFactory.create(status='open',
                                           type='event',
-                                          deadline=self.now + timezone.timedelta(days=3),
+                                          project=ProjectFactory(deadline=later),
+                                          deadline=later,
                                           people_needed=1)
 
         search_date = {
-            'start': str((self.now + timezone.timedelta(days=3)))
+            'start': str(later)
         }
 
-        response = self.client.get(self.task_url, search_date,
-                                   token=self.some_token)
+        response = self.client.get(self.task_url, search_date, token=self.some_token)
 
         # The result should include ongoing_task_1, ongoing_task_3 and
         # event_task_3 because its on the deadline date

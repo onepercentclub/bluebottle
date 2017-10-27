@@ -38,6 +38,7 @@ class Command(BaseCommand):
             placeholder,
             polymorphic_ctype=content_type,  # This does not get set automatically in migrations
             language_code=language,
+            sort_order=len(placeholder.contentitems.filter(language_code=language)),
             **block['kwargs']
         )
 
@@ -123,7 +124,7 @@ class Command(BaseCommand):
                     item.delete()
 
                 for lang, blocks in properties.HOMEPAGE.items():
-                    for (block_type, block) in reversed(blocks):
+                    for (block_type, block) in blocks:
                         self.create_block(
                             block_type, block, placeholder, lang
                         )

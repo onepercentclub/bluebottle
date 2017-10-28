@@ -131,18 +131,25 @@ class Command(BaseCommand):
         self.end_date = pendulum.create(options['end'], 12, 31, 23, 59, 59)
         self.generate_participation_xls()
 
-    def generate_participation_xls(self):
+    def get_file_name(self):
         now = pendulum.now()
-        file_name = 'participation_metrics_{}_{}_{}_generated_{}_{}.xlsx'.format(self.tenant,
-                                                                                 self.start_date.to_date_string(),
-                                                                                 self.end_date.to_date_string(),
-                                                                                 now.to_date_string(),
-                                                                                 now.int_timestamp)
+        return 'participation_metrics_{}_{}_{}_generated_{}_{}.xlsx'.format(
+            self.tenant,
+            self.start_date.to_date_string(),
+            self.end_date.to_date_string(),
+            now.to_date_string(),
+            now.int_timestamp
+        )
 
+    def get_xls_file_name(self, file_name):
+        return os.path.join(tempfile.gettempdir(), file_name)
+
+    def generate_participation_xls(self):
+        file_name = self.get_file_name()
+        self.file_path = self.get_xls_file_name(file_name)
         client = Client.objects.get(client_name=self.tenant)
         connection.set_tenant(client)
 
-        self.file_path = os.path.join(tempfile.gettempdir(), file_name)
         with xlsxwriter.Workbook(self.file_path,
                                  {'default_date_format': 'dd/mm/yy', 'remove_timezone': True}) as workbook:
             with LocalTenant(client, clear_tenant=True):
@@ -514,7 +521,6 @@ class Command(BaseCommand):
         for survey in Survey.objects.all():
             count = survey.response_set.filter(project__campaign_ended__gte=start_date,
                                                project__campaign_ended__lte=end_date).count()
-            print count
             row_data['Number responses for {}'.format(survey.title)] = self.RowData(
                 metric=count,
                 is_formula=False,

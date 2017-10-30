@@ -37,6 +37,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.incomplete = ProjectPhase.objects.get(slug="done-incomplete")
         self.complete = ProjectPhase.objects.get(slug="done-complete")
         self.campaign = ProjectPhase.objects.get(slug="campaign")
+        self.closed = ProjectPhase.objects.get(slug="closed")
 
         some_days_ago = now - timezone.timedelta(days=15)
         self.expired_project = ProjectFactory.create(
@@ -70,7 +71,28 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         order.save()
 
         self.expired_project.save()
-        self.failUnless(self.expired_project.status == self.incomplete)
+        self.assertEqual(self.expired_project.payout_status, 'needs_approval')
+        self.assertEqual(self.expired_project.status, self.incomplete)
+
+    def test_expired_under_threshold(self):
+        """ Not enough donated to hit payout threshold - status closed """
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=self.expired_project,
+            order=order,
+            amount=12
+        )
+        donation.save()
+
+        order.locked()
+        order.save()
+        order.success()
+        order.save()
+
+        self.expired_project.save()
+        self.assertEqual(self.expired_project.payout_status, None)
+        self.assertEqual(self.expired_project.status, self.closed)
 
     def test_expired_exact(self):
         """ Exactly the amount requested - status done complete """
@@ -89,7 +111,8 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         order.save()
 
         self.expired_project.save()
-        self.failUnless(self.expired_project.status == self.complete)
+        self.assertEqual(self.expired_project.payout_status, 'needs_approval')
+        self.assertEqual(self.expired_project.status, self.complete)
 
     def test_expired_more_than_enough(self):
         """ More donated than requested - status done complete """
@@ -107,7 +130,16 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         order.success()
         order.save()
         self.expired_project.save()
+        self.assertEqual(self.expired_project.payout_status, 'needs_approval')
         self.failUnless(self.expired_project.status == self.complete)
+
+    def test_expired_sourcing(self):
+        """ A crowdsourcing project should never get a payout status """
+        TaskFactory.create(project=self.expired_project, status='realized')
+        self.expired_project.amount_asked = 0
+        self.expired_project.save()
+        self.assertEqual(self.expired_project.payout_status, None)
+        self.assertEqual(self.expired_project.status, self.complete)
 
 
 class TestProjectPhaseLog(BluebottleTestCase):

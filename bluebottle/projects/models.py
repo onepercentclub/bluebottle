@@ -322,16 +322,7 @@ class Project(BaseProject, PreviousStatusMixin):
                                              "done-incomplete",
                                              "closed",
                                              "voting-done"]:
-            if self.amount_asked.amount > 0 and self.amount_donated.amount <= 20 \
-                    or not self.campaign_started:
-                self.status = ProjectPhase.objects.get(slug="closed")
-            elif self.amount_asked.amount > 0 \
-                    and self.amount_donated >= self.amount_asked:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
-                self.payout_status = 'needs_approval'
-            else:
-                self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                self.payout_status = 'needs_approval'
+            self.update_status_after_deadline()
             self.campaign_ended = self.deadline
 
         if self.payout_status == 'success' and not self.campaign_paid_out:
@@ -660,8 +651,7 @@ class Project(BaseProject, PreviousStatusMixin):
             self.status = ProjectPhase.objects.get(slug='done-complete')
             self.save()
 
-    def deadline_reached(self):
-        # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
+    def update_status_after_deadline(self):
         if self.is_funding:
             if self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
@@ -679,6 +669,10 @@ class Project(BaseProject, PreviousStatusMixin):
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
+
+    def deadline_reached(self):
+        # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
+        self.update_status_after_deadline()
         self.campaign_ended = now()
         self.save()
 

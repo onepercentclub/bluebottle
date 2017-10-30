@@ -1,10 +1,12 @@
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 from django.utils.timezone import now
 
 from rest_framework import generics
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
+from bluebottle.clients import properties
 from .models import Page
 from .serializers import PageSerializer
 
@@ -43,8 +45,16 @@ class PageDetail(generics.RetrieveAPIView):
 
     def get_object(self, queryset=None):
         queryset = self.get_queryset()
-        obj = get_object_or_404(queryset,
-                                language=self.kwargs['language'],
-                                slug=self.kwargs['slug'])
-
-        return obj
+        try:
+            return queryset.get(
+                language=self.kwargs['language'],
+                slug=self.kwargs['slug']
+            )
+        except ObjectDoesNotExist:
+            try:
+                return queryset.get(
+                    language=properties.LANGUAGE_CODE,
+                    slug=self.kwargs['slug']
+                )
+            except ObjectDoesNotExist:
+                raise Http404

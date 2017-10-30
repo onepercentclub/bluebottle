@@ -3,7 +3,7 @@ from django.db import models
 from django.forms import Textarea
 
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
-from parler.admin import TranslatableAdmin, TranslatableStackedInline
+from parler.admin import TranslatableAdmin
 from adminsortable.admin import SortableStackedInline
 from nested_inline.admin import NestedStackedInline
 

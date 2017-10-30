@@ -40,7 +40,7 @@ def successful_donation_fundraiser_mail(instance):
     # should be only when the status is success
     try:
         receiver = donation.fundraiser.owner
-    except:
+    except Exception:
         # donation it's not coming from a fundraiser
         return
 

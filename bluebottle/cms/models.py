@@ -155,7 +155,6 @@ class ProjectsContent(TitledContent):
     projects = models.ManyToManyField(Project, db_table='cms_projectscontent_projects')
     from_homepage = models.BooleanField(default=False)
 
-
     preview_template = 'admin/cms/preview/projects.html'
 
     class Meta:

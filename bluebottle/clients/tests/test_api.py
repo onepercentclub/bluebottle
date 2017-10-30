@@ -8,6 +8,7 @@ from django.test.utils import override_settings
 from rest_framework import status
 
 from bluebottle.clients import properties
+from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -170,7 +171,7 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.settings_url = reverse('settings')
 
     def test_project_platform_settings(self):
-        # Create some project settings and confirm they end up correctly in config api
+        # Create some project settings and confirm they end up correctly in settings api
         project_settings = ProjectPlatformSettings.objects.create(
             create_types=['sourcing', 'funding'],
             contact_types=['organization'],
@@ -207,3 +208,19 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertEqual(response.data['platform']['projects']['contact_types'], ['organization'])
         self.assertEqual(response.data['platform']['projects']['contact_method'], 'email')
         self.assertEqual(response.data['platform']['projects']['filters'], filters)
+
+    def test_site_platform_settings(self):
+        # Create site platform settings and confirm they end up correctly in settings api
+        SitePlatformSettings.objects.create(
+            contact_email='malle@epp.ie',
+            contact_phone='+3163202128',
+            copyright='Malle Eppie Ltd.',
+            powered_by_text='Powered by',
+            powered_by_link='https://epp.ie'
+        )
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.data['platform']['content']['contact_email'], 'malle@epp.ie')
+        self.assertEqual(response.data['platform']['content']['contact_phone'], '+3163202128')
+        self.assertEqual(response.data['platform']['content']['copyright'], 'Malle Eppie Ltd.')
+        self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://epp.ie')
+        self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')

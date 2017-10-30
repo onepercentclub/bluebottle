@@ -62,7 +62,7 @@ install_requires = [
     'django-singleton-admin==0.0.4',
     'django-summernote==0.8.7.3',
     'django-taggit==0.22.1',
-    'django-tenant-schemas==1.6.4',
+    'django-tenant-schemas==1.6.8',
     'django-tinymce==2.6.0',
     'django-tools==0.32.13',
     'django-uuidfield==0.5.0',

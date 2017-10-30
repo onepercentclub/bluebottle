@@ -82,7 +82,7 @@ class StatsContentSerializer(serializers.ModelSerializer):
 
 
 class QuoteSerializer(serializers.ModelSerializer):
-    image = ImageSerializer()
+    image = serializers.CharField(source='image.url')
 
     class Meta:
         model = Quote
@@ -161,7 +161,19 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
 
 class ProjectsContentSerializer(serializers.ModelSerializer):
-    projects = ProjectPreviewSerializer(many=True)
+    projects = serializers.SerializerMethodField()
+
+    def get_projects(self, obj):
+        if obj.from_homepage:
+            projects = Project.objects.filter(
+                is_campaign=True, status__viewable=True
+            ).order_by('?')[0:4]
+        else:
+            projects = self.projects
+
+        return ProjectPreviewSerializer(
+            projects, many=True, context=self.context
+        ).to_representation(projects)
 
     class Meta:
         model = ProjectsContent
@@ -204,7 +216,7 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
 
 
 class StepSerializer(serializers.ModelSerializer):
-    image = ImageSerializer()
+    image = serializers.CharField(source='image.url')
 
     class Meta:
         model = Step
@@ -220,7 +232,7 @@ class StepsContentSerializer(serializers.ModelSerializer):
 
 
 class LogoSerializer(serializers.ModelSerializer):
-    image = ImageSerializer()
+    image = serializers.CharField(source='image.url')
 
     class Meta:
         model = Logo

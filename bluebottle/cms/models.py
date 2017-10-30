@@ -95,7 +95,7 @@ class Stat(SortableMixin, models.Model):
 class Quote(models.Model):
     block = models.ForeignKey('cms.QuotesContent', related_name='quotes')
     name = models.CharField(max_length=60)
-    quote = models.CharField(max_length=90)
+    quote = models.CharField(max_length=90, help_text='Max 90 characters')
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='quote_images/'
@@ -152,7 +152,9 @@ class ProjectsContent(TitledContent):
     action_link = models.CharField(max_length=100, default="/start-project",
                                    blank=True, null=True)
 
-    projects = models.ManyToManyField(Project, db_table='cms_projectscontent_projects')
+    projects = models.ManyToManyField(
+        Project, blank=True, db_table='cms_projectscontent_projects'
+    )
     from_homepage = models.BooleanField(default=False)
 
     preview_template = 'admin/cms/preview/projects.html'

@@ -133,6 +133,13 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.assertEqual(self.expired_project.payout_status, 'needs_approval')
         self.failUnless(self.expired_project.status == self.complete)
 
+        # Reopening the project should remove the payout status
+        self.expired_project.status = self.campaign
+        self.expired_project.deadline = timezone.now() + timedelta(days=10)
+        self.expired_project.save()
+        self.failUnless(self.expired_project.status == self.campaign)
+        self.assertEqual(self.expired_project.payout_status, None)
+
     def test_expired_sourcing(self):
         """ A crowdsourcing project should never get a payout status """
         TaskFactory.create(project=self.expired_project, status='realized')

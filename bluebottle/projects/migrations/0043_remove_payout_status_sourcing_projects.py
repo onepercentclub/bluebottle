@@ -9,6 +9,7 @@ def forward(apps, schema_editor):
     Project = apps.get_model('projects', 'Project')
     Project.objects.filter(amount_asked=0, payout_status__isnull=False).update(payout_status=None)
 
+
 def backward(apps, schema_editor):
     pass
 

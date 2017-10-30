@@ -311,7 +311,6 @@ class Project(BaseProject, PreviousStatusMixin):
                 self.amount_extra.amount, self.amount_asked.currency
             )
 
-        # FIXME: Clean up this code, make it readable
         # Project is not ended, complete, funded or stopped and its deadline has expired.
         if not self.campaign_ended and self.deadline < timezone.now() \
                 and self.status.slug not in ["done-complete",
@@ -326,6 +325,11 @@ class Project(BaseProject, PreviousStatusMixin):
 
         if self.payout_status == 're_scheduled' and self.campaign_paid_out:
             self.campaign_paid_out = None
+
+        # BB-11037 If the project is re-opened, payout-status should be cleaned
+        if self.status.slug not in ["done-complete", "done-incomplete"] and  \
+                self.payout_status == 'needs_approval':
+            self.payout_status = None
 
         if not self.task_manager:
             self.task_manager = self.owner

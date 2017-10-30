@@ -1,4 +1,4 @@
-{% block content %}{% endblock %}{% block action %}{% endblock %}
+{% block content %}{% endblock %}{% block action %}{% endblock %}{% block post_action %}{% endblock %}
 -------------------
 
 {{TENANT_MAIL_PROPERTIES.sender}} - {{TENANT_MAIL_PROPERTIES.website}} - {{TENANT_MAIL_PROPERTIES.footer}}

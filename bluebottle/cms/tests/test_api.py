@@ -198,18 +198,18 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(highlighted.id, int(data['projects'][9]['id']))
 
     def test_results_map_end_date_inclusive(self):
+        self.page.start_date = date(2016, 1, 1)
         self.page.end_date = date(2016, 12, 31)
         self.page.save()
 
         done_complete = ProjectPhase.objects.get(slug='done-complete')
-        for _index in range(0, 10):
-            ProjectFactory.create(
-                status=done_complete,
-                campaign_ended=datetime(2016, 12, 31, 12, 00, tzinfo=get_current_timezone())
-            )
+        ProjectFactory.create_batch(
+            10,
+            status=done_complete,
+            campaign_ended=datetime(2016, 12, 31, 12, 00, tzinfo=get_current_timezone())
+        )
 
         ProjectsMapContent.objects.create_for_placeholder(self.placeholder, title='Test title')
-
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 

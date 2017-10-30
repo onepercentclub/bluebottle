@@ -536,6 +536,7 @@ ANALYTICS_BACKENDS = {
 
 ANALYTICS_FRONTEND = ''
 ANALYTICS_BACKOFFICE_ENABLED = True
+PARTICIPATION_BACKOFFICE_ENABLED = False
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'

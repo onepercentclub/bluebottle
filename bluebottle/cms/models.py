@@ -19,7 +19,6 @@ class ResultPage(TranslatableModel):
     end_date = models.DateField(null=True, blank=True)
     content = PlaceholderField('content')
 
-    image = models.ImageField(_('Header image'), blank=True, null=True)
     translations = TranslatedFields(
         title=models.CharField(_('Title'), max_length=40),
         slug=models.SlugField(_('Slug'), max_length=40),

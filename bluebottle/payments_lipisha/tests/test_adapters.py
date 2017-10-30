@@ -135,3 +135,16 @@ class LipishaPaymentAdapterTestCase(BluebottleTestCase):
 
         with self.assertRaises(PaymentException):
             adapter.check_payment_status()
+
+
+# Test for updating a payment create by normal donation flow
+# - Test it finds the payment and updates
+# - Test it updates amounts for donation, order, order payment and project
+
+# Test create new donation / payment from direct M-Pesa payment
+# - Test it won't generate twice for one code
+# - Test all amounts are set correctly for donation, order, order payment and project
+
+# Test it handles reversed payments correctly
+# - Test status changes correctly (order, order payment and payment)
+# - Test all amounts are set correctly for donation, order, order payment and project

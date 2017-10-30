@@ -1,4 +1,4 @@
-from django.http.response import HttpResponse
+from django.http import JsonResponse
 from django.views.generic.base import View
 
 from bluebottle.payments_lipisha.adapters import LipishaPaymentInterface
@@ -13,14 +13,10 @@ class PaymentInitiateView(View):
     def post(self, request):
 
         if request.POST['transaction_type'] == 'Payment':
-
             interface = LipishaPaymentInterface()
             payment_response = interface.initiate_payment(request.POST)
-            # Hand order/payment over to Adapter to handle it normally
-
-        data = payment_response
-
-        return HttpResponse(data)
+            data = payment_response
+            return JsonResponse(data)
 
 
 class PaymentAcknowledgeView(View):

@@ -1,9 +1,12 @@
 from django.conf.urls import url
 
-from ..views import PaymentResponseView
+from ..views import PaymentInitiateView, PaymentAcknowledgeView
 
 urlpatterns = [
-    url(r'^payment_response/(?P<order_payment_id>\d+)$',
-        PaymentResponseView.as_view(),
-        name='lipisha-payment-response'),
+    url(r'^update/$',
+        PaymentInitiateView.as_view(),
+        name='lipisha-initiate-payment'),
+    url(r'^acknowledge/$',
+        PaymentAcknowledgeView.as_view(),
+        name='lipisha-acknowledge-payment'),
 ]

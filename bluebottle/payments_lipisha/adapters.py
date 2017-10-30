@@ -1,16 +1,15 @@
 # coding=utf-8
 import json
+from lipisha import Lipisha, lipisha
+from moneyed.classes import Money
 
 from django.core.exceptions import ImproperlyConfigured
 
+from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
-from bluebottle.payments.exception import PaymentException
-
-from lipisha import Lipisha, lipisha
-
-from bluebottle.clients import properties
 from bluebottle.payments.adapters import BasePaymentAdapter
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.utils.utils import StatusDefinition
@@ -94,14 +93,14 @@ class LipishaPaymentAdapter(BasePaymentAdapter):
 
         response = self.client.get_transactions(
             transaction_type='Payment',
-            transaction_reference=self.payment.reference
+            merchant_transaction_reference=self.payment.reference
         )
-
         self.payment.response = json.dumps(response)
         data = response['content']
 
         if len(data) > 1:
-            raise PaymentException('Payment could not be verified yet. Multiple payments found.')
+            pass
+            # raise PaymentException('Payment could not be verified yet. Multiple payments found.')
         if len(data) == 0:
             raise PaymentException('Payment could not be verified yet. Payment not found.')
         else:
@@ -173,9 +172,42 @@ class LipishaPaymentInterface(object):
         except KeyError:
             raise PaymentException("Could not create an account number at Lipisha")
 
+    def generate_response(self, payment):
+        donation = payment.order_payment.order.donations.first()
+        message = "Dear {}, thanks for your donation {} of {} {} to {}!".format(
+            donation.name,
+            payment.transaction_reference,
+            payment.transaction_currency,
+            payment.transaction_amount,
+            donation.project.title
+        )
+
+        return {
+            "api_key": self.credentials['api_key'],
+            "api_signature": self.credentials['api_signature'],
+            "api_version": "1.0.4",
+            "api_type": "Payment",
+            "transaction_reference": payment.reference,
+            "transaction_status_code": "001",
+            "transaction_status": "SUCCESS",
+            "transaction_status_description": "Transaction received successfully.",
+            "transaction_status_action": "ACCEPT",
+            "transaction_status_reason": "VALID_TRANSACTION",
+            "transaction_custom_sms": message
+        }
+
+    def _update_amounts(self, payment, amount, currency):
+        order_payment = payment.order_payment
+        order_payment.amount = Money(amount, currency)
+        order_payment.save()
+
+        donation = payment.order_payment.order.donations.first()
+        donation.amount = Money(amount, currency)
+        donation.save()
+
     def initiate_payment(self, data):
         """
-        data
+        Documentation
 
         api_key	Your Lipisha API key.	3aa67677e8bf1d4c8fe886a38c03a860
         api_signature	Your Lipisha API signature.	SYetmwsNnb5bwaZRyeQKhZNNkCoEx+5x=
@@ -204,45 +236,115 @@ class LipishaPaymentInterface(object):
             E.g the M-Pesa confirmation code	CU79AW109D
         transaction_status	Status of a transaction. Options are: Completed, Failed
 
-        Response
+        An actual (test) post
+
+        api_key=c41a9c4986625499f30c1047e004d216
+        api_signature=jtFAPZ7AO%2FMUz%2Bt8hzZ9LbX0uB1cXIDJj2upVKj6PauLbvMeu11N4J5q670W2YJ14NhdZEjrxIMnEQktQRGTzzAMJIWjQK%2FLztGIDHwavBf6Eyhmq8NrSiMswaNpeMFbS7oeHALPepWcPN9P3RXK3h5d3HygGkKiGQi9suGvEDI%3D
+        api_version=1.0.4
+        api_type=Initiate
+        transaction_date=2017-10-28+18%3A42%3A46
+        transaction_amount=1500
+        transaction_type=Payment
+        transaction_method=Paybill+%28M-Pesa%29
+        transaction=7ACCB5CC8
+        transaction_reference=7ACCB5CC8
+        transaction_name=FRANCIS+JOAN+RACHEL
+        transaction_mobile=31654631419
+        transaction_paybill=961700
+        transaction_paybill_type=Shared
+        transaction_account=03858%231234
+        transaction_account_number=03858
+        transaction_merchant_reference=1234
+        transaction_email=
+        transaction_account_name=Primary
+        transaction_code=7ACCB5CC8
+        transaction_status=Completed
+        transaction_country=KE
+        transaction_currency=KES
+
+        Response suggested by documentation
+        http://developer.lipisha.com/index.php/app/launch/ipn_process_callback
         {
-            u'transaction_reversal_status_id': u'1',
-            u'transaction_amount': u'2000.0000',
-            u'transaction_method': u'Paybill (M-Pesa)',
-            u'transaction': u'04CB4F9FF',
-            u'transaction_account_number': u'03858',
-            u'transaction_mobile_number': u'31715283569',
-            u'transaction_name': u'ROSE ONESMUS RACHEL',
-            u'transaction_type': u'Payment',
-            u'transaction_date': u'2017-05-19 12:43:53',
-            u'transaction_reversal_status': u'None',
-            u'transaction_currency': u'KES',
-            u'transaction_status': u'Completed',
-            u'transaction_reference': u'65689',
-            u'transaction_email': u'',
-            u'transaction_account_name': u'Primary'
+            "api_key": "3aa67677e8bf1d4c8fe886a38c03a860",
+            "api_signature": "SYetmwsNnb5bwaZRyeQKhZNNkCoEx+5x=",
+            "api_version": "2.0.0",
+            "api_type": "Receipt",
+            "transaction_reference": "CU79AW109",
+            "transaction_status_code": "001",
+            "transaction_status": "SUCCESS",
+            "transaction_status_description": "Transaction received successfully.",
+            "transaction_status_action": "ACCEPT",
+            "transaction_status_reason": "VALID_TRANSACTION",
+            "transaction_custom_sms": "Dear JOHN JANE DOE, your payment of KES 100.00 via CU79AW109D was received."
         }
         """
-        account_number = data['transaction_account']
+        account_number = data['transaction_account_number']
+        transaction_merchant_reference = data['transaction_merchant_reference']
         transaction_reference = data['transaction_reference']
+        payment = None
 
         # If account number has a # then it is a donation started at our platform
-        if transaction_reference:
+        if transaction_merchant_reference:
             try:
-                order_payment = OrderPayment.objects.get(pk=transaction_reference)
-                return order_payment.payment
-            except OrderPayment.DoesNotExist:
-                # OrderPayment not found, probably not correctly filled in,
+                order_payment = OrderPayment.objects.get(id=transaction_merchant_reference)
+                if not order_payment.payment:
+                    payment = LipishaPayment.objects.create(
+                        order_payment=order_payment
+                    )
+                payment = order_payment.payment
+                self._update_amounts(payment, data['transaction_amount'], data['transaction_currency'])
+            except LipishaPayment.DoesNotExist:
+                # Payment not found, probably not correctly filled in,
                 # continue as an new anonymous donation
                 pass
 
-        try:
-            lipisha_project = LipishaProject.objects.get(account_number=account_number)
-        except LipishaProject.DoesNotExist:
-            pass
+        if transaction_reference:
+            try:
+                payment = LipishaPayment.objects.get(transaction_reference=transaction_reference)
+                return self.generate_response(payment)
+            except LipishaPayment.DoesNotExist:
+                # Payment not found, probably not correctly filled in,
+                # continue as an new anonymous donation
+                pass
+            except LipishaPayment.MultipleObjectsReturned:
+                # Multiple payments with that transaction_reference
+                # FIXME: probably send a warning?
+                payment = LipishaPayment.objects.filter(transaction_reference=transaction_reference).last()
+                self._update_amounts(payment, data['transaction_amount'], data['transaction_currency'])
 
-        order = Order.objects.create()
-        Donation.objects.create(order=order, project=lipisha_project.project)
+        if not payment:
+            # If we haven't found a payment by now we should create one
+            try:
+                lipisha_project = LipishaProject.objects.get(account_number=account_number)
+            except LipishaProject.DoesNotExist:
+                raise PaymentException("Couldn't find a project for M-PESA payment.")
 
-        # TODO:
-        # Create order payment + payment here
+            order = Order.objects.create()
+            name = data['transaction_name'].replace('+', ' ').title()
+
+            Donation.objects.create(
+                order=order,
+                amount=Money(data['transaction_amount'], data['transaction_currency']),
+                name=name,
+                project=lipisha_project.project)
+            order_payment = OrderPayment.objects.create(
+                order=order,
+                payment_method='lipishaMpesa'
+            )
+            payment = LipishaPayment.objects.create(
+                order_payment=order_payment
+            )
+
+        payment.response = json.dumps(data)
+        for k, v in data.items():
+            setattr(payment, k, v)
+
+        payment.transaction_mobile_number = data['transaction_mobile']
+        payment.reference = data['transaction_mobile']
+
+        if data['transaction_status'] == 'Completed':
+            payment.status = 'settled'
+            order_payment.settled()
+        payment.reference = payment.order_payment_id
+        payment.save()
+        return self.generate_response(payment)

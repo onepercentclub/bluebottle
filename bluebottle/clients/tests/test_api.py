@@ -8,6 +8,7 @@ from django.test.utils import override_settings
 from rest_framework import status
 
 from bluebottle.clients import properties
+from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -125,8 +126,8 @@ class ClientSettingsTestCase(BluebottleTestCase):
 
 class TestDefaultAPI(BluebottleTestCase):
     """
-        Test the default API, open and closed, authenticated or not
-        with default permissions
+    Test the default API, open and closed, authenticated or not
+    with default permissions
     """
     def setUp(self):
         super(TestDefaultAPI, self).setUp()
@@ -156,3 +157,53 @@ class TestDefaultAPI(BluebottleTestCase):
         """ request closed api, expect projects if authenticated """
         response = self.client.get(self.projects_url, token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestPlatformSettingsApi(BluebottleTestCase):
+    """
+    Test platform settings api.
+    """
+
+    def setUp(self):
+        super(TestPlatformSettingsApi, self).setUp()
+        self.init_projects()
+        self.settings_url = reverse('settings')
+
+    def test_project_platform_settings(self):
+        # Create some project settings and confirm they end up correctly in config api
+        project_settings = ProjectPlatformSettings.objects.create(
+            create_types=['sourcing', 'funding'],
+            contact_types=['organization'],
+            create_flow='choice',
+            contact_method='email'
+        )
+        ProjectSearchFilter.objects.create(
+            project_settings=project_settings,
+            name='location'
+        )
+        ProjectSearchFilter.objects.create(
+            project_settings=project_settings,
+            name='theme'
+        )
+        ProjectSearchFilter.objects.create(
+            project_settings=project_settings,
+            name='status',
+            default='campaign,voting'
+        )
+        ProjectSearchFilter.objects.create(
+            project_settings=project_settings,
+            name='type',
+            values='volunteering,funding'
+        )
+        filters = [
+            {'name': 'location', 'default': None, 'values': None, 'sequence': 1},
+            {'name': 'theme', 'default': None, 'values': None, 'sequence': 2},
+            {'name': 'status', 'default': 'campaign,voting', 'values': None, 'sequence': 3},
+            {'name': 'type', 'default': None, 'values': 'volunteering,funding', 'sequence': 4},
+        ]
+
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.data['platform']['projects']['create_types'], ['funding', 'sourcing'])
+        self.assertEqual(response.data['platform']['projects']['contact_types'], ['organization'])
+        self.assertEqual(response.data['platform']['projects']['contact_method'], 'email')
+        self.assertEqual(response.data['platform']['projects']['filters'], filters)

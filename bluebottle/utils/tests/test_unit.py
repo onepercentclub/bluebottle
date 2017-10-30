@@ -148,7 +148,7 @@ class MetaTestCase(BluebottleTestCase):
 
         # OEmbed object, with youtube link
         self.youtube = OEmbedItem.objects.create(
-            embed_url='http://www.youtube.com/watch?v=0ETxuM-hq8c',
+            embed_url='https://www.youtube.com/watch?v=0ETxuM-hq8c',
             parent=self.object,
             placeholder=self.ph,
             sort_order=3

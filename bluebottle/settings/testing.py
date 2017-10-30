@@ -52,11 +52,11 @@ DEFAULT_DB_ALIAS = 'default'
 DATABASES = {
     'default': {
         'ENGINE': 'tenant_schemas.postgresql_backend',
-        'HOST': '',
-        'PORT': '',
+        'HOST': os.getenv('GOODUP_DB_HOST', ''),
+        'PORT': os.getenv('GOODUP_DB_PORT', ''),
         'NAME': 'bluebottle_test',
-        'USER': '',
-        'PASSWORD': ''
+        'USER': os.getenv('GOODUP_DB_USER', ''),
+        'PASSWORD': os.getenv('GOODUP_DB_PASSWORD', '')
     }
 }
 

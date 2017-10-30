@@ -115,3 +115,4 @@ celerybeat.pid
 # tenants
 tenants
 
+sql

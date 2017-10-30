@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  bluebottle:
+    build: .
+    image: ashutoshb/bluebottle:latest
+    container_name: goodup-bluebottle
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - goodup-network
+    entrypoint:
+      - bash
+    command: >
+      -c "
+
+      echo 'setup database'
+      && dropdb --host=db --username=postgres --no-password --if-exists reef
+      && createdb --host=db --username=postgres --no-password reef
+      && bzcat ./sql/reef-prod-current.sql.bz2 | psql --host=db --username=postgres --no-password
+      && echo \"UPDATE clients_client SET domain_url=CONCAT(client_name, '.localhost');\" | psql --host=db --username=postgres --no-password
+      && ./manage.py migrate_schemas --no-input
+      && ./manage.py runserver --settings bluebottle.settings.local
+      "
+  db:
+    image: postgres:9.2
+    container_name: goodup-postgres
+    networks:
+      - goodup-network
+    environment:
+      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: postgres
+
+networks:
+  goodup-network:
+
+
+# TODO: Do not hardcode database params in bluebottle command

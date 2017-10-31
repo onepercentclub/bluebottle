@@ -4,7 +4,7 @@ import factory
 from django.utils.timezone import now
 
 from bluebottle.cms.models import (
-    ResultPage, HomePage, Stat, Quote
+    ResultPage, HomePage, Stat, Quote, Slide
 )
 
 
@@ -38,3 +38,8 @@ class QuoteFactory(factory.DjangoModelFactory):
 
     name = factory.Sequence(lambda n: 'Name {}'.format(n))
     quote = factory.Sequence(lambda n: 'Quote {}'.format(n))
+
+
+class SlideFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = Slide

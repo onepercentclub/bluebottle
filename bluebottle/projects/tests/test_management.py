@@ -341,6 +341,7 @@ class TestMultiTenant(BluebottleTestCase):
             status=ProjectPhase.objects.get(slug='campaign'),
             deadline=now - timezone.timedelta(days=5),
             campaign_started=now - timezone.timedelta(days=5),
+            organization=None,
             amount_asked=0)
 
         # Create a second tenant
@@ -352,12 +353,12 @@ class TestMultiTenant(BluebottleTestCase):
             status=ProjectPhase.objects.get(slug='campaign'),
             deadline=now - timezone.timedelta(days=5),
             campaign_started=now - timezone.timedelta(days=5),
+            organization=None,
             amount_asked=0)
 
     def test_realized_email_multiple_tenants(self):
         with patch.object(LocalTenant, '__new__') as mocked_init:
             call_command('cron_status_realised')
-
             self.assertEquals(len(mail.outbox), 2)
 
         self.assertEqual(mocked_init.call_count, 2)

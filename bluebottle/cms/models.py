@@ -95,7 +95,7 @@ class Stat(SortableMixin, models.Model):
 class Quote(models.Model):
     block = models.ForeignKey('cms.QuotesContent', related_name='quotes')
     name = models.CharField(max_length=60)
-    quote = models.CharField(max_length=90, help_text='Max 90 characters')
+    quote = models.TextField()
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='quote_images/'
@@ -307,7 +307,7 @@ class StepsContent(TitledContent):
         verbose_name = _('Steps')
 
     def __unicode__(self):
-        return unicode(self.steps)
+        return unicode(_('Steps'))
 
 
 class LocationsContent(TitledContent):
@@ -331,7 +331,7 @@ class CategoriesContent(TitledContent):
         verbose_name = _('Categories')
 
     def __unicode__(self):
-        return unicode(self.categories)
+        return unicode(_('Categories'))
 
 
 class Logo(models.Model):
@@ -353,7 +353,7 @@ class LogosContent(TitledContent):
         verbose_name = _('Logos')
 
     def __unicode__(self):
-        return unicode(self.logos)
+        return unicode(_('Logos'))
 
 
 class Link(models.Model):
@@ -376,4 +376,4 @@ class LinksContent(TitledContent):
         verbose_name = _('Links')
 
     def __unicode__(self):
-        return unicode(self.links)
+        return unicode(_('Links'))

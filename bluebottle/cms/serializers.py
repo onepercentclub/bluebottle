@@ -282,7 +282,7 @@ class ResultPageSerializer(serializers.ModelSerializer):
                   'end_date', 'description', 'blocks')
 
 
-class SiteContentSettingsSerializer(serializers.ModelSerializer):
+class SitePlatformSettingsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SitePlatformSettings

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import importlib
 import itertools
 from collections import namedtuple, defaultdict
 import re
@@ -158,6 +159,17 @@ def get_user_site_links(user):
     return response
 
 
+def get_platform_settings(name):
+
+    app_name, model_name = name.split('.')
+    model_app_name = 'bluebottle.{}.models'.format(app_name)
+    settings_class = getattr(importlib.import_module(model_app_name), model_name)
+    settings_object = settings_class.objects.get()
+    serializer_app_name = 'bluebottle.{}.serializers'.format(app_name)
+    serializer_class = getattr(importlib.import_module(serializer_app_name), "{}Serializer".format(model_name))
+    return serializer_class(settings_object).to_representation(settings_object)
+
+
 def get_public_properties(request):
     """
 
@@ -194,19 +206,9 @@ def get_public_properties(request):
 
     # First load tenant settings that should always be exposed
     if connection.tenant:
-        from bluebottle.cms.models import SitePlatformSettings
-        from bluebottle.cms.serializers import SiteContentSettingsSerializer
-        from bluebottle.projects.models import ProjectPlatformSettings
-        from bluebottle.projects.serializers import ProjectPlatformSettingsSerializer
 
         current_tenant = connection.tenant
         properties = get_tenant_properties()
-
-        site_content = SitePlatformSettings.objects.get()
-        site_content_ser = SiteContentSettingsSerializer(site_content).to_representation(site_content)
-
-        project_settings = ProjectPlatformSettings.objects.get()
-        project_settings_ser = ProjectPlatformSettingsSerializer(project_settings).to_representation(project_settings)
 
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
@@ -221,8 +223,9 @@ def get_public_properties(request):
             'languageCode': get_language(),
             'siteLinks': get_user_site_links(request.user),
             'platform': {
-                'content': site_content_ser,
-                'projects': project_settings_ser
+                'content': get_platform_settings('cms.SitePlatformSettings'),
+                'projects': get_platform_settings('projects.ProjectPlatformSettings'),
+                'analytics': get_platform_settings('analytics.AnalyticsPlatformSettings')
             }
         }
         try:

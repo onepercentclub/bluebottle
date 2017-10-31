@@ -43,8 +43,9 @@ class MockRequest:
 
 
 class MockUser:
-    def __init__(self, perms=None):
+    def __init__(self, perms=None, is_staff=True):
         self.perms = perms or []
+        self.is_staff = is_staff
 
     def has_perm(self, perm):
         return perm in self.perms
@@ -248,7 +249,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
     def test_export_rewards(self):
         request = self.request_factory.get('/')
-        request.user = MockUser(['rewards.read_reward'])
+        request.user = MockUser()
 
         project = ProjectFactory.create()
         reward = RewardFactory.create(project=project, amount=Money(10, 'EUR'))
@@ -280,7 +281,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
     def test_export_rewards_anonymous(self):
         request = self.request_factory.get('/')
-        request.user = MockUser(['rewards.read_reward'])
+        request.user = MockUser()
 
         project = ProjectFactory.create()
         reward = RewardFactory.create(project=project, amount=Money(10, 'EUR'))
@@ -314,7 +315,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
     def test_export_rewards_forbidden(self):
         request = self.request_factory.get('/')
-        request.user = MockUser([])
+        request.user = MockUser(is_staff=False)
 
         project = ProjectFactory.create()
         response = self.project_admin.export_rewards(request, project.id)

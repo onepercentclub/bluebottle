@@ -440,7 +440,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         This allows the project initiator to contact all recipients.
         """
         project = Project.objects.get(pk=pk)
-        if not request.user.has_perm('rewards.read_reward'):
+        if not request.user.is_staff:
             return HttpResponseForbidden('Missing permission: rewards.read_reward')
 
         response = HttpResponse(content_type='text/csv')

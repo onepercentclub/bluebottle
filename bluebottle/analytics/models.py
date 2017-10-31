@@ -7,7 +7,7 @@ from bluebottle.utils.models import BasePlatformSettings
 class AnalyticsAdapter(models.Model):
     type = models.CharField(max_length=100, default='GoogleAnalytics')
     code = models.CharField(max_length=100, null=True, blank=True)
-    metrics_settings = models.ForeignKey('analytics.AnalyticsPlatformSettings', related_name='adapters')
+    analytics_settings = models.ForeignKey('analytics.AnalyticsPlatformSettings', related_name='adapters')
 
 
 class AnalyticsPlatformSettings(BasePlatformSettings):

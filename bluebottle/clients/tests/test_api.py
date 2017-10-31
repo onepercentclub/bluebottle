@@ -7,6 +7,7 @@ from django.test.utils import override_settings
 
 from rest_framework import status
 
+from bluebottle.analytics.models import AnalyticsPlatformSettings, AnalyticsAdapter
 from bluebottle.clients import properties
 from bluebottle.cms.models import SitePlatformSettings
 from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
@@ -224,3 +225,19 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['copyright'], 'Malle Eppie Ltd.')
         self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://epp.ie')
         self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
+
+    def test_analytics_platform_settings(self):
+        # Create analytics platform settings and confirm they end up correctly in settings api
+        analytics_settings = AnalyticsPlatformSettings.objects.create()
+        AnalyticsAdapter.objects.create(
+            analytics_settings=analytics_settings,
+            type='SiteCatalyst',
+            code='AB-345-GG'
+        )
+
+        data = {
+            'type': 'SiteCatalyst',
+            'code': 'AB-345-GG'
+        }
+        response = self.client.get(self.settings_url)
+        self.assertEqual(response.data['platform']['analytics']['adapters'][0], data)

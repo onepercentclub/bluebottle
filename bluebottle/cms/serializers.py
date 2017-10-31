@@ -220,7 +220,7 @@ class StepSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Step
-        fields = ('image', 'header', 'text', )
+        fields = ('id', 'image', 'header', 'text', )
 
 
 class StepsContentSerializer(serializers.ModelSerializer):
@@ -236,7 +236,7 @@ class LogoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Logo
-        fields = ('image', )
+        fields = ('id', 'image', )
 
 
 class LogosContentSerializer(serializers.ModelSerializer):
@@ -252,7 +252,7 @@ class LinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Link
-        fields = ('image', 'title', 'link', )
+        fields = ('id', 'image', 'title', 'link', )
 
 
 class LinksContentSerializer(serializers.ModelSerializer):

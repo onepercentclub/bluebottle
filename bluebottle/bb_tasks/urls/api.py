@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
 from ..views import (
-    TaskDetail, TaskList, TaskMemberList, TaskMemberDetail,
+    TaskDetail, TaskList, TaskMemberList, TaskMemberDetail, TaskMemberStatus,
     TaskFileList, TaskFileDetail, MyTaskList, MyTaskDetail,
     TaskPreviewList, MyTaskMemberList, SkillList, UsedSkillList)
 
@@ -19,6 +19,7 @@ urlpatterns = [
     # Task Members
     url(r'^members/$', TaskMemberList.as_view(), name='task-member-list'),
     url(r'^members/(?P<pk>\d+)$', TaskMemberDetail.as_view(), name='task-member-detail'),
+    url(r'^members/status/(?P<pk>\d+)$', TaskMemberStatus.as_view(), name='task-member-status'),
     url(r'^members/my-tasks/$', MyTaskMemberList.as_view(), name='my_task_member_list'),
 
     # Task Files

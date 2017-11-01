@@ -82,7 +82,7 @@ class StatsContentSerializer(serializers.ModelSerializer):
 
 
 class QuoteSerializer(serializers.ModelSerializer):
-    image = ImageSerializer()
+    image = SorlImageField('800x600', crop='center')
 
     class Meta:
         model = Quote
@@ -216,7 +216,7 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
 
 
 class StepSerializer(serializers.ModelSerializer):
-    image = ImageSerializer()
+    image = SorlImageField('800x600', crop='center')
 
     class Meta:
         model = Step
@@ -232,7 +232,7 @@ class StepsContentSerializer(serializers.ModelSerializer):
 
 
 class LogoSerializer(serializers.ModelSerializer):
-    image = ImageSerializer()
+    image = SorlImageField('800x600', crop='center')
 
     class Meta:
         model = Logo
@@ -248,7 +248,7 @@ class LogosContentSerializer(serializers.ModelSerializer):
 
 
 class LinkSerializer(serializers.ModelSerializer):
-    image = ImageSerializer()
+    image = SorlImageField('800x600', crop='center')
 
     class Meta:
         model = Link

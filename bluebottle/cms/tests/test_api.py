@@ -1,6 +1,7 @@
 from datetime import timedelta, date, datetime
 from decimal import Decimal
 import random
+import os
 
 import mock
 
@@ -317,9 +318,10 @@ class HomePageTestCase(BluebottleTestCase):
 
     def test_slides(self):
         block = SlidesContent.objects.create_for_placeholder(self.placeholder)
+        image = File(open('./bluebottle/cms/tests/test_images/upload.png'))
 
         for i in range(0, 4):
-            SlideFactory(block=block)
+            SlideFactory(block=block, image=image)
 
         response = self.client.get(self.url)
 
@@ -327,6 +329,26 @@ class HomePageTestCase(BluebottleTestCase):
 
         self.assertEqual(response.data['blocks'][0]['type'], 'slides')
         self.assertEqual(len(response.data['blocks'][0]['slides']), 4)
+
+        for slide in response.data['blocks'][0]['slides']:
+            self.assertTrue(slide['image'].startswith('/media'))
+            self.assertTrue(slide['image'].endswith('jpg'))
+
+    def test_slides_svg(self):
+        block = SlidesContent.objects.create_for_placeholder(self.placeholder)
+        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
+
+        for i in range(0, 4):
+            SlideFactory(block=block, image=image)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        for slide in response.data['blocks'][0]['slides']:
+            self.assertTrue(slide['image'].startswith('/media'))
+            import ipdb; ipdb.set_trace()
+            self.assertTrue(slide['image'].endswith('svg'))
 
 
 class SitePlatformSettingsTestCase(BluebottleTestCase):

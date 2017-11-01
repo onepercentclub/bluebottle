@@ -1,3 +1,4 @@
+from StringIO import StringIO
 from django.apps import apps
 from django.core.management.base import BaseCommand
 from django.db import connection
@@ -49,7 +50,7 @@ class Command(BaseCommand):
                     if item['image']:
                         response = requests.get(item['image'])
                         item['image'] = File(
-                            File(response.raw, name=item['image'].split('/')[-1])
+                            File(StringIO(response.content), name=item['image'].split('/')[-1])
                         )
                     else:
                         print 'Missing image for: {}({})'.format(block_type, language)

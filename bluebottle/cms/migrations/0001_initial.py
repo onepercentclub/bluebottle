@@ -63,7 +63,8 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
+                ('base_objects', django.db.models.manager.Manager()),
             ],
         ),
         migrations.CreateModel(
@@ -94,7 +95,8 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
+                ('base_objects', django.db.models.manager.Manager()),
             ],
         ),
         migrations.CreateModel(
@@ -137,7 +139,8 @@ class Migration(migrations.Migration):
             },
             bases=('fluent_contents.contentitem',),
             managers=[
-                ('objects', django.db.models.manager.Manager()),
+                ('objects', ContentItemManager()),
+                ('base_objects', django.db.models.manager.Manager()),
             ],
         ),
         migrations.CreateModel(

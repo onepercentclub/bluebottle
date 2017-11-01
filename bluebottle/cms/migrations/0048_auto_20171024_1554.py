@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Link',
+            name='ContentLink',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('image', bluebottle.utils.fields.ImageField(blank=True, max_length=255, null=True, upload_to=b'link_images/', verbose_name='Image')),
@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
             field=models.CharField(blank=True, default='Start your own project', max_length=80, null=True),
         ),
         migrations.AddField(
-            model_name='link',
+            model_name='contentlink',
             name='block',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='links', to='cms.LinksContent'),
         ),

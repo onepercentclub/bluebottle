@@ -18,7 +18,8 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent, HomePage, SlidesContent)
+    SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings
+)
 from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -199,14 +200,13 @@ class ResultPageTestCase(BluebottleTestCase):
         self.page.save()
 
         done_complete = ProjectPhase.objects.get(slug='done-complete')
-        for _index in range(0, 10):
-            ProjectFactory.create(
-                status=done_complete,
-                campaign_ended=datetime(2016, 12, 31, 12, 00, tzinfo=get_current_timezone())
-            )
+        ProjectFactory.create_batch(
+            10,
+            status=done_complete,
+            campaign_ended=datetime(2016, 12, 31, 12, 00, tzinfo=get_current_timezone())
+        )
 
         ProjectsMapContent.objects.create_for_placeholder(self.placeholder, title='Test title')
-
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
@@ -327,3 +327,29 @@ class HomePageTestCase(BluebottleTestCase):
 
         self.assertEqual(response.data['blocks'][0]['type'], 'slides')
         self.assertEqual(len(response.data['blocks'][0]['slides']), 4)
+
+
+class SitePlatformSettingsTestCase(BluebottleTestCase):
+    """
+    Integration tests for the SitePlatformSettings API.
+    """
+
+    def setUp(self):
+        super(SitePlatformSettingsTestCase, self).setUp()
+        self.init_projects()
+
+    def test_site_platform_settings_header(self):
+        SitePlatformSettings.objects.create(
+            contact_email='info@example.com',
+            contact_phone='+31207158980',
+            copyright='GoodUp',
+            powered_by_text='Powered by',
+            powered_by_link='https://goodup.com'
+        )
+
+        response = self.client.get(reverse('settings'))
+        self.assertEqual(response.data['platform']['content']['contact_email'], 'info@example.com')
+        self.assertEqual(response.data['platform']['content']['contact_phone'], '+31207158980')
+        self.assertEqual(response.data['platform']['content']['copyright'], 'GoodUp')
+        self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
+        self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://goodup.com')

@@ -20,7 +20,7 @@ from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
-    SlidesContent, Slide, Step, Logo, LogosContent, Link, LinksContent
+    SlidesContent, Slide, Step, Logo, LogosContent, Link, LinksContent, SitePlatformSettings
 )
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
@@ -423,3 +423,17 @@ class HomePageSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomePage
         fields = ('id', 'blocks')
+
+
+class SiteContentSettingsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SitePlatformSettings
+        fields = (
+            'contact_email',
+            'contact_phone',
+            'copyright',
+            'powered_by_link',
+            'powered_by_logo',
+            'powered_by_text'
+        )

@@ -4,8 +4,10 @@ import factory
 from django.utils.timezone import now
 
 from bluebottle.cms.models import (
-    ResultPage, HomePage, Stat, Quote, Slide
+    ResultPage, HomePage, Stat, Quote, Slide,
+    SiteLinks, LinkGroup, Link, LinkPermission
 )
+from bluebottle.test.factory_models.utils import LanguageFactory
 
 
 class ResultPageFactory(factory.DjangoModelFactory):
@@ -43,3 +45,32 @@ class QuoteFactory(factory.DjangoModelFactory):
 class SlideFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Slide
+
+
+class SiteLinksFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = SiteLinks
+
+    language = factory.SubFactory(LanguageFactory)
+
+
+class LinkGroupFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = LinkGroup
+        django_get_or_create = ('name',)
+
+    site_links = factory.SubFactory(SiteLinksFactory)
+    name = factory.Sequence(lambda n: 'Link Group {}'.format(n))
+
+
+class LinkFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = Link
+
+    link_group = factory.SubFactory(LinkGroupFactory)
+    title = factory.Sequence(lambda n: 'Title {}'.format(n))
+
+
+class LinkPermissionFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = LinkPermission

@@ -3,13 +3,17 @@
 
 {% block content %}
 {% blocktrans with sender_name=sender.short_name receiver_name=receiver.short_name task_title=task.title %}
-
 Hi {{ receiver_name }},
-
+{% endblocktrans %}
+{% if message %}
+{{ message }}
+{% else %}
+{% blocktrans with sender_name=sender.short_name receiver_name=receiver.short_name task_title=task.title %}
 Great news! The project initiatior, {{ sender_name }}, assigned the task '{{ task_title }}' to you.
 
 Good luck taking on the task and feel free to keep everyone updated on the progress.
 {% endblocktrans %}
+{% endif %}
 {% endblock %}
 
 {% block action %}

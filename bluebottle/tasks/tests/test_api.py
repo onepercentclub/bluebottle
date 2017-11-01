@@ -2,6 +2,7 @@ from datetime import timedelta
 import mock
 
 from django.contrib.auth.models import Group, Permission
+from django.core import mail
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
@@ -713,6 +714,112 @@ class TestMyTasksPermissions(BluebottleTestCase):
 
         response = self.client.get(self.my_task_member_url, token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestTaskMemberStatusAPI(BluebottleTestCase):
+    """
+    Test methods for getting tasks that you are a member of.
+    """
+
+    def setUp(self):
+        super(TestTaskMemberStatusAPI, self).setUp()
+
+        self.init_projects()
+
+        self.user = BlueBottleUserFactory.create()
+        self.member = BlueBottleUserFactory.create()
+
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.project = ProjectFactory.create(task_manager=self.user)
+        self.task = TaskFactory.create(project=self.project, people_needed=2)
+        self.task_member = TaskMemberFactory.create(
+            task=self.task, member=self.member, status='applied'
+        )
+
+        self.url = reverse('task-member-status', args=(self.task_member.pk, ))
+
+    def test_read(self):
+        """
+        Task mamangers can read the status
+        """
+        response = self.client.get(self.url, token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.keys(), ['id', 'member', 'status', 'permissions'])
+
+    def test_set_status_accepted(self):
+        """
+        Task mamangers can read the status
+        """
+        mail.outbox = []
+        data = {
+            'status': 'accepted',
+            'message': 'Just a test message'
+        }
+        response = self.client.put(self.url, data=data, token=self.user_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'accepted')
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue(
+            data['message'] in mail.outbox[0].alternatives[0][0]
+        )
+        self.assertTrue(
+            data['message'] in mail.outbox[0].body
+        )
+
+    def test_set_status_accepted_twice(self):
+        """
+        Task mamangers can read the status
+        """
+        mail.outbox = []
+        data = {
+            'status': 'accepted',
+            'message': 'Just a test message'
+        }
+        response = self.client.put(self.url, data=data, token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.put(self.url, data=data, token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_set_status_rejected(self):
+        """
+        Task mamangers can read the status
+        """
+        mail.outbox = []
+        data = {
+            'status': 'rejected',
+            'message': 'Just a test message'
+        }
+        response = self.client.put(self.url, data=data, token=self.user_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'rejected')
+
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue(
+            data['message'] in mail.outbox[0].alternatives[0][0]
+        )
+        self.assertTrue(
+            data['message'] in mail.outbox[0].body
+        )
+
+    def test_set_status_member(self):
+        """
+        Task mamangers can read the status
+        """
+        data = {
+            'status': 'accepted',
+            'message': 'Just a test message'
+        }
+
+        token = "JWT {0}".format(self.member.get_jwt_token())
+        response = self.client.put(self.url, data=data, token=token)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class TestProjectTaskAPIPermissions(BluebottleTestCase):

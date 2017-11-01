@@ -2,20 +2,29 @@ import os
 from argparse import ArgumentTypeError
 from datetime import datetime
 
+import pytz
 from django.conf import settings
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
 from mock import patch
+
 from bluebottle.tasks.models import TaskMember
 
-from bluebottle.analytics.management.commands.export_engagement_metrics import Command
+from bluebottle.analytics.management.commands.export_engagement_metrics import (
+    Command as EngagementCommand
+)
+from bluebottle.analytics.management.commands.export_participation_metrics import (
+    Command as ParticipationCommand,
+)
+
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.surveys import SurveyFactory, QuestionFactory, AnswerFactory, ResponseFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
@@ -30,8 +39,8 @@ class TestEngagementMetricsUnit(SimpleTestCase):
 
     def test_validate_date(self):
         with self.assertRaises(ArgumentTypeError):
-            Command._validate_date('2017-13-13')
-        self.assertEquals('2017-01-01', Command._validate_date('2017-01-01'))
+            EngagementCommand._validate_date('2017-13-13')
+        self.assertEquals('2017-01-01', EngagementCommand._validate_date('2017-01-01'))
 
     def test_get_engagement_score(self):
         entry = {'comments': 1,
@@ -41,16 +50,16 @@ class TestEngagementMetricsUnit(SimpleTestCase):
                  'fundraisers': 1,
                  'projects': 1}
 
-        self.assertEquals(30, Command.get_engagement_score(entry))
+        self.assertEquals(30, EngagementCommand.get_engagement_score(entry))
 
     def test_get_engagement_rating(self):
-        self.assertEquals('not engaged', Command.get_engagement_rating(0))
-        self.assertEquals('little engaged', Command.get_engagement_rating(1))
-        self.assertEquals('little engaged', Command.get_engagement_rating(4))
-        self.assertEquals('engaged', Command.get_engagement_rating(5))
-        self.assertEquals('engaged', Command.get_engagement_rating(8))
-        self.assertEquals('very engaged', Command.get_engagement_rating(9))
-        self.assertEquals('invalid engagement score: test', Command.get_engagement_rating('test'))
+        self.assertEquals('not engaged', EngagementCommand.get_engagement_rating(0))
+        self.assertEquals('little engaged', EngagementCommand.get_engagement_rating(1))
+        self.assertEquals('little engaged', EngagementCommand.get_engagement_rating(4))
+        self.assertEquals('engaged', EngagementCommand.get_engagement_rating(5))
+        self.assertEquals('engaged', EngagementCommand.get_engagement_rating(8))
+        self.assertEquals('very engaged', EngagementCommand.get_engagement_rating(9))
+        self.assertEquals('invalid engagement score: test', EngagementCommand.get_engagement_rating('test'))
 
     @patch('bluebottle.analytics.management.commands.export_engagement_metrics.datetime')
     def test_get_xls_file_name(self, mock_datetime):
@@ -58,7 +67,7 @@ class TestEngagementMetricsUnit(SimpleTestCase):
         mock_datetime.now.return_value = now
         start_date = datetime(2016, 1, 1)
         end_date = datetime(2016, 12, 31)
-        self.assertEquals(Command.get_xls_file_name(start_date, end_date),
+        self.assertEquals(EngagementCommand.get_xls_file_name(start_date, end_date),
                           'engagement_report_20160101_20161231_generated_20170101-000000.xlsx')
 
 
@@ -123,7 +132,7 @@ class TestEngagementMetricsXls(BluebottleTestCase):
         # xls export
         self.xls_file_name = 'test.xlsx'
         self.xls_file_path = os.path.join(settings.PROJECT_ROOT, self.xls_file_name)
-        self.command = Command()
+        self.command = EngagementCommand()
 
     def test_xls_generation(self):
 
@@ -178,3 +187,81 @@ class TestEngagementMetricsXls(BluebottleTestCase):
 
     def tearDown(self):
         os.remove(self.xls_file_path)
+
+
+class TestParticipationXls(BluebottleTestCase):
+
+    def setUp(self):
+        super(TestParticipationXls, self).setUp()
+        self.init_projects()
+        self.year = datetime.now().year
+
+        # Project Phases
+        done_complete = ProjectPhase.objects.get(slug="done-complete")
+        done_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
+
+        # Users
+        self.users = BlueBottleUserFactory.create_batch(200)
+
+        # Projects
+        some_day = datetime(year=self.year, month=2, day=27, tzinfo=pytz.UTC)
+        project1 = ProjectFactory.create(
+            owner=self.users[0],
+            status=done_complete,
+            campaign_ended=some_day
+        )
+        ProjectFactory.create(owner=self.users[0], status=done_incomplete)
+
+        # Tasks
+        task = TaskFactory.create(author=self.users[0], project=project1, people_needed=2, status='realized')
+
+        for month in range(1, 12):
+            for x in range(1, 10):
+
+                task_member = TaskMemberFactory.create(
+                    time_spent=10,
+                    member=self.users[month * 10 + x],
+                    task=task,
+                    status=TaskMember.TaskMemberStatuses.applied
+                )
+                task_member.status = TaskMember.TaskMemberStatuses.realized
+                task_member.save()
+
+        # Survey
+        self.survey = SurveyFactory(title="My Questionnaire")
+        self.questions = QuestionFactory.create_batch(10, survey=self.survey)
+        responses = ResponseFactory.create_batch(10, survey=self.survey, project=project1)
+        for response in responses:
+            for question in self.questions:
+                AnswerFactory.create(question=question, response=response)
+
+        # xls export
+        self.xls_file_name = 'test.xlsx'
+        self.xls_file_path = os.path.join(settings.PROJECT_ROOT, self.xls_file_name)
+        self.command = ParticipationCommand()
+
+    def test_export(self):
+        with patch.object(self.command, 'get_xls_file_name', return_value=self.xls_file_name):
+            call_command(self.command, '--start', self.year, '--end', self.year, '--tenant', 'test')
+            self.assertTrue(os.path.isfile(self.xls_file_path), True)
+            workbook = load_workbook(filename=self.xls_file_path, read_only=True)
+
+            # Check participants
+            self.assertEqual(workbook.worksheets[0]['A1'].value, 'Email Address')
+            self.assertEqual(workbook.worksheets[0]['A2'].value, self.users[0].email)
+            self.assertEqual(workbook.worksheets[0]['A3'].value, self.users[11].email)
+
+            # Check some sheet titles
+            self.assertEqual(workbook.worksheets[0].title, 'Participants - {}'.format(self.year))
+            self.assertEqual(workbook.worksheets[1].title, 'Totals - {}'.format(self.year))
+            self.assertEqual(workbook.worksheets[6].title, 'Location Segmentation - {}'.format(self.year))
+            self.assertEqual(workbook.worksheets[7].title, 'Theme Segmentation - {}'.format(self.year))
+            self.assertEqual(workbook.worksheets[8].title, 'Impact Survey - {}'.format(self.year))
+
+            # Check survey responses (should be 10, all in February)
+            self.assertEqual(workbook.worksheets[8]['G1'].value, 'Number responses for My Questionnaire')
+            self.assertEqual(workbook.worksheets[8]['G3'].value, 10)
+            self.assertEqual(workbook.worksheets[8]['D5'].value, 'January')
+            self.assertEqual(workbook.worksheets[8]['G5'].value, 0)
+            self.assertEqual(workbook.worksheets[8]['D6'].value, 'February')
+            self.assertEqual(workbook.worksheets[8]['G6'].value, 10)

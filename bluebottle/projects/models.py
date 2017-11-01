@@ -2,6 +2,7 @@ import datetime
 import logging
 
 import pytz
+from adminsortable.models import SortableMixin
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
@@ -34,6 +35,7 @@ from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.managers import UpdateSignalsQuerySet
+from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     Wallpost, MediaWallpostPhoto, MediaWallpost, TextWallpost
@@ -752,6 +754,62 @@ class ProjectImage(AbstractAttachment):
             self.project_id = int(project_id[0])
 
         super(ProjectImage, self).save(*args, **kwargs)
+
+
+class ProjectSearchFilter(SortableMixin):
+
+    FILTER_OPTIONS = (
+        ('location', _('Location')),
+        ('theme', _('Theme')),
+        ('skills', _('Skill')),
+        ('date', _('Date')),
+        ('status', _('Status')),
+        ('type', _('Type')),
+        ('category', _('Category')),
+    )
+
+    project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
+                                         null=True,
+                                         related_name='filters')
+    name = models.CharField(max_length=100, choices=FILTER_OPTIONS)
+    default = models.CharField(max_length=100, blank=True, null=True)
+    values = models.CharField(max_length=500, blank=True, null=True,
+                              help_text=_('Comma separated list of possible values'))
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
+
+
+class ProjectPlatformSettings(BasePlatformSettings):
+    PROJECT_CREATE_OPTIONS = (
+        ('sourcing', _('Sourcing')),
+        ('funding', _('Funding')),
+    )
+
+    PROJECT_CONTACT_TYPE_OPTIONS = (
+        ('organization', _('Organization')),
+        ('personal', _('Personal')),
+    )
+
+    PROJECT_CREATE_FLOW_OPTIONS = (
+        ('combined', _('Combined')),
+        ('choice', _('Choice')),
+    )
+
+    PROJECT_CONTACT_OPTIONS = (
+        ('mail', _('E-mail')),
+        ('phone', _('Phone')),
+    )
+
+    create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
+    contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
+    create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
+    contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)
+
+    class Meta:
+        verbose_name_plural = _('project platform settings')
+        verbose_name = _('project platform settings')
 
 
 @receiver(project_funded, weak=False, sender=Project,

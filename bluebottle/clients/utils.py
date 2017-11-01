@@ -100,6 +100,64 @@ def get_currencies():
     return currencies
 
 
+def get_user_site_links(user):
+    from bluebottle.cms.models import SiteLinks
+
+    site_links = SiteLinks.objects.first()
+
+    # If no site links set, just return empty
+    if not site_links:
+        return {}
+
+    response = {
+        'hasCopyright': site_links.has_copyright,
+        'groups': []
+    }
+
+    for group in site_links.link_groups.all():
+        links = []
+
+        for link in group.links.all():
+            allowed = True
+            if link.link_permissions.exists():
+                # Check permissions
+                for perm in link.link_permissions.all():
+                    # has_perm  present allowed
+                    # yes       yes     yes
+                    # yes       no      no
+                    # no        yes     no
+                    # no        no      yes
+                    allowed = (user.has_perm(perm.permission) == perm.present) and allowed
+
+            if not allowed:
+                continue
+
+            link_data = {
+                'title': link.title,
+                'isHighlighted': link.highlight,
+                'sequence': link.link_order
+            }
+
+            if link.component:
+                link_data['route'] = link.component
+            if link.component_id:
+                link_data['param'] = link.component_id
+            elif link.external_link:
+                link_data['route'] = link.external_link
+                link_data['external'] = True
+
+            links.append(link_data)
+
+        response['groups'].append({
+            'title': group.title,
+            'name': group.name,
+            'sequence': group.group_order,
+            'links': links
+        })
+
+    return response
+
+
 def get_public_properties(request):
     """
 
@@ -136,8 +194,20 @@ def get_public_properties(request):
 
     # First load tenant settings that should always be exposed
     if connection.tenant:
+        from bluebottle.cms.models import SitePlatformSettings
+        from bluebottle.cms.serializers import SiteContentSettingsSerializer
+        from bluebottle.projects.models import ProjectPlatformSettings
+        from bluebottle.projects.serializers import ProjectPlatformSettingsSerializer
+
         current_tenant = connection.tenant
         properties = get_tenant_properties()
+
+        site_content = SitePlatformSettings.objects.get()
+        site_content_ser = SiteContentSettingsSerializer(site_content).to_representation(site_content)
+
+        project_settings = ProjectPlatformSettings.objects.get()
+        project_settings_ser = ProjectPlatformSettingsSerializer(project_settings).to_representation(project_settings)
+
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
@@ -148,7 +218,12 @@ def get_public_properties(request):
             'recurringDonationsEnabled': getattr(properties, 'RECURRING_DONATIONS_ENABLED', False),
             'siteName': current_tenant.name,
             'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')],
-            'languageCode': get_language()
+            'languageCode': get_language(),
+            'siteLinks': get_user_site_links(request.user),
+            'platform': {
+                'content': site_content_ser,
+                'projects': project_settings_ser
+            }
         }
         try:
             config['readOnlyFields'] = {

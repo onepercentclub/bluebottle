@@ -261,7 +261,7 @@ SHARED_APPS = (
     # 3rd party apps
     'lockdown',
     'django_extensions',
-    'raven.contrib.django.raven_compat',
+    'raven.contrib.django',
     'djcelery',
     'micawber.contrib.mcdjango',  # Embedding videos
     'rest_framework',
@@ -276,7 +276,8 @@ SHARED_APPS = (
     'daterange_filter',
     'adminsortable',
     'django_summernote',
-    'nested_inline'
+    'nested_inline',
+    'django_singleton_admin'
 
 )
 
@@ -539,12 +540,17 @@ ANALYTICS_BACKENDS = {
 
 ANALYTICS_FRONTEND = ''
 ANALYTICS_BACKOFFICE_ENABLED = True
+PARTICIPATION_BACKOFFICE_ENABLED = False
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'
 # If only one project type is set then project create should be set to 'combined'
 PROJECT_CREATE_TYPES = ['funding']
 PROJECT_CREATE_FLOW = 'combined'
+PROJECT_CONTACT_TYPES = [
+    'organization',
+]
+PROJECT_CONTACT_METHOD = 'mail'
 
 # For building frontend code
 BB_APPS = []

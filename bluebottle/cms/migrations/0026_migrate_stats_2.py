@@ -30,5 +30,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AlterModelManagers(
+            name='StatsContent',
+            managers=[
+                ('objects', models.manager.Manager()),
+            ],
+        ),
         migrations.RunPython(migrate_stats),
     ]

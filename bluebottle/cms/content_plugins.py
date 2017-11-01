@@ -3,18 +3,25 @@ from django.utils.translation import ugettext_lazy as _
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from bluebottle.cms.admin import (
-    QuoteInline, StatInline, SlideInline, StepInline
+    QuoteInline, StatInline, SlideInline, StepInline, LogoInline, LinkInline
 )
 from bluebottle.cms.models import (
     QuotesContent, StatsContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, StepsContent, SlidesContent,
-    CategoriesContent, LocationsContent
+    CategoriesContent, LocationsContent, LogosContent,
+    LinksContent
 )
 
 
 class CMSContentPlugin(ContentPlugin):
     admin_form_template = 'admin/cms/content_item.html'
+
+    class Media:
+        css = {
+            "all": ('admin/css/forms-nested.css',)
+        }
+        js = ('admin/js/inlines-nested.js',)
 
 
 @plugin_pool.register
@@ -101,4 +108,18 @@ class CategoriesBlockPlugin(CMSContentPlugin):
 class LocationsBlockPlugin(CMSContentPlugin):
     model = LocationsContent
     raw_id_fields = ('locations', )
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class LogosBlockPlugin(CMSContentPlugin):
+    model = LogosContent
+    inlines = [LogoInline]
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class LinksBlockPlugin(CMSContentPlugin):
+    model = LinksContent
+    inlines = [LinkInline]
     category = _('Homepage')

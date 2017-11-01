@@ -30,6 +30,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AlterModelManagers(
+            name='QuotesContent',
+            managers=[
+                ('objects', models.manager.Manager()),
+            ],
+        ),
         migrations.RunPython(migrate_quotes),
-
     ]

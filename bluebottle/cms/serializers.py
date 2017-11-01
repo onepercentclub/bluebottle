@@ -20,7 +20,7 @@ from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
-    SlidesContent, Slide, Step
+    SlidesContent, Slide, Step, Logo, LogosContent, Link, LinksContent, SitePlatformSettings
 )
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
@@ -53,8 +53,8 @@ class StatSerializer(serializers.ModelSerializer):
             return obj.value
 
         statistics = Statistics(
-            start=self.context['start_date'],
-            end=self.context['end_date'],
+            start=self.context.get('start_date'),
+            end=self.context.get('end_date'),
         )
 
         value = getattr(statistics, obj.type, 0)
@@ -77,14 +77,16 @@ class StatsContentSerializer(serializers.ModelSerializer):
     sub_title = serializers.CharField()
 
     class Meta:
-        model = QuotesContent
+        model = StatsContent
         fields = ('id', 'type', 'stats', 'title', 'sub_title')
 
 
 class QuoteSerializer(serializers.ModelSerializer):
+    image = SorlImageField('800x600', crop='center')
+
     class Meta:
         model = Quote
-        fields = ('id', 'name', 'quote')
+        fields = ('id', 'name', 'quote', 'image')
 
 
 class QuotesContentSerializer(serializers.ModelSerializer):
@@ -159,7 +161,19 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
 
 class ProjectsContentSerializer(serializers.ModelSerializer):
-    projects = ProjectPreviewSerializer(many=True)
+    projects = serializers.SerializerMethodField()
+
+    def get_projects(self, obj):
+        if obj.from_homepage:
+            projects = Project.objects.filter(
+                is_campaign=True, status__viewable=True
+            ).order_by('?')[0:4]
+        else:
+            projects = obj.projects
+
+        return ProjectPreviewSerializer(
+            projects, many=True, context=self.context
+        ).to_representation(projects)
 
     class Meta:
         model = ProjectsContent
@@ -206,7 +220,7 @@ class StepSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Step
-        fields = ('image', 'header', 'text', )
+        fields = ('id', 'image', 'header', 'text', )
 
 
 class StepsContentSerializer(serializers.ModelSerializer):
@@ -217,8 +231,40 @@ class StepsContentSerializer(serializers.ModelSerializer):
         fields = ('id', 'type', 'title', 'sub_title', 'steps',)
 
 
+class LogoSerializer(serializers.ModelSerializer):
+    image = SorlImageField('800x600', crop='center')
+
+    class Meta:
+        model = Logo
+        fields = ('id', 'image', )
+
+
+class LogosContentSerializer(serializers.ModelSerializer):
+    logos = LogoSerializer(many=True)
+
+    class Meta:
+        model = LogosContent
+        fields = ('id', 'type', 'title', 'sub_title', 'logos', 'action_text', 'action_link')
+
+
+class LinkSerializer(serializers.ModelSerializer):
+    image = SorlImageField('800x600', crop='center')
+
+    class Meta:
+        model = Link
+        fields = ('id', 'image', 'title', 'link', )
+
+
+class LinksContentSerializer(serializers.ModelSerializer):
+    links = LinkSerializer(many=True)
+
+    class Meta:
+        model = LinksContent
+        fields = ('id', 'type', 'title', 'sub_title', 'links', )
+
+
 class LocationsContentSerializer(serializers.ModelSerializer):
-    steps = LocationSerializer(many=True)
+    locations = LocationSerializer(many=True)
 
     class Meta:
         model = LocationsContent
@@ -342,6 +388,10 @@ class BlockSerializer(serializers.Serializer):
             serializer = StepsContentSerializer
         elif isinstance(obj, LocationsContent):
             serializer = LocationsContentSerializer
+        elif isinstance(obj, LogosContent):
+            serializer = LogosContentSerializer
+        elif isinstance(obj, LinksContent):
+            serializer = LinksContentSerializer
         else:
             serializer = DefaultBlockSerializer
 
@@ -373,3 +423,17 @@ class HomePageSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomePage
         fields = ('id', 'blocks')
+
+
+class SiteContentSettingsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SitePlatformSettings
+        fields = (
+            'contact_email',
+            'contact_phone',
+            'copyright',
+            'powered_by_link',
+            'powered_by_logo',
+            'powered_by_text'
+        )

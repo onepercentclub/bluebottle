@@ -60,6 +60,10 @@ class SorlImageField(RestrictedImageField):
         if not os.path.exists(value.path):
             return ""
 
+        _, ext = os.path.splitext(value.path)
+        if ext == '.svg':
+            return value.url
+
         if 'watermark' in self.sorl_options:
             try:
                 self.sorl_options['watermark'] = self.sorl_options['watermark']()

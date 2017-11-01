@@ -1,6 +1,7 @@
 from datetime import timedelta, date, datetime
 from decimal import Decimal
 import random
+import os
 
 import mock
 
@@ -18,7 +19,8 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import (
     StatsContent, QuotesContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent)
+    SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings
+)
 from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -27,7 +29,7 @@ from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory,
-    QuoteFactory
+    QuoteFactory, SlideFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
 from sorl_watermarker.engines.pil_engine import Engine
@@ -194,18 +196,18 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(highlighted.id, int(data['projects'][9]['id']))
 
     def test_results_map_end_date_inclusive(self):
+        self.page.start_date = date(2016, 1, 1)
         self.page.end_date = date(2016, 12, 31)
         self.page.save()
 
         done_complete = ProjectPhase.objects.get(slug='done-complete')
-        for _index in range(0, 10):
-            ProjectFactory.create(
-                status=done_complete,
-                campaign_ended=datetime(2016, 12, 31, 12, 00, tzinfo=get_current_timezone())
-            )
+        ProjectFactory.create_batch(
+            10,
+            status=done_complete,
+            campaign_ended=datetime(2016, 12, 31, 12, 00, tzinfo=get_current_timezone())
+        )
 
         ProjectsMapContent.objects.create_for_placeholder(self.placeholder, title='Test title')
-
         response = self.client.get(self.url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
@@ -281,11 +283,12 @@ class HomePageTestCase(BluebottleTestCase):
     def setUp(self):
         super(HomePageTestCase, self).setUp()
         self.init_projects()
+        HomePage.objects.get(pk=1).delete()
         self.page = HomePageFactory(pk=1)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('home-page-detail')
 
-    def test_results(self):
+    def test_homepage(self):
         RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')
         response = self.client.get(self.url)
 
@@ -293,3 +296,82 @@ class HomePageTestCase(BluebottleTestCase):
 
         self.assertEqual(response.data['blocks'][0]['type'], 'rawhtmlitem')
         self.assertEqual(response.data['blocks'][0]['content'], 'Test content')
+
+    def test_projects_from_homepage(self):
+        done_complete = ProjectPhase.objects.get(slug='done-complete')
+        for i in range(0, 5):
+            ProjectFactory.create(is_campaign=True, status=done_complete)
+
+        for i in range(0, 5):
+            ProjectFactory.create(is_campaign=False, status=done_complete)
+
+        ProjectsContent.objects.create_for_placeholder(self.placeholder, from_homepage=True)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(response.data['blocks'][0]['type'], 'projects')
+        self.assertEqual(len(response.data['blocks'][0]['projects']), 4)
+
+        for project in response.data['blocks'][0]['projects']:
+            self.assertTrue(project['is_campaign'])
+
+    def test_slides(self):
+        block = SlidesContent.objects.create_for_placeholder(self.placeholder)
+        image = File(open('./bluebottle/cms/tests/test_images/upload.png'))
+
+        for i in range(0, 4):
+            SlideFactory(block=block, image=image)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(response.data['blocks'][0]['type'], 'slides')
+        self.assertEqual(len(response.data['blocks'][0]['slides']), 4)
+
+        for slide in response.data['blocks'][0]['slides']:
+            self.assertTrue(slide['image'].startswith('/media'))
+            self.assertTrue(slide['image'].endswith('jpg'))
+
+    def test_slides_svg(self):
+        block = SlidesContent.objects.create_for_placeholder(self.placeholder)
+        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
+
+        for i in range(0, 4):
+            SlideFactory(block=block, image=image)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        for slide in response.data['blocks'][0]['slides']:
+            self.assertTrue(slide['image'].startswith('/media'))
+            import ipdb; ipdb.set_trace()
+            self.assertTrue(slide['image'].endswith('svg'))
+
+
+class SitePlatformSettingsTestCase(BluebottleTestCase):
+    """
+    Integration tests for the SitePlatformSettings API.
+    """
+
+    def setUp(self):
+        super(SitePlatformSettingsTestCase, self).setUp()
+        self.init_projects()
+
+    def test_site_platform_settings_header(self):
+        SitePlatformSettings.objects.create(
+            contact_email='info@example.com',
+            contact_phone='+31207158980',
+            copyright='GoodUp',
+            powered_by_text='Powered by',
+            powered_by_link='https://goodup.com'
+        )
+
+        response = self.client.get(reverse('settings'))
+        self.assertEqual(response.data['platform']['content']['contact_email'], 'info@example.com')
+        self.assertEqual(response.data['platform']['content']['contact_phone'], '+31207158980')
+        self.assertEqual(response.data['platform']['content']['copyright'], 'GoodUp')
+        self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
+        self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://goodup.com')

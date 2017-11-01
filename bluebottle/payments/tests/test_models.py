@@ -110,7 +110,7 @@ class PaymentTestCase(BluebottleTestCase):
     def test_info_text(self):
         self.assertEqual(
             self.order_payment.info_text,
-            'testserver via onepercentclub {id}'.format(
+            'testserver via goodup {id}'.format(
                 id=self.order_payment.id)
         )
 

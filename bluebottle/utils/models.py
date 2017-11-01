@@ -8,6 +8,7 @@ from django.conf import settings
 import bluebottle.utils.monkey_patch_migration  # noqa
 import bluebottle.utils.monkey_patch_corsheaders  # noqa
 import bluebottle.utils.monkey_patch_parler  # noqa
+import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
 
 
 class Language(models.Model):
@@ -113,3 +114,22 @@ class MailLog(models.Model):
     type = models.CharField(max_length=200)
 
     created = models.DateTimeField(auto_now_add=True)
+
+
+class BasePlatformSettings(models.Model):
+
+    update = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        self.__class__.objects.exclude(id=self.id).delete()
+        super(BasePlatformSettings, self).save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        try:
+            return cls.objects.get()
+        except cls.DoesNotExist:
+            return cls()

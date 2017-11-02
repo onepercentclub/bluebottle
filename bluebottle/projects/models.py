@@ -326,7 +326,7 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.payout_status == 're_scheduled' and self.campaign_paid_out:
             self.campaign_paid_out = None
 
-        # BB-11037 If the project is re-opened, payout-status should be cleaned
+        # If the project is re-opened, payout-status should be cleaned
         if self.status.slug not in ["done-complete", "done-incomplete"] and  \
                 self.payout_status == 'needs_approval':
             self.payout_status = None

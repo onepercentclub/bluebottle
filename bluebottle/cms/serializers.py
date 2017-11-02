@@ -442,7 +442,7 @@ class HomePageSerializer(serializers.ModelSerializer):
         fields = ('id', 'blocks')
 
 
-class SiteContentSettingsSerializer(serializers.ModelSerializer):
+class SitePlatformSettingsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SitePlatformSettings

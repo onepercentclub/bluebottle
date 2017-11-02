@@ -15,8 +15,8 @@ from bluebottle.statistics.statistics import Statistics
 
 from bluebottle.cms.models import (
     SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
-    Stat, Quote, Slide, Step, Logo, ContentLink, ResultPage, HomePage
-)
+    Stat, Quote, Slide, Step, Logo, ContentLink, ResultPage, HomePage,
+    HomeStat)
 
 
 class LinkPermissionAdmin(admin.ModelAdmin):
@@ -80,6 +80,17 @@ class SiteLinksAdmin(NonSortableParentAdmin):
 
 class StatInline(NestedStackedInline, SortableStackedInline):
     model = Stat
+    extra = 1
+    fields = ('type', 'definition', 'title', 'value')
+
+    readonly_fields = ['definition']
+
+    def definition(self, obj):
+        return getattr(Statistics, obj.type).__doc__
+
+
+class HomeStatInline(NestedStackedInline, SortableStackedInline):
+    model = HomeStat
     extra = 1
     fields = ('type', 'definition', 'title', 'value')
 

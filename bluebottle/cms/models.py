@@ -157,6 +157,41 @@ class Stat(SortableMixin, models.Model):
         ordering = ['sequence']
 
 
+class HomeStat(SortableMixin, models.Model):
+    STAT_CHOICES = [
+        ('manual', _('Manual input')),
+        ('people_involved', _('People involved')),
+        ('participants', _('Participants')),
+        ('projects_realized', _('Projects realised')),
+        ('projects_complete', _('Projects complete')),
+        ('tasks_realized', _('Tasks realised')),
+        ('task_members', _('Taskmembers')),
+        ('donated_total', _('Donated total')),
+        ('pledged_total', _('Pledged total')),
+        ('amount_matched', _('Amount matched')),
+        ('projects_online', _('Projects Online')),
+        ('votes_cast', _('Votes casts')),
+        ('time_spent', _('Time spent')),
+    ]
+
+    type = models.CharField(
+        max_length=25,
+        choices=STAT_CHOICES
+    )
+    value = models.CharField(max_length=63, null=True, blank=True,
+                             help_text=_('Use this for \'manual\' input or the override the calculated value.'))
+    block = models.ForeignKey('cms.HomeStatsContent', related_name='stats', null=True)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+    title = models.CharField(max_length=63)
+
+    @property
+    def name(self):
+        return self.title
+
+    class Meta:
+        ordering = ['sequence']
+
+
 class Quote(models.Model):
     block = models.ForeignKey('cms.QuotesContent', related_name='quotes')
     name = models.CharField(max_length=60)
@@ -184,6 +219,17 @@ class QuotesContent(TitledContent):
 
     def __unicode__(self):
         return unicode(self.quotes)
+
+
+class HomeStatsContent(TitledContent):
+    type = 'home-statistics'
+    preview_template = 'admin/cms/preview/stats.html'
+
+    class Meta:
+        verbose_name = _('Homepage Platform Statistics')
+
+    def __unicode__(self):
+        return unicode(self.stats)
 
 
 class StatsContent(TitledContent):

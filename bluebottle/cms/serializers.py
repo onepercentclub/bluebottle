@@ -20,8 +20,8 @@ from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
-    SlidesContent, Slide, Step, Logo, LogosContent, Link, LinksContent, SitePlatformSettings
-)
+    SlidesContent, Slide, Step, Logo, LogosContent, Link, LinksContent, SitePlatformSettings,
+    HomeStatsContent)
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
@@ -140,20 +140,24 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
     @memoize(timeout=60 * 60)
     def get_projects(self, obj):
         projects = Project.objects.filter(
-            campaign_ended__gte=self.context['start_date'],
-            campaign_ended__lte=self.context['end_date'],
             status__slug__in=['done-complete', 'done-incomplete']
         ).order_by(
             '-status__sequence',
             'campaign_ended'
         )
-
+        if 'start_date' in self.context and 'end_date'in self.context:
+            projects.filter(
+                campaign_ended__gte=self.context['start_date'],
+                campaign_ended__lte=self.context['end_date'],
+            )
         return ProjectTinyPreviewSerializer(projects, many=True).to_representation(projects)
 
     def __repr__(self):
-        start = self.context['start_date'].strftime('%s') if self.context['start_date'] else 'none'
-        end = self.context['end_date'].strftime('%s') if self.context['end_date'] else 'none'
-        return 'MapsContent({},{})'.format(start, end)
+        if 'start_date' in self.context and 'end_date'in self.context:
+            start = self.context['start_date'].strftime('%s') if self.context['start_date'] else 'none'
+            end = self.context['end_date'].strftime('%s') if self.context['end_date'] else 'none'
+            return 'MapsContent({},{})'.format(start, end)
+        return 'MapsContent'
 
     class Meta:
         model = ProjectImagesContent
@@ -197,6 +201,17 @@ class SlideSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Slide
+        fields = (
+            'background_image',
+            'body',
+            'id',
+            'image',
+            'link_text',
+            'link_url',
+            'tab_text',
+            'title',
+            'video',
+        )
 
 
 class SlidesContentSerializer(serializers.ModelSerializer):
@@ -363,6 +378,8 @@ class DefaultBlockSerializer(serializers.Serializer):
 class BlockSerializer(serializers.Serializer):
     def to_representation(self, obj):
         if isinstance(obj, StatsContent):
+            serializer = StatsContentSerializer
+        elif isinstance(obj, HomeStatsContent):
             serializer = StatsContentSerializer
         elif isinstance(obj, QuotesContent):
             serializer = QuotesContentSerializer

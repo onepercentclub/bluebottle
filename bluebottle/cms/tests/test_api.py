@@ -1,7 +1,6 @@
 from datetime import timedelta, date, datetime
 from decimal import Decimal
 import random
-import os
 
 import mock
 
@@ -347,7 +346,6 @@ class HomePageTestCase(BluebottleTestCase):
 
         for slide in response.data['blocks'][0]['slides']:
             self.assertTrue(slide['image'].startswith('/media'))
-            import ipdb; ipdb.set_trace()
             self.assertTrue(slide['image'].endswith('svg'))
 
 

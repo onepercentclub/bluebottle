@@ -21,7 +21,7 @@ from bluebottle.cms.models import (
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
     SlidesContent, Slide, Step, Logo, LogosContent, Link, LinksContent, SitePlatformSettings,
-    HomeStatsContent)
+)
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
@@ -378,8 +378,6 @@ class DefaultBlockSerializer(serializers.Serializer):
 class BlockSerializer(serializers.Serializer):
     def to_representation(self, obj):
         if isinstance(obj, StatsContent):
-            serializer = StatsContentSerializer
-        elif isinstance(obj, HomeStatsContent):
             serializer = StatsContentSerializer
         elif isinstance(obj, QuotesContent):
             serializer = QuotesContentSerializer

@@ -4,14 +4,14 @@ from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from bluebottle.cms.admin import (
     QuoteInline, StatInline, SlideInline, StepInline, LogoInline, LinkInline,
-    HomeStatInline)
+)
 from bluebottle.cms.models import (
     QuotesContent, StatsContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, StepsContent, SlidesContent,
     CategoriesContent, LocationsContent, LogosContent,
     LinksContent,
-    HomeStatsContent)
+)
 
 
 class CMSContentPlugin(ContentPlugin):
@@ -36,13 +36,6 @@ class StatsBlockPlugin(CMSContentPlugin):
     model = StatsContent
     inlines = [StatInline]
     category = _('Stats')
-
-
-@plugin_pool.register
-class HomeStatsBlockPlugin(CMSContentPlugin):
-    model = HomeStatsContent
-    inlines = [HomeStatInline]
-    category = _('Homepage')
 
 
 @plugin_pool.register

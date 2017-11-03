@@ -82,7 +82,7 @@ class StatsContentSerializer(serializers.ModelSerializer):
 
 
 class QuoteSerializer(serializers.ModelSerializer):
-    image = SorlImageField('800x600', crop='center')
+    image = SorlImageField('100x100', crop='center')
 
     class Meta:
         model = Quote

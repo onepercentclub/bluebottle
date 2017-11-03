@@ -754,7 +754,7 @@ class TestTaskMemberStatusAPI(BluebottleTestCase):
         mail.outbox = []
         data = {
             'status': 'accepted',
-            'message': 'Just a test message'
+            'message': 'Just a test message\nWith a newline'
         }
         response = self.client.put(self.url, data=data, token=self.user_token)
 
@@ -763,7 +763,7 @@ class TestTaskMemberStatusAPI(BluebottleTestCase):
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertTrue(
-            data['message'] in mail.outbox[0].alternatives[0][0]
+            data['message'].replace('\n', '<br />') in mail.outbox[0].alternatives[0][0]
         )
         self.assertTrue(
             data['message'] in mail.outbox[0].body
@@ -776,7 +776,7 @@ class TestTaskMemberStatusAPI(BluebottleTestCase):
         mail.outbox = []
         data = {
             'status': 'accepted',
-            'message': 'Just a test message'
+            'message': 'Just a test message\nWith a newline'
         }
         response = self.client.put(self.url, data=data, token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -79,7 +79,7 @@ class Link(SortableMixin):
         ('project', _('Project')),
         ('task', _('Task')),
         ('fundraiser', _('Fundraiser')),
-        ('results', _('Results')),
+        ('results-page', _('Results Page')),
         ('news', _('News')),
     )
 

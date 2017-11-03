@@ -20,7 +20,7 @@ from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
-    SlidesContent, Slide, Step, Logo, LogosContent, Link, LinksContent, SitePlatformSettings
+    SlidesContent, Slide, Step, Logo, LogosContent, ContentLink, LinksContent, SitePlatformSettings
 )
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
@@ -251,8 +251,8 @@ class LinkSerializer(serializers.ModelSerializer):
     image = SorlImageField('800x600', crop='center')
 
     class Meta:
-        model = Link
-        fields = ('id', 'image', 'title', 'link', )
+        model = ContentLink
+        fields = ('id', 'image', 'action_link', 'action_text', )
 
 
 class LinksContentSerializer(serializers.ModelSerializer):

@@ -8,6 +8,7 @@ from polymorphic.admin import (PolymorphicParentModelAdmin,
                                PolymorphicChildModelAdmin)
 
 from bluebottle.clients import properties
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments_external.admin import ExternalPaymentAdmin
@@ -49,7 +50,14 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     def check_status(self, request, pk=None):
         order_payment = OrderPayment.objects.get(pk=pk)
         service = PaymentService(order_payment)
-        service.check_payment_status()
+        try:
+            service.check_payment_status()
+        except PaymentException as e:
+            self.message_user(
+                request,
+                'Error checking status {}'.format(e),
+                level='WARNING'
+            )
         order_payment_url = reverse('admin:payments_orderpayment_change', args=(order_payment.id,))
         response = HttpResponseRedirect(order_payment_url)
         return response

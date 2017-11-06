@@ -4,6 +4,7 @@ from django.contrib.admin.sites import AdminSite
 from django.test.client import RequestFactory
 
 from bluebottle.payments.admin import OrderPaymentAdmin
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory
@@ -27,9 +28,9 @@ class MockUser:
 
 
 @override_settings(ENABLE_REFUNDS=True)
-class TestOrderPaymentAdmin(BluebottleTestCase):
+class TestOrderPaymentAdminRefund(BluebottleTestCase):
     def setUp(self):
-        super(TestOrderPaymentAdmin, self).setUp()
+        super(TestOrderPaymentAdminRefund, self).setUp()
         self.site = AdminSite()
         self.request_factory = RequestFactory()
 
@@ -84,3 +85,47 @@ class TestOrderPaymentAdmin(BluebottleTestCase):
                 self.assertEqual(response.status_code, 403)
                 message_mock.assert_not_called()
                 refund_mock.assert_not_called()
+
+
+class TestOrderPaymentAdminCheckStatus(BluebottleTestCase):
+    def setUp(self):
+        super(TestOrderPaymentAdminCheckStatus, self).setUp()
+        self.site = AdminSite()
+        self.request_factory = RequestFactory()
+
+        self.order_payment_admin = OrderPaymentAdmin(OrderPayment, self.site)
+        self.order_payment = OrderPaymentFactory.create(
+            payment_method='docdataIdeal',
+            integration_data={'default_pm': 'ideal'},
+        )
+        self.payment = DocdataPaymentFactory.create(
+            order_payment=self.order_payment,
+            payment_cluster_key='123-4',
+            default_pm='ideal',
+            total_gross_amount=100
+        )
+
+    def test_check_payment_status(self):
+        request = self.request_factory.post('/')
+        request.user = MockUser()
+
+        with mock.patch.object(DocdataPaymentAdapter, 'check_payment_status') as check_payment_status:
+            response = self.order_payment_admin.check_status(request, self.order_payment.pk)
+            self.assertEqual(response.status_code, 302)
+            check_payment_status.assert_called()
+            # Pretend the adapter changed payment status to 'settled'
+            self.payment.status = 'settled'
+            self.payment.save()
+            self.assertEqual(self.order_payment.order.status, 'success')
+
+        with mock.patch.object(self.order_payment_admin, 'message_user') as message_mock:
+            with mock.patch.object(DocdataPaymentAdapter, 'check_payment_status') as check_payment_status:
+                check_payment_status.side_effect = PaymentException('Docdata just exploded!')
+                response = self.order_payment_admin.check_status(request, self.order_payment.pk)
+                self.assertEqual(response.status_code, 302)
+                message_mock.assert_called_with(
+                    request,
+                    'Error checking status Docdata just exploded!',
+                    level='WARNING'
+                )
+                check_payment_status.assert_called()

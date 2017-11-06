@@ -1,13 +1,12 @@
-from datetime import timedelta, date, datetime
+from datetime import timedelta
 from decimal import Decimal
-import random
 
 import mock
 
 from django.contrib.auth.models import Permission, Group
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
-from django.utils.timezone import now, get_current_timezone
+from django.utils.timezone import now
 from moneyed.classes import Money
 
 from rest_framework import status
@@ -20,7 +19,6 @@ from bluebottle.cms.models import (
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings
 )
-from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory

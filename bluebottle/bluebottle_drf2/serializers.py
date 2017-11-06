@@ -70,6 +70,9 @@ class SorlImageField(RestrictedImageField):
             except TypeError:
                 pass
 
+        if ext == '.png':
+            self.sorl_options['format'] = 'PNG'
+
         # The get_thumbnail() helper doesn't respect the THUMBNAIL_DEBUG setting
         # so we need to deal with exceptions like is done in the template tag.
         try:

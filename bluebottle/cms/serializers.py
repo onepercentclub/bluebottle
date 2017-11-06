@@ -2,8 +2,6 @@ from bluebottle.tasks.serializers import TaskPreviewSerializer
 from django.db import connection
 from django.db.models import Sum
 
-from memoize import memoize
-
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField, OEmbedField
 )
@@ -23,7 +21,7 @@ from bluebottle.cms.models import (
     SlidesContent, Slide, Step, Logo, LogosContent, Link, LinksContent, SitePlatformSettings,
 )
 from bluebottle.geo.serializers import LocationSerializer
-from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
+from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
 
 
@@ -230,7 +228,7 @@ class StepsContentSerializer(serializers.ModelSerializer):
 
 
 class LogoSerializer(serializers.ModelSerializer):
-    image = SorlImageField('800x600', crop='center')
+    image = SorlImageField('x150', crop='center')
 
     class Meta:
         model = Logo

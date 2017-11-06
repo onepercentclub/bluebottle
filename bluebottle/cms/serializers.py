@@ -135,23 +135,6 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 
 
 class ProjectsMapContentSerializer(serializers.ModelSerializer):
-    projects = serializers.SerializerMethodField()
-
-    @memoize(timeout=60 * 60)
-    def get_projects(self, obj):
-        projects = Project.objects.filter(
-            status__slug__in=['done-complete', 'done-incomplete']
-        ).order_by(
-            '-status__sequence',
-            'campaign_ended'
-        )
-        if 'start_date' in self.context and 'end_date'in self.context:
-            projects.filter(
-                campaign_ended__gte=self.context['start_date'],
-                campaign_ended__lte=self.context['end_date'],
-            )
-        return ProjectTinyPreviewSerializer(projects, many=True).to_representation(projects)
-
     def __repr__(self):
         if 'start_date' in self.context and 'end_date'in self.context:
             start = self.context['start_date'].strftime('%s') if self.context['start_date'] else 'none'
@@ -161,7 +144,7 @@ class ProjectsMapContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectImagesContent
-        fields = ('id', 'type', 'title', 'sub_title', 'projects',)
+        fields = ('id', 'type', 'title', 'sub_title')
 
 
 class ProjectsContentSerializer(serializers.ModelSerializer):

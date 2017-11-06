@@ -30,10 +30,15 @@ class AbstractDocdataPaymentAdmin(PolymorphicChildModelAdmin):
     inlines = (PaymentLogEntryInline, DocdataTransactionInline)
 
     readonly_fields = (
-        'order_payment_link', 'merchant_order_id', 'payment_cluster_link',
-        'payment_cluster_key', 'ideal_issuer_id', 'default_pm',
+        'currency',
+        'default_pm',
+        'ideal_issuer_id',
+        'merchant_order_id',
+        'order_payment_link',
+        'payment_cluster_key',
+        'payment_cluster_link',
         'total_gross_amount',
-        'currency')
+    )
 
     def order_payment_link(self, obj):
         object = obj.order_payment
@@ -59,10 +64,26 @@ class DocdataPaymentAdmin(AbstractDocdataPaymentAdmin):
     model = DocdataPayment
 
     readonly_fields = AbstractDocdataPaymentAdmin.readonly_fields + (
-        'ip_address', 'customer_id', 'email', 'first_name', 'last_name',
-        'address', 'postal_code', 'city', 'country',
+        'address',
+        'city',
+        'country',
+        'customer_id',
+        'email',
+        'first_name',
+        'ip_address',
+        'language',
+        'last_name',
+        'order_payment',
+        'postal_code',
+        'payment_cluster_id',
+        'total_registered',
+        'total_shopper_pending',
+        'total_acquirer_approved',
+        'total_acquirer_pending',
+        'total_captured',
+        'total_refunded',
+        'total_charged_back',
     )
-
     fields = ('status',) + readonly_fields
 
 

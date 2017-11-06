@@ -21,7 +21,7 @@ def order_payment_changed(sender, instance, **kwargs):
     default_status = StatusDefinition.CREATED
 
     # Signal new status if current status is the default value
-    if (instance.status == default_status):
+    if instance.status == default_status:
         signal_kwargs = {
             'sender': sender,
             'instance': instance,

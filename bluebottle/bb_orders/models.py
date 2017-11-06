@@ -118,6 +118,20 @@ class BaseOrder(models.Model, FSMTransition):
         if save:
             self.save()
 
+    def process_order_payment_status_change(self, order_payment, **kwargs):
+        # Get the mapped status OrderPayment to Order
+        new_order_status = self.get_status_mapping(kwargs['target'])
+
+        successful_payments = self.order_payments.\
+            filter(status__in=['settled', 'authorized']).\
+            exclude(id=order_payment.id).count()
+
+        # If this order has other order_payments that were successful it should no change status
+        if successful_payments:
+            pass
+        else:
+            self.transition_to(new_order_status)
+
     def __unicode__(self):
         return "{0} : {1}".format(self.id, self.created)
 

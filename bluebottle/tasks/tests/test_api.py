@@ -801,10 +801,16 @@ class TestTaskMemberStatusAPI(BluebottleTestCase):
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertTrue(
+            'https://testserver/projects' in mail.outbox[0].alternatives[0][0]
+        )
+        self.assertTrue(
             data['message'] in mail.outbox[0].alternatives[0][0]
         )
         self.assertTrue(
             data['message'] in mail.outbox[0].body
+        )
+        self.assertTrue(
+            'https://testserver/projects' in mail.outbox[0].body
         )
 
     def test_set_status_member(self):

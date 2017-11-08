@@ -30,8 +30,8 @@ class TaskMemberMailSender:
             'sender': self.task_member.member,
             'link': '/go/tasks/{0}'.format(self.task.id),
             'site': tenant_url(),
-            'task_list': '/go/tasks',
-            'project_link': '/go/projects/{0}'.format(self.task.project.slug),
+            'project_list': '/projects',
+            'project_link': '/projects/{0}'.format(self.task.project.slug),
         }
 
     @property

@@ -11,6 +11,7 @@ from bluebottle.utils.utils import StatusDefinition
 
 from bluebottle.donations.models import Donation
 from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.members.models import Member
 from bluebottle.orders.models import Order
 from bluebottle.projects.models import Project, ProjectPhaseLog
 from bluebottle.tasks.models import Task, TaskMember, TaskStatusLog, TaskMemberStatusLog
@@ -288,6 +289,17 @@ class Statistics(object):
             donated = Money(0, properties.DEFAULT_CURRENCY)
 
         return donated
+
+    @property
+    @memoize(timeout=300)
+    def members(self):
+        """ Total amount of members."""
+        import ipdb; ipdb.set_trace()
+        members = Member.objects.filter(
+            self.date_filter('created'),
+            is_active=True
+        )
+        return len(members)
 
     def __repr__(self):
         start = self.start.strftime('%s') if self.start else 'none'

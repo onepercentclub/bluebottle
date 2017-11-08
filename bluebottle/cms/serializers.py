@@ -2,8 +2,6 @@ from bluebottle.tasks.serializers import TaskPreviewSerializer
 from django.db import connection
 from django.db.models import Sum
 
-from memoize import memoize
-
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField, OEmbedField
 )
@@ -23,7 +21,7 @@ from bluebottle.cms.models import (
     SlidesContent, Slide, Step, Logo, LogosContent, ContentLink, LinksContent, SitePlatformSettings
 )
 from bluebottle.geo.serializers import LocationSerializer
-from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
+from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
 
 
@@ -82,7 +80,7 @@ class StatsContentSerializer(serializers.ModelSerializer):
 
 
 class QuoteSerializer(serializers.ModelSerializer):
-    image = SorlImageField('800x600', crop='center')
+    image = SorlImageField('100x100', crop='center')
 
     class Meta:
         model = Quote
@@ -135,29 +133,16 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 
 
 class ProjectsMapContentSerializer(serializers.ModelSerializer):
-    projects = serializers.SerializerMethodField()
-
-    @memoize(timeout=60 * 60)
-    def get_projects(self, obj):
-        projects = Project.objects.filter(
-            campaign_ended__gte=self.context['start_date'],
-            campaign_ended__lte=self.context['end_date'],
-            status__slug__in=['done-complete', 'done-incomplete']
-        ).order_by(
-            '-status__sequence',
-            'campaign_ended'
-        )
-
-        return ProjectTinyPreviewSerializer(projects, many=True).to_representation(projects)
-
     def __repr__(self):
-        start = self.context['start_date'].strftime('%s') if self.context['start_date'] else 'none'
-        end = self.context['end_date'].strftime('%s') if self.context['end_date'] else 'none'
-        return 'MapsContent({},{})'.format(start, end)
+        if 'start_date' in self.context and 'end_date'in self.context:
+            start = self.context['start_date'].strftime('%s') if self.context['start_date'] else 'none'
+            end = self.context['end_date'].strftime('%s') if self.context['end_date'] else 'none'
+            return 'MapsContent({},{})'.format(start, end)
+        return 'MapsContent'
 
     class Meta:
         model = ProjectImagesContent
-        fields = ('id', 'type', 'title', 'sub_title', 'projects',)
+        fields = ('id', 'type', 'title', 'sub_title')
 
 
 class ProjectsContentSerializer(serializers.ModelSerializer):
@@ -197,6 +182,17 @@ class SlideSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Slide
+        fields = (
+            'background_image',
+            'body',
+            'id',
+            'image',
+            'link_text',
+            'link_url',
+            'tab_text',
+            'title',
+            'video',
+        )
 
 
 class SlidesContentSerializer(serializers.ModelSerializer):
@@ -232,7 +228,7 @@ class StepsContentSerializer(serializers.ModelSerializer):
 
 
 class LogoSerializer(serializers.ModelSerializer):
-    image = SorlImageField('800x600', crop='center')
+    image = SorlImageField('x150', crop='center')
 
     class Meta:
         model = Logo
@@ -425,7 +421,7 @@ class HomePageSerializer(serializers.ModelSerializer):
         fields = ('id', 'blocks')
 
 
-class SiteContentSettingsSerializer(serializers.ModelSerializer):
+class SitePlatformSettingsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SitePlatformSettings

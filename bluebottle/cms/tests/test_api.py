@@ -1,14 +1,12 @@
-from datetime import timedelta, date, datetime
+from datetime import timedelta
 from decimal import Decimal
-import random
-import os
 
 import mock
 
 from django.contrib.auth.models import Permission, Group
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
-from django.utils.timezone import now, get_current_timezone
+from django.utils.timezone import now
 from moneyed.classes import Money
 
 from rest_framework import status
@@ -21,7 +19,6 @@ from bluebottle.cms.models import (
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings
 )
-from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -164,15 +161,6 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(survey['answers'], [])
 
     def test_results_map(self):
-        done_complete = ProjectPhase.objects.get(slug='done-complete')
-        done_incomplete = ProjectPhase.objects.get(slug='done-incomplete')
-
-        for _index in range(0, 10):
-            ProjectFactory.create(
-                status=done_complete if _index % 2 == 0 else done_incomplete,
-                campaign_ended=now() - timedelta(days=random.choice(range(0, 30))),
-            )
-
         ProjectsMapContent.objects.create_for_placeholder(self.placeholder, title='Test title')
 
         response = self.client.get(self.url)
@@ -183,37 +171,6 @@ class ResultPageTestCase(BluebottleTestCase):
 
         data = response.data['blocks'][0]
         self.assertEqual(data['type'], 'projects-map')
-        self.assertEqual(len(data['projects']), 10)
-
-        project = data['projects'][0]
-
-        for key in ('title', 'slug', 'status', 'image', 'latitude', 'longitude'):
-            self.assertTrue(key in project)
-
-        # The last project in the list should be the completed (status == done-complete) one
-        # that has most recent campaign ended timestamp.
-        highlighted = Project.objects.filter(status__slug='done-complete').order_by('-campaign_ended')[0]
-        self.assertEqual(highlighted.id, int(data['projects'][9]['id']))
-
-    def test_results_map_end_date_inclusive(self):
-        self.page.start_date = date(2016, 1, 1)
-        self.page.end_date = date(2016, 12, 31)
-        self.page.save()
-
-        done_complete = ProjectPhase.objects.get(slug='done-complete')
-        ProjectFactory.create_batch(
-            10,
-            status=done_complete,
-            campaign_ended=datetime(2016, 12, 31, 12, 00, tzinfo=get_current_timezone())
-        )
-
-        ProjectsMapContent.objects.create_for_placeholder(self.placeholder, title='Test title')
-        response = self.client.get(self.url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-        data = response.data['blocks'][0]
-        self.assertEqual(data['type'], 'projects-map')
-        self.assertEqual(len(data['projects']), 10)
 
     def test_results_list(self):
         survey = SurveyFactory.create()
@@ -332,7 +289,7 @@ class HomePageTestCase(BluebottleTestCase):
 
         for slide in response.data['blocks'][0]['slides']:
             self.assertTrue(slide['image'].startswith('/media'))
-            self.assertTrue(slide['image'].endswith('jpg'))
+            self.assertTrue(slide['image'].endswith('png'))
 
     def test_slides_svg(self):
         block = SlidesContent.objects.create_for_placeholder(self.placeholder)
@@ -347,8 +304,14 @@ class HomePageTestCase(BluebottleTestCase):
 
         for slide in response.data['blocks'][0]['slides']:
             self.assertTrue(slide['image'].startswith('/media'))
-            import ipdb; ipdb.set_trace()
             self.assertTrue(slide['image'].endswith('svg'))
+
+    def test_map(self):
+        ProjectsMapContent.objects.create_for_placeholder(self.placeholder)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'projects-map')
 
 
 class SitePlatformSettingsTestCase(BluebottleTestCase):

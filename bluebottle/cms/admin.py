@@ -15,7 +15,7 @@ from bluebottle.statistics.statistics import Statistics
 
 from bluebottle.cms.models import (
     SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
-    Stat, Quote, Slide, Step, Logo, ContentLink, ResultPage, HomePage
+    Stat, Quote, Slide, Step, Logo, ContentLink, ResultPage, HomePage,
 )
 
 

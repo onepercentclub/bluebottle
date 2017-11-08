@@ -3,14 +3,14 @@ from django.utils.translation import ugettext_lazy as _
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from bluebottle.cms.admin import (
-    QuoteInline, StatInline, SlideInline, StepInline, LogoInline, LinkInline
+    QuoteInline, StatInline, SlideInline, StepInline, LogoInline, LinkInline,
 )
 from bluebottle.cms.models import (
     QuotesContent, StatsContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, StepsContent, SlidesContent,
     CategoriesContent, LocationsContent, LogosContent,
-    LinksContent
+    LinksContent,
 )
 
 

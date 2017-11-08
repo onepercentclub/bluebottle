@@ -289,7 +289,7 @@ class HomePageTestCase(BluebottleTestCase):
 
         for slide in response.data['blocks'][0]['slides']:
             self.assertTrue(slide['image'].startswith('/media'))
-            self.assertTrue(slide['image'].endswith('jpg'))
+            self.assertTrue(slide['image'].endswith('png'))
 
     def test_slides_svg(self):
         block = SlidesContent.objects.create_for_placeholder(self.placeholder)

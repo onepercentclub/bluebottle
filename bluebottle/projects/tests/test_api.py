@@ -930,7 +930,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         self.assertEqual(response.status_code, 403)
 
-
     def test_project_document_staff_session_user(self):
         self.another_user.groups.add(
             Group.objects.get(name='Staff')

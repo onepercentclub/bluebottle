@@ -268,7 +268,7 @@ class WelcomeContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WelcomeContent
-        fields = ('type', 'preamble', 'greeting')
+        fields = ('id', 'type', 'preamble', 'greeting')
 
 
 class LocationsContentSerializer(serializers.ModelSerializer):

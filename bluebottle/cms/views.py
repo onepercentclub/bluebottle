@@ -3,8 +3,8 @@ from pytz import timezone
 
 from django.conf import settings
 
-from bluebottle.cms.models import ResultPage
-from bluebottle.cms.serializers import ResultPageSerializer
+from bluebottle.cms.models import ResultPage, HomePage
+from bluebottle.cms.serializers import ResultPageSerializer, HomePageSerializer
 
 from bluebottle.utils.views import RetrieveAPIView
 
@@ -28,3 +28,8 @@ class ResultPageDetail(RetrieveAPIView):
             )
         )
         return context
+
+
+class HomePageDetail(RetrieveAPIView):
+    queryset = HomePage.objects.all()
+    serializer_class = HomePageSerializer

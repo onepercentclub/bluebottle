@@ -110,8 +110,9 @@ class DonationAdmin(admin.ModelAdmin):
     export_fields = [
         ('project', 'project'),
         ('order__user', 'user'),
+        ('order__user__full_name', 'name'),
         ('order__user__remote_id', 'remote id'),
-        ('name', 'name'),
+        ('name', 'name on donation'),
         ('fundraiser', 'fundraiser'),
         ('amount', 'amount'),
         ('created', 'created'),

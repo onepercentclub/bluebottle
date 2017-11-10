@@ -40,12 +40,8 @@ from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     Wallpost, MediaWallpostPhoto, MediaWallpost, TextWallpost
 )
-from .mails import (
-    mail_project_funded_internal, mail_project_complete,
-    mail_project_incomplete
-)
-from .signals import project_funded
-
+from .mails import mail_project_complete, mail_project_incomplete
+from .signals import project_funded  # NOQA
 
 logger = logging.getLogger(__name__)
 
@@ -317,23 +313,13 @@ class Project(BaseProject, PreviousStatusMixin):
                 self.amount_extra.amount, self.amount_asked.currency
             )
 
-        # FIXME: Clean up this code, make it readable
         # Project is not ended, complete, funded or stopped and its deadline has expired.
         if not self.campaign_ended and self.deadline < timezone.now() \
                 and self.status.slug not in ["done-complete",
                                              "done-incomplete",
                                              "closed",
                                              "voting-done"]:
-            if self.amount_asked.amount > 0 and self.amount_donated.amount <= 20 \
-                    or not self.campaign_started:
-                self.status = ProjectPhase.objects.get(slug="closed")
-            elif self.amount_asked.amount > 0 \
-                    and self.amount_donated >= self.amount_asked:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
-                self.payout_status = 'needs_approval'
-            else:
-                self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                self.payout_status = 'needs_approval'
+            self.update_status_after_deadline()
             self.campaign_ended = self.deadline
 
         if self.payout_status == 'success' and not self.campaign_paid_out:
@@ -341,6 +327,11 @@ class Project(BaseProject, PreviousStatusMixin):
 
         if self.payout_status == 're_scheduled' and self.campaign_paid_out:
             self.campaign_paid_out = None
+
+        # If the project is re-opened, payout-status should be cleaned
+        if self.status.slug not in ["done-complete", "done-incomplete"] and  \
+                self.payout_status == 'needs_approval':
+            self.payout_status = None
 
         if not self.task_manager:
             self.task_manager = self.owner
@@ -662,8 +653,7 @@ class Project(BaseProject, PreviousStatusMixin):
             self.status = ProjectPhase.objects.get(slug='done-complete')
             self.save()
 
-    def deadline_reached(self):
-        # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
+    def update_status_after_deadline(self):
         if self.is_funding:
             if self.amount_donated >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
@@ -681,6 +671,10 @@ class Project(BaseProject, PreviousStatusMixin):
                 self.status = ProjectPhase.objects.get(slug="done-incomplete")
             else:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
+
+    def deadline_reached(self):
+        # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
+        self.update_status_after_deadline()
         self.campaign_ended = now()
         self.save()
 
@@ -810,13 +804,6 @@ class ProjectPlatformSettings(BasePlatformSettings):
     class Meta:
         verbose_name_plural = _('project platform settings')
         verbose_name = _('project platform settings')
-
-
-@receiver(project_funded, weak=False, sender=Project,
-          dispatch_uid="email-project-team-project-funded")
-def email_project_team_project_funded(sender, instance, first_time_funded,
-                                      **kwargs):
-    mail_project_funded_internal(instance)
 
 
 @receiver(post_init, sender=Project,

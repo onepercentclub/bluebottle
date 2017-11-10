@@ -18,7 +18,7 @@ from bluebottle.cms.models import (
     StatsContent, QuotesContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings,
-    LinksContent
+    LinksContent, WelcomeContent
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -27,7 +27,7 @@ from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory,
-    QuoteFactory, SlideFactory, ContentLinkFactory
+    QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
 from sorl_watermarker.engines.pil_engine import Engine
@@ -325,6 +325,25 @@ class HomePageTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['blocks'][0]['type'], 'links')
+
+    def test_welcome(self):
+        block = WelcomeContent.objects.create_for_placeholder(
+            self.placeholder, preamble='Hi')
+
+        greetings = ['Some greeting', 'Another greeting']
+        for greeting in greetings:
+            GreetingFactory.create(block=block, text='Some greeting')
+            GreetingFactory.create(block=block, text='Some greeting')
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'welcome')
+
+        block = response.data['blocks'][0]
+
+        self.assertEqual(block['preamble'], 'Hi')
+        self.assertTrue(block['greeting'] in greetings)
 
 
 class SitePlatformSettingsTestCase(BluebottleTestCase):

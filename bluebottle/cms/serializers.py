@@ -18,7 +18,8 @@ from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
-    SlidesContent, Slide, Step, Logo, LogosContent, ContentLink, LinksContent, SitePlatformSettings
+    SlidesContent, Slide, Step, Logo, LogosContent, ContentLink, LinksContent,
+    SitePlatformSettings, WelcomeContent
 )
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer
@@ -259,6 +260,17 @@ class LinksContentSerializer(serializers.ModelSerializer):
         fields = ('id', 'type', 'title', 'sub_title', 'links', )
 
 
+class WelcomeContentSerializer(serializers.ModelSerializer):
+    greeting = serializers.SerializerMethodField()
+
+    def get_greeting(self, instance):
+        return instance.greetings.order_by('?')[0].text
+
+    class Meta:
+        model = WelcomeContent
+        fields = ('type', 'preamble', 'greeting')
+
+
 class LocationsContentSerializer(serializers.ModelSerializer):
     locations = LocationSerializer(many=True)
 
@@ -388,6 +400,8 @@ class BlockSerializer(serializers.Serializer):
             serializer = LogosContentSerializer
         elif isinstance(obj, LinksContent):
             serializer = LinksContentSerializer
+        elif isinstance(obj, WelcomeContent):
+            serializer = WelcomeContentSerializer
         else:
             serializer = DefaultBlockSerializer
 

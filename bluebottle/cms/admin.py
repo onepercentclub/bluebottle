@@ -16,6 +16,7 @@ from bluebottle.statistics.statistics import Statistics
 from bluebottle.cms.models import (
     SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
     Stat, Quote, Slide, Step, Logo, ContentLink, ResultPage, HomePage,
+    Greeting
 )
 
 
@@ -111,6 +112,11 @@ class LogoInline(NestedStackedInline):
 
 class LinkInline(NestedStackedInline):
     model = ContentLink
+    extra = 1
+
+
+class GreetingInline(NestedStackedInline):
+    model = Greeting
     extra = 1
 
 

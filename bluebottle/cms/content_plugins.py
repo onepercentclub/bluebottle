@@ -4,13 +4,14 @@ from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from bluebottle.cms.admin import (
     QuoteInline, StatInline, SlideInline, StepInline, LogoInline, LinkInline,
+    GreetingInline
 )
 from bluebottle.cms.models import (
     QuotesContent, StatsContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, StepsContent, SlidesContent,
     CategoriesContent, LocationsContent, LogosContent,
-    LinksContent,
+    LinksContent, WelcomeContent
 )
 
 
@@ -122,4 +123,11 @@ class LogosBlockPlugin(CMSContentPlugin):
 class LinksBlockPlugin(CMSContentPlugin):
     model = LinksContent
     inlines = [LinkInline]
+    category = _('Homepage')
+
+
+@plugin_pool.register
+class WelcomeBlockPlugin(CMSContentPlugin):
+    model = WelcomeContent
+    inlines = [GreetingInline]
     category = _('Homepage')

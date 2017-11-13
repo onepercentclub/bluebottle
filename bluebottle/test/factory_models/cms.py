@@ -6,7 +6,7 @@ from django.utils.timezone import now
 from bluebottle.cms.models import (
     ResultPage, HomePage, Stat, Quote, Slide,
     SiteLinks, LinkGroup, Link, LinkPermission,
-    ContentLink
+    ContentLink, Greeting
 )
 from bluebottle.test.factory_models.utils import LanguageFactory
 
@@ -51,6 +51,11 @@ class ContentLinkFactory(factory.DjangoModelFactory):
 class SlideFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Slide
+
+
+class GreetingFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = Greeting
 
 
 class SiteLinksFactory(factory.DjangoModelFactory):

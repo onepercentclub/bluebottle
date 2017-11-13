@@ -444,6 +444,24 @@ class LinksContent(TitledContent):
         return unicode(_('Links'))
 
 
+class Greeting(models.Model):
+    block = models.ForeignKey('cms.WelcomeContent', related_name='greetings')
+    text = models.TextField()
+
+
+class WelcomeContent(ContentItem):
+    type = 'welcome'
+    preview_template = 'admin/cms/preview/links.html'
+
+    preamble = models.CharField(max_length=20)
+
+    class Meta:
+        verbose_name = _('Welcome')
+
+    def __unicode__(self):
+        return u'Welcome'
+
+
 class SitePlatformSettings(BasePlatformSettings):
     contact_email = models.EmailField(null=True, blank=True)
     contact_phone = models.CharField(max_length=100, null=True, blank=True)

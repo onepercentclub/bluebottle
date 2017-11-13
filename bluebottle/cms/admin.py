@@ -6,17 +6,18 @@ from django.shortcuts import redirect
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django_singleton_admin.admin import SingletonAdmin
-
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
-from parler.admin import TranslatableAdmin, TranslatableStackedInline
+from parler.admin import TranslatableAdmin
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
+from nested_inline.admin import NestedStackedInline
+
+from bluebottle.statistics.statistics import Statistics
 
 from bluebottle.cms.models import (
     SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
-    Stats, Stat, Quotes, Quote, ResultPage, Projects
+    Stat, Quote, Slide, Step, Logo, ContentLink, ResultPage, HomePage,
+    Greeting
 )
-from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.statistics.statistics import Statistics
 
 
 class LinkPermissionAdmin(admin.ModelAdmin):
@@ -78,9 +79,10 @@ class SiteLinksAdmin(NonSortableParentAdmin):
     inlines = [LinkGroupInline]
 
 
-class StatInline(TranslatableStackedInline, SortableStackedInline):
+class StatInline(NestedStackedInline, SortableStackedInline):
     model = Stat
     extra = 1
+    fields = ('type', 'definition', 'title', 'value')
 
     readonly_fields = ['definition']
 
@@ -88,28 +90,34 @@ class StatInline(TranslatableStackedInline, SortableStackedInline):
         return getattr(Statistics, obj.type).__doc__
 
 
-class StatsAdmin(ImprovedModelForm, NonSortableParentAdmin):
-    inlines = [StatInline]
-
-
-class QuoteInline(TranslatableStackedInline):
+class QuoteInline(NestedStackedInline):
     model = Quote
     extra = 1
 
 
-class ProjectInline(admin.StackedInline):
-    model = Projects.projects.through
-    raw_id_fields = ('project', )
+class SlideInline(NestedStackedInline):
+    model = Slide
     extra = 1
 
 
-class QuotesAdmin(ImprovedModelForm, admin.ModelAdmin):
-    inlines = [QuoteInline]
+class StepInline(NestedStackedInline):
+    model = Step
+    extra = 1
 
 
-class ProjectsAdmin(ImprovedModelForm, admin.ModelAdmin):
-    inlines = [ProjectInline]
-    exclude = ('projects', )
+class LogoInline(NestedStackedInline):
+    model = Logo
+    extra = 1
+
+
+class LinkInline(NestedStackedInline):
+    model = ContentLink
+    extra = 1
+
+
+class GreetingInline(NestedStackedInline):
+    model = Greeting
+    extra = 1
 
 
 class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
@@ -128,14 +136,20 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
+class HomePageAdmin(SingletonAdmin, PlaceholderFieldAdmin, TranslatableAdmin):
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
+    }
+
+    fields = ('content', )
+
+
 class SitePlatformSettingsAdmin(SingletonAdmin):
     pass
 
 
-admin.site.register(Stats, StatsAdmin)
-admin.site.register(Quotes, QuotesAdmin)
-admin.site.register(Projects, ProjectsAdmin)
 admin.site.register(ResultPage, ResultPageAdmin)
+admin.site.register(HomePage, HomePageAdmin)
 admin.site.register(SiteLinks, SiteLinksAdmin)
 admin.site.register(LinkGroup, LinkGroupAdmin)
 admin.site.register(LinkPermission, LinkPermissionAdmin)

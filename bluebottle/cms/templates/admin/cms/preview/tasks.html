@@ -1,0 +1,5 @@
+<ul>
+{% for task in instance.tasks.all %}
+    <li>{{ task.title }}</li>
+{% endfor %}
+</ul>

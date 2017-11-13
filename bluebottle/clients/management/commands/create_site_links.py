@@ -119,10 +119,12 @@ class Command(BaseCommand):
                                                                                   present=perm.get('present', True))
 
                                 l.link_permissions.add(p)
-                                self._log(u'    Permission called {} ({}) for {}'.format(perm['permission'],
-                                                                                        perm['present'],
-                                                                                        link.get('title', 'N/A')),
-                                          created)
+                                self._log(u'    Permission called {} ({}) for {}'.format(
+                                    perm['permission'],
+                                    perm['present'],
+                                    link.get('title', 'N/A')),
+                                    created
+                                )
 
     def handle(self, *args, **options):
         if options['all'] and options['tenant']:

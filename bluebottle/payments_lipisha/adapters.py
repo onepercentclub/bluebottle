@@ -207,81 +207,13 @@ class LipishaPaymentInterface(object):
 
     def initiate_payment(self, data):
         """
-        Documentation
-
-        api_key	Your Lipisha API key.	3aa67677e8bf1d4c8fe886a38c03a860
-        api_signature	Your Lipisha API signature.	SYetmwsNnb5bwaZRyeQKhZNNkCoEx+5x=
-        api_version	Version of the API	2.0.0
-        api_type	Type of handshake or callback	Initiate
-        transaction	Unique transaction idenitifier.	CU79AW109D
-        transaction_reference	Similar to transaction	CU79AW109D
-        transaction_type	Payment, Payout, Reversal, Settlement
-        transaction_country	KE (Kenya), RW (Rwanda), UG (Uganda), TZ (Tanzania)
-        transaction_method	Method used to carry out a transaction.
-        transaction_date	Date and time of the transaction. In the format: YYYY-MM-DD HH:mm:ss 013-02-02 12:30:45
-        transaction_currency	Currency of the transaction. In 3 letter international ISO format.
-        transaction_amount	Value of the transaction.	100.00
-        transaction_paybill	Paybill, business number, till number, merchant nickname,
-            or merchant number used for the transaction	961700
-        transaction_paybill_type	Type of the Paybill. Options are: Shared, Dedicated
-        transaction_account	Number of the transaction account.	000075
-        transaction_account_number	Similar to transaction_account	000075
-        transaction_account_name	Name of the transaction account.	Test Account
-        transaction_merchant_reference	Reference a person or entity used when executing a transaction.
-            E.g. invoice, receipt, member number	LS0009
-        transaction_name	Name of the person or entity that made a transaction.	JOHN JANE DOE
-        transaction_mobile	Mobile number of the person or entity that made a transaction.	254722002222
-        transaction_email	Email of the person or entity that made a transaction.	test@test.com
-        transaction_code	Unique code returned by the mobile money network or financial service provider
-            E.g the M-Pesa confirmation code	CU79AW109D
-        transaction_status	Status of a transaction. Options are: Completed, Failed
-
-        An actual (test) post
-
-        api_key=c41a9c4986625499f30c1047e004d216
-        api_signature=jtFAPZ7AO%2FMUz%2Bt8hzZ9LbX0uB1cXIDJj2upVKj6PauLbvMeu11N4J5q670W2YJ14NhdZEjrxIMnEQktQRGTzzAMJIWjQK%2FLztGIDHwavBf6Eyhmq8NrSiMswaNpeMFbS7oeHALPepWcPN9P3RXK3h5d3HygGkKiGQi9suGvEDI%3D
-        api_version=1.0.4
-        api_type=Initiate
-        transaction_date=2017-10-28+18%3A42%3A46
-        transaction_amount=1500
-        transaction_type=Payment
-        transaction_method=Paybill+%28M-Pesa%29
-        transaction=7ACCB5CC8
-        transaction_reference=7ACCB5CC8
-        transaction_name=FRANCIS+JOAN+RACHEL
-        transaction_mobile=31654631419
-        transaction_paybill=961700
-        transaction_paybill_type=Shared
-        transaction_account=03858%231234
-        transaction_account_number=03858
-        transaction_merchant_reference=1234
-        transaction_email=
-        transaction_account_name=Primary
-        transaction_code=7ACCB5CC8
-        transaction_status=Completed
-        transaction_country=KE
-        transaction_currency=KES
-
-        Response suggested by documentation
-        http://developer.lipisha.com/index.php/app/launch/ipn_process_callback
-        {
-            "api_key": "3aa67677e8bf1d4c8fe886a38c03a860",
-            "api_signature": "SYetmwsNnb5bwaZRyeQKhZNNkCoEx+5x=",
-            "api_version": "2.0.0",
-            "api_type": "Receipt",
-            "transaction_reference": "CU79AW109",
-            "transaction_status_code": "001",
-            "transaction_status": "SUCCESS",
-            "transaction_status_description": "Transaction received successfully.",
-            "transaction_status_action": "ACCEPT",
-            "transaction_status_reason": "VALID_TRANSACTION",
-            "transaction_custom_sms": "Dear JOHN JANE DOE, your payment of KES 100.00 via CU79AW109D was received."
-        }
+        Look for an existing payment and update that or create a new one.
         """
         account_number = data['transaction_account_number']
         transaction_merchant_reference = data['transaction_merchant_reference']
         transaction_reference = data['transaction_reference']
         payment = None
+        order_payment = None
 
         # If account number has a # then it is a donation started at our platform
         if transaction_merchant_reference:
@@ -337,7 +269,10 @@ class LipishaPaymentInterface(object):
 
         payment.response = json.dumps(data)
         for k, v in data.items():
-            setattr(payment, k, v)
+            try:
+                setattr(payment, k, v)
+            except AttributeError:
+                pass
 
         payment.transaction_mobile_number = data['transaction_mobile']
         payment.reference = data['transaction_mobile']

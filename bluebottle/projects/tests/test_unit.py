@@ -411,6 +411,16 @@ class TestModel(BluebottleTestCase):
 
         self.assertFalse(self.project.expertise_based)
 
+    def test_donated_percentage(self):
+        self.project.amount_asked = Money(0, 'EUR')
+        self.assertEqual(self.donated_percentage, 0)
+        self.project.amount_asked = Money(20, 'EUR')
+        self.project.amount_donated = Money(40, 'EUR')
+        self.assertEqual(self.donated_percentage, 100)
+        self.project.amount_asked = Money(20, 'EUR')
+        self.project.amount_donated = Money(10, 'EUR')
+        self.assertEqual(self.donated_percentage, 50)
+
 
 class TestProjectTheme(BluebottleTestCase):
     def setUp(self):

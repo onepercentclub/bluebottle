@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
                 'verbose_name': 'task',
                 'verbose_name_plural': 'tasks',
             },
-            bases=(models.Model, bluebottle.utils.utils.GetTweetMixin),
+            bases=(models.Model, ),
         ),
         migrations.CreateModel(
             name='TaskFile',

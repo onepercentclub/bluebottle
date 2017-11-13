@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import importlib
 import itertools
 from collections import namedtuple, defaultdict
 import re
@@ -100,6 +101,75 @@ def get_currencies():
     return currencies
 
 
+def get_user_site_links(user):
+    from bluebottle.cms.models import SiteLinks
+
+    site_links = SiteLinks.objects.first()
+
+    # If no site links set, just return empty
+    if not site_links:
+        return {}
+
+    response = {
+        'hasCopyright': site_links.has_copyright,
+        'groups': []
+    }
+
+    for group in site_links.link_groups.all():
+        links = []
+
+        for link in group.links.all():
+            allowed = True
+            if link.link_permissions.exists():
+                # Check permissions
+                for perm in link.link_permissions.all():
+                    # has_perm  present allowed
+                    # yes       yes     yes
+                    # yes       no      no
+                    # no        yes     no
+                    # no        no      yes
+                    allowed = (user.has_perm(perm.permission) == perm.present) and allowed
+
+            if not allowed:
+                continue
+
+            link_data = {
+                'title': link.title,
+                'isHighlighted': link.highlight,
+                'sequence': link.link_order
+            }
+
+            if link.component:
+                link_data['route'] = link.component
+            if link.component_id:
+                link_data['param'] = link.component_id
+            elif link.external_link:
+                link_data['route'] = link.external_link
+                link_data['external'] = True
+
+            links.append(link_data)
+
+        response['groups'].append({
+            'title': group.title,
+            'name': group.name,
+            'sequence': group.group_order,
+            'links': links
+        })
+
+    return response
+
+
+def get_platform_settings(name):
+
+    app_name, model_name = name.split('.')
+    model_app_name = 'bluebottle.{}.models'.format(app_name)
+    settings_class = getattr(importlib.import_module(model_app_name), model_name)
+    settings_object = settings_class.objects.get()
+    serializer_app_name = 'bluebottle.{}.serializers'.format(app_name)
+    serializer_class = getattr(importlib.import_module(serializer_app_name), "{}Serializer".format(model_name))
+    return serializer_class(settings_object).to_representation(settings_object)
+
+
 def get_public_properties(request):
     """
 
@@ -136,8 +206,10 @@ def get_public_properties(request):
 
     # First load tenant settings that should always be exposed
     if connection.tenant:
+
         current_tenant = connection.tenant
         properties = get_tenant_properties()
+
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),
             'defaultAvatarUrl': "/images/default-avatar.png",
@@ -148,7 +220,13 @@ def get_public_properties(request):
             'recurringDonationsEnabled': getattr(properties, 'RECURRING_DONATIONS_ENABLED', False),
             'siteName': current_tenant.name,
             'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')],
-            'languageCode': get_language()
+            'languageCode': get_language(),
+            'siteLinks': get_user_site_links(request.user),
+            'platform': {
+                'content': get_platform_settings('cms.SitePlatformSettings'),
+                'projects': get_platform_settings('projects.ProjectPlatformSettings'),
+                'analytics': get_platform_settings('analytics.AnalyticsPlatformSettings')
+            }
         }
         try:
             config['readOnlyFields'] = {

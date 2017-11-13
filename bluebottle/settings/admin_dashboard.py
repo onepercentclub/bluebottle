@@ -99,6 +99,15 @@ FLUENT_DASHBOARD_APP_GROUPS = (
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
     }),
+    (_('Settings'), {
+        'models': (
+            'bluebottle.cms.models.SitePlatformSettings',
+            'bluebottle.projects.models.ProjectPlatformSettings',
+            'bluebottle.analytics.models.AnalyticsPlatformSettings',
+        ),
+        'module': 'fluent_dashboard.modules.AppIconList',
+        'collapsible': False,
+    }),
     # The '*' selector acts like a fallback for all other apps. This section mainly displays models
     # with tabular data that is rarely touched. The important models have an icon.
     (_('Applications'), {

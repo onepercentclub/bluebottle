@@ -1,10 +1,16 @@
-from moneyed.classes import Money
+from moneyed.classes import Money, KES
 
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.donations.models import Donation
 from bluebottle.payments.models import OrderPayment
+from bluebottle.payments_lipisha.adapters import LipishaPaymentAdapter, LipishaPaymentInterface
+from bluebottle.payments_lipisha.tests.factory_models import LipishaProjectFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -110,3 +116,66 @@ class PaymentLipishaApiTests(BluebottleTestCase):
         self.assertEqual(payload['business_number'], '1234')
         self.assertEqual(payload['account_number'], '353535#{}'.format(order_payment.id))
         self.assertEqual(payload['amount'], 250000)
+
+
+@override_settings(**lipisha_settings)
+class LipishaInitiatePaymentViewTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.project = ProjectFactory.create()
+        LipishaProjectFactory.create(project=self.project, account_number='424242')
+        self.interface = LipishaPaymentInterface()
+        self.order = OrderFactory.create()
+        self.donation = DonationFactory.create(
+            amount=Money(1500, KES),
+            order=self.order,
+            project=self.project
+        )
+        self.order_payment = OrderPaymentFactory.create(
+            payment_method='lipishaMpesa',
+            order=self.order
+        )
+        self.adapter = LipishaPaymentAdapter(self.order_payment)
+        self.lipisha_update_url = reverse('lipisha-initiate-payment')
+
+    def test_create_donation_from_lipisha_call(self):
+        data = {
+            'transaction_account': '424242',
+            'transaction_account_number': '424242',
+            'transaction_merchant_reference': '',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Completed',
+            'transaction_mobile': '25471000000',
+            'transaction_type': 'Payment'
+        }
+        response = self.client.post(self.lipisha_update_url, data)
+        expected = {
+            'transaction_status_code': '001',
+            'transaction_status_description': 'Transaction received successfully.',
+            'api_key': '1234567890',
+            'transaction_status': 'SUCCESS',
+            'transaction_custom_sms': 'Dear Sam Gichuru, thanks for your donation 7ACCB5CC8 '
+                                      'of KES 1750 to {}!'.format(self.project.title),
+            'transaction_status_action': 'ACCEPT',
+            'transaction_reference': 399,
+            'transaction_status_reason': 'VALID_TRANSACTION',
+            'api_version': '1.0.4',
+            'api_type': 'Payment'
+        }
+
+        # There should be a new donation for this project
+        donation = Donation.objects.order_by('-id').first()
+        self.assertEqual(donation.project, self.project)
+        self.assertEqual(donation.status, 'success')
+        self.assertEqual(donation.amount.amount, 1750.00)
+        self.assertEqual(donation.name, 'Sam Gichuru')
+
+        # Check that the response is confirm the specification by Lipisha
+        self.assertEqual(response.json()['api_key'], expected['api_key'])
+        self.assertEqual(response.json()['transaction_status_action'], expected['transaction_status_action'])
+        self.assertEqual(response.json()['transaction_reference'], donation.order.order_payment.id)
+        self.assertEqual(response.json()['transaction_custom_sms'], expected['transaction_custom_sms'])
+        self.assertEqual(response.json()['api_type'], expected['api_type'])

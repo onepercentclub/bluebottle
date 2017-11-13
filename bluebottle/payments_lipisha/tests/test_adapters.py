@@ -1,13 +1,16 @@
+from bluebottle.donations.models import Donation
 from bluebottle.payments.exception import PaymentException
 from moneyed.classes import Money, KES
 from mock import patch
 
 from django.test.utils import override_settings
 
-from bluebottle.payments_lipisha.adapters import LipishaPaymentAdapter
+from bluebottle.payments_lipisha.adapters import LipishaPaymentAdapter, LipishaPaymentInterface
+from bluebottle.payments_lipisha.tests.factory_models import LipishaProjectFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 lipisha_settings = {
@@ -18,7 +21,7 @@ lipisha_settings = {
             'api_key': '1234567890',
             'api_signature': '9784904749074987dlndflnlfgnh',
             'business_number': '1234',
-            'account_number': '012'
+            'account_number': '353535'
         }
     ]
 }
@@ -63,24 +66,28 @@ lipisha_not_found_response = {
 @override_settings(**lipisha_settings)
 class LipishaPaymentAdapterTestCase(BluebottleTestCase):
 
+    def setUp(self):
+        self.order = OrderFactory.create()
+        DonationFactory.create(amount=Money(1500, KES), order=self.order)
+        self.order_payment = OrderPaymentFactory.create(
+            payment_method='lipishaMpesa',
+            order=self.order
+        )
+        self.adapter = LipishaPaymentAdapter(self.order_payment)
+
     @patch('bluebottle.payments_lipisha.adapters.Lipisha')
     def test_create_success_payment(self, mock_client):
         """
         Test Lipisha M-PESA payment that turns to success.
         """
 
-        order = OrderFactory.create()
-        DonationFactory.create(amount=Money(1500, KES), order=order)
-        order_payment = OrderPaymentFactory.create(payment_method='lipishaMpesa',
-                                                   order=order)
-        adapter = LipishaPaymentAdapter(order_payment)
-        authorization_action = adapter.get_authorization_action()
+        authorization_action = self.adapter.get_authorization_action()
 
-        self.assertEqual(int(adapter.payment.reference), order_payment.id)
+        self.assertEqual(int(self.adapter.payment.reference), self.order_payment.id)
 
         self.assertEqual(authorization_action, {
             'payload': {
-                'account_number': '012#{}'.format(order_payment.id),
+                'account_number': '353535#{}'.format(self.order_payment.id),
                 'amount': 1500,
                 'business_number': '1234'
             },
@@ -91,8 +98,8 @@ class LipishaPaymentAdapterTestCase(BluebottleTestCase):
         instance = mock_client.return_value
         instance.get_transactions.return_value = lipisha_success_response
 
-        order_payment.integration_data = {}
-        adapter = LipishaPaymentAdapter(order_payment)
+        self.order_payment.integration_data = {}
+        adapter = LipishaPaymentAdapter(self.order_payment)
         adapter.check_payment_status()
         authorization_action = adapter.get_authorization_action()
         self.assertEqual(adapter.payment.transaction_amount, '1500.0000')
@@ -106,19 +113,13 @@ class LipishaPaymentAdapterTestCase(BluebottleTestCase):
         """
         Test Lipisha M-PESA payment that turns to success.
         """
+        authorization_action = self.adapter.get_authorization_action()
 
-        order = OrderFactory.create()
-        DonationFactory.create(amount=Money(1500, KES), order=order)
-        order_payment = OrderPaymentFactory.create(payment_method='lipishaMpesa',
-                                                   order=order)
-        adapter = LipishaPaymentAdapter(order_payment)
-        authorization_action = adapter.get_authorization_action()
-
-        self.assertEqual(int(adapter.payment.reference), order_payment.id)
+        self.assertEqual(int(self.adapter.payment.reference), self.order_payment.id)
 
         self.assertEqual(authorization_action, {
             'payload': {
-                'account_number': '012#{}'.format(order_payment.id),
+                'account_number': '353535#{}'.format(self.order_payment.id),
                 'amount': 1500,
                 'business_number': '1234'
             },
@@ -130,12 +131,70 @@ class LipishaPaymentAdapterTestCase(BluebottleTestCase):
         instance = mock_client.return_value
         instance.get_transactions.return_value = lipisha_not_found_response
 
-        order_payment.integration_data = {}
-        adapter = LipishaPaymentAdapter(order_payment)
+        self.order_payment.integration_data = {}
+        adapter = LipishaPaymentAdapter(self.order_payment)
 
         with self.assertRaises(PaymentException):
             adapter.check_payment_status()
 
+
+@override_settings(**lipisha_settings)
+class LipishaPaymentInterfaceTestCase(BluebottleTestCase):
+    def setUp(self):
+        self.project = ProjectFactory.create()
+        self.interface = LipishaPaymentInterface()
+        LipishaProjectFactory.create(project=self.project, account_number='424242')
+        self.order = OrderFactory.create()
+        self.donation = DonationFactory.create(
+            amount=Money(1500, KES),
+            order=self.order,
+            project=self.project
+        )
+        self.order_payment = OrderPaymentFactory.create(
+            payment_method='lipishaMpesa',
+            order=self.order
+        )
+        self.adapter = LipishaPaymentAdapter(self.order_payment)
+
+    def test_update_donation_from_lipisha_call(self):
+        data = {
+            'transaction_account_number': '424242',
+            'transaction_merchant_reference': self.order_payment.id,
+            'transaction_reference': '',
+            'transaction_amount': '2500',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Completed',
+            'transaction_mobile': '25471000000'
+        }
+        self.interface.initiate_payment(data)
+        donation = Donation.objects.get(pk=self.donation.pk)
+        self.assertEqual(donation.status, 'success')
+        # Amount should be updated
+        self.assertEqual(donation.amount.amount, 2500.00)
+
+    def test_create_donation_from_lipisha_call(self):
+        data = {
+            'transaction_account_number': '424242',
+            'transaction_merchant_reference': '',
+            'transaction_reference': '',
+            'transaction_amount': '3500',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Completed',
+            'transaction_mobile': '25471000000'
+        }
+        self.interface.initiate_payment(data)
+        # Old donation should not be touched
+        old_donation = Donation.objects.get(pk=self.donation.pk)
+        self.assertEqual(old_donation.status, 'locked')
+
+        # There should be a new donation for this project
+        donation = Donation.objects.order_by('-id').first()
+        self.assertEqual(donation.project, self.project)
+        self.assertEqual(donation.status, 'success')
+        self.assertEqual(donation.amount.amount, 3500.00)
+        self.assertEqual(donation.name, 'Sam Gichuru')
 
 # Test for updating a payment create by normal donation flow
 # - Test it finds the payment and updates

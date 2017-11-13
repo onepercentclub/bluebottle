@@ -146,22 +146,6 @@ class LipishaPaymentInterface(object):
             transaction_account_manager=self.credentials['channel_manager']
         )
 
-        """
-        {
-            u'content': {
-                u'transaction_account_manager': u'test_account',
-                u'transaction_account_name': u'MPESA Payments',
-                u'transaction_account_number': u'09999',
-                u'transaction_account_type': u'1'
-            },
-            u'status': {
-                u'status': u'SUCCESS',
-                u'status_code': 0,
-                u'status_description': u'Account Created'
-            }
-        }
-        """
-
         try:
             account_number = response['content']['transaction_account_number']
 

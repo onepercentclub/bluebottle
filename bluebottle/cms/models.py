@@ -1,15 +1,15 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from adminsortable.models import SortableMixin
+from adminsortable.fields import SortableForeignKey
 from fluent_contents.models import PlaceholderField, ContentItem
 from fluent_contents.extensions import plugin_pool, ContentPlugin
-
 from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.surveys.models import Survey
 from bluebottle.projects.models import Project
-from adminsortable.models import SortableMixin
-from adminsortable.fields import SortableForeignKey
+from bluebottle.utils.models import BasePlatformSettings
 
 
 class ResultPage(TranslatableModel):
@@ -32,6 +32,69 @@ class ResultPage(TranslatableModel):
             ('api_change_resultpage', 'Can change result pages through the API'),
             ('api_delete_resultpage', 'Can delete result pages through the API'),
         )
+
+
+class LinkPermission(models.Model):
+    permission = models.CharField(max_length=255, null=False,
+                                  help_text=_('A dot separated app name and permission codename.'))
+    present = models.BooleanField(null=False, default=True,
+                                  help_text=_('Should the permission be present or not to access the link?'))
+
+    def __unicode__(self):
+        return u"{0} - {1}".format(self.permission, self.present)
+
+
+class SiteLinks(models.Model):
+    language = models.OneToOneField('utils.Language', null=False)
+    has_copyright = models.BooleanField(null=False, default=True)
+
+    class Meta:
+        verbose_name_plural = _("Site links")
+
+    def __unicode__(self):
+        return u"Site Links {0}".format(self.language.code.upper())
+
+
+class LinkGroup(SortableMixin):
+    GROUP_CHOICES = (
+        ('main', _('Main')),
+        ('about', _('About')),
+        ('info', _('Info')),
+        ('discover', _('Discover')),
+        ('social', _('Social')),
+    )
+
+    site_links = models.ForeignKey(SiteLinks, related_name='link_groups')
+    name = models.CharField(max_length=25, choices=GROUP_CHOICES, default='main')
+    title = models.CharField(_('Title'), blank=True, max_length=50)
+    group_order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['group_order']
+
+
+class Link(SortableMixin):
+    COMPONENT_CHOICES = (
+        ('page', _('Page')),
+        ('project', _('Project')),
+        ('task', _('Task')),
+        ('fundraiser', _('Fundraiser')),
+        ('results', _('Results')),
+        ('news', _('News')),
+    )
+
+    link_group = SortableForeignKey(LinkGroup, related_name='links')
+    link_permissions = models.ManyToManyField(LinkPermission, blank=True)
+    highlight = models.BooleanField(default=False)
+    title = models.CharField(_('Title'), null=False, max_length=100)
+    component = models.CharField(_('Component'), choices=COMPONENT_CHOICES, max_length=50,
+                                 blank=True, null=True)
+    component_id = models.CharField(_('Component ID'), max_length=100, blank=True, null=True)
+    external_link = models.CharField(_('External Link'), max_length=2000, blank=True, null=True)
+    link_order = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['link_order']
 
 
 class Stats(models.Model):
@@ -263,3 +326,16 @@ class ProjectMapBlockPlugin(ResultsContentPlugin):
 @plugin_pool.register
 class SupporterTotalBlockPlugin(ResultsContentPlugin):
     model = SupporterTotalContent
+
+
+class SitePlatformSettings(BasePlatformSettings):
+    contact_email = models.EmailField(null=True, blank=True)
+    contact_phone = models.CharField(max_length=100, null=True, blank=True)
+    copyright = models.CharField(max_length=100, null=True, blank=True)
+    powered_by_text = models.CharField(max_length=100, null=True, blank=True)
+    powered_by_link = models.CharField(max_length=100, null=True, blank=True)
+    powered_by_logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
+
+    class Meta:
+        verbose_name_plural = _('site platform settings')
+        verbose_name = _('site platform settings')

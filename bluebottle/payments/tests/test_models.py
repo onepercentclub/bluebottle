@@ -110,7 +110,7 @@ class PaymentTestCase(BluebottleTestCase):
     def test_info_text(self):
         self.assertEqual(
             self.order_payment.info_text,
-            'testserver via onepercentclub {id}'.format(
+            'testserver via goodup {id}'.format(
                 id=self.order_payment.id)
         )
 
@@ -124,6 +124,29 @@ class PaymentTestCase(BluebottleTestCase):
             self.order_payment.info_text,
             'onepercentclub.com donation {id}'.format(id=self.order_payment.id)
         )
+
+    def test_multiple_payments_to_an_order(self):
+        """
+        Test that a second order_payment can't transition an successful order.
+        """
+
+        second_order_payment = OrderPaymentFactory.create(order=self.order)
+
+        self.order_payment.started()
+        self.order_payment.authorized()
+        self.order_payment.settled()
+        self.order_payment.save()
+
+        # Order should be successful now
+        self.assertEqual(self.order.status, 'success')
+
+        second_order_payment.started()
+        second_order_payment.save()
+        second_order_payment.failed()
+        second_order_payment.save()
+
+        # Order should still be successful
+        self.assertEqual(self.order.status, 'success')
 
 
 class OrderPaymentTestCase(BluebottleTestCase):

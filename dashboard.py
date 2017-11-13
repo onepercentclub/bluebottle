@@ -4,7 +4,6 @@ from datetime import timedelta
 import pendulum
 from admin_tools.dashboard.models import DashboardModule
 from admin_tools.dashboard.modules import LinkList
-from django.conf import settings
 from django.core.urlresolvers import reverse_lazy, reverse
 from django.db.models import F, Count
 from django.db.models.aggregates import Sum
@@ -407,6 +406,7 @@ class CustomIndexDashboard(FluentIndexDashboard):
                     }
                 ]
             ))
-        if getattr(settings, 'ANALYTICS_BACKOFFICE_ENABLED', True):
+        if properties.ANALYTICS_BACKOFFICE_ENABLED:
             self.children.append(MetricsModule(title=_("Metrics"),))
+        if properties.PARTICIPATION_BACKOFFICE_ENABLED:
             self.children.append(ParticipationMetricsModule(title=_("Participation Metrics"), ))

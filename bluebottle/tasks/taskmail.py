@@ -3,7 +3,6 @@ from celery import shared_task
 from django.dispatch import receiver
 from django.db import connection
 from django.db.models.signals import pre_save, pre_delete, post_save
-from django.utils import translation
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
@@ -20,109 +19,107 @@ class TaskMemberMailSender:
     The base class for Task Mail senders
     """
 
-    def __init__(self, instance, *args, **kwargs):
+    def __init__(self, instance, message=None, *args, **kwargs):
         self.task_member = instance
         self.task = instance.task
-        self.task_link = '/go/tasks/{0}'.format(self.task.id)
-        self.site = tenant_url()
-        self.task_list = '/go/tasks'
-        self.project_link = '/go/projects/{0}'.format(self.task.project.slug)
-        self.cur_language = translation.get_language()
+
+        self.ctx = {
+            'task': self.task,
+            'message': message,
+            'receiver': self.receiver,
+            'sender': self.task_member.member,
+            'link': '/go/tasks/{0}'.format(self.task.id),
+            'site': tenant_url(),
+            'project_list': '/projects',
+            'project_link': '/projects/{0}'.format(self.task.project.slug),
+        }
+
+    @property
+    def receiver(self):
+        return self.task_member.member
+
+    @property
+    def sender(self):
+        return self.task.author
 
     def send(self):
-        send_mail(template_name=self.template_mail, subject=self.subject,
+        send_mail(template_name=self.template_name, subject=self.subject,
                   to=self.receiver, **self.ctx)
 
 
 class TaskMemberAppliedMail(TaskMemberMailSender):
-    def __init__(self, instance, *args, **kwargs):
-        TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
-        self.template_mail = 'task_member_applied.mail'
-        self.receiver = self.task.author
+    template_name = 'task_member_applied.mail'
 
+    def __init__(self, *args, **kwargs):
+        TaskMemberMailSender.__init__(self, *args, **kwargs)
+        self.ctx['motivation'] = self.task_member.motivation
+
+    @property
+    def subject(self):
         with TenantLanguage(self.task_member.member.primary_language):
-            self.subject = _('%(member)s applied for your task') % {
+            return _('%(member)s applied for your task') % {
                 'member': self.task_member.member.get_short_name()}
 
-        self.ctx = {'task': self.task, 'receiver': self.receiver,
-                    'sender': self.task_member.member,
-                    'link': self.task_link,
-                    'site': self.site,
-                    'motivation': self.task_member.motivation}
+    @property
+    def receiver(self):
+        return self.task.author
+
+    @property
+    def sender(self):
+        return self.task_member.member
 
 
 class TaskMemberRejectMail(TaskMemberMailSender):
-    def __init__(self, instance, *args, **kwargs):
-        TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
+    template_name = 'task_member_rejected.mail'
 
-        self.template_mail = 'task_member_rejected.mail'
-        self.receiver = self.task_member.member
-
+    @property
+    def subject(self):
         with TenantLanguage(self.receiver.primary_language):
-            self.subject = _('%(author)s didn\'t select you for a task') % {
+            return _('%(author)s didn\'t select you for a task') % {
                 'author': self.task.author.get_short_name()}
-
-        self.ctx = {'task': self.task, 'receiver': self.receiver,
-                    'sender': self.task.author,
-                    'link': self.task_link,
-                    'site': self.site,
-                    'task_list': self.task_list}
 
 
 class TaskMemberAcceptedMail(TaskMemberMailSender):
-    def __init__(self, instance, *args, **kwargs):
-        TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
+    template_name = 'task_member_accepted.mail'
 
-        self.template_mail = 'task_member_accepted.mail'
-        self.receiver = self.task_member.member
-
+    @property
+    def subject(self):
         with TenantLanguage(self.receiver.primary_language):
-            self.subject = _('%(author)s assigned you to a task') % {
+            return _('%(author)s assigned you to a task') % {
                 'author': self.task.author.get_short_name()}
-
-        self.ctx = {'task': self.task, 'receiver': self.receiver,
-                    'sender': self.task.author,
-                    'link': self.task_link,
-                    'site': self.site}
 
 
 class TaskMemberRealizedMail(TaskMemberMailSender):
-    def __init__(self, instance, *args, **kwargs):
-        TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
+    template_name = 'task_member_realized.mail'
 
-        self.template_mail = 'task_member_realized.mail'
-        self.receiver = self.task_member.member
-
-        with TenantLanguage(self.receiver.primary_language):
-            self.subject = _('You realised a task!')
+    def __init__(self, *args, **kwargs):
+        TaskMemberMailSender.__init__(self, *args, **kwargs)
 
         survey_url = Survey.url(self.task)
+        self.ctx['survey_link'] = mark_safe(survey_url) if survey_url else None
 
-        self.ctx = {'task': self.task, 'receiver': self.receiver,
-                    'sender': self.task.author,
-                    'link': self.task_link,
-                    'survey_link': mark_safe(survey_url) if survey_url else None,
-                    'site': self.site,
-                    'task_list': self.task_list,
-                    'project_link': self.project_link}
+    @property
+    def subject(self):
+        with TenantLanguage(self.receiver.primary_language):
+            return _('You realised a task!')
 
 
 class TaskMemberWithdrawMail(TaskMemberMailSender):
-    def __init__(self, instance, *args, **kwargs):
-        TaskMemberMailSender.__init__(self, instance, *args, **kwargs)
+    template_name = 'task_member_withdrew.mail'
 
-        self.template_mail = 'task_member_withdrew.mail'
-        self.receiver = self.task.author
-
+    @property
+    def subject(self):
         with TenantLanguage(self.receiver.primary_language):
-            self.subject = _('%(member)s withdrew from a task') % {
+            return _('%(member)s withdrew from a task') % {
                 'member': self.task_member.member.get_short_name()}
 
-        self.ctx = {'task': self.task, 'receiver': self.receiver,
-                    'sender': self.task_member.member,
-                    'link': self.task_link, 'site': self.site,
-                    'task_list': self.task_list,
-                    'project_link': self.project_link}
+    @property
+    def receiver(self):
+        return self.task.author
+
+    @property
+    def sender(self):
+        return self.task_member.member
 
 
 class TaskMemberMailAdapter:
@@ -141,12 +138,12 @@ class TaskMemberMailAdapter:
 
     mail_sender = None
 
-    def __init__(self, instance, status=None):
+    def __init__(self, instance, status=None, message=None):
         if not status:
             status = instance.status
         # If a mailer is provided for the task status, set the mail_sender
         if self.TASK_MEMBER_MAIL.get(status):
-            self.mail_sender = self.TASK_MEMBER_MAIL.get(status)(instance)
+            self.mail_sender = self.TASK_MEMBER_MAIL.get(status)(instance, message)
 
     def send_mail(self):
         if self.mail_sender:
@@ -210,7 +207,11 @@ def send_deadline_to_apply_passed_mail(task, subject, tenant):
 
 @receiver(post_save, weak=False, sender=TaskMember)
 def new_reaction_notification(sender, instance, created, **kwargs):
-    if instance.status != instance._original_status or created:
+    if (
+        instance.status != instance._original_status and
+        not getattr(instance, 'skip_mail', False) or
+        created
+    ):
         mailer = TaskMemberMailAdapter(instance)
         mailer.send_mail()
 

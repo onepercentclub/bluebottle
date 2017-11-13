@@ -80,14 +80,14 @@ class Command(BaseCommand):
         if 'related' in block:
             source = apps.get_model(*block['related']['model'].split(':'))
 
-            if 'slug' in block['related']:
-                for slug in block['related']['slug']:
+            if 'slugs' in block['related']:
+                for slug in block['related']['slugs']:
                     getattr(content_block, block['related']['field']).add(
                         source.objects.get(slug=slug)
                     )
 
-            if 'id' in block['related']:
-                for id in block['related']['id']:
+            if 'ids' in block['related']:
+                for id in block['related']['ids']:
                     getattr(content_block, block['related']['field']).add(
                         source.objects.get(id=id)
                     )

@@ -21,6 +21,7 @@ lipisha_settings = {
             'api_key': '1234567890',
             'api_signature': '9784904749074987dlndflnlfgnh',
             'business_number': '1234',
+            'channel_manager': 'manager',
             'account_number': '353535'
         }
     ]
@@ -143,7 +144,6 @@ class LipishaPaymentInterfaceTestCase(BluebottleTestCase):
     def setUp(self):
         self.project = ProjectFactory.create()
         self.interface = LipishaPaymentInterface()
-        LipishaProjectFactory.create(project=self.project, account_number='424242')
         self.order = OrderFactory.create()
         self.donation = DonationFactory.create(
             amount=Money(1500, KES),
@@ -157,10 +157,13 @@ class LipishaPaymentInterfaceTestCase(BluebottleTestCase):
         self.adapter = LipishaPaymentAdapter(self.order_payment)
 
     def test_update_donation_from_lipisha_call(self):
+        LipishaProjectFactory.create(project=self.project, account_number='424242')
         data = {
-            'transaction_account_number': '424242',
+            'transaction_account': '424242',
+            'transaction_account_number': '424242#{}'.format(self.order_payment.id),
             'transaction_merchant_reference': self.order_payment.id,
-            'transaction_reference': '',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
             'transaction_amount': '2500',
             'transaction_currency': 'KES',
             'transaction_name': 'SAM+GICHURU',
@@ -173,12 +176,35 @@ class LipishaPaymentInterfaceTestCase(BluebottleTestCase):
         # Amount should be updated
         self.assertEqual(donation.amount.amount, 2500.00)
 
-    def test_create_donation_from_lipisha_call(self):
+    def test_update_failed_donation_from_lipisha_call(self):
+        LipishaProjectFactory.create(project=self.project, account_number='424242')
         data = {
+            'transaction_account': '424242',
+            'transaction_account_number': '424242#{}'.format(self.order_payment.id),
+            'transaction_merchant_reference': self.order_payment.id,
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '2500',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Failed',
+            'transaction_mobile': '25471000000'
+        }
+        self.interface.initiate_payment(data)
+        donation = Donation.objects.get(pk=self.donation.pk)
+        self.assertEqual(donation.status, 'failed')
+        # Amount should be updated
+        self.assertEqual(donation.amount.amount, 2500.00)
+
+    def test_create_donation_from_lipisha_call(self):
+        LipishaProjectFactory.create(project=self.project, account_number='424242')
+        data = {
+            'transaction_account': '424242',
             'transaction_account_number': '424242',
             'transaction_merchant_reference': '',
-            'transaction_reference': '',
-            'transaction_amount': '3500',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
             'transaction_currency': 'KES',
             'transaction_name': 'SAM+GICHURU',
             'transaction_status': 'Completed',
@@ -193,17 +219,26 @@ class LipishaPaymentInterfaceTestCase(BluebottleTestCase):
         donation = Donation.objects.order_by('-id').first()
         self.assertEqual(donation.project, self.project)
         self.assertEqual(donation.status, 'success')
-        self.assertEqual(donation.amount.amount, 3500.00)
+        self.assertEqual(donation.amount.amount, 1750.00)
         self.assertEqual(donation.name, 'Sam Gichuru')
 
-# Test for updating a payment create by normal donation flow
-# - Test it finds the payment and updates
-# - Test it updates amounts for donation, order, order payment and project
+    @patch('bluebottle.payments_lipisha.adapters.Lipisha')
+    def test_create_lipisha_account(self, mock_client):
+        lipisha_account_success_response = {
+            u'content': {
+                u'transaction_account_number': u'121212',
+                u'transaction_account_manager': u'manager',
+                u'transaction_account_name': u'my-project',
+                u'transaction_account_type': u'1'
+            },
+            u'status': {
+                u'status': u'SUCCESS',
+                u'status_code': 0,
+                u'status_description': u'Account created'
+            }
+        }
+        instance = mock_client.return_value
+        instance.create_payment_account.return_value = lipisha_account_success_response
+        self.interface.create_account_number(self.project)
 
-# Test create new donation / payment from direct M-Pesa payment
-# - Test it won't generate twice for one code
-# - Test all amounts are set correctly for donation, order, order payment and project
-
-# Test it handles reversed payments correctly
-# - Test status changes correctly (order, order payment and payment)
-# - Test all amounts are set correctly for donation, order, order payment and project
+        self.assertEqual(self.project.addons.first().account_number, '121212')

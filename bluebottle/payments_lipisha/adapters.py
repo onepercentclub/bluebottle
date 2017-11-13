@@ -264,6 +264,9 @@ class LipishaPaymentInterface(object):
         if data['transaction_status'] == 'Completed':
             payment.status = 'settled'
             order_payment.settled()
+        else:
+            payment.status = 'failed'
+            order_payment.failed()
         payment.reference = payment.order_payment_id
         payment.save()
         return self.generate_response(payment)

@@ -132,7 +132,11 @@ class SafeField(serializers.CharField):
 
 
 class PrivateFileField(models.FileField):
-    def __init__(self, upload_to='', *args, **kwargs):
+    def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **kwargs):
+        # Check if upload_to already has private path
+        # This fixes loops and randomly added migrations
+        if not upload_to.startswith('private'):
+            upload_to = 'private/{}'.format(upload_to)
         super(PrivateFileField, self).__init__(
-            upload_to='private/' + upload_to, *args, **kwargs
+            verbose_name=verbose_name, name=name, upload_to=upload_to, storage=storage, **kwargs
         )

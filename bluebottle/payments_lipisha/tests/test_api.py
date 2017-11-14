@@ -135,10 +135,61 @@ class LipishaInitiatePaymentViewTestCase(BluebottleTestCase):
             order=self.order
         )
         self.adapter = LipishaPaymentAdapter(self.order_payment)
-        self.lipisha_update_url = reverse('lipisha-initiate-payment')
+        self.lipisha_update_url = reverse('lipisha-update-payment')
 
     def test_create_donation_from_lipisha_call(self):
         data = {
+            'api_key': '3aa67677e8bf1d4c8fe886a38c03a860',
+            'api_signature': 'SYetmwsNnb5bwaZRyeQKhZNNkCoEx+5x=',
+            'api_version': '2.0.0',
+            'api_type': 'Initiate',
+            'transaction_account': '424242',
+            'transaction_account_number': '424242',
+            'transaction_merchant_reference': '',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Completed',
+            'transaction_mobile': '25471000000',
+            'transaction_type': 'Payment'
+        }
+        response = self.client.post(self.lipisha_update_url, data)
+        expected = {
+            'transaction_status_code': '001',
+            'transaction_status_description': 'Transaction received successfully.',
+            'api_key': '1234567890',
+            'transaction_status': 'SUCCESS',
+            'transaction_custom_sms': 'Dear Sam Gichuru, thanks for your donation 7ACCB5CC8 '
+                                      'of KES 1750 to {}!'.format(self.project.title),
+            'transaction_status_action': 'ACCEPT',
+            'transaction_reference': 399,
+            'transaction_status_reason': 'VALID_TRANSACTION',
+            'api_version': '1.0.4',
+            'api_type': 'Payment'
+        }
+
+        # There should be a new donation for this project
+        donation = Donation.objects.order_by('-id').first()
+        self.assertEqual(donation.project, self.project)
+        self.assertEqual(donation.status, 'success')
+        self.assertEqual(donation.amount.amount, 1750.00)
+        self.assertEqual(donation.name, 'Sam Gichuru')
+
+        # Check that the response is confirm the specification by Lipisha
+        self.assertEqual(response.json()['api_key'], expected['api_key'])
+        self.assertEqual(response.json()['transaction_status_action'], expected['transaction_status_action'])
+        self.assertEqual(response.json()['transaction_reference'], donation.order.order_payment.id)
+        self.assertEqual(response.json()['transaction_custom_sms'], expected['transaction_custom_sms'])
+        self.assertEqual(response.json()['api_type'], expected['api_type'])
+
+    def test_acknowledge_lipisha_payment(self):
+        data = {
+            'api_key': '3aa67677e8bf1d4c8fe886a38c03a860',
+            'api_signature': 'SYetmwsNnb5bwaZRyeQKhZNNkCoEx+5x=',
+            'api_version': '2.0.0',
+            'api_type': 'Acknowledge',
             'transaction_account': '424242',
             'transaction_account_number': '424242',
             'transaction_merchant_reference': '',

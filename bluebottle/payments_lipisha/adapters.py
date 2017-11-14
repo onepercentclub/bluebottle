@@ -270,3 +270,43 @@ class LipishaPaymentInterface(object):
         payment.reference = payment.order_payment_id
         payment.save()
         return self.generate_response(payment)
+
+    def acknowledge_payment(self, data):
+        """
+        Parameter	Description	Example
+        api_key	Your Lipisha API key.	3aa67677e8bf1d4c8fe886a38c03a860
+        api_signature	Your Lipisha API signature.	SYetmwsNnKhZNNkCoEx+5x=
+        api_version	Version of the API	2.0.0
+        api_type	Type of handshake or callback	Acknowledge
+        transaction	Unique transaction idenitifier.	CU79AW109D
+        transaction_reference	Similar to transaction	CU79AW109D
+        transaction_status_code	Status code of the response. Options are:
+        001 (Valid transaction)
+        002 (Invalid transaction)
+        003 (Timeout transaction)
+        001
+        transaction_status	Status of the response. Options are:
+        SUCCESS
+        FAIL
+        SUCCESS
+        transaction_status_description	Description of the response.	Transaction processed successfully.
+        transaction_status_action	Action carried out on receiving the Initiate callback. Options are:
+        ACCEPT
+        REJECT
+        ACCEPT
+        transaction_status_reason	Reason for the status response. Options are:
+        VALID_TRANSACTION
+        INVALID_TRANSACTION
+        INVALID_TRANSACTION_MOBILE
+        INVALID_TRANSACTION_AMOUNT
+        INVALID_TRANSACTION_NAME
+        INVALID_TRANSACTION_PAYBILL
+        INVALID_TRANSACTION_ACCOUNT_NUMBER
+        INVALID_TRANSACTION_MERCHANT_REFERENCE
+        INVALID_TRANSACTION_METHOD
+        INVALID_TRANSACTION_EMAIL
+        INVALID_TRANSACTION_DATE
+        TIMEOUT_TRANSACTION
+        VALID_TRANSACTION
+        """
+        pass

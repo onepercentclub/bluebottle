@@ -171,6 +171,8 @@ class TitledContent(ContentItem):
     title = models.CharField(max_length=40, blank=True, null=True)
     sub_title = models.CharField(max_length=400, blank=True, null=True)
 
+
+    preview_template = 'admin/cms/preview/default.html'
     class Meta:
         abstract = True
 
@@ -284,7 +286,6 @@ class TasksContent(TitledContent):
 
 class ProjectsMapContent(TitledContent):
     type = 'projects-map'
-    preview_template = 'admin/cms/preview/projects_map.html'
 
     class Meta:
         verbose_name = _('Projects Map')
@@ -339,7 +340,6 @@ class Slide(models.Model):
 
 class SlidesContent(TitledContent):
     type = 'slides'
-    preview_template = 'admin/cms/preview/slides.html'
 
     class Meta:
         verbose_name = _('Slides')
@@ -366,7 +366,6 @@ class StepsContent(TitledContent):
                                    blank=True, null=True)
 
     type = 'steps'
-    preview_template = 'admin/cms/preview/steps.html'
 
     class Meta:
         verbose_name = _('Steps')
@@ -389,7 +388,6 @@ class LocationsContent(TitledContent):
 
 class CategoriesContent(TitledContent):
     type = 'categories'
-    preview_template = 'admin/cms/preview/categories.html'
     categories = models.ManyToManyField(Category, db_table='cms_categoriescontent_categories')
 
     class Meta:
@@ -409,7 +407,6 @@ class Logo(models.Model):
 
 class LogosContent(TitledContent):
     type = 'logos'
-    preview_template = 'admin/cms/preview/logos.html'
     action_text = models.CharField(max_length=40)
     action_link = models.CharField(max_length=100, default="/start-project",
                                    blank=True, null=True)
@@ -435,7 +432,6 @@ class ContentLink(models.Model):
 
 class LinksContent(TitledContent):
     type = 'links'
-    preview_template = 'admin/cms/preview/links.html'
 
     class Meta:
         verbose_name = _('Links')
@@ -451,7 +447,6 @@ class Greeting(models.Model):
 
 class WelcomeContent(ContentItem):
     type = 'welcome'
-    preview_template = 'admin/cms/preview/links.html'
 
     preamble = models.CharField(max_length=20)
 

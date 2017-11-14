@@ -23,24 +23,4 @@ class Migration(migrations.Migration):
             name='allow_anonymous_rewards',
             field=models.BooleanField(default=True),
         ),
-        migrations.AlterField(
-            model_name='project',
-            name='theme',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='bb_projects.ProjectTheme'),
-        ),
-        migrations.AlterField(
-            model_name='projectdocument',
-            name='file',
-            field=bluebottle.utils.fields.PrivateFileField(max_length=110, upload_to=b'private/private/private/projects/documents'),
-        ),
-        migrations.AlterField(
-            model_name='projectimage',
-            name='file',
-            field=models.FileField(upload_to=b'project_images/'),
-        ),
-        migrations.AlterField(
-            model_name='projectsearchfilter',
-            name='name',
-            field=models.CharField(choices=[(b'location', 'Location'), (b'theme', 'Theme'), (b'skills', 'Skill'), (b'date', 'Date'), (b'status', 'Status'), (b'type', 'Type'), (b'category', 'Category')], max_length=100),
-        ),
     ]

@@ -179,7 +179,6 @@ class TasksContentSerializer(serializers.ModelSerializer):
 class SlideSerializer(serializers.ModelSerializer):
     image = SorlImageField('800x600', crop='center')
     background_image = SorlImageField('1600x1200', crop='center')
-    video = OEmbedField('video_url')
 
     class Meta:
         model = Slide
@@ -192,7 +191,7 @@ class SlideSerializer(serializers.ModelSerializer):
             'link_url',
             'tab_text',
             'title',
-            'video',
+            'video_url',
         )
 
 
@@ -225,7 +224,7 @@ class StepsContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StepsContent
-        fields = ('id', 'type', 'title', 'sub_title', 'steps',)
+        fields = ('id', 'type', 'title', 'sub_title', 'steps', 'action_text', 'action_link')
 
 
 class LogoSerializer(serializers.ModelSerializer):

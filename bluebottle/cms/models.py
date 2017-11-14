@@ -171,8 +171,8 @@ class TitledContent(ContentItem):
     title = models.CharField(max_length=40, blank=True, null=True)
     sub_title = models.CharField(max_length=400, blank=True, null=True)
 
-
     preview_template = 'admin/cms/preview/default.html'
+
     class Meta:
         abstract = True
 

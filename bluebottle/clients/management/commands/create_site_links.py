@@ -1,5 +1,10 @@
+from StringIO import StringIO
+
 from django.db import connection
+from django.core.files import File
 from django.core.management.base import BaseCommand, CommandError
+
+import requests
 
 from bluebottle.clients.models import Client
 from bluebottle.clients import properties
@@ -47,33 +52,50 @@ class Command(BaseCommand):
         self.stdout.write(u'{} [{}]'.format(info, label))
 
     def _create_settings(self, settings):
-        s = SitePlatformSettings.objects.get_or_create()
+        if 'footerPoweredBy' not in settings:
+            settings['footerPoweredBy'] = '- Powered by:'
 
+        if 'footerLink' in settings:
+            if settings['footerLink'].startswith('http'):
+                response = requests.get(settings['footerLink'])
+                logo = StringIO(response.content)
+            else:
+                logo = StringIO(
+                    settings['footerLink'].split(",")[1].decode('base64')
+                )
+
+            settings['footerLink'] = File(
+                logo, name='logo.svg'
+            )
+
+        platform_settings, _created = SitePlatformSettings.objects.get_or_create()
+
+        settings_map = {
+            'footerPoweredBy': 'powered_by_text',
+            'footerCopyrightLink': 'power_by_logo',
+            'footerLinkTarget': 'powered_by_link',
+            'footerLink': 'powered_by_logo',
+            'email': 'contact_email',
+            'phone': 'contact_phone',
+            'copyright': 'copyright',
+        }
         # handle a fixed list of settings
-        for key in settings.keys():
-            if key is 'footerLink':
+        for key, value in settings.items():
+            try:
+                setattr(platform_settings, settings_map[key], value)
+            except KeyError:
                 pass
-            elif key is 'footerLinkTarget':
-                pass
-            elif key is 'footerPoweredBy':
-                self._log('Setting called powered_by_text', True)
-                s.powered_by_text = settings['footerPoweredBy']
-                self._log('Setting called powered_by_link', True)
-                s.powered_by_link = 'https://voorjebuurt.nl'
-            elif key is 'footerPhoneCustomText':
-                pass
-            elif key is 'phoneText':
-                pass
-            elif key is 'hideFooterContact':
-                pass
-            elif key is 'hideProjectStartSearch':
-                pass
+
+        platform_settings.save()
 
     def _create_links(self, force):
         site_links = getattr(properties, 'SITE_LINKS', None)
         if site_links:
             # get languages
+            LinkGroup.objects.all().delete()
+
             for key in site_links.keys():
+
                 if key == 'settings':
                     self._create_settings(site_links['settings'])
                     continue
@@ -88,7 +110,6 @@ class Command(BaseCommand):
 
                 lang_links = site_links[lang_code]
                 sections = ['main', 'about', 'info', 'discover', 'social']
-                LinkGroup.objects.all().delete()
 
                 for group_name in sections:
                     if group_name in lang_links:

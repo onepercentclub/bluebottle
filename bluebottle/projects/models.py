@@ -2,7 +2,6 @@ import datetime
 import logging
 
 import pytz
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.urlresolvers import reverse
@@ -14,7 +13,6 @@ from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.functional import lazy
-from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
@@ -548,40 +546,6 @@ class Project(BaseProject, PreviousStatusMixin):
     def get_absolute_url(self):
         """ Get the URL for the current project. """
         return 'https://{}/projects/{}'.format(properties.tenant.domain_url, self.slug)
-
-    def get_meta_title(self, **kwargs):
-        return u"%(name_project)s | %(theme)s | %(country)s" % {
-            'name_project': self.title,
-            'theme': self.theme.name if self.theme else '',
-            'country': self.country.name if self.country else '',
-        }
-
-    def get_fb_title(self, **kwargs):
-        title = _(u"{name_project} in {country}").format(
-            name_project=self.title,
-            country=self.country.name if self.country else '',
-        )
-        return title
-
-    def get_tweet(self, **kwargs):
-        """ Build the tweet text for the meta data """
-        request = kwargs.get('request')
-        if request:
-            lang_code = request.LANGUAGE_CODE
-        else:
-            lang_code = 'en'
-        twitter_handle = settings.TWITTER_HANDLES.get(lang_code,
-                                                      settings.DEFAULT_TWITTER_HANDLE)
-
-        title = urlquote(self.get_fb_title())
-
-        # {URL} is replaced in Ember to fill in the page url, avoiding the
-        # need to provide front-end urls in our Django code.
-        tweet = _(u"{title} {{URL}}").format(
-            title=title, twitter_handle=twitter_handle
-        )
-
-        return tweet
 
     class Meta(BaseProject.Meta):
         permissions = (

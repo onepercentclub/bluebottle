@@ -13,7 +13,7 @@ from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.fields import MoneyField, PrivateFileField
-from bluebottle.utils.utils import StatusDefinition, GetTweetMixin
+from bluebottle.utils.utils import StatusDefinition
 
 
 class ProjectTheme(models.Model):
@@ -112,7 +112,7 @@ class BaseProjectDocument(models.Model):
         abstract = True
 
 
-class BaseProject(models.Model, GetTweetMixin):
+class BaseProject(models.Model):
 
     class Type(DjangoChoices):
         sourcing = ChoiceItem('sourcing', label=_('Crowd-sourcing'))

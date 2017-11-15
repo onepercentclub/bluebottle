@@ -52,16 +52,16 @@ class ProjectRawReport(BaseRawReport, pg.View):
             l.name AS location,
             lg.name AS location_group,
             1 AS value
-            FROM dll.projects_project p
+            FROM projects_project p
             LEFT JOIN (
                 SELECT max(start) AS start, project_id, status_id
-                FROM dll.projects_projectphaselog
+                FROM projects_projectphaselog
                 GROUP BY project_id, status_id
             ) pl ON pl.project_id = p.id
-            LEFT JOIN dll.bb_projects_projectphase plp ON plp.id = pl.status_id
-            LEFT JOIN dll.bb_projects_projectphase pp ON pp.id = p.status_id
-            LEFT JOIN dll.geo_location l ON p.location_id = l.id
-            LEFT JOIN dll.geo_locationgroup lg ON l.group_id = lg.id;
+            LEFT JOIN bb_projects_projectphase plp ON plp.id = pl.status_id
+            LEFT JOIN bb_projects_projectphase pp ON pp.id = p.status_id
+            LEFT JOIN geo_location l ON p.location_id = l.id
+            LEFT JOIN geo_locationgroup lg ON l.group_id = lg.id;
            """
 
     class Meta:

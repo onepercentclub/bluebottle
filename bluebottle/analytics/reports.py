@@ -17,82 +17,45 @@ class MetricsReport(object):
         'taskmember_hours': 3
     }
 
+    period_grouping = {
+        'year': ('year',),
+        'quarter': ('year', 'quarter'),
+        'month': ('year', 'quarter', 'month'),
+        'week': ('year', 'quarter', 'month', 'week'),
+    }
+
     formats = {}
 
     def __init__(self):
         pass
 
     def get_project_data(self, period='year', year=None):
-        if period == 'year':
-            return ProjectRawReport.done_objects.values('year').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
-        if period == 'quarter':
-            return ProjectRawReport.done_objects.values('year', 'quarter').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
-        if period == 'month':
-            return ProjectRawReport.done_objects.values('year', 'quarter', 'month').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
-        if period == 'week':
-            return ProjectRawReport.done_objects.values('year', 'quarter', 'month', 'week').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
+        return ProjectRawReport.done_objects.values(*self.period_grouping[period]).\
+            filter(year=year).\
+            annotate(value=Count('type_id', distinct=True))
 
     def get_task_data(self, period='year', year=None):
-        if period == 'year':
-            return TaskRawReport.objects.values('year').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
-        if period == 'quarter':
-            return TaskRawReport.objects.values('year', 'quarter').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
-        if period == 'month':
-            return TaskRawReport.objects.values('year', 'quarter', 'month').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
-        if period == 'week':
-            return TaskRawReport.objects.values('year', 'quarter', 'month', 'week').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
+        return TaskRawReport.objects.values(*self.period_grouping[period]).\
+            filter(year=year).\
+            annotate(value=Count('type_id', distinct=True))
 
     def get_taskmember_data(self, period='year', year=None):
-        if period == 'year':
-            return TaskMemberRawReport.objects.values('year').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
-        if period == 'quarter':
-            return TaskMemberRawReport.objects.values('year', 'quarter').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
-        if period == 'month':
-            return TaskMemberRawReport.objects.values('year', 'quarter', 'month').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
-        if period == 'week':
-            return TaskMemberRawReport.objects.values('year', 'quarter', 'month', 'week').\
-                filter(year=year).\
-                annotate(value=Count('type_id', distinct=True))
+        return TaskMemberRawReport.objects.values(*self.period_grouping[period]).\
+            filter(year=year).\
+            annotate(value=Count('type_id', distinct=True))
 
     def get_taskmember_hours_data(self, period='year', year=None):
-        if period == 'year':
-            return TaskMemberRawReport.objects.values('year').\
-                filter(year=year).\
-                annotate(value=Sum('value'))
-        if period == 'quarter':
-            return TaskMemberRawReport.objects.values('year', 'quarter').\
-                filter(year=year).\
-                annotate(value=Sum('value'))
-        if period == 'month':
-            return TaskMemberRawReport.objects.values('year', 'quarter', 'month').\
-                filter(year=year).\
-                annotate(value=Sum('value'))
-        if period == 'week':
-            return TaskMemberRawReport.objects.values('year', 'quarter', 'month', 'week').\
-                filter(year=year).\
-                annotate(value=Sum('value'))
+        return TaskMemberRawReport.objects.values(*self.period_grouping[period]).\
+            filter(year=year).\
+            annotate(value=Sum('value'))
+
+    def get_data(self, period='year', year=None):
+        return [
+            self.get_project_data(period, year),
+            self.get_task_data(period, year),
+            self.get_taskmember_data(period, year),
+            self.get_taskmember_hours_data(period, year),
+        ]
 
     def add_year_totals(self, year):
         border_bottom = self.formats['border']
@@ -127,26 +90,11 @@ class MetricsReport(object):
         ws.write_datetime(2, 6, date=end)
 
         # Values for year
-        year_data = self.get_project_data('year', year)
-        if len(year_data):
-            ws.write(2, 7, year_data[0]['value'])
-        else:
-            pass
-        year_data = self.get_task_data('year', year)
-        if len(year_data):
-            ws.write(2, 8, year_data[0]['value'])
-        else:
-            pass
-        year_data = self.get_taskmember_data('year', year)
-        if len(year_data):
-            ws.write(2, 9, year_data[0]['value'])
-        else:
-            pass
-        year_data = self.get_taskmember_hours_data('year', year)
-        if len(year_data):
-            ws.write(2, 10, year_data[0]['value'])
-        else:
-            pass
+        i = 2
+        for data in self.get_data('year', year):
+            if len(data):
+                i += 1
+                ws.write(i, 7, data[0]['value'])
 
         # Rows for quarter
         for q in range(1, 5):
@@ -163,41 +111,16 @@ class MetricsReport(object):
             ws.write_datetime(2 + q, 5, start)
             ws.write_datetime(2 + q, 6, end)
 
-        quarter_data = self.get_project_data('quarter', year)
-        for val in quarter_data:
-            i = 7
-            j = val['quarter'] + 2
-            cell_format = None
-            if val['quarter'] == 4:
-                cell_format = border_bottom
-            ws.write(int(j), int(i), val['value'], cell_format)
-
-        quarter_data = self.get_task_data('quarter', year)
-        for val in quarter_data:
-            i = 8
-            j = val['quarter'] + 2
-            cell_format = None
-            if val['quarter'] == 4:
-                cell_format = border_bottom
-            ws.write(int(j), int(i), val['value'], cell_format)
-
-        quarter_data = self.get_taskmember_data('quarter', year)
-        for val in quarter_data:
-            i = 9
-            j = val['quarter'] + 2
-            cell_format = None
-            if val['quarter'] == 4:
-                cell_format = border_bottom
-            ws.write(int(j), int(i), val['value'], cell_format)
-
-        quarter_data = self.get_taskmember_hours_data('quarter', year)
-        for val in quarter_data:
-            i = 10
-            j = val['quarter'] + 2
-            cell_format = None
-            if val['quarter'] == 4:
-                cell_format = border_bottom
-            ws.write(int(j), int(i), val['value'], cell_format)
+        quarter_data = self.get_data('quarter', year)
+        i = 6
+        for col in quarter_data:
+            i += 1
+            for val in col:
+                j = val['quarter'] + 2
+                cell_format = None
+                if val['quarter'] == 4:
+                    cell_format = border_bottom
+                ws.write(int(j), int(i), val['value'], cell_format)
 
         # Rows for months
         for m in range(1, 13):
@@ -214,41 +137,17 @@ class MetricsReport(object):
             ws.write(6 + m, 5, start)
             ws.write_datetime(6 + m, 6, end)
 
-        month_data = self.get_project_data('month', year)
-        for val in month_data:
-            i = 7
-            j = val['month'] + 6
-            cell_format = None
-            if val['month'] == 12:
-                cell_format = border_bottom
-            ws.write(int(j), int(i), val['value'], cell_format)
-
-        month_data = self.get_task_data('month', year)
-        for val in month_data:
-            i = 8
-            j = val['month'] + 6
-            cell_format = None
-            if val['month'] == 12:
-                cell_format = border_bottom
-            ws.write(int(j), int(i), val['value'], cell_format)
-
-        month_data = self.get_taskmember_data('month', year)
-        for val in month_data:
-            i = 9
-            j = val['month'] + 6
-            cell_format = None
-            if val['month'] == 12:
-                cell_format = border_bottom
-            ws.write(int(j), int(i), val['value'], cell_format)
-
-        month_data = self.get_taskmember_hours_data('month', year)
-        for val in month_data:
-            i = 10
-            j = val['month'] + 6
-            cell_format = None
-            if val['month'] == 12:
-                cell_format = border_bottom
-            ws.write(int(j), int(i), val['value'], cell_format)
+        month_data = self.get_data('month', year)
+        i = 6
+        for col in month_data:
+            i += 1
+            for val in col:
+                print val
+                j = val['month'] + 6
+                cell_format = None
+                if val['month'] == 12:
+                    cell_format = border_bottom
+                ws.write(int(j), int(i), val['value'], cell_format)
 
     def define_styles(self):
         self.formats['dark'] = self.workbook.add_format({
@@ -268,7 +167,7 @@ class MetricsReport(object):
             'remove_timezone': True
         })
         self.define_styles()
-        for year in [2017, 2016, 2015]:
+        for year in [2017, 2016]:
             self.add_year_totals(year)
         self.workbook.close()
         return output

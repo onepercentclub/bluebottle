@@ -6,6 +6,7 @@ import StringIO
 from django.db.models.aggregates import Count, Sum
 
 from bluebottle.analytics.models import ProjectRawReport, TaskRawReport, TaskMemberRawReport
+from bluebottle.geo.models import Location
 
 
 class MetricsReport(object):
@@ -17,47 +18,52 @@ class MetricsReport(object):
         'taskmember_hours': 3
     }
 
-    period_grouping = {
-        'year': ('year',),
-        'quarter': ('year', 'quarter'),
-        'month': ('year', 'quarter', 'month'),
-        'week': ('year', 'quarter', 'month', 'week'),
-    }
-
     formats = {}
 
     def __init__(self):
         pass
 
-    def get_project_data(self, period='year', year=None):
-        return ProjectRawReport.done_objects.values(*self.period_grouping[period]).\
+    @property
+    def locations(self):
+        return Location.objects.order_by('name').values('id', 'name')
+
+    @property
+    def location_index(self):
+        index = {}
+        i = 0
+        for loc in self.locations:
+            i += 1
+            index[loc['name']] = i
+        return index
+
+    def get_project_data(self, year=None, group=('year', )):
+        return ProjectRawReport.done_objects.values(*group).annotate(value=Count('type_id', distinct=True))
+
+    def get_task_data(self, year=None, group=('year', )):
+        return TaskRawReport.objects.values(*group).\
             filter(year=year).\
             annotate(value=Count('type_id', distinct=True))
 
-    def get_task_data(self, period='year', year=None):
-        return TaskRawReport.objects.values(*self.period_grouping[period]).\
+    def get_taskmember_data(self, year=None, group=('year', )):
+        return TaskMemberRawReport.objects.values(*group).\
             filter(year=year).\
             annotate(value=Count('type_id', distinct=True))
 
-    def get_taskmember_data(self, period='year', year=None):
-        return TaskMemberRawReport.objects.values(*self.period_grouping[period]).\
-            filter(year=year).\
-            annotate(value=Count('type_id', distinct=True))
-
-    def get_taskmember_hours_data(self, period='year', year=None):
-        return TaskMemberRawReport.objects.values(*self.period_grouping[period]).\
+    def get_taskmember_hours_data(self, year=None, group=('year', )):
+        return TaskMemberRawReport.objects.values(*group).\
             filter(year=year).\
             annotate(value=Sum('value'))
 
-    def get_data(self, period='year', year=None):
+    def get_data(self, year=None, group=('year', )):
+
         return [
-            self.get_project_data(period, year),
-            self.get_task_data(period, year),
-            self.get_taskmember_data(period, year),
-            self.get_taskmember_hours_data(period, year),
+            self.get_project_data(year, group),
+            self.get_task_data(year, group),
+            self.get_taskmember_data(year, group),
+            self.get_taskmember_hours_data(year, group),
         ]
 
-    def add_year_totals(self, year):
+    def add_year_totals_sheet(self, year):
         border_bottom = self.formats['border']
         format_dark = self.formats['dark']
         format_grey = self.formats['light']
@@ -90,11 +96,11 @@ class MetricsReport(object):
         ws.write_datetime(2, 6, date=end)
 
         # Values for year
-        i = 2
-        for data in self.get_data('year', year):
+        i = 0
+        for data in self.get_data(year, ('year',)):
             if len(data):
                 i += 1
-                ws.write(i, 7, data[0]['value'])
+                ws.write(2, i + 6, data[0]['value'])
 
         # Rows for quarter
         for q in range(1, 5):
@@ -111,7 +117,7 @@ class MetricsReport(object):
             ws.write_datetime(2 + q, 5, start)
             ws.write_datetime(2 + q, 6, end)
 
-        quarter_data = self.get_data('quarter', year)
+        quarter_data = self.get_data(year, ('year', 'quarter'))
         i = 6
         for col in quarter_data:
             i += 1
@@ -137,24 +143,64 @@ class MetricsReport(object):
             ws.write(6 + m, 5, start)
             ws.write_datetime(6 + m, 6, end)
 
-        month_data = self.get_data('month', year)
+        month_data = self.get_data(year, ('year', 'quarter', 'month'))
         i = 6
         for col in month_data:
             i += 1
             for val in col:
-                print val
                 j = val['month'] + 6
                 cell_format = None
                 if val['month'] == 12:
                     cell_format = border_bottom
                 ws.write(int(j), int(i), val['value'], cell_format)
 
+        # Location headers
+        l = 0
+        for loc in self.locations:
+            l += 1
+            ws.merge_range(0, 7 + l * 4, 0, 10 + l * 4, loc['name'], format_dark)
+            ws.write(1, l * 4 + 7, 'Projects successful', format_grey)
+            ws.write(1, l * 4 + 8, 'Activities successful', format_grey)
+            ws.write(1, l * 4 + 9, 'Members volunteered', format_grey)
+            ws.write(1, l * 4 + 10, 'Hours volunteered', format_grey)
+
+        # Location year data
+        t = 0
+        for data in self.get_data(year, ('location', 'year',)):
+            t += 1
+            for val in data:
+                if val['location']:
+                    i = self.location_index[val['location']] * 4 + 6 + t
+                    ws.write(2, i, val['value'])
+
+        # Location quarter data
+        t = 0
+        for data in self.get_data(year, ('location', 'year', 'quarter')):
+            t += 1
+            for val in data:
+                if val['location']:
+                    i = self.location_index[val['location']] * 4 + 6 + t
+                    j = val['quarter'] + 2
+                    ws.write(int(j), int(i), val['value'])
+
+        # Location month data
+        t = 0
+        for data in self.get_data(year, ('location', 'year', 'quarter', 'month')):
+            t += 1
+            for val in data:
+                if val['location']:
+                    i = self.location_index[val['location']] * 4 + 6 + t
+                    j = val['month'] + 6
+                    ws.write(int(j), int(i), val['value'])
+
     def define_styles(self):
         self.formats['dark'] = self.workbook.add_format({
             'bold': True,
             'font_color': 'white',
             'bg_color': '#555555',
-            'align': 'center'
+            'align': 'center',
+            'right': 1,
+            'border_color': '#FFFFFF'
         })
         self.formats['light'] = self.workbook.add_format({'bg_color': '#DDDDDD'})
         self.formats['border'] = self.workbook.add_format({'bottom': 1})
@@ -168,6 +214,6 @@ class MetricsReport(object):
         })
         self.define_styles()
         for year in [2017, 2016]:
-            self.add_year_totals(year)
+            self.add_year_totals_sheet(year)
         self.workbook.close()
         return output

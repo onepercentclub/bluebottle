@@ -163,6 +163,10 @@ class MetricsReport(object):
             ws.write(1, l * 4 + 8, 'Activities successful', format_grey)
             ws.write(1, l * 4 + 9, 'Members volunteered', format_grey)
             ws.write(1, l * 4 + 10, 'Hours volunteered', format_grey)
+            for c in range(7, 11):
+                ws.write(2, l * 4 + c, '', border_bottom)
+                ws.write(6, l * 4 + c, '', border_bottom)
+                ws.write(18, l * 4 + c, '', border_bottom)
 
         # Location year data
         t = 0
@@ -171,7 +175,7 @@ class MetricsReport(object):
             for val in data:
                 if val['location']:
                     i = self.location_index[val['location']] * 4 + 6 + t
-                    ws.write(2, i, val['value'])
+                    ws.write(2, i, val['value'], border_bottom)
 
         # Location quarter data
         t = 0
@@ -181,7 +185,7 @@ class MetricsReport(object):
                 if val['location']:
                     i = self.location_index[val['location']] * 4 + 6 + t
                     j = val['quarter'] + 2
-                    ws.write(int(j), int(i), val['value'])
+                    ws.write(int(j), int(i), val['value'], border_bottom if val['quarter'] == 4 else None)
 
         # Location month data
         t = 0
@@ -191,7 +195,9 @@ class MetricsReport(object):
                 if val['location']:
                     i = self.location_index[val['location']] * 4 + 6 + t
                     j = val['month'] + 6
-                    ws.write(int(j), int(i), val['value'])
+                    ws.write(int(j), int(i), val['value'], border_bottom if val['month'] == 12 else None)
+
+        ws.freeze_panes(1, 7)
 
     def define_styles(self):
         self.formats['dark'] = self.workbook.add_format({

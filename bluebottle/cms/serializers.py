@@ -3,7 +3,7 @@ from django.db import connection
 from django.db.models import Sum
 
 from bluebottle.bluebottle_drf2.serializers import (
-    ImageSerializer, SorlImageField, OEmbedField
+    ImageSerializer, SorlImageField
 )
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer

@@ -44,6 +44,7 @@ class Payment(PolymorphicModel):
         (StatusDefinition.AUTHORIZED, _('Authorized')),
         (StatusDefinition.SETTLED, _('Settled')),
         (StatusDefinition.CHARGED_BACK, _('Charged_back')),
+        (StatusDefinition.REFUND_REQUESTED, _('Refund requested')),
         (StatusDefinition.REFUNDED, _('Refunded')),
         (StatusDefinition.FAILED, _('Failed')),
         (StatusDefinition.UNKNOWN, _('Unknown'))
@@ -221,6 +222,18 @@ class OrderPayment(models.Model, FSMTransition):
                 target=StatusDefinition.UNKNOWN)
     def unknown(self):
         pass
+
+    @transition(
+        field=status,
+        source=[
+            StatusDefinition.AUTHORIZED,
+            StatusDefinition.SETTLED
+        ],
+        target=StatusDefinition.REFUND_REQUESTED
+    )
+    def refund_requested(self):
+        pass
+
 
     def get_status_mapping(self, payment_status):
         # Currently the status in Payment and OrderPayment is one to one.

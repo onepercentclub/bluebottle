@@ -8,8 +8,6 @@ from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ObjectDoesNotExist
-from django.utils.http import urlquote
-from django.utils.translation import ugettext as _
 
 from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
@@ -28,36 +26,6 @@ def clean_html(content):
 
 def get_languages():
     return properties.LANGUAGES
-
-
-class GetTweetMixin(object):
-    def get_fb_title(self, **kwargs):
-        return self.get_meta_title()
-
-    def get_meta_title(self, **kwargs):
-        if hasattr(self, 'country'):
-            return u'{name_project} | {country}'.format(
-                name_project=self.title,
-                country=self.country.name if self.country else '')
-        return self.title
-
-    def get_tweet(self, **kwargs):
-        """ Build the tweet text for the meta data """
-        request = kwargs.get('request')
-        if request:
-            lang_code = request.LANGUAGE_CODE
-        else:
-            lang_code = 'en'
-        twitter_handle = settings.TWITTER_HANDLES.get(
-            lang_code, settings.DEFAULT_TWITTER_HANDLE)
-
-        title = urlquote(self.get_meta_title())
-
-        # {URL} is replaced in Ember to fill in the page url, avoiding the
-        # need to provide front-end urls in our Django code.
-        tweet = _(u'{title} {{URL}}').format(
-            title=title, twitter_handle=twitter_handle)
-        return tweet
 
 
 class StatusDefinition(object):

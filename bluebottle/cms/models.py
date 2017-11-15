@@ -376,7 +376,6 @@ class StepsContent(TitledContent):
 
 class LocationsContent(TitledContent):
     type = 'locations'
-    preview_template = 'admin/cms/preview/locations.html'
     locations = models.ManyToManyField(Location, db_table='cms_locationscontent_locations')
 
     class Meta:

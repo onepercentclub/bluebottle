@@ -1,8 +1,11 @@
+from mock import patch
+
 from django.contrib.auth.models import Permission
 from django.contrib.auth import get_user_model
 
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.test.factory_models.cms import (
     SiteLinksFactory, LinkFactory, LinkGroupFactory, LinkPermissionFactory
 )
@@ -19,7 +22,8 @@ class TestSiteLinks(BluebottleTestCase):
         super(TestSiteLinks, self).setUp()
 
         self.user1 = BlueBottleUserFactory.create()
-        self.site_links = SiteLinksFactory.create()
+        language_en = LanguageFactory.create(code='en')
+        self.site_links = SiteLinksFactory.create(language=language_en)
         self.link_groups = {}
 
         self._add_link(title='Project List', component='project')
@@ -96,3 +100,24 @@ class TestSiteLinks(BluebottleTestCase):
         # User can not access link with absent resultpage permission
         results = get_user_site_links(self.user1)
         self.assertEqual(len(_group_by_name(results, 'main')['links']), 2)
+
+    @patch('bluebottle.clients.utils.get_language')
+    def test_language_language_fallback(self, mock_get_language):
+        mock_get_language.return_value = 'nl'
+
+        # Test fallback to first site links when none found for language
+        results = get_user_site_links(self.user1)
+        self.assertEqual(len(_group_by_name(results, 'main')['links']), 2)
+
+        # Now create NL site links
+        language_nl = LanguageFactory.create(code='nl')
+        site_links = SiteLinksFactory.create(language=language_nl)
+        link_group = LinkGroupFactory.create(title='NL Group', name='main-nl',
+                                             site_links=site_links)
+        LinkFactory.create(link_group=link_group, title='Project List NL', component='project')
+
+        # Test language specific site links are loaded if available
+        results = get_user_site_links(self.user1)
+        links = _group_by_name(results, 'main-nl')['links']
+        self.assertEqual(len(links), 1)
+        self.assertEqual(links[0]['title'], 'Project List NL')

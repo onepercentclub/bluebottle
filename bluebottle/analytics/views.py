@@ -4,10 +4,13 @@ import pendulum
 from django import forms
 from django.contrib import messages
 from django.db import connection
+from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
+from django.views.generic.base import View
 from django.views.generic.edit import FormView
 
+from bluebottle.analytics.reports import MetricsReport
 from .tasks import generate_participation_metrics
 
 
@@ -65,3 +68,17 @@ class ParticipationMetricsFormView(FormView):
             messages.add_message(self.request, messages.INFO,
                                  _('The participation metrics report will be emailed to you in a couple of hours'))
         return super(ParticipationMetricsFormView, self).form_valid(form)
+
+
+class ReportDownloadView(View):
+
+    def get(self, request):
+        report = MetricsReport()
+        output = report.to_output()
+        output.seek(0)
+        response = HttpResponse(
+            output.read(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = "attachment; filename=report.xlsx"
+        return response

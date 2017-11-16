@@ -275,9 +275,10 @@ SHARED_APPS = (
     'parler',
     'daterange_filter',
     'adminsortable',
-    'django_summernote'
-
+    'django_summernote',
+    'django_pgviews'
 )
+
 TENANT_APPS = (
     'polymorphic',
     'modeltranslation',

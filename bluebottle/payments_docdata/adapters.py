@@ -16,7 +16,7 @@ from bluebottle.utils.utils import (StatusDefinition, get_current_host,
 
 from .models import DocdataPayment
 
-logger = logging.getLogger('console')
+logger = logging.getLogger(__name__)
 
 
 class DocdataPaymentAdapter(BasePaymentAdapter):

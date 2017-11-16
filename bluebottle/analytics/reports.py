@@ -37,7 +37,9 @@ class MetricsReport(object):
         return index
 
     def get_project_data(self, year=None, group=('year', )):
-        return ProjectRawReport.done_objects.values(*group).annotate(value=Count('type_id', distinct=True))
+        return ProjectRawReport.done_objects.values(*group).\
+            filter(year=year).\
+            annotate(value=Count('type_id', distinct=True))
 
     def get_task_data(self, year=None, group=('year', )):
         return TaskRawReport.objects.values(*group).\

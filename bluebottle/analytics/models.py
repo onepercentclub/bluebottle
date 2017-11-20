@@ -42,33 +42,46 @@ def get_raw_report_model(db_table):
     class RawReportClass(models.Model):
         __metaclass__ = RawReportMetaClass
 
-        #     Column      |           Type           |
-        # ----------------+--------------------------+
-        # tenant          | name                     |
-        # type            | character varying        |
-        # type_id         | integer                  |
-        # parent_id       | integer                  |
-        # timestamp       | timestamp with time zone |
-        # status          | character varying(20)    |
-        # event_timestamp | timestamp with time zone |
-        # event_status    | character varying(20)    |
-        # user_id         | integer                  |
-        # year            | double precision         |
-        # quarter         | double precision         |
-        # month           | double precision         |
-        # week            | double precision         |
-        # location        | character varying(255)   |
-        # location_group  | character varying(255)   |
-        # value           | integer                  |
+        #          Column          |           Type           |
+        # -------------------------+--------------------------+
+        # tenant                   | name                     |
+        # type                     | character varying        |
+        # type_id                  | integer                  |
+        # description              | character varying        |
+        # parent_id                | integer                  |
+        # parent_description       | character varying        |
+        # grand_parent_id          | integer                  |
+        # grand_parent_description | character varying        |
+        # timestamp                | timestamp with time zone |
+        # status                   | character varying(20)    |
+        # event_timestamp          | timestamp with time zone |
+        # event_status             | character varying(20)    |
+        # user_id                  | integer                  |
+        # user_remote_id           | character varying        |
+        # user_email               | character varying        |
+        # year                     | double precision         |
+        # quarter                  | double precision         |
+        # month                    | double precision         |
+        # week                     | double precision         |
+        # location                 | character varying(255)   |
+        # location_group           | character varying(255)   |
+        # value                    | integer                  |
+        # pledged                  | integer                  |
         tenant = models.CharField(_('tenant'), max_length=255, primary_key=True)
         type = models.CharField(_('type'), max_length=255)
         type_id = models.PositiveIntegerField(_('type_id'))
+        description = models.CharField(_('description'), max_length=255)
         parent_id = models.PositiveIntegerField(_('parent_id'))
+        parent_description = models.CharField(_('parent_description'), max_length=255)
+        grand_parent_id = models.PositiveIntegerField(_('grand_parent_id'))
+        grand_parent_description = models.CharField(_('grand_parent_description'), max_length=255)
         timestamp = models.DateTimeField(_('timestamp'))
         status = models.CharField(_('status'), max_length=20)
         event_timestamp = models.DateTimeField(_('event_timestamp'))
         event_status = models.CharField(_('event_status'), max_length=20)
         user_id = models.PositiveIntegerField(_('user_id'))
+        user_remote_id = models.PositiveIntegerField(_('user_remote_id'))
+        user_email = models.CharField(_('user_email'), max_length=255)
         year = models.PositiveSmallIntegerField(_('year'))
         quarter = models.PositiveSmallIntegerField(_('quarter'))
         month = models.PositiveSmallIntegerField(_('month'))
@@ -76,6 +89,7 @@ def get_raw_report_model(db_table):
         location = models.CharField(_('location'), max_length=255)
         location_group = models.CharField(_('location_group'), max_length=255)
         value = models.IntegerField(_('value'))
+        pledged = models.IntegerField(_('value'))
 
     return RawReportClass
 

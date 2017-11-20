@@ -13,8 +13,8 @@ class MetricsReport(object):
         'project': 0,
         'task': 1,
         'taskmembers': 2,
-        'taskmember_hours': 3,
-        'taskvolunteers': 4
+        'taskvolunteers': 3,
+        'taskmember_hours': 4
     }
 
     formats = {}
@@ -224,11 +224,12 @@ class MetricsReport(object):
         ws.write(1, 5, 'Start date', light)
         ws.write(1, 6, 'End date', light)
 
-        ws.merge_range(0, 7, 0, 10, 'Totals', dark)
+        ws.merge_range(0, 7, 0, 11, 'Totals', dark)
         ws.write(1, 7, 'Projects successful', light)
         ws.write(1, 8, 'Activities successful', light)
-        ws.write(1, 9, 'Members volunteered', light)
-        ws.write(1, 10, 'Hours volunteered', light)
+        ws.write(1, 9, 'Activity members', light)
+        ws.write(1, 10, 'Members volunteered', light)
+        ws.write(1, 11, 'Hours volunteered', light)
 
         # Rows for year
         start = datetime.date(year, 1, 1)
@@ -293,31 +294,32 @@ class MetricsReport(object):
             ws.write(int(j), int(i), data.value, border_bottom if data.month == 12 else None)
 
         # Location headers
-        l = 0
+        lc = 0
         for loc in self.locations:
-            l += 1
-            ws.merge_range(0, 7 + l * 4, 0, 10 + l * 4, loc['name'], dark)
-            ws.write(1, l * 4 + 7, 'Projects successful', light)
-            ws.write(1, l * 4 + 8, 'Activities successful', light)
-            ws.write(1, l * 4 + 9, 'Members volunteered', light)
-            ws.write(1, l * 4 + 10, 'Hours volunteered', light)
-            for c in range(7, 11):
-                ws.write(2, l * 4 + c, '', border_bottom)
-                ws.write(6, l * 4 + c, '', border_bottom)
-                ws.write(18, l * 4 + c, '', border_bottom)
+            lc += 1
+            ws.merge_range(0, 7 + lc * 5, 0, 11 + lc * 5, loc['name'], dark)
+            ws.write(1, lc * 5 + 7, 'Projects successful', light)
+            ws.write(1, lc * 5 + 8, 'Activities successful', light)
+            ws.write(1, lc * 5 + 9, 'Activity members', light)
+            ws.write(1, lc * 5 + 10, 'Members volunteered', light)
+            ws.write(1, lc * 5 + 11, 'Hours volunteered', light)
+            for c in range(7, 12):
+                ws.write(2, lc * 5 + c, '', border_bottom)
+                ws.write(6, lc * 5 + c, '', border_bottom)
+                ws.write(18, lc * 5 + c, '', border_bottom)
 
         # Location year data
         for data in self.get_year_data(year, location=True):
             if data.location:
                 t = self.type_index[data.type]
-                i = self.location_index[data.location] * 4 + 7 + t
+                i = self.location_index[data.location] * 5 + 7 + t
                 ws.write(2, i, data.value, border_bottom)
 
         # Location quarter data
         for data in self.get_quarter_data(year, location=True):
             if data.location:
                 t = self.type_index[data.type]
-                i = self.location_index[data.location] * 4 + 7 + t
+                i = self.location_index[data.location] * 5 + 7 + t
                 j = data.quarter + 2
                 ws.write(int(j), int(i), data.value, border_bottom if data.quarter == 4 else None)
 
@@ -325,7 +327,7 @@ class MetricsReport(object):
         for data in self.get_month_data(year, location=True):
             if data.location:
                 t = self.type_index[data.type]
-                i = self.location_index[data.location] * 4 + 7 + t
+                i = self.location_index[data.location] * 5 + 7 + t
                 j = data.month + 6
                 ws.write(int(j), int(i), data.value, border_bottom if data.month == 12 else None)
 

@@ -81,6 +81,6 @@ class ReportDownloadView(View):
             output.read(),
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        filename = 'report-{}.xlsx'.format(now().strftime('%d-%m-%Y_%H-%M-%S'))
-        response['Content-Disposition'] = "attachment; {}".format(filename)
+        filename = "report-{}.xlsx".format(now().strftime('%d-%m-%Y_%H-%M-%S'))
+        response['Content-Disposition'] = "attachment; filename={}".format(filename)
         return response

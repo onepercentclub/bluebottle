@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.db import connection
 from django.http import HttpResponse
 from django.urls import reverse
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic.base import View
 from django.views.generic.edit import FormView
@@ -80,5 +81,6 @@ class ReportDownloadView(View):
             output.read(),
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        response['Content-Disposition'] = "attachment; filename=report.xlsx"
+        filename = 'report-{}.xlsx'.format(now().strftime('%d-%m-%Y_%H-%M-%S'))
+        response['Content-Disposition'] = "attachment; {}".format(filename)
         return response

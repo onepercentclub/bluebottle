@@ -6,10 +6,16 @@ import pytz
 from django.conf import settings
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
-from django.test import SimpleTestCase
+from django.test.utils import override_settings
+from django.test import TestCase, SimpleTestCase
 from mock import patch
 
 from bluebottle.tasks.models import TaskMember
+from bluebottle.analytics.models import get_raw_report_model
+
+from bluebottle.analytics.management.commands.create_report_views import (
+    Command as CreateReportViewsCommand
+)
 
 from bluebottle.analytics.management.commands.export_engagement_metrics import (
     Command as EngagementCommand
@@ -265,3 +271,23 @@ class TestParticipationXls(BluebottleTestCase):
             self.assertEqual(workbook.worksheets[8]['G5'].value, 0)
             self.assertEqual(workbook.worksheets[8]['D6'].value, 'February')
             self.assertEqual(workbook.worksheets[8]['G6'].value, 10)
+
+
+@override_settings(TENANT_APPS=('django_nose',),
+                   TENANT_MODEL='client.clients',
+                   DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',))
+class CreateReportViewTests(TestCase):
+    def setUp(self):
+        self.cmd = CreateReportViewsCommand()
+
+        super(CreateReportViewTests, self).setUp()
+
+    @override_settings(REPORTING_SQL_DIR=os.path.join(settings.PROJECT_ROOT,
+                       'bluebottle', 'analytics', 'tests', 'files')
+    def test_raw_view_creation(self):
+        # setup some test files
+        call_command(self.cmd, sname='REPORT_DB_VIEWS', tenant='test')
+
+        ReportModel = get_raw_report_model('v_projects')
+        results = ReportModel.objects.all()
+        print(len(results))

@@ -31,6 +31,7 @@ class Statistic(models.Model):
         participants = ChoiceItem('participants', label=_("Participants"))
         amount_matched = ChoiceItem('amount_matched', label=_("Amount Matched"))
         votes_cast = ChoiceItem('votes_cast', label=_("Number of votes cast"))
+        members = ChoiceItem('members', label=_("Number of members"))
 
     title = models.CharField(_("Title"), max_length=100, blank=True)
 

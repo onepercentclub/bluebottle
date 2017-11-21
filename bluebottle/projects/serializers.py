@@ -517,5 +517,6 @@ class ProjectPlatformSettingsSerializer(serializers.ModelSerializer):
             'create_flow',
             'contact_method',
             'contact_types',
-            'filters'
+            'filters',
+            'allow_anonymous_rewards'
         )

@@ -402,6 +402,7 @@ class Logo(models.Model):
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='logo_images/'
     )
+    link = models.CharField(max_length=100, blank=True, null=True)
 
 
 class LogosContent(TitledContent):

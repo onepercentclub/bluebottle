@@ -276,7 +276,6 @@ SHARED_APPS = (
     'daterange_filter',
     'adminsortable',
     'django_summernote',
-    'django_pgviews'
 )
 
 TENANT_APPS = (

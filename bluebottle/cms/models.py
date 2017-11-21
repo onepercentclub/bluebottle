@@ -446,6 +446,7 @@ class Greeting(models.Model):
 
 class WelcomeContent(ContentItem):
     type = 'welcome'
+    preview_template = 'admin/cms/preview/default.html'
 
     preamble = models.CharField(max_length=20)
 
@@ -453,7 +454,7 @@ class WelcomeContent(ContentItem):
         verbose_name = _('Welcome')
 
     def __unicode__(self):
-        return u'Welcome'
+        return unicode(_('Welcome'))
 
 
 class SitePlatformSettings(BasePlatformSettings):

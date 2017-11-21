@@ -50,25 +50,44 @@ class MetricsReport(object):
         self.formats['top'] = self.workbook.add_format({'valign': 'top'})
 
     def get_year_data(self, year, location=False, cumulative=False):
-        if location:
-            ReportModel = get_report_model('v_year_report')
+        if cumulative:
+            if location:
+                ReportModel = get_report_model('v_year_cumulative_report')
+            else:
+                ReportModel = get_report_model('v_year_cumulative_totals_report')
         else:
-            ReportModel = get_report_model('v_year_totals_report')
+            if location:
+                ReportModel = get_report_model('v_year_report')
+            else:
+                ReportModel = get_report_model('v_year_totals_report')
         return ReportModel.objects.filter(year=year)
 
     def get_quarter_data(self, year, location=False, cumulative=False):
-        if location:
-            ReportModel = get_report_model('v_quarter_report')
+        if cumulative:
+            if location:
+                ReportModel = get_report_model('v_quarter_cumulative_report')
+            else:
+                ReportModel = get_report_model('v_quarter_cumulative_totals_report')
         else:
-            ReportModel = get_report_model('v_quarter_totals_report')
+            if location:
+                ReportModel = get_report_model('v_quarter_report')
+            else:
+                ReportModel = get_report_model('v_quarter_totals_report')
         return ReportModel.objects.filter(year=year).order_by('quarter', 'type')
 
     def get_month_data(self, year, location=False, cumulative=False):
-        if location:
-            ReportModel = get_report_model('v_month_report')
+        if cumulative:
+            if location:
+                ReportModel = get_report_model('v_month_cumulative_report')
+            else:
+                ReportModel = get_report_model('v_month_cumulative_totals_report')
+            return ReportModel.objects.filter(year=year).order_by('month', 'type')
         else:
-            ReportModel = get_report_model('v_month_totals_report')
-        return ReportModel.objects.filter(year=year).order_by('month', 'type')
+            if location:
+                ReportModel = get_report_model('v_month_report')
+            else:
+                ReportModel = get_report_model('v_month_totals_report')
+            return ReportModel.objects.filter(year=year).order_by('month', 'type')
 
     def add_project_sheet(self):
         right_border = self.formats['right_border']
@@ -209,12 +228,14 @@ class MetricsReport(object):
             ws.write(r, 15, data.month)
             ws.write(r, 16, data.week)
 
-    def add_year_totals_sheet(self, year):
+    def add_year_totals_sheet(self, year, cumulative=False):
         border_bottom = self.formats['border']
         dark = self.formats['dark']
         light = self.formats['light']
-
-        ws = self.workbook.add_worksheet('Totals {}'.format(year))
+        if cumulative:
+            ws = self.workbook.add_worksheet('Aggregated Totals {}'.format(year))
+        else:
+            ws = self.workbook.add_worksheet('Totals {}'.format(year))
         ws.merge_range(0, 0, 0, 7, 'Period', dark)
         ws.write(1, 0, 'Duration', light)
         ws.write(1, 1, 'Year', light)
@@ -243,10 +264,9 @@ class MetricsReport(object):
         ws.write_datetime(2, 6, date=end)
 
         # Values for year
-        i = 0
-        for data in self.get_year_data(year):
-            i += 1
-            ws.write(2, i + 6, data.value)
+        for data in self.get_year_data(year, cumulative=cumulative):
+            i = self.type_index[data.type] + 7
+            ws.write(2, i, data.value)
 
         # Rows for quarter
         for q in range(1, 5):
@@ -263,7 +283,7 @@ class MetricsReport(object):
             ws.write_datetime(2 + q, 5, start)
             ws.write_datetime(2 + q, 6, end)
 
-        quarter_data = self.get_quarter_data(year)
+        quarter_data = self.get_quarter_data(year, cumulative=cumulative)
         for data in quarter_data:
             j = data.quarter + 2
             i = self.type_index[data.type] + 7
@@ -287,7 +307,7 @@ class MetricsReport(object):
             ws.write(6 + m, 5, start)
             ws.write_datetime(6 + m, 6, end)
 
-        month_data = self.get_month_data(year)
+        month_data = self.get_month_data(year, cumulative=cumulative)
         for data in month_data:
             j = data.month + 6
             i = self.type_index[data.type] + 7
@@ -309,14 +329,14 @@ class MetricsReport(object):
                 ws.write(18, lc * 5 + c, '', border_bottom)
 
         # Location year data
-        for data in self.get_year_data(year, location=True):
+        for data in self.get_year_data(year, location=True, cumulative=cumulative):
             if data.location:
                 t = self.type_index[data.type]
                 i = self.location_index[data.location] * 5 + 7 + t
                 ws.write(2, i, data.value, border_bottom)
 
         # Location quarter data
-        for data in self.get_quarter_data(year, location=True):
+        for data in self.get_quarter_data(year, location=True, cumulative=cumulative):
             if data.location:
                 t = self.type_index[data.type]
                 i = self.location_index[data.location] * 5 + 7 + t
@@ -324,7 +344,7 @@ class MetricsReport(object):
                 ws.write(int(j), int(i), data.value, border_bottom if data.quarter == 4 else None)
 
         # Location month data
-        for data in self.get_month_data(year, location=True):
+        for data in self.get_month_data(year, location=True, cumulative=cumulative):
             if data.location:
                 t = self.type_index[data.type]
                 i = self.location_index[data.location] * 5 + 7 + t
@@ -360,7 +380,7 @@ Date considered for selecting the correct <period>:
 - Task - Deadline.""")
 
         ws.write_string(3, 0, 'Activity members volunteered', top)
-        ws.write_string(3, 1, """Total sum of unique task members who realized a task (task member's
+        ws.write_string(3, 1, """Total sum of task members who realized a task (task member's
 status is 'Realized') with more than 0 hours realized.
 
 Date considered for selecting the correct <period>:
@@ -388,8 +408,8 @@ Date considered for selecting the correct <period>:
 project that belongs to the project, tasks and task members.
 
 Note
-- Because the location for member is not populated, we are not filtering on for example the 'office location'
-  of a member.""")
+- Because the location for member is not populated, we are not filtering on for example
+  the 'office location' of a member.""")
 
     def to_output(self):
         output = StringIO.StringIO()
@@ -402,6 +422,7 @@ Note
         self.add_definition_sheet()
         for year in [2017, 2016]:
             self.add_year_totals_sheet(year)
+            self.add_year_totals_sheet(year, cumulative=True)
         self.add_project_sheet()
         self.add_task_sheet()
         self.add_taskmember_sheet()

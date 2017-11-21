@@ -283,7 +283,7 @@ class CreateReportViewTests(TestCase):
         super(CreateReportViewTests, self).setUp()
 
     @override_settings(REPORTING_SQL_DIR=os.path.join(settings.PROJECT_ROOT,
-                       'bluebottle', 'analytics', 'tests', 'files')
+                       'bluebottle', 'analytics', 'tests', 'files'))
     def test_raw_view_creation(self):
         # setup some test files
         call_command(self.cmd, sname='REPORT_DB_VIEWS', tenant='test')

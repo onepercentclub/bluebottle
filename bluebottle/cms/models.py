@@ -307,7 +307,7 @@ class SupporterTotalContent(TitledContent):
         return 'Supporter total'
 
 
-class Slide(models.Model):
+class Slide(SortableMixin, models.Model):
     block = models.ForeignKey('cms.SlidesContent', related_name='slides')
     tab_text = models.CharField(
         _("Tab text"), max_length=100,
@@ -336,6 +336,10 @@ class Slide(models.Model):
         help_text=_("This is the link for the button inside the banner."),
         blank=True
     )
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
 
 
 class SlidesContent(TitledContent):
@@ -348,7 +352,7 @@ class SlidesContent(TitledContent):
         return unicode(self.slides)
 
 
-class Step(models.Model):
+class Step(SortableMixin, models.Model):
     block = models.ForeignKey('cms.StepsContent', related_name='steps')
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
@@ -356,6 +360,10 @@ class Step(models.Model):
     )
     header = models.CharField(_("Header"), max_length=100)
     text = models.CharField(_("Text"), max_length=400)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
 
 
 class StepsContent(TitledContent):
@@ -396,12 +404,16 @@ class CategoriesContent(TitledContent):
         return unicode(_('Categories'))
 
 
-class Logo(models.Model):
+class Logo(SortableMixin, models.Model):
     block = models.ForeignKey('cms.LogosContent', related_name='logos')
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='logo_images/'
     )
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
 
 
 class LogosContent(TitledContent):
@@ -417,7 +429,7 @@ class LogosContent(TitledContent):
         return unicode(_('Logos'))
 
 
-class ContentLink(models.Model):
+class ContentLink(SortableMixin, models.Model):
     block = models.ForeignKey('cms.LinksContent', related_name='links')
     image = ImageField(
         _("Image"), max_length=255, blank=True, null=True,
@@ -427,6 +439,10 @@ class ContentLink(models.Model):
     action_link = models.CharField(
         max_length=100, blank=True, null=True
     )
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
 
 
 class LinksContent(TitledContent):

@@ -124,7 +124,7 @@ class Command(BaseCommand):
                         for link in group_links['links']:
                             l, created = Link.objects.get_or_create(
                                 link_group=lg,
-                                highlight=link.get('highlighted', False),
+                                highlight=link.get('highlight', False),
                                 title=link.get('title', 'N/A'),
                                 component=link.get('component', None),
                                 component_id=link.get('component_id', None),

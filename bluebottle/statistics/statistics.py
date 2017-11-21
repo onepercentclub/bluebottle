@@ -11,6 +11,7 @@ from bluebottle.utils.utils import StatusDefinition
 
 from bluebottle.donations.models import Donation
 from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.members.models import Member
 from bluebottle.orders.models import Order
 from bluebottle.projects.models import Project, ProjectPhaseLog
 from bluebottle.tasks.models import Task, TaskMember, TaskStatusLog, TaskMemberStatusLog
@@ -148,17 +149,16 @@ class Statistics(object):
         This will get the last status log entry for all project phase logs
         """
 
-        phase_logs = ProjectPhaseLog.objects\
-            .filter(self.date_filter('start'))\
-            .distinct('project__id')\
-            .order_by('-project__id', '-start')
-
-        # TODO: Refactor to use django filters for sub-queries
-        count = 0
-        for log in phase_logs:
-            if log.status.slug in ['done-complete', 'done-incomplete', 'voting-done']:
-                count += 1
-        return count
+        phase_logs = ProjectPhaseLog.objects.filter(
+            self.date_filter('start')
+        ).filter(
+            status__slug__in=['done-complete', 'done-incomplete', 'voting-done']
+        ).distinct(
+            'project__id'
+        ).order_by(
+            '-project__id', '-start'
+        )
+        return len(phase_logs)
 
     @property
     @memoize(timeout=60 * 60)
@@ -288,6 +288,16 @@ class Statistics(object):
             donated = Money(0, properties.DEFAULT_CURRENCY)
 
         return donated
+
+    @property
+    @memoize(timeout=300)
+    def members(self):
+        """ Total amount of members."""
+        members = Member.objects.filter(
+            self.date_filter('created'),
+            is_active=True
+        )
+        return len(members)
 
     def __repr__(self):
         start = self.start.strftime('%s') if self.start else 'none'

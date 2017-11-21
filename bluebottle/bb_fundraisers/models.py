@@ -11,11 +11,11 @@ from django_extensions.db.fields import (ModificationDateTimeField,
 
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import ImageField, MoneyField
-from bluebottle.utils.utils import GetTweetMixin, StatusDefinition
+from bluebottle.utils.utils import StatusDefinition
 from bluebottle.wallposts.models import Wallpost
 
 
-class BaseFundraiser(models.Model, GetTweetMixin):
+class BaseFundraiser(models.Model):
     owner = models.ForeignKey('members.Member',
                               verbose_name=_("initiator"),
                               help_text=_("Project owner"))

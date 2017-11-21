@@ -910,6 +910,28 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_project_document_delete_author(self):
+        project = ProjectFactory(owner=self.some_user)
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            project=project,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('manage-project-document-detail', args=[document.pk])
+        response = self.client.delete(file_url, token=self.some_user_token)
+
+        self.assertEqual(response.status_code, 204)
+
+    def test_project_document_delete_non_author(self):
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('manage-project-document-detail', args=[document.pk])
+        response = self.client.delete(file_url, token=self.another_user_token)
+
+        self.assertEqual(response.status_code, 403)
+
     def test_project_document_staff_session_user(self):
         self.another_user.groups.add(
             Group.objects.get(name='Staff')
@@ -2282,7 +2304,8 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
             contact_method='mail',
             contact_types=['organization'],
             create_flow='choice',
-            create_types=["funding", "sourcing"]
+            create_types=["funding", "sourcing"],
+            allow_anonymous_rewards=False
         )
 
         ProjectSearchFilter.objects.create(
@@ -2317,3 +2340,4 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['projects']['filters'][2]['name'], 'status')
         self.assertEqual(response.data['platform']['projects']['filters'][2]['values'], None)
         self.assertEqual(response.data['platform']['projects']['filters'][2]['default'], 'campaign,voting')
+        self.assertEqual(response.data['platform']['projects']['allow_anonymous_rewards'], False)

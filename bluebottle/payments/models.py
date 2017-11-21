@@ -234,7 +234,6 @@ class OrderPayment(models.Model, FSMTransition):
     def refund_requested(self):
         pass
 
-
     def get_status_mapping(self, payment_status):
         # Currently the status in Payment and OrderPayment is one to one.
         return payment_status

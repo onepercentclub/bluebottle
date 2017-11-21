@@ -37,13 +37,14 @@ LEFT JOIN geo_locationgroup as lg
 ON l.group_id = lg.id);
 
 
+DROP VIEW IF EXISTS v_tasks CASCADE;
 CREATE OR REPLACE VIEW v_tasks AS (
 SELECT current_schema() as tenant,
        'task'::varchar as type,
 	t.id as type_id,
 	t.title as description,
 	t.project_id as parent_id,
-	p.description as parent_description,
+	null::VARCHAR as parent_description,
 	null::INTEGER as grand_parent_id,
 	null::VARCHAR as grand_parent_description,
  	t.deadline AT TIME ZONE 'Europe/Amsterdam' as timestamp,
@@ -69,7 +70,7 @@ ON p.type_id = t.project_id
 LEFT JOIN members_member as m
 ON m.id = t.author_id);
 
-
+DROP VIEW IF EXISTS v_taskmembers CASCADE;
 CREATE OR REPLACE VIEW v_taskmembers AS (
 SELECT current_schema() as tenant,
        'taskmember_hours'::varchar as type,
@@ -105,24 +106,28 @@ LEFT JOIN members_member as m
 ON m.id = tm.member_id);
 
 -- Create report views on projects, tasks and task members
+DROP VIEW IF EXISTS v_project_successful_report CASCADE;
 CREATE OR REPLACE VIEW v_project_successful_report AS (
 SELECT DISTINCT on (1) type_id as filter_id, * FROM v_projects 
 WHERE status = 'done-complete' AND event_status = 'done-complete'
 ORDER BY filter_id, event_timestamp DESC);
 
 -- For tasks we don't consider the event logs
+DROP VIEW IF EXISTS v_task_successful_report CASCADE;
 CREATE OR REPLACE VIEW v_task_successful_report AS (
 SELECT DISTINCT on (1) type_id as filter_id, * FROM v_tasks 
 WHERE status = 'realized'
 ORDER BY filter_id, timestamp DESC);
 
 -- For task members we don't consider the event logs
+DROP VIEW IF EXISTS v_taskmember_successful_report CASCADE;
 CREATE OR REPLACE VIEW v_taskmember_successful_report AS (
 SELECT DISTINCT on (1) type_id as filter_id, * FROM v_taskmembers 
 WHERE status = 'realized' AND value > 0
 ORDER BY filter_id, timestamp DESC);
 
 -- Generate monthly 'success' report per project location
+DROP VIEW IF EXISTS v_month_report CASCADE;
 CREATE OR REPLACE VIEW v_month_report as (
 SELECT * FROM (
 SELECT year, quarter, month, location, type, count(distinct(type_id)) as value
@@ -147,6 +152,7 @@ GROUP BY year, quarter, month, location, type) as m
 ORDER BY m.year, m.quarter, m.month, m.location, m.type);
 
 -- Generate quarterly 'success' report per project location
+DROP VIEW IF EXISTS v_quarter_report CASCADE;
 CREATE OR REPLACE VIEW v_quarter_report as (
 SELECT * FROM (
 SELECT year, quarter, 0::double precision as month, location, type, count(distinct(type_id)) as value
@@ -171,6 +177,7 @@ GROUP BY year, quarter, location, type) as q
 ORDER BY q.year, q.quarter, q.location, q.type);
 
 -- Generate yearly 'success' report per project location
+DROP VIEW IF EXISTS v_year_report CASCADE;
 CREATE OR REPLACE VIEW v_year_report as (
 SELECT * FROM (
 SELECT year, 0::double precision as quarter, 0::double precision as month, location, type, count(distinct(type_id)) as value
@@ -195,79 +202,98 @@ GROUP BY year, location, type) as y
 ORDER BY y.year, y.location, y.type);
 
 -- Generate cumulative monthly 'success' report per project location
+DROP VIEW IF EXISTS v_month_cumulative_totals_report CASCADE;
 CREATE OR REPLACE VIEW v_month_cumulative_report as (
 SELECT * FROM (
-SELECT year, quarter, month, location, type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, month, location, type) as value
+SELECT year, quarter, month, location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_project_successful_report
 GROUP BY year, quarter, month, location, type
 UNION
-SELECT year, quarter, month, location, type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, month, location, type) as value
+SELECT year, quarter, month, location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_task_successful_report
 GROUP BY year, quarter, month, location, type
 UNION
-SELECT year, quarter, month, location, 'taskmembers'::varchar as type, sum(count(distinct user_id)) OVER (ORDER BY year, quarter, month, location, type) as value
+SELECT year, quarter, month, location, 'taskmembers'::varchar as type,
+       sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, location, type
 UNION
-SELECT year, quarter, month, location, 'taskvolunteers'::varchar as type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, month, location, type) as value
+SELECT year, quarter, month, location, 'taskvolunteers'::varchar as type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, location, type
 UNION
-SELECT year, quarter, month, location, type, sum(sum(value)) OVER (ORDER BY year, quarter, month, location, type) as value
+SELECT year, quarter, month, location, type,
+       sum(sum(value)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, location, type) as m
 ORDER BY m.year, m.quarter, m.month, m.location, m.type);
 
 -- Generate cumulative quarterly 'success' report per project location
+DROP VIEW IF EXISTS v_quarter_cumulative_report CASCADE;
 CREATE OR REPLACE VIEW v_quarter_cumulative_report as (
 SELECT * FROM (
-SELECT year, quarter, 0::double precision as month, location, type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, location, type) as value
+SELECT year, quarter, 0::double precision as month, location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_project_successful_report
 GROUP BY year, quarter, location, type
 UNION
-SELECT year, quarter, 0::double precision as month, location, type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, location, type) as value
+SELECT year, quarter, 0::double precision as month, location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_task_successful_report
 GROUP BY year, quarter, location, type
 UNION
-SELECT year, quarter, 0::double precision as month, location, 'taskmembers'::varchar as type, sum(count(distinct user_id)) OVER (ORDER BY year, quarter, location, type) as value
+SELECT year, quarter, 0::double precision as month, location, 'taskmembers'::varchar as type,
+       sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, location, type
 UNION
-SELECT year, quarter, 0::double precision as month, location, 'taskvolunteers'::varchar as type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, location, type) as value
+SELECT year, quarter, 0::double precision as month, location, 'taskvolunteers'::varchar as type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, location, type
 UNION
-SELECT year, quarter, 0::double precision as month, location, type, sum(sum(value)) OVER (ORDER BY year, quarter, location, type) as value
+SELECT year, quarter, 0::double precision as month, location, type,
+       sum(sum(value)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, location, type) as m
 ORDER BY m.year, m.quarter, m.location, m.type);
 
 -- Generate cumulative yearly 'success' report per project location
+DROP VIEW IF EXISTS v_year_cumulative_report CASCADE;
 CREATE OR REPLACE VIEW v_year_cumulative_report as (
 SELECT * FROM (
-SELECT year, 0::double precision as quarter, 0::double precision as month, location, type, sum(count(distinct type_id)) OVER (ORDER BY year, location, type) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_project_successful_report
 GROUP BY year, location, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, location, type, sum(count(distinct type_id)) OVER (ORDER BY year, location, type) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_task_successful_report
 GROUP BY year, location, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'taskmembers'::varchar as type, sum(count(distinct user_id)) OVER (ORDER BY year, location, type) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'taskmembers'::varchar as type,
+       sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, location, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'taskvolunteers'::varchar as type, sum(count(distinct type_id)) OVER (ORDER BY year, location, type) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'taskvolunteers'::varchar as type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, location, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, location, type, sum(sum(value)) OVER (ORDER BY year, location, type) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, location, type,
+       sum(sum(value)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, location, type) as m
 ORDER BY m.year, m.location, m.type);
 
 
 -- Generate monthly 'success' report totals
+DROP VIEW IF EXISTS v_month_totals_report CASCADE;
 CREATE OR REPLACE VIEW v_month_totals_report as (
 SELECT * FROM (
 SELECT year, quarter, month, ''::varchar as location, type, count(distinct(type_id)) as value
@@ -292,6 +318,7 @@ GROUP BY year, quarter, month, type) as m
 ORDER BY m.year, m.quarter, m.month, m.type);
 
 -- Generate quarterly 'success' report totals
+DROP VIEW IF EXISTS v_quarter_totals_report CASCADE;
 CREATE OR REPLACE VIEW v_quarter_totals_report as (
 SELECT * FROM (
 SELECT year, quarter, 0::double precision as month, ''::varchar as location, type, count(distinct(type_id)) as value
@@ -316,6 +343,7 @@ GROUP BY year, quarter, type) as q
 ORDER BY q.year, q.quarter, q.type);
 
 -- Generate yearly 'success' report totals
+DROP VIEW IF EXISTS v_year_totals_report CASCADE;
 CREATE OR REPLACE VIEW v_year_totals_report as (
 SELECT * FROM (
 SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, type, count(distinct(type_id)) as value
@@ -340,73 +368,91 @@ GROUP BY year, type) as y
 ORDER BY y.year, y.type);
 
 -- Generate cumulative monthly  'success' report totals
+DROP VIEW IF EXISTS v_month_cumulative_totals_report CASCADE;
 CREATE OR REPLACE VIEW v_month_cumulative_totals_report as (
 SELECT * FROM (
-SELECT year, quarter, month, ''::varchar as location, type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, month, type) as value
+SELECT year, quarter, month, ''::varchar as location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_project_successful_report
 GROUP BY year, quarter, month, type
 UNION
-SELECT year, quarter, month, ''::varchar as location, type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, month, type) as value
+SELECT year, quarter, month, ''::varchar as location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_task_successful_report
 GROUP BY year, quarter, month, type
 UNION
-SELECT year, quarter, month, ''::varchar as location, 'taskmembers'::varchar as type, sum(count(distinct user_id)) OVER (ORDER BY year, quarter, month, type) as value
+SELECT year, quarter, month, ''::varchar as location, 'taskmembers'::varchar as type,
+       sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, type
 UNION
-SELECT year, quarter, month, ''::varchar as location, 'taskvolunteers'::varchar as type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, month, type) as value
+SELECT year, quarter, month, ''::varchar as location, 'taskvolunteers'::varchar as type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, type
 UNION
-SELECT year, quarter, month, ''::varchar as location, type, sum(sum(value)) OVER (ORDER BY year, quarter, month, type) as value
+SELECT year, quarter, month, ''::varchar as location, type,
+       sum(sum(value)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, type) as m
 ORDER BY m.year, m.quarter, m.month, m.type);
 
 -- Generate cumulative quarterly 'success' report totals
+DROP VIEW IF EXISTS v_quarter_cumulative_totals_report CASCADE;
 CREATE OR REPLACE VIEW v_quarter_cumulative_totals_report as (
 SELECT * FROM (
-SELECT year, quarter, 0::double precision as month, ''::varchar as location, type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, type) as value
+SELECT year, quarter, 0::double precision as month, ''::varchar as location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_project_successful_report
 GROUP BY year, quarter, type
 UNION
-SELECT year, quarter, 0::double precision as month, ''::varchar as location, type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, type) as value
+SELECT year, quarter, 0::double precision as month, ''::varchar as location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_task_successful_report
 GROUP BY year, quarter, type
 UNION
-SELECT year, quarter, 0::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type, sum(count(distinct user_id)) OVER (ORDER BY year, quarter, type) as value
+SELECT year, quarter, 0::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+       sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, type
 UNION
-SELECT year, quarter, 0::double precision as month, ''::varchar as location, 'taskvolunteers'::varchar as type, sum(count(distinct type_id)) OVER (ORDER BY year, quarter, type) as value
+SELECT year, quarter, 0::double precision as month, ''::varchar as location, 'taskvolunteers'::varchar as type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, type
 UNION
-SELECT year, quarter, 0::double precision as month, ''::varchar as location, type, sum(sum(value)) OVER (ORDER BY year, quarter, type) as value
+SELECT year, quarter, 0::double precision as month, ''::varchar as location, type,
+       sum(sum(value)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, type) as m
 ORDER BY m.year, m.quarter, m.type);
 
--- Generate cumulative quarterly 'success' report totals
+-- Generate cumulative yearly 'success' report totals
+DROP VIEW IF EXISTS v_year_cumulative_totals_report CASCADE;
 CREATE OR REPLACE VIEW v_year_cumulative_totals_report as (
 SELECT * FROM (
-SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, type, sum(count(distinct type_id)) OVER (ORDER BY year, type) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_project_successful_report
 GROUP BY year, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, type, sum(count(distinct type_id)) OVER (ORDER BY year, type) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_task_successful_report
 GROUP BY year, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type, sum(count(distinct user_id)) OVER (ORDER BY year, type) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+       sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskvolunteers'::varchar as type, sum(count(distinct type_id)) OVER (ORDER BY year, type) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskvolunteers'::varchar as type,
+       sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, type, sum(sum(value)) OVER (ORDER BY year, type) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, type,
+       sum(sum(value)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, type) as m
 ORDER BY m.year, m.type);

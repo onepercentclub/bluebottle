@@ -82,6 +82,7 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static', 'assets')
 STATIC_URL = '/static/assets/'
 
 STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'bluebottle/static'),
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -276,7 +277,6 @@ SHARED_APPS = (
     'daterange_filter',
     'adminsortable',
     'django_summernote',
-    'nested_inline',
     'django_singleton_admin'
 
 )
@@ -393,6 +393,8 @@ TENANT_APPS = (
     # https://github.com/django-money/django-money/issues/232
     'djmoney',
     'django_singleton_admin',
+    'template_debug',
+    'nested_inline',
 )
 
 

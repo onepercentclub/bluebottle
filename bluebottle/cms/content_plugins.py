@@ -20,9 +20,14 @@ class CMSContentPlugin(ContentPlugin):
 
     class Media:
         css = {
-            "all": ('admin/css/forms-nested.css',)
+            "all": ('admin/css/forms-nested.css', )
         }
-        js = ('admin/js/inlines-nested.js',)
+        js = (
+            'admin/js/inlines-nested.js',
+            'js/csrf.js',
+            'adminsortable/js/jquery-ui-django-admin.min.js',
+            'adminsortable/js/admin.sortable.stacked.inlines.js'
+        )
 
 
 @plugin_pool.register

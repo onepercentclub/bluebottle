@@ -81,7 +81,7 @@ class SiteLinksAdmin(NonSortableParentAdmin):
 
 class StatInline(NestedStackedInline, SortableStackedInline):
     model = Stat
-    extra = 1
+    extra = 0
     fields = ('type', 'definition', 'title', 'value')
 
     readonly_fields = ['definition']
@@ -95,29 +95,29 @@ class QuoteInline(NestedStackedInline):
     extra = 1
 
 
-class SlideInline(NestedStackedInline):
+class SlideInline(NestedStackedInline, SortableStackedInline):
     model = Slide
-    extra = 1
+    extra = 0
 
 
-class StepInline(NestedStackedInline):
+class StepInline(NestedStackedInline, SortableStackedInline):
     model = Step
-    extra = 1
+    extra = 0
 
 
-class LogoInline(NestedStackedInline):
+class LogoInline(NestedStackedInline, SortableStackedInline):
     model = Logo
-    extra = 1
+    extra = 0
 
 
-class LinkInline(NestedStackedInline):
+class LinkInline(NestedStackedInline, SortableStackedInline):
     model = ContentLink
-    extra = 1
+    extra = 0
 
 
 class GreetingInline(NestedStackedInline):
     model = Greeting
-    extra = 1
+    extra = 0
 
 
 class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
@@ -136,7 +136,7 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
-class HomePageAdmin(SingletonAdmin, PlaceholderFieldAdmin, TranslatableAdmin):
+class HomePageAdmin(SingletonAdmin, PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }

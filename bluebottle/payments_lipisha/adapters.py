@@ -156,7 +156,7 @@ class LipishaPaymentInterface(object):
         except KeyError:
             raise PaymentException("Could not create an account number at Lipisha")
 
-    def generate_response(self, payment):
+    def generate_success_response(self, payment):
         donation = payment.order_payment.order.donations.first()
         message = "Dear {}, thanks for your donation {} of {} {} to {}!".format(
             donation.name,
@@ -170,7 +170,7 @@ class LipishaPaymentInterface(object):
             "api_key": self.credentials['api_key'],
             "api_signature": self.credentials['api_signature'],
             "api_version": "1.0.4",
-            "api_type": "Payment",
+            "api_type": "Receipt",
             "transaction_reference": payment.reference,
             "transaction_status_code": "001",
             "transaction_status": "SUCCESS",
@@ -178,6 +178,20 @@ class LipishaPaymentInterface(object):
             "transaction_status_action": "ACCEPT",
             "transaction_status_reason": "VALID_TRANSACTION",
             "transaction_custom_sms": message
+        }
+
+    def generate_error_response(self, reference):
+        return {
+            "api_key": self.credentials['api_key'],
+            "api_signature": self.credentials['api_signature'],
+            "api_version": "1.0.4",
+            "api_type": "Receipt",
+            "transaction_reference": reference,
+            "transaction_status_code": "002",
+            "transaction_status": "FAIL",
+            "transaction_status_description": "Transaction has a problem and we reject.",
+            "transaction_status_action": "REJECT",
+            "transaction_status_reason": "INVALID_TRANSACTION"
         }
 
     def _update_amounts(self, payment, amount, currency):
@@ -199,6 +213,12 @@ class LipishaPaymentInterface(object):
         payment = None
         order_payment = None
 
+        # Credentials should match
+        if self.credentials['api_key'] != data['api_key']:
+            return self.generate_error_response(transaction_reference)
+        if self.credentials['api_signature'] != data['api_signature']:
+            return self.generate_error_response(transaction_reference)
+
         # If account number has a # then it is a donation started at our platform
         if transaction_merchant_reference:
             try:
@@ -217,7 +237,6 @@ class LipishaPaymentInterface(object):
         if transaction_reference:
             try:
                 payment = LipishaPayment.objects.get(transaction_reference=transaction_reference)
-                return self.generate_response(payment)
             except LipishaPayment.DoesNotExist:
                 # Payment not found, probably not correctly filled in,
                 # continue as an new anonymous donation
@@ -261,7 +280,7 @@ class LipishaPaymentInterface(object):
         payment.transaction_mobile_number = data['transaction_mobile']
         payment.reference = data['transaction_mobile']
 
-        if data['transaction_status'] == 'Completed':
+        if data['transaction_status'] == 'SUCCESS':
             payment.status = 'settled'
             order_payment.settled()
         else:
@@ -269,44 +288,48 @@ class LipishaPaymentInterface(object):
             order_payment.failed()
         payment.reference = payment.order_payment_id
         payment.save()
-        return self.generate_response(payment)
+        return self.generate_success_response(payment)
 
     def acknowledge_payment(self, data):
         """
-        Parameter	Description	Example
-        api_key	Your Lipisha API key.	3aa67677e8bf1d4c8fe886a38c03a860
-        api_signature	Your Lipisha API signature.	SYetmwsNnKhZNNkCoEx+5x=
-        api_version	Version of the API	2.0.0
-        api_type	Type of handshake or callback	Acknowledge
-        transaction	Unique transaction idenitifier.	CU79AW109D
-        transaction_reference	Similar to transaction	CU79AW109D
-        transaction_status_code	Status code of the response. Options are:
-        001 (Valid transaction)
-        002 (Invalid transaction)
-        003 (Timeout transaction)
-        001
-        transaction_status	Status of the response. Options are:
-        SUCCESS
-        FAIL
-        SUCCESS
-        transaction_status_description	Description of the response.	Transaction processed successfully.
-        transaction_status_action	Action carried out on receiving the Initiate callback. Options are:
-        ACCEPT
-        REJECT
-        ACCEPT
-        transaction_status_reason	Reason for the status response. Options are:
-        VALID_TRANSACTION
-        INVALID_TRANSACTION
-        INVALID_TRANSACTION_MOBILE
-        INVALID_TRANSACTION_AMOUNT
-        INVALID_TRANSACTION_NAME
-        INVALID_TRANSACTION_PAYBILL
-        INVALID_TRANSACTION_ACCOUNT_NUMBER
-        INVALID_TRANSACTION_MERCHANT_REFERENCE
-        INVALID_TRANSACTION_METHOD
-        INVALID_TRANSACTION_EMAIL
-        INVALID_TRANSACTION_DATE
-        TIMEOUT_TRANSACTION
-        VALID_TRANSACTION
+        Find existing payment and switch to given status
         """
-        pass
+        transaction_reference = data['transaction_reference']
+        order_payment = None
+
+        # Credentials should match
+        if self.credentials['api_key'] != data['api_key']:
+            return self.generate_error_response(transaction_reference)
+        if self.credentials['api_signature'] != data['api_signature']:
+            return self.generate_error_response(transaction_reference)
+
+        try:
+            payment = LipishaPayment.objects.get(transaction_reference=transaction_reference)
+            self._update_amounts(payment, data['transaction_amount'], data['transaction_currency'])
+        except LipishaPayment.DoesNotExist:
+            return self.generate_error_response(transaction_reference)
+        except LipishaPayment.MultipleObjectsReturned:
+            # Multiple payments with that transaction_reference
+            # FIXME: probably send a warning?
+            payment = LipishaPayment.objects.filter(transaction_reference=transaction_reference).last()
+            self._update_amounts(payment, data['transaction_amount'], data['transaction_currency'])
+
+        payment.response = json.dumps(data)
+        for k, v in data.items():
+            try:
+                setattr(payment, k, v)
+            except AttributeError:
+                pass
+
+        payment.transaction_mobile_number = data['transaction_mobile']
+        payment.reference = data['transaction_mobile']
+
+        if data['transaction_status'] == 'SUCCESS':
+            payment.status = 'settled'
+            order_payment.settled()
+        else:
+            payment.status = 'failed'
+            order_payment.failed()
+        payment.reference = payment.order_payment_id
+        payment.save()
+        return self.generate_success_response(payment)

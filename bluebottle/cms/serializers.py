@@ -24,6 +24,7 @@ from bluebottle.cms.models import (
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer
 from bluebottle.surveys.serializers import QuestionSerializer
+from bluebottle.utils.fields import SafeField
 
 
 class RichTextContentSerializer(serializers.Serializer):
@@ -213,6 +214,7 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
 
 class StepSerializer(serializers.ModelSerializer):
     image = SorlImageField('800x600', crop='center')
+    text = SafeField(required=False, allow_blank=True)
 
     class Meta:
         model = Step

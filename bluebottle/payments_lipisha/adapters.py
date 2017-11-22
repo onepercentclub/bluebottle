@@ -1,5 +1,7 @@
 # coding=utf-8
 import json
+import logging
+
 from lipisha import Lipisha, lipisha
 from moneyed.classes import Money
 
@@ -15,6 +17,8 @@ from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.utils.utils import StatusDefinition
 
 from .models import LipishaPayment
+
+logger = logging.getLogger()
 
 
 class LipishaPaymentAdapter(BasePaymentAdapter):
@@ -245,6 +249,7 @@ class LipishaPaymentInterface(object):
                 # Multiple payments with that transaction_reference
                 # FIXME: probably send a warning?
                 payment = LipishaPayment.objects.filter(transaction_reference=transaction_reference).last()
+                order_payment = payment.order_payment
                 self._update_amounts(payment, data['transaction_amount'], data['transaction_currency'])
 
         if not payment:
@@ -266,6 +271,7 @@ class LipishaPaymentInterface(object):
                 order=order,
                 payment_method='lipishaMpesa'
             )
+
             payment = LipishaPayment.objects.create(
                 order_payment=order_payment
             )
@@ -280,7 +286,7 @@ class LipishaPaymentInterface(object):
         payment.transaction_mobile_number = data['transaction_mobile']
         payment.reference = data['transaction_mobile']
 
-        if data['transaction_status'] == 'SUCCESS':
+        if data['transaction_status'] == 'Completed':
             payment.status = 'settled'
             order_payment.settled()
         else:

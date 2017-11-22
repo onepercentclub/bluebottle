@@ -1,7 +1,6 @@
 from datetime import timedelta, datetime
 import json
 from random import randint
-
 from django.test import RequestFactory
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
@@ -72,6 +71,101 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         response = self.client.post(self.project_manage_list_url, {'title': 'Title 2'},
                                     token=self.owner_token)
         self.assertEqual(response.status_code, 201)
+
+    def test_owner_running_permissions(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+        response = self.client.get(self.project_url, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        # update allowed
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
+                                   token=self.owner_token)
+        self.assertEqual(response.status_code, 403)
+
+    def test_owner_running_permissions_has_permission(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        response = self.client.get(self.project_url, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        # update allowed
+        response = self.client.put(
+            self.project_manage_url, {
+                'title': self.project.title,
+                'video_url': 'http://example.com/test',
+                'pitch': 'some pitch',
+                'story': 'some story'
+            },
+            token=self.owner_token
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_owner_running_permissions_has_permission_wrong_field(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        # update allowed
+        response = self.client.put(
+            self.project_manage_url, {
+                'title': 'test',
+                'pitch': 'some pitch',
+                'amount_asked': {'amount': 200, 'currency': 'EUR'}},
+            token=self.owner_token
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_owner_running_permissions_has_permission_not_changed(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        # update allowed
+        response = self.client.put(
+            self.project_manage_url, {
+                'title': self.project.title,
+                'amount_asked': {
+                    'amount': self.project.amount_asked.amount,
+                    'currency': str(self.project.amount_asked.currency)
+                }
+            },
+            token=self.owner_token
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_non_owner_running_permissions_has_permission(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        # update not allowed
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
+                                   token=self.not_owner_token)
+        self.assertEqual(response.status_code, 403)
 
     def test_non_owner_permissions(self):
         # update denied

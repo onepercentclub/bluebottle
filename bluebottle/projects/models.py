@@ -560,6 +560,7 @@ class Project(BaseProject, PreviousStatusMixin):
             ('api_read_own_project', 'Can view own projects through the API'),
             ('api_add_own_project', 'Can add own projects through the API'),
             ('api_change_own_project', 'Can change own projects through the API'),
+            ('api_change_own_running_project', 'Can change own running projects through the API'),
             ('api_delete_own_project', 'Can delete own projects through the API'),
 
             ('api_read_projectdocument', 'Can view project documents through the API'),

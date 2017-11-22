@@ -1,6 +1,8 @@
 from django.test import RequestFactory
+from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
@@ -63,10 +65,67 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
             response.data['related_permissions']['donations']['POST'], True
         )
 
-    def test_manage_non_owner_permissions(self):
+    def test_manage_owner_running_permissions(self):
         # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        response = self.client.get(self.project_manage_url, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.data['permissions']['GET'], True
+        )
+        self.assertEqual(
+            response.data['permissions']['PUT'], False
+        )
+
+    def test_manage_owner_running_permissions_with_permission(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        response = self.client.get(self.project_manage_url, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.data['permissions']['GET'], True
+        )
+        self.assertEqual(
+            response.data['permissions']['PUT'], True
+        )
+
+    def test_manage_non_owner_permissions(self):
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        response = self.client.put(self.project_manage_url, token=self.not_owner_token)
+        self.assertEqual(response.status_code, 403)
+
+    def test_manage_non_owner_permissions_running_has_permission(self):
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        response = self.client.put(self.project_manage_url, token=self.not_owner_token)
+        self.assertEqual(response.status_code, 403)
+
+    def test_manage_non_owner_permissions_running(self):
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
         response = self.client.get(self.project_manage_url, token=self.not_owner_token)
         self.assertEqual(response.status_code, 403)
+
 
     def test_owner_permissions(self):
         # view allowed

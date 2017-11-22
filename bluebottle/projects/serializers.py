@@ -2,6 +2,7 @@ import re
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from localflavor.generic.validators import IBANValidator
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -274,6 +275,8 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     permissions = ResourcePermissionField('project_manage_detail', view_args=('slug', ))
     related_permissions = ProjectPermissionsSerializer(read_only=True)
 
+    editable_fields = ('pitch', 'story', 'image', 'video_url')
+
     @staticmethod
     def validate_account_number(value):
 
@@ -337,6 +340,17 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                 if proposed_status != submit_status or current_status not in [new_status, needs_work_status]:
                     raise serializers.ValidationError(_("You can not change the project state."))
         return value
+
+    def validate(self, data):
+        if self.instance and self.instance.status.slug in ('campaign', 'voting'):
+            # When project is running, only a subset of the fields canb be changed
+            for field, value in data.items():
+                if field not in self.editable_fields and value != getattr(self.instance, field):
+                    raise serializers.ValidationError(
+                        'Not allowed to edit {} when project is running'.format(field)
+                    )
+
+        return data
 
     class Meta:
         model = Project

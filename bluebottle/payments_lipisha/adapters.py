@@ -305,8 +305,8 @@ class LipishaPaymentInterface(object):
         # Credentials should match
         if self.credentials['api_key'] != data['api_key']:
             return self.generate_error_response(transaction_reference)
-        # if self.credentials['api_signature'] != data['api_signature']:
-        #     return self.generate_error_response(transaction_reference)
+        if self.credentials['api_signature'] != data['api_signature']:
+            return self.generate_error_response(transaction_reference)
 
         try:
             payment = LipishaPayment.objects.get(transaction_reference=transaction_reference)

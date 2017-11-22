@@ -168,11 +168,13 @@ class LipishaPaymentInterfaceTestCase(BluebottleTestCase):
             'transaction_currency': 'KES',
             'transaction_name': 'SAM+GICHURU',
             'transaction_status': 'Completed',
-            'transaction_mobile': '25471000000'
+            'transaction_mobile': '25471000000',
+            'api_key': '1234567890',
+            'api_signature': '9784904749074987dlndflnlfgnh'
         }
         self.interface.initiate_payment(data)
         donation = Donation.objects.get(pk=self.donation.pk)
-        self.assertEqual(donation.status, 'success')
+        self.assertEqual(donation.status, 'pending')
         # Amount should be updated
         self.assertEqual(donation.amount.amount, 2500.00)
 
@@ -188,7 +190,9 @@ class LipishaPaymentInterfaceTestCase(BluebottleTestCase):
             'transaction_currency': 'KES',
             'transaction_name': 'SAM+GICHURU',
             'transaction_status': 'Failed',
-            'transaction_mobile': '25471000000'
+            'transaction_mobile': '25471000000',
+            'api_key': '1234567890',
+            'api_signature': '9784904749074987dlndflnlfgnh'
         }
         self.interface.initiate_payment(data)
         donation = Donation.objects.get(pk=self.donation.pk)
@@ -208,7 +212,9 @@ class LipishaPaymentInterfaceTestCase(BluebottleTestCase):
             'transaction_currency': 'KES',
             'transaction_name': 'SAM+GICHURU',
             'transaction_status': 'Completed',
-            'transaction_mobile': '25471000000'
+            'transaction_mobile': '25471000000',
+            'api_key': '1234567890',
+            'api_signature': '9784904749074987dlndflnlfgnh'
         }
         self.interface.initiate_payment(data)
         # Old donation should not be touched
@@ -218,7 +224,7 @@ class LipishaPaymentInterfaceTestCase(BluebottleTestCase):
         # There should be a new donation for this project
         donation = Donation.objects.order_by('-id').first()
         self.assertEqual(donation.project, self.project)
-        self.assertEqual(donation.status, 'success')
+        self.assertEqual(donation.status, 'pending')
         self.assertEqual(donation.amount.amount, 1750.00)
         self.assertEqual(donation.name, 'Sam Gichuru')
 

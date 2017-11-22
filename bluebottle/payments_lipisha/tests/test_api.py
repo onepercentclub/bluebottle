@@ -139,8 +139,8 @@ class LipishaInitiatePaymentViewTestCase(BluebottleTestCase):
 
     def test_create_donation_from_lipisha_call(self):
         data = {
-            'api_key': '3aa67677e8bf1d4c8fe886a38c03a860',
-            'api_signature': 'SYetmwsNnb5bwaZRyeQKhZNNkCoEx+5x=',
+            'api_key': '1234567890',
+            'api_signature': '9784904749074987dlndflnlfgnh',
             'api_version': '2.0.0',
             'api_type': 'Initiate',
             'transaction_account': '424242',
@@ -164,30 +164,30 @@ class LipishaInitiatePaymentViewTestCase(BluebottleTestCase):
             'transaction_custom_sms': 'Dear Sam Gichuru, thanks for your donation 7ACCB5CC8 '
                                       'of KES 1750 to {}!'.format(self.project.title),
             'transaction_status_action': 'ACCEPT',
-            'transaction_reference': 399,
+            'transaction_reference': '7ACCB5CC8',
             'transaction_status_reason': 'VALID_TRANSACTION',
             'api_version': '1.0.4',
-            'api_type': 'Payment'
+            'api_type': 'Receipt'
         }
 
         # There should be a new donation for this project
         donation = Donation.objects.order_by('-id').first()
         self.assertEqual(donation.project, self.project)
-        self.assertEqual(donation.status, 'success')
+        self.assertEqual(donation.status, 'pending')
         self.assertEqual(donation.amount.amount, 1750.00)
         self.assertEqual(donation.name, 'Sam Gichuru')
 
         # Check that the response is confirm the specification by Lipisha
         self.assertEqual(response.json()['api_key'], expected['api_key'])
         self.assertEqual(response.json()['transaction_status_action'], expected['transaction_status_action'])
-        self.assertEqual(response.json()['transaction_reference'], donation.order.order_payment.id)
+        self.assertEqual(response.json()['transaction_reference'], expected['transaction_reference'])
         self.assertEqual(response.json()['transaction_custom_sms'], expected['transaction_custom_sms'])
         self.assertEqual(response.json()['api_type'], expected['api_type'])
 
-    def test_acknowledge_lipisha_payment(self):
+        # Now play acknowledge request
         data = {
-            'api_key': '3aa67677e8bf1d4c8fe886a38c03a860',
-            'api_signature': 'SYetmwsNnb5bwaZRyeQKhZNNkCoEx+5x=',
+            'api_key': '1234567890',
+            'api_signature': '9784904749074987dlndflnlfgnh',
             'api_version': '2.0.0',
             'api_type': 'Acknowledge',
             'transaction_account': '424242',
@@ -198,7 +198,7 @@ class LipishaInitiatePaymentViewTestCase(BluebottleTestCase):
             'transaction_amount': '1750',
             'transaction_currency': 'KES',
             'transaction_name': 'SAM+GICHURU',
-            'transaction_status': 'Completed',
+            'transaction_status': 'Success',
             'transaction_mobile': '25471000000',
             'transaction_type': 'Payment'
         }
@@ -211,10 +211,10 @@ class LipishaInitiatePaymentViewTestCase(BluebottleTestCase):
             'transaction_custom_sms': 'Dear Sam Gichuru, thanks for your donation 7ACCB5CC8 '
                                       'of KES 1750 to {}!'.format(self.project.title),
             'transaction_status_action': 'ACCEPT',
-            'transaction_reference': 399,
+            'transaction_reference': '7ACCB5CC8',
             'transaction_status_reason': 'VALID_TRANSACTION',
             'api_version': '1.0.4',
-            'api_type': 'Payment'
+            'api_type': 'Receipt'
         }
 
         # There should be a new donation for this project
@@ -227,6 +227,6 @@ class LipishaInitiatePaymentViewTestCase(BluebottleTestCase):
         # Check that the response is confirm the specification by Lipisha
         self.assertEqual(response.json()['api_key'], expected['api_key'])
         self.assertEqual(response.json()['transaction_status_action'], expected['transaction_status_action'])
-        self.assertEqual(response.json()['transaction_reference'], donation.order.order_payment.id)
+        self.assertEqual(response.json()['transaction_reference'], '7ACCB5CC8')
         self.assertEqual(response.json()['transaction_custom_sms'], expected['transaction_custom_sms'])
         self.assertEqual(response.json()['api_type'], expected['api_type'])

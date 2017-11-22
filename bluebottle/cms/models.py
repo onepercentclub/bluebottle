@@ -410,6 +410,7 @@ class Logo(SortableMixin, models.Model):
         _("Image"), max_length=255, blank=True, null=True,
         upload_to='logo_images/'
     )
+    link = models.CharField(max_length=100, blank=True, null=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:

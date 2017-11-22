@@ -232,7 +232,7 @@ class LogoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Logo
-        fields = ('id', 'image', )
+        fields = ('id', 'image', 'link')
 
 
 class LogosContentSerializer(serializers.ModelSerializer):

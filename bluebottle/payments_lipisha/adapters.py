@@ -175,7 +175,7 @@ class LipishaPaymentInterface(object):
             "api_signature": self.credentials['api_signature'],
             "api_version": "1.0.4",
             "api_type": "Receipt",
-            "transaction_reference": payment.reference,
+            "transaction_reference": payment.transaction_reference,
             "transaction_status_code": "001",
             "transaction_status": "SUCCESS",
             "transaction_status_description": "Transaction received successfully.",
@@ -287,8 +287,8 @@ class LipishaPaymentInterface(object):
         payment.reference = data['transaction_mobile']
 
         if data['transaction_status'] == 'Completed':
-            payment.status = 'settled'
-            order_payment.settled()
+            payment.status = 'authorized'
+            order_payment.authorized()
         else:
             payment.status = 'failed'
             order_payment.failed()
@@ -301,24 +301,19 @@ class LipishaPaymentInterface(object):
         Find existing payment and switch to given status
         """
         transaction_reference = data['transaction_reference']
-        order_payment = None
 
         # Credentials should match
         if self.credentials['api_key'] != data['api_key']:
             return self.generate_error_response(transaction_reference)
-        if self.credentials['api_signature'] != data['api_signature']:
-            return self.generate_error_response(transaction_reference)
+        # if self.credentials['api_signature'] != data['api_signature']:
+        #     return self.generate_error_response(transaction_reference)
 
         try:
             payment = LipishaPayment.objects.get(transaction_reference=transaction_reference)
-            self._update_amounts(payment, data['transaction_amount'], data['transaction_currency'])
         except LipishaPayment.DoesNotExist:
             return self.generate_error_response(transaction_reference)
         except LipishaPayment.MultipleObjectsReturned:
-            # Multiple payments with that transaction_reference
-            # FIXME: probably send a warning?
             payment = LipishaPayment.objects.filter(transaction_reference=transaction_reference).last()
-            self._update_amounts(payment, data['transaction_amount'], data['transaction_currency'])
 
         payment.response = json.dumps(data)
         for k, v in data.items():
@@ -329,8 +324,9 @@ class LipishaPaymentInterface(object):
 
         payment.transaction_mobile_number = data['transaction_mobile']
         payment.reference = data['transaction_mobile']
+        order_payment = payment.order_payment
 
-        if data['transaction_status'] == 'SUCCESS':
+        if data['transaction_status'] == 'Success':
             payment.status = 'settled'
             order_payment.settled()
         else:

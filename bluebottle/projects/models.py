@@ -143,6 +143,8 @@ class Project(BaseProject, PreviousStatusMixin):
                                             blank=True)
     campaign_ended = models.DateTimeField(_('Campaign Ended'), null=True,
                                           blank=True)
+    campaign_edited = models.DateTimeField(_('Campaign edited'), null=True,
+                                          blank=True)
     campaign_funded = models.DateTimeField(_('Campaign Funded'), null=True,
                                            blank=True)
     campaign_paid_out = models.DateTimeField(_('Campaign Paid Out'), null=True,

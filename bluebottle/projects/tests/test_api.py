@@ -66,6 +66,8 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
                                    token=self.owner_token)
         self.assertEqual(response.status_code, 200)
+        self.project = Project.objects.get(pk=self.project.pk)
+        self.assertFalse(self.project.campaign_edited)
 
         # create allowed
         response = self.client.post(self.project_manage_list_url, {'title': 'Title 2'},
@@ -108,6 +110,9 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
             token=self.owner_token
         )
         self.assertEqual(response.status_code, 200)
+
+        self.project = Project.objects.get(pk=self.project.pk)
+        self.assertTrue(self.project.campaign_edited)
 
     def test_owner_running_permissions_has_permission_wrong_field(self):
         # view allowed

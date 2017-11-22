@@ -1,4 +1,5 @@
 import re
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -347,8 +348,9 @@ class ManageProjectSerializer(serializers.ModelSerializer):
             for field, value in data.items():
                 if field not in self.editable_fields and value != getattr(self.instance, field):
                     raise serializers.ValidationError(
-                        'Not allowed to edit {} when project is running'.format(field)
+                        _('Not allowed to edit {} when project is running').format(field)
                     )
+                self.instance.campaign_edited = timezone.now()
 
         return data
 

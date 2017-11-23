@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 import pendulum
 
@@ -74,6 +75,10 @@ class ParticipationMetricsFormView(FormView):
 class ReportDownloadView(View):
 
     def get(self, request):
+        client_name = re.sub(r'\s+', '_', connection.tenant.name)
+        dt_now = now().strftime('%d-%m-%Y_%H-%M-%S')
+        filename = "Report-{}-{}.xlsx".format(client_name, dt_now)
+
         report = MetricsReport()
         output = report.to_output()
         output.seek(0)
@@ -81,7 +86,5 @@ class ReportDownloadView(View):
             output.read(),
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        client_name = connection.tenant.name.replace(r'\s', '_')
-        filename = "Report-{}-{}.xlsx".format(client_name, now().strftime('%d-%m-%Y_%H-%M-%S'))
         response['Content-Disposition'] = "attachment; filename={}".format(filename)
         return response

@@ -32,7 +32,7 @@ class TaskMailTestBase(BluebottleTestCase):
         self.init_projects()
         self.status_running = ProjectPhase.objects.get(slug='campaign')
         self.project = ProjectFactory.create(status=self.status_running)
-        self.task = TaskFactory.create(project=self.project)
+        self.task = TaskFactory.create(project=self.project, deadline=now() + timedelta(days=2))
 
 
 class TestTaskMemberMail(TaskMailTestBase):
@@ -62,6 +62,12 @@ class TestTaskMemberMail(TaskMailTestBase):
         self.assertEquals(len(mail.outbox), 2)
         self.assertNotEquals(mail.outbox[1].subject.find("assigned"), -1)
         self.assertEquals(mail.outbox[1].to[0], self.task_member.member.email)
+        self.assertTrue(
+            'Hi {}'.format(self.task_member.member.short_name) in mail.outbox[1].body
+        )
+        self.assertTrue(
+            'initiator, {}'.format(self.task.author.short_name) in mail.outbox[1].body
+        )
 
     def test_member_applied_to_task_mail_not_to_project_owner(self):
         """
@@ -343,7 +349,7 @@ class TestDeadlineChangedEmail(TaskMailTestBase):
         self.task.deadline = now() + timedelta(days=4)
         self.task.save()
 
-        # There should be 4 emails send
+        # There should be 3 emails send
         self.assertEquals(len(mail.outbox), 3)
         self.assertTrue('deadline' in mail.outbox[0].subject)
 

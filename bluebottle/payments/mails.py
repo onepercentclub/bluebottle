@@ -12,6 +12,9 @@ def order_payment_refund_mail(instance):
     order = order_payment.order
     receiver = order.user
 
+    if not receiver:
+        return
+
     try:
         # NOTE: only handling on order with a single donation
         donation = order.donations.first()

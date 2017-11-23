@@ -59,3 +59,16 @@ class TestPaymentEmails(BluebottleTestCase):
         self.assertEqual(donor_mail.subject, _('Donation Refund'))
         self.assertTrue(self.project.title in donor_mail.body)
         self.assertTrue('admin@example.com' in donor_mail.body)
+
+    def test_refund_mail_anonymous(self):
+        self.order.user = None
+        self.order.save()
+
+        # Clear the email folder
+        mail.outbox = []
+
+        # Refund the order payment
+        self.order_payment.refunded()
+        self.order.save()
+
+        self.assertEqual(len(mail.outbox), 0)

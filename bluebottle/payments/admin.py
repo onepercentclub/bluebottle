@@ -8,8 +8,10 @@ from polymorphic.admin import (PolymorphicParentModelAdmin,
                                PolymorphicChildModelAdmin)
 
 from bluebottle.clients import properties
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
+from bluebottle.payments.tasks import check_payment_statuses
 from bluebottle.payments_external.admin import ExternalPaymentAdmin
 from bluebottle.payments_flutterwave.admin import FlutterwavePaymentAdmin, FlutterwaveMpesaPaymentAdmin
 from bluebottle.payments_interswitch.admin import InterswitchPaymentAdmin
@@ -49,15 +51,29 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     def check_status(self, request, pk=None):
         order_payment = OrderPayment.objects.get(pk=pk)
         service = PaymentService(order_payment)
-        service.check_payment_status()
+        try:
+            service.check_payment_status()
+        except PaymentException as e:
+            self.message_user(
+                request,
+                'Error checking status {}'.format(e),
+                level='WARNING'
+            )
         order_payment_url = reverse('admin:payments_orderpayment_change', args=(order_payment.id,))
         response = HttpResponseRedirect(order_payment_url)
         return response
 
     def batch_check_status(self, request, queryset):
-        for order_payment in queryset:
-            service = PaymentService(order_payment)
-            service.check_payment_status()
+        if getattr(properties, 'CELERY_RESULT_BACKEND', None):
+            check_payment_statuses.delay(queryset)
+            self.message_user(
+                request,
+                'Batch process to check statuses is scheduled, please check the order '
+                'payments after a couple of minutes to see the result.',
+                level='INFO'
+            )
+        else:
+            check_payment_statuses(queryset)
 
     def refund(self, request, pk=None):
         if not request.user.has_perm('payments.refund_orderpayment') or not properties.ENABLE_REFUNDS:

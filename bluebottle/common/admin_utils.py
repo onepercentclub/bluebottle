@@ -27,7 +27,7 @@ class VerboseForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
                                               obj._meta.object_name.lower()),
                 args=(obj.pk,)
             )
-            return '&nbsp;<strong><a href="{0}">{1}</a></strong>'.format(
+            return u'&nbsp;<strong><a href="{0}">{1}</a></strong>'.format(
                 change_url, escape(obj))
         except (ValueError, self.rel.to.DoesNotExist):
             return '???'

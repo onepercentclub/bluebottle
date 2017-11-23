@@ -87,7 +87,7 @@ class TestProjectMails(BluebottleTestCase):
 @override_settings(SEND_WELCOME_MAIL=False)
 class TestProjectRoleMails(BluebottleTestCase):
     """
-    Test the sending of email notifications when a Task' status changes
+    Test the sending of email to project initiator, promoter and task manager
     """
 
     def setUp(self):

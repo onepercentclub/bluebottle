@@ -7,6 +7,7 @@ from rest_framework import status
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -28,7 +29,21 @@ class TestPayoutApi(BluebottleTestCase):
         financial = Group.objects.get(name='Financial')
         financial.user_set.add(self.user2)
 
-        self.project = ProjectFactory.create(campaign_ended=now())
+        self.project = ProjectFactory.create(
+            status=ProjectPhase.objects.get(slug='campaign'),
+            campaign_ended=now(),
+            amount_asked=100)
+        donation = DonationFactory.create(
+            project=self.project,
+            amount=100
+        )
+        donation.save()
+        donation.order.locked()
+        donation.order.save()
+        donation.order.success()
+        donation.order.save()
+        self.project.save()
+        self.project.deadline_reached()
 
         self.payout_url = reverse('project-payout-detail', kwargs={'pk': self.project.id})
 

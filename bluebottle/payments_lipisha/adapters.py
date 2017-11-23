@@ -257,7 +257,8 @@ class LipishaPaymentInterface(object):
             try:
                 lipisha_project = LipishaProject.objects.get(account_number=account_number)
             except LipishaProject.DoesNotExist:
-                raise PaymentException("Couldn't find a project for M-PESA payment.")
+                logger.error("Couldn't find a project for M-PESA payment {}".format(account_number))
+                return self.generate_error_response(transaction_reference)
 
             order = Order.objects.create()
             name = data['transaction_name'].replace('+', ' ').title()

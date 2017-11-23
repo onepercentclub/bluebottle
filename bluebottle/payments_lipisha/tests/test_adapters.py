@@ -228,6 +228,95 @@ class LipishaPaymentInterfaceTestCase(BluebottleTestCase):
         self.assertEqual(donation.amount.amount, 1750.00)
         self.assertEqual(donation.name, 'Sam Gichuru')
 
+    def test_create_donation_from_lipisha_call_wrong_(self):
+        LipishaProjectFactory.create(project=self.project, account_number='424242')
+        data = {
+            'transaction_account': '424242',
+            'transaction_account_number': '424242',
+            'transaction_merchant_reference': '',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Completed',
+            'transaction_mobile': '25471000000',
+            'api_key': '1234567890',
+            'api_signature': '9784904749074987dlndflnlfgnh'
+        }
+        self.interface.initiate_payment(data)
+        # Old donation should not be touched
+        old_donation = Donation.objects.get(pk=self.donation.pk)
+        self.assertEqual(old_donation.status, 'locked')
+
+        # There should be a new donation for this project
+        donation = Donation.objects.order_by('-id').first()
+        self.assertEqual(donation.project, self.project)
+        self.assertEqual(donation.status, 'pending')
+        self.assertEqual(donation.amount.amount, 1750.00)
+        self.assertEqual(donation.name, 'Sam Gichuru')
+
+    def test_create_donation_from_lipisha_call_fails(self):
+        LipishaProjectFactory.create(project=self.project, account_number='424242')
+
+        # wrong api key
+        data = {
+            'transaction_account': '424242',
+            'transaction_account_number': '424242',
+            'transaction_merchant_reference': '',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Completed',
+            'transaction_mobile': '25471000000',
+            'api_key': '1234567890',
+            'api_signature': '9784904749074987dlndflnlfgnh'
+        }
+
+        wrong_data = data
+        wrong_data['api_key'] = 'fake'
+
+        response = self.interface.initiate_payment(data)
+        self.assertEqual(response['transaction_status'], 'FAIL')
+        self.assertEqual(response['transaction_status_reason'], 'INVALID_TRANSACTION')
+        self.assertEqual(response['transaction_reference'], '7ACCB5CC8')
+
+        # wrong api signature
+        wrong_data = data
+        wrong_data['api_signature'] = 'fake'
+
+        response = self.interface.initiate_payment(data)
+        self.assertEqual(response['transaction_status'], 'FAIL')
+        self.assertEqual(response['transaction_status_reason'], 'INVALID_TRANSACTION')
+        self.assertEqual(response['transaction_reference'], '7ACCB5CC8')
+
+        data = {
+            'transaction_account': '424242',
+            'transaction_account_number': '424242',
+            'transaction_merchant_reference': '',
+            'transaction': '7ACCB5CC8',
+            'transaction_reference': '7ACCB5CC8',
+            'transaction_amount': '1750',
+            'transaction_currency': 'KES',
+            'transaction_name': 'SAM+GICHURU',
+            'transaction_status': 'Completed',
+            'transaction_mobile': '25471000000',
+            'api_key': '1234567890',
+            'api_signature': '9784904749074987dlndflnlfgnh'
+        }
+
+        # account number does not exist
+        wrong_data = data
+        wrong_data['transaction_account'] = 'fake'
+        wrong_data['transaction_account_number'] = 'fake'
+
+        response = self.interface.initiate_payment(data)
+        self.assertEqual(response['transaction_status'], 'FAIL')
+        self.assertEqual(response['transaction_status_reason'], 'INVALID_TRANSACTION')
+        self.assertEqual(response['transaction_reference'], '7ACCB5CC8')
+
     @patch('bluebottle.payments_lipisha.adapters.Lipisha')
     def test_create_lipisha_account(self, mock_client):
         lipisha_account_success_response = {

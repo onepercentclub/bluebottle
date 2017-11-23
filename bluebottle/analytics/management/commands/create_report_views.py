@@ -23,9 +23,12 @@ class Command(BaseCommand):
         else:
             raise Exception('`Please specify either an sql file path')
 
+        # Remove comments and blank lines
+        sql_lines = filter(lambda x: not re.match(r'^(---.*|\s*)$', x), report_sql.splitlines())
+
         # Basic sanity check
-        if not (re.match('^\s*DROP VIEW.*', report_sql.splitlines()[0]) and
-                re.match('^\s*CREATE OR REPLACE VIEW.*', report_sql.splitlines()[1])):
+        if not (re.match(r'^\s*DROP VIEW.*', sql_lines[0]) and
+                re.match(r'^\s*CREATE OR REPLACE VIEW.*', sql_lines[1])):
             raise Exception('Is this a valid query to create a database view?')
 
         if options['tenant']:
@@ -33,8 +36,10 @@ class Command(BaseCommand):
         else:
             clients = Client.objects.all()
 
+        sql = "\n".join(sql_lines)
+
         for client in clients:
             connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
                 cursor = connection.cursor()
-                cursor.execute(report_sql)
+                cursor.execute(sql)

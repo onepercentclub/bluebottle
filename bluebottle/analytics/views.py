@@ -81,6 +81,7 @@ class ReportDownloadView(View):
             output.read(),
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        filename = "report-{}.xlsx".format(now().strftime('%d-%m-%Y_%H-%M-%S'))
+        client_name = connection.tenant.name.replace(r'\s', '_')
+        filename = "Report-{}-{}.xlsx".format(client_name, now().strftime('%d-%m-%Y_%H-%M-%S'))
         response['Content-Disposition'] = "attachment; filename={}".format(filename)
         return response

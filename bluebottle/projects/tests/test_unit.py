@@ -459,7 +459,6 @@ class TestProjectPlatformSettings(BluebottleTestCase):
 
     def test_load_new_settings(self):
         settings = ProjectPlatformSettings.load()
-        self.assertEqual()
         self.assertEqual(settings.allow_anonymous_rewards, True)
 
     def test_load_existing_settings(self):

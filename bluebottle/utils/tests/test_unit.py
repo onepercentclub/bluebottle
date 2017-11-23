@@ -5,29 +5,22 @@ import uuid
 
 from django.apps import apps
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.management import call_command
 from django.test import TestCase
-from django.test.client import Client
 from django.test.utils import override_settings
 from django.utils.encoding import force_bytes
-
-from fluent_contents.models import Placeholder
-from fluent_contents.plugins.oembeditem.models import OEmbedItem
-from fluent_contents.plugins.text.models import TextItem
 
 from moneyed import Money
 
 from bluebottle.clients import properties
+from bluebottle.members.models import Member
 from bluebottle.projects.models import Project
 from bluebottle.rewards.models import Reward
-from bluebottle.contentplugins.models import PictureItem
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.utils.models import MetaDataModel
 from bluebottle.utils.monkey_patch_parler import TenantAwareParlerAppsettings
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.permissions import (
@@ -36,9 +29,6 @@ from bluebottle.utils.permissions import (
 )
 from bluebottle.utils.utils import clean_for_hashtag
 from ..email_backend import send_mail, create_message
-
-
-BB_USER_MODEL = get_user_model()
 
 
 def generate_random_slug():
@@ -106,82 +96,14 @@ class HashTagTestCase(unittest.TestCase):
         self.assertEqual('FooBar #Baz', clean_for_hashtag(text))
 
 
-class MetaTestCase(BluebottleTestCase):
-    def setUp(self):
-        """
-        The complex work is using the fluent_contents stuff.
-
-        Setting the 'contents' of the MetaDataModel requires setting the
-        PictureItem, TextItem, OEmbedItem manually and creating a Placeholder
-        to group these ContentItems on the parent.
-        """
-
-        super(MetaTestCase, self).setUp()
-
-        # Create the MetaDataModel instance
-        self.object = MetaDataModel.objects.create(
-            title='Wow. Such meta. Amaze.')
-
-        # Add in a placeholder
-        self.ph = Placeholder.objects.create(
-            parent=self.object,
-            title='Foo',
-            slot='blog_contents'
-        )
-
-        """ Time to create some content items... """
-        # Simple text item
-        self.text_item = TextItem.objects.create(
-            text='<p>I am doge</p>',
-            parent=self.object,
-            placeholder=self.ph,
-            sort_order=1
-        )
-
-        # Don't bother simulating uploads, that's not the scope of this test
-        self.picture = PictureItem.objects.create(
-            image='images/kitten_snow.jpg',
-            parent=self.object,
-            placeholder=self.ph,
-            sort_order=2,
-        )
-
-        # OEmbed object, with youtube link
-        self.youtube = OEmbedItem.objects.create(
-            embed_url='http://www.youtube.com/watch?v=0ETxuM-hq8c',
-            parent=self.object,
-            placeholder=self.ph,
-            sort_order=3
-        )
-
-        # set up the client
-        self.client = Client()
-
-    def test_content_items_correctly_created(self):
-        """ Test that the setUp function creates the correct items """
-
-        items = self.object.contents.get_content_items()
-
-        self.assertEqual(len(
-            items), 3,
-            'Error in the setUp function: not all items arecorrectly created.')
-
-
 class UserTestsMixin(object):
     """ Mixin base class for tests requiring users. """
 
     def create_user(self, email=None, password=None, **extra_fields):
         """ Create, save and return a new user. """
 
-        # If email is set and not unique, it will raise a clearly
-        # interpretable IntegrityError.
-        # If auto-generated, make sure it's unique.
-        if not email:
-            email = generate_random_email()
-            while BB_USER_MODEL.objects.filter(email=email).exists():
-                email = generate_random_email()
-
-        user = BB_USER_MODEL.objects.create_user(email=email, **extra_fields)
+        email = generate_random_email()
+        user, created = Member.objects.get_or_create(email=email, **extra_fields)
 
         if not password:
             user.set_password('password')

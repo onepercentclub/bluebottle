@@ -15,7 +15,7 @@ DEBUG = True
 COMPRESS_ENABLED = False
 COMPRESS_TEMPLATES = False
 
-INCLUDE_TEST_MODELS = True
+INCLUDE_TEST_MODELS = False
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),

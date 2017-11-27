@@ -7,6 +7,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.donations.models import Donation
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments_lipisha.adapters import LipishaPaymentAdapter, LipishaPaymentInterface
+from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.payments_lipisha.tests.factory_models import LipishaProjectFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -230,3 +231,32 @@ class LipishaInitiatePaymentViewTestCase(BluebottleTestCase):
         self.assertEqual(response.json()['transaction_reference'], '7ACCB5CC8')
         self.assertEqual(response.json()['transaction_custom_sms'], expected['transaction_custom_sms'])
         self.assertEqual(response.json()['api_type'], expected['api_type'])
+
+
+@override_settings(**lipisha_settings)
+class LipishaProjectAddOnTest(BluebottleTestCase):
+    """
+    Integration tests for the Project Add-On API.
+    """
+
+    def setUp(self):
+        super(LipishaProjectAddOnTest, self).setUp()
+        self.init_projects()
+        self.project = ProjectFactory()
+        self.project_url = reverse('project_detail', args=[self.project.slug])
+
+    def test_addon_api(self):
+        # Test that the project has no add-ons yet
+        response = self.client.get(self.project_url)
+        self.assertEqual(len(response.data['addons']), 0)
+
+        # Add a Lipisha code
+        LipishaProject.objects.create(project=self.project,
+                                      account_number='456789')
+
+        # Test the project now has the Lipisha add-on
+        response = self.client.get(self.project_url)
+        self.assertEqual(len(response.data['addons']), 1)
+        self.assertEqual(response.data['addons'][0]['type'], 'mpesa')
+        self.assertEqual(response.data['addons'][0]['account_number'], '456789')
+        self.assertEqual(response.data['addons'][0]['paybill_number'], '1234')

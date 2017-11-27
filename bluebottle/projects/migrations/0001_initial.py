@@ -100,7 +100,7 @@ class Migration(migrations.Migration):
                 'verbose_name': 'campaign',
                 'verbose_name_plural': 'projects',
             },
-            bases=(models.Model, bluebottle.utils.utils.GetTweetMixin),
+            bases=(models.Model, ),
         ),
         migrations.CreateModel(
             name='ProjectBudgetLine',

@@ -5,6 +5,8 @@ import StringIO
 
 from django.db import connection
 import requests
+from django.utils.timezone import now
+
 from bluebottle.test.factory_models.tasks import TaskFactory
 
 from bluebottle.tasks.models import Skill
@@ -43,8 +45,9 @@ class MockRequest:
 
 
 class MockUser:
-    def __init__(self, perms=None):
+    def __init__(self, perms=None, is_staff=True):
         self.perms = perms or []
+        self.is_staff = is_staff
 
     def has_perm(self, perm):
         return perm in self.perms
@@ -64,6 +67,24 @@ class TestProjectAdmin(BluebottleTestCase):
         self.project_admin = ProjectAdmin(Project, self.site)
         self.mock_response = requests.Response()
         self.mock_response.status_code = 200
+        self.status_done = ProjectPhase.objects.get(slug='done-complete')
+        self.status_campaign = ProjectPhase.objects.get(slug='campaign')
+
+    def _generate_completed_project(self):
+        project = ProjectFactory.create(amount_asked=Money(100, 'EUR'),
+                                        status=self.status_campaign,
+                                        deadline=now())
+        donation = DonationFactory.create(
+            project=project,
+            amount=100
+        )
+        donation.save()
+        donation.order.locked()
+        donation.order.success()
+        donation.order.save()
+        project.save()
+        project.deadline_reached()
+        return project
 
     def test_fieldsets(self):
         request = self.request_factory.get('/')
@@ -125,7 +146,7 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.post('/')
         request.user = MockUser(['projects.approve_payout'])
 
-        project = ProjectFactory.create(payout_status='needs_approval')
+        project = self._generate_completed_project()
 
         with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
             self.project_admin.approve_payout(request, project.id)
@@ -138,14 +159,13 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.post('/')
         request.user = MockUser(['projects.approve_payout'])
 
-        project = ProjectFactory.create(payout_status='needs_approval')
+        project = self._generate_completed_project()
 
         self.mock_response.status_code = 400
         self.mock_response._content = json.dumps({'errors': {'name': ['This field is required']}})
         with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
             with mock.patch.object(self.project_admin, 'message_user') as message_mock:
                 self.project_admin.approve_payout(request, project.id)
-
         request_mock.assert_called_with(
             PAYOUT_URL, {'project_id': project.id, 'tenant': 'test'}
         )
@@ -158,7 +178,7 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.post('/')
         request.user = MockUser(['projects.approve_payout'])
 
-        project = ProjectFactory.create(payout_status='needs_approval')
+        project = self._generate_completed_project()
 
         self.mock_response.status_code = 500
         self.mock_response._content = 'Internal Server Error'
@@ -179,7 +199,8 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.post('/')
         request.user = MockUser(['projects.approve_payout'])
 
-        project = ProjectFactory.create(payout_status='needs_approval')
+        project = self._generate_completed_project()
+
         exception = requests.ConnectionError('Host not found')
 
         with mock.patch('requests.post', side_effect=exception) as request_mock:
@@ -209,7 +230,10 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.post('/')
         request.user = MockUser(['projects.approve_payout'])
 
-        project = ProjectFactory.create(payout_status='done')
+        project = self._generate_completed_project()
+        project.payout_status = 'done'
+        project.save()
+
         with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
             with mock.patch.object(self.project_admin, 'message_user') as message_mock:
                 self.project_admin.approve_payout(request, project.id)
@@ -224,7 +248,7 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.post('/')
         request.user = MockUser(['projects.approve_payout'])
 
-        project = ProjectFactory.create(payout_status='needs_approval')
+        project = self._generate_completed_project()
 
         # Project status should be editable
         self.assertFalse(
@@ -248,7 +272,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
     def test_export_rewards(self):
         request = self.request_factory.get('/')
-        request.user = MockUser(['rewards.read_reward'])
+        request.user = MockUser()
 
         project = ProjectFactory.create()
         reward = RewardFactory.create(project=project, amount=Money(10, 'EUR'))
@@ -280,7 +304,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
     def test_export_rewards_anonymous(self):
         request = self.request_factory.get('/')
-        request.user = MockUser(['rewards.read_reward'])
+        request.user = MockUser()
 
         project = ProjectFactory.create()
         reward = RewardFactory.create(project=project, amount=Money(10, 'EUR'))
@@ -314,7 +338,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
     def test_export_rewards_forbidden(self):
         request = self.request_factory.get('/')
-        request.user = MockUser([])
+        request.user = MockUser(is_staff=False)
 
         project = ProjectFactory.create()
         response = self.project_admin.export_rewards(request, project.id)

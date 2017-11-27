@@ -37,6 +37,6 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
-            bases=(models.Model, bluebottle.utils.utils.GetTweetMixin),
+            bases=(models.Model, ),
         ),
     ]

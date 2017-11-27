@@ -8,7 +8,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.projects.admin import mark_as_plan_new
-from bluebottle.projects.models import Project, ProjectPhaseLog
+from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectBudgetLine
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -37,6 +37,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.incomplete = ProjectPhase.objects.get(slug="done-incomplete")
         self.complete = ProjectPhase.objects.get(slug="done-complete")
         self.campaign = ProjectPhase.objects.get(slug="campaign")
+        self.closed = ProjectPhase.objects.get(slug="closed")
 
         some_days_ago = now - timezone.timedelta(days=15)
         self.expired_project = ProjectFactory.create(
@@ -70,7 +71,28 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         order.save()
 
         self.expired_project.save()
-        self.failUnless(self.expired_project.status == self.incomplete)
+        self.assertEqual(self.expired_project.payout_status, 'needs_approval')
+        self.assertEqual(self.expired_project.status, self.incomplete)
+
+    def test_expired_under_threshold(self):
+        """ Not enough donated to hit payout threshold - status closed """
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=self.expired_project,
+            order=order,
+            amount=12
+        )
+        donation.save()
+
+        order.locked()
+        order.save()
+        order.success()
+        order.save()
+
+        self.expired_project.save()
+        self.assertEqual(self.expired_project.payout_status, None)
+        self.assertEqual(self.expired_project.status, self.closed)
 
     def test_expired_exact(self):
         """ Exactly the amount requested - status done complete """
@@ -89,7 +111,8 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         order.save()
 
         self.expired_project.save()
-        self.failUnless(self.expired_project.status == self.complete)
+        self.assertEqual(self.expired_project.payout_status, 'needs_approval')
+        self.assertEqual(self.expired_project.status, self.complete)
 
     def test_expired_more_than_enough(self):
         """ More donated than requested - status done complete """
@@ -107,7 +130,23 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         order.success()
         order.save()
         self.expired_project.save()
+        self.assertEqual(self.expired_project.payout_status, 'needs_approval')
         self.failUnless(self.expired_project.status == self.complete)
+
+        # Reopening the project should remove the payout status
+        self.expired_project.status = self.campaign
+        self.expired_project.deadline = timezone.now() + timedelta(days=10)
+        self.expired_project.save()
+        self.failUnless(self.expired_project.status == self.campaign)
+        self.assertEqual(self.expired_project.payout_status, None)
+
+    def test_expired_sourcing(self):
+        """ A crowdsourcing project should never get a payout status """
+        TaskFactory.create(project=self.expired_project, status='realized')
+        self.expired_project.amount_asked = 0
+        self.expired_project.save()
+        self.assertEqual(self.expired_project.payout_status, None)
+        self.assertEqual(self.expired_project.status, self.complete)
 
 
 class TestProjectPhaseLog(BluebottleTestCase):
@@ -372,6 +411,16 @@ class TestModel(BluebottleTestCase):
 
         self.assertFalse(self.project.expertise_based)
 
+    def test_donated_percentage(self):
+        self.project.amount_asked = Money(0, 'EUR')
+        self.assertEqual(self.project.donated_percentage, 0)
+        self.project.amount_asked = Money(20, 'EUR')
+        self.project.amount_donated = Money(40, 'EUR')
+        self.assertEqual(self.project.donated_percentage, 100)
+        self.project.amount_asked = Money(20, 'EUR')
+        self.project.amount_donated = Money(10, 'EUR')
+        self.assertEqual(self.project.donated_percentage, 50)
+
 
 class TestProjectTheme(BluebottleTestCase):
     def setUp(self):
@@ -388,3 +437,19 @@ class TestProjectTheme(BluebottleTestCase):
         self.assertTrue(Project.objects.filter(pk=self.project.id).exists())
         self.theme.delete()
         self.assertTrue(Project.objects.filter(pk=self.project.id).exists())
+
+
+class TestProjectBudgetLine(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectBudgetLine, self).setUp()
+        self.init_projects()
+        self.project = ProjectFactory.create()
+
+    def test_project_budget_line(self):
+        line = ProjectBudgetLine.objects.create(
+            project=self.project,
+            description='Just things',
+            amount=Money(50, 'EUR')
+        )
+        line.save()
+        self.assertEqual(unicode(line), u'Just things - 50.00 \u20ac')

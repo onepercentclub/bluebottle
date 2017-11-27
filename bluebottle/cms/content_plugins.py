@@ -91,7 +91,6 @@ class TasksBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class SlidesBlockPlugin(CMSContentPlugin):
     model = SlidesContent
-    inlines = [SlideInline]
 
     category = _('Homepage')
 

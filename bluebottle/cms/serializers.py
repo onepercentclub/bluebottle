@@ -23,6 +23,7 @@ from bluebottle.cms.models import (
 )
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer
+from bluebottle.slides.models import Slide
 from bluebottle.surveys.serializers import QuestionSerializer
 from bluebottle.utils.fields import SafeField
 
@@ -197,7 +198,16 @@ class SlideSerializer(serializers.ModelSerializer):
 
 
 class SlidesContentSerializer(serializers.ModelSerializer):
-    slides = SlideSerializer(many=True)
+    slides = serializers.SerializerMethodField()
+
+    def get_slides(self, instance):
+        slides = Slide.objects.published().filter(
+            language=instance.language_code
+        )
+
+        return SlideSerializer(
+            slides, many=True, context=self.context
+        ).to_representation(slides)
 
     class Meta:
         model = SlidesContent

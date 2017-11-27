@@ -8,7 +8,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.projects.admin import mark_as_plan_new
-from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectBudgetLine
+from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectBudgetLine, ProjectPlatformSettings
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -453,3 +453,15 @@ class TestProjectBudgetLine(BluebottleTestCase):
         )
         line.save()
         self.assertEqual(unicode(line), u'Just things - 50.00 \u20ac')
+
+
+class TestProjectPlatformSettings(BluebottleTestCase):
+
+    def test_load_new_settings(self):
+        settings = ProjectPlatformSettings.load()
+        self.assertEqual(settings.allow_anonymous_rewards, True)
+
+    def test_load_existing_settings(self):
+        ProjectPlatformSettings.objects.create(allow_anonymous_rewards=False)
+        settings = ProjectPlatformSettings.load()
+        self.assertEqual(settings.allow_anonymous_rewards, False)

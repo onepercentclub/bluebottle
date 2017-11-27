@@ -17,6 +17,7 @@ SELECT current_schema() as tenant,
 	null::VARCHAR as grand_parent_description,
 	p.campaign_ended AT TIME ZONE 'Europe/Amsterdam' as timestamp,
 	pp.slug::varchar(20) as status,
+	concat(pp.id, ' - ', pp.name)::varchar(80) as status_friendly,
 	pl.start AT TIME ZONE 'Europe/Amsterdam' as event_timestamp,
 	plp.slug::varchar(20) as event_status,
 	p.owner_id as user_id,
@@ -28,7 +29,7 @@ SELECT current_schema() as tenant,
 	EXTRACT(WEEK FROM pl.start AT TIME ZONE 'Europe/Amsterdam') as week,
 	l.name as location, lg.name as location_group,
 	1 as value,
-	NULL::INTEGER as pledged
+	NULL::INTEGER as value_alt
 FROM projects_project as p
 LEFT JOIN projects_projectphaselog as pl
 ON pl.project_id = p.id
@@ -50,11 +51,12 @@ SELECT current_schema() as tenant,
 	t.id as type_id,
 	t.title as description,
 	t.project_id as parent_id,
-	null::VARCHAR as parent_description,
+	p.description as parent_description,
 	null::INTEGER as grand_parent_id,
 	null::VARCHAR as grand_parent_description,
  	t.deadline AT TIME ZONE 'Europe/Amsterdam' as timestamp,
 	t.status as status,
+	initcap(t.status)::varchar(80) as status_friendly,
  	tl.start AT TIME ZONE 'Europe/Amsterdam' as event_timestamp,
 	tl.status as event_status,
 	author_id as user_id,
@@ -67,7 +69,7 @@ SELECT current_schema() as tenant,
 	p.location as location,
 	p.location_group as location_group,
 	1 as value,
-	t.time_needed::INTEGER as pledged
+	t.time_needed::INTEGER as value_alt
 FROM tasks_task as t
 LEFT JOIN tasks_taskstatuslog as tl
 ON tl.task_id = t.id
@@ -88,6 +90,7 @@ SELECT current_schema() as tenant,
 	t.parent_description as grand_parent_description,
 	t.timestamp AT TIME ZONE 'Europe/Amsterdam' as timestamp,
 	tm.status as status,
+	initcap(tm.status)::varchar(80) as status_friendly,
 	tml.start AT TIME ZONE 'Europe/Amsterdam' as event_timestamp,
 	tml.status as event_status,
 	member_id as user_id,
@@ -100,7 +103,7 @@ SELECT current_schema() as tenant,
 	t.location as location,
 	t.location_group as location_group,
 	tm.time_spent::integer as value,
-	t.pledged as pledged
+	t.value_alt as value_alt
 FROM tasks_taskmember as tm
 LEFT JOIN tasks_taskmemberstatuslog as tml
 ON tml.task_member_id = tm.id
@@ -156,11 +159,11 @@ SELECT year, quarter, month, location, type, count(distinct(type_id)) as value
 FROM v_task_successful_report
 GROUP BY year, quarter, month, location, type
 UNION
-SELECT year, quarter, month, location, 'taskmembers'::varchar as type, count(distinct(user_id)) as value
+SELECT year, quarter, month, location, 'member_volunteers'::varchar as type, count(distinct(user_id)) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, location, type
 UNION
-SELECT year, quarter, month, location, 'taskvolunteers'::varchar as type, count(user_id) as value
+SELECT year, quarter, month, location, 'taskmember_volunteers'::varchar as type, count(user_id) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, location, type
 UNION
@@ -181,11 +184,11 @@ SELECT year, quarter, 0::double precision as month, location, type, count(distin
 FROM v_task_successful_report
 GROUP BY year, quarter, location, type
 UNION
-SELECT year, quarter, 0::double precision as month, location, 'taskmembers'::varchar as type, count(distinct(user_id)) as value
+SELECT year, quarter, 0::double precision as month, location, 'member_volunteers'::varchar as type, count(distinct(user_id)) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, location, type
 UNION
-SELECT year, quarter, 0::double precision as month, location, 'taskvolunteers'::varchar as type, count(distinct(type_id)) as value
+SELECT year, quarter, 0::double precision as month, location, 'taskmember_volunteers'::varchar as type, count(distinct(type_id)) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, location, type
 UNION
@@ -206,11 +209,11 @@ SELECT year, 0::double precision as quarter, 0::double precision as month, locat
 FROM v_task_successful_report
 GROUP BY year, location, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'taskmembers'::varchar as type, count(distinct(user_id)) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'member_volunteers'::varchar as type, count(distinct(user_id)) as value
 FROM v_taskmember_successful_report
 GROUP BY year, location, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'taskvolunteers'::varchar as type, count(distinct(type_id)) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'taskmember_volunteers'::varchar as type, count(distinct(type_id)) as value
 FROM v_taskmember_successful_report
 GROUP BY year, location, type
 UNION
@@ -231,11 +234,11 @@ SELECT year, quarter, month, ''::varchar as location, type, count(distinct(type_
 FROM v_task_successful_report
 GROUP BY year, quarter, month, type
 UNION
-SELECT year, quarter, month, ''::varchar as location, 'taskmembers'::varchar as type, count(distinct(user_id)) as value
+SELECT year, quarter, month, ''::varchar as location, 'member_volunteers'::varchar as type, count(distinct(user_id)) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, type
 UNION
-SELECT year, quarter, month, ''::varchar as location, 'taskvolunteers'::varchar as type, count(distinct(type_id)) as value
+SELECT year, quarter, month, ''::varchar as location, 'taskmember_volunteers'::varchar as type, count(distinct(type_id)) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, type
 UNION
@@ -256,11 +259,11 @@ SELECT year, quarter, 0::double precision as month, ''::varchar as location, typ
 FROM v_task_successful_report
 GROUP BY year, quarter, type
 UNION
-SELECT year, quarter, 0::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type, count(distinct(user_id)) as value
+SELECT year, quarter, 0::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type, count(distinct(user_id)) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, type
 UNION
-SELECT year, quarter, 0::double precision as month, ''::varchar as location, 'taskvolunteers'::varchar as type, count(distinct(type_id)) as value
+SELECT year, quarter, 0::double precision as month, ''::varchar as location, 'taskmember_volunteers'::varchar as type, count(distinct(type_id)) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, type
 UNION
@@ -281,11 +284,11 @@ SELECT year, 0::double precision as quarter, 0::double precision as month, ''::v
 FROM v_task_successful_report
 GROUP BY year, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type, count(distinct(user_id)) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type, count(distinct(user_id)) as value
 FROM v_taskmember_successful_report
 GROUP BY year, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskvolunteers'::varchar as type, count(distinct(type_id)) as value
+SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskmember_volunteers'::varchar as type, count(distinct(type_id)) as value
 FROM v_taskmember_successful_report
 GROUP BY year, type
 UNION
@@ -305,62 +308,62 @@ ORDER BY y.year, y.type);
 DROP VIEW IF EXISTS v_month_cumulative_taskmembers_report CASCADE;
 CREATE OR REPLACE VIEW v_month_cumulative_taskmembers_report as (
 SELECT * FROM (
-SELECT year, 1::double precision as quarter, 1::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 1::double precision as quarter, 1::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 1::double precision as quarter, 2::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 1::double precision as quarter, 2::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 1::double precision as quarter, 3::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 1::double precision as quarter, 3::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 2::double precision as quarter, 4::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 2::double precision as quarter, 4::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 2::double precision as quarter, 5::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 2::double precision as quarter, 5::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 2::double precision as quarter, 6::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 2::double precision as quarter, 6::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 3::double precision as quarter, 7::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 3::double precision as quarter, 7::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 3::double precision as quarter, 8::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 3::double precision as quarter, 8::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7,8}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 3::double precision as quarter, 9::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 3::double precision as quarter, 9::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7,8,9}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 4::double precision as quarter, 10::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 4::double precision as quarter, 10::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7,8,9,10}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 4::double precision as quarter, 11::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 4::double precision as quarter, 11::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7,8,9,10,11}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 4::double precision as quarter, 12::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 4::double precision as quarter, 12::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7,8,9,10,11,12}'::int[])
 GROUP BY year, location, type) as m
@@ -371,22 +374,22 @@ ORDER BY m.year, m.quarter, m.location, m.month, m.type);
 DROP VIEW IF EXISTS v_quarter_cumulative_taskmembers_report CASCADE;
 CREATE OR REPLACE VIEW v_quarter_cumulative_taskmembers_report as (
 SELECT * FROM (
-SELECT year, 1::double precision as quarter, 0::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 1::double precision as quarter, 0::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE quarter = ANY('{1}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 2::double precision as quarter, 0::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 2::double precision as quarter, 0::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE quarter = ANY('{1,2}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 3::double precision as quarter, 0::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 3::double precision as quarter, 0::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE quarter = ANY('{1,2,3}'::int[])
 GROUP BY year, location, type
 UNION
-SELECT year, 4::double precision as quarter, 0::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 4::double precision as quarter, 0::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY location, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE quarter = ANY('{1,2,3,4}'::int[])
 GROUP BY year, location, type) as m
@@ -397,62 +400,62 @@ ORDER BY m.year, m.location, m.quarter, m.type);
 DROP VIEW IF EXISTS v_month_cumulative_taskmember_totals_report CASCADE;
 CREATE OR REPLACE VIEW v_month_cumulative_taskmember_totals_report as (
 SELECT * FROM (
-SELECT year, 1::double precision as quarter, 1::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 1::double precision as quarter, 1::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 1::double precision as quarter, 2::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 1::double precision as quarter, 2::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 1::double precision as quarter, 3::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 1::double precision as quarter, 3::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 2::double precision as quarter, 4::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 2::double precision as quarter, 4::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 2::double precision as quarter, 5::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 2::double precision as quarter, 5::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 2::double precision as quarter, 6::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 2::double precision as quarter, 6::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 3::double precision as quarter, 7::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 3::double precision as quarter, 7::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 3::double precision as quarter, 8::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 3::double precision as quarter, 8::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7,8}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 3::double precision as quarter, 9::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 3::double precision as quarter, 9::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7,8,9}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 4::double precision as quarter, 10::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 4::double precision as quarter, 10::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7,8,9,10}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 4::double precision as quarter, 11::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 4::double precision as quarter, 11::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7,8,9,10,11}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 4::double precision as quarter, 12::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 4::double precision as quarter, 12::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE month = ANY('{1,2,3,4,5,6,7,8,9,10,11,12}'::int[])
 GROUP BY year, type) as m
@@ -463,22 +466,22 @@ ORDER BY m.year, m.quarter, m.month, m.type);
 DROP VIEW IF EXISTS v_quarter_cumulative_taskmember_totals_report CASCADE;
 CREATE OR REPLACE VIEW v_quarter_cumulative_taskmember_totals_report as (
 SELECT * FROM (
-SELECT year, 1::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 1::double precision as quarter, 0::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE quarter = ANY('{1}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 2::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 2::double precision as quarter, 0::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE quarter = ANY('{1,2}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 3::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 3::double precision as quarter, 0::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE quarter = ANY('{1,2,3}'::int[])
 GROUP BY year, type
 UNION
-SELECT year, 4::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 4::double precision as quarter, 0::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report WHERE quarter = ANY('{1,2,3,4}'::int[])
 GROUP BY year, type) as m
@@ -500,7 +503,7 @@ GROUP BY year, quarter, month, location, type
 UNION
 SELECT * FROM v_month_cumulative_taskmembers_report
 UNION
-SELECT year, quarter, month, location, 'taskvolunteers'::varchar as type,
+SELECT year, quarter, month, location, 'taskmember_volunteers'::varchar as type,
        sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY year, quarter, month, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, location, type
@@ -527,7 +530,7 @@ GROUP BY year, quarter, location, type
 UNION
 SELECT * FROM v_quarter_cumulative_taskmembers_report
 UNION
-SELECT year, quarter, 0::double precision as month, location, 'taskvolunteers'::varchar as type,
+SELECT year, quarter, 0::double precision as month, location, 'taskmember_volunteers'::varchar as type,
        sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY year, quarter, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, location, type
@@ -552,12 +555,12 @@ SELECT year, 0::double precision as quarter, 0::double precision as month, locat
 FROM v_task_successful_report
 GROUP BY year, location, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'taskmembers'::varchar as type,
+SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, location, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'taskvolunteers'::varchar as type,
+SELECT year, 0::double precision as quarter, 0::double precision as month, location, 'taskmember_volunteers'::varchar as type,
        sum(count(distinct type_id)) OVER (PARTITION BY year, location ORDER BY type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, location, type
@@ -586,7 +589,7 @@ GROUP BY year, quarter, month, type
 UNION
 SELECT * FROM v_month_cumulative_taskmember_totals_report
 UNION
-SELECT year, quarter, month, ''::varchar as location, 'taskvolunteers'::varchar as type,
+SELECT year, quarter, month, ''::varchar as location, 'taskmember_volunteers'::varchar as type,
        sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY year, quarter, month, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, month, type
@@ -613,7 +616,7 @@ GROUP BY year, quarter, type
 UNION
 SELECT * FROM v_quarter_cumulative_taskmember_totals_report
 UNION
-SELECT year, quarter, 0::double precision as month, ''::varchar as location, 'taskvolunteers'::varchar as type,
+SELECT year, quarter, 0::double precision as month, ''::varchar as location, 'taskmember_volunteers'::varchar as type,
        sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY year, quarter, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, quarter, type
@@ -638,12 +641,12 @@ SELECT year, 0::double precision as quarter, 0::double precision as month, ''::v
 FROM v_task_successful_report
 GROUP BY year, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskmembers'::varchar as type,
+SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'member_volunteers'::varchar as type,
        sum(count(distinct user_id)) OVER (PARTITION BY year ORDER BY year, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, type
 UNION
-SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskvolunteers'::varchar as type,
+SELECT year, 0::double precision as quarter, 0::double precision as month, ''::varchar as location, 'taskmember_volunteers'::varchar as type,
        sum(count(distinct type_id)) OVER (PARTITION BY year ORDER BY year, type ROWS UNBOUNDED PRECEDING) as value
 FROM v_taskmember_successful_report
 GROUP BY year, type

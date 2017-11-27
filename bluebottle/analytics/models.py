@@ -2,7 +2,18 @@ from django.db import models
 from django.utils.translation import ugettext as _
 
 
+# get_report_model returns a Django model for accessing the report views
 def get_report_model(db_table):
+    """Get Django model for accessing the views for reporting
+
+    Args:
+        db_table: The view name as created in the DB.
+
+    Returns:
+        A Django model
+
+    """
+
     class ReportMetaClass(models.base.ModelBase):
         def __new__(cls, name, bases, attrs):
             model = super(ReportMetaClass, cls).__new__(cls, name, bases, attrs)
@@ -21,6 +32,7 @@ def get_report_model(db_table):
         # location | character varying(255) |
         # type     | character varying      |
         # value    | bigint                 |
+
         year = models.PositiveSmallIntegerField(_('year'))
         quarter = models.PositiveSmallIntegerField(_('quarter'))
         month = models.PositiveSmallIntegerField(_('month'), primary_key=True)
@@ -32,6 +44,16 @@ def get_report_model(db_table):
 
 
 def get_raw_report_model(db_table):
+    """Get Django model for accessing the raw views used in reporting
+
+    Args:
+        db_table: The view name as created in the DB.
+
+    Returns:
+        A Django model
+
+    """
+
     class RawReportMetaClass(models.base.ModelBase):
         def __new__(cls, name, bases, attrs):
             model = super(RawReportMetaClass, cls).__new__(cls, name, bases, attrs)
@@ -42,31 +64,33 @@ def get_raw_report_model(db_table):
     class RawReportClass(models.Model):
         __metaclass__ = RawReportMetaClass
 
-        #          Column          |           Type           |
-        # -------------------------+--------------------------+
-        # tenant                   | name                     |
-        # type                     | character varying        |
-        # type_id                  | integer                  |
-        # description              | character varying        |
-        # parent_id                | integer                  |
-        # parent_description       | character varying        |
-        # grand_parent_id          | integer                  |
-        # grand_parent_description | character varying        |
-        # timestamp                | timestamp with time zone |
-        # status                   | character varying(20)    |
-        # event_timestamp          | timestamp with time zone |
-        # event_status             | character varying(20)    |
-        # user_id                  | integer                  |
-        # user_remote_id           | character varying        |
-        # user_email               | character varying        |
-        # year                     | double precision         |
-        # quarter                  | double precision         |
-        # month                    | double precision         |
-        # week                     | double precision         |
-        # location                 | character varying(255)   |
-        # location_group           | character varying(255)   |
-        # value                    | integer                  |
-        # pledged                  | integer                  |
+        #          Column          |            Type             |
+        # -------------------------+-----------------------------+
+        # tenant                   | name                        |
+        # type                     | character varying           |
+        # type_id                  | integer                     |
+        # description              | character varying(255)      |
+        # parent_id                | integer                     |
+        # parent_description       | character varying           |
+        # grand_parent_id          | integer                     |
+        # grand_parent_description | character varying           |
+        # timestamp                | timestamp without time zone |
+        # status                   | character varying(20)       |
+        # status_friendly          | character varying(80)       |
+        # event_timestamp          | timestamp without time zone |
+        # event_status             | character varying(20)       |
+        # user_id                  | integer                     |
+        # user_email               | character varying(254)      |
+        # user_remote_id           | character varying(75)       |
+        # year                     | double precision            |
+        # quarter                  | double precision            |
+        # month                    | double precision            |
+        # week                     | double precision            |
+        # location                 | character varying(255)      |
+        # location_group           | character varying(255)      |
+        # value                    | integer                     |
+        # value_alt                | integer                     |
+
         tenant = models.CharField(_('tenant'), max_length=255, primary_key=True)
         type = models.CharField(_('type'), max_length=255)
         type_id = models.PositiveIntegerField(_('type_id'))
@@ -77,11 +101,12 @@ def get_raw_report_model(db_table):
         grand_parent_description = models.CharField(_('grand_parent_description'), max_length=255)
         timestamp = models.DateTimeField(_('timestamp'))
         status = models.CharField(_('status'), max_length=20)
+        status_friendly = models.CharField(_('status_friendly'), max_length=80)
         event_timestamp = models.DateTimeField(_('event_timestamp'))
         event_status = models.CharField(_('event_status'), max_length=20)
         user_id = models.PositiveIntegerField(_('user_id'))
-        user_remote_id = models.PositiveIntegerField(_('user_remote_id'))
         user_email = models.CharField(_('user_email'), max_length=255)
+        user_remote_id = models.PositiveIntegerField(_('user_remote_id'))
         year = models.PositiveSmallIntegerField(_('year'))
         quarter = models.PositiveSmallIntegerField(_('quarter'))
         month = models.PositiveSmallIntegerField(_('month'))
@@ -89,21 +114,6 @@ def get_raw_report_model(db_table):
         location = models.CharField(_('location'), max_length=255)
         location_group = models.CharField(_('location_group'), max_length=255)
         value = models.IntegerField(_('value'))
-        pledged = models.IntegerField(_('value'))
+        value_alt = models.IntegerField(_('value'))
 
     return RawReportClass
-
-
-def export_report(table_name):
-    ReportModel = get_report_model(table_name)
-    results = ReportModel.objects.all()
-    for row in results:
-        print(int(row.year), int(row.quarter), int(row.month), row.location, row.type, int(row.value))
-
-
-def export_raw_report(table_name):
-    RawReportModel = get_raw_report_model(table_name)
-    results = RawReportModel.objects.all()
-    for row in results:
-        print(row.type, int(row.type_id), int(row.parent_id or 0),
-              row.timestamp, row.status, row.location, row.type, int(row.value))

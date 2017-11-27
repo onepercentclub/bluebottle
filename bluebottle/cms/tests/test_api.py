@@ -5,6 +5,7 @@ import mock
 
 from django.contrib.auth.models import Permission, Group
 from django.core.files.base import File
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now
 from moneyed.classes import Money

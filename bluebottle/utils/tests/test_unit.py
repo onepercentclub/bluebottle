@@ -6,7 +6,8 @@ import uuid
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Permission
-from django.core.exceptions import SuspiciousFileOperation
+from django.core.exceptions import SuspiciousFileOperation, ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -21,6 +22,7 @@ from bluebottle.rewards.models import Reward
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.fields import RestrictedImageFormField
 from bluebottle.utils.monkey_patch_parler import TenantAwareParlerAppsettings
 from bluebottle.utils.serializers import MoneySerializer
 from bluebottle.utils.permissions import (
@@ -598,3 +600,38 @@ class TestOneOfPermission(BluebottleTestCase):
                 'GET', self.user, obj=self.project
             )
         )
+
+
+class RestrictedImageFormFieldTestCase(TestCase):
+    def setUp(self):
+        super(RestrictedImageFormFieldTestCase, self).setUp()
+
+        self.field = RestrictedImageFormField()
+
+    def test_image(self):
+        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+            image_file = SimpleUploadedFile('upload.png', image.read(), content_type='image/png')
+            result = self.field.to_python(image_file)
+
+        self.assertEqual(result, image_file)
+
+    def test_non_image(self):
+        with open('./bluebottle/utils/tests/test_images/non-image.svg') as image:
+            image_file = SimpleUploadedFile('upload.png', image.read(), content_type='image/png')
+
+            with self.assertRaises(ValidationError):
+                self.field.to_python(image_file)
+
+    def test_svg(self):
+        with open('./bluebottle/utils/tests/test_images/upload.svg') as image:
+            image_file = SimpleUploadedFile('upload.svg', image.read(), content_type='image/svg+xml')
+            result = self.field.to_python(image_file)
+
+        self.assertEqual(result, image_file)
+
+    def test_non_image_svg_mime(self):
+        with open('./bluebottle/utils/tests/test_images/non-image.svg') as image:
+            image_file = SimpleUploadedFile('upload.svg', image.read(), content_type='image/svg+xml')
+
+            with self.assertRaises(ValidationError):
+                self.field.to_python(image_file)

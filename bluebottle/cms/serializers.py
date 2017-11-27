@@ -18,7 +18,7 @@ from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
-    SlidesContent, Slide, Step, Logo, LogosContent, ContentLink, LinksContent,
+    SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, WelcomeContent
 )
 from bluebottle.geo.serializers import LocationSerializer

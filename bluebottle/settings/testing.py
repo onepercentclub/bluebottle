@@ -29,9 +29,6 @@ MERCHANT_ACCOUNTS = [
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 COMPRESS_ENABLED = False
 
-# Include the tests models
-INCLUDE_TEST_MODELS = True
-
 INSTALLED_APPS += ('bluebottle.payments_mock',)
 
 # Yes, activate the South migrations. Otherwise, we'll never notice if our

@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from fluent_contents.extensions import plugin_pool, ContentPlugin
 
 from bluebottle.cms.admin import (
-    QuoteInline, StatInline, SlideInline, StepInline, LogoInline, LinkInline,
+    QuoteInline, StatInline, StepInline, LogoInline, LinkInline,
     GreetingInline
 )
 from bluebottle.cms.models import (
@@ -91,7 +91,6 @@ class TasksBlockPlugin(CMSContentPlugin):
 @plugin_pool.register
 class SlidesBlockPlugin(CMSContentPlugin):
     model = SlidesContent
-    inlines = [SlideInline]
 
     category = _('Homepage')
 

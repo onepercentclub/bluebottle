@@ -4,10 +4,11 @@ import factory
 from django.utils.timezone import now
 
 from bluebottle.cms.models import (
-    ResultPage, HomePage, Stat, Quote, Slide,
+    ResultPage, HomePage, Stat, Quote,
     SiteLinks, LinkGroup, Link, LinkPermission,
     Step, ContentLink, Greeting
 )
+from bluebottle.slides.models import Slide
 from bluebottle.test.factory_models.utils import LanguageFactory
 
 

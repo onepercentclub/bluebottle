@@ -2,13 +2,16 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from adminsortable.models import SortableMixin
-from adminsortable.fields import SortableForeignKey
 from fluent_contents.models import PlaceholderField, ContentItem
-from fluent_contents.extensions import plugin_pool, ContentPlugin
+from adminsortable.fields import SortableForeignKey
 from parler.models import TranslatableModel, TranslatedFields
 
-from bluebottle.surveys.models import Survey
+from bluebottle.geo.models import Location
 from bluebottle.projects.models import Project
+from bluebottle.surveys.models import Survey
+from bluebottle.tasks.models import Task
+from bluebottle.utils.fields import ImageField
+from bluebottle.categories.models import Category
 from bluebottle.utils.models import BasePlatformSettings
 
 
@@ -17,7 +20,16 @@ class ResultPage(TranslatableModel):
 
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
-    content = PlaceholderField('content')
+    content = PlaceholderField('content', plugins=[
+        'ProjectImagesBlockPlugin',
+        'ProjectMapBlockPlugin',
+        'ProjectsBlockPlugin',
+        'QuotesBlockPlugin',
+        'ShareResultsBlockPlugin',
+        'StatsBlockPlugin',
+        'SurveyBlockPlugin',
+        'TasksBlockPlugin',
+    ])
 
     translations = TranslatedFields(
         title=models.CharField(_('Title'), max_length=40),
@@ -31,6 +43,19 @@ class ResultPage(TranslatableModel):
             ('api_add_resultpage', 'Can add result pages through the API'),
             ('api_change_resultpage', 'Can change result pages through the API'),
             ('api_delete_resultpage', 'Can delete result pages through the API'),
+        )
+
+
+class HomePage(TranslatableModel):
+    content = PlaceholderField('content')
+    translations = TranslatedFields()
+
+    class Meta:
+        permissions = (
+            ('api_read_homepage', 'Can view homepages through the API'),
+            ('api_add_homepage', 'Can add homepages through the API'),
+            ('api_change_homepage', 'Can change homepages through the API'),
+            ('api_delete_homepage', 'Can delete homepages through the API'),
         )
 
 
@@ -79,7 +104,7 @@ class Link(SortableMixin):
         ('project', _('Project')),
         ('task', _('Task')),
         ('fundraiser', _('Fundraiser')),
-        ('results', _('Results')),
+        ('results-page', _('Results Page')),
         ('news', _('News')),
     )
 
@@ -97,12 +122,7 @@ class Link(SortableMixin):
         ordering = ['link_order']
 
 
-class Stats(models.Model):
-    def __unicode__(self):
-        return u"List of statistics #{0}".format(self.id)
-
-
-class Stat(TranslatableModel, SortableMixin):
+class Stat(SortableMixin, models.Model):
     STAT_CHOICES = [
         ('manual', _('Manual input')),
         ('people_involved', _('People involved')),
@@ -125,41 +145,40 @@ class Stat(TranslatableModel, SortableMixin):
     )
     value = models.CharField(max_length=63, null=True, blank=True,
                              help_text=_('Use this for \'manual\' input or the override the calculated value.'))
-    stats = SortableForeignKey(Stats)
+    block = models.ForeignKey('cms.StatsContent', related_name='stats', null=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+    title = models.CharField(max_length=63)
 
-    translations = TranslatedFields(
-        title=models.CharField(max_length=63)
-    )
+    @property
+    def name(self):
+        return self.title
 
     class Meta:
         ordering = ['sequence']
 
 
-class Quotes(models.Model):
-    def __unicode__(self):
-        return u"List of quotes #{0}".format(self.id)
-
-
-class Quote(TranslatableModel):
-    quotes = models.ForeignKey(Quotes)
-    translations = TranslatedFields(
-        name=models.CharField(max_length=30),
-        quote=models.CharField(max_length=60)
+class Quote(models.Model):
+    block = models.ForeignKey('cms.QuotesContent', related_name='quotes')
+    name = models.CharField(max_length=60)
+    quote = models.TextField()
+    image = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='quote_images/'
     )
 
 
-class ResultsContent(ContentItem):
+class TitledContent(ContentItem):
     title = models.CharField(max_length=40, blank=True, null=True)
-    sub_title = models.CharField(max_length=70, blank=True, null=True)
+    sub_title = models.CharField(max_length=400, blank=True, null=True)
+
+    preview_template = 'admin/cms/preview/default.html'
 
     class Meta:
         abstract = True
 
 
-class QuotesContent(ResultsContent):
+class QuotesContent(TitledContent):
     type = 'quotes'
-    quotes = models.ForeignKey(Quotes)
     preview_template = 'admin/cms/preview/quotes.html'
 
     class Meta:
@@ -169,9 +188,8 @@ class QuotesContent(ResultsContent):
         return unicode(self.quotes)
 
 
-class StatsContent(ResultsContent):
+class StatsContent(TitledContent):
     type = 'statistics'
-    stats = models.ForeignKey(Stats)
     preview_template = 'admin/cms/preview/stats.html'
 
     class Meta:
@@ -181,7 +199,7 @@ class StatsContent(ResultsContent):
         return unicode(self.stats)
 
 
-class SurveyContent(ResultsContent):
+class SurveyContent(TitledContent):
     type = 'survey'
     preview_template = 'admin/cms/preview/results.html'
     survey = models.ForeignKey(Survey, null=True)
@@ -193,33 +211,29 @@ class SurveyContent(ResultsContent):
         return unicode(self.survey)
 
 
-class Projects(models.Model):
-    projects = models.ManyToManyField(Project)
-
-    def __unicode__(self):
-        return u"List of projects #{0}".format(self.id)
-
-
-class ProjectsContent(ResultsContent):
-    action_text = models.CharField(max_length=40,
+class ProjectsContent(TitledContent):
+    type = 'projects'
+    action_text = models.CharField(max_length=80,
                                    default=_('Start your own project'),
                                    blank=True, null=True)
     action_link = models.CharField(max_length=100, default="/start-project",
                                    blank=True, null=True)
 
-    projects = models.ForeignKey(Projects, null=True)
+    projects = models.ManyToManyField(
+        Project, blank=True, db_table='cms_projectscontent_projects'
+    )
+    from_homepage = models.BooleanField(default=False)
 
-    type = 'projects'
     preview_template = 'admin/cms/preview/projects.html'
 
     class Meta:
         verbose_name = _('Projects')
 
     def __unicode__(self):
-        return unicode(self.projects)
+        return unicode(self.title)
 
 
-class ProjectImagesContent(ResultsContent):
+class ProjectImagesContent(TitledContent):
     type = 'project_images'
     preview_template = 'admin/cms/preview/project_images.html'
 
@@ -237,7 +251,7 @@ class ProjectImagesContent(ResultsContent):
         return 'Project images block'
 
 
-class ShareResultsContent(ResultsContent):
+class ShareResultsContent(TitledContent):
     type = 'share-results'
     preview_template = 'admin/cms/preview/share_results.html'
 
@@ -255,9 +269,23 @@ class ShareResultsContent(ResultsContent):
         return 'Share results block'
 
 
-class ProjectsMapContent(ResultsContent):
+class TasksContent(TitledContent):
+    type = 'tasks'
+    preview_template = 'admin/cms/preview/tasks.html'
+    action_text = models.CharField(max_length=40, blank=True, null=True)
+    action_link = models.CharField(max_length=100, blank=True, null=True)
+
+    tasks = models.ManyToManyField(Task, db_table='cms_taskscontent_tasks')
+
+    class Meta:
+        verbose_name = _('Tasks')
+
+    def __unicode__(self):
+        return 'Tasks'
+
+
+class ProjectsMapContent(TitledContent):
     type = 'projects-map'
-    preview_template = 'admin/cms/preview/projects_map.html'
 
     class Meta:
         verbose_name = _('Projects Map')
@@ -266,7 +294,7 @@ class ProjectsMapContent(ResultsContent):
         return 'Projects Map'
 
 
-class SupporterTotalContent(ResultsContent):
+class SupporterTotalContent(TitledContent):
     type = 'supporter_total'
     preview_template = 'admin/cms/preview/supporter_total.html'
 
@@ -279,53 +307,171 @@ class SupporterTotalContent(ResultsContent):
         return 'Supporter total'
 
 
-class ResultsContentPlugin(ContentPlugin):
-    admin_form_template = 'admin/cms/content_item.html'
-
-    category = _('Results')
-
-
-@plugin_pool.register
-class QuotesBlockPlugin(ResultsContentPlugin):
-    model = QuotesContent
-    fieldsets = (
-        (None, {'fields': ('quotes',), }),
+class Slide(SortableMixin, models.Model):
+    block = models.ForeignKey('cms.SlidesContent', related_name='slides')
+    tab_text = models.CharField(
+        _("Tab text"), max_length=100,
+        help_text=_("This is shown on tabs beneath the banner.")
     )
+    title = models.CharField(_("Title"), max_length=100, blank=True)
+    body = models.TextField(_("Body text"), blank=True)
+    image = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='banner_slides/'
+    )
+    background_image = ImageField(
+        _("Background image"), max_length=255, blank=True,
+        null=True, upload_to='banner_slides/'
+    )
+    video_url = models.URLField(
+        _("Video url"), max_length=100, blank=True, default=''
+    )
+    link_text = models.CharField(
+        _("Link text"), max_length=400,
+        help_text=_("This is the text on the button inside the banner."),
+        blank=True
+    )
+    link_url = models.CharField(
+        _("Link url"), max_length=400,
+        help_text=_("This is the link for the button inside the banner."),
+        blank=True
+    )
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
 
 
-@plugin_pool.register
-class StatsBlockPlugin(ResultsContentPlugin):
-    model = StatsContent
+class SlidesContent(TitledContent):
+    type = 'slides'
+
+    class Meta:
+        verbose_name = _('Slides')
+
+    def __unicode__(self):
+        return unicode(self.slides)
 
 
-@plugin_pool.register
-class SurveyBlockPlugin(ResultsContentPlugin):
-    model = SurveyContent
+class Step(SortableMixin, models.Model):
+    block = models.ForeignKey('cms.StepsContent', related_name='steps')
+    image = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='step_images/'
+    )
+    header = models.CharField(_("Header"), max_length=100)
+    text = models.CharField(_("Text"), max_length=400)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
 
 
-@plugin_pool.register
-class ProjectsBlockPlugin(ResultsContentPlugin):
-    model = ProjectsContent
+class StepsContent(TitledContent):
+    action_text = models.CharField(max_length=40,
+                                   default=_('Start your own project'),
+                                   blank=True, null=True)
+    action_link = models.CharField(max_length=100, default="/start-project",
+                                   blank=True, null=True)
+
+    type = 'steps'
+
+    class Meta:
+        verbose_name = _('Steps')
+
+    def __unicode__(self):
+        return unicode(_('Steps'))
 
 
-@plugin_pool.register
-class ProjectImagesBlockPlugin(ResultsContentPlugin):
-    model = ProjectImagesContent
+class LocationsContent(TitledContent):
+    type = 'locations'
+    locations = models.ManyToManyField(Location, db_table='cms_locationscontent_locations')
+
+    class Meta:
+        verbose_name = _('Locations')
+
+    def __unicode__(self):
+        return unicode(self.locations)
 
 
-@plugin_pool.register
-class ShareResultsBlockPlugin(ResultsContentPlugin):
-    model = ShareResultsContent
+class CategoriesContent(TitledContent):
+    type = 'categories'
+    categories = models.ManyToManyField(Category, db_table='cms_categoriescontent_categories')
+
+    class Meta:
+        verbose_name = _('Categories')
+
+    def __unicode__(self):
+        return unicode(_('Categories'))
 
 
-@plugin_pool.register
-class ProjectMapBlockPlugin(ResultsContentPlugin):
-    model = ProjectsMapContent
+class Logo(SortableMixin, models.Model):
+    block = models.ForeignKey('cms.LogosContent', related_name='logos')
+    image = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='logo_images/'
+    )
+    link = models.CharField(max_length=100, blank=True, null=True)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
 
 
-@plugin_pool.register
-class SupporterTotalBlockPlugin(ResultsContentPlugin):
-    model = SupporterTotalContent
+class LogosContent(TitledContent):
+    type = 'logos'
+    action_text = models.CharField(max_length=40)
+    action_link = models.CharField(max_length=100, default="/start-project",
+                                   blank=True, null=True)
+
+    class Meta:
+        verbose_name = _('Logos')
+
+    def __unicode__(self):
+        return unicode(_('Logos'))
+
+
+class ContentLink(SortableMixin, models.Model):
+    block = models.ForeignKey('cms.LinksContent', related_name='links')
+    image = ImageField(
+        _("Image"), max_length=255, blank=True, null=True,
+        upload_to='link_images/'
+    )
+    action_text = models.CharField(max_length=40)
+    action_link = models.CharField(
+        max_length=100, blank=True, null=True
+    )
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
+
+
+class LinksContent(TitledContent):
+    type = 'links'
+
+    class Meta:
+        verbose_name = _('Links')
+
+    def __unicode__(self):
+        return unicode(_('Links'))
+
+
+class Greeting(models.Model):
+    block = models.ForeignKey('cms.WelcomeContent', related_name='greetings')
+    text = models.TextField()
+
+
+class WelcomeContent(ContentItem):
+    type = 'welcome'
+    preview_template = 'admin/cms/preview/default.html'
+
+    preamble = models.CharField(max_length=20)
+
+    class Meta:
+        verbose_name = _('Welcome')
+
+    def __unicode__(self):
+        return unicode(_('Welcome'))
 
 
 class SitePlatformSettings(BasePlatformSettings):

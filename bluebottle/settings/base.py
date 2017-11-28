@@ -15,7 +15,7 @@ DEBUG = True
 COMPRESS_ENABLED = False
 COMPRESS_TEMPLATES = False
 
-INCLUDE_TEST_MODELS = True
+INCLUDE_TEST_MODELS = False
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -82,6 +82,7 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static', 'assets')
 STATIC_URL = '/static/assets/'
 
 STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'bluebottle/static'),
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -279,6 +280,7 @@ SHARED_APPS = (
     'django_singleton_admin'
 
 )
+
 TENANT_APPS = (
     'polymorphic',
     'modeltranslation',
@@ -390,13 +392,14 @@ TENANT_APPS = (
     # Note: Fixes the incorrect formatting of money values in the back-office
     # https://github.com/django-money/django-money/issues/232
     'djmoney',
+    'django_singleton_admin',
+    'nested_inline',
 )
 
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = True
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"
@@ -622,7 +625,7 @@ DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif',)
+IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', 'image/svg+xml')
 
 EXPORTDB_EXPORT_CONF = {
     'models': OrderedDict([
@@ -853,3 +856,5 @@ SUMMERNOTE_CONFIG = {
         'disableResizeImage': True
     }
 }
+
+HOMEPAGE = {}

@@ -762,6 +762,7 @@ class ProjectPlatformSettings(BasePlatformSettings):
 
     create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
     contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
+    allow_anonymous_rewards = models.BooleanField(default=True)
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)
 

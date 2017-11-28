@@ -1,5 +1,10 @@
+from StringIO import StringIO
+
 from django.db import connection
+from django.core.files import File
 from django.core.management.base import BaseCommand, CommandError
+
+import requests
 
 from bluebottle.clients.models import Client
 from bluebottle.clients import properties
@@ -44,61 +49,89 @@ class Command(BaseCommand):
             label = 'created'
         else:
             label = 'exists'
-        self.stdout.write('{} [{}]'.format(info, label))
+        self.stdout.write(u'{} [{}]'.format(info, label))
 
     def _create_settings(self, settings):
-        s = SitePlatformSettings.objects.get_or_create()
+        if 'footerPoweredBy' not in settings:
+            settings['footerPoweredBy'] = '- Powered by:'
 
+        if 'footerLink' in settings:
+            if settings['footerLink'].startswith('http'):
+                response = requests.get(settings['footerLink'])
+                logo = StringIO(response.content)
+            else:
+                logo = StringIO(
+                    settings['footerLink'].split(",")[1].decode('base64')
+                )
+
+            settings['footerLink'] = File(
+                logo, name='logo.svg'
+            )
+
+        platform_settings, _created = SitePlatformSettings.objects.get_or_create()
+
+        settings_map = {
+            'footerPoweredBy': 'powered_by_text',
+            'footerCopyrightLink': 'power_by_logo',
+            'footerLinkTarget': 'powered_by_link',
+            'footerLink': 'powered_by_logo',
+            'email': 'contact_email',
+            'phone': 'contact_phone',
+            'copyright': 'copyright',
+        }
         # handle a fixed list of settings
-        for key in settings.keys():
-            if key is 'footerLink':
+        for key, value in settings.items():
+            try:
+                setattr(platform_settings, settings_map[key], value)
+            except KeyError:
                 pass
-            elif key is 'footerLinkTarget':
-                pass
-            elif key is 'footerPoweredBy':
-                self._log('Setting called powered_by_text', True)
-                s.powered_by_text = settings['footerPoweredBy']
-                self._log('Setting called powered_by_link', True)
-                s.powered_by_link = 'https://voorjebuurt.nl'
-            elif key is 'footerPhoneCustomText':
-                pass
-            elif key is 'phoneText':
-                pass
-            elif key is 'hideFooterContact':
-                pass
-            elif key is 'hideProjectStartSearch':
-                pass
+
+        platform_settings.save()
 
     def _create_links(self, force):
         site_links = getattr(properties, 'SITE_LINKS', None)
         if site_links:
             # get languages
+            LinkGroup.objects.all().delete()
+
             for key in site_links.keys():
-                if key is 'settings':
+
+                if key == 'settings':
                     self._create_settings(site_links['settings'])
+                    continue
 
                 lang_code = key
-                language = Language.objects.get(code=lang_code)
+                try:
+                    language = Language.objects.get(code=lang_code)
+                except Language.DoesNotExist:
+                    continue
+
                 sl, created = SiteLinks.objects.get_or_create(language=language)
 
                 lang_links = site_links[lang_code]
-                for group_name in lang_links.keys():
-                    if group_name in ['main', 'about', 'info', 'discover', 'social']:
+                sections = ['main', 'about', 'info', 'discover', 'social']
+
+                for group_name in sections:
+                    if group_name in lang_links:
                         group_links = lang_links[group_name]
-                        lg, created = LinkGroup.objects.get_or_create(name=group_name,
-                                                                      site_links=sl,
-                                                                      title=group_links.get('title', ''))
+                        lg, created = LinkGroup.objects.get_or_create(
+                            name=group_name,
+                            site_links=sl,
+                            title=group_links.get('title', '')
+                        )
                         self._log('Link Group called {}'.format(group_name), created)
 
                         for link in group_links['links']:
-                            l, created = Link.objects.get_or_create(link_group=lg,
-                                                                    highlight=link.get('highlighted', False),
-                                                                    title=link.get('title', 'N/A'),
-                                                                    component=link.get('component', None),
-                                                                    component_id=link.get('component_id', None),
-                                                                    external_link=link.get('external_link', None))
+                            l, created = Link.objects.get_or_create(
+                                link_group=lg,
+                                highlight=link.get('highlight', False),
+                                title=link.get('title', 'N/A'),
+                                component=link.get('component', None),
+                                component_id=link.get('component_id', None),
+                                external_link=link.get('external_link', None)
+                            )
 
-                            self._log('  Link called {} created for {}'.format(link.get('title', 'N/A'), group_name),
+                            self._log(u'  Link called {} created for {}'.format(link.get('title', 'N/A'), group_name),
                                       created)
 
                             perms = link.get('permissions', [])
@@ -107,10 +140,12 @@ class Command(BaseCommand):
                                                                                   present=perm.get('present', True))
 
                                 l.link_permissions.add(p)
-                                self._log('    Permission called {} ({}) for {}'.format(perm['permission'],
-                                                                                        perm['present'],
-                                                                                        link.get('title', 'N/A')),
-                                          created)
+                                self._log(u'    Permission called {} ({}) for {}'.format(
+                                    perm['permission'],
+                                    perm['present'],
+                                    link.get('title', 'N/A')),
+                                    created
+                                )
 
     def handle(self, *args, **options):
         if options['all'] and options['tenant']:

@@ -2304,7 +2304,8 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
             contact_method='mail',
             contact_types=['organization'],
             create_flow='choice',
-            create_types=["funding", "sourcing"]
+            create_types=["funding", "sourcing"],
+            allow_anonymous_rewards=False
         )
 
         ProjectSearchFilter.objects.create(
@@ -2339,3 +2340,4 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['projects']['filters'][2]['name'], 'status')
         self.assertEqual(response.data['platform']['projects']['filters'][2]['values'], None)
         self.assertEqual(response.data['platform']['projects']['filters'][2]['default'], 'campaign,voting')
+        self.assertEqual(response.data['platform']['projects']['allow_anonymous_rewards'], False)

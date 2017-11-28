@@ -20,6 +20,10 @@ def create_report_views(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+            ('clients', '0001_initial'),
+            ('projects', '0044_auto_20171110_1549'),
+            ('tasks', '0035_merge_20170831_1449'),
+            ('geo', '0004_auto_20160929_0817'),
     ]
 
     operations = [

@@ -285,9 +285,10 @@ class CreateReportViewTests(TestCase):
     @override_settings(REPORTING_SQL_DIR=os.path.join(settings.PROJECT_ROOT,
                        'bluebottle', 'analytics', 'tests', 'files'))
     def test_raw_view_creation(self):
+        report_sql_path = os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'analytics',
+                                       'views', 'report.sql')
         # setup some test files
-        call_command(self.cmd, sname='REPORT_DB_VIEWS', tenant='test')
+        call_command(self.cmd, file=report_sql_path)
 
         ReportModel = get_raw_report_model('v_projects')
-        results = ReportModel.objects.all()
-        print(len(results))
+        self.assertEqual(len(ReportModel.objects.all()), 0)

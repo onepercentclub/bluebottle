@@ -359,7 +359,7 @@ class Step(SortableMixin, models.Model):
         upload_to='step_images/'
     )
     header = models.CharField(_("Header"), max_length=100)
-    text = models.CharField(_("Text"), max_length=400)
+    text = models.CharField(_("Text"), max_length=400, null=True, blank=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:

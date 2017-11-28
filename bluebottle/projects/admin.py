@@ -383,7 +383,11 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
         # Check IBAN & BIC
         account = project.account_number
-        if account[0].isalpha():
+        if len(account) < 3:
+            self.message_user(request, 'Invalid Bank Account: {}'.format(account), level='ERROR')
+            return HttpResponseRedirect(project_url)
+
+        if len(account) and account[0].isalpha():
             # Looks like an IBAN (starts with letter), let's check
             try:
                 iban = IBAN(account)
@@ -400,7 +404,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
             project.save()
 
         if not request.user.has_perm('projects.approve_payout'):
-            return HttpResponseForbidden('Missing permission: projects.approve_payout', level='ERROR')
+            self.message_user(request, 'Missing permission: projects.approve_payout', level='ERROR')
         elif project.payout_status != 'needs_approval':
             self.message_user(request, 'The payout does not have the status "needs approval"', level='ERROR')
         else:

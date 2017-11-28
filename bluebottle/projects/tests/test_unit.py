@@ -8,7 +8,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.projects.admin import mark_as_plan_new
-from bluebottle.projects.models import Project, ProjectPhaseLog
+from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectBudgetLine, ProjectPlatformSettings
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -411,6 +411,16 @@ class TestModel(BluebottleTestCase):
 
         self.assertFalse(self.project.expertise_based)
 
+    def test_donated_percentage(self):
+        self.project.amount_asked = Money(0, 'EUR')
+        self.assertEqual(self.project.donated_percentage, 0)
+        self.project.amount_asked = Money(20, 'EUR')
+        self.project.amount_donated = Money(40, 'EUR')
+        self.assertEqual(self.project.donated_percentage, 100)
+        self.project.amount_asked = Money(20, 'EUR')
+        self.project.amount_donated = Money(10, 'EUR')
+        self.assertEqual(self.project.donated_percentage, 50)
+
 
 class TestProjectTheme(BluebottleTestCase):
     def setUp(self):
@@ -427,3 +437,31 @@ class TestProjectTheme(BluebottleTestCase):
         self.assertTrue(Project.objects.filter(pk=self.project.id).exists())
         self.theme.delete()
         self.assertTrue(Project.objects.filter(pk=self.project.id).exists())
+
+
+class TestProjectBudgetLine(BluebottleTestCase):
+    def setUp(self):
+        super(TestProjectBudgetLine, self).setUp()
+        self.init_projects()
+        self.project = ProjectFactory.create()
+
+    def test_project_budget_line(self):
+        line = ProjectBudgetLine.objects.create(
+            project=self.project,
+            description='Just things',
+            amount=Money(50, 'EUR')
+        )
+        line.save()
+        self.assertEqual(unicode(line), u'Just things - 50.00 \u20ac')
+
+
+class TestProjectPlatformSettings(BluebottleTestCase):
+
+    def test_load_new_settings(self):
+        settings = ProjectPlatformSettings.load()
+        self.assertEqual(settings.allow_anonymous_rewards, True)
+
+    def test_load_existing_settings(self):
+        ProjectPlatformSettings.objects.create(allow_anonymous_rewards=False)
+        settings = ProjectPlatformSettings.load()
+        self.assertEqual(settings.allow_anonymous_rewards, False)

@@ -309,6 +309,11 @@ class StatisticsTest(BluebottleTestCase):
 
         self.assertEqual(self.stats.votes_cast, 3)
 
+    def test_members_stats(self):
+        BlueBottleUserFactory.create(is_active=False)
+
+        self.assertEqual(self.stats.members, 3)
+
 
 @override_settings(
     CACHES={

@@ -16,7 +16,7 @@ from bluebottle.clients import properties
 
 from tenant_extras.utils import TenantLanguage
 
-logger = logging.getLogger('console')
+logger = logging.getLogger(__name__)
 
 
 class TenantAwareBackend(EmailBackend):

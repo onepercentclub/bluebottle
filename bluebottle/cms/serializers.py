@@ -211,7 +211,7 @@ class SlidesContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SlidesContent
-        fields = ('id', 'type', 'slides',)
+        fields = ('id', 'type', 'slides', 'title', 'sub_title',)
 
 
 class CategoriesContentSerializer(serializers.ModelSerializer):

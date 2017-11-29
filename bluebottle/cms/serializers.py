@@ -179,8 +179,8 @@ class TasksContentSerializer(serializers.ModelSerializer):
 
 
 class SlideSerializer(serializers.ModelSerializer):
-    image = SorlImageField('800x600', crop='center')
-    background_image = SorlImageField('1600x1200', crop='center')
+    image = SorlImageField('1600x674', crop='center')
+    background_image = SorlImageField('1600x674', crop='center')
 
     class Meta:
         model = Slide

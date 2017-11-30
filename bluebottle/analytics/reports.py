@@ -1,11 +1,16 @@
+import time
 import xlsxwriter
 import calendar
 import datetime
 import StringIO
 import operator
+import logging
+
+from django.db import connection
 
 from bluebottle.analytics.models import get_report_model, get_raw_report_model
-from bluebottle.geo.models import Location
+
+logger = logging.getLogger(__name__)
 
 
 class MetricsReport(object):
@@ -24,18 +29,18 @@ class MetricsReport(object):
     def __init__(self):
         pass
 
-    @property
-    def locations(self):
-        return Location.objects.order_by('name').values('id', 'name')
-
-    @property
-    def location_index(self):
-        index = {}
+    def locations_by_year(self, year):
+        # Only fetch locations with data by using v_year_report
+        ReportModel = get_report_model('v_year_report')
+        locations_query = ReportModel.objects.filter(year=year).exclude(location=u'')
+        locations = locations_query.values('location').order_by('location').distinct()
+        location_index = {}
         i = 0
-        for loc in self.locations:
+        for loc in locations:
             i += 1
-            index[loc['name']] = i
-        return index
+            location_index[loc['location']] = i
+
+        return locations, location_index
 
     def define_styles(self):
         self.formats['dark'] = self.workbook.add_format({
@@ -319,6 +324,8 @@ Note
         # number of types
         num_types = len(self.type_index.keys())
 
+        locations, location_index = self.locations_by_year(year)
+
         # Set border for period section
         def _period_border(right_check=False):
             if right_check:
@@ -334,12 +341,12 @@ Note
             return cell_format, cell_date_format
 
         # Set location section borders
-        def _location_borders(location_index=0):
+        def _location_borders(l_index=0):
             # Add bottom borders for year, quarter and month sections
             for c in range(7, 12):
-                ws.write(2, location_index * 5 + c, '', border_bottom)
-                ws.write(6, location_index * 5 + c, '', border_bottom)
-                ws.write(18, location_index * 5 + c, '', border_bottom)
+                ws.write(2, l_index * 5 + c, '', border_bottom)
+                ws.write(6, l_index * 5 + c, '', border_bottom)
+                ws.write(18, l_index * 5 + c, '', border_bottom)
 
             # Add right border for location block
             for c in range(2, 19):
@@ -347,7 +354,7 @@ Note
                     cell_border = border_bottom_right
                 else:
                     cell_border = border_right
-                ws.write(c, location_index * 5 + period_width + num_types, '', cell_border)
+                ws.write(c, l_index * 5 + period_width + num_types, '', cell_border)
 
         # Set cell borders within location sections. right_check is true if the
         # cell is at the right most side of the section.
@@ -407,13 +414,14 @@ Note
         # Total rows for months
         for m in range(1, 13):
             m_start = start if cumulative else datetime.date(year, m, 1)
+            m_period = datetime.date(year, m, 1)
             end = datetime.date(year, m, calendar.monthrange(year, m)[1])
 
             cell_format, cell_date_format = _period_border(m == 12)
             ws.write(6 + m, 0, 'Month', cell_format)
             ws.write(6 + m, 1, year, cell_format)
             ws.write(6 + m, 2, '', cell_format)
-            ws.write(6 + m, 3, m_start.strftime('%B'), cell_format)
+            ws.write(6 + m, 3, m_period.strftime('%B'), cell_format)
             ws.write(6 + m, 4, '', cell_format)
             ws.write_datetime(6 + m, 5, m_start, cell_format=cell_date_format)
             ws.write_datetime(6 + m, 6, end, cell_format=cell_date_format)
@@ -461,9 +469,9 @@ Note
 
         # Location headers
         lc = 0
-        for loc in self.locations:
+        for loc in locations:
             lc += 1
-            ws.merge_range(0, 7 + lc * 5, 0, 11 + lc * 5, loc['name'], dark)
+            ws.merge_range(0, 7 + lc * 5, 0, 11 + lc * 5, loc['location'], dark)
             ws.write(1, lc * 5 + 7, 'Projects successful', light)
             ws.write(1, lc * 5 + 8, 'Activities successful', light)
             ws.write(1, lc * 5 + 9, 'Activity members volunteered', light)
@@ -476,7 +484,7 @@ Note
         for data in self.get_year_data(year, location=True, cumulative=cumulative):
             if data.location:
                 t = self.type_index[data.type]
-                i = self.location_index[data.location] * 5 + 7 + t
+                i = location_index[data.location] * 5 + 7 + t
 
                 cell_border = _cell_border(data, True)
                 ws.write(2, i, data.value, cell_border)
@@ -485,7 +493,7 @@ Note
         for data in self.get_quarter_data(year, location=True, cumulative=cumulative):
             if data.location:
                 t = self.type_index[data.type]
-                i = self.location_index[data.location] * 5 + 7 + t
+                i = location_index[data.location] * 5 + 7 + t
                 j = data.quarter + 2
 
                 cell_border = _cell_border(data, data.quarter == 4)
@@ -495,7 +503,7 @@ Note
         for data in self.get_month_data(year, location=True, cumulative=cumulative):
             if data.location:
                 t = self.type_index[data.type]
-                i = self.location_index[data.location] * 5 + 7 + t
+                i = location_index[data.location] * 5 + 7 + t
                 j = data.month + 6
 
                 cell_border = _cell_border(data, data.month == 12)
@@ -506,6 +514,8 @@ Note
         ws.freeze_panes(1, 7)
 
     def to_output(self):
+        start_time = time.time()
+
         output = StringIO.StringIO()
         self.workbook = xlsxwriter.Workbook(output, {
             'in_memory': True,
@@ -521,4 +531,9 @@ Note
         self.add_task_sheet()
         self.add_taskmember_sheet()
         self.workbook.close()
+
+        tenant = connection.tenant.client_name
+        logger.info("Report for %s generated in %s secs", tenant, time.time() - start_time,
+                    exc_info=1)
+
         return output

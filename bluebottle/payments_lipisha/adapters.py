@@ -233,7 +233,7 @@ class LipishaPaymentInterface(object):
                     )
                 payment = order_payment.payment
                 self._update_amounts(payment, data['transaction_amount'], data['transaction_currency'])
-            except LipishaPayment.DoesNotExist:
+            except OrderPayment.DoesNotExist:
                 # Payment not found, probably not correctly filled in,
                 # continue as an new anonymous donation
                 pass

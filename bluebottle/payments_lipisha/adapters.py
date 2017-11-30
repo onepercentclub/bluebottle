@@ -241,6 +241,7 @@ class LipishaPaymentInterface(object):
         if transaction_reference:
             try:
                 payment = LipishaPayment.objects.get(transaction_reference=transaction_reference)
+                order_payment = payment.order_payment
             except LipishaPayment.DoesNotExist:
                 # Payment not found, probably not correctly filled in,
                 # continue as an new anonymous donation

@@ -27,7 +27,7 @@ class TaskMemberMailSender:
             'task': self.task,
             'message': message,
             'receiver': self.receiver,
-            'sender': self.task_member.member,
+            'sender': self.sender,
             'link': '/go/tasks/{0}'.format(self.task.id),
             'site': tenant_url(),
             'project_list': '/projects',
@@ -220,7 +220,6 @@ def new_reaction_notification(sender, instance, created, **kwargs):
 def email_deadline_update(sender, instance, **kwargs):
     if instance.pk:
         previous_instance = Task.objects.get(pk=instance.pk)
-
         if (previous_instance.deadline.date() != instance.deadline.date() and
                 instance.status not in (Task.TaskStatuses.realized, Task.TaskStatuses.closed)):
             for task_member in instance.members_applied:
@@ -236,7 +235,7 @@ def email_deadline_update(sender, instance, **kwargs):
                     date=instance.deadline,
                     to=task_member.member,
                     site=tenant_url(),
-                    link='/go/tasks/{0}'.format(instance.id)
+                    link='/tasks/{0}'.format(instance.id)
                 )
 
 

@@ -21,7 +21,9 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.contact.*',
             'bluebottle.statistics.*',
             'bluebottle.redirects.*',
-            'bluebottle.cms.models.ResultPage'
+            'bluebottle.cms.models.ResultPage',
+            'bluebottle.cms.models.HomePage',
+            'bluebottle.cms.models.SiteLinks'
         ],
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,
@@ -95,6 +97,15 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'registration.*',
             'bluebottle.members.*',
             'bluebottle.bb_accounts.*',
+        ),
+        'module': 'fluent_dashboard.modules.AppIconList',
+        'collapsible': False,
+    }),
+    (_('Settings'), {
+        'models': (
+            'bluebottle.cms.models.SitePlatformSettings',
+            'bluebottle.projects.models.ProjectPlatformSettings',
+            'bluebottle.analytics.models.AnalyticsPlatformSettings',
         ),
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,

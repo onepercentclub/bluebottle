@@ -1,11 +1,11 @@
 from django.conf.urls import include, url
 from django.contrib import admin
+from django.contrib.auth.views import password_reset_done, password_reset_confirm
 from django.core.urlresolvers import reverse_lazy
 from django.views.generic import RedirectView
 
 from bluebottle.views import HomeView
 from bluebottle.auth.views import admin_password_reset
-from django.contrib.auth.views import password_reset_done, password_reset_confirm
 
 admin.autodiscover()
 

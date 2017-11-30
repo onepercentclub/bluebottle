@@ -13,6 +13,8 @@ from django.utils.translation import ugettext as _
 import sorl.thumbnail
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 
+import xml.etree.cElementTree as et
+
 from bluebottle.clients import properties
 
 from .utils import clean_html
@@ -98,10 +100,35 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
         """
         Checks that the file-upload field data contains a valid image (GIF,
         JPG, PNG, possibly others -- whatever the engine supports).
+
+        If the item cannot be converted to an image, check if the file is and svg
         """
         if data and data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
             raise forms.ValidationError(self.error_messages['invalid_image'])
-        return super(RestrictedImageFormField, self).to_python(data)
+
+        try:
+            return super(RestrictedImageFormField, self).to_python(data)
+        except ValidationError:
+            test_file = super(sorl.thumbnail.fields.ImageFormField, self).to_python(data)
+
+            if self.is_svg(test_file):
+                return test_file
+            else:
+                raise
+
+    def is_svg(self, f):
+        """
+        Check if provided file is svg
+        """
+        f.seek(0)
+        tag = None
+        try:
+            for event, el in et.iterparse(f, ('start',)):
+                tag = el.tag
+                break
+        except et.ParseError:
+            pass
+        return tag == '{http://www.w3.org/2000/svg}svg'
 
 
 # If south is installed, ensure that DutchBankAccountField will be introspected just like a normal CharField
@@ -132,7 +159,11 @@ class SafeField(serializers.CharField):
 
 
 class PrivateFileField(models.FileField):
-    def __init__(self, upload_to='', *args, **kwargs):
+    def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **kwargs):
+        # Check if upload_to already has private path
+        # This fixes loops and randomly added migrations
+        if not upload_to.startswith('private'):
+            upload_to = 'private/{}'.format(upload_to)
         super(PrivateFileField, self).__init__(
-            upload_to='private/' + upload_to, *args, **kwargs
+            verbose_name=verbose_name, name=name, upload_to=upload_to, storage=storage, **kwargs
         )

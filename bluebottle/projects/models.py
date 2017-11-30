@@ -2,7 +2,7 @@ import datetime
 import logging
 
 import pytz
-from django.conf import settings
+from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.urlresolvers import reverse
@@ -14,7 +14,6 @@ from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.utils.functional import lazy
-from django.utils.http import urlquote
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
@@ -34,6 +33,7 @@ from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.managers import UpdateSignalsQuerySet
+from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     Wallpost, MediaWallpostPhoto, MediaWallpost, TextWallpost
@@ -549,40 +549,6 @@ class Project(BaseProject, PreviousStatusMixin):
         """ Get the URL for the current project. """
         return 'https://{}/projects/{}'.format(properties.tenant.domain_url, self.slug)
 
-    def get_meta_title(self, **kwargs):
-        return u"%(name_project)s | %(theme)s | %(country)s" % {
-            'name_project': self.title,
-            'theme': self.theme.name if self.theme else '',
-            'country': self.country.name if self.country else '',
-        }
-
-    def get_fb_title(self, **kwargs):
-        title = _(u"{name_project} in {country}").format(
-            name_project=self.title,
-            country=self.country.name if self.country else '',
-        )
-        return title
-
-    def get_tweet(self, **kwargs):
-        """ Build the tweet text for the meta data """
-        request = kwargs.get('request')
-        if request:
-            lang_code = request.LANGUAGE_CODE
-        else:
-            lang_code = 'en'
-        twitter_handle = settings.TWITTER_HANDLES.get(lang_code,
-                                                      settings.DEFAULT_TWITTER_HANDLE)
-
-        title = urlquote(self.get_fb_title())
-
-        # {URL} is replaced in Ember to fill in the page url, avoiding the
-        # need to provide front-end urls in our Django code.
-        tweet = _(u"{title} {{URL}}").format(
-            title=title, twitter_handle=twitter_handle
-        )
-
-        return tweet
-
     class Meta(BaseProject.Meta):
         permissions = (
             ('approve_payout', 'Can approve payouts for projects'),
@@ -746,6 +712,63 @@ class ProjectImage(AbstractAttachment):
             self.project_id = int(project_id[0])
 
         super(ProjectImage, self).save(*args, **kwargs)
+
+
+class ProjectSearchFilter(SortableMixin):
+
+    FILTER_OPTIONS = (
+        ('location', _('Location')),
+        ('theme', _('Theme')),
+        ('skills', _('Skill')),
+        ('date', _('Date')),
+        ('status', _('Status')),
+        ('type', _('Type')),
+        ('category', _('Category')),
+    )
+
+    project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
+                                         null=True,
+                                         related_name='filters')
+    name = models.CharField(max_length=100, choices=FILTER_OPTIONS)
+    default = models.CharField(max_length=100, blank=True, null=True)
+    values = models.CharField(max_length=500, blank=True, null=True,
+                              help_text=_('Comma separated list of possible values'))
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    class Meta:
+        ordering = ['sequence']
+
+
+class ProjectPlatformSettings(BasePlatformSettings):
+    PROJECT_CREATE_OPTIONS = (
+        ('sourcing', _('Sourcing')),
+        ('funding', _('Funding')),
+    )
+
+    PROJECT_CONTACT_TYPE_OPTIONS = (
+        ('organization', _('Organization')),
+        ('personal', _('Personal')),
+    )
+
+    PROJECT_CREATE_FLOW_OPTIONS = (
+        ('combined', _('Combined')),
+        ('choice', _('Choice')),
+    )
+
+    PROJECT_CONTACT_OPTIONS = (
+        ('mail', _('E-mail')),
+        ('phone', _('Phone')),
+    )
+
+    create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
+    contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
+    allow_anonymous_rewards = models.BooleanField(default=True)
+    create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
+    contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)
+
+    class Meta:
+        verbose_name_plural = _('project platform settings')
+        verbose_name = _('project platform settings')
 
 
 @receiver(post_init, sender=Project,

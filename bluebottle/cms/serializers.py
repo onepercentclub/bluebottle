@@ -1,9 +1,10 @@
+from bluebottle.tasks.serializers import TaskPreviewSerializer
 from django.db import connection
 from django.db.models import Sum
 
-from memoize import memoize
-
-from bluebottle.bluebottle_drf2.serializers import ImageSerializer, SorlImageField
+from bluebottle.bluebottle_drf2.serializers import (
+    ImageSerializer, SorlImageField
+)
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.orders.models import Order
@@ -12,12 +13,19 @@ from bluebottle.statistics.statistics import Statistics
 
 from rest_framework import serializers
 
+from bluebottle.categories.serializers import CategorySerializer
 from bluebottle.cms.models import (
-    Stat, StatsContent, ResultPage, QuotesContent, SurveyContent, Quote,
+    Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
-    SupporterTotalContent)
-from bluebottle.projects.serializers import ProjectPreviewSerializer, ProjectTinyPreviewSerializer
+    SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
+    SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
+    SitePlatformSettings, WelcomeContent
+)
+from bluebottle.geo.serializers import LocationSerializer
+from bluebottle.projects.serializers import ProjectPreviewSerializer
+from bluebottle.slides.models import Slide
 from bluebottle.surveys.serializers import QuestionSerializer
+from bluebottle.utils.fields import SafeField
 
 
 class RichTextContentSerializer(serializers.Serializer):
@@ -46,8 +54,8 @@ class StatSerializer(serializers.ModelSerializer):
             return obj.value
 
         statistics = Statistics(
-            start=self.context['start_date'],
-            end=self.context['end_date'],
+            start=self.context.get('start_date'),
+            end=self.context.get('end_date'),
         )
 
         value = getattr(statistics, obj.type, 0)
@@ -65,23 +73,25 @@ class StatSerializer(serializers.ModelSerializer):
 
 
 class StatsContentSerializer(serializers.ModelSerializer):
-    stats = StatSerializer(source='stats.stat_set', many=True)
+    stats = StatSerializer(many=True)
     title = serializers.CharField()
     sub_title = serializers.CharField()
 
     class Meta:
-        model = QuotesContent
+        model = StatsContent
         fields = ('id', 'type', 'stats', 'title', 'sub_title')
 
 
 class QuoteSerializer(serializers.ModelSerializer):
+    image = SorlImageField('100x100', crop='center')
+
     class Meta:
         model = Quote
-        fields = ('id', 'name', 'quote')
+        fields = ('id', 'name', 'quote', 'image')
 
 
 class QuotesContentSerializer(serializers.ModelSerializer):
-    quotes = QuoteSerializer(source='quotes.quote_set', many=True)
+    quotes = QuoteSerializer(many=True)
 
     class Meta:
         model = QuotesContent
@@ -126,38 +136,158 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 
 
 class ProjectsMapContentSerializer(serializers.ModelSerializer):
-    projects = serializers.SerializerMethodField()
-
-    @memoize(timeout=60 * 60)
-    def get_projects(self, obj):
-        projects = Project.objects.filter(
-            campaign_ended__gte=self.context['start_date'],
-            campaign_ended__lte=self.context['end_date'],
-            status__slug__in=['done-complete', 'done-incomplete']
-        ).order_by(
-            '-status__sequence',
-            'campaign_ended'
-        )
-
-        return ProjectTinyPreviewSerializer(projects, many=True).to_representation(projects)
-
     def __repr__(self):
-        start = self.context['start_date'].strftime('%s') if self.context['start_date'] else 'none'
-        end = self.context['end_date'].strftime('%s') if self.context['end_date'] else 'none'
-        return 'MapsContent({},{})'.format(start, end)
+        if 'start_date' in self.context and 'end_date'in self.context:
+            start = self.context['start_date'].strftime('%s') if self.context['start_date'] else 'none'
+            end = self.context['end_date'].strftime('%s') if self.context['end_date'] else 'none'
+            return 'MapsContent({},{})'.format(start, end)
+        return 'MapsContent'
 
     class Meta:
         model = ProjectImagesContent
-        fields = ('id', 'type', 'title', 'sub_title', 'projects',)
+        fields = ('id', 'type', 'title', 'sub_title')
 
 
 class ProjectsContentSerializer(serializers.ModelSerializer):
-    projects = ProjectPreviewSerializer(many=True, source='projects.projects')
+    projects = serializers.SerializerMethodField()
+
+    def get_projects(self, obj):
+        if obj.from_homepage:
+            projects = Project.objects.filter(
+                is_campaign=True, status__viewable=True
+            ).order_by('?')[0:4]
+        else:
+            projects = obj.projects
+
+        return ProjectPreviewSerializer(
+            projects, many=True, context=self.context
+        ).to_representation(projects)
 
     class Meta:
         model = ProjectsContent
         fields = ('id', 'type', 'title', 'sub_title', 'projects',
                   'action_text', 'action_link')
+
+
+class TasksContentSerializer(serializers.ModelSerializer):
+    tasks = TaskPreviewSerializer(many=True)
+
+    class Meta:
+        model = TasksContent
+        fields = ('id', 'type', 'title', 'sub_title', 'tasks',
+                  'action_text', 'action_link')
+
+
+class SlideSerializer(serializers.ModelSerializer):
+    image = SorlImageField('1600x674', crop='center')
+    background_image = SorlImageField('1600x674', crop='center')
+
+    class Meta:
+        model = Slide
+        fields = (
+            'background_image',
+            'body',
+            'id',
+            'image',
+            'link_text',
+            'link_url',
+            'tab_text',
+            'title',
+            'video_url',
+        )
+
+
+class SlidesContentSerializer(serializers.ModelSerializer):
+    slides = serializers.SerializerMethodField()
+
+    def get_slides(self, instance):
+        slides = Slide.objects.published().filter(
+            language=instance.language_code
+        )
+
+        return SlideSerializer(
+            slides, many=True, context=self.context
+        ).to_representation(slides)
+
+    class Meta:
+        model = SlidesContent
+        fields = ('id', 'type', 'slides', 'title', 'sub_title',)
+
+
+class CategoriesContentSerializer(serializers.ModelSerializer):
+    categories = CategorySerializer(many=True)
+
+    class Meta:
+        model = CategoriesContent
+        fields = ('id', 'type', 'title', 'sub_title', 'categories',)
+
+
+class StepSerializer(serializers.ModelSerializer):
+    image = SorlImageField('200x200', crop='center')
+    text = SafeField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Step
+        fields = ('id', 'image', 'header', 'text', )
+
+
+class StepsContentSerializer(serializers.ModelSerializer):
+    steps = StepSerializer(many=True)
+
+    class Meta:
+        model = StepsContent
+        fields = ('id', 'type', 'title', 'sub_title', 'steps', 'action_text', 'action_link')
+
+
+class LogoSerializer(serializers.ModelSerializer):
+    image = SorlImageField('x150', crop='center')
+
+    class Meta:
+        model = Logo
+        fields = ('id', 'image', 'link')
+
+
+class LogosContentSerializer(serializers.ModelSerializer):
+    logos = LogoSerializer(many=True)
+
+    class Meta:
+        model = LogosContent
+        fields = ('id', 'type', 'title', 'sub_title', 'logos', 'action_text', 'action_link')
+
+
+class LinkSerializer(serializers.ModelSerializer):
+    image = SorlImageField('800x600', crop='center')
+
+    class Meta:
+        model = ContentLink
+        fields = ('id', 'image', 'action_link', 'action_text', )
+
+
+class LinksContentSerializer(serializers.ModelSerializer):
+    links = LinkSerializer(many=True)
+
+    class Meta:
+        model = LinksContent
+        fields = ('id', 'type', 'title', 'sub_title', 'links', )
+
+
+class WelcomeContentSerializer(serializers.ModelSerializer):
+    greeting = serializers.SerializerMethodField()
+
+    def get_greeting(self, instance):
+        return instance.greetings.order_by('?')[0].text
+
+    class Meta:
+        model = WelcomeContent
+        fields = ('id', 'type', 'preamble', 'greeting')
+
+
+class LocationsContentSerializer(serializers.ModelSerializer):
+    locations = LocationSerializer(many=True)
+
+    class Meta:
+        model = LocationsContent
+        fields = ('id', 'type', 'title', 'sub_title', 'locations',)
 
 
 class ShareResultsContentSerializer(serializers.ModelSerializer):
@@ -241,24 +371,50 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
                   'supporters', 'co_financers')
 
 
+class DefaultBlockSerializer(serializers.Serializer):
+    def to_representation(self, obj):
+        return {
+            'type': obj.__class__._meta.model_name,
+            'content': str(obj)
+        }
+
+
 class BlockSerializer(serializers.Serializer):
     def to_representation(self, obj):
         if isinstance(obj, StatsContent):
             serializer = StatsContentSerializer
-        if isinstance(obj, QuotesContent):
+        elif isinstance(obj, QuotesContent):
             serializer = QuotesContentSerializer
-        if isinstance(obj, ProjectImagesContent):
+        elif isinstance(obj, ProjectImagesContent):
             serializer = ProjectImagesContentSerializer
-        if isinstance(obj, SurveyContent):
+        elif isinstance(obj, SurveyContent):
             serializer = SurveyContentSerializer
-        if isinstance(obj, ProjectsContent):
+        elif isinstance(obj, ProjectsContent):
             serializer = ProjectsContentSerializer
-        if isinstance(obj, ShareResultsContent):
+        elif isinstance(obj, ShareResultsContent):
             serializer = ShareResultsContentSerializer
-        if isinstance(obj, ProjectsMapContent):
+        elif isinstance(obj, ProjectsMapContent):
             serializer = ProjectsMapContentSerializer
-        if isinstance(obj, SupporterTotalContent):
+        elif isinstance(obj, SupporterTotalContent):
             serializer = SupporterTotalContentSerializer
+        elif isinstance(obj, TasksContent):
+            serializer = TasksContentSerializer
+        elif isinstance(obj, CategoriesContent):
+            serializer = CategoriesContentSerializer
+        elif isinstance(obj, SlidesContent):
+            serializer = SlidesContentSerializer
+        elif isinstance(obj, StepsContent):
+            serializer = StepsContentSerializer
+        elif isinstance(obj, LocationsContent):
+            serializer = LocationsContentSerializer
+        elif isinstance(obj, LogosContent):
+            serializer = LogosContentSerializer
+        elif isinstance(obj, LinksContent):
+            serializer = LinksContentSerializer
+        elif isinstance(obj, WelcomeContent):
+            serializer = WelcomeContentSerializer
+        else:
+            serializer = DefaultBlockSerializer
 
         return serializer(obj, context=self.context).to_representation(obj)
 
@@ -280,3 +436,25 @@ class ResultPageSerializer(serializers.ModelSerializer):
         model = ResultPage
         fields = ('id', 'title', 'slug', 'start_date', 'image', 'share_image',
                   'end_date', 'description', 'blocks')
+
+
+class HomePageSerializer(serializers.ModelSerializer):
+    blocks = BlockSerializer(source='content.contentitems.all.translated', many=True)
+
+    class Meta:
+        model = HomePage
+        fields = ('id', 'blocks')
+
+
+class SitePlatformSettingsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SitePlatformSettings
+        fields = (
+            'contact_email',
+            'contact_phone',
+            'copyright',
+            'powered_by_link',
+            'powered_by_logo',
+            'powered_by_text'
+        )

@@ -179,8 +179,8 @@ class TasksContentSerializer(serializers.ModelSerializer):
 
 
 class SlideSerializer(serializers.ModelSerializer):
-    image = SorlImageField('800x600', crop='center')
-    background_image = SorlImageField('1600x1200', crop='center')
+    image = SorlImageField('1600x674', crop='center')
+    background_image = SorlImageField('1600x674', crop='center')
 
     class Meta:
         model = Slide
@@ -211,7 +211,7 @@ class SlidesContentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SlidesContent
-        fields = ('id', 'type', 'slides',)
+        fields = ('id', 'type', 'slides', 'title', 'sub_title',)
 
 
 class CategoriesContentSerializer(serializers.ModelSerializer):
@@ -223,7 +223,7 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
 
 
 class StepSerializer(serializers.ModelSerializer):
-    image = SorlImageField('800x600', crop='center')
+    image = SorlImageField('200x200', crop='center')
     text = SafeField(required=False, allow_blank=True)
 
     class Meta:

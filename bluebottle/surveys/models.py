@@ -264,7 +264,7 @@ class Question(models.Model):
             return dict((key, float(sum(value)) / len(value)) for key, value in values.items())
 
     def __unicode__(self):
-        return bleach.clean(self.title, strip=True, tags=[])
+        return bleach.clean(unicode(self.title), strip=True, tags=[])
 
 
 class SubQuestion(models.Model):

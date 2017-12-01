@@ -13,62 +13,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterModelManagers(
-            name='projectimagescontent',
-            managers=[
-                ('objects', django.db.models.manager.Manager()),
-                ('base_objects', django.db.models.manager.Manager()),
-            ],
-        ),
-        migrations.AlterModelManagers(
-            name='projectscontent',
-            managers=[
-                ('objects', django.db.models.manager.Manager()),
-                ('base_objects', django.db.models.manager.Manager()),
-            ],
-        ),
-        migrations.AlterModelManagers(
-            name='projectsmapcontent',
-            managers=[
-                ('objects', django.db.models.manager.Manager()),
-                ('base_objects', django.db.models.manager.Manager()),
-            ],
-        ),
-        migrations.AlterModelManagers(
-            name='quotescontent',
-            managers=[
-                ('objects', django.db.models.manager.Manager()),
-                ('base_objects', django.db.models.manager.Manager()),
-            ],
-        ),
-        migrations.AlterModelManagers(
-            name='shareresultscontent',
-            managers=[
-                ('objects', django.db.models.manager.Manager()),
-                ('base_objects', django.db.models.manager.Manager()),
-            ],
-        ),
-        migrations.AlterModelManagers(
-            name='statscontent',
-            managers=[
-                ('objects', django.db.models.manager.Manager()),
-                ('base_objects', django.db.models.manager.Manager()),
-            ],
-        ),
-        migrations.AlterModelManagers(
-            name='supportertotalcontent',
-            managers=[
-                ('objects', django.db.models.manager.Manager()),
-                ('base_objects', django.db.models.manager.Manager()),
-            ],
-        ),
-        migrations.AlterModelManagers(
-            name='surveycontent',
-            managers=[
-                ('objects', django.db.models.manager.Manager()),
-                ('base_objects', django.db.models.manager.Manager()),
-            ],
-        ),
         migrations.AddField(
             model_name='shareresultscontent',
             name='share_title',

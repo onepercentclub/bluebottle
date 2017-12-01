@@ -13,6 +13,8 @@ from django.utils.translation import ugettext as _
 import sorl.thumbnail
 from djmoney.models.fields import MoneyField as DjangoMoneyField
 
+import xml.etree.cElementTree as et
+
 from bluebottle.clients import properties
 
 from .utils import clean_html
@@ -98,10 +100,35 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
         """
         Checks that the file-upload field data contains a valid image (GIF,
         JPG, PNG, possibly others -- whatever the engine supports).
+
+        If the item cannot be converted to an image, check if the file is and svg
         """
         if data and data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
             raise forms.ValidationError(self.error_messages['invalid_image'])
-        return super(RestrictedImageFormField, self).to_python(data)
+
+        try:
+            return super(RestrictedImageFormField, self).to_python(data)
+        except ValidationError:
+            test_file = super(sorl.thumbnail.fields.ImageFormField, self).to_python(data)
+
+            if self.is_svg(test_file):
+                return test_file
+            else:
+                raise
+
+    def is_svg(self, f):
+        """
+        Check if provided file is svg
+        """
+        f.seek(0)
+        tag = None
+        try:
+            for event, el in et.iterparse(f, ('start',)):
+                tag = el.tag
+                break
+        except et.ParseError:
+            pass
+        return tag == '{http://www.w3.org/2000/svg}svg'
 
 
 # If south is installed, ensure that DutchBankAccountField will be introspected just like a normal CharField

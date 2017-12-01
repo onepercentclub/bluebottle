@@ -104,7 +104,10 @@ def get_currencies():
 def get_user_site_links(user):
     from bluebottle.cms.models import SiteLinks
 
-    site_links = SiteLinks.objects.first()
+    try:
+        site_links = SiteLinks.objects.get(language__code=get_language())
+    except SiteLinks.DoesNotExist:
+        site_links = SiteLinks.objects.first()
 
     # If no site links set, just return empty
     if not site_links:

@@ -32,7 +32,7 @@ class Survey(models.Model):
     @classmethod
     def url(cls, project_or_task, user_type='task_member'):
         try:
-            survey = cls.objects.all()[0]
+            survey = cls.objects.order_by('-created').all()[0]
         except IndexError:
             return None
 

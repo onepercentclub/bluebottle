@@ -406,7 +406,7 @@ class CustomIndexDashboard(FluentIndexDashboard):
                     },
                     {
                         'title': _('Download report'),
-                        'url': reverse_lazy('report-download'),
+                        'url': reverse_lazy('report-export'),
                     }
                 ]
             ))

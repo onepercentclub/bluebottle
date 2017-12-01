@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-from django.views.generic.base import View
+from django.views.generic.base import View, TemplateView
 from django.views.generic.edit import FormView
 
 from bluebottle.analytics.reports import MetricsReport
@@ -72,9 +72,12 @@ class ParticipationMetricsFormView(FormView):
         return super(ParticipationMetricsFormView, self).form_valid(form)
 
 
-class ReportDownloadView(View):
+class ReportExportView(TemplateView):
+    template_name = 'report_export.html'
 
-    def get(self, request):
+
+class ReportDownloadView(View):
+    def get(self, request, *args, **kwargs):
         client_name = re.sub(r'\s+', '_', connection.tenant.name)
         dt_now = now().strftime('%d-%m-%Y_%H-%M-%S')
         filename = "Report-{}-{}.xlsx".format(client_name, dt_now)
@@ -87,4 +90,5 @@ class ReportDownloadView(View):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         response['Content-Disposition'] = "attachment; filename={}".format(filename)
+
         return response

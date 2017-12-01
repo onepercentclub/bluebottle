@@ -11,84 +11,84 @@
     <style>
         .loading {
             background-color: lightgrey !important;
-	    text-decoration: none !important;
-	}
+            text-decoration: none !important;
+        }
 
-	.loading span {
-   	     display: none;
-	}
+        .loading span {
+            display: none;
+        }
 
-	.loading:after {
-   	    content: "{% trans 'Fetching...' %}";   
-	}
+        .loading:after {
+            content: "{% trans 'Fetching...' %}";
+        }
     </style>
 
     <script>
-	// https://stackoverflow.com/a/23797348
-	function downloadReport(evt) {
-	    evt.preventDefault();
-	    
-	    var btn = $('#content-main .button');
-	    if (btn.hasClass('loading')) return;
+    // https://stackoverflow.com/a/23797348
+    function downloadReport(evt) {
+        evt.preventDefault();
 
-	    btn.addClass('loading');
+        var btn = $('#content-main .button');
+        if (btn.hasClass('loading')) return;
 
-	    var xhr = new XMLHttpRequest();
-	    xhr.open('GET', '{% url "report-download" %}', true);
-	    xhr.responseType = 'arraybuffer';
-	    xhr.onload = function () {
-	        if (this.status === 200) {
-	            var filename = "";
-	            var disposition = xhr.getResponseHeader('Content-Disposition');
-	            if (disposition && disposition.indexOf('attachment') !== -1) {
-	                var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-	                var matches = filenameRegex.exec(disposition);
-	                if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
-	            }
-	            var type = xhr.getResponseHeader('Content-Type');
-	    
-	            var blob = typeof File === 'function'
-	                ? new File([this.response], filename, { type: type })
-	                : new Blob([this.response], { type: type });
-	            if (typeof window.navigator.msSaveBlob !== 'undefined') {
-	                window.navigator.msSaveBlob(blob, filename);
-	            } else {
-	                var URL = window.URL || window.webkitURL;
-	                var downloadUrl = URL.createObjectURL(blob);
-	    
-	                if (filename) {
-	                    var a = document.createElement("a");
-	                    if (typeof a.download === 'undefined') {
-	                        window.location = downloadUrl;
-	                    } else {
-	                        a.href = downloadUrl;
-	                        a.download = filename;
-	                        document.body.appendChild(a);
-	                        a.click();
-	                    }
-	                } else {
-	                    window.location = downloadUrl;
-	                }
-	    
-	                setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 100);
-	            }
-		
-		    btn.removeClass('loading');
-	        }
-	    };
-	    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-	    xhr.send();
-	}
+        btn.addClass('loading');
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '{% url "report-download" %}', true);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function () {
+            if (this.status === 200) {
+                var filename = "";
+                var disposition = xhr.getResponseHeader('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    var matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) filename = matches[1].replace(/['"]/g, '');
+                }
+                var type = xhr.getResponseHeader('Content-Type');
+
+                var blob = typeof File === 'function'
+                    ? new File([this.response], filename, { type: type })
+                    : new Blob([this.response], { type: type });
+                if (typeof window.navigator.msSaveBlob !== 'undefined') {
+                    window.navigator.msSaveBlob(blob, filename);
+                } else {
+                    var URL = window.URL || window.webkitURL;
+                    var downloadUrl = URL.createObjectURL(blob);
+
+                    if (filename) {
+                        var a = document.createElement("a");
+                        if (typeof a.download === 'undefined') {
+                            window.location = downloadUrl;
+                        } else {
+                            a.href = downloadUrl;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                        }
+                    } else {
+                        window.location = downloadUrl;
+                    }
+
+                    setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 100);
+                }
+
+                btn.removeClass('loading');
+            }
+        };
+        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        xhr.send();
+    }
     </script>
 
     <h1>{% trans "Report Download" %}</h1>
     <div id="content-main">
-	<p>{% trans 'This is some introductory text for this report download...' %}</p>
-	<br class="clear" />
-	<div class="submit-row">
-	<button class="button" href="#" onclick="downloadReport(event)" />
-	    <span>{% trans 'Download' %}</span>
-	</button>
+    <p>{% trans 'This is some introductory text for this report download...' %}</p>
+    <br class="clear" />
+    <div class="submit-row">
+    <button class="button" href="#" onclick="downloadReport(event)" />
+        <span>{% trans 'Download' %}</span>
+    </button>
         </div>
     </div>
 {% endblock %}

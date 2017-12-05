@@ -1,12 +1,19 @@
 from collections import OrderedDict
 import csv
 import logging
+import six
 from decimal import InvalidOperation
 
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from django.forms.models import ModelFormMetaclass
 from django_singleton_admin.admin import SingletonAdmin
+from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
+from polymorphic.admin.inlines import StackedPolymorphicInline
 
-from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
+from bluebottle.payments_lipisha.models import LipishaProject
+from bluebottle.projects.models import (
+    ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn,
+    CustomProjectField, CustomProjectFieldSettings)
 from bluebottle.tasks.models import Skill
 from django import forms
 from django.db import connection
@@ -252,7 +259,17 @@ class ReviewerWidget(admin.widgets.ForeignKeyRawIdWidget):
         return parameters
 
 
-class ProjectAdminForm(forms.ModelForm):
+class CustomAdminFormMetaClass(ModelFormMetaclass):
+    def __new__(cls, name, bases, attrs):
+        if connection.tenant.schema_name != 'public':
+            for field in CustomProjectFieldSettings.objects.all():
+                attrs[field.slug] = forms.CharField(required=False, label=field.name, help_text=field.description)
+
+        return super(CustomAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
+
+
+class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelForm)):
+
     class Meta:
         widgets = {
             'currencies': forms.CheckboxSelectMultiple,
@@ -264,15 +281,45 @@ class ProjectAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ProjectAdminForm, self).__init__(*args, **kwargs)
         self.fields['currencies'].required = False
-
         self.fields['reviewer'].widget = ReviewerWidget(
             rel=Project._meta.get_field('reviewer').rel,
             admin_site=admin.sites.site
         )
         self.fields['story'].widget.attrs = {'data-project_id': self.instance.pk}
 
+        for field in CustomProjectFieldSettings.objects.all():
+            if CustomProjectField.objects.filter(project=self.instance, field=field).exists():
+                value = CustomProjectField.objects.filter(project=self.instance, field=field).get().value
+                self.initial[field.slug] = value
 
-class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
+    def save(self, commit=True):
+        project = super(ProjectAdminForm, self).save(commit=commit)
+        for field in CustomProjectFieldSettings.objects.all():
+            extra, created = CustomProjectField.objects.get_or_create(
+                project=project,
+                field=field
+            )
+            extra.value = self.cleaned_data.get(field.slug, None)
+            extra.save()
+        return project
+
+
+class ProjectAddOnInline(StackedPolymorphicInline):
+
+    model = ProjectAddOn
+
+    class LipishaProjectInline(StackedPolymorphicInline.Child):
+        model = LipishaProject
+        readonly_fields = ['paybill_number']
+
+    def get_child_inline_instances(self):
+        instances = []
+        # if ProjectPlatformSettings.load().lipisha:
+        instances.append(self.LipishaProjectInline(parent_inline=self))
+        return instances
+
+
+class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):
     form = ProjectAdminForm
     date_hierarchy = 'created'
     ordering = ('-created',)
@@ -281,8 +328,18 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
     raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization',)
     prepopulated_fields = {'slug': ('title',)}
 
-    inlines = (ProjectBudgetLineInline, RewardInlineAdmin, TaskAdminInline, ProjectDocumentInline,
-               ProjectPhaseLogInline)
+    def get_inline_instances(self, request, obj=None):
+        instances = super(ProjectAdmin, self).get_inline_instances(request, obj)
+        return instances
+
+    inlines = (
+        ProjectBudgetLineInline,
+        RewardInlineAdmin,
+        TaskAdminInline,
+        ProjectDocumentInline,
+        ProjectPhaseLogInline,
+        ProjectAddOnInline
+    )
 
     list_filter = ('country__subregion__region', )
 
@@ -538,29 +595,38 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
         if request.user.has_perm('projects.approve_payout'):
             main['fields'].insert(3, 'payout_status')
 
-        return (
-            (_('Main'), main),
+        main = (_('Main'), main)
 
-            (_('Story'), {'fields': ('pitch', 'story', 'reach')}),
+        story = (_('Story'), {'fields': ('pitch', 'story', 'reach')})
 
-            (_('Details'), {'fields': ('language', 'theme', 'categories', 'image', 'video_url', 'country', 'latitude',
-                                       'longitude', 'location', 'place')}),
+        details = (_('Details'), {'fields': (
+            'language', 'theme', 'categories',
+            'image', 'video_url', 'country', 'latitude',
+            'longitude', 'location', 'place')})
 
-            (_('Goal'), {'fields': ('amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
-                                    'currencies', 'popularity', 'vote_count')}),
+        goal = (_('Goal'), {'fields': (
+            'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
+            'currencies', 'popularity', 'vote_count')})
 
-            (_('Dates'), {'fields': ('voting_deadline', 'deadline', 'date_submitted', 'campaign_started',
-                                     'campaign_ended', 'campaign_funded', 'campaign_paid_out')}),
+        dates = (_('Dates'), {'fields': (
+            'voting_deadline', 'deadline', 'date_submitted', 'campaign_started',
+            'campaign_ended', 'campaign_funded', 'campaign_paid_out')})
 
-            (_('Bank details'), {'fields': ('account_holder_name',
-                                            'account_holder_address',
-                                            'account_holder_postal_code',
-                                            'account_holder_city',
-                                            'account_holder_country',
-                                            'account_number',
-                                            'account_details',
-                                            'account_bank_country')})
-        )
+        bank = (_('Bank details'), {'fields': (
+            'account_holder_name',
+            'account_holder_address',
+            'account_holder_postal_code',
+            'account_holder_city',
+            'account_holder_country',
+            'account_number',
+            'account_details',
+            'account_bank_country'
+        )})
+
+        # extra = (_('Extra fields'), {'fields': })
+        extra = (_('Extra fields'), {'fields': [field.slug for field in CustomProjectFieldSettings.objects.all()]})
+
+        return (main, story, details, goal, dates, bank, extra)
 
     def get_queryset(self, request):
         # Optimization: Select related fields that are used in admin specific
@@ -587,9 +653,9 @@ class ProjectPhaseAdmin(admin.ModelAdmin):
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)
 
 
-class ProjectSearchFilterAdmin(SortableTabularInline):
+class ProjectSearchFilterInline(SortableTabularInline):
     model = ProjectSearchFilter
-    extra = 1
+    extra = 0
 
 
 class ProjectPlatformSettingsAdminForm(forms.ModelForm):
@@ -598,12 +664,22 @@ class ProjectPlatformSettingsAdminForm(forms.ModelForm):
             'create_types': forms.CheckboxSelectMultiple,
             'contact_types': forms.CheckboxSelectMultiple,
         }
+    extra = 0
+
+
+class CustomProjectFieldSettingsInline(admin.StackedInline):
+    model = CustomProjectFieldSettings
+    readonly_fields = ('slug',)
+    extra = 0
 
 
 class ProjectPlatformSettingsAdmin(SingletonAdmin, NonSortableParentAdmin):
 
     form = ProjectPlatformSettingsAdminForm
-    inlines = [ProjectSearchFilterAdmin]
+    inlines = [
+        ProjectSearchFilterInline,
+        CustomProjectFieldSettingsInline
+    ]
 
 
 admin.site.register(ProjectPlatformSettings, ProjectPlatformSettingsAdmin)

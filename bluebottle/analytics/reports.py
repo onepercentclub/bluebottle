@@ -143,7 +143,7 @@ Note
                 ReportModel = get_report_model('v_quarter_report')
             else:
                 ReportModel = get_report_model('v_quarter_totals_report')
-        return ReportModel.objects.filter(year=year).order_by('quarter', 'type')
+        return ReportModel.objects.filter(year=year).order_by('year', 'quarter', 'type')
 
     def get_month_data(self, year, location=False, cumulative=False):
         if cumulative:
@@ -151,13 +151,12 @@ Note
                 ReportModel = get_report_model('v_month_cumulative_report')
             else:
                 ReportModel = get_report_model('v_month_cumulative_totals_report')
-            return ReportModel.objects.filter(year=year).order_by('month', 'type')
         else:
             if location:
                 ReportModel = get_report_model('v_month_report')
             else:
                 ReportModel = get_report_model('v_month_totals_report')
-            return ReportModel.objects.filter(year=year).order_by('month', 'type')
+        return ReportModel.objects.filter(year=year).order_by('year', 'quarter', 'month', 'type')
 
     def _write_standard_cell(self, worksheet, row, column, value, cell_format=None):
         if not cell_format:
@@ -371,6 +370,14 @@ Note
             cell_border.set_align('left')
             return cell_border
 
+        def _quarter_write(i, j, data, last_row=False):
+            cell_border = _cell_border(data, last_row)
+            ws.write(int(j), int(i), data.value, cell_border)
+
+        def _month_write(i, j, data, last_row):
+            cell_border = _cell_border(data, last_row)
+            ws.write(int(j), int(i), data.value, cell_border)
+
         # Write Period section
         ws.merge_range(0, 0, 0, period_width, 'Period', dark)
         ws.write(1, 0, 'Duration', light)
@@ -451,8 +458,13 @@ Note
             j = data.quarter + 2
             i = self.type_index[data.type] + 7
 
-            cell_format = _cell_border(data, data.quarter == 4)
-            ws.write(int(j), int(i), data.value, cell_format)
+            _quarter_write(i, j, data, data.quarter == 4)
+
+            # FIXME: filling forward to ensure no gaps if subsequent quarters have no data
+            if cumulative:
+                for quarter in range(int(data.quarter) + 1, 5):
+                    j = quarter + 2
+                    _quarter_write(i, j, data, quarter == 4)
 
         # Total rows for months
         month_data = self.get_month_data(year, cumulative=cumulative)
@@ -460,8 +472,13 @@ Note
             j = data.month + 6
             i = self.type_index[data.type] + 7
 
-            cell_format = _cell_border(data, data.month == 12)
-            ws.write(int(j), int(i), data.value, cell_format)
+            _month_write(i, j, data, data.month == 12)
+
+            # FIXME: filling forward to ensure no gaps if subsequent months have no data
+            if cumulative:
+                for month in range(int(data.month) + 1, 13):
+                    j = month + 6
+                    _month_write(i, j, data, month == 12)
 
         """ End Totals Section """
 
@@ -496,8 +513,13 @@ Note
                 i = location_index[data.location] * 5 + 7 + t
                 j = data.quarter + 2
 
-                cell_border = _cell_border(data, data.quarter == 4)
-                ws.write(int(j), int(i), data.value, cell_border)
+                _quarter_write(i, j, data, data.quarter == 4)
+
+                # FIXME: filling forward to ensure no gaps if subsequent quarters have no data
+                if cumulative:
+                    for quarter in range(int(data.quarter) + 1, 5):
+                        j = quarter + 2
+                        _quarter_write(i, j, data, quarter == 4)
 
         # Location month data
         for data in self.get_month_data(year, location=True, cumulative=cumulative):
@@ -506,8 +528,13 @@ Note
                 i = location_index[data.location] * 5 + 7 + t
                 j = data.month + 6
 
-                cell_border = _cell_border(data, data.month == 12)
-                ws.write(int(j), int(i), data.value, cell_border)
+                _month_write(i, j, data, data.month == 12)
+
+                # FIXME: filling forward to ensure no gaps if subsequent months have no data
+                if cumulative:
+                    for month in range(int(data.month) + 1, 13):
+                        j = month + 6
+                        _month_write(i, j, data, month == 12)
 
         """ End Location Sections """
 

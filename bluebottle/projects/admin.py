@@ -22,6 +22,7 @@ from django.utils.translation import ugettext_lazy as _
 from daterange_filter.filter import DateRangeFilter
 from django_summernote.widgets import SummernoteWidget
 from sorl.thumbnail.admin import AdminImageMixin
+from schwifty import IBAN, BIC
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.payouts_dorado.adapters import (
@@ -378,10 +379,34 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     def approve_payout(self, request, pk=None):
         project = Project.objects.get(pk=pk)
+        project_url = reverse('admin:projects_project_change', args=(project.id,))
+
+        # Check IBAN & BIC
+        account = project.account_number
+        if len(account) < 3:
+            self.message_user(request, 'Invalid Bank Account: {}'.format(account), level='ERROR')
+            return HttpResponseRedirect(project_url)
+
+        if len(account) and account[0].isalpha():
+            # Looks like an IBAN (starts with letter), let's check
+            try:
+                iban = IBAN(account)
+            except ValueError as e:
+                self.message_user(request, 'Invalid IBAN: {}'.format(e), level='ERROR')
+                return HttpResponseRedirect(project_url)
+            project.account_number = iban.compact
+            try:
+                bic = BIC(project.account_details)
+            except ValueError as e:
+                self.message_user(request, 'Invalid BIC: {}'.format(e), level='ERROR')
+                return HttpResponseRedirect(project_url)
+            project.account_details = bic.compact
+            project.save()
+
         if not request.user.has_perm('projects.approve_payout'):
-            return HttpResponseForbidden('Missing permission: projects.approve_payout')
+            self.message_user(request, 'Missing permission: projects.approve_payout', level='ERROR')
         elif project.payout_status != 'needs_approval':
-            self.message_user(request, 'The payout does not have the status "needs approval"')
+            self.message_user(request, 'The payout does not have the status "needs approval"', level='ERROR')
         else:
             adapter = DoradoPayoutAdapter(project)
             try:
@@ -414,7 +439,6 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
                     level=messages.ERROR
                 )
 
-        project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)
 
     def refund(self, request, pk=None):

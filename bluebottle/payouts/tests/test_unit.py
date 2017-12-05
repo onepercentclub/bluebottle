@@ -153,7 +153,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -173,7 +173,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -189,7 +189,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         """ Test amounts for new donations. """
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -214,7 +214,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -243,7 +243,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -280,7 +280,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -314,7 +314,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -347,7 +347,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation2.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project_incomplete.status = ProjectPhase.objects.get(slug='done-incomplete')
         self.project_incomplete.save()
 
@@ -381,7 +381,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -415,7 +415,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation2.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project_incomplete.status = ProjectPhase.objects.get(
             slug='done-incomplete')
         self.project_incomplete.save()
@@ -465,7 +465,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         donation.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         beneath_threshold_project.status = ProjectPhase.objects.get(
             slug='done-incomplete')
         beneath_threshold_project.save()
@@ -562,7 +562,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -586,7 +586,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -609,7 +609,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -629,7 +629,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.pending()
         self.donation.order.save()
 
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.assertEqual(self.project.amount_donated, Money(60, 'EUR'))
 
         payout1 = ProjectPayoutFactory.create(
@@ -703,7 +703,7 @@ class PayoutPledgeTestCase(PayoutBaseTestCase):
         pledge.order.save()
 
         # Update phase to done-completed
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -733,7 +733,7 @@ class PayoutPledgeTestCase(PayoutBaseTestCase):
         pledge.order.save()
 
         # Update phase to done-completed
-        self.project.refresh_from_db()()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 

@@ -1,20 +1,33 @@
-from django.shortcuts import get_object_or_404
-from django.views.generic.base import RedirectView
+import logging
+from django.http import JsonResponse
+from django.views.generic.base import View
 
-from bluebottle.payments.models import OrderPayment
-from bluebottle.payments.services import PaymentService
-from bluebottle.utils.utils import get_current_host
+from bluebottle.payments_lipisha.adapters import LipishaPaymentInterface
+
+logger = logging.getLogger(__name__)
 
 
-class PaymentResponseView(RedirectView):
+class PaymentUpdateView(View):
 
     permanent = False
     query_string = True
-    pattern_name = 'telesom-payment-response'
+    pattern_name = 'lipisha-payment-initiate'
 
-    def get_redirect_url(self, *args, **kwargs):
-        order_payment = get_object_or_404(OrderPayment, id=kwargs['order_payment_id'])
-        service = PaymentService(order_payment)
-        service.check_payment_status()
-
-        return "{0}/orders/{1}/success".format(get_current_host(), order_payment.order.id)
+    def post(self, request):
+        if request.POST['api_type'] == 'Initiate':
+            if request.POST['transaction_type'] == 'Payment':
+                interface = LipishaPaymentInterface()
+                payment_response = interface.initiate_payment(request.POST)
+                data = payment_response
+                return JsonResponse(data)
+            else:
+                logger.error('Could not parse Lipisha Paymnent update: '
+                             'Unknown transaction_type {}'.format(request.POST['transaction_type']))
+        if request.POST['api_type'] == 'Acknowledge':
+            interface = LipishaPaymentInterface()
+            payment_response = interface.acknowledge_payment(request.POST)
+            data = payment_response
+            return JsonResponse(data)
+        else:
+            logger.error('Could not parse Lipisha Paymnent update: '
+                         'Unknown api_type {}'.format(request.POST['api_type']))

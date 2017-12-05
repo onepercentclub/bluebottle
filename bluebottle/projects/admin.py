@@ -667,7 +667,7 @@ class ProjectPlatformSettingsAdminForm(forms.ModelForm):
     extra = 0
 
 
-class CustomProjectFieldSettingsInline(admin.StackedInline):
+class CustomProjectFieldSettingsInline(SortableTabularInline):
     model = CustomProjectFieldSettings
     readonly_fields = ('slug',)
     extra = 0

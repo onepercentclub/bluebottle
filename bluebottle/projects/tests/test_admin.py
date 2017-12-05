@@ -21,7 +21,7 @@ from bluebottle.projects.admin import (
     LocationFilter, ProjectReviewerFilter, ProjectAdminForm,
     ReviewerWidget, ProjectAdmin,
     ProjectSkillFilter)
-from bluebottle.projects.models import Project, ProjectPhase
+from bluebottle.projects.models import Project, ProjectPhase, CustomProjectFieldSettings
 from bluebottle.projects.tasks import refund_project
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -551,3 +551,56 @@ class ProjectSkillFilterTest(BluebottleTestCase):
         queryset = filter.queryset(self.request, Project.objects.all())
         self.assertEqual(len(queryset), 1)
         self.assertEqual(queryset.get(), self.project_with_skill)
+
+
+class ProjectCustomFieldAdminTest(BluebottleTestCase):
+    """
+    Test extra fields in Project Admin
+    """
+
+    def setUp(self):
+        super(ProjectCustomFieldAdminTest, self).setUp()
+        self.request_factory = RequestFactory()
+        self.request = self.request_factory.post('/')
+        self.request.user = MockUser()
+        self.init_projects()
+        self.project_admin = ProjectAdmin(Project, AdminSite())
+
+    def test_custom_fields(self):
+        project = ProjectFactory.create()
+        CustomProjectFieldSettings.objects.create(name='Extra Info')
+        fields = self.project_admin.get_fields(request=self.request, obj=project)
+        self.assertTrue('extra-info' in fields)
+
+
+class ProjectAdminExportTest(BluebottleTestCase):
+    """
+    Test csv export
+    """
+    def setUp(self):
+        super(ProjectAdminExportTest, self).setUp()
+        self.init_projects()
+        self.request_factory = RequestFactory()
+        self.request = self.request_factory.post('/')
+        self.request.user = MockUser()
+        self.init_projects()
+        self.project_admin = ProjectAdmin(Project, AdminSite())
+
+    def test_project_export(self):
+        project = ProjectFactory(title='Just an example')
+        CustomProjectFieldSettings.objects.create(name='Extra Info')
+        project.extra.update(value='This is nice!')
+        project.save()
+
+        export_action = self.project_admin.actions[0]
+        response = export_action(self.project_admin, self.request, self.project_admin.get_queryset(self.request))
+
+        data = response.content.split("\r\n")
+        headers = data[0].split(",")
+        data = data[1].split(",")
+
+        # Test basic info and extra field are in the csv export
+        self.assertEqual(headers[0], 'title')
+        self.assertEqual(headers[27], 'Extra Info')
+        self.assertEqual(data[0], 'Just an example')
+        self.assertEqual(data[27], 'This is nice!')

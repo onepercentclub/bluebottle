@@ -1,9 +1,11 @@
 
 from django.core.urlresolvers import reverse
-from django.db.models.signals import pre_save
+from django.db import connection
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver, Signal
 from django.utils.translation import ugettext_lazy as _
 
+from bluebottle.projects.tasks import populate_extra_fields
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients import properties
@@ -63,3 +65,14 @@ def send_new_role_email(sender, instance, **kwargs):
                 link=link
 
             )
+
+
+@receiver(post_save, weak=False, sender='projects.CustomProjectFieldSettings')
+def project_custom_fields(sender, instance, **kwargs):
+    """
+    Generate empty extra fields for all projects so exports etc work as expected.
+    """
+    if getattr(properties, 'CELERY_RESULT_BACKEND', None):
+        populate_extra_fields.delay(connection.tenant, instance)
+    else:
+        populate_extra_fields(connection.tenant, instance)

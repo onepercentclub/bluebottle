@@ -9,7 +9,6 @@ from django.db import connection
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.services import PaymentService
-from bluebottle.projects.models import Project
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +26,8 @@ def update_popularity():
 
     Simply loops over all the tenants, and updates the scores
     """
+    from bluebottle.projects.models import Project
+
     logger.info("Updating projects popularity using Celery")
 
     for tenant in Client.objects.all():
@@ -43,6 +44,8 @@ def update_exchange_rates():
 
     Simply loops over all the tenants, and updates the scores
     """
+    from bluebottle.projects.models import Project
+
     logger.info("Retrieving up to date exchange rates")
     # call_command('update_rates')
 
@@ -58,6 +61,8 @@ def update_exchange_rates():
 def update_project_status_stats():
     """ Calculates the no. of projects per status for a tenant
     """
+    from bluebottle.projects.models import Project
+
     for tenant in Client.objects.all():
         connection.set_tenant(tenant)
         with LocalTenant(tenant, clear_tenant=True):
@@ -71,3 +76,15 @@ def refund_project(tenant, project):
         for donation in project.donations:
             service = PaymentService(donation.order.order_payment)
             service.refund_payment()
+
+
+@shared_task
+def populate_extra_fields(tenant, field):
+    """
+    Generate empty extra fields for all projects so exports etc work as expected
+    """
+    from bluebottle.projects.models import Project, CustomProjectField
+    connection.set_tenant(tenant)
+    with LocalTenant(tenant, clear_tenant=True):
+        for project in Project.objects.all():
+            CustomProjectField.objects.get_or_create(project=project, field=field)

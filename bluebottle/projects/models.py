@@ -770,7 +770,7 @@ class CustomProjectFieldSettings(SortableMixin):
 
 
 class CustomProjectField(models.Model):
-    project = models.ForeignKey('projects.Project', verbose_name='extra')
+    project = models.ForeignKey('projects.Project', related_name='extra')
     field = models.ForeignKey('projects.CustomProjectFieldSettings')
     value = models.CharField(max_length=5000, null=True, blank=True)
 

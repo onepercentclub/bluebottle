@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
 
-from bluebottle.projects.models import CustomProjectFieldSettings, Project
+from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
 from .models import Language
 import csv
 from django.db.models.fields.files import FieldFile
@@ -96,18 +96,20 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             row = labels if labels else field_names
             # For project check if we have extra fields
             if queryset.model is Project:
-                for extra in CustomProjectFieldSettings.objects.all():
-                    labels.append(extra.name)
+                for field in CustomProjectFieldSettings.objects.all():
+                    labels.append(field.name)
             writer.writerow(row)
 
         for obj in queryset:
             row = [prep_field(request, obj, field, manyToManySep) for field in field_names]
             # Write extra field data
-            try:
-                for extra in obj.extra.all():
-                    row.append(extra.value)
-            except AttributeError:
-                pass
+            if queryset.model is Project:
+                for field in CustomProjectFieldSettings.objects.all():
+                    try:
+                        value = obj.extra.get(field=field).value
+                    except CustomProjectField.DoesNotExist:
+                        value = ''
+                    row.append(value)
             writer.writerow(row)
         return response
 

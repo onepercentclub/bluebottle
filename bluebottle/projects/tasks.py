@@ -76,15 +76,3 @@ def refund_project(tenant, project):
         for donation in project.donations:
             service = PaymentService(donation.order.order_payment)
             service.refund_payment()
-
-
-@shared_task
-def populate_extra_fields(tenant, field):
-    """
-    Generate empty extra fields for all projects so exports etc work as expected
-    """
-    from bluebottle.projects.models import Project, CustomProjectField
-    connection.set_tenant(tenant)
-    with LocalTenant(tenant, clear_tenant=True):
-        for project in Project.objects.all():
-            CustomProjectField.objects.get_or_create(project=project, field=field)

@@ -22,7 +22,7 @@ from bluebottle.projects.admin import (
     LocationFilter, ProjectReviewerFilter, ProjectAdminForm,
     ReviewerWidget, ProjectAdmin,
     ProjectSkillFilter)
-from bluebottle.projects.models import Project, ProjectPhase, CustomProjectFieldSettings
+from bluebottle.projects.models import Project, ProjectPhase, CustomProjectFieldSettings, CustomProjectField
 from bluebottle.projects.tasks import refund_project
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -566,8 +566,8 @@ class ProjectCustomFieldAdminTest(BluebottleAdminTestCase):
 
     def test_save_custom_fields(self):
         project = ProjectFactory.create(title='Test')
-        CustomProjectFieldSettings.objects.create(name='How is it')
-        project.extra.update(value='This is nice!')
+        field = CustomProjectFieldSettings.objects.create(name='How is it')
+        project.extra.create(value='This is nice!', field=field)
         project.save()
 
         project_url = reverse('admin:projects_project_change', args=(project.id, ))
@@ -594,8 +594,8 @@ class ProjectAdminExportTest(BluebottleTestCase):
     def test_project_export(self):
         project = ProjectFactory(title='Just an example')
         CustomProjectFieldSettings.objects.create(name='Extra Info')
-        project.extra.update(value='This is nice!')
-        project.save()
+        field = CustomProjectFieldSettings.objects.create(name='How is it')
+        CustomProjectField.objects.create(project=project, value='This is nice!', field=field)
 
         export_action = self.project_admin.actions[0]
         response = export_action(self.project_admin, self.request, self.project_admin.get_queryset(self.request))
@@ -608,4 +608,5 @@ class ProjectAdminExportTest(BluebottleTestCase):
         self.assertEqual(headers[0], 'title')
         self.assertEqual(headers[27], 'Extra Info')
         self.assertEqual(data[0], 'Just an example')
-        self.assertEqual(data[27], 'This is nice!')
+        self.assertEqual(data[27], '')
+        self.assertEqual(data[28], 'This is nice!')

@@ -9,7 +9,7 @@ from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.projects.admin import mark_as_plan_new
 from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectBudgetLine, ProjectPlatformSettings, \
-    CustomProjectFieldSettings
+    CustomProjectFieldSettings, CustomProjectField
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -474,6 +474,12 @@ class TestProjectPlatformSettings(BluebottleTestCase):
         # Check that the slug is set correctly
         self.assertEqual(custom.slug, 'extra-info')
 
-        # Check that the project already has populated the extra field
+        # Check that the project doesn't have extra field yet
+        project.refresh_from_db()
+        self.assertEqual(project.extra.count(), 0)
+
+        CustomProjectField.objects.create(project=project, value='This is nice!', field=custom)
+
+        # And now it should be there
         project.refresh_from_db()
         self.assertEqual(project.extra.count(), 1)

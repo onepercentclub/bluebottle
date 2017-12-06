@@ -9,6 +9,7 @@ from django.db import connection
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.services import PaymentService
+from bluebottle.projects.models import Project
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,6 @@ def update_popularity():
 
     Simply loops over all the tenants, and updates the scores
     """
-    from bluebottle.projects.models import Project
-
     logger.info("Updating projects popularity using Celery")
 
     for tenant in Client.objects.all():
@@ -44,8 +43,6 @@ def update_exchange_rates():
 
     Simply loops over all the tenants, and updates the scores
     """
-    from bluebottle.projects.models import Project
-
     logger.info("Retrieving up to date exchange rates")
     # call_command('update_rates')
 
@@ -61,8 +58,6 @@ def update_exchange_rates():
 def update_project_status_stats():
     """ Calculates the no. of projects per status for a tenant
     """
-    from bluebottle.projects.models import Project
-
     for tenant in Client.objects.all():
         connection.set_tenant(tenant)
         with LocalTenant(tenant, clear_tenant=True):

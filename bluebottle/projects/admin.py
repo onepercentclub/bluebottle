@@ -453,6 +453,7 @@ class ProjectAdmin(AdminImageMixin, ImprovedModelForm):
 
     reward_export_fields = (
         ('reward__title', 'Reward'),
+        ('reward__description', 'Description'),
         ('order__id', 'Order id'),
         ('created', 'Donation Date'),
         ('reward__amount', 'Amount'),

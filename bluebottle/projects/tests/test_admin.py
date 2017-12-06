@@ -354,6 +354,7 @@ class TestProjectAdmin(BluebottleTestCase):
         self.assertEqual(line['Name'], reward_order.user.full_name)
         self.assertEqual(line['Order id'], str(reward_order.id))
         self.assertEqual(line['Reward'], reward.title)
+        self.assertEqual(line['Description'], reward.description)
         self.assertEqual(line['Amount'], str(reward.amount))
         self.assertEqual(line['Actual Amount'], str(donation.amount))
 

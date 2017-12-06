@@ -10,6 +10,7 @@ from django_singleton_admin.admin import SingletonAdmin
 from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
 from polymorphic.admin.inlines import StackedPolymorphicInline
 
+from bluebottle.payments.adapters import has_payment_prodiver
 from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.projects.models import (
     ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn,
@@ -271,6 +272,8 @@ class CustomAdminFormMetaClass(ModelFormMetaclass):
 class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelForm)):
 
     class Meta:
+        model = Project
+        fields = '__all__'
         widgets = {
             'currencies': forms.CheckboxSelectMultiple,
             'story': SummernoteWidget()
@@ -314,8 +317,8 @@ class ProjectAddOnInline(StackedPolymorphicInline):
 
     def get_child_inline_instances(self):
         instances = []
-        # if ProjectPlatformSettings.load().lipisha:
-        instances.append(self.LipishaProjectInline(parent_inline=self))
+        if connection.schema_name != 'public' and has_payment_prodiver('lipisha'):
+            instances.append(self.LipishaProjectInline(parent_inline=self))
         return instances
 
 
@@ -330,6 +333,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
     def get_inline_instances(self, request, obj=None):
         instances = super(ProjectAdmin, self).get_inline_instances(request, obj)
+
+        add_on_inline = ProjectAddOnInline(self.model, self.admin_site)
+        if len(add_on_inline.get_child_inline_instances()):
+            instances.append(add_on_inline)
         return instances
 
     inlines = (
@@ -338,7 +345,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         TaskAdminInline,
         ProjectDocumentInline,
         ProjectPhaseLogInline,
-        ProjectAddOnInline
+
     )
 
     list_filter = ('country__subregion__region', )
@@ -623,8 +630,9 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'account_bank_country'
         )})
 
-        # extra = (_('Extra fields'), {'fields': })
-        extra = (_('Extra fields'), {'fields': [field.slug for field in CustomProjectFieldSettings.objects.all()]})
+        extra = (_('Extra fields'), {
+            'fields': [field.slug for field in CustomProjectFieldSettings.objects.all()]
+        })
 
         return (main, story, details, goal, dates, bank, extra)
 

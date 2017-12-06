@@ -5,6 +5,7 @@ import StringIO
 
 from django.db import connection
 import requests
+from django.urls.base import reverse
 from django.utils.timezone import now
 
 from bluebottle.test.factory_models.tasks import TaskFactory
@@ -29,7 +30,7 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
-from bluebottle.test.utils import BluebottleTestCase, override_settings
+from bluebottle.test.utils import BluebottleTestCase, override_settings, BluebottleAdminTestCase
 
 from django.forms.models import modelform_factory
 
@@ -553,24 +554,28 @@ class ProjectSkillFilterTest(BluebottleTestCase):
         self.assertEqual(queryset.get(), self.project_with_skill)
 
 
-class ProjectCustomFieldAdminTest(BluebottleTestCase):
+class ProjectCustomFieldAdminTest(BluebottleAdminTestCase):
     """
     Test extra fields in Project Admin
     """
 
     def setUp(self):
         super(ProjectCustomFieldAdminTest, self).setUp()
-        self.request_factory = RequestFactory()
-        self.request = self.request_factory.post('/')
-        self.request.user = MockUser()
+        self.client.force_login(self.superuser)
         self.init_projects()
-        self.project_admin = ProjectAdmin(Project, AdminSite())
 
-    def test_custom_fields(self):
-        project = ProjectFactory.create()
-        CustomProjectFieldSettings.objects.create(name='Extra Info')
-        fields = self.project_admin.get_fields(request=self.request, obj=project)
-        self.assertTrue('extra-info' in fields)
+    def test_save_custom_fields(self):
+        project = ProjectFactory.create(title='Test')
+        CustomProjectFieldSettings.objects.create(name='How is it')
+        project.extra.update(value='This is nice!')
+        project.save()
+
+        project_url = reverse('admin:projects_project_change', args=(project.id, ))
+        response = self.client.get(project_url)
+        self.assertEqual(response.status_code, 200)
+        # Test the extra field and it's value show up
+        self.assertContains(response, 'How is it')
+        self.assertContains(response, 'This is nice!')
 
 
 class ProjectAdminExportTest(BluebottleTestCase):

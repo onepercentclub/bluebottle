@@ -7,6 +7,8 @@ from django.conf import settings
 
 from tenant_schemas.urlresolvers import reverse
 
+from bluebottle.members.models import CustomMemberFieldSettings
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -76,3 +78,26 @@ class InlineModelTestCase(BluebottleAdminTestCase):
         member_url = reverse('admin:members_member_change', args=(self.superuser.id,))
         response = self.client.get(member_url)
         self.assertIn(vote.project.title, response.content)
+
+
+class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
+    """
+    Test extra fields in Member Admin
+    """
+
+    def setUp(self):
+        super(MemberCustomFieldAdminTest, self).setUp()
+        self.client.force_login(self.superuser)
+
+    def test_save_custom_fields(self):
+        member = BlueBottleUserFactory.create()
+        field = CustomMemberFieldSettings.objects.create(name='Department')
+        member.extra.create(value='Engineering', field=field)
+        member.save()
+
+        member_url = reverse('admin:members_member_change', args=(member.id, ))
+        response = self.client.get(member_url)
+        self.assertEqual(response.status_code, 200)
+        # Test the extra field and it's value show up
+        self.assertContains(response, 'Department')
+        self.assertContains(response, 'Engineering')

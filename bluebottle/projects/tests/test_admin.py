@@ -564,7 +564,7 @@ class ProjectCustomFieldAdminTest(BluebottleAdminTestCase):
         self.client.force_login(self.superuser)
         self.init_projects()
 
-    def test_save_custom_fields(self):
+    def test_custom_fields(self):
         project = ProjectFactory.create(title='Test')
         field = CustomProjectFieldSettings.objects.create(name='How is it')
         project.extra.create(value='This is nice!', field=field)
@@ -576,6 +576,33 @@ class ProjectCustomFieldAdminTest(BluebottleAdminTestCase):
         # Test the extra field and it's value show up
         self.assertContains(response, 'How is it')
         self.assertContains(response, 'This is nice!')
+
+    def test_save_custom_fields(self):
+        project = ProjectFactory.create(title='Test')
+        CustomProjectFieldSettings.objects.create(name='Purpose')
+
+        data = project.__dict__
+        # Set some foreignkeys and money fields
+        # TODO: There should be a more elegant solution for this.
+        data['status'] = 1
+        data['theme'] = 1
+        data['owner'] = 1
+        data['amount_extra_0'] = 100.0
+        data['amount_extra_1'] = 'EUR'
+        data['amount_needed_0'] = 100.0
+        data['amount_needed_1'] = 'EUR'
+        data['amount_asked_0'] = 100.0
+        data['amount_asked_1'] = 'EUR'
+        data['amount_donated_0'] = 0.0
+        data['amount_donated_1'] = 'EUR'
+
+        # Set the extra field
+        data['purpose'] = 'Do good better'
+        form = ProjectAdminForm(instance=project, data=data)
+        self.assertEqual(form.errors, {})
+        form.save()
+        project.refresh_from_db()
+        self.assertEqual(project.extra.get().value, 'Do good better')
 
 
 class ProjectAdminExportTest(BluebottleTestCase):

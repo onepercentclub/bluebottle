@@ -264,7 +264,9 @@ class CustomAdminFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
         if connection.tenant.schema_name != 'public':
             for field in CustomProjectFieldSettings.objects.all():
-                attrs[field.slug] = forms.CharField(required=False, label=field.name, help_text=field.description)
+                attrs[field.slug] = forms.CharField(required=False,
+                                                    label=field.name,
+                                                    help_text=field.description)
 
         return super(CustomAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
@@ -290,10 +292,15 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
         )
         self.fields['story'].widget.attrs = {'data-project_id': self.instance.pk}
 
-        for field in CustomProjectFieldSettings.objects.all():
-            if CustomProjectField.objects.filter(project=self.instance, field=field).exists():
-                value = CustomProjectField.objects.filter(project=self.instance, field=field).get().value
-                self.initial[field.slug] = value
+        if connection.tenant.schema_name != 'public':
+            for field in CustomProjectFieldSettings.objects.all():
+                self.fields[field.slug] = forms.CharField(required=False,
+                                                          label=field.name,
+                                                          help_text=field.description)
+
+                if CustomProjectField.objects.filter(project=self.instance, field=field).exists():
+                    value = CustomProjectField.objects.filter(project=self.instance, field=field).get().value
+                    self.initial[field.slug] = value
 
     def save(self, commit=True):
         project = super(ProjectAdminForm, self).save(commit=commit)

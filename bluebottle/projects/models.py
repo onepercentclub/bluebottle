@@ -762,9 +762,6 @@ class CustomProjectFieldSettings(SortableMixin):
     def slug(self):
         return slugify(self.name)
 
-    def __unicode__(self):
-        return self.slug
-
     class Meta:
         ordering = ['sequence']
 

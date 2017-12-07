@@ -79,7 +79,9 @@ class CustomAdminFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
         if connection.tenant.schema_name != 'public':
             for field in CustomMemberFieldSettings.objects.all():
-                attrs[field.slug] = forms.CharField(required=False, label=field.name, help_text=field.description)
+                attrs[field.slug] = forms.CharField(required=False,
+                                                    label=field.name,
+                                                    help_text=field.description)
 
         return super(CustomAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
@@ -108,10 +110,14 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
         if f is not None:
             f.queryset = f.queryset.select_related('content_type')
 
-        for field in CustomMemberFieldSettings.objects.all():
-            if CustomMemberField.objects.filter(member=self.instance, field=field).exists():
-                value = CustomMemberField.objects.filter(member=self.instance, field=field).get().value
-                self.initial[field.slug] = value
+        if connection.tenant.schema_name != 'public':
+            for field in CustomMemberFieldSettings.objects.all():
+                self.fields[field.slug] = forms.CharField(required=False,
+                                                          label=field.name,
+                                                          help_text=field.description)
+                if CustomMemberField.objects.filter(member=self.instance, field=field).exists():
+                    value = CustomMemberField.objects.filter(member=self.instance, field=field).get().value
+                    self.initial[field.slug] = value
 
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.

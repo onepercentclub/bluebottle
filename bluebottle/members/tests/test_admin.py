@@ -9,7 +9,7 @@ from django.conf import settings
 
 from tenant_schemas.urlresolvers import reverse
 
-from bluebottle.members.admin import MemberAdmin
+from bluebottle.members.admin import MemberAdmin, MemberChangeForm
 from bluebottle.members.models import CustomMemberFieldSettings, Member, CustomMemberField
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
@@ -28,9 +28,6 @@ class MockUser:
     def __init__(self, perms=None, is_staff=True):
         self.perms = perms or []
         self.is_staff = is_staff
-
-    def has_perm(self, perm):
-        return perm in self.perms
 
 
 class GroupAdminTest(BluebottleAdminTestCase):
@@ -108,7 +105,7 @@ class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
         super(MemberCustomFieldAdminTest, self).setUp()
         self.client.force_login(self.superuser)
 
-    def test_save_custom_fields(self):
+    def test_load_custom_fields(self):
         member = BlueBottleUserFactory.create()
         field = CustomMemberFieldSettings.objects.create(name='Department')
         member.extra.create(value='Engineering', field=field)
@@ -120,6 +117,16 @@ class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
         # Test the extra field and it's value show up
         self.assertContains(response, 'Department')
         self.assertContains(response, 'Engineering')
+
+    def test_save_custom_fields(self):
+        member = BlueBottleUserFactory.create()
+        CustomMemberFieldSettings.objects.create(name='Department')
+        data = member.__dict__
+        data['department'] = 'Engineering'
+        form = MemberChangeForm(instance=member, data=data)
+        form.save()
+        member.refresh_from_db()
+        self.assertEqual(member.extra.get().value, 'Engineering')
 
 
 class MemberAdminExportTest(BluebottleTestCase):

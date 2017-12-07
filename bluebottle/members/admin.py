@@ -123,8 +123,8 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
         member = super(MemberChangeForm, self).save(commit=commit)
         for field in CustomMemberFieldSettings.objects.all():
             extra, created = CustomMemberField.objects.get_or_create(
-                project=member,
-                member=field
+                member=member,
+                field=field
             )
             extra.value = self.cleaned_data.get(field.slug, None)
             extra.save()
@@ -168,11 +168,12 @@ class MemberAdmin(UserAdmin):
             if item['name'] == 'Pledge':
                 standard_fieldsets[2][1]['fields'].append('can_pledge')
 
-        extra = (_('Extra fields'), {
-            'fields': [field.slug for field in CustomMemberFieldSettings.objects.all()]
-        })
+        if CustomMemberFieldSettings.objects.count():
+            extra = (_('Extra fields'), {
+                'fields': [field.slug for field in CustomMemberFieldSettings.objects.all()]
+            })
 
-        standard_fieldsets.append(extra)
+            standard_fieldsets.append(extra)
 
         return tuple(standard_fieldsets)
 

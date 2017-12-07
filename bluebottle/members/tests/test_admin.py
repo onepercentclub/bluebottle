@@ -1,17 +1,36 @@
 # coding=utf-8
 import os
 
+from django.contrib.admin.sites import AdminSite
 from django.core import mail
+from django.test.client import RequestFactory
 from django.test.utils import override_settings
 from django.conf import settings
 
 from tenant_schemas.urlresolvers import reverse
 
-from bluebottle.members.models import CustomMemberFieldSettings
+from bluebottle.members.admin import MemberAdmin
+from bluebottle.members.models import CustomMemberFieldSettings, Member, CustomMemberField
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
+
+
+factory = RequestFactory()
+
+
+class MockRequest:
+    pass
+
+
+class MockUser:
+    def __init__(self, perms=None, is_staff=True):
+        self.perms = perms or []
+        self.is_staff = is_staff
+
+    def has_perm(self, perm):
+        return perm in self.perms
 
 
 class GroupAdminTest(BluebottleAdminTestCase):
@@ -101,3 +120,38 @@ class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
         # Test the extra field and it's value show up
         self.assertContains(response, 'Department')
         self.assertContains(response, 'Engineering')
+
+
+class MemberAdminExportTest(BluebottleTestCase):
+    """
+    Test csv export
+    """
+    def setUp(self):
+        super(MemberAdminExportTest, self).setUp()
+        self.init_projects()
+        self.request_factory = RequestFactory()
+        self.request = self.request_factory.post('/')
+        self.request.user = MockUser()
+        self.init_projects()
+        self.member_admin = MemberAdmin(Member, AdminSite())
+
+    def test_member_export(self):
+        member = BlueBottleUserFactory.create(username='malle-eppie')
+        CustomMemberFieldSettings.objects.create(name='Extra Info')
+        field = CustomMemberFieldSettings.objects.create(name='How are you')
+        CustomMemberField.objects.create(member=member, value='Fine', field=field)
+
+        export_action = self.member_admin.actions[0]
+        response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
+
+        data = response.content.split("\r\n")
+        headers = data[0].split(",")
+        data = data[1].split(",")
+
+        # Test basic info and extra field are in the csv export
+        self.assertEqual(headers[0], 'username')
+        self.assertEqual(headers[11], 'Extra Info')
+        self.assertEqual(headers[12], 'How are you')
+        self.assertEqual(data[0], 'malle-eppie')
+        self.assertEqual(data[11], '')
+        self.assertEqual(data[12], 'Fine')

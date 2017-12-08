@@ -114,6 +114,32 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         self.project = Project.objects.get(pk=self.project.pk)
         self.assertTrue(self.project.campaign_edited)
 
+    def test_owner_running_permissions_categories(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+        categories = [CategoryFactory.create() for _ in range(10)]
+
+        for category in categories:
+            self.project.categories.add(category)
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        # update allowed
+        response = self.client.put(
+            self.project_manage_url,
+            {
+                'title': self.project.title,
+                'pitch': 'test',
+                'categories': [category.id for category in categories]
+            },
+            token=self.owner_token
+        )
+        self.assertEqual(response.status_code, 200)
+
     def test_owner_running_permissions_has_permission_wrong_field(self):
         # view allowed
         self.project.status = ProjectPhase.objects.get(slug='campaign')

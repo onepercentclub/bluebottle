@@ -126,7 +126,6 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         response = self.client.get(self.project_manage_url, token=self.not_owner_token)
         self.assertEqual(response.status_code, 403)
 
-
     def test_owner_permissions(self):
         # view allowed
         response = self.client.get(self.project_detail_url, token=self.owner_token)

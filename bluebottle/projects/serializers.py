@@ -3,7 +3,6 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
 from localflavor.generic.validators import IBANValidator
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -346,10 +345,21 @@ class ManageProjectSerializer(serializers.ModelSerializer):
         if self.instance and self.instance.status.slug in ('campaign', 'voting'):
             # When project is running, only a subset of the fields canb be changed
             for field, value in data.items():
-                if field not in self.editable_fields and value != getattr(self.instance, field):
-                    raise serializers.ValidationError(
-                        _('Not allowed to edit {} when project is running').format(field)
-                    )
+                current = getattr(self.instance, field)
+
+                if field not in self.editable_fields:
+                    try:
+                        # If we check a many to many field, make convert both sides to a set
+                        current = set(current.all())
+                        value = set(value)
+                    except (AttributeError, TypeError):
+                        # normal field: do nothing
+                        pass
+
+                    if value != current:
+                        raise serializers.ValidationError(
+                            _('Not allowed to edit {} when project is running').format(field)
+                        )
                 self.instance.campaign_edited = timezone.now()
 
         return data

@@ -332,7 +332,7 @@ TENANT_APPS = (
     'bluebottle.contact',
     'bluebottle.geo',
     'bluebottle.pages',
-    'bluebottle.news',
+    'bluebottle.mails',
     'bluebottle.news',
     'bluebottle.slides',
     'bluebottle.quotes',

@@ -106,6 +106,7 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.cms.models.SitePlatformSettings',
             'bluebottle.projects.models.ProjectPlatformSettings',
             'bluebottle.analytics.models.AnalyticsPlatformSettings',
+            'bluebottle.mails.models.MailPlatformSettings',
         ),
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,

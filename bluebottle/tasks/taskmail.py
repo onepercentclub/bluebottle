@@ -6,6 +6,7 @@ from django.db.models.signals import pre_save, pre_delete, post_save
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
 
+from bluebottle.common.signals import platform_event
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients.utils import tenant_url, LocalTenant
@@ -18,6 +19,7 @@ class TaskMemberMailSender:
     """
     The base class for Task Mail senders
     """
+    event_name = 'taskmember.unknown'
 
     def __init__(self, instance, message=None, *args, **kwargs):
         self.task_member = instance
@@ -43,12 +45,16 @@ class TaskMemberMailSender:
         return self.task.author
 
     def send(self):
+        platform_event.send(sender=self.task_member.__class__,
+                            obj=self.task_member,
+                            name=self.event_name)
         send_mail(template_name=self.template_name, subject=self.subject,
                   to=self.receiver, **self.ctx)
 
 
 class TaskMemberAppliedMail(TaskMemberMailSender):
     template_name = 'task_member_applied.mail'
+    event_name = 'taskmember.applied'
 
     def __init__(self, *args, **kwargs):
         TaskMemberMailSender.__init__(self, *args, **kwargs)
@@ -71,6 +77,7 @@ class TaskMemberAppliedMail(TaskMemberMailSender):
 
 class TaskMemberRejectMail(TaskMemberMailSender):
     template_name = 'task_member_rejected.mail'
+    event_name = 'taskmember.rejected'
 
     @property
     def subject(self):
@@ -81,6 +88,7 @@ class TaskMemberRejectMail(TaskMemberMailSender):
 
 class TaskMemberAcceptedMail(TaskMemberMailSender):
     template_name = 'task_member_accepted.mail'
+    event_name = 'taskmember.accepted'
 
     @property
     def subject(self):
@@ -91,6 +99,7 @@ class TaskMemberAcceptedMail(TaskMemberMailSender):
 
 class TaskMemberRealizedMail(TaskMemberMailSender):
     template_name = 'task_member_realized.mail'
+    event_name = 'taskmember.realized'
 
     def __init__(self, *args, **kwargs):
         TaskMemberMailSender.__init__(self, *args, **kwargs)
@@ -106,6 +115,7 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
 
 class TaskMemberWithdrawMail(TaskMemberMailSender):
     template_name = 'task_member_withdrew.mail'
+    event_name = 'taskmember.withdrew'
 
     @property
     def subject(self):

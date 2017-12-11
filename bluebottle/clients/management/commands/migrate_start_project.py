@@ -62,5 +62,3 @@ class Command(BaseCommand):
                         )
                 except AttributeError:
                     pass
-
-

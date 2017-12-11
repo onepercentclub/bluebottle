@@ -19,12 +19,15 @@ def scrape_mail_logo(apps, schema_editor):
 
     from django.core.files import File
 
-    img_temp = NamedTemporaryFile(delete=True)
-    img_temp.write(urllib2.urlopen(logo_url).read())
-    img_temp.flush()
+    try:
+        img_temp = NamedTemporaryFile(delete=True)
+        img_temp.write(urllib2.urlopen(logo_url).read())
+        img_temp.flush()
 
-    mail_settings, _ = MailPlatformSettings.objects.get_or_create()
-    mail_settings.email_logo.save('logo-email.gif', File(img_temp))
+        mail_settings, _ = MailPlatformSettings.objects.get_or_create()
+        mail_settings.email_logo.save('logo-email.gif', File(img_temp))
+    except urllib2.URLError:
+        pass
 
 
 def backward(apps, schema_editor):

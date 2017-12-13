@@ -120,7 +120,7 @@ class GreetingInline(NestedStackedInline):
     extra = 0
 
 
-class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
+class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }

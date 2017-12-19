@@ -84,9 +84,10 @@ class ProjectPermissionsSerializer(serializers.Serializer):
     rewards = RelatedResourcePermissionField('reward-list')
     donations = RelatedResourcePermissionField('order-manage-list')
     tasks = RelatedResourcePermissionField('task-list')
+    manage_project = RelatedResourcePermissionField('project_manage_detail', view_args=('slug', ))
 
     class Meta:
-        fields = ('rewards', 'donations', 'tasks')
+        fields = ('rewards', 'donations', 'tasks', 'manage_project')
 
 
 class ProjectSerializer(serializers.ModelSerializer):

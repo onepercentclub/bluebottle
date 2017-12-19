@@ -37,6 +37,19 @@ class Task(models.Model, PreviousStatusMixin):
         manual = ChoiceItem('manual', label=_('Manual'))
         automatic = ChoiceItem('automatic', label=_('Automatic'))
 
+    placeholders = {
+        '{{ site }}/tasks/{{ obj.task.id }}': 'Link to task',
+        '{{ obj.owner.name }}': 'Task owner name',
+        '{{ obj.title }}': 'Task title'
+    }
+
+    roles = {
+        'task_members.member': 'Task members',
+        'owner': 'Task owner',
+        'project.owner': 'Project owner',
+        'project.task_manager': 'Project task manager',
+    }
+
     title = models.CharField(_('title'), max_length=100)
     description = models.TextField(_('description'))
     location = models.CharField(_('location'),
@@ -307,6 +320,21 @@ class TaskMember(models.Model, PreviousStatusMixin):
         withdrew = ChoiceItem('withdrew', label=_('Withdrew'))
         realized = ChoiceItem('realized', label=_('Realised'))
 
+    placeholders = {
+        '{{ site }}/tasks/{{ obj.task.id }}': 'Link to task',
+        '{{ obj.name }}': 'Task member name',
+        '{{ obj.motivation }}': 'Task member motivation',
+        '{{ obj.task.owner.name }}': 'Task owner name',
+        '{{ obj.task.title }}': 'Task title'
+    }
+
+    roles = (
+        ('member', 'Task member'),
+        ('task.owner', 'Task owner'),
+        ('task.project.owner', 'Project owner'),
+        ('task.project.task_manager', 'Project task manager')
+    )
+
     member = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
     task = models.ForeignKey('tasks.Task', related_name="members")
     status = models.CharField(_('status'), max_length=20,
@@ -351,6 +379,10 @@ class TaskMember(models.Model, PreviousStatusMixin):
 
     def delete(self, using=None, keep_parents=False):
         super(TaskMember, self).delete(using=using, keep_parents=keep_parents)
+
+    @property
+    def name(self):
+        return self.member.name
 
     @property
     def owner(self):

@@ -18,6 +18,16 @@ class Member(BlueBottleBaseUser):
                                  blank=True,
                                  null=True)
 
+    placeholders = {
+        '{{ site }}/member/profile': _('Link to My Profile'),
+        '{{ obj.full_name }}': _('Member full name'),
+        '{{ obj.first_name }}': _('Member first name')
+    }
+
+    roles = {
+        'obj': 'Member'
+    }
+
     def __init__(self, *args, **kwargs):
         super(Member, self).__init__(*args, **kwargs)
 

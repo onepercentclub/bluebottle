@@ -19,7 +19,7 @@ class TaskMemberMailSender:
     """
     The base class for Task Mail senders
     """
-    event_name = 'taskmember.unknown'
+    event_name = 'task_member.unknown'
 
     def __init__(self, instance, message=None, *args, **kwargs):
         self.task_member = instance
@@ -54,7 +54,7 @@ class TaskMemberMailSender:
 
 class TaskMemberAppliedMail(TaskMemberMailSender):
     template_name = 'task_member_applied.mail'
-    event_name = 'taskmember.applied'
+    event_name = 'task_member.applied'
 
     def __init__(self, *args, **kwargs):
         TaskMemberMailSender.__init__(self, *args, **kwargs)
@@ -77,7 +77,7 @@ class TaskMemberAppliedMail(TaskMemberMailSender):
 
 class TaskMemberRejectMail(TaskMemberMailSender):
     template_name = 'task_member_rejected.mail'
-    event_name = 'taskmember.rejected'
+    event_name = 'task_member.rejected'
 
     @property
     def subject(self):
@@ -88,7 +88,7 @@ class TaskMemberRejectMail(TaskMemberMailSender):
 
 class TaskMemberAcceptedMail(TaskMemberMailSender):
     template_name = 'task_member_accepted.mail'
-    event_name = 'taskmember.accepted'
+    event_name = 'task_member.accepted'
 
     @property
     def subject(self):
@@ -99,7 +99,7 @@ class TaskMemberAcceptedMail(TaskMemberMailSender):
 
 class TaskMemberRealizedMail(TaskMemberMailSender):
     template_name = 'task_member_realized.mail'
-    event_name = 'taskmember.realized'
+    event_name = 'task_member.realized'
 
     def __init__(self, *args, **kwargs):
         TaskMemberMailSender.__init__(self, *args, **kwargs)
@@ -115,7 +115,7 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
 
 class TaskMemberWithdrawMail(TaskMemberMailSender):
     template_name = 'task_member_withdrew.mail'
-    event_name = 'taskmember.withdrew'
+    event_name = 'task_member.withdrew'
 
     @property
     def subject(self):

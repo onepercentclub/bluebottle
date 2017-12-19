@@ -12,6 +12,23 @@ class Donation(models.Model):
     """
     Donation of an amount from a user to a project.
     """
+    placeholders = {
+        '{{ site }}/projects/{{ obj.project.slug }}': 'Link to project',
+        '{{ obj.name }}': 'Donor custom name',
+        '{{ obj.project.owner.full_name }}': 'Project initiator full name',
+        '{{ obj.project.title }}': 'Project title',
+        '{{ obj.fundraiser.title }}': 'Fundraiser title',
+        '{{ obj.fundraiser.owner.full_name }}': 'Fundraiser owner full name',
+        '{{ obj.reward.name }}': 'Donation reward',
+        '{{ obj.amount }}': 'Donation amount'
+    }
+
+    roles = (
+        ('user', 'Donor'),
+        ('project.owner', 'Project initiator'),
+        ('fundraiser.owner', 'Fundraiser owner')
+    )
+
     amount = MoneyField(_("Amount"))
 
     project = models.ForeignKey('projects.Project',

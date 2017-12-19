@@ -748,6 +748,30 @@ class ProjectSearchFilter(SortableMixin):
         ordering = ['sequence']
 
 
+class CustomProjectFieldSettings(SortableMixin):
+
+    project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
+                                         null=True,
+                                         related_name='extra_fields')
+
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=200, null=True, blank=True)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    @property
+    def slug(self):
+        return slugify(self.name)
+
+    class Meta:
+        ordering = ['sequence']
+
+
+class CustomProjectField(models.Model):
+    project = models.ForeignKey('projects.Project', related_name='extra')
+    field = models.ForeignKey('projects.CustomProjectFieldSettings')
+    value = models.CharField(max_length=5000, null=True, blank=True)
+
+
 class ProjectPlatformSettings(BasePlatformSettings):
     PROJECT_CREATE_OPTIONS = (
         ('sourcing', _('Sourcing')),

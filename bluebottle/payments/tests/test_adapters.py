@@ -1,7 +1,7 @@
 from django.test.utils import override_settings
 from moneyed import Money
 
-from bluebottle.payments.adapters import BasePaymentAdapter
+from bluebottle.payments.adapters import BasePaymentAdapter, has_payment_prodiver
 from bluebottle.test.factory_models.payments import OrderPaymentFactory, PaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -42,3 +42,7 @@ class PaymentAdapterTestCase(BluebottleTestCase):
         credentials = self.adapter.credentials
 
         self.assertEqual('USD', credentials['currency'])
+
+    def test_has_payment_provider(self):
+        self.assertTrue(has_payment_prodiver('docdata'))
+        self.assertFalse(has_payment_prodiver('adyen'))

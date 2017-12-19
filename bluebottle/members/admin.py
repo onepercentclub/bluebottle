@@ -1,3 +1,5 @@
+import six
+from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django import forms
 from django.conf.urls import url
 from django.contrib.auth import get_user_model
@@ -5,11 +7,15 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.db import connection
+from django.forms.models import ModelFormMetaclass
 from django.http import HttpResponseRedirect
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from django_singleton_admin.admin import SingletonAdmin
 
 from bluebottle.bb_accounts.models import UserAddress
+from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
 from bluebottle.clients import properties
@@ -53,7 +59,34 @@ class MemberCreationForm(forms.ModelForm):
         return user
 
 
-class MemberChangeForm(forms.ModelForm):
+class CustomMemberFieldSettingsInline(SortableTabularInline):
+    model = CustomMemberFieldSettings
+    readonly_fields = ('slug',)
+    extra = 0
+
+
+class MemberPlatformSettingsAdmin(SingletonAdmin, NonSortableParentAdmin):
+
+    inlines = [
+        CustomMemberFieldSettingsInline
+    ]
+
+
+admin.site.register(MemberPlatformSettings, MemberPlatformSettingsAdmin)
+
+
+class CustomAdminFormMetaClass(ModelFormMetaclass):
+    def __new__(cls, name, bases, attrs):
+        if connection.tenant.schema_name != 'public':
+            for field in CustomMemberFieldSettings.objects.all():
+                attrs[field.slug] = forms.CharField(required=False,
+                                                    label=field.name,
+                                                    help_text=field.description)
+
+        return super(CustomAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
+
+
+class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelForm)):
     """
     Change Member form
     """
@@ -77,11 +110,31 @@ class MemberChangeForm(forms.ModelForm):
         if f is not None:
             f.queryset = f.queryset.select_related('content_type')
 
+        if connection.tenant.schema_name != 'public':
+            for field in CustomMemberFieldSettings.objects.all():
+                self.fields[field.slug] = forms.CharField(required=False,
+                                                          label=field.name,
+                                                          help_text=field.description)
+                if CustomMemberField.objects.filter(member=self.instance, field=field).exists():
+                    value = CustomMemberField.objects.filter(member=self.instance, field=field).get().value
+                    self.initial[field.slug] = value
+
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.
         # This is done here, rather than on the field, because the
         # field does not have access to the initial value
         return self.initial["password"]
+
+    def save(self, commit=True):
+        member = super(MemberChangeForm, self).save(commit=commit)
+        for field in CustomMemberFieldSettings.objects.all():
+            extra, created = CustomMemberField.objects.get_or_create(
+                member=member,
+                field=field
+            )
+            extra.value = self.cleaned_data.get(field.slug, None)
+            extra.save()
+        return member
 
 
 class UserAddressInline(admin.StackedInline):
@@ -120,6 +173,13 @@ class MemberAdmin(UserAdmin):
         for item in properties.PAYMENT_METHODS:
             if item['name'] == 'Pledge':
                 standard_fieldsets[2][1]['fields'].append('can_pledge')
+
+        if CustomMemberFieldSettings.objects.count():
+            extra = (_('Extra fields'), {
+                'fields': [field.slug for field in CustomMemberFieldSettings.objects.all()]
+            })
+
+            standard_fieldsets.append(extra)
 
         return tuple(standard_fieldsets)
 

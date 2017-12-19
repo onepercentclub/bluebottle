@@ -1,4 +1,3 @@
-
 from django.core.urlresolvers import reverse
 from django.db.models.signals import pre_save
 from django.dispatch import receiver, Signal

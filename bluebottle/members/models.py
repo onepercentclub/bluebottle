@@ -1,5 +1,7 @@
+from adminsortable.models import SortableMixin
 from django.db import models
 from django.db.models import Sum
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import cached_property
 from django.core.exceptions import ObjectDoesNotExist
@@ -8,7 +10,39 @@ from bluebottle.bb_accounts.models import BlueBottleBaseUser
 from bluebottle.projects.models import Project
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.tasks.models import TaskMember
+from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import StatusDefinition
+
+
+class CustomMemberFieldSettings(SortableMixin):
+
+    member_settings = models.ForeignKey('members.MemberPlatformSettings',
+                                        null=True,
+                                        related_name='extra_fields')
+
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=200, null=True, blank=True)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    @property
+    def slug(self):
+        return slugify(self.name)
+
+    class Meta:
+        ordering = ['sequence']
+
+
+class CustomMemberField(models.Model):
+    member = models.ForeignKey('members.Member', related_name='extra')
+    field = models.ForeignKey('members.CustomMemberFieldSettings')
+    value = models.CharField(max_length=5000, null=True, blank=True)
+
+
+class MemberPlatformSettings(BasePlatformSettings):
+
+    class Meta:
+        verbose_name_plural = _('member platform settings')
+        verbose_name = _('member platform settings')
 
 
 class Member(BlueBottleBaseUser):

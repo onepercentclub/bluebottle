@@ -8,7 +8,8 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
 from bluebottle.projects.admin import mark_as_plan_new
-from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectBudgetLine, ProjectPlatformSettings
+from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectBudgetLine, ProjectPlatformSettings, \
+    CustomProjectFieldSettings, CustomProjectField
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -465,3 +466,20 @@ class TestProjectPlatformSettings(BluebottleTestCase):
         ProjectPlatformSettings.objects.create(allow_anonymous_rewards=False)
         settings = ProjectPlatformSettings.load()
         self.assertEqual(settings.allow_anonymous_rewards, False)
+
+    def test_extra_project_fields(self):
+        project = ProjectFactory.create()
+        custom = CustomProjectFieldSettings.objects.create(name='Extra Info')
+
+        # Check that the slug is set correctly
+        self.assertEqual(custom.slug, 'extra-info')
+
+        # Check that the project doesn't have extra field yet
+        project.refresh_from_db()
+        self.assertEqual(project.extra.count(), 0)
+
+        CustomProjectField.objects.create(project=project, value='This is nice!', field=custom)
+
+        # And now it should be there
+        project.refresh_from_db()
+        self.assertEqual(project.extra.count(), 1)

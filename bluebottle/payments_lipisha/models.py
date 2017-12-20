@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.translation import ugettext as _
 
 from bluebottle.payments.models import Payment
+from bluebottle.projects.models import ProjectAddOn
 
 
 class LipishaPayment(Payment):
@@ -120,3 +121,19 @@ class LipishaPayment(Payment):
         """
         fee = round(self.order_payment.amount * Decimal(0.015), 2)
         return fee
+
+
+class LipishaProject(ProjectAddOn):
+
+    type = 'mpesa'
+    serializer = 'bluebottle.payments_lipisha.serializers.BaseProjectAddOnSerializer'
+    account_number = models.CharField(max_length=100, null=True, blank=True,
+                                      help_text='Lipisha account number')
+
+    @property
+    def paybill_number(self):
+        from bluebottle.payments_lipisha.adapters import LipishaPaymentInterface
+        return LipishaPaymentInterface().credentials['business_number']
+
+    def __unicode__(self):
+        return "{} - {}".format(self.account_number, self.project.title)

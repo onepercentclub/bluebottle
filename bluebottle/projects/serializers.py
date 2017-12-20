@@ -18,11 +18,13 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import (
     ProjectBudgetLine, ProjectDocument, Project, ProjectImage,
-    ProjectPlatformSettings, ProjectSearchFilter)
+    ProjectPlatformSettings, ProjectSearchFilter,
+    ProjectAddOn)
 from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.utils.serializers import (MoneySerializer, ResourcePermissionField,
                                           RelatedResourcePermissionField)
 from bluebottle.utils.fields import SafeField
+from bluebottle.utils.utils import get_class
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 from bluebottle.votes.models import Vote
 
@@ -90,8 +92,32 @@ class ProjectPermissionsSerializer(serializers.Serializer):
         fields = ('rewards', 'donations', 'tasks', 'manage_project')
 
 
+class BaseProjectAddOnSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectAddOn
+        fields = ('id', 'type')
+
+
+class ProjectAddOnSerializer(serializers.ModelSerializer):
+
+    type = serializers.ReadOnlyField(required=False)
+
+    def to_representation(self, obj):
+        """
+        Project Add On Polymorphic serialization
+        """
+        AddOnSerializer = get_class(obj.serializer)
+        return AddOnSerializer(obj, context=self.context).to_representation(obj)
+
+    class Meta:
+        model = ProjectAddOn
+        fields = ('id', 'type')
+
+
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
+    addons = ProjectAddOnSerializer(many=True)
     amount_asked = MoneySerializer()
     amount_donated = MoneySerializer()
     amount_extra = MoneySerializer()
@@ -126,6 +152,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id',
+                  'addons',
                   'allow_overfunding',
                   'amount_asked',
                   'amount_donated',

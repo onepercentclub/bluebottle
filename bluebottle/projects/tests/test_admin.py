@@ -5,6 +5,7 @@ import StringIO
 
 from django.db import connection
 import requests
+from django.urls.base import reverse
 from django.utils.timezone import now
 
 from bluebottle.test.factory_models.tasks import TaskFactory
@@ -21,7 +22,7 @@ from bluebottle.projects.admin import (
     LocationFilter, ProjectReviewerFilter, ProjectAdminForm,
     ReviewerWidget, ProjectAdmin,
     ProjectSkillFilter)
-from bluebottle.projects.models import Project, ProjectPhase
+from bluebottle.projects.models import Project, ProjectPhase, CustomProjectFieldSettings, CustomProjectField
 from bluebottle.projects.tasks import refund_project
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -29,7 +30,7 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
-from bluebottle.test.utils import BluebottleTestCase, override_settings
+from bluebottle.test.utils import BluebottleTestCase, override_settings, BluebottleAdminTestCase
 
 from django.forms.models import modelform_factory
 
@@ -551,3 +552,88 @@ class ProjectSkillFilterTest(BluebottleTestCase):
         queryset = filter.queryset(self.request, Project.objects.all())
         self.assertEqual(len(queryset), 1)
         self.assertEqual(queryset.get(), self.project_with_skill)
+
+
+class ProjectCustomFieldAdminTest(BluebottleAdminTestCase):
+    """
+    Test extra fields in Project Admin
+    """
+
+    def setUp(self):
+        super(ProjectCustomFieldAdminTest, self).setUp()
+        self.client.force_login(self.superuser)
+        self.init_projects()
+
+    def test_custom_fields(self):
+        project = ProjectFactory.create(title='Test')
+        field = CustomProjectFieldSettings.objects.create(name='How is it')
+        project.extra.create(value='This is nice!', field=field)
+        project.save()
+
+        project_url = reverse('admin:projects_project_change', args=(project.id, ))
+        response = self.client.get(project_url)
+        self.assertEqual(response.status_code, 200)
+        # Test the extra field and it's value show up
+        self.assertContains(response, 'How is it')
+        self.assertContains(response, 'This is nice!')
+
+    def test_save_custom_fields(self):
+        project = ProjectFactory.create(title='Test')
+        CustomProjectFieldSettings.objects.create(name='Purpose')
+
+        data = project.__dict__
+        # Set some foreignkeys and money fields
+        # TODO: There should be a more elegant solution for this.
+        data['status'] = 1
+        data['theme'] = 1
+        data['owner'] = 1
+        data['amount_extra_0'] = 100.0
+        data['amount_extra_1'] = 'EUR'
+        data['amount_needed_0'] = 100.0
+        data['amount_needed_1'] = 'EUR'
+        data['amount_asked_0'] = 100.0
+        data['amount_asked_1'] = 'EUR'
+        data['amount_donated_0'] = 0.0
+        data['amount_donated_1'] = 'EUR'
+
+        # Set the extra field
+        data['purpose'] = 'Do good better'
+        form = ProjectAdminForm(instance=project, data=data)
+        self.assertEqual(form.errors, {})
+        form.save()
+        project.refresh_from_db()
+        self.assertEqual(project.extra.get().value, 'Do good better')
+
+
+class ProjectAdminExportTest(BluebottleTestCase):
+    """
+    Test csv export
+    """
+    def setUp(self):
+        super(ProjectAdminExportTest, self).setUp()
+        self.init_projects()
+        self.request_factory = RequestFactory()
+        self.request = self.request_factory.post('/')
+        self.request.user = MockUser()
+        self.init_projects()
+        self.project_admin = ProjectAdmin(Project, AdminSite())
+
+    def test_project_export(self):
+        project = ProjectFactory(title='Just an example')
+        CustomProjectFieldSettings.objects.create(name='Extra Info')
+        field = CustomProjectFieldSettings.objects.create(name='How is it')
+        CustomProjectField.objects.create(project=project, value='This is nice!', field=field)
+
+        export_action = self.project_admin.actions[0]
+        response = export_action(self.project_admin, self.request, self.project_admin.get_queryset(self.request))
+
+        data = response.content.split("\r\n")
+        headers = data[0].split(",")
+        data = data[1].split(",")
+
+        # Test basic info and extra field are in the csv export
+        self.assertEqual(headers[0], 'title')
+        self.assertEqual(headers[27], 'Extra Info')
+        self.assertEqual(data[0], 'Just an example')
+        self.assertEqual(data[27], '')
+        self.assertEqual(data[28], 'This is nice!')

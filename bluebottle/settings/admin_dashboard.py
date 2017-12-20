@@ -22,7 +22,8 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.statistics.*',
             'bluebottle.redirects.*',
             'bluebottle.cms.models.ResultPage',
-            'bluebottle.cms.models.HomePage'
+            'bluebottle.cms.models.HomePage',
+            'bluebottle.cms.models.SiteLinks'
         ],
         'module': 'fluent_dashboard.modules.AppIconList',
         'collapsible': False,

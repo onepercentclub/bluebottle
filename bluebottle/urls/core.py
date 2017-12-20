@@ -77,6 +77,8 @@ urlpatterns = [
         include('bluebottle.payments_vitepay.urls.core')),
     url(r'^payments_flutterwave/',
         include('bluebottle.payments_flutterwave.urls.core')),
+    url(r'^payments_lipisha/',
+        include('bluebottle.payments_lipisha.urls.core')),
 
     url(r'^surveys/',
         include('bluebottle.surveys.urls.core')),

@@ -18,12 +18,14 @@ from bluebottle.cms.models import (
     Stat, StatsContent, ResultPage, HomePage, QuotesContent, SurveyContent, Quote,
     ProjectImagesContent, ProjectsContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, TasksContent, CategoriesContent, StepsContent, LocationsContent,
-    SlidesContent, Slide, Step, Logo, LogosContent, ContentLink, LinksContent,
+    SlidesContent, Step, Logo, LogosContent, ContentLink, LinksContent,
     SitePlatformSettings, WelcomeContent
 )
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.serializers import ProjectPreviewSerializer
+from bluebottle.slides.models import Slide
 from bluebottle.surveys.serializers import QuestionSerializer
+from bluebottle.utils.fields import SafeField
 
 
 class RichTextContentSerializer(serializers.Serializer):
@@ -177,8 +179,8 @@ class TasksContentSerializer(serializers.ModelSerializer):
 
 
 class SlideSerializer(serializers.ModelSerializer):
-    image = SorlImageField('800x600', crop='center')
-    background_image = SorlImageField('1600x1200', crop='center')
+    image = SorlImageField('1600x674', crop='center')
+    background_image = SorlImageField('1600x674', crop='center')
 
     class Meta:
         model = Slide
@@ -196,11 +198,20 @@ class SlideSerializer(serializers.ModelSerializer):
 
 
 class SlidesContentSerializer(serializers.ModelSerializer):
-    slides = SlideSerializer(many=True)
+    slides = serializers.SerializerMethodField()
+
+    def get_slides(self, instance):
+        slides = Slide.objects.published().filter(
+            language=instance.language_code
+        )
+
+        return SlideSerializer(
+            slides, many=True, context=self.context
+        ).to_representation(slides)
 
     class Meta:
         model = SlidesContent
-        fields = ('id', 'type', 'slides',)
+        fields = ('id', 'type', 'slides', 'title', 'sub_title',)
 
 
 class CategoriesContentSerializer(serializers.ModelSerializer):
@@ -212,7 +223,8 @@ class CategoriesContentSerializer(serializers.ModelSerializer):
 
 
 class StepSerializer(serializers.ModelSerializer):
-    image = SorlImageField('800x600', crop='center')
+    image = SorlImageField('200x200', crop='center')
+    text = SafeField(required=False, allow_blank=True)
 
     class Meta:
         model = Step

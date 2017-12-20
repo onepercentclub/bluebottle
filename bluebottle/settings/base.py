@@ -15,7 +15,7 @@ DEBUG = True
 COMPRESS_ENABLED = False
 COMPRESS_TEMPLATES = False
 
-INCLUDE_TEST_MODELS = True
+INCLUDE_TEST_MODELS = False
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -245,10 +245,6 @@ SOCIAL_AUTH_PIPELINE = (
 
 AFOM_ENABLED = False
 
-SOCIAL_AUTH_USER_FIELDS = ('username', 'email', 'first_name', 'last_name',)
-SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
-SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
-
 SHARED_APPS = (
     'tenant_schemas',
     'bluebottle.clients',  # you must list the app where your tenant model resides in
@@ -400,7 +396,6 @@ TENANT_APPS = (
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = True
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"
@@ -511,6 +506,9 @@ LOGGING = {
 # Custom User model
 AUTH_USER_MODEL = 'members.Member'
 
+SOCIAL_AUTH_USER_FIELDS = ('username', 'email', 'first_name', 'last_name',)
+SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
+SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 SOCIAL_AUTH_USER_MODEL = 'members.Member'
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_friends', 'public_profile', 'user_birthday']
 SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [('birthday', 'birthday')]
@@ -626,7 +624,7 @@ DJANGO_WYSIWYG_FLAVOR = "tinymce_advanced"
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif',)
+IMAGE_ALLOWED_MIME_TYPES = ('image/png', 'image/jpeg', 'image/gif', 'image/svg+xml')
 
 EXPORTDB_EXPORT_CONF = {
     'models': OrderedDict([

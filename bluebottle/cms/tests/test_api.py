@@ -18,7 +18,7 @@ from bluebottle.cms.models import (
     StatsContent, QuotesContent, SurveyContent, ProjectsContent,
     ProjectImagesContent, ShareResultsContent, ProjectsMapContent,
     SupporterTotalContent, HomePage, SlidesContent, SitePlatformSettings,
-    LinksContent, WelcomeContent
+    LinksContent, WelcomeContent, StepsContent
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -26,8 +26,8 @@ from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.surveys import SurveyFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.cms import (
-    ResultPageFactory, HomePageFactory, StatFactory,
-    QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory
+    ResultPageFactory, HomePageFactory, StatFactory, StepFactory,
+    QuoteFactory, SlideFactory, ContentLinkFactory, GreetingFactory,
 )
 from bluebottle.test.utils import BluebottleTestCase
 from sorl_watermarker.engines.pil_engine import Engine
@@ -275,11 +275,17 @@ class HomePageTestCase(BluebottleTestCase):
             self.assertTrue(project['is_campaign'])
 
     def test_slides(self):
-        block = SlidesContent.objects.create_for_placeholder(self.placeholder)
+        SlidesContent.objects.create_for_placeholder(self.placeholder)
         image = File(open('./bluebottle/cms/tests/test_images/upload.png'))
 
         for i in range(0, 4):
-            SlideFactory(block=block, image=image)
+            SlideFactory(
+                image=image,
+                sequence=i,
+                publication_date=now(),
+                status='published',
+                language='en'
+            )
 
         response = self.client.get(self.url)
 
@@ -293,14 +299,21 @@ class HomePageTestCase(BluebottleTestCase):
             self.assertTrue(slide['image'].endswith('png'))
 
     def test_slides_svg(self):
-        block = SlidesContent.objects.create_for_placeholder(self.placeholder)
+        SlidesContent.objects.create_for_placeholder(self.placeholder)
         image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
 
         for i in range(0, 4):
-            SlideFactory(block=block, image=image)
+            SlideFactory(
+                image=image,
+                sequence=i,
+                publication_date=now(),
+                status='published',
+                language='en'
+            )
 
         response = self.client.get(self.url)
 
+        self.assertEqual(len(response.data['blocks'][0]['slides']), 4)
         self.assertEqual(response.status_code, 200)
 
         for slide in response.data['blocks'][0]['slides']:
@@ -325,6 +338,49 @@ class HomePageTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['blocks'][0]['type'], 'links')
+
+    def test_steps(self):
+        block = StepsContent.objects.create_for_placeholder(self.placeholder)
+        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
+
+        for i in range(0, 4):
+            StepFactory.create(
+                block=block,
+                header='test header',
+                text='<a href="http://example.com">link</a>',
+                image=image
+            )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'steps')
+
+        for step in response.data['blocks'][0]['steps']:
+            self.assertEqual(
+                step['text'], u'<a href="http://example.com">link</a>'
+            )
+
+    def test_steps_unsafe(self):
+        block = StepsContent.objects.create_for_placeholder(self.placeholder)
+        image = File(open('./bluebottle/cms/tests/test_images/upload.svg'))
+
+        StepFactory.create(
+            block=block,
+            header='test header',
+            text='<script src="http://example.com"></script>Some text',
+            image=image
+        )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['blocks'][0]['type'], 'steps')
+
+        for step in response.data['blocks'][0]['steps']:
+            self.assertEqual(
+                step['text'], u'&lt;script src="http://example.com"&gt;&lt;/script&gt;Some text'
+            )
 
     def test_welcome(self):
         block = WelcomeContent.objects.create_for_placeholder(

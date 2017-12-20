@@ -168,7 +168,7 @@ class Quote(models.Model):
 
 
 class TitledContent(ContentItem):
-    title = models.CharField(max_length=40, blank=True, null=True)
+    title = models.CharField(max_length=50, blank=True, null=True)
     sub_title = models.CharField(max_length=400, blank=True, null=True)
 
     preview_template = 'admin/cms/preview/default.html'
@@ -359,7 +359,7 @@ class Step(SortableMixin, models.Model):
         upload_to='step_images/'
     )
     header = models.CharField(_("Header"), max_length=100)
-    text = models.CharField(_("Text"), max_length=400)
+    text = models.CharField(_("Text"), max_length=400, null=True, blank=True)
     sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
 
     class Meta:

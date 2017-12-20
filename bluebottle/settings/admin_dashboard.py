@@ -19,7 +19,6 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.quotes.*',
             'bluebottle.terms.*',
             'bluebottle.contact.*',
-            'bluebottle.statistics.*',
             'bluebottle.redirects.*',
             'bluebottle.cms.models.ResultPage',
             'bluebottle.cms.models.HomePage',

@@ -1,5 +1,5 @@
 import json
-import tempfile
+import os
 
 from django.core.management.commands.makemessages import Command as BaseCommand
 
@@ -16,7 +16,7 @@ class Command(BaseCommand):
     ]
 
     def handle(self, *args, **kwargs):
-        with tempfile.NamedTemporaryFile(dir='bluebottle', suffix='.py') as temp:
+        with open('bluebottle/fixtures.py', 'w') as temp:
             for app, file in self.fixtures:
                 with open('bluebottle/{}/fixtures/{}'.format(app, file)) as fixture_file:
                     strings = [
@@ -33,4 +33,6 @@ class Command(BaseCommand):
 
             temp.flush()
 
-            return super(Command, self).handle(*args, **kwargs)
+            super(Command, self).handle(*args, **kwargs)
+
+        os.unlink('bluebottle/fixtures.py')

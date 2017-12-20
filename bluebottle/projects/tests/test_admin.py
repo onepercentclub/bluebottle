@@ -148,6 +148,9 @@ class TestProjectAdmin(BluebottleTestCase):
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
+        project.account_number = 'NL86 INGB 0002 4455 88'
+        project.account_details = 'INGBNL2A'
+        project.save()
 
         with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
             self.project_admin.approve_payout(request, project.id)
@@ -156,11 +159,17 @@ class TestProjectAdmin(BluebottleTestCase):
             PAYOUT_URL, {'project_id': project.id, 'tenant': 'test'}
         )
 
-    def test_mark_payout_as_approved_validation_error(self):
+        # Check that IBAN has spaces removed
+        project = Project.objects.get(pk=project.id)
+        self.assertEqual(project.account_number, 'NL86INGB0002445588')
+
+    def test_mark_payout_as_approved_remote_validation_error(self):
         request = self.request_factory.post('/')
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
+        project.account_number = '123456123456'
+        project.save()
 
         self.mock_response.status_code = 400
         self.mock_response._content = json.dumps({'errors': {'name': ['This field is required']}})
@@ -175,11 +184,45 @@ class TestProjectAdmin(BluebottleTestCase):
             request, 'Account details: name, this field is required.', level=messages.ERROR
         )
 
+    def test_mark_payout_as_approved_local_iban_validation_error(self):
+        # Test with invalid IBAN, but starting with letter
+        request = self.request_factory.post('/')
+        request.user = MockUser(['projects.approve_payout'])
+
+        project = self._generate_completed_project()
+        project.account_number = 'HH239876'
+        project.account_details = 'RABONL2U'
+        project.save()
+
+        with mock.patch.object(self.project_admin, 'message_user') as message_mock:
+            self.project_admin.approve_payout(request, project.id)
+        message_mock.assert_called_with(
+            request, "Invalid IBAN: Unknown country-code 'HH'", level='ERROR'
+        )
+
+    def test_mark_payout_as_approved_local_validation_error(self):
+        # Test with valid IBAN and invalid BIC
+        request = self.request_factory.post('/')
+        request.user = MockUser(['projects.approve_payout'])
+
+        project = self._generate_completed_project()
+        project.account_number = 'NL86 INGB 0002 4455 88'
+        project.account_details = 'Amsterdam'
+        project.save()
+
+        with mock.patch.object(self.project_admin, 'message_user') as message_mock:
+            self.project_admin.approve_payout(request, project.id)
+        message_mock.assert_called_with(
+            request, "Invalid BIC: Invalid length '9'", level='ERROR'
+        )
+
     def test_mark_payout_as_approved_internal_server_error(self):
         request = self.request_factory.post('/')
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
+        project.account_number = '123456123456'
+        project.save()
 
         self.mock_response.status_code = 500
         self.mock_response._content = 'Internal Server Error'
@@ -201,6 +244,8 @@ class TestProjectAdmin(BluebottleTestCase):
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
+        project.account_number = '123456123456'
+        project.save()
 
         exception = requests.ConnectionError('Host not found')
 
@@ -220,18 +265,26 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.post('/')
         request.user = MockUser()
 
-        with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
-            project = ProjectFactory.create(payout_status='needs_approval')
+        project = ProjectFactory.create(payout_status='needs_approval')
+        project.account_number = '123456123456'
+        project.save()
 
-        response = self.project_admin.approve_payout(request, project.id)
-        self.assertEqual(response.status_code, 403)
+        with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
+            with mock.patch.object(self.project_admin, 'message_user') as message_mock:
+                response = self.project_admin.approve_payout(request, project.id)
+
+        self.assertEqual(response.status_code, 302)
         request_mock.assert_not_called()
+        message_mock.assert_called_with(
+            request, 'Missing permission: projects.approve_payout', level='ERROR'
+        )
 
     def test_mark_payout_as_approved_wrong_status(self):
         request = self.request_factory.post('/')
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
+        project.account_number = '123456123456'
         project.payout_status = 'done'
         project.save()
 
@@ -250,6 +303,8 @@ class TestProjectAdmin(BluebottleTestCase):
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
+        project.account_number = '123456123456'
+        project.save()
 
         # Project status should be editable
         self.assertFalse(
@@ -300,6 +355,7 @@ class TestProjectAdmin(BluebottleTestCase):
         self.assertEqual(line['Name'], reward_order.user.full_name)
         self.assertEqual(line['Order id'], str(reward_order.id))
         self.assertEqual(line['Reward'], reward.title)
+        self.assertEqual(line['Description'], reward.description)
         self.assertEqual(line['Amount'], str(reward.amount))
         self.assertEqual(line['Actual Amount'], str(donation.amount))
 

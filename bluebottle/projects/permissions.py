@@ -25,6 +25,9 @@ class IsEditableOrReadOnly(BasePermission):
     def has_action_permission(self, action, user, model_cls):
         return True
 
+    def has_parent_permission(self, method, user, parent, model=None):
+        return self.has_object_action_permission(method, user, parent)
+
 
 class CanEditOwnRunningProjects(ResourceOwnerPermission):
     """ Allows access only to obj owner. """

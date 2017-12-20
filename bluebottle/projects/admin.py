@@ -581,7 +581,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
     def get_list_display(self, request):
         fields = ['get_title_display', 'get_owner_display', 'created', 'status', 'deadline', 'donated_percentage',
-                  'amount_extra', 'expertise_based']
+                  'campaign_edited', 'amount_extra', 'expertise_based']
 
         if request.user.has_perm('projects.approve_payout'):
             fields.insert(4, 'payout_status')

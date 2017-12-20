@@ -137,6 +137,7 @@ class Stat(SortableMixin, models.Model):
         ('projects_online', _('Projects Online')),
         ('votes_cast', _('Votes casts')),
         ('time_spent', _('Time spent')),
+        ('members', _("Number of members"))
     ]
 
     type = models.CharField(

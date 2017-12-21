@@ -111,11 +111,20 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             # The date has not changed: Do not validate
             return data
 
+        project_deadline = data['project'].deadline
+        project_is_funding = data['project'].project_type in ['funding', 'both']
+        if data.get('deadline') > project_deadline and project_is_funding:
+            raise serializers.ValidationError({
+                'deadline': [
+                    _("The deadline can not be more than the project deadline")
+                ]
+            })
+
         project_started = data['project'].campaign_started or data['project'].created
         if data.get('deadline') > project_started + timedelta(days=365):
             raise serializers.ValidationError({
                 'deadline': [
-                    _("The deadline can not be more then a year after the project deadline")
+                    _("The deadline can not be more than a year after the project started")
                 ]
             })
 
@@ -159,13 +168,11 @@ class BaseTaskSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         instance = super(BaseTaskSerializer, self).create(validated_data)
         self._check_project_deadline(instance, validated_data)
-
         return instance
 
     def update(self, instance, validated_data):
         result = super(BaseTaskSerializer, self).update(instance, validated_data)
         self._check_project_deadline(instance, validated_data)
-
         return result
 
 

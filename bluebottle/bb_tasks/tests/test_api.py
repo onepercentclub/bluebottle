@@ -170,7 +170,10 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertTrue('deadline' in response.data)
 
     def test_create_task_after_project_deadline(self):
-        # Create a task with an invalid deadline
+        self.some_project.project_type = 'sourcing'
+        self.some_project.save()
+
+        # Create a task with an later deadline
         some_task_data = {
             'project': self.some_project.slug,
             'title': 'A nice task!',
@@ -195,8 +198,31 @@ class TaskApiIntegrationTests(BluebottleTestCase):
             ).deadline.strftime("%Y-%m-%d %H:%M:%S"),
         )
 
+    def test_create_task_after_funding_project_deadline(self):
+        self.some_project.project_type = 'funding'
+        self.some_project.save()
+
+        # Create a task with an later deadline
+        some_task_data = {
+            'project': self.some_project.slug,
+            'title': 'A nice task!',
+            'description': 'Well, this is nice',
+            'time_needed': 5,
+            'skill': '{0}'.format(self.skill1.id),
+            'location': 'Overthere',
+            'deadline': str(self.some_project.deadline + timedelta(days=1)),
+            'deadline_to_apply': str(self.some_project.deadline + timedelta(minutes=1))
+        }
+        response = self.client.post(self.task_url, some_task_data,
+                                    token=self.some_token)
+
+        # This should fail because
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
+                         response.data)
+
     def test_create_task_project_not_started(self):
         self.some_project.status = ProjectPhase.objects.get(slug='plan-submitted')
+        self.some_project.project_type = 'sourcing'
         self.some_project.save()
 
         # Create a task with an invalid deadline
@@ -242,6 +268,8 @@ class TaskApiIntegrationTests(BluebottleTestCase):
         self.assertTrue('closed projects' in response.data[0])
 
     def test_update_deadline(self):
+        self.some_project.project_type = 'sourcing'
+        self.some_project.save()
         future_date = timezone.now() + timezone.timedelta(days=30)
         task_data = {
             'project': self.some_project.slug,

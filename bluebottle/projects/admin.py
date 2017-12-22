@@ -14,7 +14,7 @@ from bluebottle.payments.adapters import has_payment_prodiver
 from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.projects.models import (
     ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn,
-    CustomProjectField, CustomProjectFieldSettings)
+    CustomProjectField, CustomProjectFieldSettings, ProjectCreateTemplate)
 from bluebottle.tasks.models import Skill
 from django import forms
 from django.db import connection
@@ -698,6 +698,12 @@ class ProjectSearchFilterInline(SortableTabularInline):
     extra = 0
 
 
+class ProjectCreateTemplateInline(admin.StackedInline):
+    raw_id_fields = ('organization', )
+    model = ProjectCreateTemplate
+    extra = 0
+
+
 class ProjectPlatformSettingsAdminForm(forms.ModelForm):
     class Meta:
         widgets = {
@@ -718,7 +724,8 @@ class ProjectPlatformSettingsAdmin(SingletonAdmin, NonSortableParentAdmin):
     form = ProjectPlatformSettingsAdminForm
     inlines = [
         ProjectSearchFilterInline,
-        CustomProjectFieldSettingsInline
+        CustomProjectFieldSettingsInline,
+        ProjectCreateTemplateInline
     ]
 
 

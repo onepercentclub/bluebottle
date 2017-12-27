@@ -156,5 +156,6 @@ class DocdataGatewayErrorTestCase(BluebottleTestCase):
             order_payment=order_payment
         )
 
-        with self.assertRaisesMessage(PaymentException, 'OMG'):
+        with self.assertRaisesMessage(PaymentException, 'Received unknown reply from DocData. '
+                                                        'WebDirect payment not created.'):
             self.gateway.start_remote_payment(order_key='123', payment=payment)

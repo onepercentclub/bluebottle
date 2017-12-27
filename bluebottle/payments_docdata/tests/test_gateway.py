@@ -96,6 +96,17 @@ class DocdataClientErrorMock():
                 }
             })
 
+        @staticmethod
+        def start(*args, **kwargs):
+            return bunchify({
+                'createError': {
+                    'error': {
+                        '_code': '044',
+                        'value': 'OMG'
+                    }
+                }
+            })
+
     class factory:
         @staticmethod
         def create(ns):
@@ -133,3 +144,17 @@ class DocdataGatewayErrorTestCase(BluebottleTestCase):
                 description='Donation',
                 receiptText='Thanks'
             )
+
+    def test_start_remote_payment(self, mock_client):
+        credentials = {
+            'merchant_name': 'test',
+            'merchant_password': 'top-secret',
+        }
+        self.gateway = DocdataClient(credentials)
+        order_payment = OrderPaymentFactory()
+        payment = DocdataDirectdebitPaymentFactory(
+            order_payment=order_payment
+        )
+
+        with self.assertRaisesMessage(PaymentException, 'OMG'):
+            self.gateway.start_remote_payment(order_key='123', payment=payment)

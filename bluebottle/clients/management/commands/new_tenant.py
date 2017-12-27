@@ -36,8 +36,6 @@ class Command(BaseCommand):
         domain_url = options.get('domain_url', None)
         post_command = options.get('post_command', None)
 
-        client_name.replace('_', '-')
-
         # If full-name is specified then don't prompt for any values.
         if name:
             if not client_name:
@@ -47,6 +45,8 @@ class Command(BaseCommand):
             if not domain_url:
                 base_domain = getattr(settings, 'TENANT_BASE_DOMAIN', 'localhost')
                 domain_url = '{0}.{1}'.format(client_name, base_domain)
+
+            client_name.replace('_', '-')
 
             client = self.store_client(
                 name=name,
@@ -88,6 +88,8 @@ class Command(BaseCommand):
                     input_msg = 'Domain url'
                     input_msg = "%s (leave blank to use '%s')" % (input_msg, default_domain_url)
                     domain_url = input(force_str('%s: ' % input_msg)) or default_domain_url
+
+            client_name.replace('_', '-')
 
             client = self.store_client(
                 name=name,

@@ -29,6 +29,14 @@ class DocdataClientSuccessMock():
                 }
             })
 
+        @staticmethod
+        def status(*args, **kwargs):
+            return bunchify({
+                'statusSuccess': {
+                    'report': 'Okidoki'
+                }
+            })
+
     class factory:
         @staticmethod
         def create(ns):
@@ -107,6 +115,17 @@ class DocdataClientErrorMock():
                 }
             })
 
+        @staticmethod
+        def status(*args, **kwargs):
+            return bunchify({
+                'statusError': {
+                    'error': {
+                        '_code': '044',
+                        'value': 'Payment not found here...'
+                    }
+                }
+            })
+
     class factory:
         @staticmethod
         def create(ns):
@@ -159,3 +178,45 @@ class DocdataGatewayErrorTestCase(BluebottleTestCase):
         with self.assertRaisesMessage(PaymentException, 'Received unknown reply from DocData. '
                                                         'WebDirect payment not created.'):
             self.gateway.start_remote_payment(order_key='123', payment=payment)
+
+    def test_start_remote_payment_without_order(self, mock_client):
+        credentials = {
+            'merchant_name': 'test',
+            'merchant_password': 'top-secret',
+        }
+        self.gateway = DocdataClient(credentials)
+        order_payment = OrderPaymentFactory()
+        DocdataDirectdebitPaymentFactory(
+            order_payment=order_payment
+        )
+
+        with self.assertRaisesMessage(PaymentException, 'Missing order_key!'):
+            self.gateway.start_remote_payment(order_key=None)
+
+    def test_status(self, mock_client):
+        credentials = {
+            'merchant_name': 'test',
+            'merchant_password': 'top-secret',
+        }
+        self.gateway = DocdataClient(credentials)
+        order_payment = OrderPaymentFactory()
+        DocdataDirectdebitPaymentFactory(
+            order_payment=order_payment
+        )
+
+        with self.assertRaisesMessage(PaymentException, 'Payment not found here...'):
+            self.gateway.status(order_key=123)
+
+    def test_status_without_order(self, mock_client):
+        credentials = {
+            'merchant_name': 'test',
+            'merchant_password': 'top-secret',
+        }
+        self.gateway = DocdataClient(credentials)
+        order_payment = OrderPaymentFactory()
+        DocdataDirectdebitPaymentFactory(
+            order_payment=order_payment
+        )
+
+        with self.assertRaisesMessage(PaymentException, 'Missing order_key!'):
+            self.gateway.status(order_key=None)

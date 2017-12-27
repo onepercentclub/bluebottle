@@ -1,6 +1,8 @@
 import mock
 from shutil import copyfile
 
+from bluebottle.clients.models import Client
+from django.db import connection
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.core.management import call_command
@@ -17,7 +19,7 @@ from bluebottle.orders.models import Order
 
 
 @override_settings(TENANT_APPS=('django_nose',),
-                   TENANT_MODEL='client.clients',
+                   TENANT_MODEL='clients.Client',
                    DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter', ))
 class ManagementCommandArgsTests(TestCase):
     def test_new_tenant(self):
@@ -33,7 +35,7 @@ class ManagementCommandArgsTests(TestCase):
 
 
 @override_settings(TENANT_APPS=('django_nose',),
-                   TENANT_MODEL='client.clients',
+                   TENANT_MODEL='clients.Client',
                    DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',))
 class ManagementCommandTests(TestCase):
     def test_new_tenant(self):
@@ -51,9 +53,39 @@ class ManagementCommandTests(TestCase):
             self.assertEqual(kwargs['client_name'], 'test')
             self.assertEqual(kwargs['domain_url'], 'test.localhost')
 
+    def test_create_new_tenant(self):
+        from ..management.commands.new_tenant import Command as NewTenantCommand
+        cmd = NewTenantCommand()
+        call_command(
+            cmd,
+            full_name='New Tenant',
+            schema_name='new',
+            domain_url='http://new.localhost:8000',
+            client_name='new'
+        )
+
+
+class ManagementCommandNewTenantTests(TestCase):
+
+    def test_create_new_tenant(self):
+        from ..management.commands.new_tenant import Command as NewTenantCommand
+        connection.set_schema_to_public()
+        cmd = NewTenantCommand()
+        call_command(
+            cmd,
+            full_name='New Tenant',
+            schema_name='new',
+            domain_url='http://new.localhost:8000',
+            client_name='new'
+        )
+
+        new_client = Client.objects.get(schema_name='new')
+        self.assertEqual(new_client.full_name, 'New Tenant')
+        self.assertEqual(new_client.client_name, 'new')
+
 
 @override_settings(TENANT_APPS=('django_nose',),
-                   TENANT_MODEL='client.clients',
+                   TENANT_MODEL='clients.Client',
                    DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',))
 class BulkImportTests(TestCase):
     def setUp(self):

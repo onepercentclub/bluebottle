@@ -53,17 +53,6 @@ class ManagementCommandTests(TestCase):
             self.assertEqual(kwargs['client_name'], 'test')
             self.assertEqual(kwargs['domain_url'], 'test.localhost')
 
-    def test_create_new_tenant(self):
-        from ..management.commands.new_tenant import Command as NewTenantCommand
-        cmd = NewTenantCommand()
-        call_command(
-            cmd,
-            full_name='New Tenant',
-            schema_name='new',
-            domain_url='http://new.localhost:8000',
-            client_name='new'
-        )
-
 
 class ManagementCommandNewTenantTests(TestCase):
 

@@ -80,7 +80,7 @@ class ManagementCommandNewTenantTests(TestCase):
         )
 
         new_client = Client.objects.get(schema_name='new')
-        self.assertEqual(new_client.full_name, 'New Tenant')
+        self.assertEqual(new_client.name, 'New Tenant')
         self.assertEqual(new_client.client_name, 'new')
 
 

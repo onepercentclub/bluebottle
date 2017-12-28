@@ -151,7 +151,7 @@ class TestTaskMemberMail(TaskMailTestBase):
         self.assertEquals(email.to[0], task_member.member.email)
 
     def test_member_realized_mail_with_survey(self):
-        survey = SurveyFactory(link='https://example.com/survey/1/')
+        survey = SurveyFactory(link='https://example.com/survey/1/', active=True)
 
         task_member = TaskMemberFactory.create(
             task=self.task,
@@ -168,6 +168,26 @@ class TestTaskMemberMail(TaskMailTestBase):
         self.assertNotEquals(email.subject.find("realised"), -1)
         self.assertEquals(email.to[0], task_member.member.email)
         self.assertTrue(survey.url(self.task) in email.body)
+        self.assertTrue('survey' in email.body)
+
+    def test_member_realized_mail_with_inactive_survey(self):
+        SurveyFactory(link='https://example.com/survey/1/', active=False)
+
+        task_member = TaskMemberFactory.create(
+            task=self.task,
+            status='accepted'
+        )
+
+        task_member.status = 'realized'
+        task_member.save()
+
+        self.assertEquals(len(mail.outbox), 2)
+
+        email = mail.outbox[-1]
+
+        self.assertNotEquals(email.subject.find("realised"), -1)
+        self.assertEquals(email.to[0], task_member.member.email)
+        self.assertFalse('survey' in email.body)
 
     def test_member_realized_mail_not_sent_twice(self):
         task_member = TaskMemberFactory.create(

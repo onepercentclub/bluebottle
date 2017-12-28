@@ -407,6 +407,9 @@ class TaskMember(models.Model, PreviousStatusMixin):
 
         super(TaskMember, self).save(*args, **kwargs)
 
+    def __unicode__(self):
+        return u"{} - {}".format(self.member.full_name, self.task.title)
+
 
 class TaskFile(models.Model):
     author = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')

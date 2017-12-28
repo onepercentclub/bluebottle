@@ -55,4 +55,15 @@ class Mail(TranslatableModel):
 
     action_link = models.CharField(_('Action link'), max_length=100, blank=True, null=True)
 
+    test_object = models.IntegerField(null=True, blank=True)
+    test_email = models.EmailField(null=True, blank=True)
+
+    @property
+    def test_model(self):
+        try:
+            return self.related_class.objects.get(id=self.test_object)
+        except self.related_class.DoesNotExist:
+            return None
+
+
 from signals import *  # NOQA

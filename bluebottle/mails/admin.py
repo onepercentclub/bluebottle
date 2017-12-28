@@ -34,8 +34,9 @@ def mailform_factory(obj):
 
 
 class CreateMailAdminForm(forms.ModelForm):
+
     class Meta:
-        fields = ['event']
+        fields = ('event',)
 
 
 class MailAdmin(TranslatableAdmin, SummernoteModelAdmin):
@@ -48,6 +49,11 @@ class MailAdmin(TranslatableAdmin, SummernoteModelAdmin):
         (_('Content'), {'fields': ['body_html', 'placeholder_display', ('action_link', 'action_title')]}),
     )
 
+    def get_fieldsets(self, request, obj=None):
+        if obj:
+            return super(MailAdmin, self).get_fieldsets(request, obj)
+        return [(None, {'fields': self.get_fields(request, obj)})]
+
     def get_readonly_fields(self, request, obj=None):
         return self.readonly_fields if obj else []
 
@@ -59,7 +65,7 @@ class MailAdmin(TranslatableAdmin, SummernoteModelAdmin):
         return super(MailAdmin, self).get_form(request, obj, **kwargs)
 
     def recipients_display(self, obj):
-        if len(obj.recipients):
+        if obj.recipients and len(obj.recipients):
             return ", ".join(eval(obj.recipients))
         return "-"
     recipients_display.short_description = _('Recipients')

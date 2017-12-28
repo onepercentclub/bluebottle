@@ -45,10 +45,10 @@ class Mail(TranslatableModel):
     updated = models.DateTimeField(auto_now=True)
 
     event = models.CharField(max_length=200, choices=MAIL_EVENTS)
-    recipients = models.CharField(max_length=600)
+    recipients = models.CharField(max_length=600, blank=True, null=True)
 
     translations = TranslatedFields(
-        subject=models.CharField(_('Subject'), max_length=300),
+        subject=models.CharField(_('Subject'), max_length=300, blank=True, null=True),
         body_html=models.TextField(_('Body html')),
         action_title=models.CharField(_('Action title'), max_length=100, blank=True, null=True),
     )

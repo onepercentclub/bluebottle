@@ -87,6 +87,20 @@ class PaymentsDocdataAdapterTestCase(BluebottleTestCase, FsmTestMixin):
         payment = self.adapter.payment
         self.assertEqual(payment.country, 'NL')
 
+    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
+    def test_payment_country_without_user(self, mock_client):
+        # For donations without users some defaults should be used
+        instance = mock_client.return_value
+        instance.create.return_value = {'order_key': 123, 'order_id': 123}
+        order_payment = OrderPaymentFactory(payment_method='docdataCreditcard',
+                                            integration_data={'default_pm': 'ideal'})
+        order_payment.order.user = None
+        order_payment.order.save()
+        self.adapter = DocdataPaymentAdapter(order_payment=order_payment)
+        payment = self.adapter.payment
+        self.assertEqual(payment.first_name, 'Nomen')
+        self.assertEqual(payment.last_name, 'Nescio')
+
 
 class DocdataClientMock():
     class service():

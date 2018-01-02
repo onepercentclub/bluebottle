@@ -3,6 +3,9 @@ from moneyed import Money
 from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
+
+from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
+from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
 from .models import Language
 import csv
 from django.db.models.fields.files import FieldFile
@@ -91,10 +94,34 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
         writer = csv.writer(response)
 
         if header:
-            writer.writerow(labels if labels else field_names)
+            row = labels if labels else field_names
+            # For project check if we have extra fields
+            if queryset.model is Project:
+                for field in CustomProjectFieldSettings.objects.all():
+                    labels.append(field.name)
+            if queryset.model is Member:
+                for field in CustomMemberFieldSettings.objects.all():
+                    labels.append(field.name)
+            writer.writerow(row)
 
         for obj in queryset:
-            writer.writerow([prep_field(request, obj, field, manyToManySep) for field in field_names])
+            row = [prep_field(request, obj, field, manyToManySep) for field in field_names]
+            # Write extra field data
+            if queryset.model is Project:
+                for field in CustomProjectFieldSettings.objects.all():
+                    try:
+                        value = obj.extra.get(field=field).value
+                    except CustomProjectField.DoesNotExist:
+                        value = ''
+                    row.append(value)
+            if queryset.model is Member:
+                for field in CustomMemberFieldSettings.objects.all():
+                    try:
+                        value = obj.extra.get(field=field).value
+                    except CustomMemberField.DoesNotExist:
+                        value = ''
+                    row.append(value)
+            writer.writerow(row)
         return response
 
     export_as_csv.short_description = description

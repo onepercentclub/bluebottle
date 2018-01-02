@@ -245,10 +245,6 @@ SOCIAL_AUTH_PIPELINE = (
 
 AFOM_ENABLED = False
 
-SOCIAL_AUTH_USER_FIELDS = ('username', 'email', 'first_name', 'last_name',)
-SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
-SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
-
 SHARED_APPS = (
     'tenant_schemas',
     'bluebottle.clients',  # you must list the app where your tenant model resides in
@@ -509,6 +505,9 @@ LOGGING = {
 # Custom User model
 AUTH_USER_MODEL = 'members.Member'
 
+SOCIAL_AUTH_USER_FIELDS = ('username', 'email', 'first_name', 'last_name',)
+SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
+SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 SOCIAL_AUTH_USER_MODEL = 'members.Member'
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_friends', 'public_profile', 'user_birthday']
 SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [('birthday', 'birthday')]

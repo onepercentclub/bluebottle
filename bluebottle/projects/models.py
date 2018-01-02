@@ -20,6 +20,7 @@ from django_extensions.db.fields import ModificationDateTimeField, CreationDateT
 
 from django_summernote.models import AbstractAttachment
 from moneyed.classes import Money
+from polymorphic.models import PolymorphicModel
 from select_multiple_field.models import SelectMultipleField
 
 from bluebottle.analytics.tasks import queue_analytics_record
@@ -143,6 +144,8 @@ class Project(BaseProject, PreviousStatusMixin):
                                             blank=True)
     campaign_ended = models.DateTimeField(_('Campaign Ended'), null=True,
                                           blank=True)
+    campaign_edited = models.DateTimeField(_('Campaign edited'), null=True,
+                                           blank=True)
     campaign_funded = models.DateTimeField(_('Campaign Funded'), null=True,
                                            blank=True)
     campaign_paid_out = models.DateTimeField(_('Campaign Paid Out'), null=True,
@@ -560,6 +563,7 @@ class Project(BaseProject, PreviousStatusMixin):
             ('api_read_own_project', 'Can view own projects through the API'),
             ('api_add_own_project', 'Can add own projects through the API'),
             ('api_change_own_project', 'Can change own projects through the API'),
+            ('api_change_own_running_project', 'Can change own running projects through the API'),
             ('api_delete_own_project', 'Can delete own projects through the API'),
 
             ('api_read_projectdocument', 'Can view project documents through the API'),
@@ -679,6 +683,14 @@ class ProjectBudgetLine(models.Model):
         return u'{0} - {1}'.format(self.description, self.amount)
 
 
+class ProjectAddOn(PolymorphicModel):
+
+    type = 'base'
+
+    project = models.ForeignKey('projects.Project', related_name='addons')
+    serializer = 'bluebottle.projects.serializers.BaseProjectAddOnSerializer'
+
+
 class ProjectImage(AbstractAttachment):
     """
     Project Image: Image that is directly associated with the project.
@@ -737,6 +749,30 @@ class ProjectSearchFilter(SortableMixin):
 
     class Meta:
         ordering = ['sequence']
+
+
+class CustomProjectFieldSettings(SortableMixin):
+
+    project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
+                                         null=True,
+                                         related_name='extra_fields')
+
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=200, null=True, blank=True)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    @property
+    def slug(self):
+        return slugify(self.name)
+
+    class Meta:
+        ordering = ['sequence']
+
+
+class CustomProjectField(models.Model):
+    project = models.ForeignKey('projects.Project', related_name='extra')
+    field = models.ForeignKey('projects.CustomProjectFieldSettings')
+    value = models.CharField(max_length=5000, null=True, blank=True)
 
 
 class ProjectPlatformSettings(BasePlatformSettings):

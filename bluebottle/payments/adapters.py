@@ -8,6 +8,16 @@ from bluebottle.payments.models import Payment
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
 
 
+def has_payment_prodiver(provider):
+    try:
+        for account in properties.MERCHANT_ACCOUNTS:
+            if account['merchant'] == provider:
+                return True
+    except AttributeError:
+        pass
+    return False
+
+
 class BasePaymentAdapter(object):
     """
     This is the abstract base class that should be used by all PaymentAdapters.

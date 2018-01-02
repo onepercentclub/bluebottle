@@ -90,6 +90,7 @@ install_requires = [
     'raven==6.1.0',
     'regex==2017.05.26',
     'requests==2.17.3',
+    'schwifty==2.1.0',
     'sorl-thumbnail==12.3-github',
     'sorl-watermark==1.0.0',
     'South==1.0.2',

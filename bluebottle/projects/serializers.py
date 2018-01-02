@@ -1,4 +1,5 @@
 import re
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -17,11 +18,13 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import (
     ProjectBudgetLine, ProjectDocument, Project, ProjectImage,
-    ProjectPlatformSettings, ProjectSearchFilter)
+    ProjectPlatformSettings, ProjectSearchFilter,
+    ProjectAddOn)
 from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.utils.serializers import (MoneySerializer, ResourcePermissionField,
                                           RelatedResourcePermissionField)
 from bluebottle.utils.fields import SafeField
+from bluebottle.utils.utils import get_class
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 from bluebottle.votes.models import Vote
 
@@ -83,13 +86,38 @@ class ProjectPermissionsSerializer(serializers.Serializer):
     rewards = RelatedResourcePermissionField('reward-list')
     donations = RelatedResourcePermissionField('order-manage-list')
     tasks = RelatedResourcePermissionField('task-list')
+    manage_project = RelatedResourcePermissionField('project_manage_detail', view_args=('slug', ))
 
     class Meta:
-        fields = ('rewards', 'donations', 'tasks')
+        fields = ('rewards', 'donations', 'tasks', 'manage_project')
+
+
+class BaseProjectAddOnSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProjectAddOn
+        fields = ('id', 'type')
+
+
+class ProjectAddOnSerializer(serializers.ModelSerializer):
+
+    type = serializers.ReadOnlyField(required=False)
+
+    def to_representation(self, obj):
+        """
+        Project Add On Polymorphic serialization
+        """
+        AddOnSerializer = get_class(obj.serializer)
+        return AddOnSerializer(obj, context=self.context).to_representation(obj)
+
+    class Meta:
+        model = ProjectAddOn
+        fields = ('id', 'type')
 
 
 class ProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
+    addons = ProjectAddOnSerializer(many=True)
     amount_asked = MoneySerializer()
     amount_donated = MoneySerializer()
     amount_extra = MoneySerializer()
@@ -124,6 +152,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id',
+                  'addons',
                   'allow_overfunding',
                   'amount_asked',
                   'amount_donated',
@@ -274,6 +303,8 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     permissions = ResourcePermissionField('project_manage_detail', view_args=('slug', ))
     related_permissions = ProjectPermissionsSerializer(read_only=True)
 
+    editable_fields = ('pitch', 'story', 'image', 'video_url')
+
     @staticmethod
     def validate_account_number(value):
 
@@ -337,6 +368,29 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                 if proposed_status != submit_status or current_status not in [new_status, needs_work_status]:
                     raise serializers.ValidationError(_("You can not change the project state."))
         return value
+
+    def validate(self, data):
+        if self.instance and self.instance.status.slug in ('campaign', 'voting'):
+            # When project is running, only a subset of the fields canb be changed
+            for field, value in data.items():
+                current = getattr(self.instance, field)
+
+                if field not in self.editable_fields:
+                    try:
+                        # If we check a many to many field, make convert both sides to a set
+                        current = set(current.all())
+                        value = set(value)
+                    except (AttributeError, TypeError):
+                        # normal field: do nothing
+                        pass
+
+                    if value != current:
+                        raise serializers.ValidationError(
+                            _('Not allowed to edit {} when project is running').format(field)
+                        )
+                self.instance.campaign_edited = timezone.now()
+
+        return data
 
     class Meta:
         model = Project

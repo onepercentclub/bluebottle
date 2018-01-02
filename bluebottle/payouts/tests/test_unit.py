@@ -9,7 +9,6 @@ from django.utils import timezone
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.donations.models import Donation
 from bluebottle.payouts.models import ProjectPayout
-from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
@@ -55,11 +54,6 @@ class PayoutBaseTestCase(BluebottleTestCase):
             amount=60
         )
         self.donation2.save()
-
-    def _reload_project(self):
-        # Stale project instances aren't updated, so we have to reload it
-        # from the db again.
-        self.project = Project.objects.get(pk=self.project.id)
 
 
 @override_settings(
@@ -117,7 +111,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -159,7 +153,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -179,7 +173,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -195,7 +189,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         """ Test amounts for new donations. """
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -220,7 +214,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -249,7 +243,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -286,7 +280,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -320,7 +314,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -353,7 +347,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation2.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project_incomplete.status = ProjectPhase.objects.get(slug='done-incomplete')
         self.project_incomplete.save()
 
@@ -387,7 +381,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -421,7 +415,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation2.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project_incomplete.status = ProjectPhase.objects.get(
             slug='done-incomplete')
         self.project_incomplete.save()
@@ -471,7 +465,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         beneath_threshold_project.status = ProjectPhase.objects.get(
             slug='done-incomplete')
         beneath_threshold_project.save()
@@ -568,7 +562,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -592,7 +586,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -615,7 +609,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.save()
 
         # Update phase to act.
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -635,7 +629,7 @@ class PayoutTestCase(PayoutBaseTestCase):
         self.donation.order.pending()
         self.donation.order.save()
 
-        self._reload_project()
+        self.project.refresh_from_db()
         self.assertEqual(self.project.amount_donated, Money(60, 'EUR'))
 
         payout1 = ProjectPayoutFactory.create(
@@ -709,7 +703,7 @@ class PayoutPledgeTestCase(PayoutBaseTestCase):
         pledge.order.save()
 
         # Update phase to done-completed
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 
@@ -739,7 +733,7 @@ class PayoutPledgeTestCase(PayoutBaseTestCase):
         pledge.order.save()
 
         # Update phase to done-completed
-        self._reload_project()
+        self.project.refresh_from_db()
         self.project.status = ProjectPhase.objects.get(slug='done-complete')
         self.project.save()
 

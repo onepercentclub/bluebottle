@@ -5,9 +5,6 @@ import decimal
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
-from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse
-from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from bluebottle.bb_payouts.models import (ProjectPayoutLog,
@@ -315,33 +312,6 @@ class LegacyPayoutListFilter(admin.SimpleListFilter):
             return queryset.filter(payout_rule=self.value())
 
 
-class OrganizationPayoutAdmin(BaseOrganizationPayoutAdmin):
-    actions = ('export_sepa',)
-
-    def export_sepa(self, request, queryset):
-        """
-        Dowload a sepa file with selected ProjectPayments
-        """
-        objs = queryset.all()
-        if not request.user.is_staff:
-            raise PermissionDenied
-        response = HttpResponse(mimetype='text/xml')
-        date = timezone.datetime.strftime(timezone.now(), '%Y%m%d%H%I%S')
-        response['Content-Disposition'] = 'attachment; ' \
-                                          'filename=payments_sepa%s.xml' % date
-        response.write(OrganizationPayout.create_sepa_xml(objs))
-        return response
-
-    export_sepa.short_description = "Export SEPA file."
-
-
-try:
-    admin.site.unregister(OrganizationPayout)
-except NotRegistered:
-    pass
-admin.site.register(OrganizationPayout, OrganizationPayoutAdmin)
-
-
 class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
     list_display = ['payout', 'status', 'admin_project', 'amount_pending',
                     'amount_raised', 'amount_pledged', 'amount_payable',
@@ -361,7 +331,7 @@ class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
     ]
 
     actions = ('change_status_to_new', 'change_status_to_progress',
-               'change_status_to_settled', 'export_sepa', 'recalculate_amounts',
+               'change_status_to_settled', 'recalculate_amounts',
                export_as_csv_action(fields=export_fields))
 
     def get_list_filter(self, request):
@@ -372,22 +342,6 @@ class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
             return ['status', PayoutListFilter, LegacyPayoutListFilter]
         else:
             return ['status', PayoutListFilter]
-
-    def export_sepa(self, request, queryset):
-        """
-        Dowload a sepa file with selected ProjectPayments
-        """
-        objs = queryset.all()
-        if not request.user.is_staff:
-            raise PermissionDenied
-        response = HttpResponse()
-        date = timezone.datetime.strftime(timezone.now(), '%Y%m%d%H%I%S')
-        response['Content-Disposition'] = 'attachment; ' \
-                                          'filename=payments_sepa%s.xml' % date
-        response.write(ProjectPayout.create_sepa_xml(objs))
-        return response
-
-    export_sepa.short_description = "Export SEPA file."
 
 
 try:

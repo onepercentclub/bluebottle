@@ -9,6 +9,8 @@ class DocdataPaymentFactory(factory.DjangoModelFactory):
 
 
 class DocdataDirectdebitPaymentFactory(factory.DjangoModelFactory):
+    total_gross_amount = 500.00
+
     class Meta(object):
         model = DocdataDirectdebitPayment
 

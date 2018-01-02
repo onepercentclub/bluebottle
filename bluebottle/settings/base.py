@@ -350,7 +350,6 @@ TENANT_APPS = (
     'bluebottle.terms',
     'bluebottle.votes',
     'bluebottle.social',
-    'bluebottle.csvimport',
     'bluebottle.rewards',
 
     # Custom dashboard

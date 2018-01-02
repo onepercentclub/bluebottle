@@ -20,6 +20,7 @@ class Survey(models.Model):
     created = CreationDateTimeField()
     updated = ModificationDateTimeField()
     last_synced = models.DateTimeField(null=True)
+    active = models.BooleanField(default=False, help_text=_('Should this survey be used in emails?'))
 
     @property
     def questions(self):
@@ -32,7 +33,7 @@ class Survey(models.Model):
     @classmethod
     def url(cls, project_or_task, user_type='task_member'):
         try:
-            survey = cls.objects.order_by('-created').all()[0]
+            survey = cls.objects.filter(active=True).order_by('-created').all()[0]
         except IndexError:
             return None
 

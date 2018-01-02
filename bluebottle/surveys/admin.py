@@ -30,7 +30,7 @@ class QuestionAdminInline(admin.StackedInline):
 class SurveyAdmin(admin.ModelAdmin):
     model = Survey
     readonly_fields = ('title', 'link', 'created', 'updated')
-    fields = ('remote_id', 'last_synced') + readonly_fields
+    fields = ('remote_id', 'last_synced', 'active') + readonly_fields
     list_display = ('title', 'last_synced', 'response_count')
 
     inlines = [QuestionAdminInline]

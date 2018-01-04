@@ -37,7 +37,8 @@
 		"goal": 10000000,
 		"video": "https://www.youtube.com/watch?v=n1ncordnTMc",
 		"image": "file:///tmp/test-image.png",
-		"categories": ["awesome-actors"]
+		"categories": ["awesome-actors"],
+		"account_number": "NL39RABO0300065264"
 	}],
 
 	"tasks": [{

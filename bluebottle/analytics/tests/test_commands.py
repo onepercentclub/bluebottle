@@ -1,7 +1,6 @@
 import os
 from argparse import ArgumentTypeError
 from datetime import datetime
-from pendulum import Pendulum
 
 import pytz
 from django.conf import settings
@@ -31,7 +30,6 @@ from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.surveys import SurveyFactory, QuestionFactory, AnswerFactory, ResponseFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
@@ -144,7 +142,6 @@ class TestEngagementMetricsXls(BluebottleTestCase):
         self.command = EngagementCommand()
 
     def test_xls_generation(self):
-
         with patch.object(self.command, 'get_xls_file_name', return_value=self.xls_file_name):
             call_command(self.command, '--start', '{}-01-01'.format(self.year),
                          '--end', '{}-12-31'.format(self.year), '--export-to', 'xls')
@@ -237,53 +234,27 @@ class TestParticipationXls(BluebottleTestCase):
                 task_member.status = TaskMember.TaskMemberStatuses.realized
                 task_member.save()
 
-        # Survey
-        self.survey = SurveyFactory(title="My Questionnaire")
-        self.questions = QuestionFactory.create_batch(10, survey=self.survey)
-        responses = ResponseFactory.create_batch(10, survey=self.survey, project=project1)
-        for response in responses:
-            for question in self.questions:
-                AnswerFactory.create(question=question, response=response)
-
         # xls export
         self.xls_file_name = 'test.xlsx'
         self.xls_file_path = os.path.join(settings.PROJECT_ROOT, self.xls_file_name)
         self.command = ParticipationCommand()
 
-    def test_export_is_broken(self):
-        with patch('pendulum.now', return_value=Pendulum(self.year, 1, 6)):
-            with patch.object(self.command, 'get_xls_file_name', return_value=self.xls_file_name):
-                with self.assertRaises(TypeError):
-                    call_command(self.command, '--start', self.year, '--end', self.year, '--tenant', 'test')
-
     def test_export(self):
-        # FIXME: mocking pendulum.now until we fix the participants export to handle a date now
-        #        in early January
-        with patch('pendulum.now', return_value=Pendulum(self.year, 12, 31)):
-            with patch.object(self.command, 'get_xls_file_name', return_value=self.xls_file_name):
-                call_command(self.command, '--start', self.year, '--end', self.year, '--tenant', 'test')
-                self.assertTrue(os.path.isfile(self.xls_file_path), True)
-                workbook = load_workbook(filename=self.xls_file_path, read_only=True)
+        with patch.object(self.command, 'get_xls_file_name', return_value=self.xls_file_name):
+            call_command(self.command, '--start', self.year, '--end', self.year, '--tenant', 'test')
+            self.assertTrue(os.path.isfile(self.xls_file_path), True)
+            workbook = load_workbook(filename=self.xls_file_path, read_only=True)
 
-                # Check participants
-                self.assertEqual(workbook.worksheets[0]['A1'].value, 'Email Address')
-                self.assertEqual(workbook.worksheets[0]['A2'].value, self.users[0].email)
-                self.assertEqual(workbook.worksheets[0]['A3'].value, self.users[11].email)
+            # Check participants
+            self.assertEqual(workbook.worksheets[0]['A1'].value, 'Email Address')
+            self.assertEqual(workbook.worksheets[0]['A2'].value, self.users[0].email)
+            self.assertEqual(workbook.worksheets[0]['A3'].value, self.users[11].email)
 
-                # Check some sheet titles
-                self.assertEqual(workbook.worksheets[0].title, 'Participants - {}'.format(self.year))
-                self.assertEqual(workbook.worksheets[1].title, 'Totals - {}'.format(self.year))
-                self.assertEqual(workbook.worksheets[6].title, 'Location Segmentation - {}'.format(self.year))
-                self.assertEqual(workbook.worksheets[7].title, 'Theme Segmentation - {}'.format(self.year))
-                self.assertEqual(workbook.worksheets[8].title, 'Impact Survey - {}'.format(self.year))
-
-                # Check survey responses (should be 10, all in February)
-                self.assertEqual(workbook.worksheets[8]['G1'].value, 'Number responses for My Questionnaire')
-                self.assertEqual(workbook.worksheets[8]['G3'].value, 10)
-                self.assertEqual(workbook.worksheets[8]['D5'].value, 'January')
-                self.assertEqual(workbook.worksheets[8]['G5'].value, 0)
-                self.assertEqual(workbook.worksheets[8]['D6'].value, 'February')
-                self.assertEqual(workbook.worksheets[8]['G6'].value, 10)
+            # Check some sheet titles
+            self.assertEqual(workbook.worksheets[0].title, 'Participants - {}'.format(self.year))
+            self.assertEqual(workbook.worksheets[1].title, 'Totals - {}'.format(self.year))
+            self.assertEqual(workbook.worksheets[6].title, 'Location Segmentation - {}'.format(self.year))
+            self.assertEqual(workbook.worksheets[7].title, 'Theme Segmentation - {}'.format(self.year))
 
 
 @override_settings(TENANT_APPS=('django_nose',),

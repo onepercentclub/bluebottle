@@ -49,7 +49,7 @@ class Command(BaseCommand):
 
         self.yearly_statistics_row_start = 1
         self.monthly_statistics_row_start = 4
-        self.monthly_statistics_row_end = None
+        self.monthly_statistics_row_end = 4
         self.weekly_statistics_row_start = 17
         self.weekly_statistics_row_end = None
 
@@ -163,7 +163,6 @@ class Command(BaseCommand):
                 self.generate_worksheet(workbook, 'aggregated')
                 self.generate_worksheet(workbook, 'location_segmentation')
                 self.generate_worksheet(workbook, 'theme_segmentation')
-                self.generate_worksheet(workbook, 'impact_survey')
 
         if self.to_email:
             with open(self.file_path, 'r') as f:

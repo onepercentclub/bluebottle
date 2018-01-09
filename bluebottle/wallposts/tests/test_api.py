@@ -772,7 +772,7 @@ class TestDonationWallpost(BluebottleTestCase):
     def test_donation_wallposts(self):
         # Create a donation and set it to settled to trigger wallpost
         order = OrderFactory.create(user=self.user)
-        donation = DonationFactory.create(project=self.some_project, order=order)
+        donation = DonationFactory.create(project=self.some_project, order=order, fundraiser=None)
         order.locked()
         order.success()
         order.save()

@@ -397,18 +397,21 @@ class CustomIndexDashboard(FluentIndexDashboard):
         self.children.append(EndedProjects())
         self.children.append(RecentTasks())
         if context['request'].user.has_perm('sites.export'):
+            metrics_children = [
+                {
+                    'title': _('Export metrics'),
+                    'url': reverse_lazy('exportdb_export'),
+                },
+            ]
+            if properties.REPORTING_BACKOFFICE_ENABLED:
+                metrics_children.append({
+                    'title': _('Download report'),
+                    'url': reverse_lazy('report-export'),
+                })
+
             self.children.append(LinkList(
                 _('Export Metrics'),
-                children=[
-                    {
-                        'title': _('Export metrics'),
-                        'url': reverse_lazy('exportdb_export'),
-                    },
-                    {
-                        'title': _('Download report'),
-                        'url': reverse_lazy('report-export'),
-                    }
-                ]
+                children=metrics_children
             ))
         if properties.ANALYTICS_BACKOFFICE_ENABLED:
             self.children.append(MetricsModule(title=_("Metrics"),))

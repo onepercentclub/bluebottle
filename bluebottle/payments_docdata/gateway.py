@@ -35,12 +35,7 @@ __all__ = (
     'Amount',
 
     'Payment',
-    'AmexPayment',
-    'MasterCardPayment',
     'DirectDebitPayment',
-    'IdealPayment',
-    'BankTransferPayment',
-    'ElvPayment',
 )
 
 
@@ -248,14 +243,6 @@ class DocdataClient(object):
 
             paymentRequestInput.directDebitPaymentInput = PaymentInput.to_xml(
                 self.client.factory)
-
-        if payment_method == 'MASTERCARD':
-            paymentRequestInput.paymentMethod = 'MASTERCARD'
-            PaymentInput = MasterCardPayment(credit_card_number=None,
-                                             expiry_date=None,
-                                             cvc2=None,
-                                             card_holder=None,
-                                             email_address=None)
 
         # Execute start payment request.
         reply = self.client.service.start(self.merchant, order_key,
@@ -635,56 +622,6 @@ class Payment(object):
                 self.__class__.__name__))
 
 
-class AmexPayment(Payment):
-    """
-    American Express payment.
-    """
-    payment_method = DocdataClient.PAYMENT_METHOD_AMEX
-    request_parameter = 'amexPaymentInput'
-
-    def __init__(self, credit_card_number, expiry_date, cid, card_holder,
-                 email_address):
-        self.credit_card_number = credit_card_number
-        self.expiry_date = expiry_date
-        self.cid = cid
-        self.card_holder = card_holder
-        self.email_address = email_address
-
-    def to_xml(self, factory):
-        node = factory.create('ns0:amexPaymentInput')
-        node.creditCardNumber = self.credit_card_number
-        node.expiryDate = self.expiry_date
-        node.cid = self.cid
-        node.cardHolder = unicode(self.card_holder)
-        node.emailAddress = self.email_address
-        return node
-
-
-class MasterCardPayment(Payment):
-    """
-    Mastercard payment
-    """
-    payment_method = DocdataClient.PAYMENT_METHOD_MASTERCARD
-    request_parameter = 'masterCardPaymentInput'
-
-    def __init__(self, credit_card_number, expiry_date, cvc2, card_holder,
-                 email_address):
-        self.credit_card_number = credit_card_number
-        self.expiry_date = expiry_date
-        self.cvc2 = cvc2
-        self.card_holder = unicode(card_holder)
-        self.email_address = email_address
-
-    def to_xml(self, factory):
-        node = factory.create('ns0:masterCardPaymentInput')
-        node.creditCardNumber = self.credit_card_number
-        node.expiryDate = self.expiry_date
-        node.cvc2 = self.cvc2
-        node.cardHolder = unicode(self.card_holder)
-        node.emailAddress = self.email_address
-        return node
-
-
 class DirectDebitPayment(Payment):
     """
     Direct debit payment.
@@ -710,48 +647,4 @@ class DirectDebitPayment(Payment):
         node.holderCountry = country
         node.bic = self.bic
         node.iban = self.iban
-        return node
-
-
-class IdealPayment(DirectDebitPayment):
-    """
-    Direct debit payment in The Netherlands.
-    The visitor is redirected to the bank website where the payment is made,
-    and then redirected back to the gateway.
-    """
-    payment_method = 'IDEAL'
-
-
-class BankTransferPayment(Payment):
-    """
-    Bank transfer.
-    https://support.docdatapayments.com/index.php?_m=knowledgebase&_a=viewarticle&kbarticleid=141&nav=0,7
-    """
-    payment_method = DocdataClient.PAYMENT_METHOD_BANK_TRANSFER
-    request_parameter = 'bankTransferPaymentInput'
-
-    def __init__(self, email_address):
-        self.email_address = email_address
-
-    def to_xml(self, factory):
-        node = factory.create('ns0:bankTransferPaymentInput')
-        node.emailAddress = self.email_address
-        return node
-
-
-class ElvPayment(Payment):
-    """
-    The German Electronic Direct Debit (Elektronisches Lastschriftverfahren or ELV)
-    """
-    payment_method = DocdataClient.PAYMENT_METHOD_ELV
-    request_parameter = 'elvPaymentInput'
-
-    def __init__(self, account_number, bank_code):
-        self.account_number = account_number
-        self.bank_code = bank_code
-
-    def to_xml(self, factory):
-        node = factory.create('ns0:elvPaymentInput')
-        node.accountNumber = self.account_number
-        node.bankCode = self.bank_code
         return node

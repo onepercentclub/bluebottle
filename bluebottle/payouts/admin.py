@@ -7,9 +7,11 @@ from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
 from django.utils.translation import ugettext as _
 
-from bluebottle.bb_payouts.models import ProjectPayoutLog
+from bluebottle.bb_payouts.models import (ProjectPayoutLog,
+                                          OrganizationPayoutLog)
 from bluebottle.clients import properties
-from bluebottle.payouts.models import ProjectPayout
+from bluebottle.payouts.models import ProjectPayout, OrganizationPayout
+from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.utils import StatusDefinition
 
 from .admin_utils import link_to
@@ -27,6 +29,10 @@ class PayoutLogBase(admin.TabularInline):
 
 class PayoutLogInline(PayoutLogBase):
     model = ProjectPayoutLog
+
+
+class OrganizationPayoutLogInline(PayoutLogBase):
+    model = OrganizationPayoutLog
 
 
 class ProjectPayoutForm(forms.ModelForm):
@@ -195,6 +201,69 @@ class BaseProjectPayoutAdmin(BasePayoutAdmin):
 admin.site.register(ProjectPayout, BaseProjectPayoutAdmin)
 
 
+class BaseOrganizationPayoutAdmin(BasePayoutAdmin):
+    inlines = [OrganizationPayoutLogInline]
+
+    can_delete = False
+
+    search_fields = ['invoice_reference']
+
+    date_hierarchy = 'start_date'
+
+    list_filter = ['status', ]
+
+    list_display = [
+        'invoice_reference', 'start_date', 'end_date', 'status',
+        'organization_fee_incl', 'psp_fee_incl',
+        'other_costs_incl', 'payable_amount_incl'
+    ]
+
+    readonly_fields = [
+        'invoice_reference', 'organization_fee_excl', 'organization_fee_vat',
+        'organization_fee_incl', 'psp_fee_excl', 'psp_fee_vat', 'psp_fee_incl',
+        'payable_amount_excl', 'payable_amount_vat', 'payable_amount_incl',
+        'other_costs_vat', 'status'
+    ]
+
+    fieldsets = (
+        (None, {
+            'fields': (
+                'status', 'invoice_reference'
+            )
+        }),
+        (_('Dates'), {
+            'fields': (
+                'start_date', 'end_date', 'planned', 'completed'
+            )
+        }),
+        (_('Organization fee'), {
+            'fields': (
+                'organization_fee_excl', 'organization_fee_vat',
+                'organization_fee_incl'
+            )
+        }),
+        (_('PSP fee'), {
+            'fields': (
+                'psp_fee_excl', 'psp_fee_vat', 'psp_fee_incl'
+            )
+        }),
+        (_('Other costs'), {
+            'fields': (
+                'other_costs_excl', 'other_costs_vat', 'other_costs_incl'
+            )
+        }),
+        (_('Amount payable'), {
+            'fields': (
+                'payable_amount_excl', 'payable_amount_vat',
+                'payable_amount_incl'
+            )
+        })
+    )
+
+
+admin.site.register(OrganizationPayout, BaseOrganizationPayoutAdmin)
+
+
 class PayoutListFilter(admin.SimpleListFilter):
     title = _('Payout rule')
     parameter_name = 'payout_rule'
@@ -246,6 +315,7 @@ class LegacyPayoutListFilter(admin.SimpleListFilter):
 class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
     list_display = ['payout', 'status', 'admin_project', 'amount_pending',
                     'amount_raised', 'amount_pledged', 'amount_payable',
+                    # 'percent',
                     'admin_has_iban', 'created_date',
                     'submitted_date', 'completed_date']
 
@@ -259,6 +329,10 @@ class ProjectPayoutAdmin(BaseProjectPayoutAdmin):
         ('created', 'created'),
         ('submitted', 'submitted')
     ]
+
+    actions = ('change_status_to_new', 'change_status_to_progress',
+               'change_status_to_settled', 'recalculate_amounts',
+               export_as_csv_action(fields=export_fields))
 
     def get_list_filter(self, request):
         # If site has a legacy payout rule then display the legacy filter

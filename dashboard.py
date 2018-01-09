@@ -403,6 +403,10 @@ class CustomIndexDashboard(FluentIndexDashboard):
                     {
                         'title': _('Export metrics'),
                         'url': reverse_lazy('exportdb_export'),
+                    },
+                    {
+                        'title': _('Download report'),
+                        'url': reverse_lazy('report-export'),
                     }
                 ]
             ))

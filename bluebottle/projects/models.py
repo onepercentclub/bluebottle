@@ -144,6 +144,8 @@ class Project(BaseProject, PreviousStatusMixin):
                                             blank=True)
     campaign_ended = models.DateTimeField(_('Campaign Ended'), null=True,
                                           blank=True)
+    campaign_edited = models.DateTimeField(_('Campaign edited'), null=True,
+                                           blank=True)
     campaign_funded = models.DateTimeField(_('Campaign Funded'), null=True,
                                            blank=True)
     campaign_paid_out = models.DateTimeField(_('Campaign Paid Out'), null=True,
@@ -561,6 +563,7 @@ class Project(BaseProject, PreviousStatusMixin):
             ('api_read_own_project', 'Can view own projects through the API'),
             ('api_add_own_project', 'Can add own projects through the API'),
             ('api_change_own_project', 'Can change own projects through the API'),
+            ('api_change_own_running_project', 'Can change own running projects through the API'),
             ('api_delete_own_project', 'Can delete own projects through the API'),
 
             ('api_read_projectdocument', 'Can view project documents through the API'),

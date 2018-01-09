@@ -19,7 +19,6 @@ class IsEditableOrReadOnly(BasePermission):
 
         if action in permissions.SAFE_METHODS:
             return True
-
         return obj.status.editable
 
     def has_action_permission(self, action, user, model_cls):
@@ -45,3 +44,6 @@ class CanEditOwnRunningProjects(ResourceOwnerPermission):
         return super(CanEditOwnRunningProjects, self).has_object_action_permission(
             action, user, obj
         ) and obj.status.slug in ('campaign', 'voting')
+
+    def has_parent_permission(self, method, user, parent, model=None):
+        return self.has_object_action_permission(method, user, parent)

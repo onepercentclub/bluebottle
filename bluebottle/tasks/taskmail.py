@@ -89,6 +89,28 @@ class TaskMemberAcceptedMail(TaskMemberMailSender):
                 'author': self.task.author.get_short_name()}
 
 
+class TaskMemberJoinedMail(TaskMemberMailSender):
+    template_name = 'task_member_auto_accepted.mail'
+
+    def __init__(self, *args, **kwargs):
+        TaskMemberMailSender.__init__(self, *args, **kwargs)
+        self.ctx['motivation'] = self.task_member.motivation
+
+    @property
+    def subject(self):
+        with TenantLanguage(self.task_member.member.primary_language):
+            return _('%(member)s joined your task') % {
+                'member': self.task_member.member.get_short_name()}
+
+    @property
+    def receiver(self):
+        return self.task.author
+
+    @property
+    def sender(self):
+        return self.task_member.member
+
+
 class TaskMemberRealizedMail(TaskMemberMailSender):
     template_name = 'task_member_realized.mail'
 
@@ -142,8 +164,14 @@ class TaskMemberMailAdapter:
         if not status:
             status = instance.status
         # If a mailer is provided for the task status, set the mail_sender
+        self.mail_sender = self.TASK_MEMBER_MAIL.get(status)(instance, message)
+
+        # Set up some special mail rules for Tasks with auto accepting
         if self.TASK_MEMBER_MAIL.get(status):
-            self.mail_sender = self.TASK_MEMBER_MAIL.get(status)(instance, message)
+            if TaskMember.task.accepting == Task.TaskAcceptingChoices.automatic:
+                if TaskMember.TaskMemberStatuses.accepted:
+                    # Task member was auto-accepted
+                    self.mail_sender = TaskMemberJoinedMail
 
     def send_mail(self):
         if self.mail_sender:

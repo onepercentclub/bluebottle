@@ -209,6 +209,27 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
             response.data['related_permissions']['rewards']['POST'], False
         )
 
+    def test_non_owner_edit_permissions(self):
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        # view allowed
+        response = self.client.get(self.project_detail_url, token=self.not_owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.data['permissions']['GET'], True
+        )
+
+        self.assertEqual(
+            response.data['related_permissions']['manage_project']['PUT'], False
+        )
+
     def test_anonymous_permissions(self):
         # view allowed
         response = self.client.get(self.project_detail_url)

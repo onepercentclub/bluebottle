@@ -429,7 +429,7 @@ class TestTaskStatus(BluebottleTestCase):
 
 class TestTaskSearchDate(BluebottleTestCase):
     def test_day_start_method(self):
-        from bluebottle.bb_tasks.views import day_start
+        from bluebottle.tasks.views import day_start
 
         date_str = '2016-08-09T15:45:29.275632Z'
         result = day_start(date_str)

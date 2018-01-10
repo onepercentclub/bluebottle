@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from bluebottle.bb_tasks.views import TaskMemberResumeView
+from bluebottle.tasks.views import TaskMemberResumeView
 
 
 urlpatterns = [

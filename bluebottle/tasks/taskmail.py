@@ -90,7 +90,7 @@ class TaskMemberAcceptedMail(TaskMemberMailSender):
 
 
 class TaskMemberJoinedMail(TaskMemberMailSender):
-    template_name = 'task_member_auto_accepted.mail'
+    template_name = 'task_member_joined.mail'
 
     def __init__(self, *args, **kwargs):
         TaskMemberMailSender.__init__(self, *args, **kwargs)
@@ -167,11 +167,10 @@ class TaskMemberMailAdapter:
         self.mail_sender = self.TASK_MEMBER_MAIL.get(status)(instance, message)
 
         # Set up some special mail rules for Tasks with auto accepting
-        if self.TASK_MEMBER_MAIL.get(status):
-            if TaskMember.task.accepting == Task.TaskAcceptingChoices.automatic:
-                if TaskMember.TaskMemberStatuses.accepted:
-                    # Task member was auto-accepted
-                    self.mail_sender = TaskMemberJoinedMail
+        if instance.task.accepting == Task.TaskAcceptingChoices.automatic:
+            if instance.status == TaskMember.TaskMemberStatuses.accepted:
+                # Task member was auto-accepted
+                self.mail_sender = TaskMemberJoinedMail(instance, message)
 
     def send_mail(self):
         if self.mail_sender:

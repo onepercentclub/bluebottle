@@ -8,7 +8,10 @@ import django_filters
 from rest_framework import filters, serializers
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.tasks.permissions import TaskPermission, TaskMemberPermission, TaskManagerPermission
+from bluebottle.tasks.permissions import (
+    TaskPermission, TaskMemberPermission, TaskManagerPermission, ActiveProjectOrReadOnlyPermission,
+    ResumePermission
+)
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.tasks.serializers import (
     BaseTaskSerializer, BaseTaskMemberSerializer, TaskFileSerializer,
@@ -21,10 +24,6 @@ from bluebottle.utils.permissions import (
 from bluebottle.utils.views import (
     PrivateFileView, ListAPIView, ListCreateAPIView,
     RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView, OwnerListViewMixin,
-)
-from bluebottle.bb_tasks.permissions import (
-    ActiveProjectOrReadOnlyPermission,
-    ResumePermission
 )
 
 

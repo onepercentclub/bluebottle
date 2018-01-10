@@ -24,7 +24,7 @@ urlpatterns = [
     url(r'^api/categories/',
         include('bluebottle.categories.urls.api')),
     url(r'^api/bb_tasks/',
-        include('bluebottle.bb_tasks.urls.api')),
+        include('bluebottle.tasks.urls.api')),
     url(r'^api/geo/', include('bluebottle.geo.urls.api')),
     url(r'^api/contact/',
         include('bluebottle.contact.urls.api')),
@@ -119,7 +119,7 @@ urlpatterns = [
         include('bluebottle.payouts_dorado.urls')),
 
     url(r'^downloads/', include('bluebottle.projects.urls.media')),
-    url(r'^downloads/', include('bluebottle.bb_tasks.urls.media')),
+    url(r'^downloads/', include('bluebottle.tasks.urls.media')),
 ]
 
 

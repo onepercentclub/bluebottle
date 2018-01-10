@@ -14,6 +14,9 @@ from bluebottle.surveys.models import Survey
 from bluebottle.utils.email_backend import send_mail
 
 
+TASK_REMINDER_INTERVAL = 5
+
+
 class TaskMemberMailSender:
     """
     The base class for Task Mail senders
@@ -144,6 +147,24 @@ class TaskMemberWithdrawMail(TaskMemberMailSender):
         return self.task_member.member
 
 
+class TaskMemberReminderMail(TaskMemberMailSender):
+
+    def __init__(self, *args, **kwargs):
+        TaskMemberReminderMail.__init__(self, *args, **kwargs)
+        self.ctx['task_reminder_interval'] = TASK_REMINDER_INTERVAL
+
+    @property
+    def template_name(self):
+        if self.task.type == Task.TaskTypes.event:
+            return 'task_member_reminder_event.mail'
+        return 'task_member_reminder_ongoing.mail'
+
+    @property
+    def subject(self):
+        with TenantLanguage(self.receiver.primary_language):
+            return _('The task you subscribed to is due')
+
+
 class TaskMemberMailAdapter:
     """
     This class retrieve the correct TaskMemberMailSender instance based on
@@ -179,6 +200,18 @@ class TaskMemberMailAdapter:
 
 
 @shared_task
+def send_upcoming_task_reminder(task):
+    # Acceptable statuses for task reminders
+    statuses = [TaskMember.TaskMemberStatuses.accepted]
+
+    # Send all applicable task members a mail if not send yet
+    if not task.mail_logs.filter(type='upcoming_deadline').exists():
+        for taskmember in task.members.filter(status__in=statuses).all():
+            TaskMemberReminderMail(taskmember).send()
+        task.mail_logs.create(type='upcoming_deadline')
+
+
+@shared_task
 def send_task_realized_mail(task, template, subject, tenant):
     """ Send an email to the task owner with the request to confirm
     the task participants.
@@ -198,6 +231,39 @@ def send_task_realized_mail(task, template, subject, tenant):
             site=tenant_url(),
             link='/go/tasks/{0}'.format(task.id)
         )
+
+
+@shared_task
+def send_task_reminder_mail(task, subject, tenant):
+    connection.set_tenant(tenant)
+
+    with LocalTenant(tenant, clear_tenant=True):
+        if not task.members_applied:
+            template = 'deadline_to_apply_closed'
+        else:
+            if task.people_applied + task.externals_applied < task.people_needed:
+                status = 'partial'
+            elif task.people_accepted < task.people_needed:
+                status = 'accept'
+            else:
+                status = 'target_reached'
+
+            template = 'deadline_to_apply_{type}_{status}'.format(
+                type=task.type, status=status
+            )
+
+        if not task.mail_logs.filter(type='deadline_to_apply_passed').exists():
+            send_mail(
+                template_name='tasks/mails/{}.mail'.format(template),
+                subject=subject,
+                task=task,
+                to=task.author,
+                site=tenant_url(),
+                edit_link='/tasks/{0}/edit'.format(task.id),
+                link='/tasks/{0}'.format(task.id),
+
+            )
+            task.mail_logs.create(type='deadline_to_apply_passed')
 
 
 @shared_task

@@ -164,7 +164,8 @@ class TaskMemberMailAdapter:
         if not status:
             status = instance.status
         # If a mailer is provided for the task status, set the mail_sender
-        self.mail_sender = self.TASK_MEMBER_MAIL.get(status)(instance, message)
+        if self.TASK_MEMBER_MAIL.get(status):
+            self.mail_sender = self.TASK_MEMBER_MAIL.get(status)(instance, message)
 
         # Set up some special mail rules for Tasks with auto accepting
         if instance.task.accepting == Task.TaskAcceptingChoices.automatic:

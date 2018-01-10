@@ -23,15 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Export the participation metrics per tenant'
-
-    colors = {
-        'projects': '',
-        'tasks': '',
-        'task_members': ''
-    }
-
-    RowData = namedtuple('RowData', ['metric', 'definition', 'hide_column', 'is_formula'])
+    help = 'Export participation report'
 
     def __init__(self, **kwargs):
         super(Command, self).__init__(**kwargs)
@@ -40,18 +32,10 @@ class Command(BaseCommand):
         self.to_email = None
         self.file_path = None
 
-        self.all_tenants = [client.client_name for client in Client.objects.all()]
-
         self.start_date = None
         self.end_date = None
 
         self.charts = defaultdict(dict)
-
-        self.yearly_statistics_row_start = 1
-        self.monthly_statistics_row_start = 4
-        self.monthly_statistics_row_end = 4
-        self.weekly_statistics_row_start = 17
-        self.weekly_statistics_row_end = None
 
     @staticmethod
     def setup_workbook_formatters(workbook):
@@ -118,9 +102,6 @@ class Command(BaseCommand):
                             type=int,
                             help="End Year (YYYY) for dump. UTC is the default time zone")
 
-        parser.add_argument('--tenant', metavar='TENANT', action='store', dest='tenant', required=True,
-                            choices=self.all_tenants, help="Name of the tenant to export")
-
         parser.add_argument('--email', metavar='EMAIL', action='store', dest='email', required=False,
                             help="Email of the contact person")
 
@@ -129,11 +110,11 @@ class Command(BaseCommand):
         self.to_email = options['email']
         self.start_date = pendulum.create(options['start'], 1, 1, 0, 0, 0)
         self.end_date = pendulum.create(options['end'], 12, 31, 23, 59, 59)
-        self.generate_participation_xls()
+        self.generate_report_xls()
 
     def get_file_name(self):
         now = pendulum.now()
-        return 'participation_metrics_{}_{}_{}_generated_{}_{}.xlsx'.format(
+        return 'metrics_report_{}_{}_{}_generated_{}_{}.xlsx'.format(
             self.tenant,
             self.start_date.to_date_string(),
             self.end_date.to_date_string(),
@@ -144,7 +125,7 @@ class Command(BaseCommand):
     def get_xls_file_name(self, file_name):
         return os.path.join(tempfile.gettempdir(), file_name)
 
-    def generate_participation_xls(self):
+    def generate_report_xls(self):
         file_name = self.get_file_name()
         self.file_path = self.get_xls_file_name(file_name)
         client = Client.objects.get(client_name=self.tenant)
@@ -163,6 +144,7 @@ class Command(BaseCommand):
                 self.generate_worksheet(workbook, 'aggregated')
                 self.generate_worksheet(workbook, 'location_segmentation')
                 self.generate_worksheet(workbook, 'theme_segmentation')
+                self.generate_worksheet(workbook, 'impact_survey')
 
         if self.to_email:
             with open(self.file_path, 'r') as f:

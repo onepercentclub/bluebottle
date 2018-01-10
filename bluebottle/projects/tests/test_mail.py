@@ -25,9 +25,9 @@ class TestProjectMails(BluebottleTestCase):
         self.complete = ProjectPhase.objects.get(slug='done-complete')
         self.incomplete = ProjectPhase.objects.get(slug='done-incomplete')
         self.project = ProjectFactory.create(status=self.status_running, organization=None)
-        self.survey = SurveyFactory(link='https://example.com/survey/1/')
 
     def test_complete(self):
+        self.survey = SurveyFactory(link='https://example.com/survey/1/', active=True)
         self.project.status = self.complete
         self.project.save()
 
@@ -37,6 +37,19 @@ class TestProjectMails(BluebottleTestCase):
         self.assertNotEquals(email.subject.find("has been realised"), -1)
 
         self.assertTrue(self.survey.url(self.project, user_type='initiator') in email.body)
+        self.assertTrue('survey' in email.body)
+
+    def test_inactive_survey_complete(self):
+        self.survey = SurveyFactory(link='https://example.com/survey/1/', active=False)
+        self.project.status = self.complete
+        self.project.save()
+
+        self.assertEquals(len(mail.outbox), 1)
+        email = mail.outbox[0]
+
+        self.assertNotEquals(email.subject.find("has been realised"), -1)
+
+        self.assertFalse('survey' in email.body)
 
     def test_complete_no_celebration(self):
         self.project.celebrate_results = False
@@ -50,6 +63,7 @@ class TestProjectMails(BluebottleTestCase):
         self.assertFalse('survey' in email.body)
 
     def test_complete_with_organization(self):
+        self.survey = SurveyFactory(link='https://example.com/survey/1/', active=True)
         self.project.organization = OrganizationFactory.create(email='organization@example.com')
         self.project.status = self.complete
         self.project.save()
@@ -64,6 +78,23 @@ class TestProjectMails(BluebottleTestCase):
         self.assertEqual(organization_email.to, [self.project.organization.email])
         self.assertTrue('has been realised' in organization_email.subject)
         self.assertTrue(Survey.url(self.project, user_type='organization') in organization_email.body)
+
+    def test_complete_inactive_survey_with_organization(self):
+        self.survey = SurveyFactory(link='https://example.com/survey/1/', active=False)
+        self.project.organization = OrganizationFactory.create(email='organization@example.com')
+        self.project.status = self.complete
+        self.project.save()
+
+        self.assertEquals(len(mail.outbox), 2)
+        initiator_email = mail.outbox[0]
+        self.assertEqual(initiator_email.to, [self.project.owner.email])
+        self.assertTrue('has been realised' in initiator_email.subject)
+        self.assertFalse('survey' in initiator_email.body)
+
+        organization_email = mail.outbox[1]
+        self.assertEqual(organization_email.to, [self.project.organization.email])
+        self.assertTrue('has been realised' in organization_email.subject)
+        self.assertFalse('survey' in organization_email.body)
 
     def test_incomplete(self):
         self.project.status = self.incomplete

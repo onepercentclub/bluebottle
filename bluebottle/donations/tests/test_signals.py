@@ -41,8 +41,8 @@ class TestDonationSignals(BluebottleTestCase):
 
     def test_system_wallpost_fundraiser_after_donation(self):
         """
-        Test that a SystemWallpost is created for the project and fundraiser
-        wall when a user does a succesful donation
+        Test that a SystemWallpost is created for the fundraiser
+        wall only when a user does a succesful donation
         """
         self.assertEqual(SystemWallpost.objects.count(), 0)
 
@@ -56,10 +56,10 @@ class TestDonationSignals(BluebottleTestCase):
         order.success()
         order.save()
 
-        self.assertEqual(SystemWallpost.objects.count(), 2)
-        self.assertEqual(SystemWallpost.objects.all()[1].content_object,
+        self.assertEqual(SystemWallpost.objects.count(), 1)
+        self.assertEqual(SystemWallpost.objects.all()[0].content_object,
                          fundraiser)
-        self.assertEqual(SystemWallpost.objects.all()[1].author, order.user)
+        self.assertEqual(SystemWallpost.objects.all()[0].author, order.user)
 
     def test_anonymous_donation_no_author_on_wallpost(self):
         """

@@ -30,6 +30,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('projects', '0018_merge_20170118_1533'),
+        ('authtoken', '0001_initial'),
     ]
 
     operations = [

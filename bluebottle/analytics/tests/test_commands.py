@@ -6,10 +6,16 @@ import pytz
 from django.conf import settings
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
-from django.test import SimpleTestCase
+from django.test.utils import override_settings
+from django.test import TestCase, SimpleTestCase
 from mock import patch
 
 from bluebottle.tasks.models import TaskMember
+from bluebottle.analytics.models import get_raw_report_model
+
+from bluebottle.analytics.management.commands.create_report_views import (
+    Command as CreateReportViewsCommand
+)
 
 from bluebottle.analytics.management.commands.export_engagement_metrics import (
     Command as EngagementCommand
@@ -24,7 +30,6 @@ from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.surveys import SurveyFactory, QuestionFactory, AnswerFactory, ResponseFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
@@ -76,6 +81,8 @@ class TestEngagementMetricsXls(BluebottleTestCase):
     def setUp(self):
         super(TestEngagementMetricsXls, self).setUp()
         self.init_projects()
+
+        self.year = datetime.now().year
 
         # Project Phases
         done_complete = ProjectPhase.objects.get(slug="done-complete")
@@ -135,9 +142,9 @@ class TestEngagementMetricsXls(BluebottleTestCase):
         self.command = EngagementCommand()
 
     def test_xls_generation(self):
-
         with patch.object(self.command, 'get_xls_file_name', return_value=self.xls_file_name):
-            call_command(self.command, '--start', '2017-01-01', '--end', '2017-12-31', '--export-to', 'xls')
+            call_command(self.command, '--start', '{}-01-01'.format(self.year),
+                         '--end', '{}-12-31'.format(self.year), '--export-to', 'xls')
             self.assertTrue(os.path.isfile(self.xls_file_path), True)
 
             workbook = load_workbook(filename=self.xls_file_path, read_only=True)
@@ -227,14 +234,6 @@ class TestParticipationXls(BluebottleTestCase):
                 task_member.status = TaskMember.TaskMemberStatuses.realized
                 task_member.save()
 
-        # Survey
-        self.survey = SurveyFactory(title="My Questionnaire")
-        self.questions = QuestionFactory.create_batch(10, survey=self.survey)
-        responses = ResponseFactory.create_batch(10, survey=self.survey, project=project1)
-        for response in responses:
-            for question in self.questions:
-                AnswerFactory.create(question=question, response=response)
-
         # xls export
         self.xls_file_name = 'test.xlsx'
         self.xls_file_path = os.path.join(settings.PROJECT_ROOT, self.xls_file_name)
@@ -256,12 +255,24 @@ class TestParticipationXls(BluebottleTestCase):
             self.assertEqual(workbook.worksheets[1].title, 'Totals - {}'.format(self.year))
             self.assertEqual(workbook.worksheets[6].title, 'Location Segmentation - {}'.format(self.year))
             self.assertEqual(workbook.worksheets[7].title, 'Theme Segmentation - {}'.format(self.year))
-            self.assertEqual(workbook.worksheets[8].title, 'Impact Survey - {}'.format(self.year))
 
-            # Check survey responses (should be 10, all in February)
-            self.assertEqual(workbook.worksheets[8]['G1'].value, 'Number responses for My Questionnaire')
-            self.assertEqual(workbook.worksheets[8]['G3'].value, 10)
-            self.assertEqual(workbook.worksheets[8]['D5'].value, 'January')
-            self.assertEqual(workbook.worksheets[8]['G5'].value, 0)
-            self.assertEqual(workbook.worksheets[8]['D6'].value, 'February')
-            self.assertEqual(workbook.worksheets[8]['G6'].value, 10)
+
+@override_settings(TENANT_APPS=('django_nose',),
+                   TENANT_MODEL='client.clients',
+                   DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',))
+class CreateReportViewTests(TestCase):
+    def setUp(self):
+        self.cmd = CreateReportViewsCommand()
+
+        super(CreateReportViewTests, self).setUp()
+
+    @override_settings(REPORTING_SQL_DIR=os.path.join(settings.PROJECT_ROOT,
+                       'bluebottle', 'analytics', 'tests', 'files'))
+    def test_raw_view_creation(self):
+        report_sql_path = os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'analytics',
+                                       'views', 'report.sql')
+        # setup some test files
+        call_command(self.cmd, file=report_sql_path)
+
+        ReportModel = get_raw_report_model('v_projects')
+        self.assertEqual(len(ReportModel.objects.all()), 0)

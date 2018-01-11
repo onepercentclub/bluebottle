@@ -478,8 +478,34 @@ class TestUpcomingDeadlineReminderEmail(TaskMailTestBase):
         # Now the outbox should have 3 new mails
         self.assertEquals(len(mail.outbox), 3)
         self.assertEquals(mail.outbox[0].subject, 'The task you subscribed to is due')
-        self.assertContains(mail.outbox[0].subject, 'The task you subscribed to is due')
-        # A kindly reminder
+        self.assertTrue('will take place' in mail.outbox[0].body)
+
+        # Running the task again shouldn't send the mails again
+        send_task_reminder_mails()
+        self.assertEquals(len(mail.outbox), 3)
+
+    def test_event_is_nigh(self):
+        """
+        Deadline in 5 days should trigger
+        """
+        self.task.deadline = now() + timedelta(days=5)
+        self.task.people_needed = 3
+        self.task.type = 'ongoing'
+        self.task.status = 'open'
+        self.task.save()
+
+        TaskMemberFactory.create_batch(3, task=self.task, status='accepted')
+        self.assertEquals(len(mail.outbox), 3)
+        # Empty
+        mail.outbox = []
+
+        # Run the (scheduled) task for reminder mails
+        send_task_reminder_mails()
+
+        # Now the outbox should have 3 new mails
+        self.assertEquals(len(mail.outbox), 3)
+        self.assertEquals(mail.outbox[0].subject, 'The task you subscribed to is due')
+        self.assertTrue('days to complete your task' in mail.outbox[0].body)
 
         # Running the task again shouldn't send the mails again
         send_task_reminder_mails()

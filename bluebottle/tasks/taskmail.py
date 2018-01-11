@@ -150,7 +150,7 @@ class TaskMemberWithdrawMail(TaskMemberMailSender):
 class TaskMemberReminderMail(TaskMemberMailSender):
 
     def __init__(self, *args, **kwargs):
-        TaskMemberReminderMail.__init__(self, *args, **kwargs)
+        TaskMemberMailSender.__init__(self, *args, **kwargs)
         self.ctx['task_reminder_interval'] = TASK_REMINDER_INTERVAL
 
     @property

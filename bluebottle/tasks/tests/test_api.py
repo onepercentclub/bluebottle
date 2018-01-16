@@ -277,6 +277,50 @@ class TaskApiTestcase(BluebottleTestCase):
         response = self.client.get(task_url)
         self.assertEqual(response.data['status'], 'in progress')
 
+    def test_task_member_duplicate(self):
+        task = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.some_user,
+            project=self.some_project,
+            people_needed=1
+        )
+
+        TaskMemberFactory.create(
+            member=self.some_user, task=task, status='applied'
+        )
+
+        task_member_data = {
+            'task': task.id,
+            'motivation': 'Pick me!'
+        }
+        response = self.client.post(self.task_member_url,
+                                    task_member_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_task_member_rejected(self):
+        task = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.some_user,
+            project=self.some_project,
+            people_needed=1
+        )
+
+        TaskMemberFactory.create(
+            member=self.some_user, task=task, status='rejected'
+        )
+
+        task_member_data = {
+            'task': task.id,
+            'motivation': 'Pick me!'
+        }
+        response = self.client.post(self.task_member_url,
+                                    task_member_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_time_spent(self):
         task = TaskFactory.create(
             status=Task.TaskStatuses.open,

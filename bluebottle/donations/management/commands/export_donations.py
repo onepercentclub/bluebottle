@@ -20,7 +20,12 @@ class Command(BaseCommand):
         for client in Client.objects.all():
             connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
-                orders = Order.objects.filter(status__in=('pending', 'success'))
+                orders = Order.objects.filter(
+                    status__in=('pending', 'success')
+                ).exclude(
+                    order_payments__payment_method=''
+                )
+
                 if options['start']:
                     orders = orders.filter(created__gte=options['start'])
                 if options['end']:

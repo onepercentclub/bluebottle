@@ -2,7 +2,6 @@ import sys
 import logging
 
 from django.core.management.base import BaseCommand
-from django.db import connection
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant

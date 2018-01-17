@@ -3,15 +3,17 @@
 {% block content %}
     <tr class="donation-table-row">
         <tr class="donation-table-address">
-            <td>
-                {% if 'members.api_read_full_member' in to.get_all_permissions %}
-                    {{donation.user.full_name}} <br />
-                    {{donation.user.address.line1}}<br />
-                    {{donation.user.address.postal_code}} {{donation.user.address.city}}<br />
-                {% else %}
-                    {{donation.user.first_name}} <br />
-                {% endif %}
-            </td>
+            {%  if not donation.anonymous %}
+                <td>
+                    {% if not donation.anonymous and 'members.api_read_full_member' in to.get_all_permissions %}
+                        {{donation.user.full_name}} <br />
+                        {{donation.user.address.line1}}<br />
+                        {{donation.user.address.postal_code}} {{donation.user.address.city}}<br />
+                    {% else %}
+                        {{donation.user.first_name}} <br />
+                    {% endif %}
+                </td>
+            {% endif %}
             <td>
                 <table>
                     <tr class="order-block">

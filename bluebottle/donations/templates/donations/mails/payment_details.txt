@@ -1,7 +1,7 @@
 {% load i18n %}
 
 {% block content %}
-    {% if 'members.api_read_full_member' in to.get_all_permissions %}
+    {% if not donation.anonymous and 'members.api_read_full_member' in to.get_all_permissions %}
         {{donation.user.full_name}}
         {{donation.user.address.line1}}
         {{donation.user.address.postal_code}} {{donation.user.address.city}}

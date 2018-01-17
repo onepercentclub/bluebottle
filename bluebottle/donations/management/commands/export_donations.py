@@ -1,4 +1,5 @@
 import json
+from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.db import connection
 
@@ -20,6 +21,8 @@ class Command(BaseCommand):
         for client in Client.objects.all():
             connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
+                ContentType.objects.clear_cache()
+
                 orders = Order.objects.filter(
                     status__in=('pending', 'success')
                 ).exclude(
@@ -32,12 +35,7 @@ class Command(BaseCommand):
                     orders = orders.filter(created__lte=options['end'])
 
                 for order in orders:
-                    try:
-                        transaction_reference = order.order_payment.payment.transaction_reference
-                    except Exception:
-                        transaction_reference = ''
-
-                    print transaction_reference
+                    transaction_reference = order.order_payment.payment.transaction_reference
 
                     results.append({
                         'id': order.id,

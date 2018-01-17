@@ -34,7 +34,7 @@ class Command(BaseCommand):
             with LocalTenant(client, clear_tenant=True):
 
                 payouts = ProjectPayout.objects.filter(
-                    amount_payable__gt=0, completed__isnull=True
+                    amount_payable__gt=0, status='settled'
                 )
                 if options['start']:
                     payouts = payouts.filter(created__gte=options['start'])

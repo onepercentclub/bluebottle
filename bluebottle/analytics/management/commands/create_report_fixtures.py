@@ -1,7 +1,6 @@
 import os
 import yaml
 
-from django.db import connection
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
@@ -23,7 +22,6 @@ class Command(BaseCommand):
 
     def generate_fixtures(self, client_name, skip=50):
         client = Client.objects.get(client_name=client_name)
-        connection.set_tenant(client)
         results = {
             'members': [],
             'projects': [],

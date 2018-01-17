@@ -1,6 +1,5 @@
 import json
 from django.core.management.base import BaseCommand
-from django.db import connection
 
 from bluebottle.donations.models import Donation
 from bluebottle.payouts.models import ProjectPayout
@@ -30,7 +29,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         results = []
         for client in Client.objects.all():
-            connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
 
                 payouts = ProjectPayout.objects.filter(amount_payable__gt=0)

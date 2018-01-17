@@ -1,7 +1,6 @@
 from celery import shared_task
 
 from django.dispatch import receiver
-from django.db import connection
 from django.db.models.signals import pre_save, pre_delete, post_save
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
@@ -216,8 +215,6 @@ def send_task_realized_mail(task, template, subject, tenant):
     """ Send an email to the task owner with the request to confirm
     the task participants.
     """
-    connection.set_tenant(tenant)
-
     with LocalTenant(tenant, clear_tenant=True):
         if len(task.members.filter(status=TaskMember.TaskMemberStatuses.realized)):
             # There is already a confirmed task member: Do not bother the owner
@@ -235,8 +232,6 @@ def send_task_realized_mail(task, template, subject, tenant):
 
 @shared_task
 def send_deadline_to_apply_passed_mail(task, subject, tenant):
-    connection.set_tenant(tenant)
-
     with LocalTenant(tenant, clear_tenant=True):
         if not task.members_applied:
             template = 'deadline_to_apply_closed'

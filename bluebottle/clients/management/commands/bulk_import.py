@@ -10,7 +10,6 @@ from moneyed.classes import Money
 
 from django.core.files import File
 from django.core.management.base import BaseCommand
-from django.db import connection
 from django.utils.timezone import now
 from django.contrib.contenttypes.models import ContentType
 
@@ -70,10 +69,7 @@ class Command(BaseCommand):
                             help="Models you want to import, can be multiple e.g. -m users wallposts")
 
     def handle(self, *args, **options):
-
         client = Client.objects.get(client_name=options['tenant'])
-        connection.set_tenant(client)
-
         self.upload = options['upload']
 
         with LocalTenant(client, clear_tenant=True):

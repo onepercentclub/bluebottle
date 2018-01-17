@@ -87,7 +87,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
 
         self.message_user(
             request,
-            'Refund is requested. It may take a while for this to be visble here'
+            'Refund is requested.'
         )
 
         order_payment_url = reverse('admin:payments_orderpayment_change', args=(order_payment.id,))

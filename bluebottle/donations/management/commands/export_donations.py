@@ -35,7 +35,10 @@ class Command(BaseCommand):
                     orders = orders.filter(created__lte=options['end'])
 
                 for order in orders:
-                    transaction_reference = order.order_payment.payment.transaction_reference
+                    try:
+                        transaction_reference = order.order_payment.payment.transaction_reference
+                    except Exception:
+                        transaction_reference = ''
 
                     results.append({
                         'id': order.id,

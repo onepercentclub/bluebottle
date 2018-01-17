@@ -23,9 +23,6 @@ def _send_celery_mail(msg, tenant=None, send=False):
         to utf_8 so we don't get Unicode errors.
     """
     with LocalTenant(tenant, clear_tenant=True):
-        # if tenant:
-        #    properties.set_tenant(tenant)
-
         body = msg.body
         if isinstance(body, unicode):
             body = msg.body.encode('utf_8')
@@ -98,12 +95,6 @@ def _post_to_facebook(instance, tenant=None):
 
     if not tenant:
         return
-
-    from tenant_schemas.utils import get_tenant_model
-    from django.db import connection
-
-    db_tenant = get_tenant_model().objects.get(client_name=tenant.client_name)
-    connection.set_tenant(db_tenant)
 
     with LocalTenant(tenant, clear_tenant=True):
         social = instance.author.social_auth.get(provider='facebook')

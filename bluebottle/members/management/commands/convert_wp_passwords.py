@@ -25,8 +25,6 @@ class Command(BaseCommand):
         """
         try:
             client = Client.objects.get(client_name=options['tenant'])
-            connection.set_tenant(client)
-
         except Client.DoesNotExist:
             logger.error("You must specify a valid tenant with -t or --tenant.")
             tenants = Client.objects.all().values_list('client_name', flat=True)

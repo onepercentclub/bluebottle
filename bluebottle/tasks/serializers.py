@@ -1,5 +1,6 @@
 from datetime import timedelta
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.bluebottle_drf2.serializers import (
@@ -13,6 +14,36 @@ from bluebottle.utils.serializers import PermissionField, ResourcePermissionFiel
 from bluebottle.wallposts.serializers import TextWallpostSerializer
 from bluebottle.projects.models import Project
 from bluebottle.members.models import Member
+
+
+class UniqueTaskMemberValidator(object):
+    def set_context(self, serializer):
+        self.instance = serializer.instance
+        self.request = serializer.context['request']
+
+    def __call__(self, data):
+        if 'task' not in data:
+            return
+
+        queryset = TaskMember.objects.filter(
+            member=self.request.user,
+            task=data['task']
+        ).exclude(
+            status__in=(
+                TaskMember.TaskMemberStatuses.rejected,
+                TaskMember.TaskMemberStatuses.withdrew
+            )
+        )
+
+        if self.instance is not None:
+            queryset = queryset.exclude(
+                pk=self.instance.pk
+            )
+
+        if queryset.exists():
+            raise ValidationError(
+                _('It is not possible to apply twice for the same task')
+            )
 
 
 class BaseTaskMemberSerializer(serializers.ModelSerializer):
@@ -30,6 +61,7 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
         model = TaskMember
         fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
                   'externals', 'time_spent', 'resume', 'permissions')
+        validators = (UniqueTaskMemberValidator(), )
 
     def validate(self, data):
         if 'time_spent' not in data or not self.instance:

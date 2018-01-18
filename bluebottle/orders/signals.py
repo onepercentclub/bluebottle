@@ -65,18 +65,8 @@ def _order_status_post_transition(sender, instance, **kwargs):
                 successful_donation_fundraiser_mail(donation)
                 new_oneoff_donation(donation)
 
-                # Create Wallpost on project wall if there isn't a wallpost for this donation yet
-                if TextWallpost.objects.filter(donation=donation).count() == 0:
-                    post = SystemWallpost()
-                    post.content_object = donation.project
-                    post.related_object = donation
-                    post.donation = donation
-                    post.author = author
-                    post.ip = '127.0.0.1'
-                    post.save()
-
-                # Create Wallpost on fundraiser wall (if FR present)
                 if donation.fundraiser:
+                    # Create Wallpost on fundraiser wall (if FR present)
                     fr_post = SystemWallpost()
                     fr_post.content_object = donation.fundraiser
                     fr_post.related_object = donation
@@ -84,6 +74,15 @@ def _order_status_post_transition(sender, instance, **kwargs):
                     fr_post.author = author
                     fr_post.ip = '127.0.0.1'
                     fr_post.save()
+                elif TextWallpost.objects.filter(donation=donation).count() == 0:
+                    # Create Wallpost on project wall if there isn't a wallpost for this donation yet
+                    post = SystemWallpost()
+                    post.content_object = donation.project
+                    post.related_object = donation
+                    post.donation = donation
+                    post.author = author
+                    post.ip = '127.0.0.1'
+                    post.save()
 
 
 @receiver(post_save, sender=Order)

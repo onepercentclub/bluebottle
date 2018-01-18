@@ -9,13 +9,6 @@ import django.db.models.deletion
 import djmoney.models.fields
 
 
-def clean_up_old_migration(apps, schema_editor):
-    # Ugly hack to fix half migrated tenants
-    from django.db import connection
-    cursor = connection.cursor()
-    cursor.execute("DROP TABLE IF EXISTS projects_projectcreatetemplate")
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -24,7 +17,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(clean_up_old_migration),
         migrations.CreateModel(
             name='ProjectCreateTemplate',
             fields=[

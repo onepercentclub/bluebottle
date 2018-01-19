@@ -568,10 +568,14 @@ class ProjectCreateTemplateSerializer(serializers.ModelSerializer):
         model = ProjectCreateTemplate
         fields = (
             'name',
-            'amount',
+            'image',
             'description',
-            'organization',
-            'image'
+
+            'default_amount_asked',
+            'default_organization',
+            'default_image',
+            'default_title',
+            'default_description',
         )
 
 

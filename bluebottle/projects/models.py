@@ -758,6 +758,8 @@ class ProjectCreateTemplate(models.Model):
                                          related_name='templates')
     name = models.CharField(max_length=300)
     amount = MoneyField()
+    description = models.TextField(null=True, blank=True)
+    image = models.ImageField(null=True)
     organization = models.ForeignKey('organizations.Organization',
                                      null=True,
                                      help_text=_('Default partner organization'))

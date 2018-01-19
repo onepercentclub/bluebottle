@@ -7,6 +7,7 @@ from decimal import InvalidOperation
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django.forms.models import ModelFormMetaclass
 from django_singleton_admin.admin import SingletonAdmin
+from django_summernote.admin import SummernoteInlineModelAdmin
 from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
 from polymorphic.admin.inlines import StackedPolymorphicInline
 
@@ -698,9 +699,10 @@ class ProjectSearchFilterInline(SortableTabularInline):
     extra = 0
 
 
-class ProjectCreateTemplateInline(admin.StackedInline):
-    raw_id_fields = ('organization', )
+class ProjectCreateTemplateInline(admin.StackedInline, SummernoteInlineModelAdmin):
     model = ProjectCreateTemplate
+    raw_id_fields = ('organization', )
+    summer_note_fields = ('description',)
     extra = 0
 
 

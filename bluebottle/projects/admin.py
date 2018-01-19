@@ -701,7 +701,6 @@ class ProjectSearchFilterInline(SortableTabularInline):
 
 class ProjectCreateTemplateInline(admin.StackedInline, SummernoteInlineModelAdmin):
     model = ProjectCreateTemplate
-    raw_id_fields = ('default_organization', )
     summer_note_fields = ('description', 'default_description')
     extra = 0
 

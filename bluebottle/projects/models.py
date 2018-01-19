@@ -767,9 +767,6 @@ class ProjectCreateTemplate(models.Model):
                                            help_text=_('Default project description'))
     default_image = models.ImageField(null=True,
                                       help_text=_('Default project image'))
-    default_organization = models.ForeignKey('organizations.Organization',
-                                             null=True,
-                                             help_text=_('Default partner organization'))
 
 
 class CustomProjectFieldSettings(SortableMixin):

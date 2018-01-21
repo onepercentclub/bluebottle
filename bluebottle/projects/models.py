@@ -758,14 +758,16 @@ class ProjectCreateTemplate(models.Model):
                                          related_name='templates')
     name = models.CharField(max_length=300)
     description = models.TextField(null=True, blank=True)
-    image = models.ImageField(null=True)
+    image = models.ImageField(null=True, blank=True)
 
-    default_amount_asked = MoneyField()
+    default_amount_asked = MoneyField(null=True, blank=True)
     default_title = models.CharField(max_length=300, null=True, blank=True,
                                      help_text=_('Default project title'))
+    default_pitch = models.TextField(null=True, blank=True,
+                                     help_text=_('Default project pitch'))
     default_description = models.TextField(null=True, blank=True,
                                            help_text=_('Default project description'))
-    default_image = models.ImageField(null=True,
+    default_image = models.ImageField(null=True, blank=True,
                                       help_text=_('Default project image'))
 
 

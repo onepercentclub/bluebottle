@@ -5,6 +5,7 @@ import six
 from decimal import InvalidOperation
 
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from django.contrib.admin.widgets import AdminTextareaWidget
 from django.forms.models import ModelFormMetaclass
 from django_singleton_admin.admin import SingletonAdmin
 from django_summernote.admin import SummernoteInlineModelAdmin
@@ -699,9 +700,20 @@ class ProjectSearchFilterInline(SortableTabularInline):
     extra = 0
 
 
+class ProjectCreateTemplateForm(forms.ModelForm):
+    class Meta:
+        model = ProjectCreateTemplate
+        exclude = []
+        widgets = {
+            'description': SummernoteWidget(attrs={'height': '200px'}),
+            'default_description': SummernoteWidget(attrs={'height': '200px'}),
+            'default_pitch': AdminTextareaWidget(attrs={'cols': '40', 'rows': '5'})
+        }
+
+
 class ProjectCreateTemplateInline(admin.StackedInline, SummernoteInlineModelAdmin):
+    form = ProjectCreateTemplateForm
     model = ProjectCreateTemplate
-    summer_note_fields = ('description', 'default_description')
     extra = 0
 
 

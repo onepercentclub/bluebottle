@@ -572,8 +572,8 @@ class ProjectCreateTemplateSerializer(serializers.ModelSerializer):
             'description',
 
             'default_amount_asked',
-            'default_image',
             'default_title',
+            'default_pitch',
             'default_description',
         )
 

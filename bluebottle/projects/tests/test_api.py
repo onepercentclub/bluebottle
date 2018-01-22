@@ -2500,6 +2500,6 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         response = self.client.get(reverse('settings'))
         self.assertEqual(len(response.data['platform']['projects']['templates']), 2)
         template = response.data['platform']['projects']['templates'][1]
-        self.assertEqual(template['default_amount_asked'], u'1500.00')
+        self.assertEqual(template['default_amount_asked'], {'currency': 'EUR', 'amount': 1500.00})
         self.assertEqual(len(template['image']), 4)
         self.assertEqual(template['default_title'], 'Sample project title')

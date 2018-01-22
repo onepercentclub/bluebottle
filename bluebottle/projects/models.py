@@ -757,10 +757,18 @@ class ProjectCreateTemplate(models.Model):
                                          null=True,
                                          related_name='templates')
     name = models.CharField(max_length=300)
-    amount = MoneyField()
-    organization = models.ForeignKey('organizations.Organization',
-                                     null=True,
-                                     help_text=_('Default partner organization'))
+    description = models.TextField(null=True, blank=True)
+    image = models.ImageField(null=True, blank=True)
+
+    default_amount_asked = MoneyField(null=True, blank=True)
+    default_title = models.CharField(max_length=300, null=True, blank=True,
+                                     help_text=_('Default project title'))
+    default_pitch = models.TextField(null=True, blank=True,
+                                     help_text=_('Default project pitch'))
+    default_description = models.TextField(null=True, blank=True,
+                                           help_text=_('Default project description'))
+    default_image = models.ImageField(null=True, blank=True,
+                                      help_text=_('Default project image'))
 
 
 class CustomProjectFieldSettings(SortableMixin):

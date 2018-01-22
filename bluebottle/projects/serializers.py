@@ -562,12 +562,19 @@ class ProjectSearchFilterSerializer(serializers.ModelSerializer):
 
 class ProjectCreateTemplateSerializer(serializers.ModelSerializer):
 
+    image = ImageSerializer()
+
     class Meta:
         model = ProjectCreateTemplate
         fields = (
             'name',
-            'amount',
-            'organization'
+            'image',
+            'description',
+
+            'default_amount_asked',
+            'default_title',
+            'default_pitch',
+            'default_description',
         )
 
 

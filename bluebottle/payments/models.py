@@ -192,7 +192,7 @@ class OrderPayment(models.Model, FSMTransition):
 
     @transition(field=status,
                 source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED,
-                        StatusDefinition.SETTLED],
+                        StatusDefinition.CANCELLED, StatusDefinition.SETTLED],
                 target=StatusDefinition.FAILED)
     def failed(self):
         self.closed = None

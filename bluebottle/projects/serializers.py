@@ -561,8 +561,9 @@ class ProjectSearchFilterSerializer(serializers.ModelSerializer):
 
 
 class ProjectCreateTemplateSerializer(serializers.ModelSerializer):
-
+    default_amount_asked = MoneySerializer(min_amount=5.0)
     image = ImageSerializer()
+    default_image = ImageSerializer()
 
     class Meta:
         model = ProjectCreateTemplate
@@ -575,6 +576,7 @@ class ProjectCreateTemplateSerializer(serializers.ModelSerializer):
             'default_title',
             'default_pitch',
             'default_description',
+            'default_image',
         )
 
 

@@ -97,20 +97,27 @@ class LipishaPaymentAdapter(BasePaymentAdapter):
 
         response = self.client.get_transactions(
             transaction_type='Payment',
-            merchant_transaction_reference=self.payment.reference
+            transaction_reference=self.payment.reference
         )
         self.payment.response = json.dumps(response)
         data = response['content']
 
-        if len(data) > 1:
-            pass
-            # raise PaymentException('Payment could not be verified yet. Multiple payments found.')
         if len(data) == 0:
+            self.payment.status = StatusDefinition.FAILED
+            self.payment.save()
             raise PaymentException('Payment could not be verified yet. Payment not found.')
         else:
             payment = data[0]
             for k, v in payment.iteritems():
                 setattr(self.payment, k, v)
+            if self.payment.transaction_amount != self.payment.order_payment.amount.amount:
+                # Update donation amount based on the amount registered at Lipisha
+                amount = Money(self.payment.transaction_amount, 'KES')
+                donation = self.payment.order_payment.order.donations.all()[0]
+                self.payment.order_payment.amount = amount
+                donation.amount = amount
+                donation.save()
+                self.payment.order_payment.save()
 
         self.payment.status = self._get_mapped_status(self.payment.transaction_status)
 

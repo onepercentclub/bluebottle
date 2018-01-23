@@ -568,6 +568,7 @@ class ProjectCreateTemplateSerializer(serializers.ModelSerializer):
         model = ProjectCreateTemplate
         fields = (
             'name',
+            'sub_name',
             'image',
             'description',
 

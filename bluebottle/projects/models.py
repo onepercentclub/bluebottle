@@ -757,6 +757,7 @@ class ProjectCreateTemplate(models.Model):
                                          null=True,
                                          related_name='templates')
     name = models.CharField(max_length=300)
+    sub_name = models.CharField(max_length=300)
     description = models.TextField(null=True, blank=True)
     image = models.ImageField(null=True, blank=True)
 

@@ -29,7 +29,7 @@ FLUENT_DASHBOARD_APP_GROUPS = (
     }),
     (_('Projects'), {
         'models': (
-            'bluebottle.projects.*',
+            'bluebottle.projects.models.Project',
             'bluebottle.bb_projects.*',
             'bluebottle.fundraisers.*',
             'bluebottle.categories.*',

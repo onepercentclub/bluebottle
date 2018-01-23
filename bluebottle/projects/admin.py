@@ -5,8 +5,10 @@ import six
 from decimal import InvalidOperation
 
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from django.contrib.admin.widgets import AdminTextareaWidget
 from django.forms.models import ModelFormMetaclass
 from django_singleton_admin.admin import SingletonAdmin
+from django_summernote.admin import SummernoteInlineModelAdmin
 from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
 from polymorphic.admin.inlines import StackedPolymorphicInline
 
@@ -14,7 +16,7 @@ from bluebottle.payments.adapters import has_payment_prodiver
 from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.projects.models import (
     ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn,
-    CustomProjectField, CustomProjectFieldSettings)
+    CustomProjectField, CustomProjectFieldSettings, ProjectCreateTemplate)
 from bluebottle.tasks.models import Skill
 from django import forms
 from django.db import connection
@@ -698,6 +700,23 @@ class ProjectSearchFilterInline(SortableTabularInline):
     extra = 0
 
 
+class ProjectCreateTemplateForm(forms.ModelForm):
+    class Meta:
+        model = ProjectCreateTemplate
+        exclude = []
+        widgets = {
+            'description': SummernoteWidget(attrs={'height': '200px'}),
+            'default_description': SummernoteWidget(attrs={'height': '200px'}),
+            'default_pitch': AdminTextareaWidget(attrs={'cols': '40', 'rows': '5'})
+        }
+
+
+class ProjectCreateTemplateInline(admin.StackedInline, SummernoteInlineModelAdmin):
+    form = ProjectCreateTemplateForm
+    model = ProjectCreateTemplate
+    extra = 0
+
+
 class ProjectPlatformSettingsAdminForm(forms.ModelForm):
     class Meta:
         widgets = {
@@ -718,7 +737,8 @@ class ProjectPlatformSettingsAdmin(SingletonAdmin, NonSortableParentAdmin):
     form = ProjectPlatformSettingsAdminForm
     inlines = [
         ProjectSearchFilterInline,
-        CustomProjectFieldSettingsInline
+        CustomProjectFieldSettingsInline,
+        ProjectCreateTemplateInline
     ]
 
 

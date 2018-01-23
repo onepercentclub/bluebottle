@@ -751,6 +751,27 @@ class ProjectSearchFilter(SortableMixin):
         ordering = ['sequence']
 
 
+class ProjectCreateTemplate(models.Model):
+
+    project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
+                                         null=True,
+                                         related_name='templates')
+    name = models.CharField(max_length=300)
+    sub_name = models.CharField(max_length=300)
+    description = models.TextField(null=True, blank=True)
+    image = models.ImageField(null=True, blank=True)
+
+    default_amount_asked = MoneyField(null=True, blank=True)
+    default_title = models.CharField(max_length=300, null=True, blank=True,
+                                     help_text=_('Default project title'))
+    default_pitch = models.TextField(null=True, blank=True,
+                                     help_text=_('Default project pitch'))
+    default_description = models.TextField(null=True, blank=True,
+                                           help_text=_('Default project description'))
+    default_image = models.ImageField(null=True, blank=True,
+                                      help_text=_('Default project image'))
+
+
 class CustomProjectFieldSettings(SortableMixin):
 
     project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
@@ -795,7 +816,6 @@ class ProjectPlatformSettings(BasePlatformSettings):
         ('mail', _('E-mail')),
         ('phone', _('Phone')),
     )
-
     create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
     contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
     allow_anonymous_rewards = models.BooleanField(default=True)

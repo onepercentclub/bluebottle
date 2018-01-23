@@ -1,20 +1,22 @@
 from datetime import timedelta, datetime
 import json
 from random import randint
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.test.utils import override_settings
 
-from moneyed import Money
+from moneyed.classes import Money
 
 from rest_framework import status
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
+from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter, ProjectCreateTemplate
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -2422,6 +2424,9 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
     def setUp(self):
         super(ProjectPlatformSettingsTestCase, self).setUp()
         self.init_projects()
+        image_file = './bluebottle/projects/test_images/upload.png'
+        self.some_image = SimpleUploadedFile(name='test_image.png', content=open(image_file, 'rb').read(),
+                                             content_type='image/png')
 
     def test_site_platform_settings_header(self):
         SitePlatformSettings.objects.create()
@@ -2466,3 +2471,35 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['projects']['filters'][2]['values'], None)
         self.assertEqual(response.data['platform']['projects']['filters'][2]['default'], 'campaign,voting')
         self.assertEqual(response.data['platform']['projects']['allow_anonymous_rewards'], False)
+
+    def test_site_platform_project_create_settings(self):
+
+        SitePlatformSettings.objects.create()
+        project_settings = ProjectPlatformSettings.objects.create(
+            contact_method='mail',
+            contact_types=['organization'],
+            create_flow='choice',
+            create_types=["funding", "sourcing"],
+            allow_anonymous_rewards=False
+        )
+
+        ProjectCreateTemplate.objects.create(
+            project_settings=project_settings,
+            default_amount_asked=Money(1500, 'EUR'),
+            description='<h2>Cool things</h2>Mighty awesome things!',
+            image=self.some_image,
+            default_title='Sample project title',
+        )
+
+        ProjectCreateTemplate.objects.create(
+            project_settings=project_settings,
+            default_amount_asked=Money(2500, 'EUR'),
+            description='<h2>Better things</h2>The dogs balls!'
+        )
+
+        response = self.client.get(reverse('settings'))
+        self.assertEqual(len(response.data['platform']['projects']['templates']), 2)
+        template = response.data['platform']['projects']['templates'][1]
+        self.assertEqual(template['default_amount_asked'], {'currency': 'EUR', 'amount': 1500.00})
+        self.assertEqual(len(template['image']), 4)
+        self.assertEqual(template['default_title'], 'Sample project title')

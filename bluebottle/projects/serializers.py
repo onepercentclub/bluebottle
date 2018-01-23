@@ -19,7 +19,7 @@ from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import (
     ProjectBudgetLine, ProjectDocument, Project, ProjectImage,
     ProjectPlatformSettings, ProjectSearchFilter,
-    ProjectAddOn)
+    ProjectAddOn, ProjectCreateTemplate)
 from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.utils.serializers import (MoneySerializer, ResourcePermissionField,
                                           RelatedResourcePermissionField)
@@ -560,9 +560,31 @@ class ProjectSearchFilterSerializer(serializers.ModelSerializer):
         )
 
 
+class ProjectCreateTemplateSerializer(serializers.ModelSerializer):
+    default_amount_asked = MoneySerializer(min_amount=5.0)
+    image = ImageSerializer()
+    default_image = ImageSerializer()
+
+    class Meta:
+        model = ProjectCreateTemplate
+        fields = (
+            'name',
+            'sub_name',
+            'image',
+            'description',
+
+            'default_amount_asked',
+            'default_title',
+            'default_pitch',
+            'default_description',
+            'default_image',
+        )
+
+
 class ProjectPlatformSettingsSerializer(serializers.ModelSerializer):
 
     filters = ProjectSearchFilterSerializer(many=True)
+    templates = ProjectCreateTemplateSerializer(many=True)
 
     class Meta:
         model = ProjectPlatformSettings
@@ -572,5 +594,6 @@ class ProjectPlatformSettingsSerializer(serializers.ModelSerializer):
             'contact_method',
             'contact_types',
             'filters',
+            'templates',
             'allow_anonymous_rewards'
         )

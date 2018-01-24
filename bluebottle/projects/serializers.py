@@ -564,6 +564,7 @@ class ProjectCreateTemplateSerializer(serializers.ModelSerializer):
     default_amount_asked = MoneySerializer(min_amount=5.0)
     image = ImageSerializer()
     default_image = ImageSerializer()
+    default_story = serializers.CharField(source='default_description')
 
     class Meta:
         model = ProjectCreateTemplate
@@ -576,7 +577,7 @@ class ProjectCreateTemplateSerializer(serializers.ModelSerializer):
             'default_amount_asked',
             'default_title',
             'default_pitch',
-            'default_description',
+            'default_story',
             'default_image',
         )
 

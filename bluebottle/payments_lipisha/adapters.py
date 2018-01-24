@@ -94,12 +94,19 @@ class LipishaPaymentAdapter(BasePaymentAdapter):
                 }
 
     def check_payment_status(self):
+        # If we have a transaction reference, then use that
+        if self.payment.transaction_reference and self.payment.transaction_reference != '4':
+            response = self.client.get_transactions(
+                transaction_type='Payment',
+                transaction=self.payment.transaction_reference
+            )
+        else:
+            response = self.client.get_transactions(
+                transaction_type='Payment',
+                transaction_reference=self.order_payment.id
+            )
 
-        response = self.client.get_transactions(
-            transaction_type='Payment',
-            transaction_reference=self.payment.reference
-        )
-        self.payment.response = json.dumps(response)
+        self.payment.update_response = json.dumps(response)
         data = response['content']
 
         if len(data) == 0:
@@ -108,6 +115,8 @@ class LipishaPaymentAdapter(BasePaymentAdapter):
             raise PaymentException('Payment could not be verified yet. Payment not found.')
         else:
             payment = data[0]
+            # Make sure we set the right properties
+            payment['transaction_reference'] = payment['transaction']
             for k, v in payment.iteritems():
                 setattr(self.payment, k, v)
             if self.payment.transaction_amount != self.payment.order_payment.amount.amount:

@@ -34,7 +34,7 @@ def is_absolute_url(url):
 class RestrictedImageField(serializers.ImageField):
     def to_internal_value(self, data):
         if isinstance(data, unicode) and is_absolute_url(data):
-            response = requests.get(data)
+            response = requests.get(data, verify=True)
             try:
                 response.raise_for_status()
             except requests.HTTPError, e:

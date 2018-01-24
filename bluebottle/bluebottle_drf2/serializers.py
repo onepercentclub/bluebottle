@@ -2,16 +2,21 @@ import logging
 import os
 from os.path import isfile
 import re
+from StringIO import StringIO
 import sys
 from urllib2 import URLError
+import urlparse
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.files import File
 from django.core.urlresolvers import reverse
 from django.template import defaultfilters
 from django.template.defaultfilters import linebreaks
 from django.utils.encoding import smart_str
 from django.utils.html import strip_tags, urlize
+
+import requests
 
 from micawber.contrib.mcdjango import providers
 from micawber.exceptions import ProviderException
@@ -22,8 +27,24 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 logger = logging.getLogger(__name__)
 
 
+def is_absolute_url(url):
+    return bool(urlparse.urlparse(url).netloc)
+
+
 class RestrictedImageField(serializers.ImageField):
     def to_internal_value(self, data):
+        if isinstance(data, unicode) and is_absolute_url(data):
+            response = requests.get(data)
+            try:
+                response.raise_for_status()
+            except requests.HTTPError, e:
+                raise ValidationError(e.message)
+
+            data = File(
+                StringIO(response.content),
+                name=data.split('/')[-1],
+            )
+            data.content_type = response.headers['content-type']
         if data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
             # We restrict images to a fixed set of mimetypes.
             # This prevents users from uploading broken eps files (for example),

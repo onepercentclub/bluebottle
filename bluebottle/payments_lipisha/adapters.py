@@ -95,7 +95,7 @@ class LipishaPaymentAdapter(BasePaymentAdapter):
 
     def check_payment_status(self):
         # If we have a transaction reference, then use that
-        if self.payment.transaction_reference:
+        if self.payment.transaction_reference and self.payment.transaction_reference != '4':
             response = self.client.get_transactions(
                 transaction_type='Payment',
                 transaction=self.payment.transaction_reference

@@ -16,7 +16,8 @@ class RecentProjects(DashboardModule):
     limit = 10
 
     def init_with_context(self, context):
-        self.children = Project.objects.filter(status__slug='plan-submitted').order_by('-created')[:self.limit]
+        projects = Project.objects.filter(status__slug='plan-submitted').order_by('date_submitted')
+        self.children = projects[:self.limit]
 
 
 class MyReviewingProjects(DashboardModule):

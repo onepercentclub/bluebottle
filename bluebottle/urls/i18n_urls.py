@@ -12,6 +12,10 @@ admin.autodiscover()
 
 urlpatterns = [
 
+    # Django JET URLS
+    url(r'^jet/', include('jet.urls', 'jet')),
+    url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),  # Django JET dashboard URLS
+
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$',
         admin_password_reset,

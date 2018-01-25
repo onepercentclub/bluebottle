@@ -50,6 +50,7 @@ install_requires = [
     'django-fsm==2.5.0',
     'django-hashers-passlib==0.3',
     'django-ipware==1.1.6',
+    'django-jet==1.0.7',
     'django-localflavor==1.5.2',
     'django-lockdown==1.4.2',
     'django-loginas==0.3.2',

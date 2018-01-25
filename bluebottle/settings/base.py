@@ -4,8 +4,9 @@ from collections import OrderedDict
 import rules
 from PIL import ImageFile
 
+from django.utils.translation import ugettext_lazy as _
+
 from .payments import *  # noqa
-from .admin_dashboard import *  # noqa
 
 BASE_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), os.path.pardir, os.path.pardir))
@@ -286,10 +287,14 @@ TENANT_APPS = (
     'bluebottle.common',
     'token_auth',
 
+    'bluebottle.bluebottle_dashboard',
+    'jet',
+    'jet.dashboard',
+
     'admin_tools',
-    'admin_tools.theming',
-    'admin_tools.menu',
-    'admin_tools.dashboard',
+    # 'admin_tools.theming',
+    # 'admin_tools.menu',
+    # 'admin_tools.dashboard',
 
     # Thumbnails
     'sorl.thumbnail',
@@ -309,12 +314,11 @@ TENANT_APPS = (
 
     'rest_framework.authtoken',
 
-    # Newly moved BB apps
     'bluebottle.members',
     'bluebottle.projects',
     'bluebottle.organizations',
+
     'bluebottle.tasks',
-    'bluebottle.bluebottle_dashboard',
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
@@ -353,7 +357,7 @@ TENANT_APPS = (
     'bluebottle.rewards',
 
     # Custom dashboard
-    'fluent_dashboard',
+    # 'fluent_dashboard',
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
@@ -857,3 +861,42 @@ SUMMERNOTE_CONFIG = {
 }
 
 HOMEPAGE = {}
+
+JET_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomIndexDashboard'
+# JET_INDEX_DASHBOARD = 'dashboard_old.CustomIndexDashboard'
+JET_DEFAULT_THEME = 'light-gray'
+
+JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
+    {'label': _('Projects'), 'app_label': 'projects', 'items': [
+        {'name': 'projects.project'},
+        {'name': 'categories.category'},
+        {'name': 'fundraisers.fundraiser'},
+        {'name': 'organizations.organization'},
+        {'name': 'rewards.reward'},
+        {'name': 'votes.vote'},
+        {'name': 'projects.projectphase'},
+        {'name': 'projects.projecttheme'},
+        {'name': 'projects.fundraiser'},
+    ]},
+    {'label': _('Tasks'), 'app_label': 'tasks', 'items': [
+        {'name': 'tasks.task'},
+    ]},
+    {'label': 'Users', 'items': [
+        {'name': 'members.member'},
+    ]},
+    {'label': _('Site Content'), 'items': [
+        {'name': 'cms.resultpage'},
+        {'name': 'cms.homepage'},
+        {'name': 'slides.slide'},
+        {'name': 'redirects.redirect'},
+
+    ]},
+    {'label': _('Platform settings'), 'items': [
+        {'name': 'projects.projectplatformsettings'},
+        {'name': 'cms.siteplatformsettings'},
+        {'name': 'analytics.analyticsplatformsettings'},
+    ]},
+
+]
+
+JET_SIDE_MENU_COMPACT = False

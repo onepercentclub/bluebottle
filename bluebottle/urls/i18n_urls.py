@@ -14,7 +14,9 @@ urlpatterns = [
 
     # Django JET URLS
     url(r'^jet/', include('jet.urls', 'jet')),
-    url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),  # Django JET dashboard URLS
+    url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
+
+    url(r'^admin/analytics/', include('bluebottle.bluebottle_dashboard.urls.admin')),
 
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$',
@@ -26,7 +28,6 @@ urlpatterns = [
     url(r'^admin/password_reset/confirm/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         password_reset_confirm,
         name='password_reset_confirm'),
-    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/exportdb/', include('exportdb.urls')),
     url(r'^admin/analytics/', include('bluebottle.analytics.urls')),
     url(r'^admin/', include(admin.site.urls)),

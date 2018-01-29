@@ -1,44 +1,15 @@
+import importlib
+
+from bluebottle.projects.dashboard import RecentProjects, MyReviewingProjects, ClosingFundingProjects
 from django.urls.base import reverse
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
+
 from jet.dashboard import modules
-from jet.dashboard.dashboard import Dashboard
+from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard
 from jet.dashboard.modules import DashboardModule
 
-from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
-
-
-class RecentProjects(DashboardModule):
-    title = _('Recently Submitted Projects')
-    title_url = reverse('admin:projects_project_changelist')
-    template = 'dashboard/recent_projects.html'
-    limit = 10
-
-    def init_with_context(self, context):
-        projects = Project.objects.filter(status__slug='plan-submitted').order_by('date_submitted')
-        self.children = projects[:self.limit]
-
-
-class MyReviewingProjects(DashboardModule):
-    title = _('Projects I\'m reviewing')
-    title_url = reverse('admin:projects_project_changelist')
-    template = 'dashboard/recent_projects.html'
-    limit = 5
-
-    def init_with_context(self, context):
-        user = context.request.user
-        self.children = Project.objects.filter(reviewer=user).order_by('-created')[:self.limit]
-
-
-class ClosingFundingProjects(DashboardModule):
-    title = _('Projects nearing deadline')
-    title_url = reverse('admin:projects_project_changelist')
-    template = 'dashboard/closing_funding_projects.html'
-    limit = 5
-
-    def init_with_context(self, context):
-        self.children = Project.objects.filter(status__slug='campaign').order_by('deadline')[:self.limit]
 
 
 class ClosingTasks(DashboardModule):
@@ -97,3 +68,14 @@ class CustomIndexDashboard(Dashboard):
             column=0,
             order=0
         ))
+
+
+class CustomAppIndexDashboard(DefaultAppIndexDashboard):
+
+    def __new__(cls, context, **kwargs):
+        try:
+            mod = importlib.import_module("bluebottle.{}.dashboard".format(kwargs['app_label']))
+            dash = mod.AppIndexDashboard(context, **kwargs)
+            return dash
+        except ImportError:
+            return DefaultAppIndexDashboard(context, **kwargs)

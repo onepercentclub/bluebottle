@@ -103,5 +103,10 @@ class LocationAdmin(admin.ModelAdmin):
     def get_actions(self, request):
         return dict([self.make_action(group) for group in LocationGroup.objects.all()])
 
+    fieldsets = (
+        (_('Info'), {'fields': ('name', 'description', 'group', 'city', 'country', 'image')}),
+        (_('Map'), {'fields': ('position', )})
+    )
+
 
 admin.site.register(Location, LocationAdmin)

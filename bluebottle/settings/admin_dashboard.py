@@ -1,121 +1,103 @@
 from django.utils.translation import ugettext_lazy as _
 
-# Custom dashboard configuration
-# ADMIN_TOOLS_INDEX_DASHBOARD = 'fluent_dashboard.dashboard.FluentIndexDashboard'
-ADMIN_TOOLS_INDEX_DASHBOARD = 'dashboard.CustomIndexDashboard'
-ADMIN_TOOLS_APP_INDEX_DASHBOARD = 'fluent_dashboard.dashboard.FluentAppIndexDashboard'
-ADMIN_TOOLS_MENU = 'bluebottle.clients.admin_menu.AdminMenu'
 
+JET_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomIndexDashboard'
+JET_APP_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomAppIndexDashboard'
 
-# Further customize the dashboard
-FLUENT_DASHBOARD_DEFAULT_MODULE = 'admin_tools.dashboard.modules.AppList'
-FLUENT_DASHBOARD_APP_GROUPS = (
-    (_('Site content'), {
-        'models': [
-            'bluebottle.pages.*',
-            'bluebottle.news.*',
-            'bluebottle.slides.*',
-            'bluebottle.banners.*',
-            'bluebottle.quotes.*',
-            'bluebottle.terms.*',
-            'bluebottle.contact.*',
-            'bluebottle.redirects.*',
-            'bluebottle.cms.models.ResultPage',
-            'bluebottle.cms.models.HomePage',
-            'bluebottle.cms.models.SiteLinks'
-        ],
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Projects'), {
-        'models': (
-            'bluebottle.projects.models.Project',
-            'bluebottle.bb_projects.*',
-            'bluebottle.fundraisers.*',
-            'bluebottle.categories.*',
-            'bluebottle.organizations.*',
-            'bluebottle.votes.*',
-            'bluebottle.geo.models.Location',
-            'bluebottle.rewards.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Tasks'), {
-        'models': (
-            'bluebottle.tasks.*',
-            'bluebottle.bb_tasks.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Surveys'), {
-        'models': (
-            'bluebottle.surveys.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Wallposts'), {
-        'models': (
-            'bluebottle.wallposts.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Donations'), {
-        'models': (
-            'bluebottle.donations.*',
-            'bluebottle.orders.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Monthly Donations'), {
-        'models': (
-            'bluebottle.recurring_donations.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Finances'), {
-        'models': (
-            'bluebottle.payments.*',
-            'bluebottle.payments_docdata.*',
-            'bluebottle.payments_logger.*',
-            'bluebottle.payouts.*',
-            'bluebottle.accounting.*',
-            'bluebottle.journals.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Members'), {
-        'models': (
-            'django.contrib.auth.*',
-            'registration.*',
-            'bluebottle.members.*',
-            'bluebottle.bb_accounts.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Settings'), {
-        'models': (
-            'bluebottle.cms.models.SitePlatformSettings',
-            'bluebottle.projects.models.ProjectPlatformSettings',
-            'bluebottle.analytics.models.AnalyticsPlatformSettings',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    # The '*' selector acts like a fallback for all other apps. This section mainly displays models
-    # with tabular data that is rarely touched. The important models have an icon.
-    (_('Applications'), {
-        'models': ('*',),
-        'module': FLUENT_DASHBOARD_DEFAULT_MODULE,
-        'collapsible': False,
-    }),
-)
+JET_DEFAULT_THEME = 'light-gray'
 
-ADMIN_TOOLS_THEMING_CSS = 'css/admin/dashboard.css'
+JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
+    {
+        'label': _('Projects'),
+        'app_label': 'projects',
+        'permissions': ['projects.change_project'],
+        'items': [
+            {'name': 'projects.project', 'permissions': ['projects.project']},
+            {'name': 'categories.category'},
+            {'name': 'fundraisers.fundraiser'},
+            {'name': 'bb_projects.projectphase'},
+            {'name': 'bb_projects.projecttheme'},
+            {'name': 'organizations.organization'},
+            {'name': 'geo.location'},
+        ]
+    },
+    {
+        'label': _('Tasks'),
+        'app_label': 'tasks',
+        'permissions': ['tasks.change_task'],
+        'items': [
+            {'name': 'tasks.task'},
+            {'name': 'tasks.taskmember'},
+            {'name': 'tasks.skill'},
+        ]
+    },
+    {
+        'label': 'Members',
+        'app_label': 'members',
+        'permissions': ['members.change_member'],
+        'items': [
+            {'name': 'members.member'},
+            {'name': 'auth.group'},
+        ]
+    },
+    {
+        'label': 'Wallposts',
+        'permissions': ['wallposts.wallpost'],
+        'items': [
+            {'name': 'wallposts.wallpost'},
+            {'name': 'wallposts.systemwallpost'},
+            {'name': 'wallposts.mediawallpost'},
+            {'name': 'wallposts.textwallpost'},
+            {'name': 'wallposts.reaction'},
+        ]
+    },
+    {
+        'label': _('Site Content'),
+        'items': [
+            {'name': 'cms.resultpage'},
+            {'name': 'cms.homepage'},
+            {'name': 'cms.sitelinks'},
+            {'name': 'pages.page'},
+
+            {'name': 'slides.slide'},
+            {'name': 'redirects.redirect'},
+            {'name': 'news.newsitem'},
+            {'name': 'terms.terms'},
+            {'name': 'contact.contactmessage'},
+
+        ]
+    },
+    {
+        'label': _('Donations'), 'items': [
+            {'name': 'donations.donation'},
+            {'name': 'orders.order'},
+            {'name': 'recurring_donations.monthlybatch'},
+            {'name': 'recurring_donations.monthlydonation'},
+            {'name': 'recurring_donations.monthlydonor'},
+            {'name': 'recurring_donations.monthlyorder'},
+        ]
+    },
+    {
+        'label': _('Finance'),
+        'items': [
+            {'name': 'payments.orderpayment'},
+            {'name': 'payments.payment'},
+            {'name': 'djmoney_rates.ratesource'},
+        ]
+    },
+    {
+        'label': _('Platform settings'),
+        'items': [
+            {'name': 'projects.projectplatformsettings'},
+            {'name': 'members.memberplatformsettings'},
+            {'name': 'cms.siteplatformsettings'},
+            {'name': 'analytics.analyticsplatformsettings'},
+            {'name': 'utils.language'},
+            {'name': 'authtoken.token'},
+
+        ]
+    },
+
+]
+
+JET_SIDE_MENU_COMPACT = False

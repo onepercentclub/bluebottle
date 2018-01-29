@@ -132,7 +132,13 @@ mark_as_closed.short_description = _("Mark selected projects as status Rejected 
 
 
 class ProjectThemeAdmin(admin.ModelAdmin):
-    list_display = admin.ModelAdmin.list_display + ('slug', 'disabled',)
+    list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'project_link')
+    readonly_fields = ('project_link', )
+    fields = ('name', 'slug', 'description', 'disabled') + readonly_fields
+
+    def project_link(self, obj):
+        url = "{}?theme={}".format(reverse('admin:projects_project_changelist'), obj.id)
+        return format_html("<a href='{}'>{} projects</a>".format(url, obj.project_set.count()))
 
 
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
@@ -288,7 +294,11 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
 
     def __init__(self, *args, **kwargs):
         super(ProjectAdminForm, self).__init__(*args, **kwargs)
-        self.fields['currencies'].required = False
+        try:
+            self.fields['currencies'].required = False
+        except KeyError:
+            # Field is not shown
+            pass
         self.fields['reviewer'].widget = ReviewerWidget(
             rel=Project._meta.get_field('reviewer').rel,
             admin_site=admin.sites.site
@@ -342,20 +352,30 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     prepopulated_fields = {'slug': ('title',)}
 
     def get_inline_instances(self, request, obj=None):
-        instances = super(ProjectAdmin, self).get_inline_instances(request, obj)
+        self.inlines = self.all_inlines
+        if obj:
+            # We need to reload project, or we get an error when changing project type
+            proj = Project.objects.get(pk=obj.id)
+            if obj and proj.project_type == 'sourcing':
+                self.inlines = self.sourcing_inlines
 
+        instances = super(ProjectAdmin, self).get_inline_instances(request, obj)
         add_on_inline = ProjectAddOnInline(self.model, self.admin_site)
         if len(add_on_inline.get_child_inline_instances()):
             instances.append(add_on_inline)
         return instances
 
-    inlines = (
+    all_inlines = (
         ProjectBudgetLineInline,
         RewardInlineAdmin,
         TaskAdminInline,
         ProjectDocumentInline,
         ProjectPhaseLogInline,
-
+    )
+    sourcing_inlines = (
+        ProjectDocumentInline,
+        TaskAdminInline,
+        ProjectPhaseLogInline,
     )
 
     list_filter = ('country__subregion__region', )
@@ -668,7 +688,15 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'fields': [field.slug for field in CustomProjectFieldSettings.objects.all()]
         })
 
-        return (main, story, details, goal, dates, bank, extra)
+        fieldsets = (main, story, details, dates)
+
+        if obj and obj.project_type != 'sourcing':
+            fieldsets += (goal, bank)
+
+        if CustomProjectFieldSettings.objects.count():
+            fieldsets += (extra, )
+
+        return fieldsets
 
     def get_queryset(self, request):
         # Optimization: Select related fields that are used in admin specific
@@ -689,7 +717,11 @@ admin.site.register(Project, ProjectAdmin)
 
 class ProjectPhaseAdmin(admin.ModelAdmin):
 
-    list_display = ['__unicode__', 'name', 'slug']
+    list_display = ['__unicode__', 'name', 'slug', 'project_link']
+
+    def project_link(self, obj):
+        url = "{}?status={}".format(reverse('admin:projects_project_changelist'), obj.id)
+        return format_html("<a href='{}'>{} projects</a>".format(url, obj.project_set.count()))
 
 
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)

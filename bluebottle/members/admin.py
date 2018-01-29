@@ -16,6 +16,7 @@ from django_singleton_admin.admin import SingletonAdmin
 
 from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings
+from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
 from bluebottle.clients import properties
@@ -151,6 +152,30 @@ class MemberVotesInline(admin.TabularInline):
     extra = 0
 
 
+class MemberTasksInline(admin.TabularInline):
+    model = TaskMember
+    extra = 0
+    readonly_fields = ('task_admin_link', 'task_deadline', 'status', 'time_spent')
+    fields = readonly_fields
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request):
+        return False
+
+    def task_deadline(self, obj):
+        return obj.task.deadline.date()
+
+    def task_admin_link(self, obj):
+        task = obj.task
+        url = reverse('admin:tasks_task_change', args=[task.id])
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url), task.title.encode("utf8")
+        )
+
+
 class MemberAdmin(UserAdmin):
 
     @property
@@ -221,7 +246,7 @@ class MemberAdmin(UserAdmin):
     list_filter = ('user_type', 'is_active', 'is_staff', 'is_superuser', 'newsletter', 'favourite_themes', 'skills')
     list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined', 'is_active', 'login_as_user')
     ordering = ('-date_joined', 'email',)
-    inlines = (UserAddressInline, MemberVotesInline,)
+    inlines = (UserAddressInline, MemberVotesInline, MemberTasksInline)
 
     def login_as_user(self, obj):
         return format_html(

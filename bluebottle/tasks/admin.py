@@ -179,7 +179,14 @@ class TaskAdmin(admin.ModelAdmin):
         DeadlineToApplyFilter,
         'accepting'
     )
-    list_display = ('title', 'project', 'status', 'created', 'deadline', 'expertise_based')
+    list_display = (
+        'title',
+        'project_link',
+        'status',
+        'created_date',
+        'deadline_date',
+        'deadline_to_apply_date',
+    )
 
     readonly_fields = ('date_status_change',)
 
@@ -212,6 +219,27 @@ class TaskAdmin(admin.ModelAdmin):
               'accepting', 'needs_motivation', 'location',
               'date_status_change', 'people_needed',
               'project', 'author', 'type', 'deadline', 'deadline_to_apply')
+
+    def created_date(self, obj):
+        return obj.created.date()
+    created_date.admin_order_field = 'created'
+    created_date.short_description = _('Created')
+
+    def deadline_date(self, obj):
+        return obj.deadline.date()
+    deadline_date.admin_order_field = 'deadline'
+    deadline_date.short_description = _('Deadline')
+
+    def deadline_to_apply_date(self, obj):
+        return obj.deadline_to_apply.date()
+    deadline_to_apply_date.admin_order_field = 'deadline_to_apply'
+    deadline_to_apply_date.short_description = _('Deadline to apply')
+
+    def project_link(self, obj):
+        url = reverse('admin:projects_project_change', args=(obj.project.id,))
+        title = obj.project.title
+        title = (title[:30] + '&hellip;') if len(title) > 30 else title
+        return format_html(u"<a href='{}'>{}</a>".format(url, title))
 
 
 admin.site.register(Task, TaskAdmin)

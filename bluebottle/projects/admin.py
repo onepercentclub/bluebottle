@@ -144,23 +144,6 @@ class ProjectThemeAdmin(admin.ModelAdmin):
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
-class ProjectThemeFilter(admin.SimpleListFilter):
-    title = _('Theme')
-    parameter_name = 'theme'
-
-    def lookups(self, request, model_admin):
-        themes = [obj.theme for obj in
-                  model_admin.model.objects.order_by('theme__name').distinct(
-                      'theme__name').exclude(theme__isnull=True).all()]
-        return [(theme.id, _(theme.name)) for theme in themes]
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(theme=self.value())
-        else:
-            return queryset
-
-
 class ProjectReviewerFilter(admin.SimpleListFilter):
     title = _('Reviewer')
     parameter_name = 'reviewer'
@@ -615,8 +598,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         return filters
 
     def get_list_display(self, request):
-        fields = ['get_title_display', 'get_owner_display', 'created', 'status', 'deadline', 'donated_percentage',
-                  'campaign_edited', 'amount_extra', 'expertise_based']
+        fields = [
+            'get_title_display', 'get_owner_display', 'created_date',
+            'status', 'deadline_date', 'donated_percentage',
+            'campaign_edited', 'amount_extra', 'expertise_based'
+        ]
 
         if request.user.has_perm('projects.approve_payout'):
             fields.insert(4, 'payout_status')
@@ -628,6 +614,16 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if Vote.objects.count():
             fields += ('vote_count',)
         return fields
+
+    def created_date(self, obj):
+        return obj.created.date()
+    created_date.admin_order_field = 'created'
+    created_date.short_description = _('Created')
+
+    def deadline_date(self, obj):
+        return obj.deadline.date()
+    deadline_date.admin_order_field = 'deadline'
+    deadline_date.short_description = _('Deadline')
 
     def get_list_editable(self, request):
         return ('is_campaign',)

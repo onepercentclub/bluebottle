@@ -35,8 +35,6 @@ class Command(BaseCommand):
                     except Exception:
                         transaction_reference = ''
 
-                    print transaction_reference
-
                     results.append({
                         'id': order.id,
                         'transaction_reference': transaction_reference,

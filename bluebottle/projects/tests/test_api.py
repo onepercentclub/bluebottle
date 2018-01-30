@@ -1,20 +1,24 @@
 from datetime import timedelta, datetime
 import json
 from random import randint
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.test.utils import override_settings
 
-from moneyed import Money
+import httmock
+
+from moneyed.classes import Money
 
 from rest_framework import status
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
+from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter, ProjectCreateTemplate
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -962,6 +966,62 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED, response)
         self.assertEquals(response.data['project_type'], 'sourcing',
                           'Project should have a default project_type')
+
+    @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
+    def test_project_image_url(self):
+        # Add some values to this project
+        project_data = {
+            'title': 'My idea is way smarter!',
+            'pitch': 'Lorem ipsum, bla bla ',
+            'description': 'Some more text',
+            'amount_asked': 1000,
+            'image': 'http://example.com/image.jpg'
+        }
+
+        @httmock.urlmatch(path=r'/image.jpg')
+        def image_mock(url, request):
+            with open(self.some_photo, mode='rb') as image:
+                    return httmock.response(
+                        200,
+                        content=image.read(),
+                        headers={'content-type': 'image/jpeg'}
+                    )
+
+        with httmock.HTTMock(image_mock):
+            response = self.client.post(self.manage_projects_url,
+                                        project_data,
+                                        token=self.another_user_token)
+
+        self.assertEquals(response.status_code, 201)
+        self.assertTrue(
+            response.data['image']['large'].endswith('jpg')
+        )
+
+    @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
+    def test_project_image_url_404(self):
+        # Add some values to this project
+        project_data = {
+            'title': 'My idea is way smarter!',
+            'pitch': 'Lorem ipsum, bla bla ',
+            'description': 'Some more text',
+            'amount_asked': 1000,
+            'image': 'http://example.com/image.jpg'
+        }
+
+        @httmock.urlmatch(path=r'/image.jpg')
+        def image_mock(url, request):
+            return httmock.response(404)
+
+        with httmock.HTTMock(image_mock):
+            response = self.client.post(self.manage_projects_url,
+                                        project_data,
+                                        token=self.another_user_token)
+
+        self.assertEquals(response.status_code, 400)
+
+        self.assertTrue(
+            response.data['image'][0].startswith('404 Client Error')
+        )
 
     @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
     def test_project_type_defined(self):
@@ -2422,6 +2482,9 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
     def setUp(self):
         super(ProjectPlatformSettingsTestCase, self).setUp()
         self.init_projects()
+        image_file = './bluebottle/projects/test_images/upload.png'
+        self.some_image = SimpleUploadedFile(name='test_image.png', content=open(image_file, 'rb').read(),
+                                             content_type='image/png')
 
     def test_site_platform_settings_header(self):
         SitePlatformSettings.objects.create()
@@ -2466,3 +2529,35 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['projects']['filters'][2]['values'], None)
         self.assertEqual(response.data['platform']['projects']['filters'][2]['default'], 'campaign,voting')
         self.assertEqual(response.data['platform']['projects']['allow_anonymous_rewards'], False)
+
+    def test_site_platform_project_create_settings(self):
+
+        SitePlatformSettings.objects.create()
+        project_settings = ProjectPlatformSettings.objects.create(
+            contact_method='mail',
+            contact_types=['organization'],
+            create_flow='choice',
+            create_types=["funding", "sourcing"],
+            allow_anonymous_rewards=False
+        )
+
+        ProjectCreateTemplate.objects.create(
+            project_settings=project_settings,
+            default_amount_asked=Money(1500, 'EUR'),
+            description='<h2>Cool things</h2>Mighty awesome things!',
+            image=self.some_image,
+            default_title='Sample project title',
+        )
+
+        ProjectCreateTemplate.objects.create(
+            project_settings=project_settings,
+            default_amount_asked=Money(2500, 'EUR'),
+            description='<h2>Better things</h2>The dogs balls!'
+        )
+
+        response = self.client.get(reverse('settings'))
+        self.assertEqual(len(response.data['platform']['projects']['templates']), 2)
+        template = response.data['platform']['projects']['templates'][1]
+        self.assertEqual(template['default_amount_asked'], {'currency': 'EUR', 'amount': 1500.00})
+        self.assertEqual(len(template['image']), 4)
+        self.assertEqual(template['default_title'], 'Sample project title')

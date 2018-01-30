@@ -103,6 +103,10 @@ class OrganizationContact(models.Model):
         _('created'), help_text=_('When this contact was created.'))
     updated = ModificationDateTimeField(_('updated'))
 
+    class Meta:
+        verbose_name = _('Partner Organization Contact')
+        verbose_name_plural = _('Partner Organization Contacts')
+
 
 class OrganizationMember(models.Model):
     class MemberFunctions(DjangoChoices):

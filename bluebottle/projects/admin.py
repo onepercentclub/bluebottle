@@ -4,6 +4,7 @@ import logging
 import six
 from decimal import InvalidOperation
 
+from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django.contrib.admin.widgets import AdminTextareaWidget
 from django.forms.models import ModelFormMetaclass
@@ -17,7 +18,7 @@ from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.projects.models import (
     ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn,
     CustomProjectField, CustomProjectFieldSettings, ProjectCreateTemplate)
-from bluebottle.tasks.models import Skill
+
 from django import forms
 from django.db import connection
 from django.conf.urls import url
@@ -29,7 +30,6 @@ from django.utils.html import format_html
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden, HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
-from daterange_filter.filter import DateRangeFilter
 from django_summernote.widgets import SummernoteWidget
 from sorl.thumbnail.admin import AdminImageMixin
 from schwifty import IBAN, BIC
@@ -157,25 +157,6 @@ class ProjectThemeFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(theme=self.value())
-        else:
-            return queryset
-
-
-class ProjectSkillFilter(admin.SimpleListFilter):
-    title = _('Task skills')
-    parameter_name = 'skill'
-
-    def lookups(self, request, model_admin):
-        skills = Skill.objects.filter(disabled=False)
-        lookups = [(skill.id, _(skill.name)) for skill in skills]
-        return [('any', _('Any expertise based skill'))] + lookups
-
-    def queryset(self, request, queryset):
-        if self.value():
-            if self.value() == 'any':
-                return queryset.filter(task__skill__isnull=False, task__skill__expertise=True)
-            else:
-                return queryset.filter(task__skill=self.value())
         else:
             return queryset
 
@@ -613,8 +594,15 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         return process_urls + urls
 
     def get_list_filter(self, request):
-        filters = ['status', 'is_campaign', ProjectThemeFilter, ProjectSkillFilter,
-                   ProjectReviewerFilter, 'project_type', ('deadline', DateRangeFilter), ]
+        filters = [
+            ('status', UnionFieldListFilter),
+            'is_campaign',
+            ('theme', UnionFieldListFilter),
+            ('task__skill', UnionFieldListFilter),
+            ProjectReviewerFilter,
+            'project_type',
+            'deadline',
+        ]
 
         if request.user.has_perm('projects.approve_payout'):
             filters.insert(1, 'payout_status')

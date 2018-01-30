@@ -33,42 +33,6 @@ class CustomIndexDashboard(Dashboard):
         self.children.append(ClosingFundingProjects())
         self.children.append(ClosingTasks())
 
-        self.children.append(modules.LinkList(
-            _('Some links'),
-            children=[
-                {
-                    'title': _('Django documentation'),
-                    'url': 'http://docs.djangoproject.com/',
-                    'external': True,
-                },
-                {
-                    'title': _('Django "django-users" mailing list'),
-                    'url': 'http://groups.google.com/group/django-users',
-                    'external': True,
-                },
-                {
-                    'title': _('Django irc channel'),
-                    'url': 'irc://irc.freenode.net/django',
-                    'external': True,
-                },
-            ],
-            column=0,
-            order=0
-        ))
-
-        self.children.append(modules.LinkList(
-            _('More links'),
-            children=[
-                {
-                    'title': _('Interwebs'),
-                    'url': 'http://interwebs.com/',
-                    'external': True,
-                },
-            ],
-            column=0,
-            order=0
-        ))
-
 
 class CustomAppIndexDashboard(DefaultAppIndexDashboard):
 

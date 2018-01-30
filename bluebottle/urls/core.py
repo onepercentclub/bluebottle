@@ -119,7 +119,7 @@ urlpatterns = [
         include('bluebottle.payouts_dorado.urls')),
 
     url(r'^downloads/', include('bluebottle.projects.urls.media')),
-    url(r'^downloads/', include('bluebottle.bb_tasks.urls.media')),
+
 ]
 
 

@@ -3,16 +3,17 @@ from django.utils.translation import ugettext_lazy as _
 
 from jet.dashboard import modules
 from jet.dashboard.dashboard import DefaultAppIndexDashboard
-from jet.dashboard.modules import DashboardModule
+from jet.dashboard.modules import DashboardModule, ModelList
 
 from bluebottle.projects.models import Project
 
 
 class RecentProjects(DashboardModule):
     title = _('Recently Submitted Projects')
-    title_url = reverse('admin:projects_project_changelist')
+    title_url = "{}?status_filter=2".format(reverse('admin:projects_project_changelist'))
     template = 'dashboard/recent_projects.html'
     limit = 5
+    column = 1
 
     def init_with_context(self, context):
         projects = Project.objects.filter(status__slug='plan-submitted').order_by('date_submitted')
@@ -21,9 +22,10 @@ class RecentProjects(DashboardModule):
 
 class MyReviewingProjects(DashboardModule):
     title = _('Projects I\'m reviewing')
-    title_url = reverse('admin:projects_project_changelist')
+    title_url = "{}?reviewer=True".format(reverse('admin:projects_project_changelist'))
     template = 'dashboard/recent_projects.html'
     limit = 5
+    column = 1
 
     def init_with_context(self, context):
         user = context.request.user
@@ -32,18 +34,40 @@ class MyReviewingProjects(DashboardModule):
 
 class ClosingFundingProjects(DashboardModule):
     title = _('Projects nearing deadline')
-    title_url = reverse('admin:projects_project_changelist')
+    title_url = "{}?o=6&status_filter=5".format(reverse('admin:projects_project_changelist'))
     template = 'dashboard/closing_funding_projects.html'
     limit = 5
+    column = 1
 
     def init_with_context(self, context):
         self.children = Project.objects.filter(status__slug='campaign').order_by('deadline')[:self.limit]
+
+
+class ProjectInfo(ModelList):
+    title_url = "{}".format(reverse('admin:projects_project_changelist'))
+    title = _("Projects menu")
+    models = [
+        'projects.Project',
+        'categories.Category',
+        'fundraisers.Fundraiser',
+        'organizations.Organization',
+        'bb_projects.ProjectTheme',
+        'bb_projects.ProjectPhase',
+        'organizations.Organization',
+
+    ]
+    template = 'dashboard/projects_info.html'
+    deletable = False
+    collapsible = False
+    draggable = False
+    column = 0
 
 
 class AppIndexDashboard(DefaultAppIndexDashboard):
 
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
+        self.children.append(ProjectInfo())
         self.children.append(RecentProjects())
         self.children.append(MyReviewingProjects())
         self.children.append(ClosingFundingProjects())

@@ -374,6 +374,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ('location__group', 'region'),
         ('country', 'country'),
         ('location', 'location'),
+        ('place', 'place'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),
         ('campaign_started', 'campaign started'),

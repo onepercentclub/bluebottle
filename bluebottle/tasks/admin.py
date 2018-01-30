@@ -317,7 +317,7 @@ admin.site.register(TaskMember, TaskMemberAdmin)
 
 
 class SkillAdmin(admin.ModelAdmin):
-    list_display = ('translated_name', 'disabled', 'expertise')
+    list_display = ('translated_name', 'task_link')
     readonly_fields = ('translated_name',)
     fields = readonly_fields + ('disabled', 'description', 'expertise')
 
@@ -331,6 +331,10 @@ class SkillAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    def task_link(self, obj):
+        url = "{}?skill_filter={}".format(reverse('admin:tasks_task_changelist'), obj.id)
+        return format_html("<a href='{}'>{} tasks</a>".format(url, obj.task_set.count()))
 
 
 admin.site.register(Skill, SkillAdmin)

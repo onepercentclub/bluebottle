@@ -689,7 +689,7 @@ class ProjectAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'title')
-        self.assertEqual(headers[27], 'Extra Info')
+        self.assertEqual(headers[28], 'Extra Info')
         self.assertEqual(data[0], 'Just an example')
-        self.assertEqual(data[27], '')
-        self.assertEqual(data[28], 'This is nice!')
+        self.assertEqual(data[28], '')
+        self.assertEqual(data[29], 'This is nice!')

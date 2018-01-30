@@ -391,6 +391,8 @@ TENANT_APPS = (
     'djmoney',
     'django_singleton_admin',
     'nested_inline',
+    'permissions_widget',
+
 )
 
 

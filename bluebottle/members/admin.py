@@ -2,16 +2,18 @@ import six
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django import forms
 from django.conf.urls import url
+from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.contrib import admin
+from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.forms.models import ModelFormMetaclass
 from django.http import HttpResponseRedirect
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+
 from django_singleton_admin.admin import SingletonAdmin
 
 from bluebottle.bb_accounts.models import UserAddress
@@ -213,7 +215,7 @@ class MemberAdmin(UserAdmin):
     )
 
     superuser_fieldsets = (
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups')}),
     )
 
     add_fieldsets = (
@@ -305,3 +307,19 @@ class MemberAdmin(UserAdmin):
 
 
 admin.site.register(Member, MemberAdmin)
+
+
+class GroupsAdmin(admin.ModelAdmin):
+    list_display = ["name", ]
+
+    class Media:
+        css = {
+            'all': ('css/admin/permissions-table.css',)
+        }
+
+    class Meta:
+        model = Group
+
+
+admin.site.unregister(Group)
+admin.site.register(Group, GroupsAdmin)

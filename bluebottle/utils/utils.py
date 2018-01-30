@@ -49,6 +49,7 @@ class StatusDefinition(object):
     SETTLED = 'settled'
     CONFIRMED = 'confirmed'
     CHARGED_BACK = 'charged_back'
+    REFUND_REQUESTED = 'refund_requested'
     REFUNDED = 'refunded'
     PAID = 'paid'
     FAILED = 'failed'

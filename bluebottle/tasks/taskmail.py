@@ -1,7 +1,6 @@
 from celery import shared_task
 
 from django.dispatch import receiver
-from django.db import connection
 from django.db.models.signals import pre_save, pre_delete, post_save
 from django.utils.translation import ugettext as _
 from django.utils.safestring import mark_safe
@@ -12,6 +11,9 @@ from bluebottle.clients.utils import tenant_url, LocalTenant
 from bluebottle.tasks.models import TaskMember, Task
 from bluebottle.surveys.models import Survey
 from bluebottle.utils.email_backend import send_mail
+
+
+TASK_REMINDER_INTERVAL = 5
 
 
 class TaskMemberMailSender:
@@ -89,6 +91,28 @@ class TaskMemberAcceptedMail(TaskMemberMailSender):
                 'author': self.task.author.get_short_name()}
 
 
+class TaskMemberJoinedMail(TaskMemberMailSender):
+    template_name = 'task_member_joined.mail'
+
+    def __init__(self, *args, **kwargs):
+        TaskMemberMailSender.__init__(self, *args, **kwargs)
+        self.ctx['motivation'] = self.task_member.motivation
+
+    @property
+    def subject(self):
+        with TenantLanguage(self.task_member.member.primary_language):
+            return _('%(member)s joined your task') % {
+                'member': self.task_member.member.get_short_name()}
+
+    @property
+    def receiver(self):
+        return self.task.author
+
+    @property
+    def sender(self):
+        return self.task_member.member
+
+
 class TaskMemberRealizedMail(TaskMemberMailSender):
     template_name = 'task_member_realized.mail'
 
@@ -122,6 +146,24 @@ class TaskMemberWithdrawMail(TaskMemberMailSender):
         return self.task_member.member
 
 
+class TaskMemberReminderMail(TaskMemberMailSender):
+
+    def __init__(self, *args, **kwargs):
+        TaskMemberMailSender.__init__(self, *args, **kwargs)
+        self.ctx['task_reminder_interval'] = TASK_REMINDER_INTERVAL
+
+    @property
+    def template_name(self):
+        if self.task.type == Task.TaskTypes.event:
+            return 'task_member_reminder_event.mail'
+        return 'task_member_reminder_ongoing.mail'
+
+    @property
+    def subject(self):
+        with TenantLanguage(self.receiver.primary_language):
+            return _('The task you subscribed to is due')
+
+
 class TaskMemberMailAdapter:
     """
     This class retrieve the correct TaskMemberMailSender instance based on
@@ -145,9 +187,27 @@ class TaskMemberMailAdapter:
         if self.TASK_MEMBER_MAIL.get(status):
             self.mail_sender = self.TASK_MEMBER_MAIL.get(status)(instance, message)
 
+        # Set up some special mail rules for Tasks with auto accepting
+        if instance.task.accepting == Task.TaskAcceptingChoices.automatic:
+            if instance.status == TaskMember.TaskMemberStatuses.accepted:
+                # Task member was auto-accepted
+                self.mail_sender = TaskMemberJoinedMail(instance, message)
+
     def send_mail(self):
         if self.mail_sender:
             self.mail_sender.send()
+
+
+@shared_task
+def send_upcoming_task_reminder(task):
+    # Acceptable statuses for task reminders
+    statuses = [TaskMember.TaskMemberStatuses.accepted]
+
+    # Send all applicable task members a mail if not send yet
+    if not task.mail_logs.filter(type='upcoming_deadline').exists():
+        for taskmember in task.members.filter(status__in=statuses).all():
+            TaskMemberReminderMail(taskmember).send()
+        task.mail_logs.create(type='upcoming_deadline')
 
 
 @shared_task
@@ -155,8 +215,6 @@ def send_task_realized_mail(task, template, subject, tenant):
     """ Send an email to the task owner with the request to confirm
     the task participants.
     """
-    connection.set_tenant(tenant)
-
     with LocalTenant(tenant, clear_tenant=True):
         if len(task.members.filter(status=TaskMember.TaskMemberStatuses.realized)):
             # There is already a confirmed task member: Do not bother the owner
@@ -174,8 +232,6 @@ def send_task_realized_mail(task, template, subject, tenant):
 
 @shared_task
 def send_deadline_to_apply_passed_mail(task, subject, tenant):
-    connection.set_tenant(tenant)
-
     with LocalTenant(tenant, clear_tenant=True):
         if not task.members_applied:
             template = 'deadline_to_apply_closed'

@@ -323,8 +323,6 @@ TENANT_APPS = (
     'bluebottle.payouts',
     'bluebottle.payouts_dorado',
     'bluebottle.surveys',
-
-    # Plain Bluebottle apps
     'bluebottle.wallposts',
     'bluebottle.utils',
     'bluebottle.analytics',
@@ -333,6 +331,7 @@ TENANT_APPS = (
     'bluebottle.contact',
     'bluebottle.geo',
     'bluebottle.pages',
+    'bluebottle.mails',
     'bluebottle.news',
     'bluebottle.slides',
     'bluebottle.quotes',

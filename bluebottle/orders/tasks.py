@@ -2,8 +2,6 @@ import logging
 
 from celery import shared_task
 
-from django.db import connection
-
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.orders.models import Order
 from bluebottle.utils.utils import StatusDefinition
@@ -19,7 +17,6 @@ def timeout_new_order(order, tenant):
     never be finished.
     """
     logger.info("Timeing out order {}".format(order))
-    connection.set_tenant(tenant)
 
     with LocalTenant(tenant, clear_tenant=True):
         order = Order.objects.get(pk=order.pk)
@@ -35,7 +32,6 @@ def timeout_locked_order(order, tenant):
     will never be  payed.
     """
     logger.info("Timeing out order {}".format(order))
-    connection.set_tenant(tenant)
 
     with LocalTenant(tenant, clear_tenant=True):
         order = Order.objects.get(pk=order.pk)

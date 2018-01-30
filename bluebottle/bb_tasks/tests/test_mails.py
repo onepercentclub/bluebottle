@@ -21,6 +21,9 @@ class TaskEmailTests(BluebottleTestCase):
         self.another_user = BlueBottleUserFactory.create(first_name='Kong',
                                                          primary_language='nl')
 
+        self.yet_another_user = BlueBottleUserFactory.create(first_name='Gong',
+                                                             primary_language='en')
+
         self.some_project = ProjectFactory.create()
         self.some_project.owner.primary_language = 'en'
 
@@ -82,3 +85,27 @@ class TaskEmailTests(BluebottleTestCase):
         self.assertEqual(m.activated_language,
                          self.taskmember1.member.primary_language)
         self.assertEqual(m.recipients()[0], self.some_user.email)
+
+    def test_mail_member_joined(self):
+        """
+        Test the sent mail for auto accepted task members.
+        """
+        self.task.accepting = Task.TaskAcceptingChoices.automatic
+        self.task.save()
+
+        mail.outbox = []
+
+        taskmember = TaskMemberFactory.create(
+            member=self.yet_another_user,
+            status=TaskMember.TaskMemberStatuses.applied,
+            task=self.task
+        )
+
+        self.assertEqual(taskmember.status, 'accepted')
+
+        # test that the e-mail is indeed sent
+        self.assertEqual(len(mail.outbox), 1)
+
+        m = mail.outbox.pop(0)
+        self.assertIn('Gong joined your task', m.subject)
+        self.assertEqual(m.recipients()[0], self.some_project.owner.email)

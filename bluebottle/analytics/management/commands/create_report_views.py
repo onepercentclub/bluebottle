@@ -39,7 +39,6 @@ class Command(BaseCommand):
         sql = "\n".join(sql_lines)
 
         for client in clients:
-            connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
                 cursor = connection.cursor()
                 cursor.execute(sql)

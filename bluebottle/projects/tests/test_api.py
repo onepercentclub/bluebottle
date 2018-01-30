@@ -9,6 +9,8 @@ from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.test.utils import override_settings
 
+import httmock
+
 from moneyed.classes import Money
 
 from rest_framework import status
@@ -964,6 +966,62 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED, response)
         self.assertEquals(response.data['project_type'], 'sourcing',
                           'Project should have a default project_type')
+
+    @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
+    def test_project_image_url(self):
+        # Add some values to this project
+        project_data = {
+            'title': 'My idea is way smarter!',
+            'pitch': 'Lorem ipsum, bla bla ',
+            'description': 'Some more text',
+            'amount_asked': 1000,
+            'image': 'http://example.com/image.jpg'
+        }
+
+        @httmock.urlmatch(path=r'/image.jpg')
+        def image_mock(url, request):
+            with open(self.some_photo, mode='rb') as image:
+                    return httmock.response(
+                        200,
+                        content=image.read(),
+                        headers={'content-type': 'image/jpeg'}
+                    )
+
+        with httmock.HTTMock(image_mock):
+            response = self.client.post(self.manage_projects_url,
+                                        project_data,
+                                        token=self.another_user_token)
+
+        self.assertEquals(response.status_code, 201)
+        self.assertTrue(
+            response.data['image']['large'].endswith('jpg')
+        )
+
+    @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
+    def test_project_image_url_404(self):
+        # Add some values to this project
+        project_data = {
+            'title': 'My idea is way smarter!',
+            'pitch': 'Lorem ipsum, bla bla ',
+            'description': 'Some more text',
+            'amount_asked': 1000,
+            'image': 'http://example.com/image.jpg'
+        }
+
+        @httmock.urlmatch(path=r'/image.jpg')
+        def image_mock(url, request):
+            return httmock.response(404)
+
+        with httmock.HTTMock(image_mock):
+            response = self.client.post(self.manage_projects_url,
+                                        project_data,
+                                        token=self.another_user_token)
+
+        self.assertEquals(response.status_code, 400)
+
+        self.assertTrue(
+            response.data['image'][0].startswith('404 Client Error')
+        )
 
     @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
     def test_project_type_defined(self):

@@ -546,7 +546,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             return HttpResponseForbidden('Missing permission: rewards.read_reward')
 
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=%s.csv' % (
+        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
             unicode(project.title).replace('.', '_')
         )
 
@@ -558,6 +558,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             writer.writerow([
                 prep_field(request, reward, field[0]) for field in self.reward_export_fields
             ])
+
         return response
 
     def amount_donated_i18n(self, obj):

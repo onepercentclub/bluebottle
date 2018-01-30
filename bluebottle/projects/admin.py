@@ -39,7 +39,7 @@ from bluebottle.payouts_dorado.adapters import (
     DoradoPayoutAdapter, PayoutValidationError, PayoutCreationError
 )
 from bluebottle.rewards.models import Reward
-from bluebottle.tasks.admin import TaskAdminInline
+from bluebottle.tasks.admin import TaskAdminInline, DeadlineFilter
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
@@ -601,7 +601,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             ('task__skill', UnionFieldListFilter),
             ProjectReviewerFilter,
             'project_type',
-            'deadline',
+            DeadlineFilter,
         ]
 
         if request.user.has_perm('projects.approve_payout'):

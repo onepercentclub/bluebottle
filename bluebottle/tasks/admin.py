@@ -1,12 +1,11 @@
 from datetime import timedelta
 
+from adminfilters.multiselect import UnionFieldListFilter
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-
-from daterange_filter.filter import DateRangeFilter
 
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
 from bluebottle.utils.admin import export_as_csv_action
@@ -110,9 +109,9 @@ class TaskFileAdminInline(admin.StackedInline):
     extra = 0
 
 
-class DeadlineToAppliedFilter(admin.SimpleListFilter):
-    title = _('Deadline to apply')
-    parameter_name = 'deadline_to_apply'
+class DeadlineFilter(admin.SimpleListFilter):
+    title = _('Deadline')
+    parameter_name = 'deadline'
 
     def lookups(self, request, model_admin):
         return (
@@ -135,6 +134,11 @@ class DeadlineToAppliedFilter(admin.SimpleListFilter):
                 )
         else:
             return queryset
+
+
+class DeadlineToApplyFilter(DeadlineFilter):
+    title = _('Deadline to apply')
+    parameter_name = 'deadline_to_apply'
 
 
 class OnlineOnLocationFilter(admin.SimpleListFilter):
@@ -165,13 +169,16 @@ class TaskAdmin(admin.ModelAdmin):
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
 
     raw_id_fields = ('author', 'project')
-    list_filter = ('status', 'type', 'skill__expertise',
-                   OnlineOnLocationFilter,
-                   ('skill', admin.RelatedOnlyFieldListFilter),
-                   'deadline', ('deadline', DateRangeFilter),
-                   DeadlineToAppliedFilter, ('deadline_to_apply', DateRangeFilter),
-                   'accepting'
-                   )
+    list_filter = (
+        'status',
+        'type',
+        'skill__expertise',
+        OnlineOnLocationFilter,
+        ('skill', UnionFieldListFilter),
+        DeadlineFilter,
+        DeadlineToApplyFilter,
+        'accepting'
+    )
     list_display = ('title', 'project', 'status', 'created', 'deadline', 'expertise_based')
 
     readonly_fields = ('date_status_change',)

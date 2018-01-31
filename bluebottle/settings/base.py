@@ -308,6 +308,7 @@ TENANT_APPS = (
     'bluebottle.widget',
 
     'rest_framework.authtoken',
+    'django_elasticsearch_dsl',
 
     # Newly moved BB apps
     'bluebottle.members',
@@ -857,3 +858,8 @@ SUMMERNOTE_CONFIG = {
 }
 
 HOMEPAGE = {}
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'localhost:9200'
+    },
+}

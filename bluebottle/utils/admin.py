@@ -120,7 +120,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                         value = obj.extra.get(field=field).value
                     except CustomMemberField.DoesNotExist:
                         value = ''
-                    row.append(value)
+                    row.append(value.encode('utf-8'))
             writer.writerow(row)
         return response
 

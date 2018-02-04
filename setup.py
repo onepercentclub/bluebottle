@@ -94,7 +94,7 @@ install_requires = [
     'sorl-thumbnail==12.4.1',
     'sorl-watermark==1.0.0',
     'South==1.0.2',
-    'Sphinx==1.6.6',
+    'Sphinx==1.6.7',
     'suds-jurko==0.6',
     'SurveyGizmo==1.2.3',
     'transifex-client==0.13.0',

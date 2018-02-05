@@ -65,7 +65,7 @@ install_requires = [
     'django-taggit==0.22.2',
     'django-tenant-schemas==1.9.0',
     'django-tinymce==2.7.0',
-    'django-tools==0.38.8',
+    'django-tools==0.38.9',
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.8.0',
     'djangorestframework-jwt==1.11.0',
@@ -104,7 +104,7 @@ install_requires = [
 
     # Github requirements
     'django-tenant-extras==2.0.14',
-    'django-fluent-contents==2.0',
+    'django-fluent-contents==2.0.1',
     'django-bb-salesforce==1.2.2',
     'django-taggit-autocomplete-modified==0.1.0',
     'django-token-auth==1.3.2b4',

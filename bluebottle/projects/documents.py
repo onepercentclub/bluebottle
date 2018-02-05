@@ -1,8 +1,10 @@
-from django_elasticsearch_dsl import DocType, Index
-from bluebottle.projects.models import  Project
+from django_elasticsearch_dsl import DocType
+
+from bluebottle.projects.models import Project
+from bluebottle.utils.documents import MultiTenantIndex
 
 # The name of your index
-project = Index('projects')
+project = MultiTenantIndex('projects')
 # See Elasticsearch Indices API reference for available settings
 project.settings(
     number_of_shards=1,

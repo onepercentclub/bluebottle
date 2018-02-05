@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand, CommandError
-from django.db import connection
 from django.utils.timezone import now
 
 from bluebottle.bb_projects.models import ProjectPhase
@@ -26,8 +25,6 @@ class Command(BaseCommand):
         need to update projects which haven't been funded but have expired,
         or they have been overfunded and have expired.
         """
-        connection.set_tenant(client)
-
         with LocalTenant(client, clear_tenant=True):
 
             self.stdout.write("Checking deadlines for client {0}".

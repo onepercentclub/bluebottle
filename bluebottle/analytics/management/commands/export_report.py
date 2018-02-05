@@ -129,7 +129,6 @@ class Command(BaseCommand):
         file_name = self.get_file_name()
         self.file_path = self.get_xls_file_name(file_name)
         client = Client.objects.get(client_name=self.tenant)
-        connection.set_tenant(client)
 
         with xlsxwriter.Workbook(self.file_path,
                                  {'default_date_format': 'dd/mm/yy', 'remove_timezone': True}) as workbook:

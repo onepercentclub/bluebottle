@@ -56,7 +56,7 @@ install_requires = [
     'django-memoize==2.1.0',
     'django-modeltranslation==0.12.2',
     'django-parler==1.9.1',
-    'django-polymorphic==2.0.1',
+    'django-polymorphic==2.0.2',
     'django-money==0.12.3',
     'django-rest-swagger==2.1.2',
     'django-select-multiple-field==0.4.2',

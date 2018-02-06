@@ -162,3 +162,21 @@ class MemberAdminExportTest(BluebottleTestCase):
         self.assertEqual(data[0], 'malle-eppie')
         self.assertEqual(data[11], '')
         self.assertEqual(data[12], 'Fine')
+
+    def test_member_unicode_export(self):
+        member = BlueBottleUserFactory.create(username='stimpy')
+        friend = CustomMemberFieldSettings.objects.create(name='Best friend')
+        CustomMemberField.objects.create(member=member, value='Ren Höek', field=friend)
+
+        export_action = self.member_admin.actions[0]
+        response = export_action(self.member_admin, self.request, self.member_admin.get_queryset(self.request))
+
+        data = response.content.split("\r\n")
+        headers = data[0].split(",")
+        data = data[1].split(",")
+
+        # Test basic info and extra field are in the csv export
+        self.assertEqual(headers[0], 'username')
+        self.assertEqual(headers[11], 'Best friend')
+        self.assertEqual(data[0], 'stimpy')
+        self.assertEqual(data[11], 'Ren Höek')

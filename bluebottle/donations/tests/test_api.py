@@ -9,8 +9,7 @@ from rest_framework import status
 from moneyed import Money
 
 from bluebottle.bb_orders.views import ManageOrderDetail
-from bluebottle.clients import properties
-from bluebottle.donations.models import Donation
+from bluebottle.donations.models import Donation, DonationPlatformSettings, DonationDefaultAmounts
 from bluebottle.orders.models import Order
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -660,7 +659,10 @@ class TestProjectDonationList(DonationApiTestCase):
         self.assertEqual(response.data['count'], 1)
 
     def test_successful_project_donation_list(self, check_status_psp):
-        setattr(properties, 'SHOW_DONATION_AMOUNTS', True)
+        donation_settings = DonationPlatformSettings.load()
+        donation_settings.show_donation_amount = True
+        donation_settings.save()
+
         # Unsuccessful donations should not be shown
         order = OrderFactory.create(user=self.user2)
         reward = RewardFactory.create(project=self.project3)
@@ -677,7 +679,9 @@ class TestProjectDonationList(DonationApiTestCase):
         self.assertIn('reward', response.data['results'][0])
 
     def test_project_donation_list_without_amounts(self, check_status_psp):
-        setattr(properties, 'SHOW_DONATION_AMOUNTS', False)
+        donation_settings = DonationPlatformSettings.load()
+        donation_settings.show_donation_amount = False
+        donation_settings.save()
         reward = RewardFactory.create(project=self.project3)
         order = OrderFactory.create(user=self.user2)
         DonationFactory.create(amount=2000, project=self.project3, reward=reward,
@@ -922,3 +926,65 @@ class TestLatestDonationListApi(DonationApiTestCase):
                                    token=self.user2_token)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestDonationSettingsApi(DonationApiTestCase):
+    """
+    Test that donation settings are reflected in the API
+    - Test that donation amount is shown or hidden
+    - Test donation settings are shown in config api
+    """
+
+    def setUp(self):
+        super(TestDonationSettingsApi, self).setUp()
+        self.project = ProjectFactory.create(amount_asked=5000)
+        self.project.set_status('campaign')
+        self.user = BlueBottleUserFactory.create()
+
+        order = OrderFactory.create()
+        DonationFactory.create(amount=1000, project=self.project, order=order)
+        order.locked()
+        order.save()
+        order.success()
+        order.save()
+        self.project_donation_list_url = reverse('project-donation-list')
+        self.settings_url = reverse('settings')
+
+    def test_donation_settings(self):
+        donation_settings = DonationPlatformSettings.load()
+        amounts = DonationDefaultAmounts.objects.first()
+        amounts.value1 = 10
+        amounts.value2 = 11
+        amounts.value3 = 12
+        amounts.value4 = 13
+        amounts.save()
+
+        donation_settings.show_donation_amount = False
+        donation_settings.save()
+
+        response = self.client.get(self.settings_url, token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data['platform']['donations']['default_amounts'][0]['amounts'],
+            [10, 11, 12, 13]
+        )
+
+    def test_donation_amount_not_shown(self):
+        donation_settings = DonationPlatformSettings.load()
+        donation_settings.show_donation_amount = False
+        donation_settings.save()
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project.slug},
+                                   token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse('amount' in response.data['results'][0])
+
+    def test_donation_amount_shown(self):
+        donation_settings = DonationPlatformSettings.load()
+        donation_settings.show_donation_amount = True
+        donation_settings.save()
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project.slug},
+                                   token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('amount' in response.data['results'][0])

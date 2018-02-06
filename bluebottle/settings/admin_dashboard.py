@@ -190,6 +190,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['cms.change_siteplatformsettings']
             },
             {
+                'name': 'donations.donationplatformsettings',
+                'permissions': ['donations.change_donationplatformsettings']
+            },
+            {
                 'name': 'analytics.analyticsplatformsettings',
                 'permissions': ['analytics.change_analyticsplatformsettings']
             },

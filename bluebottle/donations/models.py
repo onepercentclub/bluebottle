@@ -5,8 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
-from bluebottle.utils.fields import MoneyField
-from bluebottle.utils.models import MailLog
+from bluebottle.utils.fields import MoneyField, CurrencyField
+from bluebottle.utils.models import BasePlatformSettings, MailLog
 from bluebottle.utils.utils import StatusDefinition
 
 
@@ -75,3 +75,21 @@ class Donation(models.Model):
         if not hasattr(order_payment, 'payment'):
             return '?'
         return order_payment.payment.method_name
+
+
+class DonationDefaultAmounts(models.Model):
+    settings = models.ForeignKey('donations.DonationPlatformSettings', related_name='default_amounts')
+    currency = CurrencyField()
+    value1 = models.DecimalField(default=10.0, decimal_places=2, max_digits=12)
+    value2 = models.DecimalField(default=10.0, decimal_places=2, max_digits=12)
+    value3 = models.DecimalField(default=10.0, decimal_places=2, max_digits=12)
+    value4 = models.DecimalField(default=10.0, decimal_places=2, max_digits=12)
+
+
+class DonationPlatformSettings(BasePlatformSettings):
+
+    show_donation_amount = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name_plural = _('donation platform settings')
+        verbose_name = _('donation platform settings')

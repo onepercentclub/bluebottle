@@ -32,6 +32,23 @@ def get_default_currency():
     return getattr(properties, 'DEFAULT_CURRENCY')
 
 
+class CurrencyField(models.CharField):
+    def __init__(self,
+                 verbose_name=None,
+                 name=None,
+                 max_length=3,
+                 default=lazy(get_default_currency, str)(),
+                 choices=lazy(get_currency_choices, tuple)(),
+                 **kwargs):
+        super(CurrencyField, self).__init__(
+            verbose_name=verbose_name,
+            name=name,
+            max_length=max_length,
+            default=default,
+            choices=choices,
+            **kwargs)
+
+
 class MoneyField(DjangoMoneyField):
     def __init__(self, verbose_name=None, name=None,
                  max_digits=12, decimal_places=2, default=None,

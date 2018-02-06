@@ -1,4 +1,4 @@
-from bluebottle.donations.models import Donation
+from bluebottle.donations.models import Donation, DonationPlatformSettings, DonationDefaultAmounts
 from rest_framework import serializers
 
 from bluebottle.members.serializers import UserPreviewSerializer
@@ -157,3 +157,31 @@ class LatestDonationSerializer(serializers.ModelSerializer):
 
     def get_payment_method(self, obj):
         return obj.get_payment_method()
+
+
+class DefaultDonationAmountSerializer(serializers.ModelSerializer):
+
+    amounts = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DonationDefaultAmounts
+        fields = (
+            'currency',
+            'amounts'
+        )
+
+    def get_amounts(self, obj):
+        return [obj.value1, obj.value2, obj.value3, obj.value4]
+
+
+class DonationPlatformSettingsSerializer(serializers.ModelSerializer):
+
+    default_amounts = DefaultDonationAmountSerializer(many=True)
+
+    class Meta:
+        model = DonationPlatformSettings
+        fields = (
+            'show_donation_amount',
+            'recurring_donations',
+            'default_amounts'
+        )

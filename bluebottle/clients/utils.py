@@ -235,8 +235,9 @@ def get_public_properties(request):
                 'payouts': get_payout_settings(),
                 'content': get_platform_settings('cms.SitePlatformSettings'),
                 'projects': get_platform_settings('projects.ProjectPlatformSettings'),
-                'analytics': get_platform_settings('analytics.AnalyticsPlatformSettings'),
                 'members': get_platform_settings('members.MemberPlatformSettings'),
+                'analytics': get_platform_settings('analytics.AnalyticsPlatformSettings'),
+                'donations': get_platform_settings('donations.DonationPlatformSettings')
             }
         }
         try:

@@ -4,8 +4,9 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from django_singleton_admin.admin import SingletonAdmin
 
-from bluebottle.donations.models import Donation
+from bluebottle.donations.models import Donation, DonationDefaultAmounts, DonationPlatformSettings
 from bluebottle.orders.models import Order
 from bluebottle.rewards.models import Reward
 from bluebottle.utils.admin import (
@@ -268,3 +269,18 @@ class DonationInline(admin.TabularInline):
             str(url),
             obj.id
         )
+
+
+class CustomProjectFieldSettingsInline(admin.TabularInline):
+    model = DonationDefaultAmounts
+    extra = 0
+
+
+class DonationPlatformSettingsAdmin(SingletonAdmin):
+
+    inlines = [
+        CustomProjectFieldSettingsInline,
+    ]
+
+
+admin.site.register(DonationPlatformSettings, DonationPlatformSettingsAdmin)

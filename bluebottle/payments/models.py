@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.utils.functional import lazy
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
@@ -15,7 +16,8 @@ from django_fsm import FSMField, transition
 from bluebottle import clients
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.managers import PaymentManager
-from bluebottle.utils.fields import MoneyField
+from bluebottle.utils.fields import MoneyField, get_default_currency, get_currency_choices
+from bluebottle.utils.models import BasePlatformSettings
 from bluebottle.utils.utils import FSMTransition, StatusDefinition
 
 
@@ -336,6 +338,43 @@ class Transaction(PolymorphicModel):
 
     class Meta:
         ordering = ('-created', '-updated')
+
+
+class PaymentProviderSettings(models.Model):
+    name = models.CharField(max_length=100)
+    settings = JSONField()
+
+    def __unicode__(self):
+        return self.name
+
+
+class PaymentMethodCurrencySettings(models.Model):
+    payment_method = models.ForeignKey('payments.PaymentMethodSettings')
+    currency = models.CharField(
+        default=lazy(get_default_currency, str)(),
+        choices=lazy(get_currency_choices, tuple)(),
+        max_length=3
+    )
+    min_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    max_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+
+
+class PaymentMethodSettings(models.Model):
+    settings = models.ForeignKey('payments.PaymentPlatformSettings', related_name='payment_methods')
+    provider = models.ForeignKey('payments.PaymentProviderSettings', null=True)
+    profile = models.CharField(max_length=100, help_text=_('The payment method short name, e.g. creditcard'))
+    name = models.CharField(max_length=100, help_text=_('The payment method long name, e.g. Credit Card'))
+    restricted_countries = models.ManyToManyField('geo.Country', null=True, blank=True)
+
+    def __unicode__(self):
+        return u"{} {}".format(self.provider, self.name)
+
+
+class PaymentPlatformSettings(BasePlatformSettings):
+
+    class Meta:
+        verbose_name_plural = _('payment platform settings')
+        verbose_name = _('payment platform settings')
 
 
 import signals  # noqa

@@ -4,13 +4,15 @@ from django.core.urlresolvers import reverse
 from django.db import connection
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.utils.html import format_html
+from django_singleton_admin.admin import SingletonAdmin
 
 from polymorphic.admin import (PolymorphicParentModelAdmin,
                                PolymorphicChildModelAdmin)
 
 from bluebottle.clients import properties
 from bluebottle.payments.exception import PaymentException
-from bluebottle.payments.models import Payment, OrderPayment
+from bluebottle.payments.models import Payment, OrderPayment, PaymentPlatformSettings, PaymentMethodSettings, \
+    PaymentProviderSettings, PaymentMethodCurrencySettings
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments.tasks import check_payment_statuses
 from bluebottle.payments_beyonic.admin import BeyonicPaymentAdmin
@@ -192,3 +194,49 @@ admin.site.register(Payment, PaymentAdmin)
 
 class BasePaymentAdmin(PolymorphicChildModelAdmin):
     base_model = Payment
+
+
+class PaymentProviderSettingsAdmin(admin.ModelAdmin):
+    model = PaymentProviderSettings
+
+
+admin.site.register(PaymentProviderSettings, PaymentProviderSettingsAdmin)
+
+
+class PaymentMethodCurrencySettingsAdmin(admin.StackedInline):
+    model = PaymentMethodCurrencySettings
+    extra = 0
+
+
+class PaymentMethodSettingsAdmin(admin.ModelAdmin):
+    model = PaymentMethodSettings
+    raw_id_fields = ['settings', 'provider']
+    filter_horizontal = ['restricted_countries']
+    inlines = [PaymentMethodCurrencySettingsAdmin]
+    list_display = ('name', 'provider', )
+
+
+admin.site.register(PaymentMethodSettings, PaymentMethodSettingsAdmin)
+
+
+class PaymentMethodSettingsInline(admin.TabularInline):
+    readonly_fields = ['name_link', 'provider']
+    fields = ['name', 'profile'] + readonly_fields
+    model = PaymentMethodSettings
+    extra = 0
+
+    prepopulated_fields = {"profile": ("name",)}
+
+    def name_link(self, obj):
+        if not obj.id:
+            return '-'
+        url = reverse('admin:payments_paymentmethodsettings_change', args=(obj.id, ))
+        return format_html("<a href='{}'>{}</a>".format(url, obj.name))
+
+
+class PaymentPlatformSettingsAdmin(SingletonAdmin):
+    model = PaymentPlatformSettings
+    inlines = [PaymentMethodSettingsInline]
+
+
+admin.site.register(PaymentPlatformSettings, PaymentPlatformSettingsAdmin)

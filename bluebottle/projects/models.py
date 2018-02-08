@@ -23,7 +23,6 @@ from moneyed.classes import Money
 from polymorphic.models import PolymorphicModel
 from select_multiple_field.models import SelectMultipleField
 
-from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase, BaseProjectDocument
@@ -240,28 +239,6 @@ class Project(BaseProject, PreviousStatusMixin):
                 # Save the new value to the db, but skip .save
                 # this way we will not trigger signals and hit the save method
                 self.objects.filter(pk=project.pk).update(popularity=popularity)
-
-    @classmethod
-    def update_status_stats(cls, tenant):
-        logger.info('Updating Project Status Stats: {}'.format(tenant.name))
-        timestamp = datetime.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-        for status in ProjectPhase.objects.all():
-            # TODO: Should we count statuses only where the project phase status is active?
-            count = Project.objects.filter(status=status).count()
-            logger.info('status: {}, count: {}'.format(status.name, count))
-            tags = {
-                'type': 'project_status_daily',
-                'status': status.name,
-                'status_slug': status.slug,
-                'tenant': tenant.client_name,
-            }
-            fields = {
-                'total': count,
-            }
-            if getattr(properties, 'CELERY_RESULT_BACKEND', None):
-                queue_analytics_record.delay(timestamp=timestamp, tags=tags, fields=fields)
-            else:
-                queue_analytics_record(timestamp=timestamp, tags=tags, fields=fields)
 
     def save(self, *args, **kwargs):
         # Set valid slug

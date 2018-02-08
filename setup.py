@@ -88,7 +88,7 @@ install_requires = [
     'python-social-auth==0.3.6',
     'surlex==0.2.0',
     'raven==6.5.0',
-    'regex==2018.02.03',
+    'regex==2018.02.08',
     'requests==2.18.4',
     'schwifty==2.1.0',
     'sorl-thumbnail==12.4.1',

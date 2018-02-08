@@ -80,7 +80,7 @@ install_requires = [
     'mixpanel==4.3.2',
     'openpyxl==2.5.0',
     'pendulum==1.4.1',
-    'psycopg2==2.7.3.2',
+    'psycopg2==2.7.4',
     'pygeoip==0.3.2',
     'pyjwt==1.5.3',
     'python-dateutil==2.6.1',

@@ -61,7 +61,7 @@ install_requires = [
     'django-rest-swagger==2.1.2',
     'django-select-multiple-field==0.4.2',
     'django-singleton-admin==0.0.4',
-    'django-summernote==0.8.8.5',
+    'django-summernote==0.8.8.6',
     'django-taggit==0.22.2',
     'django-tenant-schemas==1.9.0',
     'django-tinymce==2.7.0',

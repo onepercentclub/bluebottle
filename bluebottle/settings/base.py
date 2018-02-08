@@ -315,8 +315,6 @@ TENANT_APPS = (
     'bluebottle.tasks',
     'bluebottle.bluebottle_dashboard',
     'bluebottle.homepage',
-    'bluebottle.recurring_donations',
-    'bluebottle.payouts',
     'bluebottle.payouts_dorado',
     'bluebottle.surveys',
     'bluebottle.wallposts',
@@ -359,7 +357,6 @@ TENANT_APPS = (
     'bluebottle.bb_tasks',
     'bluebottle.bb_fundraisers',
     'bluebottle.bb_orders',
-    'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
 
     # Basic Bb implementations

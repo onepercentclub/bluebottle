@@ -7,6 +7,7 @@ from decimal import InvalidOperation
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django.contrib.admin.widgets import AdminTextareaWidget
 from django.forms.models import ModelFormMetaclass
+from django.utils.text import slugify
 from django_singleton_admin.admin import SingletonAdmin
 from django_summernote.admin import SummernoteInlineModelAdmin
 from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
@@ -547,7 +548,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
-            unicode(project.title).replace('.', '_')
+            unicode(slugify(project.title))
         )
 
         writer = csv.writer(response)

@@ -7,7 +7,13 @@ from django.db.models.aggregates import Count
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
+
+from elasticsearch_dsl import Q as ESQ, SF
+from rest_framework.response import Response
+import six
+
 from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectDocument
+from bluebottle.projects import documents
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import (
     ProjectThemeSerializer, ProjectPhaseSerializer,
@@ -25,8 +31,19 @@ from bluebottle.projects.permissions import IsEditableOrReadOnly, CanEditOwnRunn
 from .models import ProjectTheme, ProjectPhase
 
 
+from django.core.paginator import Paginator
+
+
+class ESPaginator(Paginator):
+    def page(self, *args, **kwargs):
+        page = super(ESPaginator, self).page(*args, **kwargs)
+        page.object_list = page.object_list.to_queryset()
+        return page
+
+
 class ProjectPagination(BluebottlePagination):
     page_size = 8
+    django_paginator_class = ESPaginator
 
 
 class TinyProjectPagination(BluebottlePagination):
@@ -35,7 +52,33 @@ class TinyProjectPagination(BluebottlePagination):
 
 class ProjectListSearchMixin(object):
 
-    def search(self, qs, query):
+    def search(self):
+        search = documents.ProjectDocument.search()
+        query = ESQ()
+
+        text = self.request.query_params['text']
+        if text:
+            query = query & (
+                ESQ('match', title={'query': text, 'boost': 2}) |
+                ESQ('match', pitch=text) |
+                ESQ('match', story=text) |
+                ESQ('nested', path='task_set', query=ESQ('match', **{'task_set.title': text})) |
+                ESQ('nested', path='task_set', query=ESQ('match', **{'task_set.description': text}))
+            )
+
+        statuses = self.request.query_params.getlist('status[]')
+        if statuses:
+            filter = ESQ()
+            for status in statuses:
+                filter = filter & ESQ('term', status=status)
+            query = query & filter
+        import ipdb; ipdb.set_trace()
+
+        return search.query(
+            'function_score', query=query, field_value_factor={'field': 'popularity'}
+        )
+
+
         # Apply filters
         status = query.getlist(u'status[]', None)
         if status:
@@ -165,12 +208,16 @@ class ProjectPreviewList(ProjectListSearchMixin, OwnerListViewMixin, ListAPIView
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
-    def get_queryset(self):
-        qs = super(ProjectPreviewList, self).get_queryset()
-        query = self.request.query_params
-        qs = self.search(qs, query)
-        qs.select_related('task')
-        return qs.filter(status__viewable=True)
+    def list(self, request):
+        result = self.search()
+
+        page = self.paginate_queryset(result)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(result.to_queryset(), many=True)
+        return Response(serializer.data)
 
 
 class ProjectPreviewDetail(RetrieveAPIView):

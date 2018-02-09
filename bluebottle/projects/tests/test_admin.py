@@ -348,7 +348,7 @@ class TestProjectAdmin(BluebottleTestCase):
         response = self.project_admin.export_rewards(request, project.id)
         header = 'Content-Type: text/csv\r\n' \
                  'Content-Disposition: attachment; ' \
-                 'filename=test-with-lots-of-weird-things.csv'
+                 'filename="test-with-lots-of-weird-things.csv"'
         self.assertEqual(response.serialize_headers(), header)
 
         reader = csv.DictReader(StringIO.StringIO(response.content))

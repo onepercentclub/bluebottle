@@ -5,7 +5,7 @@ from django.test.client import RequestFactory
 from django.utils.timezone import now
 
 from bluebottle.tasks.models import Task
-from bluebottle.tasks.admin import TaskAdmin, DeadlineToAppliedFilter
+from bluebottle.tasks.admin import TaskAdmin, DeadlineToApplyFilter, DeadlineFilter
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -37,8 +37,8 @@ class TestTaskAdmin(BluebottleTestCase):
         request = self.request_factory.get('/')
         request.user = MockUser()
 
-        self.assertIn('deadline', self.task_admin.get_list_filter(request))
-        self.assertIn(DeadlineToAppliedFilter, self.task_admin.get_list_filter(request))
+        self.assertIn(DeadlineFilter, self.task_admin.get_list_filter(request))
+        self.assertIn(DeadlineToApplyFilter, self.task_admin.get_list_filter(request))
 
     def test_fields_appear(self):
         request = self.request_factory.get('/')
@@ -62,21 +62,21 @@ class TestDeadlineToApplyFilter(BluebottleTestCase):
             TaskFactory.create(deadline_to_apply=now() + timedelta(days=days))
 
     def test_deadline_to_apply_filter_deadline_passed(self):
-        filter = DeadlineToAppliedFilter(None, {'deadline_to_apply': 0}, Task, self.task_admin)
+        filter = DeadlineToApplyFilter(None, {'deadline_to_apply': 0}, Task, self.task_admin)
         queryset = filter.queryset(self.request, Task.objects.all())
         self.assertEqual(len(queryset), 1)
 
     def test_deadline_to_apply_filter_7_days(self):
-        filter = DeadlineToAppliedFilter(None, {'deadline_to_apply': 7}, Task, self.task_admin)
+        filter = DeadlineToApplyFilter(None, {'deadline_to_apply': 7}, Task, self.task_admin)
         queryset = filter.queryset(self.request, Task.objects.all())
         self.assertEqual(len(queryset), 1)
 
     def test_deadline_to_apply_filter_30_days(self):
-        filter = DeadlineToAppliedFilter(None, {'deadline_to_apply': 30}, Task, self.task_admin)
+        filter = DeadlineToApplyFilter(None, {'deadline_to_apply': 30}, Task, self.task_admin)
         queryset = filter.queryset(self.request, Task.objects.all())
         self.assertEqual(len(queryset), 2)
 
     def test_deadline_to_apply_filter_not_set(self):
-        filter = DeadlineToAppliedFilter(None, {}, Task, self.task_admin)
+        filter = DeadlineToApplyFilter(None, {}, Task, self.task_admin)
         queryset = filter.queryset(self.request, Task.objects.all())
         self.assertEqual(len(queryset), 3)

@@ -1,27 +1,22 @@
 import csv
 import json
 import mock
+from moneyed import Money
 import StringIO
+import requests
 
 from django.db import connection
-import requests
+from django.contrib.admin.sites import AdminSite
+from django.contrib import messages
+from django.forms.models import modelform_factory
+from django.test.client import RequestFactory
 from django.urls.base import reverse
 from django.utils.timezone import now
 
-from bluebottle.test.factory_models.tasks import TaskFactory
-
-from bluebottle.tasks.models import Skill
-
-from django.contrib.admin.sites import AdminSite
-from django.contrib import messages
-from django.test.client import RequestFactory
-
-from moneyed import Money
 
 from bluebottle.projects.admin import (
     LocationFilter, ProjectReviewerFilter, ProjectAdminForm,
-    ReviewerWidget, ProjectAdmin,
-    ProjectSkillFilter)
+    ReviewerWidget, ProjectAdmin)
 from bluebottle.projects.models import Project, ProjectPhase, CustomProjectFieldSettings, CustomProjectField
 from bluebottle.projects.tasks import refund_project
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -31,8 +26,6 @@ from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.test.utils import BluebottleTestCase, override_settings, BluebottleAdminTestCase
-
-from django.forms.models import modelform_factory
 
 
 factory = RequestFactory()
@@ -578,36 +571,6 @@ class ProjectAdminFormTest(BluebottleTestCase):
         )
         parameters = widget.url_parameters()
         self.assertTrue(parameters['is_staff'], True)
-
-
-class ProjectSkillFilterTest(BluebottleTestCase):
-    """
-    Test project task skill filter
-    """
-
-    def setUp(self):
-        super(ProjectSkillFilterTest, self).setUp()
-        self.init_projects()
-
-        self.skill = Skill.objects.all()[0]
-        self.project_with_skill = ProjectFactory.create()
-        TaskFactory(project=self.project_with_skill, skill=self.skill)
-        ProjectFactory.create()
-        self.user = BlueBottleUserFactory.create()
-        self.request = factory.get('/')
-        self.request.user = self.user
-        self.admin = ProjectAdmin(Project, AdminSite())
-
-    def test_unfiltered(self):
-        filter = ProjectSkillFilter(None, {}, Project, self.admin)
-        queryset = filter.queryset(self.request, Project.objects.all())
-        self.assertEqual(len(queryset), 2)
-
-    def test_filter(self):
-        filter = ProjectSkillFilter(None, {'skill': self.skill.id}, Project, self.admin)
-        queryset = filter.queryset(self.request, Project.objects.all())
-        self.assertEqual(len(queryset), 1)
-        self.assertEqual(queryset.get(), self.project_with_skill)
 
 
 class ProjectCustomFieldAdminTest(BluebottleAdminTestCase):

@@ -54,7 +54,8 @@ from .tasks import refund_project
 logger = logging.getLogger(__name__)
 
 
-def mark_as(slug, queryset):
+def mark_as(model_admin, request, queryset):
+    slug = request.POST['action'].replace('mark_', '')
     try:
         status = ProjectPhase.objects.get(slug=slug)
     except ProjectPhase.DoesNotExist:
@@ -66,69 +67,6 @@ def mark_as(slug, queryset):
     for project in projects:
         project.status = status
         project.save()
-
-
-def mark_as_plan_new(modeladmin, request, queryset):
-    mark_as('plan-new', queryset)
-
-
-mark_as_plan_new.short_description = _("Mark selected projects as status Plan - Draft")
-
-
-def mark_as_plan_submitted(modeladmin, request, queryset):
-    mark_as('plan-submitted', queryset)
-
-
-mark_as_plan_submitted.short_description = _("Mark selected projects as status Plan - Submitted")
-
-
-def mark_as_plan_needs_work(modeladmin, request, queryset):
-    mark_as('plan-needs-work', queryset)
-
-
-mark_as_plan_needs_work.short_description = _("Mark selected projects as status Plan - Needs Work")
-
-
-def mark_as_voting(modeladmin, request, queryset):
-    mark_as('voting', queryset)
-
-
-mark_as_voting.short_description = _("Mark selected projects as status Voting - Running")
-
-
-def mark_as_voting_done(modeladmin, request, queryset):
-    mark_as('voting-done', queryset)
-
-
-mark_as_voting_done.short_description = _("Mark selected projects as status Voting - Done")
-
-
-def mark_as_campaign(modeladmin, request, queryset):
-    mark_as('campaign', queryset)
-
-
-mark_as_campaign.short_description = _("Mark selected projects as status Project - Running")
-
-
-def mark_as_done_complete(modeladmin, request, queryset):
-    mark_as('done-complete', queryset)
-
-
-mark_as_done_complete.short_description = _("Mark selected projects as status Project - Realised")
-
-
-def mark_as_done_incomplete(modeladmin, request, queryset):
-    mark_as('done-incomplete', queryset)
-
-
-mark_as_done_incomplete.short_description = _("Mark selected projects as status Project - Done")
-
-
-def mark_as_closed(modeladmin, request, queryset):
-    mark_as('closed', queryset)
-
-
-mark_as_closed.short_description = _("Mark selected projects as status Rejected / Canceled")
 
 
 class ProjectThemeAdmin(admin.ModelAdmin):
@@ -315,6 +253,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization',)
     prepopulated_fields = {'slug': ('title',)}
 
+    class Media:
+        css = {
+            'all': ('css/admin/wide-actions.css',)
+        }
+
     def get_inline_instances(self, request, obj=None):
         self.inlines = self.all_inlines
         if obj:
@@ -374,12 +317,17 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ('expertise_based', 'expertise based'),
     ]
 
-    actions = [export_as_csv_action(fields=export_fields),
-               mark_as_closed, mark_as_done_incomplete,
-               mark_as_done_complete, mark_as_campaign,
-               mark_as_voting_done, mark_as_voting,
-               mark_as_plan_needs_work, mark_as_plan_submitted,
-               mark_as_plan_new]
+    actions = [export_as_csv_action(fields=export_fields), ]
+
+    def get_actions(self, request):
+        actions = super(ProjectAdmin, self).get_actions(request)
+        for phase in ProjectPhase.objects.order_by('-sequence').all():
+            action_name = 'mark_{}'.format(phase.slug)
+            actions[action_name] = (
+                mark_as, action_name, _('Mark selected as "{}"'.format(_(phase.name)))
+            )
+        print actions
+        return OrderedDict(reversed(actions.items()))
 
     # Fields
     def num_votes(self, obj):
@@ -627,11 +575,6 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
     def get_list_editable(self, request):
         return ('is_campaign',)
-
-    def get_actions(self, request):
-        """Order the action in reverse (delete at the bottom)."""
-        actions = super(ProjectAdmin, self).get_actions(request)
-        return OrderedDict(reversed(actions.items()))
 
     def get_fieldsets(self, request, obj=None):
         main = {'fields': ['owner', 'reviewer', 'task_manager', 'promoter', 'organization', 'status', 'title', 'slug',

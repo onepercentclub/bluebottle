@@ -2,8 +2,8 @@ import csv
 import json
 import mock
 from moneyed import Money
-import requests
 import StringIO
+import requests
 
 from django.db import connection
 from django.contrib.admin.sites import AdminSite
@@ -12,6 +12,7 @@ from django.forms.models import modelform_factory
 from django.test.client import RequestFactory
 from django.urls.base import reverse
 from django.utils.timezone import now
+
 
 from bluebottle.projects.admin import (
     LocationFilter, ProjectReviewerFilter, ProjectAdminForm,

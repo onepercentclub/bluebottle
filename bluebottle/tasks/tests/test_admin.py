@@ -5,7 +5,7 @@ from django.test.client import RequestFactory
 from django.utils.timezone import now
 
 from bluebottle.tasks.models import Task
-from bluebottle.tasks.admin import TaskAdmin, DeadlineToApplyFilter
+from bluebottle.tasks.admin import TaskAdmin, DeadlineToApplyFilter, DeadlineFilter
 from bluebottle.test.factory_models.tasks import TaskFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -37,7 +37,7 @@ class TestTaskAdmin(BluebottleTestCase):
         request = self.request_factory.get('/')
         request.user = MockUser()
 
-        self.assertIn('deadline', self.task_admin.get_list_filter(request))
+        self.assertIn(DeadlineFilter, self.task_admin.get_list_filter(request))
         self.assertIn(DeadlineToApplyFilter, self.task_admin.get_list_filter(request))
 
     def test_fields_appear(self):

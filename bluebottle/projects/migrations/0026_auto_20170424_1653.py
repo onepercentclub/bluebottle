@@ -6,16 +6,7 @@ from django.db import migrations
 
 
 def correct_needs_approval_status(apps, schema_editor):
-    Project = apps.get_model('projects', 'Project')
-    ProjectPayout = apps.get_model('payouts', 'ProjectPayout')
-
-    for project in Project.objects.filter(payout_status='needs_approval'):
-        try:
-            if project.projectpayout_set.get().status in ('in_progress', 'settled'):
-                project.payout_status = None
-                project.save()
-        except ProjectPayout.DoesNotExist:
-            pass
+    pass
 
 
 class Migration(migrations.Migration):

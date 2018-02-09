@@ -6,24 +6,7 @@ from django.db import migrations
 
 
 def set_payout_status(apps, schema_editor):
-    Project = apps.get_model('projects', 'Project')
-    Member = apps.get_model('members', 'Member')
-    Group = apps.get_model('auth', 'Group')
-
-    Project.objects.filter(
-        projectpayout__status='new'
-    ).update(
-        payout_status='needs_approval'
-    )
-
-    try:
-        accounting_member = Member.objects.get(email='devteam+accounting@onepercentclub.com')
-        accounting_member.is_active = True
-        group = Group.objects.get(name='Financial')
-        accounting_member.groups.add(group)
-        accounting_member.save()
-    except Member.DoesNotExist:
-        pass
+    pass
 
 
 class Migration(migrations.Migration):

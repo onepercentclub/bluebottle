@@ -161,9 +161,6 @@ class BluebottleTestCase(InitProjectDataMixin, TestCase):
 class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
     """
     Set-up webtest so we can do admin tests.
-    e.g.
-    payout_url = reverse('admin:payouts_projectpayout_changelist')
-    response = self.app.get(payout_url, user=self.superuser)
     """
     def setUp(self):
         self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)

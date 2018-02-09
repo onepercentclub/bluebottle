@@ -315,13 +315,10 @@ TENANT_APPS = (
     'bluebottle.tasks',
     'bluebottle.bluebottle_dashboard',
     'bluebottle.homepage',
-    'bluebottle.recurring_donations',
-    'bluebottle.payouts',
     'bluebottle.payouts_dorado',
     'bluebottle.surveys',
     'bluebottle.wallposts',
     'bluebottle.utils',
-    'bluebottle.analytics',
     'bluebottle.categories',
     'bluebottle.contentplugins',
     'bluebottle.contact',
@@ -359,7 +356,6 @@ TENANT_APPS = (
     'bluebottle.bb_tasks',
     'bluebottle.bb_fundraisers',
     'bluebottle.bb_orders',
-    'bluebottle.bb_payouts',
     'bluebottle.bb_follow',
 
     # Basic Bb implementations
@@ -513,31 +509,6 @@ SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [('birthday', 'birthday')]
 RECURRING_DONATIONS_ENABLED = False
 DONATIONS_ENABLED = True
 
-# Analytics Service
-ANALYTICS_ENABLED = False
-ANALYTICS_BACKENDS = {
-    'influxdb': {
-        'handler_class': 'bluebottle.analytics.backends.InfluxExporter',
-        'host': 'localhost',
-        'port': 8086,
-        'username': '',
-        'password': '',
-        'database': 'platform_v1',
-        'measurement': 'saas',
-        'ssl': True
-    },
-    'file': {
-        'handler_class': 'bluebottle.analytics.backends.FileExporter',
-        'base_dir': os.path.join(PROJECT_ROOT, 'analytics'),
-        'measurement': 'saas',
-    }
-}
-
-ANALYTICS_FRONTEND = ''
-ANALYTICS_BACKOFFICE_ENABLED = True
-REPORTING_BACKOFFICE_ENABLED = False
-PARTICIPATION_BACKOFFICE_ENABLED = False
-REPORT_SQL_DIR = ''
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'

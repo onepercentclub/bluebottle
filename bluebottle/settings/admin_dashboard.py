@@ -83,7 +83,6 @@ FLUENT_DASHBOARD_APP_GROUPS = (
             'bluebottle.payments.*',
             'bluebottle.payments_docdata.*',
             'bluebottle.payments_logger.*',
-            'bluebottle.payouts.*',
             'bluebottle.accounting.*',
             'bluebottle.journals.*',
         ),

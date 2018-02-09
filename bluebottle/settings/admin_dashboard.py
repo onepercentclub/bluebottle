@@ -22,7 +22,16 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         ]
     },
     {
-        'label': _('Tasks'),
+        'label': _('Users'),
+        'app_label': 'members',
+        'permissions': ['members.change_member'],
+        'items': [
+            {'name': 'members.member'},
+            {'name': 'auth.group'},
+        ]
+    },
+    {
+        'label': _('Volunteering'),
         'app_label': 'tasks',
         'permissions': ['tasks.change_task'],
         'items': [
@@ -32,69 +41,112 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         ]
     },
     {
-        'label': 'Members',
-        'app_label': 'members',
-        'permissions': ['members.change_member'],
-        'items': [
-            {'name': 'members.member'},
-            {'name': 'auth.group'},
-        ]
-    },
-    {
-        'label': 'Wallposts',
-        'permissions': ['wallposts.wallpost'],
-        'items': [
-            {'name': 'wallposts.wallpost'},
-            {'name': 'wallposts.systemwallpost'},
-            {'name': 'wallposts.mediawallpost'},
-            {'name': 'wallposts.textwallpost'},
-            {'name': 'wallposts.reaction'},
-        ]
-    },
-    {
-        'label': _('Site Content'),
-        'items': [
-            {'name': 'cms.resultpage'},
-            {'name': 'cms.homepage'},
-            {'name': 'cms.sitelinks'},
-            {'name': 'pages.page'},
-
-            {'name': 'slides.slide'},
-            {'name': 'redirects.redirect'},
-            {'name': 'news.newsitem'},
-            {'name': 'terms.terms'},
-            {'name': 'contact.contactmessage'},
-
-        ]
-    },
-    {
-        'label': _('Donations'), 'items': [
+        'label': _('Giving'), 'items': [
             {'name': 'donations.donation'},
             {'name': 'orders.order'},
             {'name': 'recurring_donations.monthlybatch'},
             {'name': 'recurring_donations.monthlydonation'},
             {'name': 'recurring_donations.monthlydonor'},
             {'name': 'recurring_donations.monthlyorder'},
-        ]
-    },
-    {
-        'label': _('Finance'),
-        'items': [
             {'name': 'payments.orderpayment'},
             {'name': 'payments.payment'},
-            {'name': 'djmoney_rates.ratesource'},
         ]
     },
     {
-        'label': _('Platform settings'),
+        'label': _('Content'),
         'items': [
+            {'name': 'pages.page'},
+            {
+                'name': 'news.newsitem',
+                'label': _('News')
+            },
+            {
+                'name': 'cms.homepage',
+                'label': _('Homepage')
+            },
+            {'name': 'slides.slide'},
+            {
+                'name': 'cms.resultpage',
+                'label': _('Result page')
+            },
+            {
+                'name': 'cms.sitelinks',
+                'label': _('Menu')
+            },
+            {'name': 'redirects.redirect'},
+
+        ]
+    },
+    {
+        'label': _('Wall Posts'),
+        'permissions': ['wallposts.wallpost'],
+        'items': [
+            {
+                'name': 'wallposts.wallpost',
+            },
+            {
+                'url': '/admin/wallposts/mediawallpost/',
+                'label': _('Media wall posts')
+            },
+            {
+                'name': 'wallposts.reaction'
+            },
+        ]
+    },
+    {
+        'label': _('Analytics'),
+        'items': [
+            {
+                'label': _('Projects'),
+                'type': 'reverse',
+                'name': 'analytics-index',
+                'kwargs': {'report': 'projects'}
+            },
+            {
+                'label': _('Projects'),
+                'url': '/admin/analytics/projects'
+            },
+            {
+                'label': _('Users platform'),
+                'url': '/admin/analytics/users'
+            },
+            {
+                'label': _('Volunteering - Volunteers'),
+                'url': '/admin/analytics/volunteers'
+            },
+            {
+                'label': _('Volunteering - Tasks'),
+                'url': '/admin/analytics/tasks'
+            },
+            {
+                'label': _('Volunteering - Hours'),
+                'url': '/admin/analytics/hours'
+            },
+            {
+                'label': _('Giving - Donations'),
+                'url': '/admin/analytics/donations'
+            },
+            {
+                'label': _('Giving - Supporters'),
+                'url': '/admin/analytics/supporters'
+            },
+            {
+                'label': _('Voting'),
+                'url': '/admin/analytics/'
+            },
+        ]
+    },
+    {
+        'label': _('Settings'),
+        'items': [
+            {'name': 'terms.terms'},
             {'name': 'projects.projectplatformsettings'},
             {'name': 'members.memberplatformsettings'},
             {'name': 'cms.siteplatformsettings'},
             {'name': 'analytics.analyticsplatformsettings'},
+            {'name': 'djmoney_rates.ratesource'},
             {'name': 'utils.language'},
             {'name': 'authtoken.token'},
-
         ]
     },
 

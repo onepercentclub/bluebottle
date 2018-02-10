@@ -1,5 +1,6 @@
 import importlib
 
+from bluebottle.members.dashboard import RecentMembersDashboard
 from bluebottle.projects.dashboard import RecentProjects, MyReviewingProjects, ClosingFundingProjects
 from django.urls.base import reverse, reverse_lazy
 from django.utils.timezone import now
@@ -33,6 +34,7 @@ class CustomIndexDashboard(Dashboard):
         self.children.append(MyReviewingProjects())
         self.children.append(ClosingFundingProjects())
         self.children.append(ClosingTasks())
+        self.children.append(RecentMembersDashboard())
         if context['request'].user.has_perm('sites.export'):
             metrics_children = [
                 {

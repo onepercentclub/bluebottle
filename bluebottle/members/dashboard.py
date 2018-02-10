@@ -9,7 +9,7 @@ from jet.dashboard.dashboard import DefaultAppIndexDashboard
 
 
 class RecentMembersDashboard(DashboardModule):
-    title = _('Recently Joined Members')
+    title = _('Recently joined users')
     title_url = reverse('admin:members_member_changelist')
     template = 'dashboard/recent_members.html'
     limit = 5

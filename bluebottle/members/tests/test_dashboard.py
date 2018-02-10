@@ -19,5 +19,5 @@ class MemberDashboardTest(BluebottleAdminTestCase):
     def test_member_dashboard(self):
 
         response = self.client.get(self.member_admin_url)
-        self.assertContains(response, 'Recently Joined Members')
+        self.assertContains(response, 'Recently joined users')
         self.assertContains(response, 'Cousin Sven')

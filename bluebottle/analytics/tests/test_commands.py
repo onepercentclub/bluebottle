@@ -1,14 +1,15 @@
 import os
 from argparse import ArgumentTypeError
 from datetime import datetime
-
+from mock import patch
+from openpyxl import load_workbook
 import pytz
+
 from django.conf import settings
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 from django.test import TestCase, SimpleTestCase
-from mock import patch
 
 from bluebottle.tasks.models import TaskMember
 from bluebottle.analytics.models import get_raw_report_model
@@ -16,14 +17,12 @@ from bluebottle.analytics.models import get_raw_report_model
 from bluebottle.analytics.management.commands.create_report_views import (
     Command as CreateReportViewsCommand
 )
-
 from bluebottle.analytics.management.commands.export_engagement_metrics import (
     Command as EngagementCommand
 )
 from bluebottle.analytics.management.commands.export_participation_metrics import (
     Command as ParticipationCommand,
 )
-
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -34,8 +33,9 @@ from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 from bluebottle.test.utils import BluebottleTestCase
+
 from .common import FakeInfluxDBClient
-from openpyxl import load_workbook
+
 
 fake_client = FakeInfluxDBClient()
 

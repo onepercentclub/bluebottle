@@ -8,7 +8,7 @@ from jet.dashboard import modules
 from jet.dashboard.dashboard import DefaultAppIndexDashboard
 
 
-class RecentMembers(DashboardModule):
+class RecentMembersDashboard(DashboardModule):
     title = _('Recently Joined Members')
     title_url = reverse('admin:members_member_changelist')
     template = 'dashboard/recent_members.html'
@@ -23,4 +23,4 @@ class AppIndexDashboard(DefaultAppIndexDashboard):
 
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
-        self.children.append(RecentMembers())
+        self.children.append(RecentMembersDashboard())

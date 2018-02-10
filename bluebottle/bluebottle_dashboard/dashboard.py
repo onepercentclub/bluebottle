@@ -28,6 +28,9 @@ class ClosingTasks(DashboardModule):
 class CustomIndexDashboard(Dashboard):
     columns = 2
 
+    class Media:
+        css = ('css/admin/dashboard.css', )
+
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
         self.children.append(RecentProjects())

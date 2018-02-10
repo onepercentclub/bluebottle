@@ -4,8 +4,8 @@
 {% jet_get_current_theme as THEME %}
 {% jet_get_current_version as JET_VERSION %}
 
-{% block branding %}
-    <img src="{% static 'images/logo_goodup.png' %}" style="height: 50px" alt="Logo">
+{% block extrastyle %}
+    <link rel="stylesheet" type="text/css" href="/static/assets/admin/css/dashboard.css">
 {% endblock %}
 
 {% block userlinks %}
@@ -16,12 +16,6 @@
 {% endblock %}
 
 {% block nav-global %}
-    <a href="{% url 'analytics-index' %}" class="sidebar-link icon">
-        <span class="sidebar-link-label">
-            <span class="sidebar-link-icon icon-data"></span>
-            {% trans 'Analytics' %}
-        </span>
-    </a>
     <a href="{% url 'admin:members_member_changelist' %}" class="sidebar-link icon">
         <span class="sidebar-link-label">
             <span class="sidebar-link-icon icon-user"></span>

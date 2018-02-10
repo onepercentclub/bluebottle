@@ -54,3 +54,10 @@
 #header ul#navigation-menu li a {
     text-transform: none;
 }
+
+.sidebar {
+    width: 12rem;
+}
+.sidebar-popup-container {
+    left: 10rem;
+}

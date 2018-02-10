@@ -4,31 +4,10 @@
 {% jet_get_current_theme as THEME %}
 {% jet_get_current_version as JET_VERSION %}
 
-
 {% block content_title %}
-    <h2>GoodUp Analytics</h2>
-    <div>
-        <div class="graph">
-            <iframe src='https://goodup.eu.looker.com/embed/public/4JNFp6MWrfW9FWfKdTcFd4HchbR5c2gc' width='900' height='400' frameborder='0'></iframe>
-        </div>
-        <div class="table" style="display: none">
-            <iframe src='https://goodup.eu.looker.com/embed/public/4JNFp6MWrfW9FWfKdTcFd4HchbR5c2gc?type=table' width='900' height='400' frameborder='0'></iframe>
-        </div>
-    </div>
-    <div>
-        <div class="graph">
-            <iframe src='https://goodup.eu.looker.com/embed/public/ccFcZbWtyKdtFZWKTRSxTNrYksVs9TVH' width='900' height='400' frameborder='0'></iframe>
-        </div>
-        <div class="table" style="display: none">
-            <iframe src='https://goodup.eu.looker.com/embed/public/ccFcZbWtyKdtFZWKTRSxTNrYksVs9TVH?type=table' width='900' height='400' frameborder='0'></iframe>
-        </div>
-    </div>
-
 {% endblock %}
 {% block content %}
-
-
-
+    <iframe src='https://goodup.eu.looker.com/embed/dashboards/{{ report_id }}' width='100%' height='10000' frameborder='0'></iframe>
 {% endblock %}
 
 

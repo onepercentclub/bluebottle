@@ -200,10 +200,11 @@ class SystemWallpostAdmin(PolymorphicChildModelAdmin):
 class WallpostParentAdmin(PolymorphicParentModelAdmin):
     """ The parent model admin """
     base_model = Wallpost
-    list_display = ('created', 'author', 'content_type', 'type', 'deleted')
+    list_display = ('created', 'author', 'content_type', 'text', 'type', 'deleted')
     fields = ('title', 'text', 'author', 'ip_address')
     list_filter = ('created', 'deleted')
     ordering = ('-created',)
+    search_fields = ('textwallpost__text', 'mediawallpost__text')
     child_models = (
         (MediaWallpost, MediaWallpostAdmin),
         (TextWallpost, TextWallpostAdmin),
@@ -217,11 +218,26 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
         """ The Admin needs to show all the Reactions. """
         return self.model.objects_with_deleted.all()
 
+    def text(self, obj):
+        text = '-empty-'
+        try:
+            text = obj.systemwallpost.text
+        except SystemWallpost.DoesNotExist:
+            pass
+        try:
+            text = obj.textwallpost.text
+        except TextWallpost.DoesNotExist:
+            pass
+        try:
+            text = obj.mediawallpost.text
+        except MediaWallpost.DoesNotExist:
+            pass
+        if len(text) > 40:
+            return format_html(text[:38] + '&hellip;')
+        return text
 
-# Only the parent needs to be registered:
+
 admin.site.register(Wallpost, WallpostParentAdmin)
-
-# So why you are also registering the child?
 admin.site.register(MediaWallpost, MediaWallpostAdmin)
 admin.site.register(TextWallpost, TextWallpostAdmin)
 admin.site.register(SystemWallpost, SystemWallpostAdmin)

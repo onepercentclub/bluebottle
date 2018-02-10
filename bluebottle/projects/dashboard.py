@@ -9,7 +9,7 @@ from bluebottle.projects.models import Project
 
 
 class RecentProjects(DashboardModule):
-    title = _('Recently Submitted Projects')
+    title = _('Recently submitted projects')
     title_url = "{}?status_filter=2".format(reverse('admin:projects_project_changelist'))
     template = 'dashboard/recent_projects.html'
     limit = 5
@@ -54,7 +54,6 @@ class ProjectInfo(ModelList):
         'bb_projects.ProjectTheme',
         'bb_projects.ProjectPhase',
         'organizations.Organization',
-
     ]
     template = 'dashboard/projects_info.html'
     deletable = False

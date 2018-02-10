@@ -53,7 +53,7 @@ class CustomIndexDashboard(Dashboard):
 
             if properties.PARTICIPATION_BACKOFFICE_ENABLED:
                 metrics_children.append({
-                    'title': _('Request Complete Participation Metrics'),
+                    'title': _('Request complete participation metrics'),
                     'url': reverse('participation-metrics')
                 })
 

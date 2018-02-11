@@ -1,7 +1,7 @@
 from bluebottle.analytics.reports import MetricsReport
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.tasks import TaskFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.utils import BluebottleTestCase
 from django.utils.timezone import now
 from openpyxl.reader.excel import load_workbook
@@ -13,7 +13,8 @@ class TestReportExport(BluebottleTestCase):
         campaign = ProjectPhase.objects.get(slug='done-complete')
         done = ProjectPhase.objects.get(slug='done-complete')
         projects = ProjectFactory.create_batch(10, status=campaign)
-        TaskFactory.create_batch(12, project=projects[0])
+        tasks = TaskFactory.create_batch(10, project=projects[0], status='realized')
+        TaskMemberFactory.create_batch(10, task=tasks[0], status='realized')
         for project in projects:
             project.status = done
             project.save()

@@ -26,7 +26,7 @@ dependency_links = [
 
 install_requires = [
     'Babel==2.5.3',
-    'Django==1.11.10',
+    'Django==2.0.2',
     'Flutterwave==1.0.7',
     'Pillow==5.0.0',
     'South==1.0.2',
@@ -104,7 +104,7 @@ install_requires = [
 
     # Github requirements
     'django-tenant-extras==2.0.14',
-    'django-fluent-contents==2.0.1',
+    'django-fluent-contents==2.0.2',
     'django-bb-salesforce==1.2.2',
     'django-taggit-autocomplete-modified==0.1.0',
     'django-token-auth==1.3.2b4',

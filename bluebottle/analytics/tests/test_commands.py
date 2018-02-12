@@ -8,15 +8,8 @@ import pytz
 from django.conf import settings
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
-from django.test import TestCase, SimpleTestCase
+from django.test import SimpleTestCase
 
-from bluebottle.tasks.models import TaskMember
-from bluebottle.analytics.models import get_raw_report_model
-
-from bluebottle.analytics.management.commands.create_report_views import (
-    Command as CreateReportViewsCommand
-)
 from bluebottle.analytics.management.commands.export_engagement_metrics import (
     Command as EngagementCommand
 )
@@ -24,6 +17,7 @@ from bluebottle.analytics.management.commands.export_participation_metrics impor
     Command as ParticipationCommand,
 )
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.tasks.models import TaskMember
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
@@ -255,24 +249,3 @@ class TestParticipationXls(BluebottleTestCase):
             self.assertEqual(workbook.worksheets[1].title, 'Totals - {}'.format(self.year))
             self.assertEqual(workbook.worksheets[6].title, 'Location Segmentation - {}'.format(self.year))
             self.assertEqual(workbook.worksheets[7].title, 'Theme Segmentation - {}'.format(self.year))
-
-
-@override_settings(TENANT_APPS=('django_nose',),
-                   TENANT_MODEL='client.clients',
-                   DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',))
-class CreateReportViewTests(TestCase):
-    def setUp(self):
-        self.cmd = CreateReportViewsCommand()
-
-        super(CreateReportViewTests, self).setUp()
-
-    @override_settings(REPORTING_SQL_DIR=os.path.join(settings.PROJECT_ROOT,
-                       'bluebottle', 'analytics', 'tests', 'files'))
-    def test_raw_view_creation(self):
-        report_sql_path = os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'analytics',
-                                       'views', 'report.sql')
-        # setup some test files
-        call_command(self.cmd, file=report_sql_path)
-
-        ReportModel = get_raw_report_model('v_projects')
-        self.assertEqual(len(ReportModel.objects.all()), 0)

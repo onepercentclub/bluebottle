@@ -38,9 +38,15 @@ class ProjectDocument(DocType):
     })
 
     location = fields.ObjectField(properties={
+        'id': fields.LongField(),
         'name': fields.StringField(),
         'position': fields.GeoPointField(),
         'city': fields.StringField()
+    })
+
+    country = fields.ObjectField(properties={
+        'id': fields.LongField(),
+        'name': fields.StringField(),
     })
 
     project_location = fields.GeoPointField()
@@ -71,12 +77,15 @@ class ProjectDocument(DocType):
             return related_instance.project_set.all()
         elif isinstance(related_instance, Location):
             return related_instance.project_set.all()
+        elif isinstance(related_instance, Country):
+            return related_instance.project_set.all()
+
 
     def prepare_client_name(self, instance):
         return connection.tenant.client_name
 
     def prepare_project_location(self, instance):
         if instance.latitude and instance.longitude:
-            return (instance.latitude, instance.longitude)
+            return (instance.longitude, instance.latitude)
         else:
             return None

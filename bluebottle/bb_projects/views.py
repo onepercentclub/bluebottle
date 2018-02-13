@@ -68,11 +68,24 @@ class ProjectListSearchMixin(object):
 
         statuses = self.request.query_params.getlist('status[]')
         if statuses:
-            filter = ESQ()
-            for status in statuses:
-                filter = filter & ESQ('term', status=status)
+            filters = ESQ(
+                'bool',
+                should=[
+                    ESQ('term', **{'status.slug': status}) for status in statuses
+                ]
+            )
+
+            query = query & filters
+
+        country = self.request.query_params.get('country', None)
+        if country:
+            filter = ESQ('term', **{'country.id': country})
             query = query & filter
-        import ipdb; ipdb.set_trace()
+
+        location = self.request.query_params.get('location', None)
+        if location:
+            filter = ESQ('term', **{'location.id': country})
+            query = query & filter
 
         return search.query(
             'function_score', query=query, field_value_factor={'field': 'popularity'}

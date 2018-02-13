@@ -39,6 +39,9 @@ class CustomMemberField(models.Model):
 
 
 class MemberPlatformSettings(BasePlatformSettings):
+    require_consent = models.BooleanField(
+        default=False, help_text=_('Require users to consent to cookies')
+    )
 
     class Meta:
         verbose_name_plural = _('member platform settings')

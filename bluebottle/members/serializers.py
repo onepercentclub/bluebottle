@@ -10,6 +10,7 @@ from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializ
 from bluebottle.clients import properties
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
+from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.tasks.models import Skill
 from bluebottle.utils.serializers import PermissionField
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
@@ -279,3 +280,11 @@ class PasswordSetSerializer(serializers.Serializer):
 
 class UserVerificationSerializer(serializers.Serializer):
     token = serializers.CharField()
+
+
+class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MemberPlatformSettings
+        fields = (
+            'require_consent',
+        )

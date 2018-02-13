@@ -1,14 +1,15 @@
 import importlib
 
 from bluebottle.projects.dashboard import RecentProjects, MyReviewingProjects, ClosingFundingProjects
-from django.urls.base import reverse
+from django.urls.base import reverse, reverse_lazy
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from jet.dashboard import modules
 from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard
-from jet.dashboard.modules import DashboardModule
+from jet.dashboard.modules import DashboardModule, LinkList
 
+from bluebottle.clients import properties
 from bluebottle.tasks.models import Task
 
 
@@ -32,6 +33,29 @@ class CustomIndexDashboard(Dashboard):
         self.children.append(MyReviewingProjects())
         self.children.append(ClosingFundingProjects())
         self.children.append(ClosingTasks())
+        if context['request'].user.has_perm('sites.export'):
+            metrics_children = [
+                {
+                    'title': _('Export metrics'),
+                    'url': reverse_lazy('exportdb_export'),
+                },
+            ]
+            if properties.REPORTING_BACKOFFICE_ENABLED:
+                metrics_children.append({
+                    'title': _('Download report'),
+                    'url': reverse_lazy('report-export'),
+                })
+
+            if properties.PARTICIPATION_BACKOFFICE_ENABLED:
+                metrics_children.append({
+                    'title': _('Request Complete Participation Metrics'),
+                    'url': reverse('participation-metrics')
+                })
+
+            self.children.append(LinkList(
+                _('Export Metrics'),
+                children=metrics_children
+            ))
 
 
 class CustomAppIndexDashboard(DefaultAppIndexDashboard):

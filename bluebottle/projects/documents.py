@@ -1,12 +1,11 @@
 from django.db import connection
 
 from django_elasticsearch_dsl import Index, DocType, fields, search
-from elasticsearch_dsl import Q
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.geo.models import Location
+from bluebottle.categories.models import Category
+from bluebottle.geo.models import Location, Country
 from bluebottle.projects.models import Project
-from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.tasks.models import Task
 
 # The name of your index
@@ -20,21 +19,26 @@ project.settings(
 
 @project.doc_type
 class ProjectDocument(DocType):
-    client_name = fields.StringField()
+    client_name = fields.KeywordField()
 
     task_set = fields.NestedField(properties={
         'title': fields.StringField(),
         'description': fields.StringField(),
+        'type': fields.KeywordField(),
         'status': fields.StringField(),
         'deadline': fields.DateField(),
         'deadline_to_apply': fields.DateField(),
-        'skill': fields.NestedField(
-            properties={'name': fields.StringField()}
+        'location': fields.StringField(),
+        'skill': fields.ObjectField(
+            properties={
+                'id': fields.LongField(),
+                'name': fields.KeywordField()
+            }
         ),
     })
 
     status = fields.ObjectField(properties={
-        'slug': fields.StringField()
+        'slug': fields.KeywordField()
     })
 
     location = fields.ObjectField(properties={
@@ -47,6 +51,16 @@ class ProjectDocument(DocType):
     country = fields.ObjectField(properties={
         'id': fields.LongField(),
         'name': fields.StringField(),
+    })
+
+    theme = fields.ObjectField(properties={
+        'id': fields.LongField(),
+        'name': fields.StringField(),
+    })
+
+    categories = fields.NestedField(properties={
+        'id': fields.LongField(),
+        'title': fields.StringField(),
     })
 
     project_location = fields.GeoPointField()
@@ -70,6 +84,11 @@ class ProjectDocument(DocType):
             model=cls._doc_type.model
         )
 
+    def get_queryset(self):
+        return super(ProjectDocument, self).get_queryset().select_related(
+            'location', 'country', 'theme', 'status'
+        )
+
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, Task):
             return related_instance.project
@@ -78,6 +97,8 @@ class ProjectDocument(DocType):
         elif isinstance(related_instance, Location):
             return related_instance.project_set.all()
         elif isinstance(related_instance, Country):
+            return related_instance.project_set.all()
+        elif isinstance(related_instance, Category):
             return related_instance.project_set.all()
 
 

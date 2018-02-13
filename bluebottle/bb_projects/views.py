@@ -56,7 +56,7 @@ class ProjectListSearchMixin(object):
         search = documents.ProjectDocument.search()
         query = ESQ()
 
-        text = self.request.query_params['text']
+        text = self.request.query_params.get('text')
         if text:
             query = query & (
                 ESQ('match', title={'query': text, 'boost': 2}) |
@@ -87,48 +87,54 @@ class ProjectListSearchMixin(object):
             filter = ESQ('term', **{'location.id': country})
             query = query & filter
 
+        theme = self.request.query_params.get('theme', None)
+        if theme:
+            filter = ESQ('term', **{'theme.id': theme})
+            query = query & filter
+
+        category = self.request.query_params.get('category', None)
+        if category:
+            filter = ESQ('nested', path='categories', query=ESQ('term', **{'categories.id': category}))
+            query = query & filter
+
+        skill = self.request.query_params.get('skill', None)
+        if skill:
+            filter = ESQ(
+                'nested',
+                path='task_set',
+                query=ESQ('term', **{'task_set.skill.id': category})
+            )
+            query = query & filter
+
+        project_type = self.request.query_params.get('skill', None)
+        if project_type == 'volunteering':
+            filter = ESQ(
+                'nested',
+                path='task_set',
+                query=ESQ('range', **{'task_set.count': {'gt': 0}})
+            )
+            query = query & filter
+        elif project_type == 'funding':
+            filter = ESQ('range', amount_asked={'gt': 0})
+            query = query & filter
+        elif project_type == 'voting':
+            filters = ESQ(
+                'bool',
+                should=[
+                    ESQ('term', **{'status.slug': status}) for status in ['voting', 'voting-done']
+                ]
+            )
+            query = query & filter
+
+        anywhere = self.request.query_params.get('anywhere', None)
+        if anywhere:
+            filter = ESQ('nested', path='task_set', query=~ESQ('exists', field='task_set.location'))
+            query = query & filter
+
+
         return search.query(
             'function_score', query=query, field_value_factor={'field': 'popularity'}
         )
-
-
-        # Apply filters
-        status = query.getlist(u'status[]', None)
-        if status:
-            qs = qs.filter(status__slug__in=status)
-        else:
-            status = query.get('status', None)
-            if status:
-                qs = qs.filter(status__slug=status)
-
-        country = query.get('country', None)
-        if country:
-            qs = qs.filter(country=country)
-
-        location = query.get('location', None)
-        if location:
-            qs = qs.filter(location=location)
-
-        category = query.get('category', None)
-        if category:
-            qs = qs.filter(categories__slug=category)
-
-        theme = query.get('theme', None)
-        if theme:
-            qs = qs.filter(theme_id=theme)
-
-        money_needed = query.get('money_needed', None)
-        if money_needed:
-            qs = qs.filter(amount_needed__gt=0)
-
-        skill = query.get('skill', None)
-        if skill:
-            qs.select_related('task')
-            qs = qs.filter(task__skill=skill).distinct()
-
-        anywhere = query.get('anywhere', None)
-        if anywhere:
-            qs = qs.filter(Q(task__id__isnull=False), Q(task__location__isnull=True) | Q(task__location='')).distinct()
 
         start = query.get('start', None)
         if start:
@@ -148,21 +154,6 @@ class ProjectListSearchMixin(object):
                 Q(task__type='event', task__deadline__range=[start_date, end_date]) |
                 Q(task__type='ongoing', task__deadline__gte=start_date)
             ).distinct()
-
-        project_type = query.get('project_type', None)
-        if project_type == 'volunteering':
-            qs = qs.annotate(Count('task')).filter(task__count__gt=0)
-        elif project_type == 'funding':
-            qs = qs.filter(amount_asked__gt=0)
-        elif project_type == 'voting':
-            qs = qs.filter(status__slug__in=['voting', 'voting-done'])
-
-        text = query.get('text', None)
-        if text:
-            qs = qs.filter(Q(title__icontains=text) |
-                           Q(location__name__icontains=text) |
-                           Q(pitch__icontains=text) |
-                           Q(description__icontains=text))
 
         return self._ordering(query.get('ordering', None), qs, status)
 

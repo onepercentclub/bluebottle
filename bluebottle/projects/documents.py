@@ -37,6 +37,18 @@ class ProjectDocument(DocType):
         ),
     })
 
+    task_member_set = fields.NestedField(properties={
+        'created': fields.DateField()
+    })
+
+    donation_set = fields.NestedField(properties={
+        'created': fields.DateField()
+    })
+
+    vote_set = fields.NestedField(properties={
+        'created': fields.DateField()
+    })
+
     status = fields.ObjectField(properties={
         'slug': fields.KeywordField()
     })
@@ -101,7 +113,6 @@ class ProjectDocument(DocType):
         elif isinstance(related_instance, Category):
             return related_instance.project_set.all()
 
-
     def prepare_client_name(self, instance):
         return connection.tenant.client_name
 
@@ -110,3 +121,12 @@ class ProjectDocument(DocType):
             return (instance.longitude, instance.latitude)
         else:
             return None
+
+    def prepare_task_member_set(self, instance):
+        result = []
+        for task in instance.task_set.all():
+            result += [
+                 {'created': member.created} for member in task.members.all()
+            ]
+
+        return result

@@ -106,12 +106,11 @@ class ProjectListSearchMixin(object):
             )
             query = query & filter
 
-        project_type = self.request.query_params.get('skill', None)
+        project_type = self.request.query_params.get('project_type', None)
         if project_type == 'volunteering':
             filter = ESQ(
-                'nested',
-                path='task_set',
-                query=ESQ('range', **{'task_set.count': {'gt': 0}})
+                'script',
+                script="return doc.containsKey('task_set') "
             )
             query = query & filter
         elif project_type == 'funding':

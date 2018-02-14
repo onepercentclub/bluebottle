@@ -108,10 +108,7 @@ class ProjectListSearchMixin(object):
 
         project_type = self.request.query_params.get('project_type', None)
         if project_type == 'volunteering':
-            filter = ESQ(
-                'script',
-                script="return doc.containsKey('task_set') "
-            )
+            filter = ESQ('nested', path='task_set', query=ESQ('exists', field='task_set.title'))
             query = query & filter
         elif project_type == 'funding':
             filter = ESQ('range', amount_asked={'gt': 0})
@@ -129,7 +126,6 @@ class ProjectListSearchMixin(object):
         if anywhere:
             filter = ESQ('nested', path='task_set', query=~ESQ('exists', field='task_set.location'))
             query = query & filter
-
 
         return search.query(
             'function_score', query=query, field_value_factor={'field': 'popularity'}

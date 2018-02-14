@@ -76,7 +76,7 @@ install_requires = [
     'influxdb==5.0.0',
     'lipisha==0.2.4',
     'lxml==4.1.1',
-    'micawber==0.3.4',
+    'micawber==0.3.5',
     'mixpanel==4.3.2',
     'openpyxl==2.5.0',
     'pendulum==1.4.1',

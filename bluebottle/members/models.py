@@ -42,6 +42,11 @@ class MemberPlatformSettings(BasePlatformSettings):
     require_consent = models.BooleanField(
         default=False, help_text=_('Require users to consent to cookies')
     )
+    consent_link = models.CharField(
+        default='/pages/terms-and-conditions',
+        help_text=_('Link more information about the platforms policy'),
+        max_length=255
+    )
 
     class Meta:
         verbose_name_plural = _('member platform settings')

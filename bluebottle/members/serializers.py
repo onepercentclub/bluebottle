@@ -287,4 +287,5 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
         model = MemberPlatformSettings
         fields = (
             'require_consent',
+            'consent_link',
         )

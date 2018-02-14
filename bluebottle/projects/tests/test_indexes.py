@@ -1,15 +1,21 @@
+from datetime import timedelta
 from django.test.utils import override_settings
+from django.utils.timezone import now
+
 from django_elasticsearch_dsl.test import ESTestCase
 from elasticsearch_dsl import Q, SF
 
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients.models import Client
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.projects.documents import ProjectDocument
+from bluebottle.donations.models import Donation
 
 
 @override_settings(
@@ -157,6 +163,63 @@ class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
         )
         self.assertEqual(
             result[1], self.project1,
+        )
+        self.assertEqual(
+            result[2], self.project3,
+        )
+
+    def test_search_recent_donation(self):
+        order = OrderFactory.create()
+        for days in [2, 2, 3, 4]:
+            donation = Donation.objects.create(
+                project=self.project1, order=order
+            )
+            donation.created = now() - timedelta(days=days)
+            donation.save()
+        for days in [2, 2]:
+            donation = DonationFactory.create(
+                project=self.project2, order=order, created=now() - timedelta(days=days)
+            )
+            donation.created = now() - timedelta(days=days)
+            donation.save()
+
+        for days in [3, 4]:
+            donation = DonationFactory.create(
+                project=self.project3, order=order, created=now() - timedelta(days=days)
+            )
+            donation.created = now() - timedelta(days=days)
+            donation.save()
+
+        query = self.search.query(
+            Q(
+                'nested',
+                path='donation_set',
+                score_mode='sum',
+                query=Q(
+                    'function_score',
+                    functions=[
+                        SF(
+                            'gauss',
+                            **{
+                                'donation_set.created': {
+                                    'origin': now(),
+                                    'offset': "1d",
+                                    'scale': "5d"
+                                }
+                            }
+                        ),
+                    ]
+                )
+            )
+        )
+        result = query.to_queryset()
+
+        self.assertEqual(len(result), 3)
+        self.assertEqual(
+            result[0], self.project1,
+        )
+        self.assertEqual(
+            result[1], self.project2,
         )
         self.assertEqual(
             result[2], self.project3,

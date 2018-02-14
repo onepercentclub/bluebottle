@@ -51,106 +51,137 @@ class TinyProjectPagination(BluebottlePagination):
 
 
 class ProjectListSearchMixin(object):
+    search_fields = (
+        'text', 'country', 'location', 'theme', 'category',
+        'skill', 'project_type', 'anywhere', 'start',
+    )
 
-    def search(self):
-        search = documents.ProjectDocument.search()
-        query = ESQ()
+    def _filter_text(self, query, value):
+        return query & (
+            ESQ('match', title={'query': value, 'boost': 2}) |
+            ESQ('match', pitch=value) |
+            ESQ('match', story=value) |
+            ESQ('nested', path='task_set', query=ESQ('match', **{'task_set.title': value})) |
+            ESQ('nested', path='task_set', query=ESQ('match', **{'task_set.description': value}))
+        )
 
-        text = self.request.query_params.get('text')
-        if text:
-            query = query & (
-                ESQ('match', title={'query': text, 'boost': 2}) |
-                ESQ('match', pitch=text) |
-                ESQ('match', story=text) |
-                ESQ('nested', path='task_set', query=ESQ('match', **{'task_set.title': text})) |
-                ESQ('nested', path='task_set', query=ESQ('match', **{'task_set.description': text}))
-            )
+    def _filter_status(self, query, value):
+        return query & ESQ(
+            'bool',
+            should=[
+                ESQ('term', **{'status.slug': status}) for status in value
+            ]
+        )
 
-        statuses = self.request.query_params.getlist('status[]')
-        if statuses:
-            filters = ESQ(
-                'bool',
-                should=[
-                    ESQ('term', **{'status.slug': status}) for status in statuses
-                ]
-            )
+    def _filter_country(self, query, value):
+        return query & ESQ('term', **{'country.id': value})
 
-            query = query & filters
+    def _filter_location(self, query, value):
+        return query & ESQ('term', **{'country.id': value})
 
-        country = self.request.query_params.get('country', None)
-        if country:
-            filter = ESQ('term', **{'country.id': country})
-            query = query & filter
+    def _filter_theme(self, query, value):
+        return query & ESQ('term', **{'theme.id': value})
 
-        location = self.request.query_params.get('location', None)
-        if location:
-            filter = ESQ('term', **{'location.id': country})
-            query = query & filter
+    def _filter_category(self, query, value):
+        return query & ESQ(
+            'nested', path='categories', query=ESQ('term', **{'categories.id': value})
+        )
 
-        theme = self.request.query_params.get('theme', None)
-        if theme:
-            filter = ESQ('term', **{'theme.id': theme})
-            query = query & filter
+    def _filter_skill(self, query, value):
+        return value & ESQ(
+            'nested',
+            path='task_set',
+            query=ESQ('term', **{'task_set.skill.id': value})
+        )
 
-        category = self.request.query_params.get('category', None)
-        if category:
-            filter = ESQ('nested', path='categories', query=ESQ('term', **{'categories.id': category}))
-            query = query & filter
-
-        skill = self.request.query_params.get('skill', None)
-        if skill:
-            filter = ESQ(
-                'nested',
-                path='task_set',
-                query=ESQ('term', **{'task_set.skill.id': category})
-            )
-            query = query & filter
-
-        project_type = self.request.query_params.get('project_type', None)
-        if project_type == 'volunteering':
-            filter = ESQ('nested', path='task_set', query=ESQ('exists', field='task_set.title'))
-            query = query & filter
-        elif project_type == 'funding':
-            filter = ESQ('range', amount_asked={'gt': 0})
-            query = query & filter
-        elif project_type == 'voting':
-            filters = ESQ(
+    def _filter_project_type(self, query, value):
+        if value == 'volunteering':
+            return query & ESQ('nested', path='task_set', query=ESQ('exists', field='task_set.title'))
+        elif value == 'funding':
+            return query & ESQ('range', amount_asked={'gt': 0})
+        elif value == 'voting':
+            return query & ESQ(
                 'bool',
                 should=[
                     ESQ('term', **{'status.slug': status}) for status in ['voting', 'voting-done']
                 ]
             )
-            query = query & filter
+        else:
+            return query
 
-        anywhere = self.request.query_params.get('anywhere', None)
-        if anywhere:
-            filter = ESQ('nested', path='task_set', query=~ESQ('exists', field='task_set.location'))
-            query = query & filter
-
-        return search.query(
-            'function_score', query=query, field_value_factor={'field': 'popularity'}
+    def _filter_anywhere(self, query, value):
+        return query & ESQ(
+            'nested', path='task_set', query=~ESQ('exists', field='task_set.location')
         )
 
-        start = query.get('start', None)
-        if start:
-            qs.select_related('task')
+    def _filter_start(self, query, start):
+        end = self.request.query_params.get('end', start)
 
-            tz = timezone.get_current_timezone()
-            start_date = tz.localize(
-                datetime.datetime.combine(parser.parse(start), datetime.datetime.min.time())
+        return query & (
+            ESQ('nested', path='task_set', query=(
+                ESQ('term', **{'task_set.type': 'event'}) &
+                ESQ('range', **{'task_set.deadline': {'gte': start, 'lte': end}})
+            )) |
+            ESQ('nested', path='task_set', query=(
+                ESQ('term', **{'task_set.type': 'ongoing'}) &
+                ESQ('range', **{'task_set.deadline': {'gte': start}})
+            ))
+        )
+
+    def search(self):
+        search = documents.ProjectDocument.search()
+        query = ESQ()
+
+        for field in self.search_fields:
+            value = self.request.query_params.get(field)
+            if value:
+                query = getattr(self, '_filter_{}'.format(field))(query, value)
+
+        statuses = self.request.query_params.getlist('status[]')
+        if statuses:
+            query = self._filter_status(query, statuses)
+
+        return search.query(
+            query & (
+                ESQ('bool', boost=0.5, should=(
+                    ESQ('term', **{'status.slug': 'campaign'}) | ESQ('term', **{'status.slug': 'campaign'})
+                )) |
+                ESQ('nested', path='donation_set', score_mode='sum', query=ESQ(
+                    'function_score',
+                    boost=0.1,
+                    functions=[SF(
+                        'gauss',
+                        **{'donation_set.created': {
+                            'origin': timezone.now(),
+                            'offset': "1d",
+                            'scale': "30d"
+                        }}
+                    )]
+                )) |
+                ESQ('nested', path='vote_set', score_mode='sum', query=ESQ(
+                    'function_score',
+                    functions=[SF(
+                        'gauss',
+                        **{'vote_set.created': {
+                            'origin': timezone.now(),
+                            'offset': "1d",
+                            'scale': "30d"
+                        }}
+                    )]
+                )) |
+                ESQ('nested', path='vote_set', score_mode='sum', query=ESQ(
+                    'function_score',
+                    functions=[SF(
+                        'gauss',
+                        **{'vote_set.created': {
+                            'origin': timezone.now(),
+                            'offset': "1d",
+                            'scale': "30d"
+                        }}
+                    )]
+                ))
             )
-
-            end = query.get('end', start)
-            end_date = tz.localize(
-                datetime.datetime.combine(parser.parse(end), datetime.datetime.max.time())
-            )
-
-            qs = qs.filter(
-                Q(task__type='event', task__deadline__range=[start_date, end_date]) |
-                Q(task__type='ongoing', task__deadline__gte=start_date)
-            ).distinct()
-
-        return self._ordering(query.get('ordering', None), qs, status)
+        )
 
     def _ordering(self, ordering, queryset, status):
         if ordering == 'deadline':
@@ -208,7 +239,7 @@ class ProjectPreviewList(ProjectListSearchMixin, OwnerListViewMixin, ListAPIView
     )
 
     def list(self, request):
-        result = self.search()
+        result = self.search().extra(explain=True)
 
         page = self.paginate_queryset(result)
         if page is not None:

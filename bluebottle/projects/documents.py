@@ -4,6 +4,7 @@ from django_elasticsearch_dsl import Index, DocType, fields, search
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.categories.models import Category
+from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Location, Country
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
@@ -76,6 +77,7 @@ class ProjectDocument(DocType):
     })
 
     project_location = fields.GeoPointField()
+    amount_asked = fields.FloatField()
 
     class Meta:
         model = Project
@@ -85,7 +87,7 @@ class ProjectDocument(DocType):
             'pitch',
             'popularity',
         ]
-        related_models = (Task, ProjectPhase, Location)
+        related_models = (Task, ProjectPhase, Location, Donation, Country)
 
     @classmethod
     def search(cls, using=None, index=None):
@@ -112,9 +114,14 @@ class ProjectDocument(DocType):
             return related_instance.project_set.all()
         elif isinstance(related_instance, Category):
             return related_instance.project_set.all()
+        elif isinstance(related_instance, Donation):
+            return related_instance.project
 
     def prepare_client_name(self, instance):
         return connection.tenant.client_name
+
+    def prepare_amount_asked(self, instance):
+        return instance.amount_asked.amount
 
     def prepare_project_location(self, instance):
         if instance.latitude and instance.longitude:

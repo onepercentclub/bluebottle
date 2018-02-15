@@ -96,12 +96,13 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
     {
         'label': _('Analytics'),
         'items': [
-            {
-                'label': _('Projects'),
-                'type': 'reverse',
-                'name': 'analytics-index',
-                'kwargs': {'report': 'projects'}
-            },
+            # Fix this nicer way of linking
+            # {
+            #     'label': _('Projects'),
+            #     'type': 'reverse',
+            #     'name': 'analytics-index',
+            #     'kwargs': {'report': 'projects'}
+            # },
             {
                 'label': _('Projects'),
                 'url': '/admin/analytics/projects'

@@ -13,7 +13,7 @@ class RecentProjects(DashboardModule):
     title_url = "{}?status_filter=2".format(reverse('admin:projects_project_changelist'))
     template = 'dashboard/recent_projects.html'
     limit = 5
-    column = 1
+    column = 0
 
     def init_with_context(self, context):
         projects = Project.objects.filter(status__slug='plan-submitted').order_by('date_submitted')
@@ -25,7 +25,7 @@ class MyReviewingProjects(DashboardModule):
     title_url = "{}?reviewer=True".format(reverse('admin:projects_project_changelist'))
     template = 'dashboard/recent_projects.html'
     limit = 5
-    column = 1
+    column = 0
 
     def init_with_context(self, context):
         user = context.request.user

@@ -70,3 +70,6 @@ body.menu-pinned .changelist-footer.fixed {
     left: 12rem;
     padding: 10px;
 }
+body.menu-pinned table.helper {
+    padding-left: 12rem;
+}

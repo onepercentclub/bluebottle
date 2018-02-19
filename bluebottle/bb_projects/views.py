@@ -52,17 +52,17 @@ class TinyProjectPagination(BluebottlePagination):
 
 class ProjectListSearchMixin(object):
     search_fields = (
-        'text', 'country', 'location', 'theme', 'category',
+        'country', 'location', 'theme', 'category',
         'skill', 'project_type', 'anywhere', 'start',
     )
 
-    def _filter_text(self, query, value):
-        return query & (
+    def _text_query(self, value):
+        return (
             ESQ('match', title={'query': value, 'boost': 2}) |
             ESQ('match', pitch=value) |
             ESQ('match', story=value) |
-            ESQ('nested', path='task_set', query=ESQ('match', **{'task_set.title': value})) |
-            ESQ('nested', path='task_set', query=ESQ('match', **{'task_set.description': value}))
+            ESQ('match', **{'task_set.title': value}) |
+            ESQ('match', **{'task_set.description': value})
         )
 
     def _filter_status(self, query, value):
@@ -77,26 +77,20 @@ class ProjectListSearchMixin(object):
         return query & ESQ('term', **{'country.id': value})
 
     def _filter_location(self, query, value):
-        return query & ESQ('term', **{'country.id': value})
+        return query & ESQ('term', **{'location.id': value})
 
     def _filter_theme(self, query, value):
         return query & ESQ('term', **{'theme.id': value})
 
     def _filter_category(self, query, value):
-        return query & ESQ(
-            'nested', path='categories', query=ESQ('term', **{'categories.id': value})
-        )
+        return query & ESQ('term', **{'categories.id': value})
 
     def _filter_skill(self, query, value):
-        return value & ESQ(
-            'nested',
-            path='task_set',
-            query=ESQ('term', **{'task_set.skill.id': value})
-        )
+        return query & ESQ('term', **{'task_set.skill.id': value})
 
     def _filter_project_type(self, query, value):
         if value == 'volunteering':
-            return query & ESQ('nested', path='task_set', query=ESQ('exists', field='task_set.title'))
+            return query & ESQ('exists', field='task_set.title')
         elif value == 'funding':
             return query & ESQ('range', amount_asked={'gt': 0})
         elif value == 'voting':
@@ -117,36 +111,41 @@ class ProjectListSearchMixin(object):
     def _filter_start(self, query, start):
         end = self.request.query_params.get('end', start)
 
-        return query & (
-            ESQ('nested', path='task_set', query=(
-                ESQ('term', **{'task_set.type': 'event'}) &
-                ESQ('range', **{'task_set.deadline': {'gte': start, 'lte': end}})
-            )) |
-            ESQ('nested', path='task_set', query=(
-                ESQ('term', **{'task_set.type': 'ongoing'}) &
-                ESQ('range', **{'task_set.deadline': {'gte': start}})
-            ))
-        )
+        return query & ((
+            ESQ('term', **{'task_set.type': 'event'}) &
+            ESQ('range', **{'task_set.deadline': {'gte': start, 'lte': end}})
+        ) | (
+            ESQ('term', **{'task_set.type': 'ongoing'}) &
+            ESQ('range', **{'task_set.deadline': {'gte': start}})
+        ))
 
     def search(self):
         search = documents.ProjectDocument.search()
-        query = ESQ()
+        filter = ESQ()
 
         for field in self.search_fields:
             value = self.request.query_params.get(field)
             if value:
-                query = getattr(self, '_filter_{}'.format(field))(query, value)
+                filter = getattr(self, '_filter_{}'.format(field))(filter, value)
 
         statuses = self.request.query_params.getlist('status[]')
         if statuses:
-            query = self._filter_status(query, statuses)
+            filter = self._filter_status(filter, statuses)
+
+        text = self.request.query_params.get('text')
+        if text:
+            query = search.query(self._text_query(text))
+        else:
+            query = search.query()
+
+        return query.filter(filter)
 
         return search.query(
             query & (
                 ESQ('bool', boost=0.5, should=(
-                    ESQ('term', **{'status.slug': 'campaign'}) | ESQ('term', **{'status.slug': 'campaign'})
+                    ESQ('term', **{'status.slug': 'campaign'}) | ESQ('term', **{'status.slug': 'voting'})
                 )) |
-                ESQ('nested', path='donation_set', score_mode='sum', query=ESQ(
+                ESQ('nested', path='donation_set', score_mode='sum', ignore_unmapped=True, query=ESQ(
                     'function_score',
                     boost=0.1,
                     functions=[SF(
@@ -158,8 +157,9 @@ class ProjectListSearchMixin(object):
                         }}
                     )]
                 )) |
-                ESQ('nested', path='vote_set', score_mode='sum', query=ESQ(
+                ESQ('nested', path='vote_set', score_mode='sum', ignore_unmapped=True, query=ESQ(
                     'function_score',
+                    boost=0.1,
                     functions=[SF(
                         'gauss',
                         **{'vote_set.created': {
@@ -169,11 +169,12 @@ class ProjectListSearchMixin(object):
                         }}
                     )]
                 )) |
-                ESQ('nested', path='vote_set', score_mode='sum', query=ESQ(
+                ESQ('nested', path='task_member_set', score_mode='sum', ignore_unmapped=True, query=ESQ(
                     'function_score',
+                    boost=0.1,
                     functions=[SF(
                         'gauss',
-                        **{'vote_set.created': {
+                        **{'task_member_set.created': {
                             'origin': timezone.now(),
                             'offset': "1d",
                             'scale': "30d"

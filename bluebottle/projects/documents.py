@@ -57,7 +57,7 @@ class ProjectDocument(DocType):
     location = fields.ObjectField(properties={
         'id': fields.LongField(),
         'name': fields.StringField(),
-        'position': fields.GeoPointField(),
+        'position': fields.GeoPointField(attr='position_tuple'),
         'city': fields.StringField()
     })
 
@@ -133,7 +133,7 @@ class ProjectDocument(DocType):
         result = []
         for task in instance.task_set.all():
             result += [
-                 {'created': member.created} for member in task.members.all()
+                {'created': member.created} for member in task.members.all()
             ]
 
         return result

@@ -96,7 +96,6 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(stats['stats'][1]['title'], self.stat2.title)
         self.assertEqual(stats['stats'][1]['value'], {"amount": Decimal('0'), "currency": "EUR"})
 
-
     def test_results_quotes(self):
         block = QuotesContent.objects.create_for_placeholder(self.placeholder)
         self.quote = QuoteFactory(block=block)

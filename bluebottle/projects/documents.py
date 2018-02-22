@@ -123,8 +123,6 @@ class ProjectDocument(DocType):
         elif isinstance(related_instance, Donation):
             return related_instance.project
 
-
-
     def prepare_client_name(self, instance):
         return connection.tenant.client_name
 

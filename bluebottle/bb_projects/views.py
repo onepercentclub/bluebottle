@@ -1,16 +1,11 @@
-from dateutil import parser
-import datetime
 from django.db.models.query_utils import Q
 
-from django.db.models import F
-from django.db.models.aggregates import Count
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
 
 from elasticsearch_dsl import Q as ESQ, SF
 from rest_framework.response import Response
-import six
 
 from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectDocument
 from bluebottle.projects import documents

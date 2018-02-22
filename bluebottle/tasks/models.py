@@ -306,6 +306,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
         stopped = ChoiceItem('stopped', label=_('Stopped'))
         withdrew = ChoiceItem('withdrew', label=_('Withdrew'))
         realized = ChoiceItem('realized', label=_('Realised'))
+        absent = ChoiceItem('absent', label=_('Absent'))
 
     member = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
     task = models.ForeignKey('tasks.Task', related_name="members")

@@ -8,6 +8,8 @@ Hi {{ receiver_name }},
 
 You did it! The project owner {{ sender_name }} marked the task '{{ task_title }}' as realized. Good job!
 
+You've spent {{ time_spent }} hours on this project.
+
 Let's celebrate with a short comment!
 {% endblocktrans %}
 

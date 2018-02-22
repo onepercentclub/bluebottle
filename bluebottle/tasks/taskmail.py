@@ -97,6 +97,7 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
 
         survey_url = Survey.url(self.task)
         self.ctx['survey_link'] = mark_safe(survey_url) if survey_url else None
+        self.ctx['time_spent'] = self.task_member.time_spent
 
     @property
     def subject(self):
@@ -133,6 +134,7 @@ class TaskMemberMailAdapter:
         TaskMember.TaskMemberStatuses.rejected: TaskMemberRejectMail,
         TaskMember.TaskMemberStatuses.accepted: TaskMemberAcceptedMail,
         TaskMember.TaskMemberStatuses.realized: TaskMemberRealizedMail,
+        TaskMember.TaskMemberStatuses.absent: TaskMemberRealizedMail,
         TaskMember.TaskMemberStatuses.withdrew: TaskMemberWithdrawMail,
     }
 

@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.test.utils import override_settings
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.tasks.models import Task
+from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
@@ -79,3 +79,19 @@ class TestTaskRealised(TaskUnitTestBase):
 
         self.assertEqual(self.task.status, Task.TaskStatuses.realized)
         self.assertEqual(self.project.status.slug, 'done-complete')
+
+
+class TestAbsent(TaskUnitTestBase):
+    """
+    Test what happens when a task reaches it's deadline
+    """
+    def test_all_tasks_realised_closed_project(self):
+        member = TaskMemberFactory.create(
+            task=self.task, status='accepted', time_spent=4
+        )
+        member.status = TaskMember.TaskMemberStatuses.absent
+        member.save()
+
+        self.assertEqual(member.time_spent, 0)
+
+

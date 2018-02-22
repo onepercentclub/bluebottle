@@ -374,6 +374,9 @@ class TaskMember(models.Model, PreviousStatusMixin):
                 self.task.accepting == self.task.TaskAcceptingChoices.automatic):
             self.status = self.TaskMemberStatuses.accepted
 
+        if (self.status == self.TaskMemberStatuses.absent):
+            self.time_spent = 0
+
         super(TaskMember, self).save(*args, **kwargs)
 
 

@@ -7,7 +7,8 @@ from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Location, Country
 from bluebottle.projects.models import Project
-from bluebottle.tasks.models import Task
+from bluebottle.tasks.models import Task, TaskMember
+from bluebottle.votes.models import Vote
 
 # The name of your index
 project = Index('projects')
@@ -38,17 +39,9 @@ class ProjectDocument(DocType):
         ),
     })
 
-    task_member_set = fields.NestedField(properties={
-        'created': fields.DateField()
-    })
-
-    donation_set = fields.NestedField(properties={
-        'created': fields.DateField()
-    })
-
-    vote_set = fields.NestedField(properties={
-        'created': fields.DateField()
-    })
+    task_members = fields.DateField()
+    donations = fields.DateField()
+    votes = fields.DateField()
 
     status = fields.ObjectField(properties={
         'slug': fields.KeywordField()
@@ -87,7 +80,9 @@ class ProjectDocument(DocType):
             'pitch',
             'popularity',
         ]
-        related_models = (Task, ProjectPhase, Location, Donation, Country)
+        related_models = (
+            Task, TaskMember, ProjectPhase, Location, Donation, Country, Vote
+        )
 
     @classmethod
     def search(cls, using=None, index=None):
@@ -106,6 +101,8 @@ class ProjectDocument(DocType):
     def get_instances_from_related(self, related_instance):
         if isinstance(related_instance, Task):
             return related_instance.project
+        if isinstance(related_instance, TaskMember):
+            return related_instance.task.project
         elif isinstance(related_instance, ProjectPhase):
             return related_instance.project_set.all()
         elif isinstance(related_instance, Location):
@@ -116,6 +113,9 @@ class ProjectDocument(DocType):
             return related_instance.project_set.all()
         elif isinstance(related_instance, Donation):
             return related_instance.project
+        elif isinstance(related_instance, Vote):
+            return related_instance.project
+
 
     def prepare_client_name(self, instance):
         return connection.tenant.client_name
@@ -129,11 +129,17 @@ class ProjectDocument(DocType):
         else:
             return None
 
-    def prepare_task_member_set(self, instance):
+    def prepare_votes(self, instance):
+        return [vote.created for vote in instance.vote_set.all()]
+
+    def prepare_donations(self, instance):
+        return [donation.created for donation in instance.donation_set.all()]
+
+    def prepare_task_members(self, instance):
         result = []
         for task in instance.task_set.all():
             result += [
-                {'created': member.created} for member in task.members.all()
+                member.created for member in task.members.all()
             ]
 
         return result

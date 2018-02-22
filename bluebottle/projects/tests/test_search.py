@@ -1,23 +1,26 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.test.utils import override_settings
 from django.test.client import RequestFactory
 from django.core.urlresolvers import reverse
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, now
 
 from django_elasticsearch_dsl.test import ESTestCase
+from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory, SkillFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.votes import VoteFactory
 
 from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.bb_projects.views import ProjectPreviewList
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.projects.models import Project
 
 
 @override_settings(
@@ -28,6 +31,9 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.view = ProjectPreviewList().as_view()
+
+        for index in registry.get_indices([Project]):
+            index.create()
 
     def search(self, query=None):
         url = reverse('project_preview_list')
@@ -215,21 +221,166 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
     def test_combined_filters(self):
-        pass
+        location = LocationFactory.create()
+        country = CountryFactory.create()
+        project = ProjectFactory.create(
+            location=location,
+            country=country
+        )
+        ProjectFactory.create(
+            country=country
+        )
+        ProjectFactory.create(
+            location=location,
+        )
 
-    def score_status(self):
-        pass
+        result = self.search({
+            'location': location.id,
+            'country': country.id
+        })
 
-    def score_donations(self):
-        pass
+        self.assertEqual(result.data['count'], 1)
+        self.assertEqual(result.data['results'][0]['title'], project.title)
 
-    def score_taskmembers(self):
-        pass
+    def test_score_status(self):
+        campaign = ProjectPhase.objects.get(slug='campaign')
+        project = ProjectFactory.create(status=campaign)
+        ProjectFactory.create()
+        result = self.search({})
 
-    def score_votes(self):
-        pass
+        self.assertEqual(result.data['count'], 2)
+        self.assertEqual(result.data['results'][0]['title'], project.title)
+
+    def test_score_donations(self):
+        order = OrderFactory.create(status='settled')
+        project = ProjectFactory.create()
+        DonationFactory(
+            order=order,
+            project=project,
+            fundraiser=None,
+            created=now() - timedelta(days=10)
+        )
+        DonationFactory(
+            order=order,
+            project=project,
+            fundraiser=None,
+            created=now() - timedelta(days=10)
+        )
+        DonationFactory(
+            order=order,
+            project=project,
+            fundraiser=None,
+            created=now() - timedelta(days=10)
+        )
+
+        other_project = ProjectFactory.create()
+        DonationFactory(
+            order=order,
+            project=other_project,
+            fundraiser=None,
+            created=now() - timedelta(days=1)
+        )
+        DonationFactory(
+            order=order,
+            project=other_project,
+            fundraiser=None,
+            created=now() - timedelta(days=1)
+        )
+        result = self.search({})
+
+        self.assertEqual(result.data['count'], 2)
+        self.assertEqual(result.data['results'][0]['title'], other_project.title)
+
+    def test_score_taskmembers(self):
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
+        TaskMemberFactory(
+            task=task,
+            created=now() - timedelta(days=10)
+        )
+        TaskMemberFactory(
+            task=task,
+            created=now() - timedelta(days=10)
+        )
+        TaskMemberFactory(
+            task=task,
+            created=now() - timedelta(days=10)
+        )
+
+        other_project = ProjectFactory.create()
+        other_task = TaskFactory.create(project=other_project)
+        TaskMemberFactory(
+            task=other_task,
+            created=now() - timedelta(days=1)
+        )
+        TaskMemberFactory(
+            task=other_task,
+            created=now() - timedelta(days=1)
+        )
+
+        result = self.search({})
+
+        self.assertEqual(result.data['count'], 2)
+        self.assertEqual(result.data['results'][0]['title'], other_project.title)
+
+    def test_score_votes(self):
+        project = ProjectFactory.create()
+        VoteFactory(
+            project=project,
+            created=now() - timedelta(days=10)
+        )
+        VoteFactory(
+            project=project,
+            created=now() - timedelta(days=10)
+        )
+        VoteFactory(
+            project=project,
+            created=now() - timedelta(days=10)
+        )
+
+        other_project = ProjectFactory.create()
+        VoteFactory(
+            project=other_project,
+            created=now() - timedelta(days=1)
+        )
+        VoteFactory(
+            project=other_project,
+            created=now() - timedelta(days=1)
+        )
+        result = self.search({})
+
+        self.assertEqual(result.data['count'], 2)
+        self.assertEqual(result.data['results'][0]['title'], other_project.title)
 
     def test_combined_scores(self):
-        pass
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
+        TaskMemberFactory(
+            task=task,
+            created=now() - timedelta(days=10)
+        )
+        TaskMemberFactory(
+            task=task,
+            created=now() - timedelta(days=10)
+        )
+        TaskMemberFactory(
+            task=task,
+            created=now() - timedelta(days=10)
+        )
+
+        other_project = ProjectFactory.create()
+        VoteFactory(
+            project=other_project,
+            created=now() - timedelta(days=1)
+        )
+        VoteFactory(
+            project=other_project,
+            created=now() - timedelta(days=1)
+        )
+        result = self.search({})
+
+        self.assertEqual(result.data['count'], 2)
+        self.assertEqual(result.data['results'][0]['title'], other_project.title)
+
 
 

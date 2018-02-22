@@ -61,8 +61,12 @@ class ProjectListSearchMixin(object):
             ESQ('match', title={'query': value, 'boost': 2}) |
             ESQ('match', pitch=value) |
             ESQ('match', story=value) |
-            ESQ('match', **{'task_set.title': value}) |
-            ESQ('match', **{'task_set.description': value})
+            ESQ(
+                'nested', path='task_set', query=(
+                    ESQ('match', **{'task_set.title': value}) |
+                    ESQ('match', **{'task_set.description': value})
+                )
+            )
         )
 
     def _filter_status(self, query, value):
@@ -83,14 +87,20 @@ class ProjectListSearchMixin(object):
         return query & ESQ('term', **{'theme.id': value})
 
     def _filter_category(self, query, value):
-        return query & ESQ('term', **{'categories.id': value})
+        return query & ESQ(
+            'nested', path='categories', query=ESQ('term', **{'categories.id': value})
+        )
 
     def _filter_skill(self, query, value):
-        return query & ESQ('term', **{'task_set.skill.id': value})
+        return query & ESQ(
+            'nested', path='task_set', query=ESQ('term', **{'task_set.skill.id': value})
+        )
 
     def _filter_project_type(self, query, value):
         if value == 'volunteering':
-            return query & ESQ('exists', field='task_set.title')
+            return query & ESQ(
+                'nested', path='task_set', query=ESQ('exists', field='task_set.title')
+            )
         elif value == 'funding':
             return query & ESQ('range', amount_asked={'gt': 0})
         elif value == 'voting':
@@ -111,13 +121,64 @@ class ProjectListSearchMixin(object):
     def _filter_start(self, query, start):
         end = self.request.query_params.get('end', start)
 
-        return query & ((
-            ESQ('term', **{'task_set.type': 'event'}) &
-            ESQ('range', **{'task_set.deadline': {'gte': start, 'lte': end}})
-        ) | (
-            ESQ('term', **{'task_set.type': 'ongoing'}) &
-            ESQ('range', **{'task_set.deadline': {'gte': start}})
+        return query & (ESQ(
+            'nested', path='task_set', query=(
+                ESQ('term', **{'task_set.type': 'event'}) &
+                ESQ('range', **{'task_set.deadline': {'gte': start, 'lte': end}})
+            )
+        ) | ESQ(
+            'nested', path='task_set', query=(
+                ESQ('term', **{'task_set.type': 'ongoing'}) &
+                ESQ('range', **{'task_set.deadline': {'gte': start}})
+            )
         ))
+
+    def _scoring(self):
+        return ESQ(
+            'function_score',
+            functions=[
+                SF({
+                    'filter': (
+                        ESQ('match', **{'status.slug': 'campaign'}) | ESQ('match', **{'status.slug': 'voting'})
+                    ),
+                    'weight': 2
+                }),
+                SF({
+                    'gauss': {
+                        'donations': {
+                            'origin': timezone.now(),
+                            'offset': "1d",
+                            'scale': "5d",
+                        },
+                        'multi_value_mode': 'sum'
+                    },
+                    'weight': 4
+                }),
+                SF({
+                    'gauss': {
+                        'task_members': {
+                            'origin': timezone.now(),
+                            'offset': "1d",
+                            'scale': "5d"
+                        },
+                        'multi_value_mode': 'sum'
+                    },
+                    'weight': 4
+                }),
+                SF({
+                    'gauss': {
+                        'votes': {
+                            'origin': timezone.now(),
+                            'offset': "1d",
+                            'scale': "5d"
+                        },
+                        'multi_value_mode': 'sum'
+                    },
+                    'weight': 4
+                }),
+            ],
+            boost_mode='sum',
+        )
 
     def search(self):
         search = documents.ProjectDocument.search()
@@ -132,13 +193,13 @@ class ProjectListSearchMixin(object):
         if statuses:
             filter = self._filter_status(filter, statuses)
 
+        scoring = self._scoring()
+
         text = self.request.query_params.get('text')
         if text:
-            query = search.query(self._text_query(text))
-        else:
-            query = search.query()
+            scoring.query = self._text_query(text)
 
-        return query.filter(filter)
+        return search.query(scoring).filter(filter)
 
         return search.query(
             query & (

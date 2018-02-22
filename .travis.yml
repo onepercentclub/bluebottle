@@ -1,4 +1,6 @@
 dist: trusty
+services: 
+- elasticsearch
 sudo: false
 language: python
 addons:

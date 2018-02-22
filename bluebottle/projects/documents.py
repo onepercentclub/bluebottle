@@ -44,7 +44,8 @@ class ProjectDocument(DocType):
     votes = fields.DateField()
 
     status = fields.ObjectField(properties={
-        'slug': fields.KeywordField()
+        'slug': fields.KeywordField(),
+        'sequence': fields.ShortField()
     })
 
     location = fields.ObjectField(properties={
@@ -70,7 +71,12 @@ class ProjectDocument(DocType):
     })
 
     project_location = fields.GeoPointField()
+
     amount_asked = fields.FloatField()
+    amount_needed = fields.FloatField()
+
+    deadline = fields.DateField()
+    campaign_started = fields.DateField()
 
     class Meta:
         model = Project
@@ -81,7 +87,7 @@ class ProjectDocument(DocType):
             'popularity',
         ]
         related_models = (
-            Task, TaskMember, ProjectPhase, Location, Donation, Country, Vote
+            Task, TaskMember, ProjectPhase, Location, Country, Vote
         )
 
     @classmethod
@@ -111,8 +117,6 @@ class ProjectDocument(DocType):
             return related_instance.project_set.all()
         elif isinstance(related_instance, Category):
             return related_instance.project_set.all()
-        elif isinstance(related_instance, Donation):
-            return related_instance.project
         elif isinstance(related_instance, Vote):
             return related_instance.project
 
@@ -122,6 +126,9 @@ class ProjectDocument(DocType):
 
     def prepare_amount_asked(self, instance):
         return instance.amount_asked.amount
+
+    def prepare_amount_needed(self, instance):
+        return instance.amount_asked.amount - instance.amount_donated.amount
 
     def prepare_project_location(self, instance):
         if instance.latitude and instance.longitude:

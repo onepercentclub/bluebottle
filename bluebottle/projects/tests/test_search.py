@@ -382,5 +382,95 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['count'], 2)
         self.assertEqual(result.data['results'][0]['title'], other_project.title)
 
+    def test_order_deadline(self):
+        campaign = ProjectPhase.objects.get(slug='campaign')
+        done_incomplete = ProjectPhase.objects.get(
+            slug='done-incomplete'
+        )
+        project = ProjectFactory.create(
+            deadline=now() + timedelta(days=10), status=campaign
+        )
+        ProjectFactory.create(
+            deadline=now() + timedelta(days=5), status=done_incomplete
+        )
+        ProjectFactory.create(
+            deadline=now() + timedelta(days=20), status=campaign
+        )
 
+        result = self.search({'ordering': 'deadline'})
 
+        self.assertEqual(result.data['count'], 3)
+        self.assertEqual(result.data['results'][0]['title'], project.title)
+
+    def test_order_amount_needed(self):
+        campaign = ProjectPhase.objects.get(slug='campaign')
+        done_incomplete = ProjectPhase.objects.get(
+            slug='done-incomplete'
+        )
+        project = ProjectFactory.create(
+            amount_asked=100, status=campaign
+        )
+        order = OrderFactory.create(status='locked')
+        DonationFactory(
+            order=order,
+            amount=70,
+            project=project,
+            fundraiser=None,
+            created=now() - timedelta(days=10)
+        )
+        order.success()
+        order.save()
+        ProjectFactory.create(
+            amount_asked=5, status=done_incomplete
+        )
+        other_project = ProjectFactory.create(
+            amount_asked=100, status=campaign
+        )
+        order = OrderFactory.create(status='locked')
+        DonationFactory(
+            order=order,
+            amount=50,
+            project=other_project,
+            fundraiser=None,
+            created=now() - timedelta(days=10)
+        )
+        order.success()
+        order.save()
+
+        result = self.search({'ordering': 'amount_needed'})
+
+        self.assertEqual(result.data['count'], 3)
+        self.assertEqual(result.data['results'][0]['title'], project.title)
+
+    def test_order_newest(self):
+        campaign = ProjectPhase.objects.get(slug='campaign')
+        done_incomplete = ProjectPhase.objects.get(
+            slug='done-incomplete'
+        )
+        project = ProjectFactory.create(
+            campaign_started=now() - timedelta(days=10), status=campaign
+        )
+        ProjectFactory.create(
+            campaign_started=now() - timedelta(days=5), status=done_incomplete
+        )
+        ProjectFactory.create(
+            campaign_started=now() - timedelta(days=15), status=campaign
+        )
+
+        result = self.search({'ordering': 'newest'})
+
+        self.assertEqual(result.data['count'], 3)
+        self.assertEqual(result.data['results'][0]['title'], project.title)
+
+    def test_order_status(self):
+        campaign = ProjectPhase.objects.get(slug='campaign')
+        done_incomplete = ProjectPhase.objects.get(
+            slug='done-incomplete'
+        )
+        project = ProjectFactory.create(status=campaign)
+        ProjectFactory.create(status=done_incomplete)
+
+        result = self.search({'ordering': 'status'})
+
+        self.assertEqual(result.data['count'], 2)
+        self.assertEqual(result.data['results'][0]['title'], project.title)

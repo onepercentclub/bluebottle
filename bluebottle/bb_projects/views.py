@@ -193,81 +193,26 @@ class ProjectListSearchMixin(object):
         if statuses:
             filter = self._filter_status(filter, statuses)
 
-        scoring = self._scoring()
+        ordering = self.request.query_params.get('ordering')
+        if ordering and ordering != 'popularity':
+            if ordering == 'deadline':
+                sort = ('status.sequence', 'deadline')
+            elif ordering == 'amount_needed':
+                sort = ('status.sequence', 'amount_needed')
+            elif ordering == 'newest':
+                sort = ('status.sequence', '-campaign_started')
+            elif ordering == 'status':
+                sort = 'status.order'
 
-        text = self.request.query_params.get('text')
-        if text:
-            scoring.query = self._text_query(text)
+            return search.query().filter(filter).sort(*sort)
+        else:
+            scoring = self._scoring()
 
-        return search.query(scoring).filter(filter)
+            text = self.request.query_params.get('text')
+            if text:
+                scoring.query = self._text_query(text)
 
-        return search.query(
-            query & (
-                ESQ('bool', boost=0.5, should=(
-                    ESQ('term', **{'status.slug': 'campaign'}) | ESQ('term', **{'status.slug': 'voting'})
-                )) |
-                ESQ('nested', path='donation_set', score_mode='sum', ignore_unmapped=True, query=ESQ(
-                    'function_score',
-                    boost=0.1,
-                    functions=[SF(
-                        'gauss',
-                        **{'donation_set.created': {
-                            'origin': timezone.now(),
-                            'offset': "1d",
-                            'scale': "30d"
-                        }}
-                    )]
-                )) |
-                ESQ('nested', path='vote_set', score_mode='sum', ignore_unmapped=True, query=ESQ(
-                    'function_score',
-                    boost=0.1,
-                    functions=[SF(
-                        'gauss',
-                        **{'vote_set.created': {
-                            'origin': timezone.now(),
-                            'offset': "1d",
-                            'scale': "30d"
-                        }}
-                    )]
-                )) |
-                ESQ('nested', path='task_member_set', score_mode='sum', ignore_unmapped=True, query=ESQ(
-                    'function_score',
-                    boost=0.1,
-                    functions=[SF(
-                        'gauss',
-                        **{'task_member_set.created': {
-                            'origin': timezone.now(),
-                            'offset': "1d",
-                            'scale': "30d"
-                        }}
-                    )]
-                ))
-            )
-        )
-
-    def _ordering(self, ordering, queryset, status):
-        if ordering == 'deadline':
-            queryset = queryset.order_by('status', 'deadline', 'id')
-        elif ordering == 'amount_needed':
-            # Add the percentage that is still needed to the query and sort on that.
-            # This way we do not have to take currencies into account
-            queryset = queryset.annotate(percentage_needed=F('amount_needed') / (F('amount_asked') + 1))
-            queryset = queryset.order_by('status', 'percentage_needed', 'id')
-            queryset = queryset.filter(amount_needed__gt=0)
-        elif ordering == 'newest':
-            queryset = queryset.extra(
-                select={'has_campaign_started': 'campaign_started is null'})
-            queryset = queryset.order_by('status', 'has_campaign_started',
-                                         '-campaign_started', '-created', 'id')
-        elif ordering == 'popularity':
-            queryset = queryset.order_by('status', '-popularity', 'id')
-            if status == 5:
-                queryset = queryset.filter(amount_needed__gt=0)
-
-        elif ordering:
-            queryset = queryset.order_by('status', ordering)
-
-        return queryset
+            return search.query(scoring).filter(filter)
 
 
 class ProjectTinyPreviewList(ProjectListSearchMixin, OwnerListViewMixin, ListAPIView):

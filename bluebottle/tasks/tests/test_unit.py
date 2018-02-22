@@ -93,5 +93,3 @@ class TestAbsent(TaskUnitTestBase):
         member.save()
 
         self.assertEqual(member.time_spent, 0)
-
-

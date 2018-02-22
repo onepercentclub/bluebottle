@@ -22,6 +22,9 @@ from bluebottle.bb_projects.views import ProjectPreviewList
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.projects.models import Project
 
+from bluebottle.clients.utils import LocalTenant
+from bluebottle.clients.models import Client
+
 
 @override_settings(
     ELASTICSEARCH_DSL_AUTOSYNC=True,
@@ -473,4 +476,15 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         result = self.search({'ordering': 'status'})
 
         self.assertEqual(result.data['count'], 2)
+        self.assertEqual(result.data['results'][0]['title'], project.title)
+
+    def test_multi_tenant(self):
+        project = ProjectFactory.create()
+
+        with LocalTenant(Client.objects.get(client_name='test2')):
+            ProjectFactory.create()
+
+        result = self.search({})
+
+        self.assertEqual(result.data['count'], 1)
         self.assertEqual(result.data['results'][0]['title'], project.title)

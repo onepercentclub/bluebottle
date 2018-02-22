@@ -1,6 +1,7 @@
 from django.db import connection
 
 from django_elasticsearch_dsl import Index, DocType, fields, search
+from elasticsearch_dsl import Q
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.categories.models import Category
@@ -87,7 +88,7 @@ class ProjectDocument(DocType):
             'popularity',
         ]
         related_models = (
-            Task, TaskMember, ProjectPhase, Location, Country, Vote
+            Task, TaskMember, ProjectPhase, Location, Country, Vote, Donation,
         )
 
     @classmethod
@@ -97,7 +98,7 @@ class ProjectDocument(DocType):
             index=index or cls._doc_type.index,
             doc_type=[cls],
             model=cls._doc_type.model
-        )
+        ).filter(Q('term', client_name=connection.tenant.client_name))
 
     def get_queryset(self):
         return super(ProjectDocument, self).get_queryset().select_related(
@@ -119,6 +120,9 @@ class ProjectDocument(DocType):
             return related_instance.project_set.all()
         elif isinstance(related_instance, Vote):
             return related_instance.project
+        elif isinstance(related_instance, Donation):
+            return related_instance.project
+
 
 
     def prepare_client_name(self, instance):

@@ -202,7 +202,7 @@ class ProjectListSearchMixin(object):
             elif ordering == 'newest':
                 sort = ('status.sequence', '-campaign_started')
             elif ordering == 'status':
-                sort = 'status.order'
+                sort = ('status.sequence', )
 
             return search.query().filter(filter).sort(*sort)
         else:

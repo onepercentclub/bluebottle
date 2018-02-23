@@ -123,9 +123,18 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
 
     def get_images(self, obj):
         projects = Project.objects.filter(
-            campaign_ended__gte=self.context['start_date'],
-            campaign_ended__lte=self.context['end_date'],
-            status__slug__in=['done-complete', 'done-incomplete']).order_by('?')[:8]
+            status__slug__in=['done-complete', 'done-incomplete']
+        ).order_by('?')[:8]
+
+        if 'start_date' in self.context:
+            projects = projects.filter(
+                campaign_ended__gte=self.context['start_date']
+            )
+
+        if 'end_date' in self.context:
+            projects = projects.filter(
+                campaign_ended__lte=self.context['end_date']
+            )
 
         return ProjectImageSerializer(projects, many=True).to_representation(projects)
 
@@ -295,8 +304,8 @@ class ShareResultsContentSerializer(serializers.ModelSerializer):
 
     def get_statistics(self, instance):
         stats = Statistics(
-            start=self.context['start_date'],
-            end=self.context['end_date']
+            start=self.context.get('start_date'),
+            end=self.context.get('end_date')
         )
 
         return {
@@ -347,19 +356,25 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
 
     def get_supporters(self, instance):
         stats = Statistics(
-            start=self.context['start_date'],
-            end=self.context['end_date']
+            start=self.context.get('start_date'),
+            end=self.context.get('end_date')
         )
         return stats.people_involved
 
     def get_co_financers(self, instance):
-        totals = Order.objects. \
-            filter(confirmed__gte=self.context['start_date']). \
-            filter(confirmed__lte=self.context['end_date']). \
-            filter(status__in=['pending', 'success']). \
-            filter(user__is_co_financer=True). \
-            values('user', 'total_currency'). \
-            annotate(total=Sum('total'))
+        totals = Order.objects.filter(
+            status__in=['pending', 'success'],
+            user__is_co_financer=True
+        ).values(
+            'user', 'total_currency'
+        ).annotate(total=Sum('total'))
+
+        if 'start_date' in self.context:
+            totals = totals.filter(confirmed__gte=self.context['start_date'])
+
+        if 'end_date' in self.context:
+            totals = filter(confirmed__lte=self.context['end_date'])
+
         return CoFinancerSerializer(
             totals, many=True, context=self.context
         ).to_representation(totals)

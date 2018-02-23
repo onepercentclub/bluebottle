@@ -37,6 +37,46 @@ from .common import FakeInfluxDBClient
 fake_client = FakeInfluxDBClient()
 
 
+class SetupDataMixin(object):
+
+    def initTestData(self):
+        self.year = datetime.now().year
+
+        # Project Phases
+        done_complete = ProjectPhase.objects.get(slug="done-complete")
+        done_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
+
+        # Users
+        self.users = BlueBottleUserFactory.create_batch(200)
+
+        # Projects
+        some_day = datetime(year=self.year, month=2, day=27, tzinfo=pytz.UTC)
+        project1 = ProjectFactory.create(
+            owner=self.users[0],
+            status=done_complete,
+            campaign_ended=some_day
+        )
+        ProjectFactory.create(owner=self.users[0], status=done_incomplete)
+
+        # Tasks
+        task = TaskFactory.create(author=self.users[0], project=project1, people_needed=2, status='realized')
+
+        for month in range(1, 12):
+            for x in range(1, 10):
+                task_member = TaskMemberFactory.create(
+                    time_spent=10,
+                    member=self.users[month * 10 + x],
+                    task=task,
+                    status=TaskMember.TaskMemberStatuses.applied
+                )
+                task_member.status = TaskMember.TaskMemberStatuses.realized
+                task_member.save()
+
+        # xls export
+        self.xls_file_name = 'test.xlsx'
+        self.xls_file_path = os.path.join(settings.PROJECT_ROOT, self.xls_file_name)
+
+
 class TestEngagementMetricsUnit(SimpleTestCase):
 
     def test_validate_date(self):
@@ -193,47 +233,12 @@ class TestEngagementMetricsXls(BluebottleTestCase):
         os.remove(self.xls_file_path)
 
 
-class TestParticipationXls(BluebottleTestCase):
+class TestParticipationXls(SetupDataMixin, BluebottleTestCase):
 
     def setUp(self):
         super(TestParticipationXls, self).setUp()
         self.init_projects()
-        self.year = datetime.now().year
-
-        # Project Phases
-        done_complete = ProjectPhase.objects.get(slug="done-complete")
-        done_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
-
-        # Users
-        self.users = BlueBottleUserFactory.create_batch(200)
-
-        # Projects
-        some_day = datetime(year=self.year, month=2, day=27, tzinfo=pytz.UTC)
-        project1 = ProjectFactory.create(
-            owner=self.users[0],
-            status=done_complete,
-            campaign_ended=some_day
-        )
-        ProjectFactory.create(owner=self.users[0], status=done_incomplete)
-
-        # Tasks
-        task = TaskFactory.create(author=self.users[0], project=project1, people_needed=2, status='realized')
-
-        for month in range(1, 12):
-            for x in range(1, 10):
-
-                task_member = TaskMemberFactory.create(
-                    time_spent=10,
-                    member=self.users[month * 10 + x],
-                    task=task,
-                    status=TaskMember.TaskMemberStatuses.applied
-                )
-                task_member.status = TaskMember.TaskMemberStatuses.realized
-                task_member.save()
-
-        # xls export
-        self.xls_file_name = 'test.xlsx'
-        self.xls_file_path = os.path.join(settings.PROJECT_ROOT, self.xls_file_name)
+        self.initTestData()
         self.command = ParticipationCommand()
 
     def test_export(self):
@@ -254,47 +259,12 @@ class TestParticipationXls(BluebottleTestCase):
             self.assertEqual(workbook.worksheets[7].title, 'Theme Segmentation - {}'.format(self.year))
 
 
-class TestExportAnalytics(BluebottleTestCase):
+class TestExportAnalytics(SetupDataMixin, BluebottleTestCase):
 
     def setUp(self):
         super(TestExportAnalytics, self).setUp()
         self.init_projects()
-        self.year = datetime.now().year
-
-        # Project Phases
-        done_complete = ProjectPhase.objects.get(slug="done-complete")
-        done_incomplete = ProjectPhase.objects.get(slug="done-incomplete")
-
-        # Users
-        self.users = BlueBottleUserFactory.create_batch(200)
-
-        # Projects
-        some_day = datetime(year=self.year, month=2, day=27, tzinfo=pytz.UTC)
-        project1 = ProjectFactory.create(
-            owner=self.users[0],
-            status=done_complete,
-            campaign_ended=some_day
-        )
-        ProjectFactory.create(owner=self.users[0], status=done_incomplete)
-
-        # Tasks
-        task = TaskFactory.create(author=self.users[0], project=project1, people_needed=2, status='realized')
-
-        for month in range(1, 12):
-            for x in range(1, 10):
-
-                task_member = TaskMemberFactory.create(
-                    time_spent=10,
-                    member=self.users[month * 10 + x],
-                    task=task,
-                    status=TaskMember.TaskMemberStatuses.applied
-                )
-                task_member.status = TaskMember.TaskMemberStatuses.realized
-                task_member.save()
-
-        # xls export
-        self.xls_file_name = 'test.xlsx'
-        self.xls_file_path = os.path.join(settings.PROJECT_ROOT, self.xls_file_name)
+        self.initTestData()
         self.command = AnalyticsCommand()
 
     @patch('bluebottle.analytics.utils.queue_analytics_record', return_value=True)

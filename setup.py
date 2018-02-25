@@ -34,7 +34,7 @@ install_requires = [
     'bleach==2.1.2',
     'bunch==1.0.1',
     'celery==4.1.0',
-    'django-admin-sortable==2.1.2',
+    'django-admin-sortable==2.1.3',
     'django-admin-tools==0.8.1',
     'django-celery==3.2.2',
     'django-choices==1.6.0',

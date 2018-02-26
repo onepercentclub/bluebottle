@@ -43,6 +43,7 @@ class ProjectPagination(BluebottlePagination):
 
 class TinyProjectPagination(BluebottlePagination):
     page_size = 10000
+    django_paginator_class = ESPaginator
 
 
 class ProjectListSearchMixin(object):
@@ -177,7 +178,7 @@ class ProjectListSearchMixin(object):
 
     def search(self):
         search = documents.ProjectDocument.search()
-        filter = ESQ()
+        filter = ESQ('term', **{'status.viewable': True})
 
         for field in self.search_fields:
             value = self.request.query_params.get(field)
@@ -221,12 +222,16 @@ class ProjectTinyPreviewList(ProjectListSearchMixin, OwnerListViewMixin, ListAPI
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
-    def get_queryset(self):
-        qs = super(ProjectTinyPreviewList, self).get_queryset()
-        query = self.request.query_params
-        qs = self.search(qs, query=query)
-        qs = qs.order_by('created')
-        return qs.filter(status__viewable=True)
+    def list(self, request):
+        result = self.search().sort('created')
+
+        page = self.paginate_queryset(result)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(result.to_queryset(), many=True)
+        return Response(serializer.data)
 
 
 class ProjectPreviewList(ProjectListSearchMixin, OwnerListViewMixin, ListAPIView):

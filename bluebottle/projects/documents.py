@@ -46,7 +46,8 @@ class ProjectDocument(DocType):
 
     status = fields.ObjectField(properties={
         'slug': fields.KeywordField(),
-        'sequence': fields.ShortField()
+        'sequence': fields.ShortField(),
+        'viewable': fields.BooleanField()
     })
 
     location = fields.ObjectField(properties={
@@ -77,6 +78,7 @@ class ProjectDocument(DocType):
     amount_needed = fields.FloatField()
 
     deadline = fields.DateField()
+    created = fields.DateField()
     campaign_started = fields.DateField()
 
     class Meta:

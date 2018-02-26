@@ -124,7 +124,7 @@ tests_requires = [
     'nose==1.3.7',
     'pylint==1.8.2',
     'pyquery==1.4.0',
-    'pylint-django==0.9.0',
+    'pylint-django==0.9.1',
     'tblib==1.3.2',
     'tdaemon==0.1.1',
     'WebTest==2.0.29'

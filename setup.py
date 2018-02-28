@@ -38,7 +38,7 @@ install_requires = [
     'django-admin-tools==0.8.1',
     'django-celery==3.2.2',
     'django-choices==1.6.0',
-    'django-cors-headers==2.1.0',
+    'django-cors-headers==2.2.0',
     'django-daterange-filter==1.3.0',
     'django-dynamic-fixture==2.0.0',
     'django-extensions==2.0.0',

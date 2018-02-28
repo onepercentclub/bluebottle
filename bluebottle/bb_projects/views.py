@@ -16,7 +16,7 @@ from bluebottle.projects.serializers import (
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    RetrieveUpdateDestroyAPIView, OwnerListViewMixin
+    RetrieveUpdateDestroyAPIView, OwnerListViewMixin, ExpiresMixin
 )
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission,
@@ -187,7 +187,7 @@ class ProjectPreviewDetail(RetrieveAPIView):
         return qs
 
 
-class ProjectPhaseList(ListAPIView):
+class ProjectPhaseList(ExpiresMixin, ListAPIView):
     queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseSerializer
     pagination_class = BluebottlePagination
@@ -309,7 +309,7 @@ class ManageProjectDetail(RetrieveUpdateAPIView):
         return object
 
 
-class ProjectThemeList(ListAPIView):
+class ProjectThemeList(ExpiresMixin, ListAPIView):
     serializer_class = ProjectThemeSerializer
     queryset = ProjectTheme.objects.all().filter(disabled=False)
 

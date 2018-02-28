@@ -19,7 +19,7 @@ from bluebottle.utils.permissions import (
     ResourceOwnerPermission, ResourcePermission, OneOf
 )
 from bluebottle.utils.views import (
-    PrivateFileView, ListAPIView, ListCreateAPIView,
+    PrivateFileView, ListAPIView, ListCreateAPIView, ExpiresMixin,
     RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView, OwnerListViewMixin,
 )
 from bluebottle.bb_tasks.permissions import (
@@ -326,7 +326,7 @@ class TaskFileDetail(RetrieveUpdateAPIView):
     )
 
 
-class SkillList(ListAPIView):
+class SkillList(ExpiresMixin, ListAPIView):
     queryset = Skill.objects.filter(disabled=False)
     serializer_class = SkillSerializer
 

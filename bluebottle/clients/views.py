@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+import time
+
+from django.utils.http import http_date
 
 from rest_framework import views, response
 
 from bluebottle.clients.utils import get_public_properties
+from bluebottle.utils.views import ExpiresMixin
 
 
-class SettingsView(views.APIView):
+class SettingsView(ExpiresMixin, views.APIView):
     """
     Return the tenant settings as a json object
     """
@@ -16,4 +20,6 @@ class SettingsView(views.APIView):
         Return settings
         """
         obj = get_public_properties(request)
-        return response.Response(obj)
+        resp = response.Response(obj)
+        resp['Expires'] = http_date(time.time() + 300)
+        return resp

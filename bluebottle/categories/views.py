@@ -1,10 +1,12 @@
 from rest_framework import generics
 
+from bluebottle.utils.views import ExpiresMixin
+
 from .models import Category
 from .serializers import CategorySerializer
 
 
-class CategoryList(generics.ListAPIView):
+class CategoryList(ExpiresMixin, generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 

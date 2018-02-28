@@ -136,7 +136,6 @@ TEMPLATES = [
 ]
 
 MIDDLEWARE_CLASSES = (
-    'django.middleware.cache.UpdateCacheMiddleware',
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.clients.middleware.TenantPropertiesMiddleware',
@@ -156,7 +155,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
-    'django.middleware.cache.FetchFromCacheMiddleware',
     'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
 )
 

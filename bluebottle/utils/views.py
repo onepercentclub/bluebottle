@@ -1,10 +1,12 @@
 from collections import namedtuple
+import time
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http.response import HttpResponseForbidden, HttpResponseNotFound, HttpResponse
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
+from django.utils.http import http_date
 from django.utils import translation
 from django.views.generic.base import View
 
@@ -262,3 +264,14 @@ class OwnerListViewMixin(object):
             qs = qs.filter(**{self.owner_filter_field: user})
 
         return qs
+
+
+class ExpiresMixin(object):
+    def get(self, *args, **kwargs):
+        response = super(ExpiresMixin, self).get(*args, **kwargs)
+        response['Expires'] = http_date(time.time() + 300)
+
+        return response
+
+
+

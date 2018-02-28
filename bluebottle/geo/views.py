@@ -2,12 +2,13 @@ from rest_framework import generics
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.models import Project
+from bluebottle.utils.views import ExpiresMixin
 
 from .serializers import CountrySerializer
 from .models import Country
 
 
-class CountryList(generics.ListAPIView):
+class CountryList(ExpiresMixin, generics.ListAPIView):
     serializer_class = CountrySerializer
     queryset = Country.objects.all()
 
@@ -34,6 +35,6 @@ class UsedCountryList(CountryList):
         return qs.filter(id__in=project_country_ids)
 
 
-class LocationList(generics.ListAPIView):
+class LocationList(ExpiresMixin, generics.ListAPIView):
     serializer_class = LocationSerializer
     queryset = Location.objects.all()

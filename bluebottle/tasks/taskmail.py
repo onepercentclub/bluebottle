@@ -102,7 +102,7 @@ class TaskMemberRealizedMail(TaskMemberMailSender):
     @property
     def subject(self):
         with TenantLanguage(self.receiver.primary_language):
-            return _('You realised a task!')
+            return _(' A task you’ve joined is marked as realised')
 
 
 class TaskMemberWithdrawMail(TaskMemberMailSender):

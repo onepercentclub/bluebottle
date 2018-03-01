@@ -87,7 +87,7 @@ install_requires = [
     'python-memcached==1.59',
     'python-social-auth==0.3.6',
     'surlex==0.2.0',
-    'raven==6.5.0',
+    'raven==6.6.0',
     'regex==2018.02.21',
     'requests==2.18.4',
     'schwifty==2.1.0',

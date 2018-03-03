@@ -82,7 +82,7 @@ install_requires = [
     'pendulum==1.4.2',
     'psycopg2==2.7.4',
     'pygeoip==0.3.2',
-    'pyjwt==1.5.3',
+    'pyjwt==1.6.0',
     'python-dateutil==2.6.1',
     'python-memcached==1.59',
     'python-social-auth==0.3.6',

@@ -575,7 +575,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
     # Setup
     def get_readonly_fields(self, request, obj=None):
-        fields = ['vote_count', 'amount_donated_i18n', 'amount_needed_i18n', 'popularity', 'payout_status']
+        fields = ['vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
+                  'popularity', 'payout_status', 'geocoding']
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status', )
         return fields
@@ -646,7 +647,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         details = (_('Details'), {'fields': (
             'language', 'theme', 'categories',
             'image', 'video_url', 'country', 'latitude',
-            'longitude', 'location', 'place')})
+            'longitude', 'location', 'place', 'geocoding')})
 
         goal = (_('Goal'), {'fields': (
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',

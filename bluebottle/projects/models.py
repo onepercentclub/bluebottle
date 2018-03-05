@@ -5,6 +5,7 @@ import pytz
 from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
@@ -179,6 +180,8 @@ class Project(BaseProject, PreviousStatusMixin):
                                      choices=PAYOUT_STATUS_CHOICES)
     wallposts = GenericRelation(Wallpost, related_query_name='project_wallposts')
     objects = UpdateSignalsQuerySet.as_manager()
+
+    geocoding = JSONField(default={})
 
     def __unicode__(self):
         if self.title:

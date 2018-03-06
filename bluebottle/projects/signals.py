@@ -1,3 +1,6 @@
+import geocoder
+
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.db.models.signals import pre_save
 from django.dispatch import receiver, Signal
@@ -62,3 +65,34 @@ def send_new_role_email(sender, instance, **kwargs):
                 link=link
 
             )
+
+
+@receiver(pre_save, weak=False, sender='projects.ProjectLocation')
+def save(sender, instance, **kwargs):
+    try:
+        current_instance = sender.objects.get(pk=instance.pk)
+        if (
+            current_instance.longitude and instance.longitude == current_instance.longiude and
+            current_instance.latitude and instance.latitude == current_instance.latitude
+        ):
+            return
+    except sender.DoesNotExist:
+        pass  # Object is new, so field hasn't technically changed, but you may want to do something else here.
+
+    if instance.latitude and instance.longitude:
+        try:
+            result = geocoder.google(
+                [instance.latitude, instance.longitude],
+                method='reverse',
+                key=settings.MAPS_API_KEY
+            )[0]
+            if result.street != 'Unnamed Road':
+                instance.street = result.street_long
+            instance.neighborhood = result.neighborhood
+            instance.postal_code = result.postal
+            instance.city = result.locality
+            instance.country = result.country_long
+        except IndexError:
+            pass
+
+

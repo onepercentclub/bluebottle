@@ -96,4 +96,3 @@ def save(sender, instance, **kwargs):
             instance.country = result.country_long
         except IndexError:
             pass
-

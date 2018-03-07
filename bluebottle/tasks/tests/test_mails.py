@@ -283,7 +283,7 @@ class TestTaskStatusMail(TaskMailTestBase):
             status='realized'
         )
         self.assertEquals(len(mail.outbox), 1)
-        self.assertTrue('You realised a task' in mail.outbox[0].subject)
+        self.assertTrue('marked as realised' in mail.outbox[0].subject)
 
         with patch('bluebottle.tasks.taskmail.send_task_realized_mail.apply_async'):
             self.task.status = "realized"

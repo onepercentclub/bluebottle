@@ -798,8 +798,6 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
 def geocode_mock(url, request):
     return json.dumps({
         'results': [{
-            'street_number': {'long_name': u'10', 'short_name': u'10'},
-            'locality': {'long_name': u'Amsterdam', 'short_name': u'Amsterdam'},
             'geometry': {
                 'location': {'lat': 52.3721249, 'lng': 4.9070198},
                 'viewport': {
@@ -808,14 +806,7 @@ def geocode_mock(url, request):
                 },
                 'location_type': 'ROOFTOP'
             },
-            'sublocality_level_1': {'long_name': 'Amsterdam-Centrum', 'short_name': 'Amsterdam-Centrum'},
-            'route': {'long_name': "'s-Gravenhekje", 'short_name': "'s-Gravenhekje"},
             'place_id': u'ChIJMW3CZ7sJxkcRyhrLgJ6WbMk',
-            'political': {'long_name': u'Netherlands', 'short_name': u'NL'},
-            'postal_code': {'long_name': '1011 TG', 'short_name': '1011 TG'},
-            'sublocality': {'long_name': 'Amsterdam-Centrum', 'short_name': 'Amsterdam-Centrum'},
-            'administrative_area_level_1': {'long_name': 'Noord-Holland', 'short_name': 'NH'},
-            'country': {'long_name': 'Netherlands', 'short_name': 'NL'},
             'address_components': [{
                 'long_name': '10', 'types': ['street_number'], 'short_name': '10'
             }, {
@@ -842,9 +833,7 @@ def geocode_mock(url, request):
             }, {
                 'long_name': '1011 TG', 'types': [u'postal_code'], 'short_name': u'1011 TG'
             }],
-            'formatted_address': u"'s-Gravenhekje 10, 1011 TG Amsterdam, Netherlands",
             'types': ['street_address'],
-            'administrative_area_level_2': {'long_name': 'Amsterdam', 'short_name': u'Amsterdam'}
         }],
         'status': 'OK'
     })

@@ -79,7 +79,7 @@ def save(sender, instance, **kwargs):
     except sender.DoesNotExist:
         pass  # Object is new, so field hasn't technically changed, but you may want to do something else here.
 
-    if instance.latitude and instance.longitude:
+    if instance.latitude and instance.longitude and hasattr(settings, 'MAPS_API_KEY'):
         try:
             result = geocoder.google(
                 [instance.latitude, instance.longitude],
@@ -88,11 +88,10 @@ def save(sender, instance, **kwargs):
             )[0]
             if result.street != 'Unnamed Road':
                 instance.street = result.street_long
-            instance.neighborhood = result.neighborhood
+            instance.neighborhood = result.neighborhood or result.sublocality
             instance.postal_code = result.postal
             instance.city = result.locality
             instance.country = result.country_long
         except IndexError:
             pass
-
 

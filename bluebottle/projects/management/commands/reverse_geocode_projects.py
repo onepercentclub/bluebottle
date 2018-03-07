@@ -19,9 +19,8 @@ class Command(BaseCommand):
                     longitude__isnull=False,
                     projectlocation__isnull=True
                 ):
-                    location = ProjectLocation.objects.create(
+                    ProjectLocation.objects.create(
                         project=project,
                         latitude=project.latitude,
                         longitude=project.longitude
                     )
-                    print location.street, location.postal_code, location.country

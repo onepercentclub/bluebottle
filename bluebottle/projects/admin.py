@@ -651,8 +651,9 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         details = (_('Details'), {'fields': (
             'language', 'theme', 'categories',
-            'image', 'video_url', 'country', 'latitude',
-            'longitude', 'location', 'place', )})
+            'image', 'video_url', 'country',
+            'location', 'place',
+        )})
 
         goal = (_('Goal'), {'fields': (
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',

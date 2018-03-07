@@ -262,6 +262,8 @@ class ProjectPreviewSerializer(ProjectSerializer):
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     image = SorlImageField('400x300', crop='center')
+    latitude = serializers.FloatField(source='projectlocation.latitude')
+    longitude = serializers.FloatField(source='projectlocation.longitude')
 
     class Meta:
         model = Project

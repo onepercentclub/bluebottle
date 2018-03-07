@@ -419,13 +419,16 @@ class ManageProjectSerializer(serializers.ModelSerializer):
         return super(ManageProjectSerializer, self).update(instance, validated_data)
 
     def create(self, validated_data):
+        location_data = None
         if 'projectlocation' in validated_data:
-            validated_data['projectlocation'] = ProjectLocation(
-                **validated_data.pop('projectlocation')
-            )
+            location_data = validated_data.pop('projectlocation')
 
         instance = super(ManageProjectSerializer, self).create(validated_data)
-        instance.projectlocation.save()
+        if location_data:
+            ProjectLocation.objects.create(
+                project=instance,
+                **location_data
+            )
         return instance
 
     class Meta:

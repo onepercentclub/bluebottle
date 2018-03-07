@@ -56,7 +56,8 @@ class Command(BaseCommand):
                                 'amount': float(donation.amount.amount),
                                 'currency': str(donation.amount.currency)
                             },
-                            'donation_id': donation.pk
+                            'donation_id': donation.pk,
+                            'project_id': donation.project.pk
                         } for donation in order.donations.all()]
                     })
 

@@ -41,7 +41,7 @@ install_requires = [
     'django-cors-headers==2.2.0',
     'django-daterange-filter==1.3.0',
     'django-dynamic-fixture==2.0.0',
-    'django-extensions==2.0.2',
+    'django-extensions==2.0.3',
     'django-exportdb==0.4.7',
     'django-filetransfers==0.1.0',
     'django-filter==1.1.0',
@@ -124,7 +124,7 @@ tests_requires = [
     'nose==1.3.7',
     'pylint==1.8.2',
     'pyquery==1.4.0',
-    'pylint-django==0.9.1',
+    'pylint-django==0.9.3',
     'tblib==1.3.2',
     'tdaemon==0.1.1',
     'WebTest==2.0.29'

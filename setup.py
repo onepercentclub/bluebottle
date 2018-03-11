@@ -41,7 +41,7 @@ install_requires = [
     'django-cors-headers==2.2.0',
     'django-daterange-filter==1.3.0',
     'django-dynamic-fixture==2.0.0',
-    'django-extensions==2.0.3',
+    'django-extensions==2.0.5',
     'django-exportdb==0.4.7',
     'django-filetransfers==0.1.0',
     'django-filter==1.1.0',

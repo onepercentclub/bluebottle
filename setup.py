@@ -83,7 +83,7 @@ install_requires = [
     'psycopg2==2.7.4',
     'pygeoip==0.3.2',
     'pyjwt==1.6.0',
-    'python-dateutil==2.6.1',
+    'python-dateutil==2.7.0',
     'python-memcached==1.59',
     'python-social-auth==0.3.6',
     'surlex==0.2.0',

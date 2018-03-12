@@ -185,6 +185,8 @@ urlpatterns += [
                     namespace='social')),
     url(r'^api/social-login/(?P<backend>[^/]+)/$',
         GetAuthToken.as_view()),
+    url(r'^api/auth/lock-down/$',
+        LockdownView.as_view()),
 
     # Needed for the self-documenting API in Django Rest Framework.
     url(r'^api-auth/', include('rest_framework.urls',

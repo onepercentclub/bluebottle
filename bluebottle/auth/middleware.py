@@ -3,9 +3,9 @@ from datetime import datetime, timedelta
 import json
 import logging
 
+from bluebottle.common.models import CommonPlatformSettings
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.auth.middleware import AuthenticationMiddleware
-from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.shortcuts import render_to_response
@@ -190,93 +190,68 @@ class AdminOnlyCsrf(object):
 
 
 class LockdownMiddleware(BaseLockdownMiddleware):
-    """
-    LockdownMiddleware taken from the Django Lockdown package with the addition
-    of password coming from request header: X-Lockdown
-    """
-
     def process_request(self, request):
-        if 'HTTP_X_LOCKDOWN' not in request.META:
-            return None
 
-        try:
+        common_settings = CommonPlatformSettings.load()
+
+        if common_settings.lockdown:
+            token = request.META['HTTP_X_LOCKDOWN_TOKEN']
+            if token == common_settings.token:
+                return None
+
+            url_exceptions = compile_url_exceptions(settings.LOCKDOWN_IGNORE)
+            for pattern in url_exceptions:
+                if pattern.search(request.path):
+                    return None
+
             session = request.session
-        except AttributeError:
-            raise ImproperlyConfigured('django-lockdown requires the Django '
-                                       'sessions framework')
 
-        # Don't lock down if the URL matches an exception pattern.
-        if self.url_exceptions:
-            url_exceptions = compile_url_exceptions(self.url_exceptions)
-        else:
-            url_exceptions = compile_url_exceptions(lockdown_settings.URL_EXCEPTIONS)
-        for pattern in url_exceptions:
-            if pattern.search(request.path):
-                return None
-
-        # Don't lock down if outside of the lockdown dates.
-        if self.until_date is None:
-            until_date = lockdown_settings.UNTIL_DATE
-        else:
-            until_date = self.until_date
-        if self.after_date is None:
-            after_date = lockdown_settings.AFTER_DATE
-        else:
-            after_date = self.after_date
-        if until_date or after_date:
-            locked_date = False
-            if until_date and datetime.datetime.now() < until_date:
-                locked_date = True
-            if after_date and datetime.datetime.now() > after_date:
-                locked_date = True
-            if not locked_date:
-                return None
-
-        passwords = (request.META['HTTP_X_LOCKDOWN'],)
-        form_data = request.method == 'POST' and request.POST or None
-        if self.form:
-            form_class = self.form
-        else:
-            form_class = get_lockdown_form(lockdown_settings.FORM)
-        form = form_class(passwords=passwords, data=form_data, **self.form_kwargs)
-
-        authorized = False
-        token = session.get(self.session_key)
-        if hasattr(form, 'authenticate'):
-            if form.authenticate(token):
-                authorized = True
-        elif token is True:
-            authorized = True
-
-        if authorized and self.logout_key and self.logout_key in request.GET:
-            if self.session_key in session:
-                del session[self.session_key]
-            url = request.path
-            querystring = request.GET.copy()
-            del querystring[self.logout_key]
-            if querystring:
-                url = '%s?%s' % (url, querystring.urlencode())
-            return self.redirect(request)
-
-        # Don't lock down if the user is already authorized for previewing.
-        if authorized:
-            return None
-
-        if form.is_valid():
-            if hasattr(form, 'generate_token'):
-                token = form.generate_token()
+            passwords = (common_settings.lockdown_password,)
+            form_data = request.method == 'POST' and request.POST or None
+            if self.form:
+                form_class = self.form
             else:
-                token = True
-            session[self.session_key] = token
-            return self.redirect(request)
+                form_class = get_lockdown_form(lockdown_settings.FORM)
+            form = form_class(passwords=passwords, data=form_data, **self.form_kwargs)
+            authorized = False
+            token = session.get(self.session_key)
+            if hasattr(form, 'authenticate'):
+                if form.authenticate(token):
+                    authorized = True
+            elif token is True:
+                authorized = True
 
-        page_data = {'until_date': until_date, 'after_date': after_date}
-        if not hasattr(form, 'show_form') or form.show_form():
-            page_data['form'] = form
+            if authorized and self.logout_key and self.logout_key in request.GET:
+                if self.session_key in session:
+                    del session[self.session_key]
+                url = request.path
+                querystring = request.GET.copy()
+                del querystring[self.logout_key]
+                if querystring:
+                    url = '%s?%s' % (url, querystring.urlencode())
+                return self.redirect(request)
 
-        response = render_to_response('lockdown/form.html', page_data)
-        response.status_code = 401
-        return response
+            # Don't lock down if the user is already authorized for previewing.
+            if authorized:
+                return None
+
+            if form.is_valid():
+                if hasattr(form, 'generate_token'):
+                    token = form.generate_token()
+                else:
+                    token = True
+                session[self.session_key] = token
+                return self.redirect(request)
+
+            page_data = {}
+            if not hasattr(form, 'show_form') or form.show_form():
+                page_data['form'] = form
+
+            response = render_to_response('lockdown/form.html', page_data)
+            response.status_code = 401
+            return response
+
+        return None
 
 
 authorization_logger = logging.getLogger(__name__)

@@ -232,6 +232,7 @@ def get_public_properties(request):
             'languageCode': get_language(),
             'siteLinks': get_user_site_links(request.user),
             'platform': {
+                'common': get_platform_settings('common.CommonPlatformSettings'),
                 'payouts': get_payout_settings(),
                 'content': get_platform_settings('cms.SitePlatformSettings'),
                 'projects': get_platform_settings('projects.ProjectPlatformSettings'),

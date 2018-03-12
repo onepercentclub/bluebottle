@@ -1,3 +1,5 @@
+from bluebottle.common.models import CommonPlatformSettings
+from django.http.response import JsonResponse
 from django.shortcuts import resolve_url
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
@@ -17,8 +19,20 @@ from rest_framework import parsers, renderers
 from social_django.utils import psa, get_strategy, STORAGE
 from social.exceptions import AuthCanceled
 
-# from social_auth.decorators import
 from datetime import datetime
+
+
+class LockdownView(APIView):
+
+    def post(self, request, format=None):
+        password = request.data['password']
+        common_settings = CommonPlatformSettings.load()
+
+        if password == common_settings.lockdown_password:
+            token = common_settings.token
+            return JsonResponse(data={'token': token, 'password': ''}, status=201)
+        else:
+            return JsonResponse(data={'error': _('Wrong lock-down password')}, status=401)
 
 
 class GetAuthToken(APIView):

@@ -7,6 +7,7 @@ from decimal import InvalidOperation
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django.contrib.admin.widgets import AdminTextareaWidget
 from django.forms.models import ModelFormMetaclass
+from django.utils.text import slugify
 from django_singleton_admin.admin import SingletonAdmin
 from django_summernote.admin import SummernoteInlineModelAdmin
 from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
@@ -374,6 +375,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ('location__group', 'region'),
         ('country', 'country'),
         ('location', 'location'),
+        ('place', 'place'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),
         ('campaign_started', 'campaign started'),
@@ -546,8 +548,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             return HttpResponseForbidden('Missing permission: rewards.read_reward')
 
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=%s.csv' % (
-            unicode(project.title).replace('.', '_')
+        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
+            unicode(slugify(project.title))
         )
 
         writer = csv.writer(response)
@@ -558,6 +560,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             writer.writerow([
                 prep_field(request, reward, field[0]) for field in self.reward_export_fields
             ])
+
         return response
 
     def amount_donated_i18n(self, obj):

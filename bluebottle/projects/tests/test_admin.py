@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import csv
 import json
 import mock
@@ -330,7 +331,7 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.get('/')
         request.user = MockUser()
 
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(title="¡Tést, with löt's of weird things!")
         reward = RewardFactory.create(project=project, amount=Money(10, 'EUR'))
 
         reward_order = OrderFactory.create(status='success')
@@ -345,6 +346,11 @@ class TestProjectAdmin(BluebottleTestCase):
         DonationFactory.create(project=project, order=order)
 
         response = self.project_admin.export_rewards(request, project.id)
+        header = 'Content-Type: text/csv\r\n' \
+                 'Content-Disposition: attachment; ' \
+                 'filename="test-with-lots-of-weird-things.csv"'
+        self.assertEqual(response.serialize_headers(), header)
+
         reader = csv.DictReader(StringIO.StringIO(response.content))
 
         result = [line for line in reader]
@@ -689,7 +695,7 @@ class ProjectAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'title')
-        self.assertEqual(headers[27], 'Extra Info')
+        self.assertEqual(headers[28], 'Extra Info')
         self.assertEqual(data[0], 'Just an example')
-        self.assertEqual(data[27], '')
-        self.assertEqual(data[28], 'This is nice!')
+        self.assertEqual(data[28], '')
+        self.assertEqual(data[29], 'This is nice!')

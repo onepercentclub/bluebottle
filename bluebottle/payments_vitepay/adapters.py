@@ -92,7 +92,7 @@ class VitepayPaymentAdapter(BasePaymentAdapter):
         }
         url = self.credentials['api_url']
         headers = {'Content-Type': 'application/json'}
-        response = requests.post(url, data=json.dumps(data), headers=headers)
+        response = requests.post(url, data=json.dumps(data), headers=headers, verify=False)
         if response.status_code == 200:
             self.payment.payment_url = response.content
         else:

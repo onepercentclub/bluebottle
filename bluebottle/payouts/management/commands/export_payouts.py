@@ -31,7 +31,9 @@ class Command(BaseCommand):
         for client in Client.objects.all():
             with LocalTenant(client, clear_tenant=True):
 
-                payouts = ProjectPayout.objects.filter(amount_payable__gt=0)
+                payouts = ProjectPayout.objects.filter(
+                    amount_payable__gt=0, status='settled'
+                )
                 if options['start']:
                     payouts = payouts.filter(created__gte=options['start'])
                 if options['end']:

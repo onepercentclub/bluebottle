@@ -8,7 +8,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.core.urlresolvers import reverse
 from django.conf import settings
-from django.shortcuts import render_to_response
+from django.http.response import JsonResponse
 from django.utils import timezone
 from django.http.request import RawPostDataException
 
@@ -16,10 +16,8 @@ from rest_framework import exceptions
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
-from lockdown.middleware import (LockdownMiddleware as BaseLockdownMiddleware,
-                                 compile_url_exceptions, get_lockdown_form)
+from lockdown.middleware import LockdownMiddleware as BaseLockdownMiddleware, compile_url_exceptions
 
-from lockdown import settings as lockdown_settings
 from bluebottle.utils.utils import get_client_ip
 
 
@@ -204,52 +202,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
                 if pattern.search(request.path):
                     return None
 
-            session = request.session
-
-            passwords = (common_settings.lockdown_password,)
-            form_data = request.method == 'POST' and request.POST or None
-            if self.form:
-                form_class = self.form
-            else:
-                form_class = get_lockdown_form(lockdown_settings.FORM)
-            form = form_class(passwords=passwords, data=form_data, **self.form_kwargs)
-            authorized = False
-            token = session.get(self.session_key)
-            if hasattr(form, 'authenticate'):
-                if form.authenticate(token):
-                    authorized = True
-            elif token is True:
-                authorized = True
-
-            if authorized and self.logout_key and self.logout_key in request.GET:
-                if self.session_key in session:
-                    del session[self.session_key]
-                url = request.path
-                querystring = request.GET.copy()
-                del querystring[self.logout_key]
-                if querystring:
-                    url = '%s?%s' % (url, querystring.urlencode())
-                return self.redirect(request)
-
-            # Don't lock down if the user is already authorized for previewing.
-            if authorized:
-                return None
-
-            if form.is_valid():
-                if hasattr(form, 'generate_token'):
-                    token = form.generate_token()
-                else:
-                    token = True
-                session[self.session_key] = token
-                return self.redirect(request)
-
-            page_data = {}
-            if not hasattr(form, 'show_form') or form.show_form():
-                page_data['form'] = form
-
-            response = render_to_response('lockdown/form.html', page_data)
-            response.status_code = 401
-            return response
+            return JsonResponse({'reason': 'Lock-down'}, status=401)
 
         return None
 

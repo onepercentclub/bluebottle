@@ -21,11 +21,6 @@ class CommonPlatformSettings(BasePlatformSettings):
         digest = hmac.new(settings.SECRET_KEY, msg=message, digestmod=hashlib.sha256).digest()
         return base64.b64encode(digest).decode()
 
-    def generate_token(self, request):
-        message = "{}{}".format(request.session_id, self.lockdown_password)
-        digest = hmac.new(settings.SECRET_KEY, msg=message, digestmod=hashlib.sha256).digest()
-        return base64.b64encode(digest).decode()
-
     class Meta:
         verbose_name_plural = _('common platform settings')
         verbose_name = _('common platform settings')

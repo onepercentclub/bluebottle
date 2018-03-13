@@ -8,7 +8,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.core.urlresolvers import reverse
 from django.conf import settings
-from django.http.response import JsonResponse
+from django.http.response import HttpResponse
 from django.utils import timezone
 from django.http.request import RawPostDataException
 
@@ -202,7 +202,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
                 if pattern.search(request.path):
                     return None
 
-            return JsonResponse({'reason': 'Lock-down'}, status=401)
+            return HttpResponse('Lock-down', status=401)
 
         return None
 

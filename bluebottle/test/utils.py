@@ -84,9 +84,7 @@ class ApiClient(RestAPIClient):
 
     def __init__(self, tenant, enforce_csrf_checks=False, **defaults):
         super(ApiClient, self).__init__(enforce_csrf_checks, **defaults)
-
         self.tenant = tenant
-
         self.renderer_classes = {}
         for cls in self.renderer_classes_list:
             self.renderer_classes[cls.format] = cls

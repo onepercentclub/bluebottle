@@ -1,5 +1,6 @@
 from optparse import make_option
 
+from bluebottle.common.models import CommonPlatformSettings
 from django.core import exceptions
 from django.utils.encoding import force_str
 from django.conf import settings
@@ -142,6 +143,18 @@ class Command(BaseCommand):
             call_command('loaddata', 'geo_data')
         except get_tenant_model().DoesNotExist:
             self.stdout.write("Client not found. Skipping loading fixtures")
+
+    def lockdown(self, client_name):
+        from django.db import connection
+
+        try:
+            tenant = get_tenant_model().objects.get(client_name=client_name)
+            connection.set_tenant(tenant)
+            common_settings = CommonPlatformSettings.load()
+            common_settings.lockdown = True
+            common_settings.save()
+        except get_tenant_model().DoesNotExist:
+            self.stdout.write("Client not found. Skipping lock down")
 
     def store_client(self, name, client_name, domain_url, schema_name):
         try:

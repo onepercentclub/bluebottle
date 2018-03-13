@@ -10,7 +10,7 @@ import base64
 
 
 class CommonPlatformSettings(BasePlatformSettings):
-    lockdown = models.BooleanField(default=True,
+    lockdown = models.BooleanField(default=False,
                                    help_text=_('Checking this will lockdown the site with the provided password.'))
     lockdown_password = models.CharField(null=True, blank=True, max_length=100,
                                          help_text=_('This is the password clients need to enter to view the site.'))

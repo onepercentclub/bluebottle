@@ -192,7 +192,7 @@ class LockdownMiddleware(BaseLockdownMiddleware):
 
         common_settings = CommonPlatformSettings.load()
 
-        if common_settings.lockdown:
+        if common_settings.lockdown or getattr(settings, 'FORCE_LOCKDOWN', False):
             token = request.META.get('HTTP_X_LOCKDOWN_TOKEN', None)
             if token == common_settings.token:
                 return None

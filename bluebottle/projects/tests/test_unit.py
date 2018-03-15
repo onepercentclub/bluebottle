@@ -557,6 +557,14 @@ class TestProjectLocation(BluebottleTestCase):
         with httmock.HTTMock(self.geocode_mock_factory):
             self.location.save()
 
+    def test_adjusting_geolocation(self):
+        self.location.latitude = 52.166315
+        self.location.longitude = 4.490936
+        self.location.save()
+        self.location.latitude = 43.059269
+        self.location.longitude = 23.681429
+        self.location.save()
+
     def test_geocode(self):
         self.save_location()
         self.assertEqual(

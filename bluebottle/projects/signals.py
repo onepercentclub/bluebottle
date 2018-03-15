@@ -72,7 +72,7 @@ def save(sender, instance, **kwargs):
     try:
         current_instance = sender.objects.get(pk=instance.pk)
         if (
-            current_instance.longitude and instance.longitude == current_instance.longiude and
+            current_instance.longitude and instance.longitude == current_instance.longitude and
             current_instance.latitude and instance.latitude == current_instance.latitude
         ):
             return

@@ -9,7 +9,7 @@ def move_position(apps, schema_editor):
     Project = apps.get_model('projects', 'Project')
     ProjectLocation = apps.get_model('projects', 'ProjectLocation')
     for project in Project.objects.filter(latitude__isnull=False).all():
-        location = ProjectLocation.objects.create(
+        location, created = ProjectLocation.objects.get_or_create(
             project=project,
             latitude=project.latitude,
             longitude=project.longitude
@@ -21,11 +21,10 @@ def restore_position(apps, schema_editor):
     Project = apps.get_model('projects', 'Project')
     ProjectLocation = apps.get_model('projects', 'ProjectLocation')
     for location in ProjectLocation.objects.all():
-        project = Project.objects.filter(id=location.project_id).update(
+        Project.objects.filter(id=location.project_id).update(
             latitude=location.latitude,
             longitude=location.longitude
         )
-        project.save()
 
 class Migration(migrations.Migration):
 

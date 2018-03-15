@@ -87,7 +87,6 @@ def save(sender, instance, **kwargs):
                 key=settings.MAPS_API_KEY,
                 language=instance.project.language.code if instance.project.language else None
             )[0]
-
             if result.street_long != 'Unnamed Road':
                 instance.street = result.street_long
             instance.neighborhood = result.neighborhood or result.sublocality

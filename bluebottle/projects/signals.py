@@ -79,14 +79,16 @@ def save(sender, instance, **kwargs):
     except sender.DoesNotExist:
         pass  # Object is new, so field hasn't technically changed, but you may want to do something else here.
 
-    if instance.latitude and instance.longitude and hasattr(settings, 'MAPS_API_KEY'):
+    if hasattr(settings, 'MAPS_API_KEY') and settings.MAPS_API_KEY:
         try:
             result = geocoder.google(
                 [instance.latitude, instance.longitude],
                 method='reverse',
-                key=settings.MAPS_API_KEY
+                key=settings.MAPS_API_KEY,
+                language=instance.project.language.code if instance.project.language else None
             )[0]
-            if result.street != 'Unnamed Road':
+
+            if result.street_long != 'Unnamed Road':
                 instance.street = result.street_long
             instance.neighborhood = result.neighborhood or result.sublocality
             instance.postal_code = result.postal

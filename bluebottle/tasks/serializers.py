@@ -117,7 +117,7 @@ class TaskPermissionsSerializer(serializers.Serializer):
 
 
 class BaseTaskSerializer(serializers.ModelSerializer):
-    members = BaseTaskMemberSerializer(many=True, read_only=True, source='members_applied')
+    members = BaseTaskMemberSerializer(many=True, read_only=True)
     files = TaskFileSerializer(many=True, read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug',
                                            queryset=Project.objects)

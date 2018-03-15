@@ -391,7 +391,7 @@ class LocationsContent(TitledContent):
         verbose_name = _('Locations')
 
     def __unicode__(self):
-        return unicode(self.locations)
+        return unicode(_('Locations'))
 
 
 class CategoriesContent(TitledContent):

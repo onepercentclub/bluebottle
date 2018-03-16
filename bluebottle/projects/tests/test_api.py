@@ -892,7 +892,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         # Check that it's there, in pitch phase, has got a pitch but no plan
         # yet.
         response = self.client.get(
-            self.manage_projects_url, token=self.some_user_token)
+            self.manage_projects_url, token=self.some_user_token
+        )
         self.assertEquals(response.data['count'], 1)
         self.assertEquals(
             response.data['results'][0]['status'], self.phase_plan_new.id)
@@ -1042,21 +1043,27 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         """
         Tests for Project Create
         """
-        project = Project.objects.create(
-            title='This is my lame idea',
-            status=ProjectPhase.objects.get(slug='plan-new'),
-            owner=self.some_user
+        response = self.client.post(
+            self.manage_projects_url,
+            {
+                'title': 'This is my smart idea',
+                'story': '',
+                'latitude': None,
+                'longitude': None
+            },
+            token=self.some_user_token
         )
-        project_manage_url = reverse(
-            'project_manage_detail', kwargs={'slug': project.slug}
+
+        project_detail_url = reverse(
+            'project_manage_detail', kwargs={'slug': response.data['slug']}
         )
 
         # Let's throw a pitch (create a project really)
         with httmock.HTTMock(geocode_mock):
             response = self.client.put(
-                project_manage_url,
+                project_detail_url,
                 {
-                    'title': 'This is my smart idea',
+                    'title': 'This is my even smarter idea',
                     'story': '',
                     'latitude': 52.389745,
                     'longitude': 4.8863362,
@@ -1065,7 +1072,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             )
         self.assertEquals(
             response.status_code, status.HTTP_200_OK, response)
-        self.assertEquals(response.data['title'], 'This is my smart idea')
+        self.assertEquals(response.data['title'], 'This is my even smarter idea')
         self.assertEquals(response.data['latitude'], 52.389745)
         self.assertEquals(response.data['longitude'], 4.8863362)
         self.assertEquals(
@@ -1080,6 +1087,56 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             response.data['project_location']['neighborhood'],
             "Amsterdam-Centrum"
         )
+
+    @override_settings(MAPS_API_KEY='somekey')
+    def test_project_set_location(self):
+        """
+        Tests for Project Create
+        """
+        response = self.client.post(
+            self.manage_projects_url,
+            {
+                'title': 'This is my smart idea',
+                'story': '',
+            },
+            token=self.some_user_token
+        )
+
+        project_detail_url = reverse(
+            'project_manage_detail', kwargs={'slug': response.data['slug']}
+        )
+
+        # Let's throw a pitch (create a project really)
+        with httmock.HTTMock(geocode_mock):
+            response = self.client.put(
+                project_detail_url,
+                {
+                    'title': 'This is my even smarter idea',
+                    'story': '',
+                    'latitude': 52.389745,
+                    'longitude': 4.8863362,
+                },
+                token=self.some_user_token
+            )
+        self.assertEquals(
+            response.status_code, status.HTTP_200_OK, response)
+        self.assertEquals(response.data['title'], 'This is my even smarter idea')
+        self.assertEquals(response.data['latitude'], 52.389745)
+        self.assertEquals(response.data['longitude'], 4.8863362)
+        self.assertEquals(
+            response.data['project_location']['street'],
+            "'s-Gravenhekje"
+        )
+        self.assertEquals(
+            response.data['project_location']['city'],
+            "Amsterdam"
+        )
+        self.assertEquals(
+            response.data['project_location']['neighborhood'],
+            "Amsterdam-Centrum"
+        )
+
+
 
     @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
     def test_project_type(self):

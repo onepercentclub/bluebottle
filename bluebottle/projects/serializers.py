@@ -412,11 +412,18 @@ class ManageProjectSerializer(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
-        if not hasattr(instance, 'projectlocation') and 'projectlocation' in validated_data:
-            ProjectLocation.objects.create(
-                project=instance,
-                **validated_data.pop('projectlocation')
-            )
+        if 'projectlocation' in validated_data:
+            location = validated_data.pop('projectlocation')
+
+            if not hasattr(instance, 'projectlocation'):
+                instance.projectlocation = ProjectLocation.objects.create(
+                    project=instance
+                )
+
+            for field, value in location.items():
+                setattr(instance.projectlocation, field, value)
+
+            instance.projectlocation.save()
 
         return super(ManageProjectSerializer, self).update(instance, validated_data)
 

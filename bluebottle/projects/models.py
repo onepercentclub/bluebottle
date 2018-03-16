@@ -56,10 +56,10 @@ class ProjectLocation(models.Model):
     postal_code = models.CharField(max_length=20, null=True, blank=True)
     country = models.CharField(max_length=40, null=True, blank=True)
     latitude = models.DecimalField(
-        _('latitude'), max_digits=21, decimal_places=18
+        _('latitude'), max_digits=21, decimal_places=18, null=True
     )
     longitude = models.DecimalField(
-        _('longitude'), max_digits=21, decimal_places=18
+        _('longitude'), max_digits=21, decimal_places=18, null=True
     )
 
 

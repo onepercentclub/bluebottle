@@ -169,17 +169,21 @@ def get_class(cls):
         raise GetClassError(error_message)
 
 
-def get_current_host():
+def get_current_host(include_scheme=True):
     """
     Get the current hostname with protocol
     E.g. http://localhost:8000 or https://bluebottle.org
     """
     request = ThreadLocal.get_current_request()
-    if request.is_secure():
-        scheme = 'https'
+    host = request.get_host()
+    if include_scheme:
+        if request.is_secure():
+            scheme = 'https'
+        else:
+            scheme = 'http'
+        return '{0}://{1}'.format(scheme, request.get_host())
     else:
-        scheme = 'http'
-    return '{0}://{1}'.format(scheme, request.get_host())
+        return host
 
 
 class InvalidIpError(Exception):

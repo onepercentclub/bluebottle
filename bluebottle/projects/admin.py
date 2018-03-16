@@ -575,7 +575,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
     # Setup
     def get_readonly_fields(self, request, obj=None):
-        fields = ['vote_count', 'amount_donated_i18n', 'amount_needed_i18n', 'popularity', 'payout_status']
+        fields = [
+            'created', 'updated',
+            'vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
+            'popularity', 'payout_status']
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status', )
         return fields
@@ -653,6 +656,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'currencies', 'popularity', 'vote_count')})
 
         dates = (_('Dates'), {'fields': (
+            'created', 'updated',
             'voting_deadline', 'deadline', 'date_submitted', 'campaign_started',
             'campaign_ended', 'campaign_funded', 'campaign_paid_out')})
 

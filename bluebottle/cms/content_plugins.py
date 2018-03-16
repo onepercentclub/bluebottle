@@ -1,3 +1,4 @@
+from django import forms
 from django.utils.translation import ugettext_lazy as _
 
 from fluent_contents.extensions import plugin_pool, ContentPlugin
@@ -13,9 +14,18 @@ from bluebottle.cms.models import (
     CategoriesContent, LocationsContent, LogosContent,
     LinksContent, WelcomeContent
 )
+from fluent_contents.forms import ContentItemForm
+
+
+class CMSContentItemForm(ContentItemForm):
+    # Normal ContentItemForm throws error when trying to delete
+    # ContentPlugins that contain lists.
+    # So we override the sort_order widget
+    sort_order = forms.IntegerField(widget=forms.HiddenInput(), required=False, initial=1)
 
 
 class CMSContentPlugin(ContentPlugin):
+    form = CMSContentItemForm
     admin_form_template = 'admin/cms/content_item.html'
 
     class Media:

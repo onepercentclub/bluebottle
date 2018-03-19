@@ -17,8 +17,8 @@ from bluebottle.utils.utils import get_current_host
 
 class LookerEmbed(object):
     session_length = 60 * 10
-    models = ('members_member', )
-    permissions = ('see_looks', 'access_data')
+    models = ('First', )
+    permissions = ('see_lookml_dashboards', 'access_data')
 
     def __init__(self, user, path):
         self.user = user
@@ -54,9 +54,9 @@ class LookerEmbed(object):
         string_to_sign = "\n".join(values)
         print string_to_sign
         signer = hmac.new(
-            settings.LOOKER_SECRET, string_to_sign, sha1
+            settings.LOOKER_SECRET, string_to_sign.encode('utf8'), sha1
         )
-        return base64.b64encode(signer.digest())
+        return base64.b64encode(signer.digest()).strip()
 
     @property
     def url(self):
@@ -66,14 +66,10 @@ class LookerEmbed(object):
             'time': self.time,
             'session_length': self.session_length,
             'external_user_id': '{}-{}'.format(schema_name, self.user.id),
-            'first_name': self.user.first_name,
-            'last_name': self.user.last_name,
             'permissions': self.permissions,
             'models': self.models,
             'user_attributes': {'tenant': schema_name},
             'force_logout_login': True,
-            'external_group_id': 'test',
-            'group_ids': [3],
             'access_filters': {}
         }
         json_params = dict((key, json.dumps(value)) for key, value in params.items())
@@ -107,7 +103,7 @@ class AnalyticsView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(AnalyticsView, self).get_context_data(**kwargs)
         # We need this so 'View Site' shows in admin menu
-        context['looker_embed_url'] = LookerEmbed(self.request.user, '/embed/looks/1').url
+        context['looker_embed_url'] = LookerEmbed(self.request.user, '/embed/sso/dashboards/1').url
         import requests
-        requests.get(context['looker_embed_url'])
+        print context['looker_embed_url']
         return context

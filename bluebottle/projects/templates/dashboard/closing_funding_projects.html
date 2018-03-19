@@ -1,0 +1,20 @@
+{% load i18n %}
+{% load humanize %}
+{% block module_content %}
+<ul style="line-height: 1.5em;">
+    {% spaceless %}
+    {% for project in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <span class="float-right" style="text-align:right">
+            {{ project.deadline|date }}
+            <br>
+            {{ project.days_left }} {% trans "days" %}
+        </span>
+        <a href="{% url 'admin:projects_project_change' project.id %}" >{{ project.title }}</a>
+        <br>
+        {{ project.amount_donated }} / {{ project.amount_asked }}
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

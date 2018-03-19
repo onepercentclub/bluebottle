@@ -1,12 +1,11 @@
 from datetime import timedelta
 
+from adminfilters.multiselect import UnionFieldListFilter
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-
-from daterange_filter.filter import DateRangeFilter
 
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
 from bluebottle.utils.admin import export_as_csv_action
@@ -110,9 +109,9 @@ class TaskFileAdminInline(admin.StackedInline):
     extra = 0
 
 
-class DeadlineToAppliedFilter(admin.SimpleListFilter):
-    title = _('Deadline to apply')
-    parameter_name = 'deadline_to_apply'
+class DeadlineFilter(admin.SimpleListFilter):
+    title = _('Deadline')
+    parameter_name = 'deadline'
 
     def lookups(self, request, model_admin):
         return (
@@ -135,6 +134,11 @@ class DeadlineToAppliedFilter(admin.SimpleListFilter):
                 )
         else:
             return queryset
+
+
+class DeadlineToApplyFilter(DeadlineFilter):
+    title = _('Deadline to apply')
+    parameter_name = 'deadline_to_apply'
 
 
 class OnlineOnLocationFilter(admin.SimpleListFilter):
@@ -165,14 +169,24 @@ class TaskAdmin(admin.ModelAdmin):
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
 
     raw_id_fields = ('author', 'project')
-    list_filter = ('status', 'type', 'skill__expertise',
-                   OnlineOnLocationFilter,
-                   ('skill', admin.RelatedOnlyFieldListFilter),
-                   'deadline', ('deadline', DateRangeFilter),
-                   DeadlineToAppliedFilter, ('deadline_to_apply', DateRangeFilter),
-                   'accepting'
-                   )
-    list_display = ('title', 'project', 'status', 'created', 'deadline', 'expertise_based')
+    list_filter = (
+        'status',
+        'type',
+        'skill__expertise',
+        OnlineOnLocationFilter,
+        ('skill', UnionFieldListFilter),
+        DeadlineFilter,
+        DeadlineToApplyFilter,
+        'accepting'
+    )
+    list_display = (
+        'title',
+        'project_link',
+        'status',
+        'created_date',
+        'deadline_date',
+        'deadline_to_apply_date',
+    )
 
     readonly_fields = ('date_status_change',)
 
@@ -205,6 +219,27 @@ class TaskAdmin(admin.ModelAdmin):
               'accepting', 'needs_motivation', 'location',
               'date_status_change', 'people_needed',
               'project', 'author', 'type', 'deadline', 'deadline_to_apply')
+
+    def created_date(self, obj):
+        return obj.created.date()
+    created_date.admin_order_field = 'created'
+    created_date.short_description = _('Created')
+
+    def deadline_date(self, obj):
+        return obj.deadline.date()
+    deadline_date.admin_order_field = 'deadline'
+    deadline_date.short_description = _('Deadline')
+
+    def deadline_to_apply_date(self, obj):
+        return obj.deadline_to_apply.date()
+    deadline_to_apply_date.admin_order_field = 'deadline_to_apply'
+    deadline_to_apply_date.short_description = _('Deadline to apply')
+
+    def project_link(self, obj):
+        url = reverse('admin:projects_project_change', args=(obj.project.id,))
+        title = obj.project.title
+        title = (title[:30] + '&hellip;') if len(title) > 30 else title
+        return format_html(u"<a href='{}'>{}</a>".format(url, title))
 
 
 admin.site.register(Task, TaskAdmin)
@@ -282,7 +317,7 @@ admin.site.register(TaskMember, TaskMemberAdmin)
 
 
 class SkillAdmin(admin.ModelAdmin):
-    list_display = ('translated_name', 'disabled', 'expertise')
+    list_display = ('translated_name', 'task_link')
     readonly_fields = ('translated_name',)
     fields = readonly_fields + ('disabled', 'description', 'expertise')
 
@@ -296,6 +331,10 @@ class SkillAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    def task_link(self, obj):
+        url = "{}?skill_filter={}".format(reverse('admin:tasks_task_changelist'), obj.id)
+        return format_html("<a href='{}'>{} tasks</a>".format(url, obj.task_set.count()))
 
 
 admin.site.register(Skill, SkillAdmin)

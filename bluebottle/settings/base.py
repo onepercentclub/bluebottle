@@ -200,7 +200,7 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_mock', '/payments_interswitch',
                           '/payments_vitepay', '/payments_flutterwave',
                           '/payments_lipisha', '/media', '/downloads',
-                          '/surveys', '/token')
+                          '/surveys', '/token', '/jet')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
@@ -286,10 +286,14 @@ TENANT_APPS = (
     'bluebottle.common',
     'token_auth',
 
+    'bluebottle.bluebottle_dashboard',
+    'jet',
+    'jet.dashboard',
+
     'admin_tools',
-    'admin_tools.theming',
-    'admin_tools.menu',
-    'admin_tools.dashboard',
+    # 'admin_tools.theming',
+    # 'admin_tools.menu',
+    # 'admin_tools.dashboard',
 
     # Thumbnails
     'sorl.thumbnail',
@@ -312,8 +316,8 @@ TENANT_APPS = (
     'bluebottle.members',
     'bluebottle.projects',
     'bluebottle.organizations',
+
     'bluebottle.tasks',
-    'bluebottle.bluebottle_dashboard',
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
@@ -351,7 +355,7 @@ TENANT_APPS = (
     'bluebottle.rewards',
 
     # Custom dashboard
-    'fluent_dashboard',
+    # 'fluent_dashboard',
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
@@ -386,6 +390,8 @@ TENANT_APPS = (
     'djmoney',
     'django_singleton_admin',
     'nested_inline',
+    'permissions_widget',
+
 )
 
 

@@ -548,6 +548,13 @@ class Project(BaseProject, PreviousStatusMixin):
             self.status.slug == 'closed'
         )
 
+    @property
+    def days_left(self):
+        delta = (self.deadline - now()).days
+        if delta < 0:
+            delta = 0
+        return delta
+
     def get_absolute_url(self):
         """ Get the URL for the current project. """
         return 'https://{}/projects/{}'.format(properties.tenant.domain_url, self.slug)

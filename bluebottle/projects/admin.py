@@ -4,6 +4,7 @@ import logging
 import six
 from decimal import InvalidOperation
 
+from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django.contrib.admin.widgets import AdminTextareaWidget
 from django.forms.models import ModelFormMetaclass
@@ -18,7 +19,7 @@ from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.projects.models import (
     ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn,
     CustomProjectField, CustomProjectFieldSettings, ProjectCreateTemplate)
-from bluebottle.tasks.models import Skill
+
 from django import forms
 from django.db import connection
 from django.conf.urls import url
@@ -30,7 +31,6 @@ from django.utils.html import format_html
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden, HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
-from daterange_filter.filter import DateRangeFilter
 from django_summernote.widgets import SummernoteWidget
 from sorl.thumbnail.admin import AdminImageMixin
 from schwifty import IBAN, BIC
@@ -40,7 +40,7 @@ from bluebottle.payouts_dorado.adapters import (
     DoradoPayoutAdapter, PayoutValidationError, PayoutCreationError
 )
 from bluebottle.rewards.models import Reward
-from bluebottle.tasks.admin import TaskAdminInline
+from bluebottle.tasks.admin import TaskAdminInline, DeadlineFilter
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
@@ -55,7 +55,8 @@ from .tasks import refund_project
 logger = logging.getLogger(__name__)
 
 
-def mark_as(slug, queryset):
+def mark_as(model_admin, request, queryset):
+    slug = request.POST['action'].replace('mark_', '')
     try:
         status = ProjectPhase.objects.get(slug=slug)
     except ProjectPhase.DoesNotExist:
@@ -69,110 +70,17 @@ def mark_as(slug, queryset):
         project.save()
 
 
-def mark_as_plan_new(modeladmin, request, queryset):
-    mark_as('plan-new', queryset)
-
-
-mark_as_plan_new.short_description = _("Mark selected projects as status Plan - Draft")
-
-
-def mark_as_plan_submitted(modeladmin, request, queryset):
-    mark_as('plan-submitted', queryset)
-
-
-mark_as_plan_submitted.short_description = _("Mark selected projects as status Plan - Submitted")
-
-
-def mark_as_plan_needs_work(modeladmin, request, queryset):
-    mark_as('plan-needs-work', queryset)
-
-
-mark_as_plan_needs_work.short_description = _("Mark selected projects as status Plan - Needs Work")
-
-
-def mark_as_voting(modeladmin, request, queryset):
-    mark_as('voting', queryset)
-
-
-mark_as_voting.short_description = _("Mark selected projects as status Voting - Running")
-
-
-def mark_as_voting_done(modeladmin, request, queryset):
-    mark_as('voting-done', queryset)
-
-
-mark_as_voting_done.short_description = _("Mark selected projects as status Voting - Done")
-
-
-def mark_as_campaign(modeladmin, request, queryset):
-    mark_as('campaign', queryset)
-
-
-mark_as_campaign.short_description = _("Mark selected projects as status Project - Running")
-
-
-def mark_as_done_complete(modeladmin, request, queryset):
-    mark_as('done-complete', queryset)
-
-
-mark_as_done_complete.short_description = _("Mark selected projects as status Project - Realised")
-
-
-def mark_as_done_incomplete(modeladmin, request, queryset):
-    mark_as('done-incomplete', queryset)
-
-
-mark_as_done_incomplete.short_description = _("Mark selected projects as status Project - Done")
-
-
-def mark_as_closed(modeladmin, request, queryset):
-    mark_as('closed', queryset)
-
-
-mark_as_closed.short_description = _("Mark selected projects as status Rejected / Canceled")
-
-
 class ProjectThemeAdmin(admin.ModelAdmin):
-    list_display = admin.ModelAdmin.list_display + ('slug', 'disabled',)
+    list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'project_link')
+    readonly_fields = ('project_link', )
+    fields = ('name', 'slug', 'description', 'disabled') + readonly_fields
+
+    def project_link(self, obj):
+        url = "{}?theme_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)
+        return format_html("<a href='{}'>{} projects</a>".format(url, obj.project_set.count()))
 
 
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
-
-
-class ProjectThemeFilter(admin.SimpleListFilter):
-    title = _('Theme')
-    parameter_name = 'theme'
-
-    def lookups(self, request, model_admin):
-        themes = [obj.theme for obj in
-                  model_admin.model.objects.order_by('theme__name').distinct(
-                      'theme__name').exclude(theme__isnull=True).all()]
-        return [(theme.id, _(theme.name)) for theme in themes]
-
-    def queryset(self, request, queryset):
-        if self.value():
-            return queryset.filter(theme=self.value())
-        else:
-            return queryset
-
-
-class ProjectSkillFilter(admin.SimpleListFilter):
-    title = _('Task skills')
-    parameter_name = 'skill'
-
-    def lookups(self, request, model_admin):
-        skills = Skill.objects.filter(disabled=False)
-        lookups = [(skill.id, _(skill.name)) for skill in skills]
-        return [('any', _('Any expertise based skill'))] + lookups
-
-    def queryset(self, request, queryset):
-        if self.value():
-            if self.value() == 'any':
-                return queryset.filter(task__skill__isnull=False, task__skill__expertise=True)
-            else:
-                return queryset.filter(task__skill=self.value())
-        else:
-            return queryset
 
 
 class ProjectReviewerFilter(admin.SimpleListFilter):
@@ -289,7 +197,11 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
 
     def __init__(self, *args, **kwargs):
         super(ProjectAdminForm, self).__init__(*args, **kwargs)
-        self.fields['currencies'].required = False
+        try:
+            self.fields['currencies'].required = False
+        except KeyError:
+            # Field is not shown
+            pass
         self.fields['reviewer'].widget = ReviewerWidget(
             rel=Project._meta.get_field('reviewer').rel,
             admin_site=admin.sites.site
@@ -342,21 +254,36 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization',)
     prepopulated_fields = {'slug': ('title',)}
 
-    def get_inline_instances(self, request, obj=None):
-        instances = super(ProjectAdmin, self).get_inline_instances(request, obj)
+    class Media:
+        css = {
+            'all': ('css/admin/wide-actions.css',)
+        }
 
+    def get_inline_instances(self, request, obj=None):
+        self.inlines = self.all_inlines
+        if obj:
+            # We need to reload project, or we get an error when changing project type
+            proj = Project.objects.get(pk=obj.id)
+            if obj and proj.project_type == 'sourcing':
+                self.inlines = self.sourcing_inlines
+
+        instances = super(ProjectAdmin, self).get_inline_instances(request, obj)
         add_on_inline = ProjectAddOnInline(self.model, self.admin_site)
         if len(add_on_inline.get_child_inline_instances()):
             instances.append(add_on_inline)
         return instances
 
-    inlines = (
+    all_inlines = (
         ProjectBudgetLineInline,
         RewardInlineAdmin,
         TaskAdminInline,
         ProjectDocumentInline,
         ProjectPhaseLogInline,
-
+    )
+    sourcing_inlines = (
+        ProjectDocumentInline,
+        TaskAdminInline,
+        ProjectPhaseLogInline,
     )
 
     list_filter = ('country__subregion__region', )
@@ -392,12 +319,17 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ('expertise_based', 'expertise based'),
     ]
 
-    actions = [export_as_csv_action(fields=export_fields),
-               mark_as_closed, mark_as_done_incomplete,
-               mark_as_done_complete, mark_as_campaign,
-               mark_as_voting_done, mark_as_voting,
-               mark_as_plan_needs_work, mark_as_plan_submitted,
-               mark_as_plan_new]
+    actions = [export_as_csv_action(fields=export_fields), ]
+
+    def get_actions(self, request):
+        actions = super(ProjectAdmin, self).get_actions(request)
+        for phase in ProjectPhase.objects.order_by('-sequence').all():
+            action_name = 'mark_{}'.format(phase.slug)
+            actions[action_name] = (
+                mark_as, action_name, _('Mark selected as "{}"'.format(_(phase.name)))
+            )
+        print actions
+        return OrderedDict(reversed(actions.items()))
 
     # Fields
     def num_votes(self, obj):
@@ -596,8 +528,15 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         return process_urls + urls
 
     def get_list_filter(self, request):
-        filters = ['status', 'is_campaign', ProjectThemeFilter, ProjectSkillFilter,
-                   ProjectReviewerFilter, 'project_type', ('deadline', DateRangeFilter), ]
+        filters = [
+            ('status', UnionFieldListFilter),
+            'is_campaign',
+            ('theme', UnionFieldListFilter),
+            ('task__skill', UnionFieldListFilter),
+            ProjectReviewerFilter,
+            'project_type',
+            DeadlineFilter,
+        ]
 
         if request.user.has_perm('projects.approve_payout'):
             filters.insert(1, 'payout_status')
@@ -610,8 +549,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         return filters
 
     def get_list_display(self, request):
-        fields = ['get_title_display', 'get_owner_display', 'created', 'status', 'deadline', 'donated_percentage',
-                  'campaign_edited', 'amount_extra', 'expertise_based']
+        fields = [
+            'get_title_display', 'get_owner_display', 'created_date',
+            'status', 'deadline_date', 'donated_percentage',
+            'campaign_edited', 'amount_extra', 'expertise_based'
+        ]
 
         if request.user.has_perm('projects.approve_payout'):
             fields.insert(4, 'payout_status')
@@ -624,13 +566,18 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             fields += ('vote_count',)
         return fields
 
+    def created_date(self, obj):
+        return obj.created.date()
+    created_date.admin_order_field = 'created'
+    created_date.short_description = _('Created')
+
+    def deadline_date(self, obj):
+        return obj.deadline.date()
+    deadline_date.admin_order_field = 'deadline'
+    deadline_date.short_description = _('Deadline')
+
     def get_list_editable(self, request):
         return ('is_campaign',)
-
-    def get_actions(self, request):
-        """Order the action in reverse (delete at the bottom)."""
-        actions = super(ProjectAdmin, self).get_actions(request)
-        return OrderedDict(reversed(actions.items()))
 
     def get_fieldsets(self, request, obj=None):
         main = {'fields': ['owner', 'reviewer', 'task_manager', 'promoter', 'organization', 'status', 'title', 'slug',
@@ -671,7 +618,15 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'fields': [field.slug for field in CustomProjectFieldSettings.objects.all()]
         })
 
-        return (main, story, details, goal, dates, bank, extra)
+        fieldsets = (main, story, details, dates)
+
+        if obj and obj.project_type != 'sourcing':
+            fieldsets += (goal, bank)
+
+        if CustomProjectFieldSettings.objects.count():
+            fieldsets += (extra, )
+
+        return fieldsets
 
     def get_queryset(self, request):
         # Optimization: Select related fields that are used in admin specific
@@ -692,7 +647,11 @@ admin.site.register(Project, ProjectAdmin)
 
 class ProjectPhaseAdmin(admin.ModelAdmin):
 
-    list_display = ['__unicode__', 'name', 'slug']
+    list_display = ['__unicode__', 'name', 'slug', 'project_link']
+
+    def project_link(self, obj):
+        url = "{}?status_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)
+        return format_html("<a href='{}'>{} projects</a>".format(url, obj.project_set.count()))
 
 
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)

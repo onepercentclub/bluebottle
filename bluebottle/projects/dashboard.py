@@ -1,94 +1,72 @@
-from admin_tools.dashboard.modules import DashboardModule, LinkList
-from django.conf import settings
+from django.urls.base import reverse
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.bb_projects.models import ProjectPhase
+from jet.dashboard import modules
+from jet.dashboard.dashboard import DefaultAppIndexDashboard
+from jet.dashboard.modules import DashboardModule, ModelList
+
 from bluebottle.projects.models import Project
 
 
 class RecentProjects(DashboardModule):
-    title = _('Recently Created Projects')
-    template = 'admin_tools/dashboard/recent_projects.html'
-    limit = 10
-
-    def __init__(self, title=None, limit=10, **kwargs):
-        kwargs.update({'limit': limit})
-        super(RecentProjects, self).__init__(title, **kwargs)
+    title = _('Recently submitted projects')
+    title_url = "{}?status_filter=2".format(reverse('admin:projects_project_changelist'))
+    template = 'dashboard/recent_projects.html'
+    limit = 5
+    column = 0
 
     def init_with_context(self, context):
-        qs = Project.objects.order_by('-created')
-        self.children = qs[:self.limit]
-        if not len(self.children):
-            self.pre_content = _('No recent projects.')
-        self._initialized = True
-
-
-class SubmittedPlans(DashboardModule):
-    title = _('Recently Submitted Plans')
-    template = 'admin_tools/dashboard/submitted_plans.html'
-    limit = 10
-
-    def __init__(self, title=None, limit=10, **kwargs):
-        kwargs.update({'limit': limit})
-        super(SubmittedPlans, self).__init__(title, **kwargs)
-
-    def init_with_context(self, context):
-        qs = Project.objects.order_by('created')
-        qs = qs.filter(status=ProjectPhase.objects.get(slug="plan-submitted"))
-
-        self.children = qs[:self.limit]
-        if not len(self.children):
-            self.pre_content = _('No submitted plans.')
-        self._initialized = True
-
-
-class StartedCampaigns(DashboardModule):
-    title = _('Recently Started Projects')
-    template = 'admin_tools/dashboard/started_campaigns.html'
-    limit = 10
-
-    def __init__(self, title=None, limit=10, **kwargs):
-        kwargs.update({'limit': limit})
-        super(StartedCampaigns, self).__init__(title, **kwargs)
-
-    def init_with_context(self, context):
-        qs = Project.objects.order_by('-created')
-        qs = qs.filter(status=ProjectPhase.objects.get(slug="campaign"))
-
-        self.children = qs[:self.limit]
-        if not len(self.children):
-            self.pre_content = _('No projects.')
-        self._initialized = True
-
-
-class EndedProjects(DashboardModule):
-    title = _('Recently Ended Projects')
-    template = 'admin_tools/dashboard/recent_ended_projects.html'
-    limit = 10
-
-    def __init__(self, title=None, limit=10, **kwargs):
-        kwargs.update({'limit': limit})
-        super(EndedProjects, self).__init__(title, **kwargs)
-
-    def init_with_context(self, context):
-        qs = Project.objects.filter(campaign_ended__isnull=False).order_by(
-            '-campaign_ended')[:self.limit]
-        projects = list(qs)
-
+        projects = Project.objects.filter(status__slug='plan-submitted').order_by('date_submitted')
         self.children = projects[:self.limit]
-        if not len(self.children):
-            self.pre_content = _('No recently funded projects.')
-        self._initialized = True
 
 
-class Analytics(LinkList):
-    title = _('Analytics')
+class MyReviewingProjects(DashboardModule):
+    title = _('Projects I\'m reviewing')
+    title_url = "{}?reviewer=True".format(reverse('admin:projects_project_changelist'))
+    template = 'dashboard/recent_projects.html'
+    limit = 5
+    column = 0
 
-    def __init__(self, title=None, **kwargs):
-        self.children = ({'title': _('Analytics'),
-                          'url': getattr(settings, 'ANALYTICS_FRONTEND', ''),
-                          'external': True,
-                          'description': _('Analytics'),
-                          'attrs': {'target': '_blank'},
-                          },)
-        super(Analytics, self).__init__(title, **kwargs)
+    def init_with_context(self, context):
+        user = context.request.user
+        self.children = Project.objects.filter(reviewer=user).order_by('-created')[:self.limit]
+
+
+class ClosingFundingProjects(DashboardModule):
+    title = _('Projects nearing deadline')
+    title_url = "{}?o=6&status_filter=5".format(reverse('admin:projects_project_changelist'))
+    template = 'dashboard/closing_funding_projects.html'
+    limit = 5
+    column = 1
+
+    def init_with_context(self, context):
+        self.children = Project.objects.filter(status__slug='campaign').order_by('deadline')[:self.limit]
+
+
+class ProjectInfo(ModelList):
+    title_url = "{}".format(reverse('admin:projects_project_changelist'))
+    title = _("Projects menu")
+    models = [
+        'projects.Project',
+        'categories.Category',
+        'fundraisers.Fundraiser',
+        'organizations.Organization',
+        'bb_projects.ProjectTheme',
+        'bb_projects.ProjectPhase',
+        'organizations.Organization',
+    ]
+    template = 'dashboard/projects_info.html'
+    deletable = False
+    collapsible = False
+    draggable = False
+    column = 0
+
+
+class AppIndexDashboard(DefaultAppIndexDashboard):
+
+    def init_with_context(self, context):
+        self.available_children.append(modules.LinkList)
+        self.children.append(ProjectInfo())
+        self.children.append(RecentProjects())
+        self.children.append(MyReviewingProjects())
+        self.children.append(ClosingFundingProjects())

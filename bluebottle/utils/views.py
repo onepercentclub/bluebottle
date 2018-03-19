@@ -241,7 +241,7 @@ class PrivateFileView(RetrieveAPIView):
         field = getattr(instance, self.field)
         response = HttpResponse()
         response['X-Accel-Redirect'] = field.url
-        response['Content-Disposition'] = 'attachment; filename={}'.format(
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
             field.name
         )
 

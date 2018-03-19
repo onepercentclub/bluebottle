@@ -545,7 +545,8 @@ class Project(BaseProject, PreviousStatusMixin):
         return (
             properties.ENABLE_REFUNDS and
             self.amount_donated.amount > 0 and
-            self.status.slug == 'closed'
+            (not self.payout_status or self.payout_status == StatusDefinition.NEEDS_APPROVAL) and
+            self.status.slug in ('done-incomplete', 'closed')
         )
 
     def get_absolute_url(self):

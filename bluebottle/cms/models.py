@@ -479,6 +479,8 @@ class WelcomeContent(ContentItem):
 
 
 class SitePlatformSettings(BasePlatformSettings):
+    logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
+
     contact_email = models.EmailField(null=True, blank=True)
     contact_phone = models.CharField(max_length=100, null=True, blank=True)
     copyright = models.CharField(max_length=100, null=True, blank=True)

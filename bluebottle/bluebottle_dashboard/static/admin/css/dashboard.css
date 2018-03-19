@@ -61,3 +61,15 @@
 .sidebar-popup-container {
     left: 10rem;
 }
+
+body.menu-pinned #container {
+    padding-left: 12rem;
+}
+
+body.menu-pinned .changelist-footer.fixed {
+    left: 12rem;
+    padding: 10px;
+}
+body.menu-pinned table.helper {
+    padding-left: 12rem;
+}

@@ -5,9 +5,9 @@ from tenant_schemas.urlresolvers import reverse
 from bluebottle.test.utils import BluebottleAdminTestCase
 
 
-class NewsAdminTest(BluebottleAdminTestCase):
+class SlideAdminTest(BluebottleAdminTestCase):
     def setUp(self):
-        super(NewsAdminTest, self).setUp()
+        super(SlideAdminTest, self).setUp()
         self.news = SlideFactory()
         self.news_url = reverse('admin:slides_slide_changelist')
         self.client.force_login(self.superuser)

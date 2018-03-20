@@ -13,6 +13,7 @@ from bluebottle.clients.context import ClientContext
 from bluebottle.clients.mail import EmailMultiAlternatives
 from bluebottle.clients.utils import tenant_url
 from bluebottle.clients import properties
+from bluebottle.mails.models import MailPlatformSettings
 
 from tenant_extras.utils import TenantLanguage
 
@@ -156,6 +157,9 @@ def send_mail(template_name=None, subject=None, to=None, attachments=None, **kwa
         kwargs.update({
             'site': tenant_url()
         })
+    kwargs.update({
+        'settings': MailPlatformSettings.load()
+    })
 
     try:
         msg = create_message(template_name=template_name,

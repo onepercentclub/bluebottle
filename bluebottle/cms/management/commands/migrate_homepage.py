@@ -1,7 +1,6 @@
 from StringIO import StringIO
 from django.apps import apps
 from django.core.management.base import BaseCommand
-from django.db import connection
 from django.contrib.contenttypes.models import ContentType
 from django.core.files import File
 
@@ -101,7 +100,6 @@ class Command(BaseCommand):
 
         for client in tenants:
             print "\n\nCreating homepage for {}".format(client.name)
-            connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
                 ContentType.objects.clear_cache()
 

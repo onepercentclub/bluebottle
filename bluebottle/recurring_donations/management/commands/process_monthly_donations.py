@@ -2,7 +2,6 @@ import sys
 import logging
 
 from django.core.management.base import BaseCommand
-from django.db import connection
 
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
@@ -63,8 +62,6 @@ class Command(BaseCommand):
 
         try:
             client = Client.objects.get(client_name=options['tenant'])
-            connection.set_tenant(client)
-
         except Client.DoesNotExist:
             logger.error("You must specify a valid tenant with -t or --tenant.")
             tenants = Client.objects.all().values_list('client_name', flat=True)

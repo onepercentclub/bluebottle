@@ -19,7 +19,6 @@ class Command(BaseCommand):
                     longitude__isnull=False,
                     projectlocation__isnull=True
                 ):
-                    print project.title, project.created
                     ProjectLocation.objects.create(
                         project=project,
                         latitude=project.latitude,

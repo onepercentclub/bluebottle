@@ -1136,8 +1136,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             "Amsterdam-Centrum"
         )
 
-
-
     @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
     def test_project_type(self):
         # Add some values to this project

@@ -3,12 +3,10 @@ import json
 from decimal import Decimal
 
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
 from django.utils.timezone import get_current_timezone
 
 from rest_framework import status
 
-from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, ESTestCase
@@ -481,7 +479,6 @@ class TestTinyProjectList(ESTestCase):
         self.project5 = ProjectFactory(status=new)
         self.project5.created = datetime(2017, 03, 20, tzinfo=get_current_timezone())
         self.project5.save()
-
 
     def test_tiny_project_list(self):
         response = self.client.get(reverse('project_tiny_preview_list'))

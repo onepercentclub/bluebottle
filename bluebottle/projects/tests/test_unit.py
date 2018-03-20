@@ -141,6 +141,26 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.failUnless(self.expired_project.status == self.campaign)
         self.assertEqual(self.expired_project.payout_status, None)
 
+    def test_expired_enough_by_matching(self):
+        """ Less donated than requested  but with matching- status done complete """
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=self.expired_project,
+            order=order,
+            amount=2500
+        )
+        donation.save()
+
+        order.locked()
+        order.save()
+        order.success()
+        order.save()
+        self.expired_project.amount_extra = Money(2500, 'EUR')
+        self.expired_project.save()
+        self.assertEqual(self.expired_project.payout_status, 'needs_approval')
+        self.failUnless(self.expired_project.status == self.complete)
+
     def test_expired_sourcing(self):
         """ A crowdsourcing project should never get a payout status """
         TaskFactory.create(project=self.expired_project, status='realized')

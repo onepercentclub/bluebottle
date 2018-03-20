@@ -3,9 +3,10 @@ import httmock
 import json
 import urlparse
 
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectLocationFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 from django.core.management import call_command
+from django.test.utils import override_settings
 
 mock_result = {
     'results': [
@@ -72,8 +73,10 @@ class TestReverseGeocodeCommand(BluebottleTestCase):
     def setUp(self):
         super(TestReverseGeocodeCommand, self).setUp()
         self.init_projects()
-        self.project = ProjectFactory.create()
-        ProjectLocationFactory.create(project=self.project)
+        self.project = ProjectFactory.create(
+            latitude=43.068620,
+            longitude=23.676374
+        )
         self.command = 'reverse_geocode_projects'
 
     @property
@@ -87,7 +90,8 @@ class TestReverseGeocodeCommand(BluebottleTestCase):
 
         return geocode_mock
 
-    def test_riun_command(self):
+    @override_settings(MAPS_API_KEY='Bla123Bla')
+    def test_run_command(self):
         with httmock.HTTMock(self.geocode_mock_factory):
             call_command(self.command)
         self.assertEquals(self.project.projectlocation.city, 'Lyutidol')

@@ -13,6 +13,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--start', type=str, default=None, action='store')
         parser.add_argument('--end', type=str, default=None, action='store')
+        parser.add_argument('--file', type=str, default=None, action='store')
 
     def handle(self, *args, **options):
         results = []
@@ -20,9 +21,7 @@ class Command(BaseCommand):
             with LocalTenant(client, clear_tenant=True):
                 orders = Order.objects.filter(
                     status__in=('pending', 'success')
-                ).exclude(
-                    order_payments__payment_method=''
-                )
+                ).exclude(order_payments__payment_method='')
 
                 if options['start']:
                     orders = orders.filter(created__gte=options['start'])
@@ -51,8 +50,14 @@ class Command(BaseCommand):
                                 'amount': float(donation.amount.amount),
                                 'currency': str(donation.amount.currency)
                             },
-                            'donation_id': donation.pk
+                            'donation_id': donation.pk,
+                            'project_id': donation.project.pk
                         } for donation in order.donations.all()]
                     })
 
-        print json.dumps(results)
+        if options['file']:
+            text_file = open(options['file'], "w")
+            text_file.write(json.dumps(results))
+            text_file.close()
+        else:
+            print json.dumps(results)

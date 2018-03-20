@@ -18,7 +18,7 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import (
     ProjectBudgetLine, ProjectDocument, Project, ProjectImage,
-    ProjectPlatformSettings, ProjectSearchFilter,
+    ProjectPlatformSettings, ProjectSearchFilter, ProjectLocation,
     ProjectAddOn, ProjectCreateTemplate)
 from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.utils.serializers import (MoneySerializer, ResourcePermissionField,
@@ -51,6 +51,14 @@ class ProjectCountrySerializer(CountrySerializer):
     class Meta:
         model = Country
         fields = ('id', 'name', 'subregion', 'code')
+
+
+class ProjectLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectLocation
+        fields = (
+            'street', 'country', 'city', 'neighborhood', 'latitude', 'longitude'
+        )
 
 
 class ProjectBudgetLineSerializer(serializers.ModelSerializer):
@@ -142,6 +150,9 @@ class ProjectSerializer(serializers.ModelSerializer):
     task_manager = UserProfileSerializer(read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     vote_count = serializers.IntegerField()
+    latitude = serializers.FloatField(source='projectlocation.latitude')
+    longitude = serializers.FloatField(source='projectlocation.longitude')
+    project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
 
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
@@ -174,6 +185,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'latitude',
                   'location',
                   'longitude',
+                  'project_location',
                   'open_task_count',
                   'organization',
                   'owner',
@@ -228,6 +240,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'is_funding',
                   'latitude',
                   'location',
+                  'project_location',
                   'longitude',
                   'open_task_count',
                   'owner',
@@ -249,6 +262,8 @@ class ProjectPreviewSerializer(ProjectSerializer):
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     image = SorlImageField('400x300', crop='center')
+    latitude = serializers.FloatField(source='projectlocation.latitude')
+    longitude = serializers.FloatField(source='projectlocation.longitude')
 
     class Meta:
         model = Project
@@ -302,6 +317,10 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     viewable = serializers.BooleanField(read_only=True)
     permissions = ResourcePermissionField('project_manage_detail', view_args=('slug', ))
     related_permissions = ProjectPermissionsSerializer(read_only=True)
+
+    latitude = serializers.FloatField(source='projectlocation.latitude', required=False, allow_null=True)
+    longitude = serializers.FloatField(source='projectlocation.longitude', required=False, allow_null=True)
+    project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
 
     editable_fields = ('pitch', 'story', 'image', 'video_url')
 
@@ -392,6 +411,35 @@ class ManageProjectSerializer(serializers.ModelSerializer):
 
         return data
 
+    def update(self, instance, validated_data):
+        if 'projectlocation' in validated_data:
+            location = validated_data.pop('projectlocation')
+
+            if not hasattr(instance, 'projectlocation'):
+                instance.projectlocation = ProjectLocation.objects.create(
+                    project=instance
+                )
+
+            for field, value in location.items():
+                setattr(instance.projectlocation, field, value)
+
+            instance.projectlocation.save()
+
+        return super(ManageProjectSerializer, self).update(instance, validated_data)
+
+    def create(self, validated_data):
+        location_data = None
+        if 'projectlocation' in validated_data:
+            location_data = validated_data.pop('projectlocation')
+
+        instance = super(ManageProjectSerializer, self).create(validated_data)
+        if location_data:
+            ProjectLocation.objects.create(
+                project=instance,
+                **location_data
+            )
+        return instance
+
     class Meta:
         model = Project
         fields = ('id',
@@ -422,6 +470,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'latitude',
                   'location',
                   'longitude',
+                  'project_location',
                   'organization',
                   'people_needed',
                   'people_registered',

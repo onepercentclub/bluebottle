@@ -16,7 +16,7 @@ from polymorphic.admin.inlines import StackedPolymorphicInline
 from bluebottle.payments.adapters import has_payment_prodiver
 from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.projects.models import (
-    ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn,
+    ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn, ProjectLocation,
     CustomProjectField, CustomProjectFieldSettings, ProjectCreateTemplate)
 from bluebottle.tasks.models import Skill
 from django import forms
@@ -333,6 +333,10 @@ class ProjectAddOnInline(StackedPolymorphicInline):
         return instances
 
 
+class ProjectLocationInline(admin.StackedInline):
+    model = ProjectLocation
+
+
 class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):
     form = ProjectAdminForm
     date_hierarchy = 'created'
@@ -356,6 +360,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         TaskAdminInline,
         ProjectDocumentInline,
         ProjectPhaseLogInline,
+        ProjectLocationInline,
 
     )
 
@@ -575,7 +580,12 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
     # Setup
     def get_readonly_fields(self, request, obj=None):
-        fields = ['vote_count', 'amount_donated_i18n', 'amount_needed_i18n', 'popularity', 'payout_status']
+        fields = [
+            'created', 'updated',
+            'vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
+            'popularity', 'payout_status',
+            'geocoding'
+        ]
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status', )
         return fields
@@ -645,14 +655,16 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         details = (_('Details'), {'fields': (
             'language', 'theme', 'categories',
-            'image', 'video_url', 'country', 'latitude',
-            'longitude', 'location', 'place')})
+            'image', 'video_url', 'country',
+            'location', 'place',
+        )})
 
         goal = (_('Goal'), {'fields': (
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
             'currencies', 'popularity', 'vote_count')})
 
         dates = (_('Dates'), {'fields': (
+            'created', 'updated',
             'voting_deadline', 'deadline', 'date_submitted', 'campaign_started',
             'campaign_ended', 'campaign_funded', 'campaign_paid_out')})
 

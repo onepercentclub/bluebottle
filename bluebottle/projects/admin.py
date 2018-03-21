@@ -142,7 +142,8 @@ class RewardInlineAdmin(admin.TabularInline):
     extra = 0
 
     def count(self, obj):
-        return obj.count
+        url = reverse('admin:donations_donation_changelist')
+        return format_html('<a href={}?reward={}>{}</a>'.format(url, obj.id, obj.count))
 
 
 class ProjectPhaseLogInline(admin.TabularInline):

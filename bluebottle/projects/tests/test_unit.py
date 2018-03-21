@@ -1,13 +1,14 @@
 from datetime import timedelta, time
 
+from bluebottle.projects.admin import mark_as
 from django.db.models import Count
+from django.test.client import RequestFactory
 from django.utils import timezone
 from moneyed.classes import Money
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
-from bluebottle.projects.admin import mark_as_plan_new
 from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectBudgetLine, ProjectPlatformSettings, \
     CustomProjectFieldSettings, CustomProjectField
 from bluebottle.suggestions.models import Suggestion
@@ -342,15 +343,16 @@ class TestProjectBulkActions(BluebottleTestCase):
         self.init_projects()
 
         self.projects = [ProjectFactory.create(title='test {}'.format(i)) for i in range(10)]
+        self.request = RequestFactory().post('/admin/some', data={'action': 'plan-new'})
 
     def test_mark_as_plan_new(self):
-        mark_as_plan_new(None, None, Project.objects)
+        mark_as(None, self.request, Project.objects)
 
         for project in Project.objects.all():
             self.assertEqual(project.status.slug, 'plan-new')
 
     def test_project_phase_log_creation(self):
-        mark_as_plan_new(None, None, Project.objects)
+        mark_as(None, self.request, Project.objects)
 
         for project in Project.objects.all():
             log = ProjectPhaseLog.objects.filter(project=project).order_by('start').last()
@@ -360,7 +362,7 @@ class TestProjectBulkActions(BluebottleTestCase):
         queryset = Project.objects.annotate(
             admin_vote_count=Count('vote', distinct=True)
         )
-        mark_as_plan_new(None, None, queryset)
+        mark_as(None, self.request, queryset)
 
         for project in Project.objects.all():
             self.assertEqual(project.status.slug, 'plan-new')

@@ -2,20 +2,23 @@ import six
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django import forms
 from django.conf.urls import url
+from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from django.contrib import admin
+from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.forms.models import ModelFormMetaclass
 from django.http import HttpResponseRedirect
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+
 from django_singleton_admin.admin import SingletonAdmin
 
 from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings
+from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.votes.models import Vote
 from bluebottle.clients import properties
@@ -151,6 +154,30 @@ class MemberVotesInline(admin.TabularInline):
     extra = 0
 
 
+class MemberTasksInline(admin.TabularInline):
+    model = TaskMember
+    extra = 0
+    readonly_fields = ('task_admin_link', 'task_deadline', 'status', 'time_spent')
+    fields = readonly_fields
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request):
+        return False
+
+    def task_deadline(self, obj):
+        return obj.task.deadline.date()
+
+    def task_admin_link(self, obj):
+        task = obj.task
+        url = reverse('admin:tasks_task_change', args=[task.id])
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            str(url), task.title.encode("utf8")
+        )
+
+
 class MemberAdmin(UserAdmin):
 
     @property
@@ -188,7 +215,7 @@ class MemberAdmin(UserAdmin):
     )
 
     superuser_fieldsets = (
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups')}),
     )
 
     add_fieldsets = (
@@ -221,7 +248,7 @@ class MemberAdmin(UserAdmin):
     list_filter = ('user_type', 'is_active', 'is_staff', 'is_superuser', 'newsletter', 'favourite_themes', 'skills')
     list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined', 'is_active', 'login_as_user')
     ordering = ('-date_joined', 'email',)
-    inlines = (UserAddressInline, MemberVotesInline,)
+    inlines = (UserAddressInline, MemberVotesInline, MemberTasksInline)
 
     def login_as_user(self, obj):
         return format_html(
@@ -280,3 +307,19 @@ class MemberAdmin(UserAdmin):
 
 
 admin.site.register(Member, MemberAdmin)
+
+
+class GroupsAdmin(admin.ModelAdmin):
+    list_display = ["name", ]
+
+    class Media:
+        css = {
+            'all': ('css/admin/permissions-table.css',)
+        }
+
+    class Meta:
+        model = Group
+
+
+admin.site.unregister(Group)
+admin.site.register(Group, GroupsAdmin)

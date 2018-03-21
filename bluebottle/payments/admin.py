@@ -14,7 +14,7 @@ from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments.tasks import check_payment_statuses
 from bluebottle.payments_external.admin import ExternalPaymentAdmin
-from bluebottle.payments_flutterwave.admin import FlutterwavePaymentAdmin, FlutterwaveMpesaPaymentAdmin
+from bluebottle.payments_flutterwave.admin import FlutterwavePaymentAdmin
 from bluebottle.payments_interswitch.admin import InterswitchPaymentAdmin
 from bluebottle.payments_docdata.admin import (
     DocdataPaymentAdmin,
@@ -88,7 +88,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
 
         self.message_user(
             request,
-            'Refund is requested. It may take a while for this to be visble here'
+            'Refund is requested.'
         )
 
         order_payment_url = reverse('admin:payments_orderpayment_change', args=(order_payment.id,))
@@ -157,8 +157,8 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
             (admin.model, admin) for admin in (
                 DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin,
                 VoucherPaymentAdmin, InterswitchPaymentAdmin,
-                FlutterwavePaymentAdmin, FlutterwaveMpesaPaymentAdmin,
-                LipishaPaymentAdmin, TelesomPaymentAdmin, VitepayPaymentAdmin,
+                FlutterwavePaymentAdmin, LipishaPaymentAdmin,
+                TelesomPaymentAdmin, VitepayPaymentAdmin,
                 ExternalPaymentAdmin
             )
         )

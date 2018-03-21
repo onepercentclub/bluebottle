@@ -5,6 +5,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, connection
 from django.db.models import Sum
 from django.utils import timezone
+from django.utils.timezone import now
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -152,6 +153,13 @@ class Task(models.Model, PreviousStatusMixin):
             return queryset.get('time_spent', 0)
         else:
             return None
+
+    @property
+    def days_left(self):
+        delta = (self.deadline - now()).days
+        if delta < 0:
+            delta = 0
+        return delta
 
     @property
     def date_status_change(self):

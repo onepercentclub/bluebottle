@@ -118,13 +118,32 @@ class ProjectDocumentInline(admin.StackedInline):
         return '(None)'
 
 
+class RewardInlineFormset(forms.models.BaseInlineFormSet):
+
+    def clean(self):
+        delete_checked = False
+
+        for form in self.forms:
+            try:
+                if form.cleaned_data:
+                    if form.cleaned_data['DELETE'] and form.cleaned_data['id'].count:
+                        delete_checked = True
+            except ValueError:
+                pass
+
+        if delete_checked:
+            raise forms.ValidationError(_('You cannot delete a reward that has successful donations.'))
+
+
 class RewardInlineAdmin(admin.TabularInline):
     model = Reward
+    formset = RewardInlineFormset
     readonly_fields = ('count',)
     extra = 0
 
     def count(self, obj):
-        return obj.count
+        url = reverse('admin:donations_donation_changelist')
+        return format_html('<a href={}?reward={}>{}</a>'.format(url, obj.id, obj.count))
 
 
 class ProjectPhaseLogInline(admin.TabularInline):

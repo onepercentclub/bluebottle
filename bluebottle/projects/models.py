@@ -623,7 +623,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     def update_status_after_deadline(self):
         if self.is_funding:
-            if self.amount_donated >= self.amount_asked:
+            if self.amount_donated + self.amount_extra >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
                 self.payout_status = 'needs_approval'
             elif self.amount_donated.amount <= 20 or not self.campaign_started:

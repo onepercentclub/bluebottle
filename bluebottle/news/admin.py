@@ -27,10 +27,11 @@ class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
     date_hierarchy = 'publication_date'
     search_fields = ('slug', 'title')
     actions = ['make_published']
+    raw_id_fields = ['author']
 
     fieldsets = (
         (None, {
-            'fields': ('title', 'slug', 'language', 'main_image', 'contents'),
+            'fields': ('title', 'slug', 'author', 'language', 'main_image', 'contents'),
         }),
         (_('Publication settings'), {
             'fields': ('status', 'publication_date', 'publication_end_date', 'allow_comments'),
@@ -186,7 +187,7 @@ class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
 
     def save_model(self, request, obj, form, change):
         # Automatically store the user in the author field.
-        if not change:
+        if not obj.author:
             obj.author = request.user
 
         if not obj.publication_date:

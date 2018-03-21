@@ -1,4 +1,5 @@
 import binascii
+from collections import OrderedDict
 import json
 import hmac
 import base64
@@ -18,7 +19,7 @@ from bluebottle.utils.utils import get_current_host
 class LookerEmbed(object):
     session_length = 60 * 10
     models = ('First', )
-    permissions = ('see_lookml_dashboards', 'access_data')
+    permissions = ('see_user_dashboards', 'see_lookml_dashboards', 'access_data', 'see_looks', )
 
     def __init__(self, user, path):
         self.user = user
@@ -49,32 +50,36 @@ class LookerEmbed(object):
         )
 
         values = [params.get(attr, getattr(self, attr, None)) for attr in attrs]
-        values = [value for value in values if value]
+        values = [value for value in values if value is not None]
 
         string_to_sign = "\n".join(values)
-        print string_to_sign
         signer = hmac.new(
-            settings.LOOKER_SECRET, string_to_sign.encode('utf8'), sha1
+            settings.LOOKER_SECRET, string_to_sign.encode('utf-8').strip(), sha1
         )
         return base64.b64encode(signer.digest()).strip()
 
     @property
     def url(self):
         schema_name = connection.tenant.schema_name
-        params = {
-            'nonce': self.nonce,
-            'time': self.time,
-            'session_length': self.session_length,
-            'external_user_id': '{}-{}'.format(schema_name, self.user.id),
-            'permissions': self.permissions,
-            'models': self.models,
-            'user_attributes': {'tenant': schema_name},
-            'force_logout_login': True,
-            'access_filters': {}
-        }
-        json_params = dict((key, json.dumps(value)) for key, value in params.items())
+        params = OrderedDict([
+            ('nonce', self.nonce),
+            ('time', self.time),
+            ('session_length', self.session_length),
+            ('external_user_id', '{}-{}'.format(schema_name, self.user.id)),
+            ('permissions', self.permissions),
+            ('models', self.models),
+            ('access_filters', {}),
+            ('first_name', self.user.first_name),
+            ('last_name', self.user.last_name),
+            ('group_ids', [3]),
+            ('external_group_id', 'Back-office Users'),
+            ('user_attributes', {'tenant': schema_name}),
+            ('force_logout_login', True),
+        ])
+        json_params = OrderedDict((key, json.dumps(value)) for key, value in params.items())
 
         json_params['signature'] = self.sign(json_params)
+        print json_params['signature']
 
         return '{}{}?{}'.format(
             urljoin('https://' + self.looker_host, '/login/embed/'), quote_plus(self.path), urlencode(json_params)
@@ -103,7 +108,8 @@ class AnalyticsView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(AnalyticsView, self).get_context_data(**kwargs)
         # We need this so 'View Site' shows in admin menu
-        context['looker_embed_url'] = LookerEmbed(self.request.user, '/embed/sso/dashboards/1').url
-        import requests
+        context['looker_embed_url'] = LookerEmbed(self.request.user, '/embed/dashboards/3').url
         print context['looker_embed_url']
+        import requests
+        print requests.get(context['looker_embed_url'], allow_redirects=False).headers['location']
         return context

@@ -446,3 +446,37 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['copyright'], 'GoodUp')
         self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
         self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://goodup.com')
+
+    def test_site_platform_settings_favicons(self):
+        favicon = File(open('./bluebottle/projects/test_images/upload.png'))
+        SitePlatformSettings.objects.create(favicon=favicon)
+
+        response = self.client.get(reverse('settings'))
+
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['large'].startswith(
+                '/media/cache'
+            )
+        )
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['small'].startswith(
+                '/media/cache'
+            )
+        )
+
+    def test_site_platform_settings_logo(self):
+        favicon = File(open('./bluebottle/projects/test_images/upload.png'))
+        SitePlatformSettings.objects.create(favicon=favicon)
+
+        response = self.client.get(reverse('settings'))
+
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['large'].startswith(
+                '/media/cache'
+            )
+        )
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['small'].startswith(
+                '/media/cache'
+            )
+        )

@@ -32,6 +32,7 @@ class TestDeadlineStatus(BluebottleTestCase):
         self.status_running = ProjectPhase.objects.get(slug='campaign')
         self.complete = ProjectPhase.objects.get(slug='done-complete')
         self.incomplete = ProjectPhase.objects.get(slug='done-incomplete')
+        self.submitted = ProjectPhase.objects.get(slug='plan-submitted')
         self.project = ProjectFactory.create(status=self.status_running)
 
     def test_funding_reached(self):
@@ -114,3 +115,11 @@ class TestDeadlineStatus(BluebottleTestCase):
 
         self.assertEquals(self.project.status, self.complete)
         self.assertEquals(self.project.payout_status, 'needs_approval')
+
+    def test_submitted_no_amount(self):
+        self.project.status = self.submitted
+        self.project.amount_asked = 0
+        self.project.save()
+
+        self.project.deadline_reached()
+        self.assertEquals(self.project.status, self.submitted)

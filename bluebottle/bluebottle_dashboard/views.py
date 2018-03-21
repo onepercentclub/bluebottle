@@ -23,7 +23,11 @@ class LookerEmbed(object):
 
     def __init__(self, user, path):
         self.user = user
-        self.path = path
+        self._path = path
+
+    @property
+    def path(self):
+        return '/login/embed/{}'.format(quote_plus(self._path))
 
     @property
     def nonce(self):
@@ -53,6 +57,7 @@ class LookerEmbed(object):
         values = [value for value in values if value is not None]
 
         string_to_sign = "\n".join(values)
+        print string_to_sign
         signer = hmac.new(
             settings.LOOKER_SECRET, string_to_sign.encode('utf-8').strip(), sha1
         )
@@ -82,7 +87,7 @@ class LookerEmbed(object):
         print json_params['signature']
 
         return '{}{}?{}'.format(
-            urljoin('https://' + self.looker_host, '/login/embed/'), quote_plus(self.path), urlencode(json_params)
+            'https://' + self.looker_host, self.path, urlencode(json_params)
         )
 
 
@@ -110,6 +115,4 @@ class AnalyticsView(TemplateView):
         # We need this so 'View Site' shows in admin menu
         context['looker_embed_url'] = LookerEmbed(self.request.user, '/embed/dashboards/3').url
         print context['looker_embed_url']
-        import requests
-        print requests.get(context['looker_embed_url'], allow_redirects=False).headers['location']
         return context

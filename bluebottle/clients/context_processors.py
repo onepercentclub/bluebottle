@@ -4,9 +4,9 @@ from django.db import connection
 
 def tenant(request):
 
-    logo = SitePlatformSettings.load().logo
+    site_settings = SitePlatformSettings.load()
 
     return {
         'tenant': connection.tenant,
-        'logo': logo
+        'logo': site_settings.logo
     }

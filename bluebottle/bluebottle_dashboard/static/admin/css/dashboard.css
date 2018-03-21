@@ -59,7 +59,7 @@
     width: 12rem;
 }
 .sidebar-popup-container {
-    left: 10rem;
+    left: 12rem;
 }
 
 body.menu-pinned #container {
@@ -73,3 +73,50 @@ body.menu-pinned .changelist-footer.fixed {
 body.menu-pinned table.helper {
     padding-left: 12rem;
 }
+
+.sidebar-popup {
+    top: 340px;
+}
+
+.sidebar-popup .sidebar-popup-search {
+    display: none;
+}
+
+.sidebar-title {
+    display: none;
+}
+
+.sidebar-link {
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+}
+
+.sidebar-link:hover {
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+}
+
+.icon-arrow-right {
+    color: white;
+}
+
+
+.site-title {
+    background: #ffff;
+}
+
+.site-title-logo {
+    height: 30px;
+    margin: 10px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.site-title-text {
+    margin: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+}
+

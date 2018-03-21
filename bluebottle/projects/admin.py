@@ -8,6 +8,7 @@ from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django.contrib.admin.widgets import AdminTextareaWidget
 from django.forms.models import ModelFormMetaclass
+from django.db import models
 from django.utils.text import slugify
 from django_singleton_admin.admin import SingletonAdmin
 from django_summernote.admin import SummernoteInlineModelAdmin
@@ -44,7 +45,7 @@ from bluebottle.tasks.admin import TaskAdminInline, DeadlineFilter
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
-from bluebottle.utils.admin import export_as_csv_action, prep_field
+from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin
 from bluebottle.votes.models import Vote
 
 from .forms import ProjectDocumentForm
@@ -264,8 +265,24 @@ class ProjectAddOnInline(StackedPolymorphicInline):
         return instances
 
 
-class ProjectLocationInline(admin.StackedInline):
+class ProjectLocationForm(forms.ModelForm):
+    class Meta:
+        model = ProjectLocation
+        widgets = {
+            'latitude': forms.TextInput(attrs={'size': 50, 'id': 'id_latitude'}),
+            'longitude': forms.TextInput(attrs={'size': 50, 'id': 'id_longitude'}),
+
+        }
+        fields = ('latitude', 'longitude', 'place', 'street', 'neighborhood', 'city', 'postal_code', 'country')
+
+
+class ProjectLocationInline(LatLongMapPickerMixin, admin.StackedInline):
     model = ProjectLocation
+    form = ProjectLocationForm
+    formfield_overrides = {
+        models.TextField: {'widget': forms.TextInput(attrs={'size': 70})},
+        models.CharField: {'widget': forms.TextInput(attrs={'size': 70})},
+    }
 
 
 class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):

@@ -629,23 +629,24 @@ class Project(BaseProject, PreviousStatusMixin):
             self.save()
 
     def update_status_after_deadline(self):
-        if self.is_funding:
-            if self.amount_donated >= self.amount_asked:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
-                self.payout_status = 'needs_approval'
-            elif self.amount_donated.amount <= 20 or not self.campaign_started:
-                self.status = ProjectPhase.objects.get(slug="closed")
+        if self.status.slug == 'campaign':
+            if self.is_funding:
+                if self.amount_donated >= self.amount_asked:
+                    self.status = ProjectPhase.objects.get(slug="done-complete")
+                    self.payout_status = 'needs_approval'
+                elif self.amount_donated.amount <= 20 or not self.campaign_started:
+                    self.status = ProjectPhase.objects.get(slug="closed")
+                else:
+                    self.status = ProjectPhase.objects.get(slug="done-incomplete")
+                    self.payout_status = 'needs_approval'
             else:
-                self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                self.payout_status = 'needs_approval'
-        else:
-            if self.task_set.filter(
-                    status__in=[Task.TaskStatuses.in_progress,
-                                Task.TaskStatuses.open,
-                                Task.TaskStatuses.closed]).count() > 0:
-                self.status = ProjectPhase.objects.get(slug="done-incomplete")
-            else:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
+                if self.task_set.filter(
+                        status__in=[Task.TaskStatuses.in_progress,
+                                    Task.TaskStatuses.open,
+                                    Task.TaskStatuses.closed]).count() > 0:
+                    self.status = ProjectPhase.objects.get(slug="done-incomplete")
+                else:
+                    self.status = ProjectPhase.objects.get(slug="done-complete")
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."

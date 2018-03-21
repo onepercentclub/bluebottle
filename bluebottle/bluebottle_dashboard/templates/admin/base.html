@@ -44,8 +44,10 @@
 
     {% block site_title %}
         <div class="site-title">
-            <img src="{{ MEDIA_URL }}{{ logo }}" />
-            {{ tenant.name }}
+            <img class="site-title-logo" src="{{ MEDIA_URL }}{{ logo }}" />
+            <span class="site-title-text">
+                {{ tenant.name }}
+            </span>
         </div>
     {% endblock %}
     {% block breadcrumbs %}

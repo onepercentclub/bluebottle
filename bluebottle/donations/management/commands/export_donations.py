@@ -23,7 +23,9 @@ class Command(BaseCommand):
                 ContentType.objects.clear_cache()
                 orders = Order.objects.filter(
                     status__in=('pending', 'success')
-                ).exclude(order_payments__payment_method='')
+                ).exclude(
+                    order_payments__payment_method=''
+                )
 
                 if options['start']:
                     orders = orders.filter(created__gte=options['start'])

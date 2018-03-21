@@ -89,6 +89,9 @@ class TestProjectAdmin(BluebottleTestCase):
             'payout_status' in self.project_admin.get_fieldsets(request)[0][1]['fields']
         )
 
+    def test_search_fields(self):
+        self.assertIn('organization__contacts__email', self.project_admin.search_fields)
+
     def test_fieldsets_no_permissions(self):
         request = self.request_factory.get('/')
         request.user = MockUser()

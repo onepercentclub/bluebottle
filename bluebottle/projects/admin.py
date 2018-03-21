@@ -269,7 +269,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     date_hierarchy = 'created'
     ordering = ('-created',)
     save_on_top = True
-    search_fields = ('title', 'owner__first_name', 'owner__last_name', 'organization__name')
+    search_fields = (
+        'title', 'owner__first_name', 'owner__last_name',
+        'organization__name', 'organization__contacts__email'
+    )
     raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization',)
     prepopulated_fields = {'slug': ('title',)}
 

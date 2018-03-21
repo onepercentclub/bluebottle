@@ -57,8 +57,7 @@ class NewsItem(models.Model):
 
     # Metadata
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('author'), editable=False,
-                               null=True)
+                               verbose_name=_('author'), blank=True, null=True)
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 

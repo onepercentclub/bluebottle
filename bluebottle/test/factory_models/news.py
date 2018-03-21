@@ -12,6 +12,7 @@ class NewsItemFactory(factory.DjangoModelFactory):
 
     title = factory.Sequence(lambda n: 'News Title {0}'.format(n))
     status = NewsItem.PostStatus.published
+    main_image = factory.django.ImageField(color='blue')
     publication_date = now()
     language = 'nl'
     slug = factory.Sequence(lambda n: 'slug-{0}'.format(n))

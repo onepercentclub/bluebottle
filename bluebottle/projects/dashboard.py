@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from jet.dashboard import modules
 from jet.dashboard.dashboard import DefaultAppIndexDashboard
-from jet.dashboard.modules import DashboardModule, ModelList
+from jet.dashboard.modules import DashboardModule
 
 from bluebottle.projects.models import Project
 
@@ -43,30 +43,10 @@ class ClosingFundingProjects(DashboardModule):
         self.children = Project.objects.filter(status__slug='campaign').order_by('deadline')[:self.limit]
 
 
-class ProjectInfo(ModelList):
-    title_url = "{}".format(reverse('admin:projects_project_changelist'))
-    title = _("Projects menu")
-    models = [
-        'projects.Project',
-        'categories.Category',
-        'fundraisers.Fundraiser',
-        'organizations.Organization',
-        'bb_projects.ProjectTheme',
-        'bb_projects.ProjectPhase',
-        'organizations.Organization',
-    ]
-    template = 'dashboard/projects_info.html'
-    deletable = False
-    collapsible = False
-    draggable = False
-    column = 0
-
-
 class AppIndexDashboard(DefaultAppIndexDashboard):
 
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
-        self.children.append(ProjectInfo())
         self.children.append(RecentProjects())
         self.children.append(MyReviewingProjects())
         self.children.append(ClosingFundingProjects())

@@ -104,9 +104,8 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.get('/')
         request.user = MockUser(['projects.approve_payout'])
 
-        self.assertTrue(
-            'payout_status' in self.project_admin.get_list_filter(request)
-        )
+        self.assertIn('payout_status', self.project_admin.get_list_filter(request))
+        self.assertIn('categories', self.project_admin.get_list_filter(request))
 
     def test_list_filter_no_permissions(self):
         request = self.request_factory.get('/')

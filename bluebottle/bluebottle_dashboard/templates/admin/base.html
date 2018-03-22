@@ -4,10 +4,15 @@
 {% jet_get_current_theme as THEME %}
 {% jet_get_current_version as JET_VERSION %}
 
+{% block extrahead %}
+{{ block.super }}
+<script type="text/javascript" src="{% static '/admin/js/extra-jet.js' %}"></script>
+{% endblock %}
+
+
 {% block extrastyle %}
     <link rel="stylesheet" type="text/css" href="/static/assets/admin/css/dashboard.css">
 {% endblock %}
-
 
 <body class="{% if request.COOKIES.sidebar_pinned != 'false' %}menu-pinned {% endif %}{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}"
   data-admin-utc-offset="{% now "Z" %}">

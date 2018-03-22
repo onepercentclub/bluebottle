@@ -9,15 +9,6 @@ from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 
 
-class MockUser:
-    def __init__(self, perms=None, is_staff=True):
-        self.perms = perms or []
-        self.is_staff = is_staff
-
-    def has_perm(self, perm):
-        return perm in self.perms
-
-
 class TestNewsAdmin(BluebottleAdminTestCase):
 
     def setUp(self):

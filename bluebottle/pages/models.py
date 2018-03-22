@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
 from django.utils.translation import ugettext_lazy as _
@@ -58,9 +57,8 @@ class Page(models.Model):
         _('publication end date'), null=True, blank=True, db_index=True)
 
     # Metadata
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, verbose_name=_('author'), editable=False,
-        null=True)
+    author = models.ForeignKey('members.Member', verbose_name=_('author'),
+                               blank=True, null=True)
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 

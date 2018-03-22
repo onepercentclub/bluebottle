@@ -120,3 +120,31 @@ body.menu-pinned table.helper {
     display: inline-block;
 }
 
+
+/* CMS styling */
+
+.field-body .cp-placeholderfield {
+    clear: both;
+    margin-left: 0;
+}
+
+.field-body .cp-content .inline-related h2.cp-formset-item-title {
+    background: #ddd;
+    background-image: none;
+}
+
+.module h2 .cp-item-icons a {
+    color: rgba(0,0,0,0);
+}
+
+.inline-related {
+    border: 1px solid #ddd;
+    margin: 10px 0px;
+}
+
+.field-body .cp-content .inline-related h2.cp-formset-item-title {
+    margin-top: 0;
+    border-left: 0;
+    border-right: 0;
+}
+

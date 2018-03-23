@@ -613,7 +613,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         main = (_('Main'), main)
 
-        story = (_('Story'), {'fields': ('pitch', 'story', 'reach')})
+        story = (_('Story'), {'fields': ('pitch', 'story')})
 
         details = (_('Details'), {'fields': (
             'language', 'theme', 'categories',

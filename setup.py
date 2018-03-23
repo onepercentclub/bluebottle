@@ -65,7 +65,7 @@ install_requires = [
     'django-taggit==0.22.2',
     'django-tenant-schemas==1.9.0',
     'django-tinymce==2.7.0',
-    'django-tools==0.39.1',
+    'django-tools==0.39.3',
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.8.0',
     'djangorestframework-jwt==1.11.0',

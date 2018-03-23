@@ -167,6 +167,7 @@ class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
+    save_as = True
 
     raw_id_fields = ('author', 'project')
     list_filter = (

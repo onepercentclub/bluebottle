@@ -268,7 +268,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     form = ProjectAdminForm
     date_hierarchy = 'created'
     ordering = ('-created',)
-    save_on_top = True
+    save_as = True
     search_fields = (
         'title', 'owner__first_name', 'owner__last_name',
         'organization__name', 'organization__contacts__email'

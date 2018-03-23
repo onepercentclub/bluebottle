@@ -25,6 +25,7 @@ class PageAdmin(PlaceholderFieldAdmin):
     actions = ['make_published']
     ordering = ('language', 'slug', 'title')
     prepopulated_fields = {'slug': ('title',)}
+    raw_id_fields = ('author', )
 
     radio_fields = {
         'status': admin.HORIZONTAL,
@@ -33,7 +34,7 @@ class PageAdmin(PlaceholderFieldAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('title', 'body', 'language', 'slug', 'full_page'),
+            'fields': ('title', 'slug', 'author', 'language', 'full_page', 'body'),
         }),
         (_('Publication settings'), {
             'fields': ('status', 'publication_date', 'publication_end_date'),
@@ -109,7 +110,7 @@ class PageAdmin(PlaceholderFieldAdmin):
 
     def save_model(self, request, obj, form, change):
         # Automatically store the user in the author field.
-        if not change:
+        if not obj.author:
             obj.author = request.user
 
         if not obj.publication_date:

@@ -339,7 +339,7 @@ class SkillAdmin(admin.ModelAdmin):
     task_link.short_description = _('Tasks with this skill')
 
     def member_link(self, obj):
-        url = "{}?skills={}".format(reverse('admin:members_member_changelist'), obj.id)
+        url = "{}?skills__id__exact={}".format(reverse('admin:members_member_changelist'), obj.id)
         return format_html("<a href='{}'>{} {}</a>".format(
             url, obj.member_set.count(), _('users')
         ))

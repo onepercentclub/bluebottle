@@ -1,4 +1,5 @@
 import six
+from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django import forms
 from django.conf.urls import url
@@ -245,7 +246,15 @@ class MemberAdmin(UserAdmin):
     form = MemberChangeForm
     add_form = MemberCreationForm
 
-    list_filter = ('user_type', 'is_active', 'is_staff', 'is_superuser', 'newsletter', 'favourite_themes', 'skills')
+    list_filter = (
+        'user_type',
+        'is_active',
+        'is_staff',
+        'is_superuser',
+        'newsletter',
+        ('favourite_themes', UnionFieldListFilter),
+        ('skills', UnionFieldListFilter),
+    )
     list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined', 'is_active', 'login_as_user')
     ordering = ('-date_joined', 'email',)
     inlines = (UserAddressInline, MemberVotesInline, MemberTasksInline)

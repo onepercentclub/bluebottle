@@ -317,8 +317,8 @@ admin.site.register(TaskMember, TaskMemberAdmin)
 
 
 class SkillAdmin(admin.ModelAdmin):
-    list_display = ('translated_name', 'task_link')
-    readonly_fields = ('translated_name',)
+    list_display = ('translated_name', 'task_link', 'member_link')
+    readonly_fields = ('translated_name', 'task_link', 'member_link')
     fields = readonly_fields + ('disabled', 'description', 'expertise')
 
     def translated_name(self, obj):
@@ -327,14 +327,23 @@ class SkillAdmin(admin.ModelAdmin):
     translated_name.short_description = _('Name')
 
     def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request):
+        if obj and obj.task_set.count() == 0:
+            return True
         return False
 
     def task_link(self, obj):
         url = "{}?skill_filter={}".format(reverse('admin:tasks_task_changelist'), obj.id)
-        return format_html("<a href='{}'>{} tasks</a>".format(url, obj.task_set.count()))
+        return format_html("<a href='{}'>{} {}</a>".format(
+            url, obj.task_set.count(), _('tasks')
+        ))
+    task_link.short_description = _('Tasks with this skill')
+
+    def member_link(self, obj):
+        url = "{}?skills={}".format(reverse('admin:members_member_changelist'), obj.id)
+        return format_html("<a href='{}'>{} {}</a>".format(
+            url, obj.member_set.count(), _('users')
+        ))
+    member_link.short_description = _('Users with this skill')
 
 
 admin.site.register(Skill, SkillAdmin)

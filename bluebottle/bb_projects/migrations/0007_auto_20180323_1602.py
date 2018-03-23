@@ -7,7 +7,6 @@ from django.db import migrations
 
 def set_done_complete_not_editable(apps, schema_editor):
     ProjectPhase = apps.get_model('bb_projects', 'ProjectPhase')
-    import ipdb; ipdb.set_trace()
     done_complete = ProjectPhase.objects.get(slug='done-complete')
     done_complete.editable = False
     done_complete.save()

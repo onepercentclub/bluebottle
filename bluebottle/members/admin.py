@@ -254,6 +254,7 @@ class MemberAdmin(UserAdmin):
         'newsletter',
         ('favourite_themes', UnionFieldListFilter),
         ('skills', UnionFieldListFilter),
+        'groups'
     )
     list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined', 'is_active', 'login_as_user')
     ordering = ('-date_joined', 'email',)

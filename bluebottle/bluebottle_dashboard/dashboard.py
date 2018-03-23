@@ -15,13 +15,15 @@ from bluebottle.tasks.models import Task
 
 
 class ClosingTasks(DashboardModule):
-    title = _('Tasks nearing deadline')
+    title = _('Tasks nearing application deadline')
     title_url = reverse('admin:tasks_task_changelist')
     template = 'dashboard/closing_tasks.html'
     limit = 5
 
     def init_with_context(self, context):
-        tasks = Task.objects.exclude(deadline__lt=now()).filter(status__in=['open', 'full']).order_by('deadline')
+        tasks = Task.objects.exclude(deadline_to_apply__lt=now()).\
+            filter(project__status__slug='campaign').\
+            filter(status__in=['open', 'full']).order_by('deadline_to_apply')
         self.children = tasks[:self.limit]
 
 

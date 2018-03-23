@@ -93,19 +93,22 @@ class DonationAdminForm(forms.ModelForm):
 class DonationAdmin(admin.ModelAdmin):
     form = DonationAdminForm
     date_hierarchy = 'created'
-    list_display = ('created', 'completed', 'admin_project', 'fundraiser',
+    list_display = ('created', 'order_payment_links', 'admin_project', 'fundraiser',
                     'user', 'user_full_name', 'amount',
                     'related_payment_method', 'order_type', 'status')
     list_filter = (DonationStatusFilter, 'order__order_type',
                    DonationUserFilter)
     ordering = ('-created',)
     raw_id_fields = ('project', 'fundraiser')
-    readonly_fields = ('order_link', 'created', 'updated', 'completed',
+    readonly_fields = ('order_link', 'order_payment_links', 'created', 'updated', 'completed',
                        'status', 'user_link', 'project_link',
                        'fundraiser_link')
     fields = readonly_fields + ('amount', 'project', 'fundraiser', 'reward', 'name')
-    search_fields = ('order__user__first_name', 'order__user__last_name',
-                     'order__user__email', 'project__title', 'name')
+    search_fields = (
+        'order__user__first_name', 'order__user__last_name',
+        'order__user__email', 'project__title', 'name',
+        'order__order_payments__id'
+    )
 
     export_fields = [
         ('project', 'project'),
@@ -157,10 +160,19 @@ class DonationAdmin(admin.ModelAdmin):
                                                     object._meta.model_name),
                       args=[object.id])
         return format_html(
-            u"<a href='{}'>Order: {}</a>",
+            u"<a href='{}'>{}</a>",
             str(url),
             obj.id
         )
+
+    def order_payment_links(self, obj):
+        object = obj.order
+        list = []
+        for op in object.order_payments.all():
+            url = reverse('admin:payments_orderpayment_change', args=[op.id])
+            list.append("<a href='{}'>{}</a>".format(url, op.id))
+        return format_html(", ".join(list))
+    order_payment_links.short_description = _('Order payment')
 
     def user_link(self, obj):
         user = obj.order.user

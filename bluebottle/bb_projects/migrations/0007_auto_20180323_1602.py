@@ -7,9 +7,11 @@ from django.db import migrations
 
 def set_done_complete_not_editable(apps, schema_editor):
     ProjectPhase = apps.get_model('bb_projects', 'ProjectPhase')
-    done_complete = ProjectPhase.objects.get(slug='done-complete')
-    done_complete.editable = False
-    done_complete.save()
+    ProjectPhase.objects.filter(slug='done-complete').update(editable=False)
+
+
+def dummy(apps, schema_editor):
+    pass
 
 
 class Migration(migrations.Migration):
@@ -19,5 +21,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(set_done_complete_not_editable),
+        migrations.RunPython(set_done_complete_not_editable, dummy),
     ]

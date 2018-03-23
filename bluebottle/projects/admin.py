@@ -328,6 +328,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ProjectDocumentInline,
         TaskAdminInline,
         ProjectPhaseLogInline,
+        ProjectLocationInline
     )
 
     list_filter = ('country__subregion__region', )

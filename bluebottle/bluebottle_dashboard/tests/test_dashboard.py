@@ -25,7 +25,7 @@ class MainDashboardTest(BluebottleAdminTestCase):
         self.assertContains(response, 'Recently submitted project')
         self.assertContains(response, 'Crowdfunding projects nearing deadline')
         self.assertContains(response, 'Recently joined users')
-        self.assertContains(response, 'Tasks nearing deadline')
+        self.assertContains(response, 'Tasks nearing application deadline')
         self.assertContains(response, 'Export metrics')
         # Stand settings don't show export options
         self.assertNotContains(response, 'Download report')

@@ -56,10 +56,10 @@ class ProjectLocation(models.Model):
     postal_code = models.CharField(max_length=20, null=True, blank=True)
     country = models.CharField(max_length=40, null=True, blank=True)
     latitude = models.DecimalField(
-        _('latitude'), max_digits=21, decimal_places=18, null=True
+        _('latitude'), max_digits=21, decimal_places=18
     )
     longitude = models.DecimalField(
-        _('longitude'), max_digits=21, decimal_places=18, null=True
+        _('longitude'), max_digits=21, decimal_places=18
     )
 
 
@@ -636,7 +636,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     def update_status_after_deadline(self):
         if self.is_funding:
-            if self.amount_donated >= self.amount_asked:
+            if self.amount_donated + self.amount_extra >= self.amount_asked:
                 self.status = ProjectPhase.objects.get(slug="done-complete")
                 self.payout_status = 'needs_approval'
             elif self.amount_donated.amount <= 20 or not self.campaign_started:

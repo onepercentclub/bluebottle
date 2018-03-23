@@ -297,6 +297,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     amount_needed = MoneySerializer(read_only=True)
     budget_lines = ProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
     currencies = serializers.JSONField(read_only=True)
+    categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
     documents = ProjectDocumentSerializer(many=True, read_only=True)
     editable = serializers.BooleanField(read_only=True)
     image = ImageSerializer(required=False, allow_null=True)

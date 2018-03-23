@@ -11,7 +11,7 @@ class Command(BaseCommand):
     help = 'Set project location based on geo location'
 
     def handle(self, *args, **options):
-        for client in Client.objects.all().filter(client_name='onepercent'):
+        for client in Client.objects.all():
             connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
                 for project in Project.objects.filter(

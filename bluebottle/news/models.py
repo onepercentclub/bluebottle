@@ -37,7 +37,12 @@ class NewsItem(models.Model):
     language = models.CharField(_("language"),
                                 max_length=5,
                                 choices=lazy(get_languages, tuple)())
-    contents = PlaceholderField("blog_contents")
+    contents = PlaceholderField("blog_contents", plugins=[
+        'TextPlugin',
+        'ImageTextPlugin',
+        'RawHtmlPlugin',
+        'PicturePlugin'
+    ])
     # This should not be nessecary, but fixes deletion of some news items
     # See https://github.com/edoburu/django-fluent-contents/issues/19
     contentitem_set = ContentItemRelation()

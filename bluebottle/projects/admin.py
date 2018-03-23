@@ -268,7 +268,6 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     form = ProjectAdminForm
     date_hierarchy = 'created'
     ordering = ('-created',)
-    save_on_top = True
     search_fields = (
         'title', 'owner__first_name', 'owner__last_name',
         'organization__name', 'organization__contacts__email'
@@ -614,7 +613,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         main = (_('Main'), main)
 
-        story = (_('Story'), {'fields': ('pitch', 'story', 'reach')})
+        story = (_('Story'), {'fields': ('pitch', 'story')})
 
         details = (_('Details'), {'fields': (
             'language', 'theme', 'categories',

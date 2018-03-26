@@ -25,6 +25,15 @@ def get_languages():
     return properties.LANGUAGES
 
 
+class DocumentItem(ContentItem):
+
+    text = models.CharField(_('Link title'), max_length=100)
+    document = models.FileField(_("Document"), upload_to='pages')
+
+    def __str__(self):
+        return Truncator(strip_tags(self.text)).words(20)
+
+
 class ImageTextItem(ContentItem):
     """
     A snippet of HTML text to display on a page.
@@ -45,7 +54,7 @@ class ImageTextItem(ContentItem):
     )
 
     align = models.CharField(_("Picture placement"), max_length=10, choices=ALIGN_CHOICES, blank=True)
-    ratio = models.IntegerField(_("Picture / Text ratio"), max_length=10, choices=RATIO_CHOICES, default=6, blank=True)
+    ratio = models.IntegerField(_("Picture / Text ratio"), choices=RATIO_CHOICES, default=6, blank=True)
     objects = ContentItemManager()
 
     @property
@@ -100,7 +109,8 @@ class Page(models.Model):
         'TextPlugin',
         'ImageTextPlugin',
         'RawHtmlPlugin',
-        'PicturePlugin'
+        'PicturePlugin',
+        'DocumentPlugin'
     ])
     # This should not be nessecary, but fixes deletion of some pages
     # See https://github.com/edoburu/django-fluent-contents/issues/19

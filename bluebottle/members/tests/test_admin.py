@@ -63,8 +63,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
 
     @override_settings(
         SEND_WELCOME_MAIL=True,
-        MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
-                                      'properties'))
+        MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test', 'properties'))
     def test_valid_form(self):
         response = self.client.get(self.member_url)
         csrf = self.get_csrf_token(response)
@@ -72,9 +71,13 @@ class MemberAdminTest(BluebottleAdminTestCase):
             'email': 'bob@bob.com',
             'first_name': 'Bob',
             'last_name': 'Bob',
+            'is_staff': False,
+            'is_active': True,
+            'is_superuser': False,
             'csrfmiddlewaretoken': csrf
         }
         response = self.client.post(self.member_url, data)
+        self.assertEquals(response.status_code, 302)
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, ['bob@bob.com'])
         self.assertTrue('Set password' in welcome_email.body)

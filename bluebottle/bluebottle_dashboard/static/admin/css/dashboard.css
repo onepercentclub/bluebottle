@@ -153,6 +153,6 @@ body.menu-pinned table.helper {
     border-right: 0;
 }
 
-label.vCheckboxLabel {
+.delete label.vCheckboxLabel {
     color: #ffffff;
 }

@@ -7,23 +7,21 @@ from hashlib import sha1
 import time
 import os
 from urllib import urlencode, quote_plus
-from urlparse import urljoin
 
 from django.db import connection
 from django.conf import settings
-from django.views.generic.base import TemplateView
 
 from bluebottle.utils.utils import get_current_host
 
 
-class LookerEmbed(object):
+class LookerSSOEmbed(object):
     session_length = 60 * 10
     models = ('First', )
     permissions = ('see_user_dashboards', 'see_lookml_dashboards', 'access_data', 'see_looks', )
 
-    def __init__(self, user, path):
+    def __init__(self, user, type, id):
         self.user = user
-        self._path = path
+        self._path = '/embed/{}s/{}'.format(type, id)
 
     @property
     def path(self):
@@ -84,34 +82,7 @@ class LookerEmbed(object):
         json_params = OrderedDict((key, json.dumps(value)) for key, value in params.items())
 
         json_params['signature'] = self.sign(json_params)
-        print json_params['signature']
 
         return '{}{}?{}'.format(
             'https://' + self.looker_host, self.path, urlencode(json_params)
         )
-
-
-class AnalyticsView(TemplateView):
-
-    template_name = 'analytics/index.html'
-
-    mapping = {
-        'users': 16,
-        'projects': 18,
-
-        'volunteers': 19,
-        'tasks': 21,
-        'hours': 20,
-
-        'donations': 17,
-        'supporters': 22,
-
-        'voting': 16,
-
-    }
-
-    def get_context_data(self, **kwargs):
-        context = super(AnalyticsView, self).get_context_data(**kwargs)
-        context['looker_embed_url'] = LookerEmbed(self.request.user, '/embed/dashboards/3').url
-        print context['looker_embed_url']
-        return context

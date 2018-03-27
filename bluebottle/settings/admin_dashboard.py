@@ -95,45 +95,12 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
     },
     {
         'label': _('Analytics'),
+        'app_label': 'looker',
+        'url': {'type': 'app', 'app_label': 'looker'},
         'items': [
-            # Fix this nicer way of linking
-            # {
-            #     'label': _('Projects'),
-            #     'type': 'reverse',
-            #     'name': 'analytics-index',
-            #     'kwargs': {'report': 'projects'}
-            # },
             {
-                'label': _('Projects'),
-                'url': '/admin/analytics/projects'
-            },
-            {
-                'label': _('Users platform'),
-                'url': '/admin/analytics/users'
-            },
-            {
-                'label': _('Volunteering - Volunteers'),
-                'url': '/admin/analytics/volunteers'
-            },
-            {
-                'label': _('Volunteering - Tasks'),
-                'url': '/admin/analytics/tasks'
-            },
-            {
-                'label': _('Volunteering - Hours'),
-                'url': '/admin/analytics/hours'
-            },
-            {
-                'label': _('Giving - Donations'),
-                'url': '/admin/analytics/donations'
-            },
-            {
-                'label': _('Giving - Supporters'),
-                'url': '/admin/analytics/supporters'
-            },
-            {
-                'label': _('Voting'),
-                'url': '/admin/analytics/'
+                'label': _('Manage Dashboards'),
+                'name': 'looker.lookerembed',
             },
         ]
     },

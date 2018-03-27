@@ -2,7 +2,7 @@ from collections import OrderedDict
 import csv
 import logging
 import six
-from decimal import InvalidOperation
+from decimal import InvalidOperation, DivisionByZero
 
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django.contrib.admin.widgets import AdminTextareaWidget
@@ -444,7 +444,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         try:
             percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
             return "{0} %".format(percentage)
-        except (AttributeError, InvalidOperation):
+        except (AttributeError, InvalidOperation, DivisionByZero):
             return '-'
 
     def expertise_based(self, obj):

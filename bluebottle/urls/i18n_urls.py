@@ -6,7 +6,8 @@ from django.views.generic import RedirectView
 
 from bluebottle.views import HomeView
 from bluebottle.auth.views import admin_password_reset
-from bluebottle.looker.dashboard_views import LookerEmbedView
+from bluebottle.looker.dashboard_views import LookerEmbedView  # noqa This has to be imported early so that custom urls will work
+
 
 admin.autodiscover()
 

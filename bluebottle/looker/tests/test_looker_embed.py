@@ -6,7 +6,7 @@ from urlparse import urlparse, parse_qs
 from django.test.utils import override_settings
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.bluebottle_dashboard.views import LookerEmbed
+from bluebottle.looker.utils import LookerEmbed
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -79,6 +79,3 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
         self.assertEqual(
             url.netloc, 'looker.example.com'
         )
-
-
-

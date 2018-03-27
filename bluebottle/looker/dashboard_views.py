@@ -28,6 +28,3 @@ urls.register_urls([
         name='looker-embed'
     )
 ])
-
-
-

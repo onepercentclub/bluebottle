@@ -585,6 +585,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             ('task__skill', UnionFieldListFilter),
             ProjectReviewerFilter,
             'project_type',
+            'categories',
             DeadlineFilter,
         ]
 

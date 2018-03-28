@@ -3,6 +3,7 @@ import logging
 
 import pytz
 from adminsortable.models import SortableMixin
+
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.urlresolvers import reverse
@@ -19,6 +20,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 
 from django_summernote.models import AbstractAttachment
+
 from moneyed.classes import Money
 from polymorphic.models import PolymorphicModel
 from select_multiple_field.models import SelectMultipleField
@@ -43,6 +45,22 @@ from .mails import mail_project_complete, mail_project_incomplete
 from .signals import project_funded  # NOQA
 
 logger = logging.getLogger(__name__)
+
+
+class ProjectLocation(models.Model):
+    project = models.OneToOneField('projects.Project', primary_key=True)
+    place = models.CharField(max_length=80, null=True, blank=True)
+    street = models.TextField(max_length=80, null=True, blank=True)
+    neighborhood = models.TextField(max_length=80, null=True, blank=True)
+    city = models.TextField(max_length=80, null=True, blank=True)
+    postal_code = models.CharField(max_length=20, null=True, blank=True)
+    country = models.CharField(max_length=40, null=True, blank=True)
+    latitude = models.DecimalField(
+        _('latitude'), max_digits=21, decimal_places=18
+    )
+    longitude = models.DecimalField(
+        _('longitude'), max_digits=21, decimal_places=18
+    )
 
 
 class ProjectPhaseLog(models.Model):
@@ -96,11 +114,6 @@ class ProjectDocument(BaseProjectDocument):
 
 
 class Project(BaseProject, PreviousStatusMixin):
-    latitude = models.DecimalField(
-        _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-    longitude = models.DecimalField(
-        _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-
     reach = models.PositiveIntegerField(
         _('Reach'), help_text=_('How many people do you expect to reach?'),
         blank=True, null=True)
@@ -625,7 +638,7 @@ class Project(BaseProject, PreviousStatusMixin):
     def update_status_after_deadline(self):
         if self.status.slug == 'campaign':
             if self.is_funding:
-                if self.amount_donated >= self.amount_asked:
+                if self.amount_donated + self.amount_extra >= self.amount_asked:
                     self.status = ProjectPhase.objects.get(slug="done-complete")
                     self.payout_status = 'needs_approval'
                 elif self.amount_donated.amount <= 20 or not self.campaign_started:

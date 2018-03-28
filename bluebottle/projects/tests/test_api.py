@@ -794,6 +794,51 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
         self.assertEqual(data['count'], 2)
 
 
+@httmock.urlmatch(netloc='maps.googleapis.com')
+def geocode_mock(url, request):
+    return json.dumps({
+        'results': [{
+            'geometry': {
+                'location': {'lat': 52.3721249, 'lng': 4.9070198},
+                'viewport': {
+                    'northeast': {'lat': 52.37347388029149, 'lng': 4.908368780291502},
+                    'southwest': {'lat': 52.37077591970849, 'lng': 4.905670819708497}
+                },
+                'location_type': 'ROOFTOP'
+            },
+            'place_id': u'ChIJMW3CZ7sJxkcRyhrLgJ6WbMk',
+            'address_components': [{
+                'long_name': '10', 'types': ['street_number'], 'short_name': '10'
+            }, {
+                'long_name': "'s-Gravenhekje", 'types': ['route'], 'short_name': "'s-Gravenhekje"
+            }, {
+                'long_name': 'Amsterdam-Centrum',
+                'types': ['political', 'sublocality', 'sublocality_level_1'],
+                'short_name': 'Amsterdam-Centrum'
+            }, {
+                'long_name': u'Amsterdam',
+                'types': ['locality', 'political'], 'short_name': 'Amsterdam'
+            }, {
+                'long_name': 'Amsterdam',
+                'types': ['administrative_area_level_2', 'political'],
+                'short_name': 'Amsterdam'
+            }, {
+                'long_name': 'Noord-Holland',
+                'types': ['administrative_area_level_1', 'political'],
+                'short_name': u'NH'
+            }, {
+                'long_name': 'Netherlands',
+                'types': [u'country', u'political'],
+                'short_name': u'NL'
+            }, {
+                'long_name': '1011 TG', 'types': [u'postal_code'], 'short_name': u'1011 TG'
+            }],
+            'types': ['street_address'],
+        }],
+        'status': 'OK'
+    })
+
+
 class ProjectManageApiIntegrationTest(BluebottleTestCase):
     """
     Integration tests for the Project API.
@@ -818,6 +863,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.manage_projects_url = reverse('project_manage_list')
         self.manage_budget_lines_url = reverse('project-budgetline-list')
         self.manage_project_document_url = reverse('manage-project-document-list')
+
         self.some_photo = './bluebottle/projects/test_images/upload.png'
 
     def test_project_create(self):
@@ -831,9 +877,14 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.data['count'], 0)
 
         # Let's throw a pitch (create a project really)
-        response = self.client.post(self.manage_projects_url,
-                                    {'title': 'This is my smart idea', 'story': ''},
-                                    token=self.some_user_token)
+        response = self.client.post(
+            self.manage_projects_url,
+            {
+                'title': 'This is my smart idea',
+                'story': '',
+            },
+            token=self.some_user_token
+        )
         self.assertEquals(
             response.status_code, status.HTTP_201_CREATED, response)
         self.assertEquals(response.data['title'], 'This is my smart idea')
@@ -841,7 +892,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         # Check that it's there, in pitch phase, has got a pitch but no plan
         # yet.
         response = self.client.get(
-            self.manage_projects_url, token=self.some_user_token)
+            self.manage_projects_url, token=self.some_user_token
+        )
         self.assertEquals(response.data['count'], 1)
         self.assertEquals(
             response.data['results'][0]['status'], self.phase_plan_new.id)
@@ -913,7 +965,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         project_data['slug'] = 'a-new-slug-should-not-be-possible'
         response_2 = self.client.put(project_url, project_data,
                                      token=self.another_user_token)
-        print(response_2.content)
         self.assertEquals(response_2.data['detail'],
                           'You do not have permission to perform this action.')
         self.assertEquals(response_2.status_code, 403)
@@ -949,6 +1000,141 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.get(project_url, token=self.some_user_token)
         self.assertEquals(
             response.status_code, status.HTTP_403_FORBIDDEN, response)
+
+    @override_settings(MAPS_API_KEY='somekey')
+    def test_project_create_location(self):
+        """
+        Tests for Project Create
+        """
+
+        # Check that a new user doesn't have any projects to manage
+        response = self.client.get(
+            self.manage_projects_url, token=self.some_user_token)
+        self.assertEquals(response.data['count'], 0)
+
+        with httmock.HTTMock(geocode_mock):
+            response = self.client.post(
+                self.manage_projects_url,
+                {
+                    'title': 'This is my smart idea',
+                    'story': '',
+                    'latitude': 52.389745,
+                    'longitude': 4.8863362,
+                },
+                token=self.some_user_token
+            )
+        self.assertEquals(
+            response.status_code, status.HTTP_201_CREATED, response)
+        self.assertEquals(response.data['title'], 'This is my smart idea')
+        self.assertEquals(response.data['latitude'], 52.389745)
+        self.assertEquals(response.data['longitude'], 4.8863362)
+
+        self.assertEquals(
+            response.data['project_location']['street'],
+            "'s-Gravenhekje"
+        )
+        self.assertEquals(
+            response.data['project_location']['city'],
+            "Amsterdam"
+        )
+
+    @override_settings(MAPS_API_KEY='somekey')
+    def test_project_update_location(self):
+        """
+        Tests for Project Create
+        """
+        response = self.client.post(
+            self.manage_projects_url,
+            {
+                'title': 'This is my smart idea',
+                'story': '',
+                'latitude': None,
+                'longitude': None
+            },
+            token=self.some_user_token
+        )
+
+        project_detail_url = reverse(
+            'project_manage_detail', kwargs={'slug': response.data['slug']}
+        )
+
+        # Let's throw a pitch (create a project really)
+        with httmock.HTTMock(geocode_mock):
+            response = self.client.put(
+                project_detail_url,
+                {
+                    'title': 'This is my even smarter idea',
+                    'story': '',
+                    'latitude': 52.389745,
+                    'longitude': 4.8863362,
+                },
+                token=self.some_user_token
+            )
+        self.assertEquals(
+            response.status_code, status.HTTP_200_OK, response)
+        self.assertEquals(response.data['title'], 'This is my even smarter idea')
+        self.assertEquals(response.data['latitude'], 52.389745)
+        self.assertEquals(response.data['longitude'], 4.8863362)
+        self.assertEquals(
+            response.data['project_location']['street'],
+            "'s-Gravenhekje"
+        )
+        self.assertEquals(
+            response.data['project_location']['city'],
+            "Amsterdam"
+        )
+        self.assertEquals(
+            response.data['project_location']['neighborhood'],
+            "Amsterdam-Centrum"
+        )
+
+    @override_settings(MAPS_API_KEY='somekey')
+    def test_project_set_location(self):
+        """
+        Tests for Project Create
+        """
+        response = self.client.post(
+            self.manage_projects_url,
+            {
+                'title': 'This is my smart idea',
+                'story': '',
+            },
+            token=self.some_user_token
+        )
+
+        project_detail_url = reverse(
+            'project_manage_detail', kwargs={'slug': response.data['slug']}
+        )
+
+        # Let's throw a pitch (create a project really)
+        with httmock.HTTMock(geocode_mock):
+            response = self.client.put(
+                project_detail_url,
+                {
+                    'title': 'This is my even smarter idea',
+                    'story': '',
+                    'latitude': 52.389745,
+                    'longitude': 4.8863362,
+                },
+                token=self.some_user_token
+            )
+        self.assertEquals(
+            response.status_code, status.HTTP_200_OK, response)
+        self.assertEquals(response.data['title'], 'This is my even smarter idea')
+        self.assertEquals(response.data['latitude'], 52.389745)
+        self.assertEquals(response.data['longitude'], 4.8863362)
+        self.assertEquals(
+            response.data['project_location']['street'],
+            "'s-Gravenhekje"
+        )
+        self.assertEquals(
+            response.data['project_location']['city'],
+            "Amsterdam"
+        )
+        self.assertEquals(
+            response.data['project_location']['neighborhood'],
+            "Amsterdam-Centrum"
+        )
 
     @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
     def test_project_type(self):

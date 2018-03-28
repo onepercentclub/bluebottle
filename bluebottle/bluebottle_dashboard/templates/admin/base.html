@@ -167,30 +167,32 @@
                         </a>
                     {% endif %}
                     {% block nav-global %}
-                        <a href="{% url 'admin:members_member_changelist' %}" class="sidebar-link icon">
-                            <span class="sidebar-link-label">
-                                <span class="sidebar-link-icon icon-user"></span>
-                                {% trans 'Users' %}
-                            </span>
-                        </a>
-                        <a href="{% url 'admin:projects_project_changelist' %}" class="sidebar-link icon">
-                            <span class="sidebar-link-label">
-                                <span class="sidebar-link-icon icon-edit"></span>
-                                {% trans 'Projects' %}
-                            </span>
-                        </a>
-                        <a href="{% url 'admin:tasks_task_changelist' %}" class="sidebar-link icon">
-                            <span class="sidebar-link-label">
-                                <span class="sidebar-link-icon icon-calendar"></span>
-                                {% trans 'Tasks' %}
-                            </span>
-                        </a>
-                        <a href="{% url 'admin:donations_donation_changelist' %}" class="sidebar-link icon">
-                            <span class="sidebar-link-label">
-                                <span class="sidebar-link-icon icon-question"></span>
-                                {% trans 'Donations' %}
-                            </span>
-                        </a>
+                        {% if user.is_active and user.is_staff %}
+                            <a href="{% url 'admin:members_member_changelist' %}" class="sidebar-link icon">
+                                <span class="sidebar-link-label">
+                                    <span class="sidebar-link-icon icon-user"></span>
+                                    {% trans 'Users' %}
+                                </span>
+                            </a>
+                            <a href="{% url 'admin:projects_project_changelist' %}" class="sidebar-link icon">
+                                <span class="sidebar-link-label">
+                                    <span class="sidebar-link-icon icon-edit"></span>
+                                    {% trans 'Projects' %}
+                                </span>
+                            </a>
+                            <a href="{% url 'admin:tasks_task_changelist' %}" class="sidebar-link icon">
+                                <span class="sidebar-link-label">
+                                    <span class="sidebar-link-icon icon-calendar"></span>
+                                    {% trans 'Tasks' %}
+                                </span>
+                            </a>
+                            <a href="{% url 'admin:donations_donation_changelist' %}" class="sidebar-link icon">
+                                <span class="sidebar-link-label">
+                                    <span class="sidebar-link-icon icon-question"></span>
+                                    {% trans 'Donations' %}
+                                </span>
+                            </a>
+                        {% endif %}
                     {% endblock %}
                 </div>
 

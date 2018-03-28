@@ -118,6 +118,7 @@ TEMPLATES = [
                 'admin_tools.template_loaders.Loader',
             ],
             'context_processors': [
+                'bluebottle.clients.context_processors.tenant',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.debug',

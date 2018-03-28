@@ -8,6 +8,8 @@ from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django.contrib.admin.widgets import AdminTextareaWidget
 from django.forms.models import ModelFormMetaclass
+from django.db import models
+from django.utils.text import slugify
 from django_singleton_admin.admin import SingletonAdmin
 from django_summernote.admin import SummernoteInlineModelAdmin
 from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
@@ -16,7 +18,7 @@ from polymorphic.admin.inlines import StackedPolymorphicInline
 from bluebottle.payments.adapters import has_payment_prodiver
 from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.projects.models import (
-    ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn,
+    ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn, ProjectLocation,
     CustomProjectField, CustomProjectFieldSettings, ProjectCreateTemplate)
 
 from django import forms
@@ -43,7 +45,7 @@ from bluebottle.tasks.admin import TaskAdminInline, DeadlineFilter
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
-from bluebottle.utils.admin import export_as_csv_action, prep_field
+from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin
 from bluebottle.votes.models import Vote
 
 from .forms import ProjectDocumentForm
@@ -117,13 +119,32 @@ class ProjectDocumentInline(admin.StackedInline):
         return '(None)'
 
 
+class RewardInlineFormset(forms.models.BaseInlineFormSet):
+
+    def clean(self):
+        delete_checked = False
+
+        for form in self.forms:
+            try:
+                if form.cleaned_data:
+                    if form.cleaned_data['DELETE'] and form.cleaned_data['id'].count:
+                        delete_checked = True
+            except ValueError:
+                pass
+
+        if delete_checked:
+            raise forms.ValidationError(_('You cannot delete a reward that has successful donations.'))
+
+
 class RewardInlineAdmin(admin.TabularInline):
     model = Reward
+    formset = RewardInlineFormset
     readonly_fields = ('count',)
     extra = 0
 
     def count(self, obj):
-        return obj.count
+        url = reverse('admin:donations_donation_changelist')
+        return format_html('<a href={}?reward={}>{}</a>'.format(url, obj.id, obj.count))
 
 
 class ProjectPhaseLogInline(admin.TabularInline):
@@ -244,12 +265,35 @@ class ProjectAddOnInline(StackedPolymorphicInline):
         return instances
 
 
+class ProjectLocationForm(forms.ModelForm):
+    class Meta:
+        model = ProjectLocation
+        widgets = {
+            'latitude': forms.TextInput(attrs={'size': 50, 'id': 'id_latitude'}),
+            'longitude': forms.TextInput(attrs={'size': 50, 'id': 'id_longitude'}),
+
+        }
+        fields = ('latitude', 'longitude', 'place', 'street', 'neighborhood', 'city', 'postal_code', 'country')
+
+
+class ProjectLocationInline(LatLongMapPickerMixin, admin.StackedInline):
+    model = ProjectLocation
+    form = ProjectLocationForm
+    formfield_overrides = {
+        models.TextField: {'widget': forms.TextInput(attrs={'size': 70})},
+        models.CharField: {'widget': forms.TextInput(attrs={'size': 70})},
+    }
+
+
 class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):
     form = ProjectAdminForm
     date_hierarchy = 'created'
     ordering = ('-created',)
-    save_on_top = True
-    search_fields = ('title', 'owner__first_name', 'owner__last_name', 'organization__name')
+    save_as = True
+    search_fields = (
+        'title', 'owner__first_name', 'owner__last_name',
+        'organization__name', 'organization__contacts__email'
+    )
     raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization',)
     prepopulated_fields = {'slug': ('title',)}
 
@@ -257,6 +301,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         css = {
             'all': ('css/admin/wide-actions.css',)
         }
+        js = ('admin/js/inline-task-add.js',)
 
     def get_inline_instances(self, request, obj=None):
         self.inlines = self.all_inlines
@@ -278,11 +323,13 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         TaskAdminInline,
         ProjectDocumentInline,
         ProjectPhaseLogInline,
+        ProjectLocationInline,
     )
     sourcing_inlines = (
         ProjectDocumentInline,
         TaskAdminInline,
         ProjectPhaseLogInline,
+        ProjectLocationInline
     )
 
     list_filter = ('country__subregion__region', )
@@ -301,6 +348,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ('location__group', 'region'),
         ('country', 'country'),
         ('location', 'location'),
+        ('place', 'place'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),
         ('campaign_started', 'campaign started'),
@@ -478,8 +526,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             return HttpResponseForbidden('Missing permission: rewards.read_reward')
 
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=%s.csv' % (
-            unicode(project.title).replace('.', '_')
+        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
+            unicode(slugify(project.title))
         )
 
         writer = csv.writer(response)
@@ -490,6 +538,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             writer.writerow([
                 prep_field(request, reward, field[0]) for field in self.reward_export_fields
             ])
+
         return response
 
     def amount_donated_i18n(self, obj):
@@ -504,7 +553,12 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
     # Setup
     def get_readonly_fields(self, request, obj=None):
-        fields = ['vote_count', 'amount_donated_i18n', 'amount_needed_i18n', 'popularity', 'payout_status']
+        fields = [
+            'created', 'updated',
+            'vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
+            'popularity', 'payout_status',
+            'geocoding'
+        ]
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status', )
         return fields
@@ -532,6 +586,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             ('task__skill', UnionFieldListFilter),
             ProjectReviewerFilter,
             'project_type',
+            'categories',
             DeadlineFilter,
         ]
 
@@ -585,18 +640,20 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         main = (_('Main'), main)
 
-        story = (_('Story'), {'fields': ('pitch', 'story', 'reach')})
+        story = (_('Story'), {'fields': ('pitch', 'story')})
 
         details = (_('Details'), {'fields': (
             'language', 'theme', 'categories',
-            'image', 'video_url', 'country', 'latitude',
-            'longitude', 'location', 'place')})
+            'image', 'video_url', 'country',
+            'location', 'place',
+        )})
 
         goal = (_('Goal'), {'fields': (
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
             'currencies', 'popularity', 'vote_count')})
 
         dates = (_('Dates'), {'fields': (
+            'created', 'updated',
             'voting_deadline', 'deadline', 'date_submitted', 'campaign_started',
             'campaign_ended', 'campaign_funded', 'campaign_paid_out')})
 

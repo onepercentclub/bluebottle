@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import csv
 import json
 import mock
@@ -88,6 +89,9 @@ class TestProjectAdmin(BluebottleTestCase):
             'payout_status' in self.project_admin.get_fieldsets(request)[0][1]['fields']
         )
 
+    def test_search_fields(self):
+        self.assertIn('organization__contacts__email', self.project_admin.search_fields)
+
     def test_fieldsets_no_permissions(self):
         request = self.request_factory.get('/')
         request.user = MockUser()
@@ -100,9 +104,8 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.get('/')
         request.user = MockUser(['projects.approve_payout'])
 
-        self.assertTrue(
-            'payout_status' in self.project_admin.get_list_filter(request)
-        )
+        self.assertIn('payout_status', self.project_admin.get_list_filter(request))
+        self.assertIn('categories', self.project_admin.get_list_filter(request))
 
     def test_list_filter_no_permissions(self):
         request = self.request_factory.get('/')
@@ -323,7 +326,7 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.get('/')
         request.user = MockUser()
 
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(title="¡Tést, with löt's of weird things!")
         reward = RewardFactory.create(project=project, amount=Money(10, 'EUR'))
 
         reward_order = OrderFactory.create(status='success')
@@ -338,6 +341,11 @@ class TestProjectAdmin(BluebottleTestCase):
         DonationFactory.create(project=project, order=order)
 
         response = self.project_admin.export_rewards(request, project.id)
+        header = 'Content-Type: text/csv\r\n' \
+                 'Content-Disposition: attachment; ' \
+                 'filename="test-with-lots-of-weird-things.csv"'
+        self.assertEqual(response.serialize_headers(), header)
+
         reader = csv.DictReader(StringIO.StringIO(response.content))
 
         result = [line for line in reader]
@@ -652,7 +660,7 @@ class ProjectAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'title')
-        self.assertEqual(headers[27], 'Extra Info')
+        self.assertEqual(headers[28], 'Extra Info')
         self.assertEqual(data[0], 'Just an example')
-        self.assertEqual(data[27], '')
-        self.assertEqual(data[28], 'This is nice!')
+        self.assertEqual(data[28], '')
+        self.assertEqual(data[29], 'This is nice!')

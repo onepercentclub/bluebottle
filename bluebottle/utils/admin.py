@@ -1,3 +1,4 @@
+from django.conf import settings
 from moneyed import Money
 
 from django.contrib import admin
@@ -87,7 +88,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                 labels = field_names
 
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=%s.csv' % (
+        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
             unicode(opts).replace('.', '_')
         )
 
@@ -142,3 +143,16 @@ class TotalAmountAdminChangeList(ChangeList):
         amounts = [Money(total['total'], total[currency_column]) for total in totals]
         amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
+
+
+class LatLongMapPickerMixin(object):
+
+    class Media:
+        if hasattr(settings, 'MAPS_API_KEY') and settings.MAPS_API_KEY:
+            css = {
+                'all': ('css/admin/location_picker.css',),
+            }
+            js = (
+                'https://maps.googleapis.com/maps/api/js?key={}'.format(settings.MAPS_API_KEY),
+                'js/admin/location_picker.js',
+            )

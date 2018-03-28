@@ -36,6 +36,12 @@ class Reward(models.Model):
             order__status=StatusDefinition.FAILED
         ).count()
 
+    @property
+    def success_count(self):
+        return self.donations.filter(
+            order__status__in=[StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+        ).count()
+
     def __unicode__(self):
         return self.title
 
@@ -55,3 +61,8 @@ class Reward(models.Model):
             ('api_delete_own_reward', 'Can delete own reward through the API'),
 
         )
+
+    def delete(self, using=None, keep_parents=False):
+        if self.success_count:
+            raise ValueError(_('Not allowed to delete a reward with successful donations.'))
+        return super(Reward, self).delete(using=using, keep_parents=False)

@@ -1,12 +1,6 @@
 {% extends "admin/change_form.html" %}
 {% load i18n admin_modify %}
 
-
-{% block object-tools-items %}
-    <li><a href="#" id="preview-button">{% trans "Preview" %}</a></li>
-    {{ block.super }}
-{% endblock %}
-
 {# override submit buttons in the admin with JavaScript, since the {% submit_row %} is inflexible. #}
 {% block extrahead %}{{ block.super }}
     <script type="text/javascript">

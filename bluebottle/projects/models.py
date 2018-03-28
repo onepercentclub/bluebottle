@@ -3,6 +3,7 @@ import logging
 
 import pytz
 from adminsortable.models import SortableMixin
+
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.urlresolvers import reverse
@@ -19,6 +20,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 
 from django_summernote.models import AbstractAttachment
+
 from moneyed.classes import Money
 from polymorphic.models import PolymorphicModel
 from select_multiple_field.models import SelectMultipleField
@@ -43,6 +45,22 @@ from .mails import mail_project_complete, mail_project_incomplete
 from .signals import project_funded  # NOQA
 
 logger = logging.getLogger(__name__)
+
+
+class ProjectLocation(models.Model):
+    project = models.OneToOneField('projects.Project', primary_key=True)
+    place = models.CharField(max_length=80, null=True, blank=True)
+    street = models.TextField(max_length=80, null=True, blank=True)
+    neighborhood = models.TextField(max_length=80, null=True, blank=True)
+    city = models.TextField(max_length=80, null=True, blank=True)
+    postal_code = models.CharField(max_length=20, null=True, blank=True)
+    country = models.CharField(max_length=40, null=True, blank=True)
+    latitude = models.DecimalField(
+        _('latitude'), max_digits=21, decimal_places=18
+    )
+    longitude = models.DecimalField(
+        _('longitude'), max_digits=21, decimal_places=18
+    )
 
 
 class ProjectPhaseLog(models.Model):
@@ -629,23 +647,24 @@ class Project(BaseProject, PreviousStatusMixin):
             self.save()
 
     def update_status_after_deadline(self):
-        if self.is_funding:
-            if self.amount_donated >= self.amount_asked:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
-                self.payout_status = 'needs_approval'
-            elif self.amount_donated.amount <= 20 or not self.campaign_started:
-                self.status = ProjectPhase.objects.get(slug="closed")
+        if self.status.slug == 'campaign':
+            if self.is_funding:
+                if self.amount_donated + self.amount_extra >= self.amount_asked:
+                    self.status = ProjectPhase.objects.get(slug="done-complete")
+                    self.payout_status = 'needs_approval'
+                elif self.amount_donated.amount <= 20 or not self.campaign_started:
+                    self.status = ProjectPhase.objects.get(slug="closed")
+                else:
+                    self.status = ProjectPhase.objects.get(slug="done-incomplete")
+                    self.payout_status = 'needs_approval'
             else:
-                self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                self.payout_status = 'needs_approval'
-        else:
-            if self.task_set.filter(
-                    status__in=[Task.TaskStatuses.in_progress,
-                                Task.TaskStatuses.open,
-                                Task.TaskStatuses.closed]).count() > 0:
-                self.status = ProjectPhase.objects.get(slug="done-incomplete")
-            else:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
+                if self.task_set.filter(
+                        status__in=[Task.TaskStatuses.in_progress,
+                                    Task.TaskStatuses.open,
+                                    Task.TaskStatuses.closed]).count() > 0:
+                    self.status = ProjectPhase.objects.get(slug="done-incomplete")
+                else:
+                    self.status = ProjectPhase.objects.get(slug="done-complete")
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."

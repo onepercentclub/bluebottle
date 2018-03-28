@@ -138,7 +138,8 @@ class TestTaskMemberMail(TaskMailTestBase):
     def test_member_realized_mail(self):
         task_member = TaskMemberFactory.create(
             task=self.task,
-            status='accepted'
+            status='accepted',
+            time_spent=8
         )
 
         task_member.status = 'realized'
@@ -149,6 +150,7 @@ class TestTaskMemberMail(TaskMailTestBase):
         email = mail.outbox[-1]
 
         self.assertNotEquals(email.subject.find("realised"), -1)
+        self.assertTrue('spent {} hours'.format(task_member.time_spent) in email.body)
         self.assertEquals(email.to[0], task_member.member.email)
 
     def test_member_realized_mail_with_survey(self):
@@ -282,7 +284,7 @@ class TestTaskStatusMail(TaskMailTestBase):
             status='realized'
         )
         self.assertEquals(len(mail.outbox), 1)
-        self.assertTrue('You realised a task' in mail.outbox[0].subject)
+        self.assertTrue('marked as realised' in mail.outbox[0].subject)
 
         with patch('bluebottle.tasks.taskmail.send_task_realized_mail.apply_async'):
             self.task.status = "realized"

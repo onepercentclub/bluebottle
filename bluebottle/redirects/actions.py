@@ -28,7 +28,7 @@ def export_as_csv_action(description="Export selected objects as CSV file",
 
         response = HttpResponse(mimetype='text/csv')
         response[
-            'Content-Disposition'] = 'attachment; filename=%s.csv' % unicode(
+            'Content-Disposition'] = 'attachment; filename="%s.csv"' % unicode(
             opts).replace('.', '_')
 
         writer = csv.writer(response)

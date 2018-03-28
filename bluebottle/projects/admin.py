@@ -335,6 +335,9 @@ class ProjectAddOnInline(StackedPolymorphicInline):
 
 class ProjectLocationInline(admin.StackedInline):
     model = ProjectLocation
+    readonly_fields = (
+        'city', 'postal_code', 'street', 'neighborhood', 'country',
+    )
 
 
 class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):

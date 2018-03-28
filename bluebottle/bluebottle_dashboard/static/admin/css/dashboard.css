@@ -153,6 +153,27 @@ body.menu-pinned table.helper {
     border-right: 0;
 }
 
-label.vCheckboxLabel {
+.delete label.vCheckboxLabel {
     color: #ffffff;
+}
+
+
+/* Labels */
+
+.admin-label {
+    border-radius: 4px;
+    padding: 4px 8px;
+    color: #000000;
+    font-weight: bold;
+    background-color: #F5E625;
+}
+
+.admin-label-green {
+    color: white;
+    background-color: #2faa60;
+}
+
+.admin-label-gray {
+    color: white;
+    background-color: #333C47;
 }

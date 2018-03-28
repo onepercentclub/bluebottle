@@ -4,10 +4,10 @@ from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.models import Group
+from django.contrib.auth.tokens import default_token_generator
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.forms.models import ModelFormMetaclass
@@ -26,8 +26,6 @@ from bluebottle.clients import properties
 
 from .models import Member
 
-BB_USER_MODEL = get_user_model()
-
 
 class MemberCreationForm(forms.ModelForm):
     """
@@ -36,28 +34,28 @@ class MemberCreationForm(forms.ModelForm):
     error_messages = {
         'duplicate_email': _("A user with that email already exists."),
     }
-    email = forms.EmailField(label=_("email address"), max_length=254,
-                             help_text=_(
-                                 "Required. 254 characters or fewer. A valid email address."))
-    first_name = forms.CharField(label=_("first name"), max_length=100)
-    last_name = forms.CharField(label=_("last name"), max_length=100,)
+    email = forms.EmailField(label=_("Email address"), max_length=254,
+                             help_text=_("A valid, unique email address."))
+
+    is_active = forms.BooleanField(label=_("Is active"), initial=True)
 
     class Meta:
-        model = BB_USER_MODEL
-        fields = ("email",)
+        model = Member
+        fields = ('email', 'first_name', 'last_name',
+                  'is_active', 'is_staff', 'is_superuser')
 
     def clean_email(self):
-        # Since BlueBottleUser.email is unique, this check is redundant but it sets a nicer error message than the ORM.
+        # Since BlueBottleUser.email is unique, this check is redundant
+        # but it sets a nicer error message than the ORM.
         email = self.cleaned_data["email"]
         try:
-            BB_USER_MODEL._default_manager.get(email=email)
-        except BB_USER_MODEL.DoesNotExist:
+            Member._default_manager.get(email=email)
+        except Member.DoesNotExist:
             return email
         raise forms.ValidationError(self.error_messages['duplicate_email'])
 
     def save(self, commit=True):
         user = super(MemberCreationForm, self).save(commit=False)
-        user.is_active = True
         if commit:
             user.save()
         return user
@@ -96,16 +94,10 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
     """
 
     email = forms.EmailField(label=_("email address"), max_length=254,
-                             help_text=_(
-                                 "Required. 254 characters or fewer. A valid email address."))
-    password = ReadOnlyPasswordHashField(label=_("Password"),
-                                         help_text=_(
-                                             "Raw passwords are not stored, so there is no way to see "
-                                             "this user's password, but you can change the password "
-                                             "using <a href=\"../password/\">this form</a>."))
+                             help_text=_("A valid, unique email address."))
 
     class Meta:
-        model = BB_USER_MODEL
+        model = Member
         exclude = ()
 
     def __init__(self, *args, **kwargs):
@@ -185,7 +177,7 @@ class MemberAdmin(UserAdmin):
     def standard_fieldsets(self):
 
         standard_fieldsets = [
-            [None, {'fields': ['email', 'password', 'remote_id']}],
+            [None, {'fields': ['email', 'reset_password', 'remote_id']}],
             [_('Personal info'),
              {'fields': ['first_name', 'last_name', 'username', 'gender', 'birthdate', 'phone_number']}],
             [_("Profile"),
@@ -221,11 +213,14 @@ class MemberAdmin(UserAdmin):
 
     add_fieldsets = (
         (None, {'classes': ('wide',),
-                'fields': ('email', 'first_name', 'last_name',)}
+                'fields': ('email', 'first_name', 'last_name',
+                           'is_active', 'is_staff', 'is_superuser')}
          ),
     )
 
-    readonly_fields = ('date_joined', 'last_login', 'updated', 'deleted', 'login_as_user')
+    readonly_fields = ('date_joined', 'last_login',
+                       'updated', 'deleted', 'login_as_user',
+                       'reset_password')
 
     export_fields = (
         ('username', 'username'),
@@ -256,9 +251,17 @@ class MemberAdmin(UserAdmin):
         ('skills', UnionFieldListFilter),
         'groups'
     )
-    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'date_joined', 'is_active', 'login_as_user')
+    list_display = ('email', 'first_name', 'last_name', 'is_staff',
+                    'date_joined', 'is_active', 'login_as_user')
     ordering = ('-date_joined', 'email',)
     inlines = (UserAddressInline, MemberVotesInline, MemberTasksInline)
+
+    def reset_password(self, obj):
+        reset_form_url = reverse('admin:auth_user_password_change', args=(obj.id, ))
+        reset_mail_url = reverse('admin:auth_user_password_reset_mail', kwargs={'user_id': obj.id})
+        return format_html("<a href='{}'>{}</a>  | <a href='{}'>{}</a>  ",
+                           reset_form_url, _("Reset password form"),
+                           reset_mail_url, _("Send reset password mail"))
 
     def login_as_user(self, obj):
         return format_html(
@@ -299,9 +302,28 @@ class MemberAdmin(UserAdmin):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = [
-            url(r'^login-as/(?P<user_id>\d+)/$', self.admin_site.admin_view(self.login_as_redirect))
+            url(r'^login-as/(?P<user_id>\d+)/$', self.admin_site.admin_view(self.login_as_redirect)),
+            url(r'^password-reset/(?P<user_id>\d+)/$',
+                self.send_password_reset_mail,
+                name='auth_user_password_reset_mail'
+                )
         ]
         return extra_urls + urls
+
+    def send_password_reset_mail(self, request, user_id):
+        user = Member.objects.get(pk=user_id)
+        form = PasswordResetForm({'email': user.email})
+        form.is_valid()
+        opts = {
+            'use_https': True,
+            'token_generator': default_token_generator,
+            'from_email': properties.TENANT_MAIL_PROPERTIES['address'],
+            'request': request,
+        }
+        form.save(**opts)
+        message = _('User {name} will receive an email to reset password.').format(name=user.full_name)
+        self.message_user(request, message)
+        return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
 
     def login_as_redirect(self, *args, **kwargs):
         user = Member.objects.get(id=kwargs.get('user_id', None))

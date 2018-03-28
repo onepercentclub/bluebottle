@@ -301,6 +301,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         css = {
             'all': ('css/admin/wide-actions.css',)
         }
+        js = ('admin/js/inline-task-add.js',)
 
     def get_inline_instances(self, request, obj=None):
         self.inlines = self.all_inlines

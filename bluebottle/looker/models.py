@@ -17,5 +17,3 @@ class LookerEmbed(models.Model):
         permissions = (
             ('access_looker_embeds', 'Can access looker embeds'),
         )
-
-

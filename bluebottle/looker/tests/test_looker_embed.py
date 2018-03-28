@@ -6,12 +6,12 @@ from urlparse import urlparse, parse_qs
 from django.test.utils import override_settings
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.looker.utils import LookerEmbed
+from bluebottle.looker.utils import LookerSSOEmbed
 from bluebottle.test.utils import BluebottleTestCase
 
 
 @mock.patch(
-    'bluebottle.bluebottle_dashboard.views.get_current_host',
+    'bluebottle.looker.utils.get_current_host',
     return_value='goodup.com'
 )
 @override_settings(LOOKER_SECRET='123456')
@@ -28,7 +28,7 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
         )
 
     def test_url(self, get_current_host):
-        embed = LookerEmbed(self.user, '/embed/look/1')
+        embed = LookerSSOEmbed(self.user, 'look', '1')
         url = urlparse(embed.url)
         query = parse_qs(url.query)
 
@@ -61,18 +61,18 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
             json.loads(query['user_attributes'][0])['tenant'], 'test'
         )
         self.assertEqual(
-            int(query['session_length'][0]), LookerEmbed.session_length
+            int(query['session_length'][0]), LookerSSOEmbed.session_length
         )
         self.assertEqual(
-            json.loads(query['permissions'][0]), list(LookerEmbed.permissions)
+            json.loads(query['permissions'][0]), list(LookerSSOEmbed.permissions)
         )
         self.assertEqual(
-            json.loads(query['models'][0]), list(LookerEmbed.models)
+            json.loads(query['models'][0]), list(LookerSSOEmbed.models)
         )
 
-    @override_settings(LOOKER_HOST='https://looker.example.com')
+    @override_settings(LOOKER_HOST='looker.example.com')
     def test_host_in_settings(self, get_current_host):
-        embed = LookerEmbed(self.user, '/embed/look/1')
+        embed = LookerSSOEmbed(self.user, 'look', 1)
         url = urlparse(embed.url)
 
         self.assertEqual(url.scheme, 'https')

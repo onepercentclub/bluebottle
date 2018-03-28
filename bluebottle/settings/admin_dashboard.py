@@ -96,7 +96,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
     {
         'label': _('Analytics'),
         'app_label': 'looker',
-        'url': {'type': 'app', 'app_label': 'looker'},
+        'permissions': ['looker.lookerembed'],
         'items': [
             {
                 'label': _('Manage Dashboards'),

@@ -55,7 +55,6 @@ class LookerSSOEmbed(object):
         values = [value for value in values if value is not None]
 
         string_to_sign = "\n".join(values)
-        print string_to_sign
         signer = hmac.new(
             settings.LOOKER_SECRET, string_to_sign.encode('utf-8').strip(), sha1
         )

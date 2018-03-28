@@ -314,6 +314,8 @@ TENANT_APPS = (
 
     'rest_framework.authtoken',
 
+    'bluebottle.looker',
+
     'bluebottle.members',
     'bluebottle.projects',
     'bluebottle.organizations',

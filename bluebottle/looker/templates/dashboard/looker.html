@@ -1,0 +1,17 @@
+{% load i18n %}
+{% block module_content %}
+
+{% if module.children %}
+    <ul style="line-height: 1.5em;">
+        {% spaceless %}
+        {% for dashboard in module.children %}
+        <li class="{% cycle 'odd' 'even' %}">
+            <a href="{% url 'jet-dashboard:looker-embed' dashboard.pk %}" >{{ dashboard.title }}</a>
+        </li>
+        {% endfor %}
+        {% endspaceless %}
+    </ul>
+{% else %}
+    <p>No dashboards found</p>
+{% endif %}
+{% endblock %}

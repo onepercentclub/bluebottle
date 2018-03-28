@@ -6,6 +6,8 @@ from django.views.generic import RedirectView
 
 from bluebottle.views import HomeView
 from bluebottle.auth.views import admin_password_reset
+from bluebottle.looker.dashboard_views import LookerEmbedView  # noqa This has to be imported early so that custom urls will work
+
 
 admin.autodiscover()
 
@@ -15,8 +17,6 @@ urlpatterns = [
     # Django JET URLS
     url(r'^jet/', include('jet.urls', 'jet')),
     url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
-
-    url(r'^admin/analytics/', include('bluebottle.bluebottle_dashboard.urls.admin')),
 
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$',

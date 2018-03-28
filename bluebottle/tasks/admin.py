@@ -88,13 +88,12 @@ def resume_link(obj):
         )
 
 
-class TaskMemberAdminInline(admin.StackedInline):
+class TaskMemberAdminInline(admin.TabularInline):
     model = TaskMember
     extra = 0
     raw_id_fields = ('member',)
-    readonly_fields = ('created',)
-    fields = readonly_fields + ('member', 'status', 'motivation',
-                                'time_spent', 'externals', 'resume')
+    readonly_fields = ('motivation', 'resume_link')
+    fields = ('member', 'status', 'time_spent', 'externals', 'motivation', 'resume_link')
 
     def resume_link(self, obj):
         return resume_link(obj)
@@ -167,6 +166,7 @@ class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
     inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
+    save_as = True
 
     raw_id_fields = ('author', 'project')
     list_filter = (
@@ -248,9 +248,11 @@ admin.site.register(Task, TaskAdmin)
 class TaskAdminInline(admin.TabularInline):
     model = Task
     extra = 0
-    fields = ('title', 'project', 'status', 'deadline', 'deadline_to_apply',
-              'time_needed', 'task_admin_link')
-    readonly_fields = ('task_admin_link',)
+    show_change_link = True
+    readonly_fields = (
+        'title', 'project', 'status',
+        'deadline', 'deadline_to_apply', 'time_needed')
+    fields = readonly_fields
 
     def task_admin_link(self, obj):
         object = obj
@@ -317,8 +319,8 @@ admin.site.register(TaskMember, TaskMemberAdmin)
 
 
 class SkillAdmin(admin.ModelAdmin):
-    list_display = ('translated_name', 'task_link')
-    readonly_fields = ('translated_name',)
+    list_display = ('translated_name', 'task_link', 'member_link')
+    readonly_fields = ('translated_name', 'task_link', 'member_link')
     fields = readonly_fields + ('disabled', 'description', 'expertise')
 
     def translated_name(self, obj):
@@ -327,14 +329,23 @@ class SkillAdmin(admin.ModelAdmin):
     translated_name.short_description = _('Name')
 
     def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request):
+        if obj and obj.task_set.count() == 0:
+            return True
         return False
 
     def task_link(self, obj):
         url = "{}?skill_filter={}".format(reverse('admin:tasks_task_changelist'), obj.id)
-        return format_html("<a href='{}'>{} tasks</a>".format(url, obj.task_set.count()))
+        return format_html("<a href='{}'>{} {}</a>".format(
+            url, obj.task_set.count(), _('tasks')
+        ))
+    task_link.short_description = _('Tasks with this skill')
+
+    def member_link(self, obj):
+        url = "{}?skills__id__exact={}".format(reverse('admin:members_member_changelist'), obj.id)
+        return format_html("<a href='{}'>{} {}</a>".format(
+            url, obj.member_set.count(), _('users')
+        ))
+    member_link.short_description = _('Users with this skill')
 
 
 admin.site.register(Skill, SkillAdmin)

@@ -29,6 +29,7 @@
 </script>
 <script type="text/javascript" src="{% url 'jet:jsi18n' %}"></script>
 <script src="{% static "jet/js/build/bundle.min.js" as url %}{{ url|jet_append_version }}"></script>
+<script type="text/javascript" src="{% static '/admin/js/extra-jet.js' %}"></script>
 
 {% jet_static_translation_urls as translation_urls %}
 {% for url in translation_urls %}

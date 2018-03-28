@@ -33,6 +33,10 @@ class DocumentItem(ContentItem):
     def __str__(self):
         return Truncator(strip_tags(self.text)).words(20)
 
+    class Meta:
+        verbose_name = _('Document')
+        verbose_name_plural = _('Document')
+
 
 class ImageTextItem(ContentItem):
     """

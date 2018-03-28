@@ -18,8 +18,6 @@ urlpatterns = [
     url(r'^jet/', include('jet.urls', 'jet')),
     url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
 
-    url(r'^admin/analytics/', include('bluebottle.bluebottle_dashboard.urls.admin')),
-
     # Django Admin, docs and password reset
     url(r'^admin/password_reset/$',
         admin_password_reset,

@@ -1,11 +1,12 @@
 from datetime import timedelta
 
+from bluebottle.test.factory_models.utils import LanguageFactory
 from django.utils import timezone
 
 import factory
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.projects.models import Project, ProjectDocument
+from bluebottle.projects.models import Project, ProjectDocument, ProjectLocation
 
 from .accounts import BlueBottleUserFactory
 from .geo import CountryFactory
@@ -31,6 +32,15 @@ class ProjectPhaseFactory(factory.DjangoModelFactory):
     sequence = factory.Sequence(lambda n: n)
 
 
+class ProjectLocationFactory(factory.DjangoModelFactory):
+
+    class Meta(object):
+        model = ProjectLocation
+
+    latitude = 43.068620
+    longitude = 23.676374
+
+
 class ProjectFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Project
@@ -42,6 +52,8 @@ class ProjectFactory(factory.DjangoModelFactory):
     theme = factory.SubFactory(ProjectThemeFactory, name='Education')
     country = factory.SubFactory(CountryFactory)
     currencies = ['EUR']
+
+    language = factory.SubFactory(LanguageFactory)
 
     deadline = timezone.now() + timedelta(days=100)
     amount_needed = 100

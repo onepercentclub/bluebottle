@@ -8,6 +8,7 @@ from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django.contrib.admin.widgets import AdminTextareaWidget
 from django.forms.models import ModelFormMetaclass
+from django.db import models
 from django.utils.text import slugify
 from django_singleton_admin.admin import SingletonAdmin
 from django_summernote.admin import SummernoteInlineModelAdmin
@@ -17,7 +18,7 @@ from polymorphic.admin.inlines import StackedPolymorphicInline
 from bluebottle.payments.adapters import has_payment_prodiver
 from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.projects.models import (
-    ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn,
+    ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn, ProjectLocation,
     CustomProjectField, CustomProjectFieldSettings, ProjectCreateTemplate)
 
 from django import forms
@@ -44,7 +45,7 @@ from bluebottle.tasks.admin import TaskAdminInline, DeadlineFilter
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
-from bluebottle.utils.admin import export_as_csv_action, prep_field
+from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin
 from bluebottle.votes.models import Vote
 
 from .forms import ProjectDocumentForm
@@ -264,6 +265,26 @@ class ProjectAddOnInline(StackedPolymorphicInline):
         return instances
 
 
+class ProjectLocationForm(forms.ModelForm):
+    class Meta:
+        model = ProjectLocation
+        widgets = {
+            'latitude': forms.TextInput(attrs={'size': 50, 'id': 'id_latitude'}),
+            'longitude': forms.TextInput(attrs={'size': 50, 'id': 'id_longitude'}),
+
+        }
+        fields = ('latitude', 'longitude', 'place', 'street', 'neighborhood', 'city', 'postal_code', 'country')
+
+
+class ProjectLocationInline(LatLongMapPickerMixin, admin.StackedInline):
+    model = ProjectLocation
+    form = ProjectLocationForm
+    formfield_overrides = {
+        models.TextField: {'widget': forms.TextInput(attrs={'size': 70})},
+        models.CharField: {'widget': forms.TextInput(attrs={'size': 70})},
+    }
+
+
 class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):
     form = ProjectAdminForm
     date_hierarchy = 'created'
@@ -301,11 +322,13 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         TaskAdminInline,
         ProjectDocumentInline,
         ProjectPhaseLogInline,
+        ProjectLocationInline,
     )
     sourcing_inlines = (
         ProjectDocumentInline,
         TaskAdminInline,
         ProjectPhaseLogInline,
+        ProjectLocationInline
     )
 
     list_filter = ('country__subregion__region', )
@@ -532,7 +555,9 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         fields = [
             'created', 'updated',
             'vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
-            'popularity', 'payout_status']
+            'popularity', 'payout_status',
+            'geocoding'
+        ]
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status', )
         return fields
@@ -617,8 +642,9 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         details = (_('Details'), {'fields': (
             'language', 'theme', 'categories',
-            'image', 'video_url', 'country', 'latitude',
-            'longitude', 'location', 'place')})
+            'image', 'video_url', 'country',
+            'location', 'place',
+        )})
 
         goal = (_('Goal'), {'fields': (
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',

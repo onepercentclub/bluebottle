@@ -231,11 +231,6 @@
 
                 {% if user.is_active and user.is_staff %}
                     {% jet_get_menu as app_list %}
-                    <form action="{% url "jet:toggle_application_pin" %}" method="POST" id="toggle-application-pin-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="app_label">
-                    </form>
-
                     <div class="sidebar-section">
                         <div class="sidebar-title">
                             {% trans 'Menu' %}
@@ -244,11 +239,6 @@
                         <div class="apps-list-pinned">
                             {% for app in app_list %}
                                 <a{% if app.url %} href="{{ app.url }}"{% endif %} class="sidebar-link popup-section-link app-item" data-app-label="{{ app.app_label }}" data-popup-section-class="sidebar-popup-section-{{ app.app_label }}" data-order="{{ forloop.counter }}"{% if app.url_blank %} target="_blank"{% endif %}>
-                                    <span class="sidebar-left collapsible">
-                                        <span class="sidebar-left-pin icon-star pin-toggle"></span>
-                                        <span class="sidebar-left-unpin icon-cross pin-toggle"></span>
-                                    </span>
-
                                     <span class="sidebar-right">
                                         <span class="sidebar-right-arrow icon-arrow-right"></span>
                                     </span>

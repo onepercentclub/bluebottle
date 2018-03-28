@@ -5,7 +5,6 @@ from celery import shared_task
 from collections import namedtuple
 from moneyed import Money
 
-from django.db import connection
 from django.utils.timezone import now
 from django.utils import timezone
 
@@ -41,7 +40,6 @@ def process_monthly_batch(tenant, monthly_batch, send_email):
     :param send_email: Are emails to be send or do we run this quietly.
     :return:
     """
-    connection.set_tenant(tenant)
     with LocalTenant(tenant, clear_tenant=True):
 
         if not monthly_batch:

@@ -2,7 +2,7 @@ from collections import OrderedDict
 import csv
 import logging
 import six
-from decimal import InvalidOperation
+from decimal import InvalidOperation, DivisionByZero
 
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django.contrib.admin.widgets import AdminTextareaWidget
@@ -449,7 +449,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         try:
             percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
             return "{0} %".format(percentage)
-        except (AttributeError, InvalidOperation):
+        except (AttributeError, InvalidOperation, DivisionByZero):
             return '-'
 
     def expertise_based(self, obj):
@@ -527,7 +527,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if not request.user.has_perm('payments.refund_orderpayment') or not project.can_refund:
             return HttpResponseForbidden('Missing permission: payments.refund_orderpayment')
 
+        project.status = ProjectPhase.objects.get(slug='refunded')
+        project.save()
+
         refund_project.delay(connection.tenant, project)
+
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)
 

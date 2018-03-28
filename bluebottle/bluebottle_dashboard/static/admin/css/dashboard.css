@@ -55,9 +55,22 @@
     text-transform: none;
 }
 
+
+body {
+    color: #454545
+}
+
+/* Sidebar */
+
 .sidebar {
     width: 12rem;
+    background-color: #241C46;
 }
+
+.sidebar-section {
+    border-bottom: #ffffff solid 1px;
+}
+
 .sidebar-popup-container {
     left: 12rem;
 }
@@ -75,34 +88,120 @@ body.menu-pinned table.helper {
 }
 
 .sidebar-popup {
-    top: 340px;
+    top: 470px;
 }
 
 .sidebar-popup .sidebar-popup-search {
     display: none;
 }
 
-.sidebar-title {
-    /*display: none;*/
+.sidebar .sidebar-link {
+    color: white;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
-.sidebar-link {
-    padding-top: 0.8rem;
-    padding-bottom: 0.8rem;
+.sidebar .sidebar-link:hover {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
-.sidebar-link:hover {
-    padding-top: 0.8rem;
-    padding-bottom: 0.8rem;
+.sidebar .sidebar-link,
+.sidebar .sidebar-link.icon,
+.sidebar .sidebar-title {
+    text-transform: none;
+    font-size: 1rem;
+}
+
+#branding {
+    background-color: transparent;
+    padding: 16px;
+    text-align: left;
+}
+
+#branding-menu {
+    position: relative;
+    margin: 0;
+    left: 0;
+    border-radius: 12px;
+    background-color: #ffffff;
+    padding: 4px;
+}
+
+#branding-menu img {
+    width: 40px;
+    display: block;
+}
+
+.sidebar-opened .icon-menu:before,
+.sidebar-dependent .icon-menu:before{
+    content: "";
+}
+
+
+/* Tabs */
+.changeform-tabs-item a,
+.changeform-tabs-item a:hover,
+.changeform-tabs-item a:visited {
+    color: #241C46;
+    text-transform: none;
+    font-size: 1rem;
+    border-bottom-width: 4px;
+    margin: 0 8px;
+}
+
+.changeform-tabs-item.selected a,
+.changeform-tabs-item.selected a:hover,
+.changeform-tabs-item.selected a:visited {
+    color: #241C46;
+}
+
+/* Bread crumbs */
+
+div.breadcrumbs {
+    text-transform: none;
+    color: #1cacfc;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-left: 12px;
+}
+
+div.breadcrumbs a, div.breadcrumbs a:visited {
+    font-weight: bold;
+    color: #241C46;
 }
 
 .icon-arrow-right {
-    color: white;
+    font-weight: bold;
+    color: #241C46;
+}
+
+.segmented-button, .segmented-button:visited, .segmented-button:hover, .segmented-button:active  {
+    background-color: transparent;
+    color: #241C46;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.changeform-navigation-button-label {
+    opacity: 1;
+}
+
+.changeform-navigation-button, .changeform-navigation-button:visited, .changeform-navigation-button:hover {
+    max-width: 250px;
+    width: auto;
 }
 
 
+/* Content */
+
+#content {
+    padding-top: 0;
+}
+
 .site-title {
     background: #ffff;
+    color: #241C46;
 }
 
 .site-title-logo {
@@ -140,7 +239,7 @@ body.menu-pinned table.helper {
 
 .cp-content>.inline-related {
     border: 1px solid #ddd;
-    margin: 10px 0px;
+    margin: 10px 0;
 }
 
 .js-inline-admin-formset {
@@ -176,4 +275,28 @@ body.menu-pinned table.helper {
 .admin-label-gray {
     color: white;
     background-color: #333C47;
+}
+
+/* Admin change form */
+.form-row {
+    padding: 1.5rem;
+}
+
+.form-row label {
+    font-weight: bold;
+    color: #241C46;
+}
+
+.form-row .related-lookup:before {
+    color: #1cacfc
+}
+
+.form-row .related-lookup {
+    color: #1cacfc
+}
+
+
+#searchbar {
+    width: 321px;
+    background: #ffffff url('/static/assets/admin/img/search.svg') no-repeat 290px 50%;
 }

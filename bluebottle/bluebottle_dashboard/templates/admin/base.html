@@ -14,7 +14,7 @@
 <link rel="stylesheet" type="text/css" href="{% static "jet/css/themes/"|add:THEME|add:"/base.css" as url %}{{ url|jet_append_version }}" class="base-stylesheet" />
 <link rel="stylesheet" type="text/css" href="{% static "jet/css/themes/"|add:THEME|add:"/select2.theme.css" as url %}{{ url|jet_append_version }}" class="select2-stylesheet" />
 <link rel="stylesheet" type="text/css" href="{% static "jet/css/themes/"|add:THEME|add:"/jquery-ui.theme.css" as url %}{{ url|jet_append_version }}" class="jquery-ui-stylesheet" />
-<link rel="stylesheet" type="text/css" href="/static/assets/admin/css/dashboard.css">
+<link rel="stylesheet" type="text/css" href="{% static "/admin/css/dashboard.css" %}">
 
 {% block extrastyle %}{% endblock %}
 {% if LANGUAGE_BIDI %}<link rel="stylesheet" type="text/css" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}" />{% endif %}
@@ -51,7 +51,9 @@
     <!-- Header -->
     <div id="header">
         <div id="branding">
-            <span id="branding-menu" class="sidebar-header-menu-icon icon-menu sidebar-toggle"></span>
+            <span id="branding-menu" class="sidebar-header-menu-icon icon-menu sidebar-toggle">
+                <img src="{% static "/admin/images/goodup_icon.jpg" %}" />
+            </span>
             <span id="branding-pin" class="sidebar-link-icon icon-pin sidebar-pin"></span>
             {% block branding %}{% endblock %}
         </div>

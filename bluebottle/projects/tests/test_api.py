@@ -1,5 +1,7 @@
+import csv
 from datetime import timedelta, datetime
 import json
+from StringIO import StringIO
 from random import randint
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -24,6 +26,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory, LocationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectDocumentFactory
 from bluebottle.test.factory_models.tasks import (
@@ -34,6 +37,7 @@ from bluebottle.test.factory_models.wallposts import (
     MediaWallpostFactory, MediaWallpostPhotoFactory,
     TextWallpostFactory)
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import StatusDefinition
 
 from ..models import Project
 
@@ -2747,3 +2751,65 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(template['default_amount_asked'], {'currency': 'EUR', 'amount': 1500.00})
         self.assertEqual(len(template['image']), 4)
         self.assertEqual(template['default_title'], 'Sample project title')
+
+
+class ProjectSupportersExportTest(BluebottleTestCase):
+    """
+    Tests for the Project API permissions.
+    """
+    def setUp(self):
+        super(ProjectSupportersExportTest, self).setUp()
+        self.init_projects()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.project = ProjectFactory.create(owner=self.owner)
+
+        reward = RewardFactory.create(project=self.project)
+
+        for order_type in ('one-off', 'recurring', 'one-off'):
+            order = OrderFactory.create(
+                status=StatusDefinition.SUCCESS,
+                order_type=order_type
+            )
+            self.donation = DonationFactory.create(
+                amount=Money(1000, 'EUR'),
+                order=order,
+                project=self.project,
+                fundraiser=None,
+                reward=reward
+            )
+
+        self.supporters_export_url = reverse(
+            'project-supporters-export', kwargs={'pk': self.project.pk}
+        )
+
+    def test_owner(self):
+        # view allowed
+        response = self.client.get(
+            self.supporters_export_url, token=self.owner_token
+        )
+        self.assertEqual(response.status_code, 200)
+        reader = csv.DictReader(StringIO(response.content))
+        results = [result for result in reader]
+        self.assertEqual(len(results), 2)
+        for row in results:
+            for field in ('Reward', 'Donation Date', 'Email', 'Name'):
+                self.assertTrue(field in row)
+
+    def test_non_owner(self):
+        # view allowed
+        response = self.client.get(
+            self.supporters_export_url,
+            token="JWT {0}".format(
+                BlueBottleUserFactory.create().get_jwt_token()
+            )
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_no_user(self):
+        # view allowed
+        response = self.client.get(
+            self.supporters_export_url
+        )
+        self.assertEqual(response.status_code, 401)

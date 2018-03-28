@@ -93,7 +93,7 @@ class ProjectDocumentFileView(PrivateFileView):
     )
 
 
-class ProjectSupportersDownloadView(RetrieveAPIView):
+class ProjectSupportersExportView(RetrieveAPIView):
     fields = (
         ('order__user__email', 'Email'),
         ('order__user__full_name', 'Name'),
@@ -123,10 +123,10 @@ class ProjectSupportersDownloadView(RetrieveAPIView):
 
         writer = csv.writer(response)
 
-        writer.writerow([field for field in self.fields])
-        for reward in instance.donations.filter(order__order_type='one-off'):
+        writer.writerow([field[1] for field in self.fields])
+        for donation in instance.donations.filter(order__order_type='one-off'):
             writer.writerow([
-                prep_field(request, reward, field[0]) for field in self.fields
+                prep_field(request, donation, field[0]) for field in self.fields
             ])
 
         return response

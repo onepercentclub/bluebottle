@@ -113,6 +113,21 @@ body.menu-pinned table.helper {
     font-size: 1rem;
 }
 
+.sidebar-popup-list-item a,
+.sidebar-popup-list-item a:hover {
+    padding: 1rem 1.5rem;
+}
+
+.sidebar-popup-list-item a ,
+.sidebar-popup-list-item a:visited {
+    color: #241C46;
+    font-weight: bold;
+}
+
+.sidebar-popup-list-item a:hover {
+    color: #ffffff;
+}
+
 #branding {
     background-color: transparent;
     padding: 16px;
@@ -136,6 +151,25 @@ body.menu-pinned table.helper {
 .sidebar-opened .icon-menu:before,
 .sidebar-dependent .icon-menu:before{
     content: "";
+}
+
+.sidebar-link .icon-arrow-right,
+.sidebar-link:hover .icon-arrow-right,
+.icon-arrow-right {
+    font-weight: bold;
+    color: #ffffff;
+}
+.sidebar-link:hover {
+    background-color: #3A325E;
+}
+
+.sidebar-popup-title {
+    text-transform: none;
+}
+
+.sidebar-popup-list-item.selected,
+.sidebar-popup-list-item:hover {
+    background-color: #CFCDD7;
 }
 
 
@@ -202,6 +236,7 @@ div.breadcrumbs a, div.breadcrumbs a:visited {
 .site-title {
     background: #ffff;
     color: #241C46;
+    padding-left: 8px;
 }
 
 .site-title-logo {
@@ -228,8 +263,11 @@ div.breadcrumbs a, div.breadcrumbs a:visited {
 }
 
 .form-row .cp-content .inline-related h2.cp-formset-item-title {
-    background: #ddd;
     background-image: none;
+    text-transform: none;
+    font-size: 1rem;
+    color: #241C46;
+    border-bottom: 1px solid #ddd;
 }
 
 .module h2 .cp-item-icons a,
@@ -238,12 +276,12 @@ div.breadcrumbs a, div.breadcrumbs a:visited {
 }
 
 .cp-content>.inline-related {
-    border: 1px solid #ddd;
     margin: 10px 0;
 }
 
 .js-inline-admin-formset {
-    width: 70%
+    width: 70%;
+    margin-left: 100px;
 }
 
 .form-row .cp-content .inline-related h2.cp-formset-item-title {
@@ -278,8 +316,11 @@ div.breadcrumbs a, div.breadcrumbs a:visited {
 }
 
 /* Admin change form */
-.form-row {
-    padding: 1.5rem;
+
+.form-row,
+.cp-content .form-row {
+    padding: 1rem;
+    border-bottom: 0;
 }
 
 .form-row label {
@@ -299,4 +340,119 @@ div.breadcrumbs a, div.breadcrumbs a:visited {
 #searchbar {
     width: 321px;
     background: #ffffff url('/static/assets/admin/img/search.svg') no-repeat 290px 50%;
+}
+
+/* Admin lists */
+
+table thead th {
+    background-color: #241C46;
+    color: #ffffff;
+    text-transform: none;
+    font-weight: bold;
+    padding: 12px;
+}
+
+table thead th a,
+table thead th a:link {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.project-title {
+    width: 300px;
+    text-overflow: ellipsis;
+}
+
+#result_list td {
+    padding: 1rem;
+}
+
+
+input[type="submit"], input[type="submit"]:visited, input[type="submit"]:hover,
+input[type="button"], input[type="button"]:visited, input[type="button"]:hover,
+.object-tools a, .object-tools a:visited, .object-tools a:hover,
+a.addlink,
+.submit-row a.deletelink, .submit-row a.deletelink:visited, .submit-row a.deletelink:hover,
+#changelist .actions .button,
+#changelist .actions .button:visited,
+#changelist .actions .button:hover,
+.button.default, input[type="submit"].default,
+input[type="button"].default, .object-tools a.default,
+#toolbar form input[type="submit"],
+#toolbar form input[type="submit"]:visited,
+#toolbar form input[type="submit"]:hover {
+    background-color: #1cacfc;
+    text-transform: none;
+    font-weight: bold;
+    border-bottom: #2E6793 solid 2px;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+input[type="submit"]:hover,
+input[type="button"]:hover,
+#toolbar form input[type="submit"]:hover {
+    background-color: #74b9ff;
+
+}
+
+.object-tools a.addlink:before {
+    color: #ffffff;
+}
+
+#changelist .actions .button,
+#changelist .actions .button:visited,
+#changelist .actions .button:hover,
+.button.default, input[type="submit"].default,
+input[type="button"].default, .object-tools a.default
+{
+    background-color: #2faa60;
+    border-bottom: #5E8341 solid 2px;
+}
+
+input[type="submit"].default:hover,
+#changelist .actions .button:hover {
+    background-color: #8bd2a0;
+}
+
+.paginator .pages-wrapper span {
+    background-color: #2faa60;
+    color: #fff;
+}
+
+.submit-row a.deletelink, .submit-row a.deletelink:visited, .submit-row a.deletelink:hover {
+    background-color: #c7254e;
+    border-bottom: #912043 solid 2px;
+}
+
+.submit-row a.deletelink:hover {
+    background-color: #d88c97;
+}
+
+/* Messages */
+
+ul.messagelist li.success {
+    background-color: #2faa60;
+}
+
+ul.messagelist li.success a{
+    color: #ffffff;
+    border-bottom: 1px #ffffff solid;
+    font-weight: bold;
+}
+
+ul.messagelist li.success a:hover{
+    color: #000000;
+    border-bottom: 1px #000000 solid;
+    transition: color 0.3s ease;
+}
+
+/* Dashboard */
+
+.dashboard-item-list {
+    line-height: 2rem;
+}
+
+.dashboard-item-content {
+    padding: 12px;
 }

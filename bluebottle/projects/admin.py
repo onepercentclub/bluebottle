@@ -392,7 +392,6 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
                 obj.title, obj.title[:45]
             )
         return obj.title
-
     get_title_display.admin_order_field = 'title'
     get_title_display.short_description = _('title')
 
@@ -620,7 +619,9 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     created_date.short_description = _('Created')
 
     def deadline_date(self, obj):
-        return obj.deadline.date()
+        if obj.deadline:
+            return obj.deadline.date()
+        return None
     deadline_date.admin_order_field = 'deadline'
     deadline_date.short_description = _('Deadline')
 

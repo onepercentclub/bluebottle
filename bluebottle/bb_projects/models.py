@@ -9,6 +9,7 @@ from django.utils.timezone import now
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
+from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
@@ -16,16 +17,20 @@ from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition
 
 
-class ProjectTheme(models.Model):
+class ProjectTheme(TranslatableModel):
 
     """ Themes for Projects. """
 
     # The name is marked as unique so that users can't create duplicate
     # theme names.
-    name = models.CharField(_('name'), max_length=100, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
-    description = models.TextField(_('description'), blank=True)
     disabled = models.BooleanField(_('disabled'), default=False)
+
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=100),
+        description=models.TextField(_('description'), blank=True),
+        meta={'unique_together': [('language_code', 'name')]}
+    )
 
     def __unicode__(self):
         return self.name
@@ -37,7 +42,7 @@ class ProjectTheme(models.Model):
         super(ProjectTheme, self).save(**kwargs)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['slug']
         verbose_name = _('project theme')
         verbose_name_plural = _('project themes')
         permissions = (

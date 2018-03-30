@@ -10,6 +10,8 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 
+from parler.models import TranslatableModel, TranslatedFields
+
 from bluebottle.utils.models import MailLog
 from tenant_extras.utils import TenantLanguage
 
@@ -284,20 +286,20 @@ class Task(models.Model, PreviousStatusMixin):
         )
 
 
-class Skill(models.Model):
-    name = models.CharField(_('english name'), max_length=100, unique=True)
-    description = models.TextField(_('description'), blank=True)
+class Skill(TranslatableModel):
     expertise = models.BooleanField(_('expertise'),
                                     help_text=_('Is this skill expertise based, or could anyone do it?'),
                                     default=True)
     disabled = models.BooleanField(_('disabled'), default=False)
 
-    @property
-    def localized_name(self):
-        return _(self.name)
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=100, ),
+        description=models.TextField(_('description'), blank=True),
+        meta={'unique_together': [('language_code', 'name')]}
+    )
 
     def __unicode__(self):
-        return unicode(self.localized_name)
+        return self.name
 
     class Meta:
         ordering = ('id',)

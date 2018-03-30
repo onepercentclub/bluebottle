@@ -7,6 +7,7 @@ from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
+from parler.admin import TranslatableAdmin
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
 from bluebottle.utils.admin import export_as_csv_action
 
@@ -318,15 +319,10 @@ class TaskMemberAdmin(admin.ModelAdmin):
 admin.site.register(TaskMember, TaskMemberAdmin)
 
 
-class SkillAdmin(admin.ModelAdmin):
-    list_display = ('translated_name', 'task_link', 'member_link')
-    readonly_fields = ('translated_name', 'task_link', 'member_link')
+class SkillAdmin(TranslatableAdmin):
+    list_display = ('name', 'task_link', 'member_link')
+    readonly_fields = ('name', 'task_link', 'member_link')
     fields = readonly_fields + ('disabled', 'description', 'expertise')
-
-    def translated_name(self, obj):
-        return _(obj.name)
-
-    translated_name.short_description = _('Name')
 
     def has_delete_permission(self, request, obj=None):
         if obj and obj.task_set.count() == 0:

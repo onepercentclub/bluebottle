@@ -33,6 +33,8 @@ from django.http.response import HttpResponseRedirect, HttpResponseForbidden, Ht
 from django.utils.translation import ugettext_lazy as _
 
 from django_summernote.widgets import SummernoteWidget
+
+from parler.admin import TranslatableAdmin
 from sorl.thumbnail.admin import AdminImageMixin
 from schwifty import IBAN, BIC
 
@@ -71,7 +73,7 @@ def mark_as(model_admin, request, queryset):
         project.save()
 
 
-class ProjectThemeAdmin(admin.ModelAdmin):
+class ProjectThemeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'project_link')
     readonly_fields = ('project_link', )
     fields = ('name', 'slug', 'description', 'disabled') + readonly_fields

@@ -311,7 +311,7 @@ class ManageProjectDetail(RetrieveUpdateAPIView):
 
 class ProjectThemeList(ListAPIView):
     serializer_class = ProjectThemeSerializer
-    queryset = ProjectTheme.objects.all().filter(disabled=False)
+    queryset = ProjectTheme.objects.filter(disabled=False)
 
 
 class ProjectUsedThemeList(ProjectThemeList):

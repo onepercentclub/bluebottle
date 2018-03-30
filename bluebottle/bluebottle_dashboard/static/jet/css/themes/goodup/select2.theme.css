@@ -882,7 +882,7 @@
     .select2-container--jet .select2-selection .select2-selection__rendered {
       color: #4E4E4E;
       line-height: 32px;
-      font-size: 1rem; }
+      font-size: 0.9rem; }
     .select2-container--jet .select2-selection .select2-selection__placeholder {
       color: #999; }
   .select2-container--jet .select2-buttons {
@@ -929,7 +929,7 @@
     max-height: 200px;
     overflow-y: auto; }
   .select2-container--jet .select2-results__option {
-    font-size: 1rem; }
+    font-size: 0.9rem; }
     .select2-container--jet .select2-results__option[role=group] {
       padding: 0; }
     .select2-container--jet .select2-results__option[aria-disabled=true] {

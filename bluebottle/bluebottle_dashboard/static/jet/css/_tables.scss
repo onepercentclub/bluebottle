@@ -123,9 +123,9 @@ table {
   thead th {
     &.sortable {
       cursor: pointer;
-
       &:hover {
-        background: $content-selected-background-color;
+        background: red;
+        background: $sidebar-hover-background-color;
       }
     }
 

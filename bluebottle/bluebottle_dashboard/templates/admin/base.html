@@ -54,7 +54,7 @@
             <span id="branding-menu" class="sidebar-header-menu-icon icon-menu sidebar-toggle">
                 <img src="{% static "/admin/images/goodup_icon.jpg" %}" />
             </span>
-            <span id="branding-pin" class="sidebar-link-icon icon-pin sidebar-pin"></span>
+            <span id="branding-pin" class="sidebar-link-icon icon-arrow-down sidebar-pin"></span>
             {% block branding %}{% endblock %}
         </div>
         {% block usertools %}
@@ -172,7 +172,7 @@
                     {% if user.is_active and user.is_staff %}
                         <a href="{% url 'admin:index' %}" class="sidebar-link icon">
                             <span class="sidebar-link-label">
-                                <span class="sidebar-link-icon icon-data"></span>
+                                <span class="sidebar-link-icon icon-home"></span>
                                 {% trans 'Home' %}
                             </span>
                         </a>
@@ -189,25 +189,25 @@
                         {% block nav-global %}
                             <a href="{% url 'admin:members_member_changelist' %}" class="sidebar-link icon">
                                 <span class="sidebar-link-label">
-                                    <span class="sidebar-link-icon icon-user"></span>
+                                    <span class="sidebar-link-icon icon-users"></span>
                                     {% trans 'Users' %}
                                 </span>
                             </a>
                             <a href="{% url 'admin:projects_project_changelist' %}" class="sidebar-link icon">
                                 <span class="sidebar-link-label">
-                                    <span class="sidebar-link-icon icon-edit"></span>
+                                    <span class="sidebar-link-icon icon-books"></span>
                                     {% trans 'Projects' %}
                                 </span>
                             </a>
                             <a href="{% url 'admin:tasks_task_changelist' %}" class="sidebar-link icon">
                                 <span class="sidebar-link-label">
-                                    <span class="sidebar-link-icon icon-calendar"></span>
+                                    <span class="sidebar-link-icon icon-clipboard"></span>
                                     {% trans 'Tasks' %}
                                 </span>
                             </a>
                             <a href="{% url 'admin:donations_donation_changelist' %}" class="sidebar-link icon">
                                 <span class="sidebar-link-label">
-                                    <span class="sidebar-link-icon icon-question"></span>
+                                    <span class="sidebar-link-icon icon-coin-euro"></span>
                                     {% trans 'Donations' %}
                                 </span>
                             </a>
@@ -265,7 +265,7 @@
                             <span class="sidebar-right">
                                 <a href="#" class="sidebar-right-plus bookmarks-add" title="{% trans "Add bookmark" %}"{% if title %} data-title="{{ title }}"{% endif %}><span class="icon-add"></span></a>
                             </span>
-                            {% trans 'bookmarks' %}
+                            {% trans 'Bookmarks' %}
                         </div>
 
                         <div class="bookmarks-list">

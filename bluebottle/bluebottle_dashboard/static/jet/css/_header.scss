@@ -56,13 +56,13 @@
     right: 4px;
     margin-top: -11px;
     display: inline-block;
-    font-size: 22px;
+    font-size: 1.2rem;
     cursor: pointer;
     transition: transform 0.3s;
-    transform: rotate(-45deg);
+    transform: rotate(0deg);
 
     body.menu-pinned & {
-      transform: rotate(45deg);
+      transform: rotate(90deg);
     }
 
     &:hover {

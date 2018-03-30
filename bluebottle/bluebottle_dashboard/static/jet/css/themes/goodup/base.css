@@ -4035,12 +4035,12 @@ div.system-message {
     right: 4px;
     margin-top: -11px;
     display: inline-block;
-    font-size: 22px;
+    font-size: 1.2rem;
     cursor: pointer;
     transition: transform 0.3s;
-    transform: rotate(-45deg); }
+    transform: rotate(0deg); }
     body.menu-pinned #branding-pin {
-      transform: rotate(45deg); }
+      transform: rotate(90deg); }
     #branding-pin:hover {
       color: #fff; }
     @media only screen and (max-width: 960px) {
@@ -6005,8 +6005,6 @@ body.popup .submit-row {
 
 .inline-related.tabular fieldset.module {
   padding: 0; }
-  .inline-related.tabular fieldset.module table {
-    width: 100%; }
 
 .inline-navigation {
   position: absolute;
@@ -9380,7 +9378,7 @@ body.login {
   text-transform: none;
   font-size: 1rem;
   color: #241C46;
-  border-bottom: 1px solid #ddd; }
+  border-bottom: 1px solid #cacaca; }
 
 .module h2 .cp-item-icons a,
 .module h2 .cp-item-delete a {
@@ -9388,10 +9386,6 @@ body.login {
 
 .cp-content > .inline-related {
   margin: 10px 0; }
-
-.js-inline-admin-formset {
-  width: 70%;
-  margin-left: 100px; }
 
 .form-row .cp-content .inline-related h2.cp-formset-item-title {
   margin-top: 0;

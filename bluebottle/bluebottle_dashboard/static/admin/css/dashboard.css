@@ -55,7 +55,9 @@
     text-transform: none;
 }
 
-/* Dashboard */
+/* Fluent Contents */
+
+.cp-item-controls .cp-item-delete a,
 .cp-item-controls .cp-item-icons a {
     width: 22px;
     height: 22px;
@@ -67,4 +69,14 @@
 
 .cp-item-icons .cp-item-down {
     background-image: url("/static/assets/admin/images/icons/editor-tail-down-24px.svg");
+}
+
+
+.cp-item-controls .cp-item-delete a {
+    background-image: url("/static/assets/admin/images/icons/editor-delete-24px.svg");
+}
+
+.cp-item-controls .cp-item-delete input,
+.cp-item-controls .cp-item-delete label {
+    display: none;
 }

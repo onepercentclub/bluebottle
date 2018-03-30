@@ -321,7 +321,7 @@ admin.site.register(TaskMember, TaskMemberAdmin)
 
 class SkillAdmin(TranslatableAdmin):
     list_display = ('name', 'task_link', 'member_link')
-    readonly_fields = ('name', 'task_link', 'member_link')
+    readonly_fields = ('task_link', 'member_link')
     fields = readonly_fields + ('disabled', 'description', 'expertise')
 
     def has_delete_permission(self, request, obj=None):

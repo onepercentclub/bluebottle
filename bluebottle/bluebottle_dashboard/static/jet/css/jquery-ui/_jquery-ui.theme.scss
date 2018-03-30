@@ -21,7 +21,7 @@
   border: 0;
   background: $content-contrast2-background-color;
   color: $content-contrast2-text-color;
-  font-weight: bold;
+  font-weight: 700;
   a {
     color: $content-contrast2-text-color;
   }
@@ -30,7 +30,7 @@
 .ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
   border: 1px solid $jquery-ui-state-default-border-color;
   background: $jquery-ui-state-default-background-color;
-  font-weight: bold;
+  font-weight: 700;
   color: $jquery-ui-state-default-text-color;
   border-radius: 3px;
 }
@@ -44,14 +44,14 @@
 .ui-state-hover, .ui-widget-content .ui-state-hover, .ui-widget-header .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus {
   border: 1px solid $jquery-ui-state-hover-border-color;
   background: $jquery-ui-state-hover-background-color;
-  font-weight: bold;
+  font-weight: 700;
   color: $jquery-ui-state-hover-text-color;
 }
 
 .ui-state-active, .ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active {
   border: 1px solid $jquery-ui-state-active-border-color;
   background: $jquery-ui-state-active-background-color;
-  font-weight: bold;
+  font-weight: 700;
   color: $jquery-ui-state-active-text-color;
 }
 
@@ -82,7 +82,7 @@
 .ui-icon {
   @include font-icon;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 700;
   background: none !important;
   text-indent: 0;
   overflow: visible;

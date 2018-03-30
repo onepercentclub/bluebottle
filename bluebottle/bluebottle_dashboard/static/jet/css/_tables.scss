@@ -42,13 +42,13 @@ table {
   }
   tbody th a,
   tbody th a:visited {
-    font-weight: bold;
+    font-weight: 700;
     color: $top-link-color;
   }
 
   tbody th a:hover,
   tbody th a:active {
-    font-weight: bold;
+    font-weight: 700;
     color: $top-text-color;
   }
 
@@ -165,7 +165,7 @@ table {
             &:after {
               @include font-icon;
               content: $icon-arrow-down;
-              font-weight: bold;
+              font-weight: 700;
             }
           }
 
@@ -178,7 +178,7 @@ table {
             &:after {
               @include font-icon;
               content: $icon-arrow-up;
-              font-weight: bold;
+              font-weight: 700;
             }
           }
         }

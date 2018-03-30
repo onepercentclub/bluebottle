@@ -14,7 +14,7 @@
     line-height: 32px;
     outline: 0;
     font-size: 0.9rem;
-    font-weight: bold;
+    font-weight: 700;
     text-align: center;
     padding: 0 10px;
     white-space: nowrap;
@@ -30,7 +30,7 @@
   }
 
   &.default {
-    font-weight: bold;
+    font-weight: 700;
     background-color: $primary-button-background-color;
     color: $primary-button-text-color;
     border-bottom: darken($primary-button-background-color, 10) 2px solid;
@@ -95,7 +95,7 @@ textarea {
   &, &:visited, &:hover {
     background-color: transparent;
     color: $top-link-color;
-    font-weight: bold;
+    font-weight: 700;
     border: 0;
     height: 32px;
     line-height: 32px;

@@ -601,7 +601,7 @@
     .select2-container--jet .select2-selection--single .select2-selection__clear {
       cursor: pointer;
       float: right;
-      font-weight: bold; }
+      font-weight: 700; }
     .select2-container--jet .select2-selection--single .select2-selection__arrow {
       height: 26px;
       position: absolute;
@@ -835,7 +835,7 @@
     .select2-container--jet .select2-selection--multiple .select2-selection__clear {
       cursor: pointer;
       float: right;
-      font-weight: bold;
+      font-weight: 700;
       margin-top: 5px;
       margin-right: 10px; }
     .select2-container--jet .select2-selection--multiple .select2-selection__choice {
@@ -854,7 +854,7 @@
       color: #7f8fa4;
       cursor: pointer;
       display: inline-block;
-      font-weight: bold;
+      font-weight: 700;
       margin-right: 2px; }
       .select2-container--jet .select2-selection--multiple .select2-selection__choice__remove:hover {
         color: #1cacfc; }

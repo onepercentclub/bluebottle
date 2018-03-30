@@ -54,7 +54,7 @@
 #recent-actions-module {
   > h2 {
     padding: 6px;
-    font-weight: bold;
+    font-weight: 700;
     margin: 0;
   }
 
@@ -185,7 +185,7 @@ ul.actionlist li {
     border-radius: 4px;
     margin-bottom: 20px;
     transition: background $transitions-duration;
-    .float-right {
+    .align-right {
       text-align: right;
     }
 
@@ -218,7 +218,7 @@ ul.actionlist li {
 
       &-title {
         display: block;
-        font-weight: bold;
+        font-weight: 700;
         line-height: 30px;
         white-space: nowrap;
         overflow: hidden;
@@ -238,7 +238,7 @@ ul.actionlist li {
       &-collapse-button {
         font-size: 1rem;
         vertical-align: middle;
-        font-weight: bold !important;
+        font-weight: 700 !important;
       }
 
       &-buttons {
@@ -358,7 +358,7 @@ ul.actionlist li {
 
       .big {
         font-size: 20px;
-        font-weight: bold;
+        font-weight: 700;
       }
 
       .highlight {
@@ -453,8 +453,7 @@ ul.actionlist li {
 
     .select2-selection {
       border-radius: 4px 0 0 4px !important;
-      border-width: 0;
-
+      border-width: 1px 0 1px 1px;
       @include for-mobile {
         border-radius: 4px !important;
         border-width: 1px;

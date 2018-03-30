@@ -109,7 +109,7 @@
       margin-right: 2px;
       vertical-align: top;
       width: 321px;
-      background: #ffffff url('/static/assets/admin/img/search.svg') no-repeat 290px 50%;
+      background: $content-background-color url('/static/assets/admin/img/search.svg') no-repeat 290px 50%;
       @include for-mobile {
         margin-right: 5px;
       }
@@ -407,7 +407,7 @@
         line-height: 32px;
         outline: 0;
         font-size: 0.9rem;
-        font-weight: bold;
+        font-weight: 700;
         text-align: center;
         padding: 0 20px;
         margin: 0 8px 5px 0;

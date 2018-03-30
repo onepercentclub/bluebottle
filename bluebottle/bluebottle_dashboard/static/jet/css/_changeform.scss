@@ -86,7 +86,7 @@ form {
     word-wrap: break-word;
     line-height: 1;
     color: $dim-text-color;
-    font-weight: bold;
+    font-weight: 700;
 
     @include for-mobile {
       display: block;
@@ -362,7 +362,7 @@ fieldset.monospace textarea {
       line-height: 32px;
       outline: 0;
       font-size: 0.9rem;
-      font-weight: bold;
+      font-weight: 700;
       text-align: center;
       padding: 0 20px;
       box-sizing: border-box;
@@ -540,7 +540,7 @@ body.popup .submit-row {
   h3 {
     margin: 0;
     background: linear-gradient(to top, $content-background-color 0%, $content-contrast-background-color 100%);
-    font-weight: bold;
+    font-weight: 700;
     color: $text-color;
     padding: 20px 24px 0 24px;
     font-size: 0.9rem;
@@ -739,7 +739,7 @@ body.popup .submit-row {
     &.selected {
       background: transparent;
       color: $text-color;
-      font-weight: bold;
+      font-weight: 700;
       cursor: default;
     }
 
@@ -761,7 +761,7 @@ body.popup .submit-row {
 
     thead th, thead td {
       background: linear-gradient(to top, $content-background-color 0%, $content-contrast-background-color 100%);
-      font-weight: bold;
+      font-weight: 700;
       color: $text-color;
 
       a:link, a:visited {
@@ -826,7 +826,7 @@ body.popup .submit-row {
 
   ul.tools a.add, div.add-row a, .tabular tr.add-row td a {
     font-size: 0.9rem;
-    font-weight: bold;
+    font-weight: 700;
     vertical-align: middle;
 
     &:before {
@@ -876,7 +876,7 @@ form .related-widget-wrapper ul {
     }
 
     &-icon {
-      font-weight: bold;
+      font-weight: 700;
       vertical-align: middle;
       line-height: 32px;
 
@@ -990,7 +990,7 @@ form .related-widget-wrapper ul {
       position: relative;
       top: 2px;
       color: $dim-text-color;
-      font-weight: bold;
+      font-weight: 700;
       transition: background-color $fast-transitions-duration,
                   color $fast-transitions-duration,
                   border-color $transitions-duration;

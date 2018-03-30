@@ -38,7 +38,7 @@ p {
 }
 
 h1, h2, h3, h4, h5 {
-  font-weight: bold;
+  font-weight: 700;
 }
 
 h1 {
@@ -60,7 +60,7 @@ h2.subhead {
 h3 {
   font-size: 1rem;
   margin: .8em 0 .3em 0;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 h4 {
@@ -89,7 +89,7 @@ dt, dd {
 }
 
 dt {
-  font-weight: bold;
+  font-weight: 700;
   margin-top: 4px;
 }
 
@@ -268,7 +268,7 @@ img[src$="admin/img/icon-unknown.gif"], img[src$="admin/img/icon-unknown.svg"] {
   display: none;
 
   + span {
-    font-weight: bold;
+    font-weight: 700;
     color: $success-text-color;
   }
 }

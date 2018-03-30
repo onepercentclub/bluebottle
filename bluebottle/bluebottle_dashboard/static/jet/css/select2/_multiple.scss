@@ -22,7 +22,7 @@
   .select2-selection__clear {
     cursor: pointer;
     float: right;
-    font-weight: bold;
+    font-weight: 700;
     margin-top: 5px;
     margin-right: 10px;
   }
@@ -45,7 +45,7 @@
     color: $input-contrast-text-color;
     cursor: pointer;
     display: inline-block;
-    font-weight: bold;
+    font-weight: 700;
     margin-right: 2px;
 
     &:hover {

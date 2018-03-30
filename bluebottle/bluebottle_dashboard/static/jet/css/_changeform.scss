@@ -4,7 +4,7 @@
 
 .form-row {
   overflow: hidden;
-  padding: 10px;
+  padding: 14px;
 
   img, input {
     vertical-align: middle;
@@ -85,6 +85,8 @@ form {
     width: 160px;
     word-wrap: break-word;
     line-height: 1;
+    color: $dim-text-color;
+    font-weight: bold;
 
     @include for-mobile {
       display: block;
@@ -150,8 +152,9 @@ form .aligned {
   p.help {
     clear: left;
     margin-top: 0;
-    margin-left: 160px;
-    padding-left: 10px;
+    margin-left: 0;
+    padding-left: 0;
+    color: lighten($text-color, 30);
 
     @include for-mobile {
       margin-left: 0;
@@ -310,7 +313,7 @@ fieldset.monospace textarea {
     &, &:visited, &:hover {
       margin: 0 5px 5px 0;
       padding: 0 20px;
-      font-size: 12px;
+      font-size: 0.9rem;
 
       @include for-phone {
         display: block;
@@ -352,19 +355,23 @@ fieldset.monospace textarea {
       display: inline-block;
       background-color: $danger-button-background-color;
       color: $danger-button-text-color;
-      border: 0;
+      border-bottom: darken($danger-button-background-color, 10) 2px solid;
+      cursor: pointer;
       border-radius: 4px;
       height: 32px;
       line-height: 32px;
       outline: 0;
-      font-size: 12px;
-      font-weight: lighter;
+      font-size: 0.9rem;
+      font-weight: bold;
       text-align: center;
       padding: 0 20px;
-      text-transform: uppercase;
       box-sizing: border-box;
       transition: background $transitions-duration, box-shadow $transitions-duration, border $transitions-duration;
 
+      &:hover, &:active {
+        background-color: darken($danger-button-background-color, 10);
+        color: $danger-button-text-color;
+      }
       @include for-phone {
         display: block;
         width: 100%;
@@ -536,8 +543,7 @@ body.popup .submit-row {
     font-weight: bold;
     color: $text-color;
     padding: 20px 24px 0 24px;
-    text-transform: uppercase;
-    font-size: 12px;
+    font-size: 0.9rem;
 
     @include for-mobile {
       padding: 20px 20px 0 20px;
@@ -823,7 +829,7 @@ body.popup .submit-row {
   }
 
   ul.tools a.add, div.add-row a, .tabular tr.add-row td a {
-    font-size: 12px;
+    font-size: 0.9rem;
     font-weight: bold;
     vertical-align: middle;
 
@@ -868,9 +874,9 @@ form .related-widget-wrapper ul {
 
   &-button {
     &, &:visited, &:hover {
-      width: 120px;
-      vertical-align: middle;
-      box-sizing: border-box;
+      max-width: 250px;
+      text-overflow: ellipsis;
+      display: inline-block;
     }
 
     &-icon {
@@ -888,13 +894,10 @@ form .related-widget-wrapper ul {
     }
 
     &-label {
-      display: block;
-      opacity: 0.5;
-      transition: opacity $transitions-duration;
-      text-align: center;
       white-space: nowrap;
+      display: block;
       overflow: hidden;
-      text-overflow: ellipsis;
+      text-overflow: ellipsis
     }
 
     &-icon.left + &-label {
@@ -903,14 +906,6 @@ form .related-widget-wrapper ul {
 
     &-icon.right + &-label {
       margin-right: 16px;
-    }
-
-    &:hover &-label {
-      opacity: 1;
-    }
-
-    &.disabled:hover &-label {
-      opacity: 0.5;
     }
   }
 }
@@ -977,7 +972,7 @@ form .related-widget-wrapper ul {
 
 .changeform-tabs {
   margin: 0;
-  padding: 0 0 0 16px;
+  padding: 0;
   border-bottom: 2px solid $background-color;
   background-color: $content-background-color;
   border-radius: 4px 4px 0 0;
@@ -993,15 +988,13 @@ form .related-widget-wrapper ul {
 
     a, a:hover, a:visited {
       display: inline-block;
-      padding: 12px 4px;
+      padding: 12px 8px;
       margin: 0 8px 0 0;
-      border-bottom: 2px solid transparent;
+      border-bottom: 6px solid transparent;
       position: relative;
       top: 2px;
       color: $dim-text-color;
       font-weight: bold;
-      font-size: 11px;
-      text-transform: uppercase;
       transition: background-color $fast-transitions-duration,
                   color $fast-transitions-duration,
                   border-color $transitions-duration;

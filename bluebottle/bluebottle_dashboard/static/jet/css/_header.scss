@@ -4,10 +4,8 @@
 
 #branding {
   display: none;
-  background-color: $sidebar-contrast-background-color;
   color: $sidebar-contrast-text-color;
-  padding: 14px 32px 14px 36px;
-  text-align: center;
+  padding: 16px;
   position: relative;
   height: auto !important;
   min-height: 52px;
@@ -15,6 +13,11 @@
 
   @include for-mobile {
     min-height: 0;
+  }
+
+  img {
+    width: 40px;
+    display: block;
   }
 
   &.initialized {
@@ -36,8 +39,6 @@
     display: inline-block;
     padding: 0 10px;
     margin: 0;
-    text-transform: uppercase;
-    font-size: 11px;
     vertical-align: middle;
   }
 
@@ -74,13 +75,16 @@
   }
 
   &-menu {
-    position: absolute;
     top: 50%;
-    left: 20px;
-    margin-top: -8px;
     display: inline-block;
     font-size: 16px;
     cursor: pointer;
+    position: relative;
+    margin: 0;
+    left: 0;
+    border-radius: 12px;
+    background-color: #ffffff;
+    padding: 4px;
 
     &:hover {
       color: #fff;
@@ -107,7 +111,7 @@
     right: 20px;
     border: 1px solid $top-border-color;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 0.9rem;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -237,8 +241,6 @@
 
   &-contrast-block {
     &-title {
-      text-transform: uppercase;
-      font-size: 10px;
       font-weight: bold;
       margin-bottom: 6px;
     }
@@ -274,4 +276,24 @@
   &.initialized {
     display: block;
   }
+}
+
+.site-title {
+    background: #ffff;
+    color: $top-link-color;
+    padding-left: 8px;
+}
+
+.site-title-logo {
+    height: 30px;
+    margin: 10px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.site-title-text {
+    margin: 12px;
+    font-size: 20px;
+    font-weight: bold;
+    display: inline-block;
 }

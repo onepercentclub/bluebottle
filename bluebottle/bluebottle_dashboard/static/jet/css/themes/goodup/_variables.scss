@@ -8,42 +8,43 @@
  */
 
 $background-color: #f8fafc;
-$text-color: #8B9AA7;
-$dim-text-color: #c0c6cc;
+$text-color: #4E4E4E;
+$dim-text-color: #281E50;
 $error-text-color: #c7254e;
 
-$link-color: #79A7D8;
-$hover-link-color: #1cacfc;
+$link-color: #4E4E4E;
+$hover-link-color: #3C96DC;
 
 $contrast-color: #2faa60;
 
-$font: Arial, sans-serif !default;
+$font: Helvetica Neue, Arial, sans-serif !default;
 $font-size: 14px;
 
 /*
  * Sidebar
  */
 
-$sidebar-width: 250px;
+$sidebar-width: 180px;
+$popup-sidebar-width: 220px;
 
-$sidebar-background-color: #333C47;
-$sidebar-contrast-background-color: #2B333D;
+$sidebar-background-color: #281E50;;
+$sidebar-contrast-background-color: #FFFFFF;
 $sidebar-contrast-text-color: #6A7481;
 
-$sidebar-arrow-color: #222830;
-$sidebar-hover-arrow-color: #FDBB5E;
+$sidebar-arrow-color: #FFFFFF;
+$sidebar-hover-arrow-color: #FFFFFF;
 
-$sidebar-action-color: #7D8CA1;
+$sidebar-action-color: #FFFFFF;
 $sidebar-hover-action-color: #FDBB5E;
 
 $sidebar-title-action-color: #fff;
 $sidebar-hover-title-action-item-color: #FDBB5E;
 
-$sidebar-text-color: #7D8CA1;
-$sidebar-icon-color: #636C79;
-$sidebar-link-color: #B8C5D6;
+$sidebar-text-color: #FFFFFF;
+$sidebar-icon-color: #FFFFFF;
+$sidebar-link-color: #FFFFFF;
 $sidebar-hover-link-color: #fff;
-$sidebar-hover-background-color: #2B333D;
+$sidebar-hover-background-color: rgba(228,228,235,0.1);;
 
 $sidebar-popup-search-input-background-color: #E3ECF2;
 $sidebar-popup-search-input-text-color: #7f8fa4;
@@ -53,9 +54,9 @@ $sidebar-popup-background-color: #f7f8fa;
 $sidebar-popup-text-color: #7f8fa4;
 $sidebar-popup-overlay-color: #000;
 
-$sidebar-popup-link-text-color: #7f8fa4;
+$sidebar-popup-link-text-color: #281E50;
 $sidebar-popup-hover-link-color: #fff;
-$sidebar-popup-hover-link-background-color: #1cacfc;
+$sidebar-popup-hover-link-background-color: rgba(40,30,80,0.1);
 
 /*
  * Top
@@ -63,9 +64,9 @@ $sidebar-popup-hover-link-background-color: #1cacfc;
 
 $top-height: 32px;
 
-$top-text-color: #8B9EAB;
-$top-separator-color: #C6D8E4;
-$top-link-color: #C6D8E4;
+$top-text-color: #3C96DC;
+$top-separator-color: #281E50;
+$top-link-color: #281E50;
 $top-hover-link-color: #1cacfc;
 $top-border-color: #dce0e6;
 $top-icon-color: $link-color;
@@ -81,37 +82,52 @@ $top-dropdown-icon-color: #8b9cb3;
 $top-dropdown-selected-color: #EFEDC8;
 
 /*
+ * Messages
+ */
+
+$warning-color: #E62828;
+$warning-text-color: #fff;
+$info-color: #3C96DC;
+$info-text-color: #fff;
+$success-color: #64A03C;
+$success-text-color: #fff;
+
+/*
  * Content
  */
 
 $content-background-color: #fff;
 $content-contrast-background-color: #F8FAFC; //inline list bg
-$content-contrast2-background-color: #E3ECF2; //table header
+$content-contrast2-background-color: #281E50; //table header
 $content-contrast3-background-color: #EEF3F7; //dashboard, delete collapsable
-$content-selected-background-color: #FFFDDB;
-$content-contrast2-text-color: $text-color;
+$content-selected-background-color: rgba(60,150,220,0.1);
+$content-contrast2-text-color: #FFFFFF;
 $content-border-color: #f1f2f4; //row bottom
 $content-border2-color: #D5E3EC; //table bottom
-$content-selected-border-color: #EFEDC8;
+$content-selected-border-color: rgba(60,150,220,0.4);
 
-$tab-selected-border-color: #1cacfc;
-$tab-error-border-color: #c7254e;
+$tab-selected-border-color: #3C96DC;
+$tab-error-border-color: $warning-color;
+
 
 /*
  * Buttons
  */
 
-$button-background-color: #E3ECF2;
-$button-hover-background-color: #1cacfc;
+$button-background-color: rgba(40,30,80,0.1);
+$button-hover-background-color: rgba(40,30,80,0.3);
 $button-active-background-color: $contrast-color;
-$button-text-color: #7f8fa4;
-$button-hover-text-color: #fff;
-$button-active-text-color: #fff;
+$button-text-color: #281E50;
+$button-hover-text-color: #281E50;
+$button-active-text-color: #281E50;
 
-$primary-button-background-color: $contrast-color;
+$primary-button-background-color: #64A03C;
 $primary-button-text-color: #fff;
 
-$danger-button-background-color: #c7254e;
+$secondary-button-background-color: #3C96DC;;
+$secondary-button-text-color: #fff;
+
+$danger-button-background-color: $warning-color;
 $danger-button-text-color: #fff;
 
 $background-button-background-color: #fff;
@@ -123,7 +139,7 @@ $background-button-text-color: #7f8fa4;
 
 $input-background-color: #fff;
 $input-contrast-background-color: #E3ECF2;
-$input-border-color: #EDEDED;
+$input-border-color: #D0D2D3;;
 $input-hover-background-color: #1cacfc;
 $input-icon-color: $link-color;
 $input-text-color: $text-color;
@@ -137,17 +153,6 @@ $input-shadow-color: transparentize($contrast-color, 0.25);
 $background-input-background-color: #fff;
 $background-input-border-color: #fff;
 $background-input-text-color: $text-color;
-
-/*
- * Messages
- */
-
-$warning-color: #e75e40;
-$warning-text-color: #fff;
-$info-color: #FCA326;
-$info-text-color: #fff;
-$success-color: #2d9fd8;
-$success-text-color: #fff;
 
 /*
  * Login

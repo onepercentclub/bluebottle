@@ -38,7 +38,7 @@
     > li {
       padding: 8px;
       border-bottom: 1px solid $content-border-color;
-      font-size: 13px;
+      font-size: 1rem;
       list-style: none;
 
       &:last-child {
@@ -53,10 +53,9 @@
     input[type="submit"] {
       background-color: $danger-button-background-color;
       color: $danger-button-text-color;
-      font-size: 12px;
+      font-size: 0.9rem;
       font-weight: lighter;
       padding: 0 20px;
-      text-transform: uppercase;
       vertical-align: middle;
       margin-bottom: 5px;
 

@@ -52,8 +52,8 @@
 
   &-pin {
     position: absolute;
-    top: 50%;
-    right: 4px;
+    top: 28px;
+    right: 6px;
     margin-top: -11px;
     display: inline-block;
     font-size: 1.2rem;
@@ -282,7 +282,8 @@
   color: $top-link-color;
   font-size: 1.1rem;
   font-weight: 700;
-  padding: 10px 10px 0 20px;
+  padding: 16px 10px 8px 20px;
+  text-transform: capitalize;
 }
 
 .site-title-login {
@@ -293,9 +294,4 @@
 
 .site-title-logo {
   width: 200px;
-}
-
-
-.site-title-text {
-    display: block;
 }

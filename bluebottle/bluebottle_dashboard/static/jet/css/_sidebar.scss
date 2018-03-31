@@ -211,8 +211,8 @@
       }
     }
 
-    &:hover, &.selected {
-      color: $sidebar-hover-link-color;
+    &:hover, &.selected, &:active {
+      color: $sidebar-link-color;
       background-color: $sidebar-hover-background-color;
     }
 
@@ -519,7 +519,7 @@
           }
         }
 
-        &.selected a {
+        &.selected a, &:hover a, &:active a{
           background-color: $sidebar-popup-hover-link-background-color;
           color: $sidebar-popup-hover-link-color;
         }

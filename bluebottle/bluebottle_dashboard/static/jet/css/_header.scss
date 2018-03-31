@@ -279,21 +279,23 @@
 }
 
 .site-title {
-    background: #ffff;
-    color: $top-link-color;
-    padding-left: 8px;
+  color: $top-link-color;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 10px 10px 0 20px;
+}
+
+.site-title-login {
+  padding-top: 20px;
+  font-size: 1.4rem;
+  text-align: center;
 }
 
 .site-title-logo {
-    height: 30px;
-    margin: 10px;
-    display: inline-block;
-    vertical-align: middle;
+  width: 200px;
 }
 
+
 .site-title-text {
-    margin: 12px;
-    font-size: 20px;
-    font-weight: 700;
-    display: inline-block;
+    display: block;
 }

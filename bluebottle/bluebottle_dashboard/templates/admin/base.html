@@ -58,6 +58,7 @@
             {% block branding %}{% endblock %}
         </div>
         {% block usertools %}
+
         {% if user.is_active and user.is_staff or has_permission %}
         <div id="user-tools">
             {% block welcome-msg %}
@@ -75,17 +76,21 @@
         {% endblock %}
     </div>
     <!-- END Header -->
-
-    {% block site_title %}
+    {% if user.is_authenticated %}
         <div class="site-title">
-            <img class="site-title-logo" src="{{ MEDIA_URL }}{{ logo }}" />
+            {{ tenant.name }}
         </div>
-    {% endblock %}
+    {% else %}
+        <div class="site-title site-title-login">
+            <img class="site-title-logo" alt="{{ tenant.name }}" src="{{ MEDIA_URL }}{{ logo }}" />
+        </div>
+    {% endif %}
+
     {% block breadcrumbs %}
-    <div class="breadcrumbs">
-    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-    {% if title %} &rsaquo; {{ title }}{% endif %}
-    </div>
+        <div class="breadcrumbs">
+            <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+            {% if title %} &rsaquo; {{ title }}{% endif %}
+        </div>
     {% endblock %}
     {% endif %}
 

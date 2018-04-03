@@ -57,26 +57,66 @@
 
 /* Fluent Contents */
 
-.cp-item-controls .cp-item-delete a,
-.cp-item-controls .cp-item-icons a {
-    width: 22px;
-    height: 22px;
+.cp-item-icons .cp-item-down,
+.cp-item-icons .cp-item-up,
+.cp-item-controls .cp-item-delete a {
+    background: none;
+
 }
 
-.cp-item-icons .cp-item-up {
-    background-image: url("/static/assets/admin/images/icons/editor-tail-up-24px.svg");
+.cp-item-down:hover:before,
+.cp-item-up:hover:before {
+    color: #3C96DC;
 }
 
-.cp-item-icons .cp-item-down {
-    background-image: url("/static/assets/admin/images/icons/editor-tail-down-24px.svg");
+.cp-item-down:before {
+    content: "\ea3e";
+    font-size: 1rem;
+    color: #281E50;
 }
 
+.cp-item-up:before {
+    content: "\ea3a";
+    font-size: 1rem;
+    color: #281E50;
+}
 
 .cp-item-controls .cp-item-delete a {
-    background-image: url("/static/assets/admin/images/icons/editor-delete-24px.svg");
+    padding: 0 3px;
 }
 
-.cp-item-controls .cp-item-delete input,
-.cp-item-controls .cp-item-delete label {
+.cp-item-controls .cp-item-delete a:before {
+    content: "\ea0f";
+    font-size: 1rem;
+    color: #281E50;
+}
+
+.cp-item-controls .cp-item-delete a:hover:before {
+    color: #c7254e;
+}
+
+.aligned .cp-item-controls label {
     display: none;
+}
+
+#content .parler-language-tabs {
+    border-bottom: 2px solid #B9B7C8;
+}
+
+#content .parler-language-tabs span {
+    border: 0;
+    top: 0;
+    background-color: #E3E4EA;
+    color: #281E50;
+}
+
+#content .parler-language-tabs span a {
+    color: #281E50;
+    font-weight: 700;
+}
+
+#content .parler-language-tabs span.current {
+    border: 0;
+    background-color: #B9B7C8;
+    color: #281E50;
 }

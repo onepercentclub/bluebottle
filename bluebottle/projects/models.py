@@ -626,8 +626,8 @@ class Project(BaseProject, PreviousStatusMixin):
         data = {
             "Project": self.title,
             "Owner": self.owner.email,
-            "old_status": old_status.name,
-            "new_status": new_status.name
+            "old_status": old_status.slug,
+            "new_status": new_status.slug
         }
 
         if old_status.slug in ('plan-new',

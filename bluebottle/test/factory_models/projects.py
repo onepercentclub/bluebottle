@@ -16,7 +16,7 @@ from .organizations import OrganizationFactory
 class ProjectThemeFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = ProjectTheme
-        django_get_or_create = ('name',)
+        django_get_or_create = ('slug',)
 
     name = factory.Sequence(lambda n: 'Theme_{0}'.format(n))
     slug = name
@@ -49,7 +49,7 @@ class ProjectFactory(factory.DjangoModelFactory):
     organization = factory.SubFactory(OrganizationFactory)
     title = factory.Sequence(lambda n: 'Project_{0}'.format(n))
     status = factory.SubFactory(ProjectPhaseFactory, sequence=1)
-    theme = factory.SubFactory(ProjectThemeFactory, name='Education')
+    theme = factory.SubFactory(ProjectThemeFactory, slug='education')
     country = factory.SubFactory(CountryFactory)
     currencies = ['EUR']
 

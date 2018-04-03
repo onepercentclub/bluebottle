@@ -2755,7 +2755,7 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
 
 class ProjectSupportersExportTest(BluebottleTestCase):
     """
-    Tests for the Project API permissions.
+    Tests for the Project supporters export permissions.
     """
     def setUp(self):
         super(ProjectSupportersExportTest, self).setUp()
@@ -2798,7 +2798,7 @@ class ProjectSupportersExportTest(BluebottleTestCase):
                 self.assertTrue(field in row)
 
     def test_non_owner(self):
-        # view allowed
+        # view not allowed
         response = self.client.get(
             self.supporters_export_url,
             token="JWT {0}".format(
@@ -2808,7 +2808,7 @@ class ProjectSupportersExportTest(BluebottleTestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_no_user(self):
-        # view allowed
+        # view not allowed
         response = self.client.get(
             self.supporters_export_url
         )

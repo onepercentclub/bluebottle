@@ -7103,5 +7103,243 @@
             "name": "Cocos (Keeling) Islands", 
             "language_code": "en"
         }
+    }, 
+    {
+        "pk": 1, 
+        "model": "geo.region", 
+        "fields": {
+            "name": "Africa", 
+            "numeric_code": "002"
+        }
+    }, 
+    {
+        "pk": 14, 
+        "model": "geo.region", 
+        "fields": {
+            "name": "Europe", 
+            "numeric_code": "150"
+        }
+    }, 
+    {
+        "pk": 15, 
+        "model": "geo.region", 
+        "fields": {
+            "name": "Oceania", 
+            "numeric_code": "009"
+        }
+    }, 
+    {
+        "pk": 16, 
+        "model": "geo.region", 
+        "fields": {
+            "name": "Asia", 
+            "numeric_code": "142"
+        }
+    }, 
+    {
+        "pk": 17, 
+        "model": "geo.region", 
+        "fields": {
+            "name": "Americas", 
+            "numeric_code": "019"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 1, 
+            "name": "Eastern Africa", 
+            "numeric_code": "014"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 1, 
+            "name": "Middle Africa", 
+            "numeric_code": "017"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 1, 
+            "name": "Northern Africa", 
+            "numeric_code": "015"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 1, 
+            "name": "Southern Africa", 
+            "numeric_code": "018"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 1, 
+            "name": "Western Africa", 
+            "numeric_code": "011"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 17, 
+            "name": "Caribbean", 
+            "numeric_code": "029"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 17, 
+            "name": "Central America", 
+            "numeric_code": "013"
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 17, 
+            "name": "South America", 
+            "numeric_code": "005"
+        }
+    }, 
+    {
+        "pk": 9, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 17, 
+            "name": "Northern America", 
+            "numeric_code": "021"
+        }
+    }, 
+    {
+        "pk": 10, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 16, 
+            "name": "Central Asia", 
+            "numeric_code": "143"
+        }
+    }, 
+    {
+        "pk": 11, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 16, 
+            "name": "Southern Asia", 
+            "numeric_code": "034"
+        }
+    }, 
+    {
+        "pk": 12, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 16, 
+            "name": "South-Eastern Asia", 
+            "numeric_code": "035"
+        }
+    }, 
+    {
+        "pk": 13, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 16, 
+            "name": "Western Asia", 
+            "numeric_code": "145"
+        }
+    }, 
+    {
+        "pk": 14, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 14, 
+            "name": "Eastern Europe", 
+            "numeric_code": "151"
+        }
+    }, 
+    {
+        "pk": 15, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 14, 
+            "name": "Northern Europe", 
+            "numeric_code": "154"
+        }
+    }, 
+    {
+        "pk": 16, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 14, 
+            "name": "Southern Europe", 
+            "numeric_code": "039"
+        }
+    }, 
+    {
+        "pk": 17, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 14, 
+            "name": "Western Europe", 
+            "numeric_code": "155"
+        }
+    }, 
+    {
+        "pk": 18, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 15, 
+            "name": "Australia and New Zealand", 
+            "numeric_code": "053"
+        }
+    }, 
+    {
+        "pk": 19, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 15, 
+            "name": "Melanesia", 
+            "numeric_code": "054"
+        }
+    }, 
+    {
+        "pk": 20, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 15, 
+            "name": "Micronesia", 
+            "numeric_code": "057"
+        }
+    }, 
+    {
+        "pk": 21, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 15, 
+            "name": "Polynesia", 
+            "numeric_code": "061"
+        }
+    }, 
+    {
+        "pk": 22, 
+        "model": "geo.subregion", 
+        "fields": {
+            "region": 16, 
+            "name": "Eastern Asia", 
+            "numeric_code": "030"
+        }
     }
 ]

@@ -169,11 +169,12 @@ $login-content-background-color: #fff;
  * jQuery UI
  */
 
-$jquery-ui-buttonpane-background: $content-contrast2-background-color;
+$jquery-ui-buttonpane-background: $sidebar-popup-background-color;
+$jquery-ui-buttonpane-text: $sidebar-popup-link-text-color;
 
-$jquery-ui-state-default-background-color: $input-background-color;
-$jquery-ui-state-default-border-color: $input-border-color;
-$jquery-ui-state-default-text-color: $input-text-color;
+$jquery-ui-state-default-background-color: $sidebar-popup-background-color;
+$jquery-ui-state-default-border-color: $sidebar-popup-link-text-color;
+$jquery-ui-state-default-text-color: $sidebar-popup-link-text-color;
 
 $jquery-ui-state-hover-background-color: $button-hover-background-color;
 $jquery-ui-state-hover-border-color: $button-hover-background-color;

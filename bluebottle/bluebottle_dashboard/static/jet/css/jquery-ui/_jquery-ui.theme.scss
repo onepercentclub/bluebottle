@@ -19,11 +19,11 @@
 
 .ui-widget-header {
   border: 0;
-  background: $content-contrast2-background-color;
-  color: $content-contrast2-text-color;
+  background: $jquery-ui-buttonpane-background;
+  color: $jquery-ui-buttonpane-text;
   font-weight: 700;
   a {
-    color: $content-contrast2-text-color;
+    color: $jquery-ui-buttonpane-text;
   }
 }
 
@@ -37,7 +37,7 @@
 
 .ui-widget-header .ui-state-default {
   background: none;
-  color: $content-contrast2-text-color;
+  color: $jquery-ui-buttonpane-text;
   border: 0;
 }
 

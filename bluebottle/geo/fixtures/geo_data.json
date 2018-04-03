@@ -7108,7 +7108,6 @@
         "pk": 1, 
         "model": "geo.region", 
         "fields": {
-            "name": "Africa", 
             "numeric_code": "002"
         }
     }, 
@@ -7116,7 +7115,6 @@
         "pk": 14, 
         "model": "geo.region", 
         "fields": {
-            "name": "Europe", 
             "numeric_code": "150"
         }
     }, 
@@ -7124,7 +7122,6 @@
         "pk": 15, 
         "model": "geo.region", 
         "fields": {
-            "name": "Oceania", 
             "numeric_code": "009"
         }
     }, 
@@ -7132,7 +7129,6 @@
         "pk": 16, 
         "model": "geo.region", 
         "fields": {
-            "name": "Asia", 
             "numeric_code": "142"
         }
     }, 
@@ -7140,8 +7136,97 @@
         "pk": 17, 
         "model": "geo.region", 
         "fields": {
-            "name": "Americas", 
             "numeric_code": "019"
+        }
+    }, 
+    {
+        "pk": 0, 
+        "model": "geo.regiontranslation", 
+        "fields": {
+            "master": 1, 
+            "name": "Afrika", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "geo.regiontranslation", 
+        "fields": {
+            "master": 1, 
+            "name": "Africa", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "geo.regiontranslation", 
+        "fields": {
+            "master": 14, 
+            "name": "Europa", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "geo.regiontranslation", 
+        "fields": {
+            "master": 14, 
+            "name": "Europe", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "geo.regiontranslation", 
+        "fields": {
+            "master": 15, 
+            "name": "Oceani\u00eb", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "geo.regiontranslation", 
+        "fields": {
+            "master": 15, 
+            "name": "Oceania", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "geo.regiontranslation", 
+        "fields": {
+            "master": 16, 
+            "name": "Azi\u00eb", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "geo.regiontranslation", 
+        "fields": {
+            "master": 16, 
+            "name": "Asia", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "geo.regiontranslation", 
+        "fields": {
+            "master": 17, 
+            "name": "Amerika", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 9, 
+        "model": "geo.regiontranslation", 
+        "fields": {
+            "master": 17, 
+            "name": "Americas", 
+            "language_code": "en"
         }
     }, 
     {
@@ -7149,7 +7234,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 1, 
-            "name": "Eastern Africa", 
             "numeric_code": "014"
         }
     }, 
@@ -7158,7 +7242,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 1, 
-            "name": "Middle Africa", 
             "numeric_code": "017"
         }
     }, 
@@ -7167,7 +7250,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 1, 
-            "name": "Northern Africa", 
             "numeric_code": "015"
         }
     }, 
@@ -7176,7 +7258,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 1, 
-            "name": "Southern Africa", 
             "numeric_code": "018"
         }
     }, 
@@ -7185,7 +7266,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 1, 
-            "name": "Western Africa", 
             "numeric_code": "011"
         }
     }, 
@@ -7194,7 +7274,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 17, 
-            "name": "Caribbean", 
             "numeric_code": "029"
         }
     }, 
@@ -7203,7 +7282,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 17, 
-            "name": "Central America", 
             "numeric_code": "013"
         }
     }, 
@@ -7212,7 +7290,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 17, 
-            "name": "South America", 
             "numeric_code": "005"
         }
     }, 
@@ -7221,7 +7298,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 17, 
-            "name": "Northern America", 
             "numeric_code": "021"
         }
     }, 
@@ -7230,7 +7306,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 16, 
-            "name": "Central Asia", 
             "numeric_code": "143"
         }
     }, 
@@ -7239,7 +7314,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 16, 
-            "name": "Southern Asia", 
             "numeric_code": "034"
         }
     }, 
@@ -7248,7 +7322,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 16, 
-            "name": "South-Eastern Asia", 
             "numeric_code": "035"
         }
     }, 
@@ -7257,7 +7330,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 16, 
-            "name": "Western Asia", 
             "numeric_code": "145"
         }
     }, 
@@ -7266,7 +7338,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 14, 
-            "name": "Eastern Europe", 
             "numeric_code": "151"
         }
     }, 
@@ -7275,7 +7346,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 14, 
-            "name": "Northern Europe", 
             "numeric_code": "154"
         }
     }, 
@@ -7284,7 +7354,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 14, 
-            "name": "Southern Europe", 
             "numeric_code": "039"
         }
     }, 
@@ -7293,7 +7362,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 14, 
-            "name": "Western Europe", 
             "numeric_code": "155"
         }
     }, 
@@ -7302,7 +7370,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 15, 
-            "name": "Australia and New Zealand", 
             "numeric_code": "053"
         }
     }, 
@@ -7311,7 +7378,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 15, 
-            "name": "Melanesia", 
             "numeric_code": "054"
         }
     }, 
@@ -7320,7 +7386,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 15, 
-            "name": "Micronesia", 
             "numeric_code": "057"
         }
     }, 
@@ -7329,7 +7394,6 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 15, 
-            "name": "Polynesia", 
             "numeric_code": "061"
         }
     }, 
@@ -7338,8 +7402,403 @@
         "model": "geo.subregion", 
         "fields": {
             "region": 16, 
-            "name": "Eastern Asia", 
             "numeric_code": "030"
+        }
+    }, 
+    {
+        "pk": 0, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 1, 
+            "name": "Oostelijk Afrika", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 1, 
+            "name": "Eastern Africa", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 2, 
+            "name": "Centraal-Afrika", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 2, 
+            "name": "Middle Africa", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 3, 
+            "name": "Noord-Afrika", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 3, 
+            "name": "Northern Africa", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 4, 
+            "name": "Zuidelijk Afrika", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 4, 
+            "name": "Southern Africa", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 5, 
+            "name": "West-Afrika", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 9, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 5, 
+            "name": "Western Africa", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 10, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 6, 
+            "name": "Cara\u00efben", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 11, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 6, 
+            "name": "Caribbean", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 12, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 7, 
+            "name": "Centraal-Amerika", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 13, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 7, 
+            "name": "Central America", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 14, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 8, 
+            "name": "Zuid-Amerika", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 15, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 8, 
+            "name": "South America", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 16, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 9, 
+            "name": "Noord-Amerika", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 17, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 9, 
+            "name": "Northern America", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 18, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 10, 
+            "name": "Centraal-Azi\u00eb", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 19, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 10, 
+            "name": "Central Asia", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 20, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 11, 
+            "name": "Zuid-Azi\u00eb", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 21, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 11, 
+            "name": "Southern Asia", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 22, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 12, 
+            "name": "Zuidoost-Azi\u00eb", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 23, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 12, 
+            "name": "South-Eastern Asia", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 24, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 13, 
+            "name": "Zuidwest-Azi\u00eb", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 25, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 13, 
+            "name": "Western Asia", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 26, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 14, 
+            "name": "Oost-Europa", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 27, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 14, 
+            "name": "Eastern Europe", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 28, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 15, 
+            "name": "Noord-Europa", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 29, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 15, 
+            "name": "Northern Europe", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 30, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 16, 
+            "name": "Zuid-Europa", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 31, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 16, 
+            "name": "Southern Europe", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 32, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 17, 
+            "name": "West-Europa", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 33, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 17, 
+            "name": "Western Europe", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 34, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 18, 
+            "name": "Australi\u00eb en Nieuw-Zeeland", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 35, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 18, 
+            "name": "Australia and New Zealand", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 36, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 19, 
+            "name": "Melanesi\u00eb", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 37, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 19, 
+            "name": "Melanesia", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 38, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 20, 
+            "name": "Micronesi\u00eb", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 39, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 20, 
+            "name": "Micronesia", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 40, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 21, 
+            "name": "Polynesi\u00eb", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 41, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 21, 
+            "name": "Polynesia", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 42, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 22, 
+            "name": "Oost-Azi\u00eb", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 43, 
+        "model": "geo.subregiontranslation", 
+        "fields": {
+            "master": 22, 
+            "name": "Eastern Asia", 
+            "language_code": "en"
         }
     }
 ]

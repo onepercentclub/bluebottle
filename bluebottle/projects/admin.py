@@ -701,9 +701,9 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 admin.site.register(Project, ProjectAdmin)
 
 
-class ProjectPhaseAdmin(admin.ModelAdmin):
-
+class ProjectPhaseAdmin(TranslatableAdmin):
     list_display = ['__unicode__', 'name', 'slug', 'project_link']
+    readonly_fields = ('slug', )
 
     def project_link(self, obj):
         url = "{}?status_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)

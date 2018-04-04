@@ -101,6 +101,8 @@ class ProjectSupportersExportView(RetrieveAPIView):
         ('reward__title', 'Reward'),
     )
 
+    lookup_field = 'slug'
+
     queryset = Project.objects
 
     permission_classes = (
@@ -109,8 +111,8 @@ class ProjectSupportersExportView(RetrieveAPIView):
 
     def get(self, request, pk):
         try:
-            instance = self.queryset.get(pk=pk)
-        except self.queryset.DoesNotExist:
+            instance = self.queryset.get(slug=pk)
+        except Project.DoesNotExist:
             return HttpResponseNotFound()
 
         try:

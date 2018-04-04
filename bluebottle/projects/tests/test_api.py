@@ -2781,7 +2781,7 @@ class ProjectSupportersExportTest(BluebottleTestCase):
             )
 
         self.supporters_export_url = reverse(
-            'project-supporters-export', kwargs={'pk': self.project.pk}
+            'project-supporters-export', kwargs={'pk': self.project.slug}
         )
 
     def test_owner(self):
@@ -2813,3 +2813,11 @@ class ProjectSupportersExportTest(BluebottleTestCase):
             self.supporters_export_url
         )
         self.assertEqual(response.status_code, 401)
+
+    def test_does_not_exist(self):
+        # view allowed
+        response = self.client.get(
+            self.supporters_export_url + 'does-not-exist', token=self.owner_token
+        )
+        self.assertEqual(response.status_code, 404)
+

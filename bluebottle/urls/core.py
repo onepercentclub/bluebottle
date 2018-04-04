@@ -79,6 +79,8 @@ urlpatterns = [
         include('bluebottle.payments_flutterwave.urls.core')),
     url(r'^payments_lipisha/',
         include('bluebottle.payments_lipisha.urls.core')),
+    url(r'^payments_beyonic/',
+        include('bluebottle.payments_beyonic.urls.core')),
 
     url(r'^surveys/',
         include('bluebottle.surveys.urls.core')),
@@ -90,7 +92,6 @@ urlpatterns = [
         include('bluebottle.votes.urls.api')),
     url(r'^api/surveys/',
         include('bluebottle.surveys.urls.api')),
-
 
     # Organization urls for private documents
     url(r'^documents/',

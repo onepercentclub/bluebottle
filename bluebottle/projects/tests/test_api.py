@@ -2820,4 +2820,3 @@ class ProjectSupportersExportTest(BluebottleTestCase):
             self.supporters_export_url + 'does-not-exist', token=self.owner_token
         )
         self.assertEqual(response.status_code, 404)
-

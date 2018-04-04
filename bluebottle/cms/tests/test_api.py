@@ -4,6 +4,7 @@ from decimal import Decimal
 import mock
 
 from django.contrib.auth.models import Permission, Group
+from django.core.cache import cache
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now
@@ -45,6 +46,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.page = ResultPageFactory(title='Results last year', image=image)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('result-page-detail', kwargs={'pk': self.page.id})
+        cache.clear()
 
     def test_results_header(self):
         def watermark(self, image, *args, **kwargs):

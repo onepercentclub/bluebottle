@@ -81,13 +81,17 @@ class TestProjectAdmin(BluebottleTestCase):
         project.deadline_reached()
         return project
 
-    def test_fieldsets(self):
+    def test_sourcing_fieldsets(self):
         request = self.request_factory.get('/')
         request.user = MockUser(['projects.approve_payout'])
+        project = ProjectFactory.create(project_type='sourcing')
+        self.assertEqual(len(self.project_admin.get_fieldsets(request, project)), 3)
 
-        self.assertTrue(
-            'payout_status' in self.project_admin.get_fieldsets(request)[0][1]['fields']
-        )
+    def test_payout_status(self):
+        request = self.request_factory.get('/')
+        request.user = MockUser(['projects.approve_payout'])
+        project = ProjectFactory.create(project_type='funding')
+        self.assertIn('payout_status', self.project_admin.get_fieldsets(request, project)[3][1]['fields'])
 
     def test_search_fields(self):
         self.assertIn('organization__contacts__email', self.project_admin.search_fields)

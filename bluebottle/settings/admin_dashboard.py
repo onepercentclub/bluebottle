@@ -4,7 +4,8 @@ from django.utils.translation import ugettext_lazy as _
 JET_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomIndexDashboard'
 JET_APP_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomAppIndexDashboard'
 
-JET_DEFAULT_THEME = 'light-gray'
+JET_DEFAULT_THEME = 'goodup'
+
 
 JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
     {

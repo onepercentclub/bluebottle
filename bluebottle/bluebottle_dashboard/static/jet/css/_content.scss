@@ -38,7 +38,7 @@ p {
 }
 
 h1, h2, h3, h4, h5 {
-  font-weight: bold;
+  font-weight: 700;
 }
 
 h1 {
@@ -58,13 +58,13 @@ h2.subhead {
 }
 
 h3 {
-  font-size: 14px;
+  font-size: 1rem;
   margin: .8em 0 .3em 0;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 h4 {
-  font-size: 12px;
+  font-size: 0.9rem;
   margin: 1em 0 .8em 0;
   padding-bottom: 3px;
 }
@@ -72,7 +72,6 @@ h4 {
 h5 {
   font-size: 10px;
   margin: 1.5em 0 .5em 0;
-  text-transform: uppercase;
   letter-spacing: 1px;
 }
 
@@ -90,7 +89,7 @@ dt, dd {
 }
 
 dt {
-  font-weight: bold;
+  font-weight: 700;
   margin-top: 4px;
 }
 
@@ -120,7 +119,7 @@ blockquote {
 code, pre {
   font-family: "Bitstream Vera Sans Mono", Monaco, "Courier New", Courier, monospace;
   color: #666;
-  font-size: 12px;
+  font-size: 0.9rem;
 }
 
 pre.literal-block {
@@ -169,7 +168,7 @@ p.mini {
 
 .help, p.help, form p.help {
   color: $dim-text-color;
-  font-size: 12px;
+  font-size: 0.8rem;
 }
 
 .help-tooltip {
@@ -269,7 +268,7 @@ img[src$="admin/img/icon-unknown.gif"], img[src$="admin/img/icon-unknown.svg"] {
   display: none;
 
   + span {
-    font-weight: bold;
+    font-weight: 700;
     color: $success-text-color;
   }
 }

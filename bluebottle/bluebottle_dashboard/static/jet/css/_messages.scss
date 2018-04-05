@@ -20,16 +20,28 @@ ul.messagelist {
     &.success {
       background: $success-color;
       color: $success-text-color;
+       a {
+         color: $success-text-color;
+         text-decoration: underline;
+       }
     }
 
     &.warning, &.error {
       background: $warning-color;
       color: $warning-text-color;
+       a {
+         color: $warning-text-color;
+         text-decoration: underline;
+       }
     }
 
     &.info, &.debug {
       background: $info-color;
       color: $info-text-color;
+       a {
+         color: $info-text-color;
+         text-decoration: underline;
+       }
     }
   }
 }
@@ -50,7 +62,7 @@ ul.errorlist {
   background: #fff;
 
   li {
-    font-size: 13px;
+    font-size: 1rem;
     display: block;
     margin-bottom: 4px;
 
@@ -106,7 +118,7 @@ div.system-message {
 }
 
 .description {
-  font-size: 12px;
+  font-size: 0.9rem;
   margin: 0;
   padding: 6px 0 0 0;
 }

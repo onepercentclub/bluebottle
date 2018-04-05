@@ -41,7 +41,7 @@ from bluebottle.payouts_dorado.adapters import (
     DoradoPayoutAdapter, PayoutValidationError, PayoutCreationError
 )
 from bluebottle.rewards.models import Reward
-from bluebottle.tasks.admin import TaskAdminInline, DeadlineFilter
+from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
@@ -388,19 +388,16 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     def get_title_display(self, obj):
         if len(obj.title) > 35:
             return format_html(
-                u'<span title="{}">{} &hellip;</span>',
+                u'<span title="{}" class="project-title">{} &hellip;</span>',
                 obj.title, obj.title[:45]
             )
         return obj.title
-
     get_title_display.admin_order_field = 'title'
     get_title_display.short_description = _('title')
 
     def get_owner_display(self, obj):
         owner_name = obj.owner.get_full_name()
-        if owner_name:
-            owner_name = u' ({name})'.format(name=owner_name)
-        return u'{email}{name}'.format(name=owner_name, email=obj.owner.email)
+        return format_html(u'<span title="{email}">{name}</a>', name=owner_name, email=obj.owner.email)
 
     get_owner_display.admin_order_field = 'owner__last_name'
     get_owner_display.short_description = _('owner')
@@ -424,6 +421,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             return "{0} %".format(percentage)
         except (AttributeError, InvalidOperation):
             return '-'
+    donated_percentage.short_description = _('Donated')
 
     def expertise_based(self, obj):
         return obj.expertise_based
@@ -581,13 +579,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     def get_list_filter(self, request):
         filters = [
             ('status', UnionFieldListFilter),
-            'is_campaign',
             ('theme', UnionFieldListFilter),
             ('task__skill', UnionFieldListFilter),
-            ProjectReviewerFilter,
             'project_type',
-            'categories',
-            DeadlineFilter,
+            'categories'
         ]
 
         if request.user.has_perm('projects.approve_payout'):
@@ -597,14 +592,14 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if Location.objects.count():
             filters += [LocationGroupFilter, LocationFilter]
         else:
-            filters += ['country__subregion__region', ('country', admin.RelatedOnlyFieldListFilter), ]
+            filters += [('country', admin.RelatedOnlyFieldListFilter), ]
         return filters
 
     def get_list_display(self, request):
         fields = [
             'get_title_display', 'get_owner_display', 'created_date',
             'status', 'deadline_date', 'donated_percentage',
-            'campaign_edited', 'amount_extra', 'expertise_based'
+            'expertise_based'
         ]
 
         if request.user.has_perm('projects.approve_payout'):
@@ -624,12 +619,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     created_date.short_description = _('Created')
 
     def deadline_date(self, obj):
-        return obj.deadline.date()
+        if obj.deadline:
+            return obj.deadline.date()
+        return None
     deadline_date.admin_order_field = 'deadline'
     deadline_date.short_description = _('Deadline')
-
-    def get_list_editable(self, request):
-        return ('is_campaign',)
 
     def get_fieldsets(self, request, obj=None):
         main = {'fields': ['owner', 'reviewer', 'task_manager', 'promoter', 'organization', 'status', 'title', 'slug',

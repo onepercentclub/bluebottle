@@ -4,10 +4,8 @@
 
 #branding {
   display: none;
-  background-color: $sidebar-contrast-background-color;
   color: $sidebar-contrast-text-color;
-  padding: 14px 32px 14px 36px;
-  text-align: center;
+  padding: 16px;
   position: relative;
   height: auto !important;
   min-height: 52px;
@@ -15,6 +13,11 @@
 
   @include for-mobile {
     min-height: 0;
+  }
+
+  img {
+    width: 40px;
+    display: block;
   }
 
   &.initialized {
@@ -36,8 +39,6 @@
     display: inline-block;
     padding: 0 10px;
     margin: 0;
-    text-transform: uppercase;
-    font-size: 11px;
     vertical-align: middle;
   }
 
@@ -51,17 +52,17 @@
 
   &-pin {
     position: absolute;
-    top: 50%;
-    right: 4px;
+    top: 28px;
+    right: 6px;
     margin-top: -11px;
     display: inline-block;
-    font-size: 22px;
+    font-size: 1.2rem;
     cursor: pointer;
     transition: transform 0.3s;
-    transform: rotate(-45deg);
+    transform: rotate(0deg);
 
     body.menu-pinned & {
-      transform: rotate(45deg);
+      transform: rotate(90deg);
     }
 
     &:hover {
@@ -74,13 +75,16 @@
   }
 
   &-menu {
-    position: absolute;
     top: 50%;
-    left: 20px;
-    margin-top: -8px;
     display: inline-block;
     font-size: 16px;
     cursor: pointer;
+    position: relative;
+    margin: 0;
+    left: 0;
+    border-radius: 12px;
+    background-color: #ffffff;
+    padding: 4px;
 
     &:hover {
       color: #fff;
@@ -107,7 +111,7 @@
     right: 20px;
     border: 1px solid $top-border-color;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 0.9rem;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -159,7 +163,7 @@
     }
 
     li.user-tools-welcome-msg {
-      font-weight: bold;
+      font-weight: 700;
       padding: 0 10px 0 14px;
       line-height: 30px;
 
@@ -183,7 +187,7 @@
         @include for-mobile {
           line-height: $sidebar-header-height;
           font-size: 20px;
-          font-weight: bold;
+          font-weight: 700;
         }
       }
     }
@@ -237,9 +241,7 @@
 
   &-contrast-block {
     &-title {
-      text-transform: uppercase;
-      font-size: 10px;
-      font-weight: bold;
+      font-weight: 700;
       margin-bottom: 6px;
     }
   }
@@ -274,4 +276,22 @@
   &.initialized {
     display: block;
   }
+}
+
+.site-title {
+  color: $top-link-color;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 16px 10px 8px 20px;
+  text-transform: capitalize;
+}
+
+.site-title-login {
+  padding-top: 20px;
+  font-size: 1.4rem;
+  text-align: center;
+}
+
+.site-title-logo {
+  width: 200px;
 }

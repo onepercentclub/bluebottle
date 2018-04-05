@@ -20,7 +20,7 @@
     .select2-selection__rendered {
       color: $input-text-color;
       line-height: $input-height;
-      font-size: 13px;
+      font-size: 0.9rem;
     }
 
     .select2-selection__placeholder {
@@ -101,7 +101,7 @@
   }
 
   .select2-results__option {
-    font-size: 13px;
+    font-size: 0.9rem;
 
     &[role=group] {
       padding: 0;

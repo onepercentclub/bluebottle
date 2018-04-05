@@ -108,7 +108,8 @@
       margin-bottom: 5px;
       margin-right: 2px;
       vertical-align: top;
-
+      width: 321px;
+      background: $content-background-color url('/static/assets/admin/img/search.svg') no-repeat 290px 50%;
       @include for-mobile {
         margin-right: 5px;
       }
@@ -120,14 +121,18 @@
 
     input[type="submit"] {
       &, &:visited, &:hover {
-        background-color: $primary-button-background-color;
-        color: $primary-button-text-color;
-        font-size: 12px;
-        font-weight: lighter;
+        background-color: $secondary-button-background-color;
+        color: $secondary-button-text-color;
+        font-size: 1rem;
         padding: 0 20px;
-        text-transform: uppercase;
         vertical-align: middle;
         margin-bottom: 5px;
+        cursor: pointer;
+        border-bottom: darken($secondary-button-background-color, 10) 2px solid;
+        &:hover, &:active {
+          background-color: darken($secondary-button-background-color, 10);
+          color: $secondary-button-text-color;
+        }
       }
 
       &:hover, &:focus {
@@ -221,18 +226,16 @@
     background-color: $button-background-color;
     color: $button-text-color;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 1rem;
     padding: 6px 10px;
     border-radius: 4px;
-  }
-
-  a {
-    &, &:visited {
-      color: $button-text-color;
+    transition: background $transitions-duration;
+    &:hover, &:active {
+      background-color: $button-hover-background-color;
+      color: $button-hover-text-color;
     }
-
-    &:focus, &:hover {
-      text-decoration: underline;
+    a {
+      color: $button-text-color;
     }
   }
 }
@@ -244,7 +247,7 @@
   line-height: normal;
   padding: 0 !important;
   margin: 0;
-  font-size: 12px;
+  font-size: 0.9rem;
 
   &.initialized {
     display: inherit;
@@ -260,7 +263,7 @@
     }
 
     span, a {
-      font-size: 14px;
+      font-size: 1rem;
       padding: 6px 10px;
       display: inline-block;
 
@@ -278,8 +281,8 @@
     }
 
     span {
-      background-color: $button-active-background-color;
-      color: $button-active-text-color;
+      background-color: $button-hover-background-color;
+      color: $button-hover-text-color;
 
       &.disabled {
         background-color: $button-background-color;
@@ -288,6 +291,7 @@
     }
 
     a {
+      transition: background $transitions-duration;
       &:link, &:visited {
         background-color: $button-background-color;
         color: $button-text-color;
@@ -303,7 +307,7 @@
 
   a.showall {
     &:link, &:visited {
-      font-size: 12px;
+      font-size: 0.9rem;
     }
   }
 
@@ -313,7 +317,7 @@
 
   input[type="submit"] {
     &, &:hover, &:focus {
-      font-size: 13px;
+      font-size: 1rem;
       padding: 6px 10px;
       height: auto;
       line-height: normal;
@@ -394,20 +398,25 @@
     .button {
       &, &:visited, &:hover {
         display: inline-block;
-        background-color: $primary-button-background-color;
-        color: $primary-button-text-color;
+        background-color: $secondary-button-background-color;
+        color: $secondary-button-text-color;
+        cursor: pointer;
         border: 0;
         border-radius: 4px;
         height: 32px;
         line-height: 32px;
         outline: 0;
-        font-size: 12px;
-        font-weight: lighter;
+        font-size: 0.9rem;
+        font-weight: 700;
         text-align: center;
         padding: 0 20px;
-        text-transform: uppercase;
         margin: 0 8px 5px 0;
         transition: background $transitions-duration;
+        border-bottom: darken($secondary-button-background-color, 10) 2px solid;
+        &:hover, &:active {
+          background-color: darken($secondary-button-background-color, 10);
+          color: $secondary-button-text-color;
+        }
 
         @include for-phone {
           width: 100%;
@@ -426,7 +435,7 @@
     }
 
     span {
-      font-size: 12px;
+      font-size: 0.9rem;
     }
   }
 }

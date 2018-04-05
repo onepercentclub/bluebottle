@@ -90,8 +90,7 @@
     &-menu {
       &, &:visited, &:hover {
         display: inline-block;
-        font-size: 14px;
-        text-transform: uppercase;
+        font-size: 1rem;
         color: $sidebar-link-color;
         line-height: $sidebar-header-height;
         padding: 0 16px;
@@ -114,11 +113,11 @@
       &.icon-menu {
         display: none;
       }
-
       &.icon-cross {
         display: inline;
       }
     }
+
   }
 
   &-close {
@@ -136,7 +135,6 @@
     &-icon {
       color: $sidebar-popup-search-input-text-color;
       font-size: 28px;
-      font-weight: bold;
       vertical-align: middle;
     }
   }
@@ -163,15 +161,13 @@
   }
 
   &-title {
+    font-size: 1.2rem;
     display: block;
-    color: $sidebar-text-color;
-    text-transform: uppercase;
-    font-size: 11px;
-    font-weight: bold;
+    color: rgba(255,255,255,0.2);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding: 0 14px 0 24px;
+    padding: 0 14px 0 20px;
     margin-bottom: 10px;
     transition: color $transitions-duration;
 
@@ -187,7 +183,7 @@
     &-link {
       &, &:visited, &:hover {
         color: $sidebar-text-color;
-        font-weight: bold;
+        font-weight: 700;
         transition: color $transitions-duration;
       }
 
@@ -201,7 +197,7 @@
     &, &:visited, &:hover {
       display: block;
       color: $sidebar-link-color;
-      padding: 8px 12px 8px 20px;
+      padding: 12px 12px 12px 20px;
       vertical-align: middle;
       transition: color $transitions-duration, background-color $transitions-duration;
       position: relative;
@@ -213,15 +209,10 @@
           padding-left: 20px;
         }
       }
-
-      &.icon {
-        font-size: 11px;
-        text-transform: uppercase;
-      }
     }
 
-    &:hover, &.selected {
-      color: $sidebar-hover-link-color;
+    &:hover, &.selected, &:active {
+      color: $sidebar-link-color;
       background-color: $sidebar-hover-background-color;
     }
 
@@ -251,10 +242,8 @@
     &, &:visited, &:hover {
       display: block;
       color: $sidebar-action-color;
-      font-size: 11px;
       text-align: center;
       padding: 8px 0;
-      text-transform: uppercase;
       transition: color $transitions-duration, background-color $transitions-duration;
 
       @include for-mobile {
@@ -295,7 +284,7 @@
         display: inline-block;
         position: absolute;
         top: 1px;
-        font-size: 14px;
+        font-size: 1rem;
         color: $sidebar-action-color;
         transition: color $transitions-duration;
 
@@ -357,14 +346,14 @@
     }
 
     &-plus {
-      font-size: 14px;
+      font-size: 1rem;
       outline: 0;
     }
 
     &-arrow {
       color: $sidebar-arrow-color;
       font-size: 16px;
-      font-weight: bold !important;
+      font-weight: 700 !important;
       transition: color $transitions-duration, opacity $transitions-duration;
 
       html.touchevents .editing & {
@@ -421,8 +410,7 @@
     left: 0;
     right: 0;
     text-align: center;
-    font-size: 11px;
-    font-weight: bold;
+    font-weight: 700;
     transition: background-color $transitions-duration, color $transitions-duration;
 
     @include for-mobile {
@@ -432,14 +420,14 @@
 
   &-popup {
     position: absolute;
-    top: 0;
     bottom: 0;
     left: 0;
-    width: $sidebar-width;
+    width: $popup-sidebar-width;
     color: $sidebar-popup-text-color;
     background-color: $sidebar-popup-background-color;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    top: 440px;
 
     @include for-mobile {
       width: 360px;
@@ -472,9 +460,8 @@
     }
 
     &-title {
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
+      font-size: 1.2rem;
+      font-weight: 700;
       padding: 20px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -483,7 +470,7 @@
       @include for-mobile {
         padding: 24px 0 24px 20px;
         margin-bottom: 0;
-        font-size: 14px;
+        font-size: 1rem;
       }
     }
 
@@ -494,7 +481,7 @@
       height: 32px;
       text-indent: 20px;
       border: 0;
-      font-size: 13px;
+      font-size: 1rem;
       outline: 0;
       padding: 0;
       margin: 0 0 12px 0;
@@ -506,7 +493,7 @@
       }
 
       @include for-mobile {
-        font-size: 14px;
+        font-size: 1rem;
         height: 40px;
       }
     }
@@ -521,7 +508,7 @@
 
         a, a:visited, a:hover {
           color: $sidebar-popup-link-text-color;
-          padding: 8px 20px;
+          padding: 12px 20px;
           display: block;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -532,7 +519,7 @@
           }
         }
 
-        &.selected a {
+        &.selected a, &:hover a, &:active a{
           background-color: $sidebar-popup-hover-link-background-color;
           color: $sidebar-popup-hover-link-color;
         }
@@ -546,8 +533,7 @@
     vertical-align: middle;
     cursor: pointer;
     line-height: 31px;
-    padding: 10px 0 10px 20px;
-
+    padding: 10px 10px 0 20px;
     &:hover {
       color: $hover-link-color;
     }
@@ -561,3 +547,4 @@
     }
   }
 }
+

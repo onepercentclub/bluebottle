@@ -54,9 +54,7 @@
 #recent-actions-module {
   > h2 {
     padding: 6px;
-    text-transform: uppercase;
-    font-size: 11px;
-    font-weight: bold;
+    font-weight: 700;
     margin: 0;
   }
 
@@ -78,7 +76,7 @@
 ul.actionlist li {
   padding: 8px;
   list-style-type: none;
-  font-size: 13px;
+  font-size: 1rem;
   border-bottom: 1px solid $content-border-color;
   white-space: normal;
   overflow: hidden;
@@ -187,6 +185,9 @@ ul.actionlist li {
     border-radius: 4px;
     margin-bottom: 20px;
     transition: background $transitions-duration;
+    .align-right {
+      text-align: right;
+    }
 
     @include for-mobile {
       margin-bottom: 10px;
@@ -217,9 +218,7 @@ ul.actionlist li {
 
       &-title {
         display: block;
-        font-size: 11px;
-        font-weight: bold;
-        text-transform: uppercase;
+        font-weight: 700;
         line-height: 30px;
         white-space: nowrap;
         overflow: hidden;
@@ -237,15 +236,15 @@ ul.actionlist li {
       }
 
       &-collapse-button {
-        font-size: 13px;
+        font-size: 1rem;
         vertical-align: middle;
-        font-weight: bold !important;
+        font-weight: 700 !important;
       }
 
       &-buttons {
         float: right;
         margin-left: 10px;
-        font-size: 13px;
+        font-size: 1rem;
         line-height: 30px;
         vertical-align: middle;
         visibility: hidden;
@@ -269,6 +268,8 @@ ul.actionlist li {
       border-radius: 4px;
       box-shadow: 0 2px 0 0 $content-border2-color;
       overflow: hidden;
+      padding: 12px;
+      line-height: 22px;
 
       &.contrast {
         background: $content-contrast2-background-color;
@@ -285,17 +286,16 @@ ul.actionlist li {
         li {
           display: block;
           border-bottom: 1px solid $content-border-color;
-          font-size: 13px;
+          font-size: 1rem;
           padding: 8px;
 
           &.contrast {
             background: $content-contrast2-background-color;
-            font-size: 12px;
+            font-size: 0.9rem;
 
             &, & a, & a:visited, & a:hover {
               color: $content-contrast2-text-color;
               text-decoration: none;
-              text-transform: uppercase;
             }
           }
 
@@ -358,7 +358,7 @@ ul.actionlist li {
 
       .big {
         font-size: 20px;
-        font-weight: bold;
+        font-weight: 700;
       }
 
       .highlight {
@@ -453,8 +453,7 @@ ul.actionlist li {
 
     .select2-selection {
       border-radius: 4px 0 0 4px !important;
-      border-width: 0;
-
+      border-width: 1px 0 1px 1px;
       @include for-mobile {
         border-radius: 4px !important;
         border-width: 1px;

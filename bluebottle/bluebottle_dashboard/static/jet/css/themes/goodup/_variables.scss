@@ -7,17 +7,18 @@
  * General
  */
 
-$background-color: #f8fafc;
+$background-color: #ececec;
 $text-color: #4E4E4E;
 $dim-text-color: #281E50;
 $error-text-color: #c7254e;
 
-$link-color: #3C96DC;
+$link-color: #4E4E4E;
+//$link-color: #3C96DC;
 $hover-link-color: #3C96DC;
 
-$contrast-color: #2faa60;
+$contrast-color: #3C96DC;
 
-$font: Helvetica Neue, Arial, sans-serif !default;
+$font: "Helvetica Neue", Helvetica, Arial, sans-serif;
 $font-size: 14px;
 
 /*
@@ -51,7 +52,7 @@ $sidebar-popup-search-input-text-color: #7f8fa4;
 $sidebar-popup-search-input-placeholder-color: #bdcbde;
 
 $sidebar-popup-background-color: #f7f8fa;
-$sidebar-popup-text-color: #7f8fa4;
+$sidebar-popup-text-color: #281E50;
 $sidebar-popup-overlay-color: #000;
 
 $sidebar-popup-link-text-color: #281E50;
@@ -68,10 +69,10 @@ $top-text-color: #3C96DC;
 $top-separator-color: #281E50;
 $top-link-color: #281E50;
 $top-hover-link-color: #1cacfc;
-$top-border-color: #dce0e6;
+$top-border-color: #dbdbdb;
 $top-icon-color: $link-color;
 
-$top-dropdown-background-color: #424e5c;
+$top-dropdown-background-color: $sidebar-background-color;
 $top-dropdown-text-color: #fff;
 $top-dropdown-contrast-background-color: #333C47;
 $top-dropdown-contrast-text-color: #7D8CA1;
@@ -148,7 +149,7 @@ $input-hover-text-color: #fff;
 $input-selected-text-color: $contrast-color;
 $input-disabled-text-color: $dim-text-color;
 $input-placeholder-color: #999;
-$input-shadow-color: transparentize($contrast-color, 0.25);
+$input-shadow-color: transparentize($contrast-color, 1);
 
 $background-input-background-color: #fff;
 $background-input-border-color: #fff;

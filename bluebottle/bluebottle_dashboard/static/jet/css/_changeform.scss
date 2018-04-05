@@ -86,7 +86,7 @@ form {
     word-wrap: break-word;
     line-height: 1;
     color: $dim-text-color;
-    font-weight: 700;
+    font-weight: 500;
 
     @include for-mobile {
       display: block;
@@ -968,8 +968,8 @@ form .related-widget-wrapper ul {
 
 .changeform-tabs {
   margin: 0;
-  padding: 0;
-  border-bottom: 2px solid $background-color;
+  padding: 0 0 0 16px;
+  border-bottom: 1px solid $background-color;
   background-color: $content-background-color;
   border-radius: 4px 4px 0 0;
 
@@ -990,7 +990,7 @@ form .related-widget-wrapper ul {
       position: relative;
       top: 2px;
       color: $dim-text-color;
-      font-weight: 700;
+      font-weight: 500;
       transition: background-color $fast-transitions-duration,
                   color $fast-transitions-duration,
                   border-color $transitions-duration;
@@ -1054,4 +1054,9 @@ body.change-form #content-main > form > div {
       display: block;
     }
   }
+}
+
+
+fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
+  text-decoration: underline;
 }

@@ -105,11 +105,11 @@
     }
 
     #searchbar {
-      margin-bottom: 5px;
-      margin-right: 2px;
+      margin-bottom: 8px;
+      margin-right: 8px;
       vertical-align: top;
-      width: 321px;
-      background: $content-background-color url('/static/assets/admin/img/search.svg') no-repeat 290px 50%;
+      width: 328px;
+      background: $content-background-color url('/static/assets/admin/img/search.svg') no-repeat 304px 50%;
       @include for-mobile {
         margin-right: 5px;
       }
@@ -150,7 +150,7 @@
 
 .changelist-filter-select {
   &-wrapper {
-    margin-right: 2px;
+    margin-right: 8px;
     margin-bottom: 5px;
     display: inline-block;
     vertical-align: top;
@@ -449,7 +449,6 @@
     left: 20px;
     right: 20px;
     bottom: 0;
-    border-top: 2px solid $content-border2-color;
     transition: left 0.3s;
 
     body.menu-pinned & {

@@ -62,6 +62,10 @@ class ProjectLocation(models.Model):
         _('longitude'), max_digits=21, decimal_places=18
     )
 
+    class Meta:
+        verbose_name = _('Location')
+        verbose_name_plural = _('Location')
+
 
 class ProjectPhaseLog(models.Model):
     project = models.ForeignKey('projects.Project')

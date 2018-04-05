@@ -318,18 +318,18 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         return instances
 
     all_inlines = (
+        ProjectLocationInline,
         ProjectBudgetLineInline,
         RewardInlineAdmin,
         TaskAdminInline,
         ProjectDocumentInline,
-        ProjectPhaseLogInline,
-        ProjectLocationInline,
+        ProjectPhaseLogInline
     )
     sourcing_inlines = (
+        ProjectLocationInline,
         ProjectDocumentInline,
         TaskAdminInline,
-        ProjectPhaseLogInline,
-        ProjectLocationInline
+        ProjectPhaseLogInline
     )
 
     list_filter = ('country__subregion__region', )
@@ -626,32 +626,38 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     deadline_date.short_description = _('Deadline')
 
     def get_fieldsets(self, request, obj=None):
-        main = {'fields': ['owner', 'reviewer', 'task_manager', 'promoter', 'organization', 'status', 'title', 'slug',
-                           'project_type', 'is_campaign', 'celebrate_results']}
+        main = (_('Main'), {'fields': [
+            'reviewer', 'title', 'slug', 'project_type',
+            'status', 'owner', 'task_manager', 'promoter',
+            'organization', 'is_campaign', 'celebrate_results'
+        ]})
+
+        story = (_('Story'), {'fields': [
+            'pitch', 'story',
+            'image', 'video_url',
+            'theme', 'categories', 'language',
+            'country', 'place',
+        ]})
+
+        if Location.objects.count():
+            story[1]['fields'].append('location')
+
+        amount = (_('Amount'), {'fields': [
+            'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
+            'currencies', 'popularity', 'vote_count'
+        ]})
 
         if request.user.has_perm('projects.approve_payout'):
-            main['fields'].insert(3, 'payout_status')
+            amount[1]['fields'].insert(0, 'payout_status')
 
-        main = (_('Main'), main)
-
-        story = (_('Story'), {'fields': ('pitch', 'story')})
-
-        details = (_('Details'), {'fields': (
-            'language', 'theme', 'categories',
-            'image', 'video_url', 'country',
-            'location', 'place',
-        )})
-
-        goal = (_('Goal'), {'fields': (
-            'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
-            'currencies', 'popularity', 'vote_count')})
-
-        dates = (_('Dates'), {'fields': (
+        dates = (_('Dates'), {'fields': [
             'created', 'updated',
-            'voting_deadline', 'deadline', 'date_submitted', 'campaign_started',
-            'campaign_ended', 'campaign_funded', 'campaign_paid_out')})
+            'deadline', 'date_submitted', 'campaign_started',
+            'campaign_ended', 'campaign_funded',
+            'campaign_paid_out', 'voting_deadline'
+        ]})
 
-        bank = (_('Bank details'), {'fields': (
+        bank = (_('Bank details'), {'fields': [
             'account_holder_name',
             'account_holder_address',
             'account_holder_postal_code',
@@ -660,16 +666,16 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'account_number',
             'account_details',
             'account_bank_country'
-        )})
+        ]})
 
         extra = (_('Extra fields'), {
             'fields': [field.slug for field in CustomProjectFieldSettings.objects.all()]
         })
 
-        fieldsets = (main, story, details, dates)
+        fieldsets = (main, story, dates)
 
         if obj and obj.project_type != 'sourcing':
-            fieldsets += (goal, bank)
+            fieldsets += (amount, bank)
 
         if CustomProjectFieldSettings.objects.count():
             fieldsets += (extra, )

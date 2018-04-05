@@ -30,6 +30,16 @@
     }
   }
 
+  &.danger {
+      background-color: $danger-button-background-color;
+      color: $danger-button-text-color;
+      border-bottom: darken($danger-button-background-color, 10) 2px solid;
+      &:hover, &:active {
+        background-color: darken($danger-button-background-color, 10);
+        color: $danger-button-text-color;
+      }
+  }
+
   &.default {
     font-weight: 500;
     background-color: $primary-button-background-color;

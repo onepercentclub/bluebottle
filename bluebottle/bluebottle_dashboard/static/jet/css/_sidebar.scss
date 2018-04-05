@@ -352,8 +352,8 @@
 
     &-arrow {
       color: $sidebar-arrow-color;
-      font-size: 16px;
-      font-weight: 700 !important;
+      font-size: 0.8rem;
+      font-weight: 500 !important;
       transition: color $transitions-duration, opacity $transitions-duration;
 
       html.touchevents .editing & {

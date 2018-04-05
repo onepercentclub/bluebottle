@@ -2707,6 +2707,13 @@ img[src$="admin/img/icon-no.gif"] + span, img[src$="admin/img/icon-no.svg"] + sp
   transition: background 0.3s; }
   .button:hover, .button:active, .button:focus, .button:visited:hover, .button:visited:active, .button:visited:focus, .button:hover:hover, .button:hover:active, .button:hover:focus, input[type="submit"]:hover, input[type="submit"]:active, input[type="submit"]:focus, input[type="submit"]:visited:hover, input[type="submit"]:visited:active, input[type="submit"]:visited:focus, input[type="submit"]:hover:hover, input[type="submit"]:hover:active, input[type="submit"]:hover:focus, input[type="button"]:hover, input[type="button"]:active, input[type="button"]:focus, input[type="button"]:visited:hover, input[type="button"]:visited:active, input[type="button"]:visited:focus, input[type="button"]:hover:hover, input[type="button"]:hover:active, input[type="button"]:hover:focus, .object-tools a:hover, .object-tools a:active, .object-tools a:focus, .object-tools a:visited:hover, .object-tools a:visited:active, .object-tools a:visited:focus, .object-tools a:hover:hover, .object-tools a:hover:active, .object-tools a:hover:focus {
     background-color: rgba(40, 30, 80, 0.3); }
+.button.danger, input[type="submit"].danger, input[type="button"].danger, .object-tools a.danger {
+  background-color: #E62828;
+  color: #fff;
+  border-bottom: #c41717 2px solid; }
+  .button.danger:hover, .button.danger:active, input[type="submit"].danger:hover, input[type="submit"].danger:active, input[type="button"].danger:hover, input[type="button"].danger:active, .object-tools a.danger:hover, .object-tools a.danger:active {
+    background-color: #c41717;
+    color: #fff; }
 .button.default, input[type="submit"].default, input[type="button"].default, .object-tools a.default {
   font-weight: 500;
   background-color: #64A03C;
@@ -4559,9 +4566,9 @@ div.breadcrumbs {
   font-weight: 700; }
 .breadcrumbs-separator {
   color: #281E50;
-  font-weight: 700;
+  font-weight: 500;
   margin: 0 6px 0 6px;
-  font-size: 15px;
+  font-size: 0.8rem;
   vertical-align: middle; }
 
 /*
@@ -6181,9 +6188,10 @@ form .related-widget-wrapper ul {
     text-overflow: ellipsis;
     display: inline-block; }
   .changeform-navigation-button-icon {
-    font-weight: 700;
+    font-weight: 500;
     vertical-align: middle;
-    line-height: 32px; }
+    line-height: 32px;
+    font-size: 0.8rem; }
     .changeform-navigation-button-icon.left {
       float: left; }
     .changeform-navigation-button-icon.right {
@@ -7466,8 +7474,8 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
       outline: 0; }
     .sidebar-right-arrow {
       color: #FFFFFF;
-      font-size: 16px;
-      font-weight: 700 !important;
+      font-size: 0.8rem;
+      font-weight: 500 !important;
       transition: color 0.3s, opacity 0.3s; }
       html.touchevents .editing .sidebar-right-arrow {
         opacity: 0; }
@@ -8457,7 +8465,10 @@ ul.actionlist li {
     .dashboard-item-header-drag {
       float: right;
       line-height: 30px !important;
-      margin-left: 10px; }
+      margin-left: 10px;
+      cursor: move; }
+      .dashboard-item-header-drag:hover, .dashboard-item-header-drag:active {
+        color: #3C96DC; }
       html.touchevents .dashboard-item-header-drag {
         display: none; }
     .dashboard-item-header-collapse-button {
@@ -8477,6 +8488,8 @@ ul.actionlist li {
         visibility: visible; }
     .dashboard-item-header:hover .dashboard-item-header-buttons {
       visibility: visible; }
+    .dashboard-item-header a.dashboard-item-remove:hover {
+      color: #E62828; }
   .dashboard-item-content {
     background: #fff;
     border-radius: 4px;

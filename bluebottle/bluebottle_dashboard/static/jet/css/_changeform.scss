@@ -876,9 +876,10 @@ form .related-widget-wrapper ul {
     }
 
     &-icon {
-      font-weight: 700;
+      font-weight: 500;
       vertical-align: middle;
       line-height: 32px;
+      font-size: 0.8rem;
 
       &.left {
         float: left;

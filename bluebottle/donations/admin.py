@@ -93,9 +93,9 @@ class DonationAdminForm(forms.ModelForm):
 class DonationAdmin(admin.ModelAdmin):
     form = DonationAdminForm
     date_hierarchy = 'created'
-    list_display = ('created', 'order_payment_links', 'admin_project', 'fundraiser',
-                    'user', 'user_full_name', 'amount',
-                    'related_payment_method', 'order_type', 'status')
+    list_display = ('created_display', 'order_payment_links', 'admin_project', 'fundraiser',
+                    'user_full_name', 'amount',
+                    'related_payment_method', 'status')
     list_filter = (DonationStatusFilter, 'order__order_type',
                    DonationUserFilter)
     ordering = ('-created',)
@@ -109,6 +109,11 @@ class DonationAdmin(admin.ModelAdmin):
         'order__user__email', 'project__title', 'name',
         'order__order_payments__id'
     )
+
+    def created_display(self, obj):
+        return obj.created.strftime('%Y-%m-%d %H:%I')
+    created_display.admin_order_field = 'created'
+    created_display.short_description = _('Created')
 
     export_fields = [
         ('project', 'project'),

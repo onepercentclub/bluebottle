@@ -1,11 +1,11 @@
 {% load i18n %}
 {% load humanize %}
 {% block module_content %}
-<ul style="line-height: 1.5em;">
+<ul class="dashboard-item-list">
     {% spaceless %}
     {% for task in module.children %}
     <li class="{% cycle 'odd' 'even' %}">
-        <span class="float-right" style="text-align:right">
+        <span class="float-right">
             {{ task.deadline|date }}
             <br>
             {{ task.days_left }} {% trans "days" %}

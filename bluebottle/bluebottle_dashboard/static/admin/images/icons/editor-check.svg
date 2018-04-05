@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="20px" height="16px" viewBox="0 0 20 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 49.2 (51160) - http://www.bohemiancoding.com/sketch -->
+    <title>Icon/UI/Checkbox/Check</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Symbols" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="component/editor-header" transform="translate(-1386.000000, -21.000000)" fill="#3C96DC" fill-rule="nonzero">
+            <g id="editor-header">
+                <g id="Icon/Form/Checkbox" transform="translate(1386.000000, 21.000000)">
+                    <polygon id="Shape" points="7 9.54545455 3 5.72727273 0 8.59090909 7 15.2727273 20 2.86363636 17 0"></polygon>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

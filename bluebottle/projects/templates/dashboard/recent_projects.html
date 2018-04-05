@@ -1,10 +1,10 @@
 {% load i18n %}
 {% block module_content %}
-<ul style="line-height: 1.5em;">
+<ul class="dashboard-item-list">
     {% spaceless %}
     {% for project in module.children %}
     <li class="{% cycle 'odd' 'even' %}">
-        <span class="float-right" style="text-align: right" title="Date submitted">
+        <span class="float-right" title="Date submitted">
             {{ project.date_submitted|date }}<br>
         </span>
         <a href="{% url 'admin:projects_project_change' project.id %}" >{{ project.title }}</a>

@@ -36,7 +36,6 @@ class LinkInline(SortableStackedInline):
         'link_permissions',
         ('component', 'component_id'),
         'external_link',
-
     )
 
 

@@ -91,6 +91,15 @@ class DonationAdminForm(forms.ModelForm):
 
 
 class DonationAdmin(admin.ModelAdmin):
+
+    def lookup_allowed(self, lookup, value):
+        # Fix for known Django bug
+        # https://code.djangoproject.com/ticket/28262
+        allow = super(DonationAdmin, self).lookup_allowed(lookup, value)
+        if lookup == 'order__user_id':
+            return True
+        return allow
+
     form = DonationAdminForm
     date_hierarchy = 'created'
     list_display = ('created_display', 'order_payment_links', 'admin_project', 'fundraiser',

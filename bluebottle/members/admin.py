@@ -18,10 +18,12 @@ from django.utils.translation import ugettext_lazy as _
 from django_singleton_admin.admin import SingletonAdmin
 
 from bluebottle.bb_accounts.models import UserAddress
+from bluebottle.donations.models import Donation
+from bluebottle.geo.models import Location
 from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings
-from bluebottle.tasks.models import TaskMember
+from bluebottle.projects.models import Project
+from bluebottle.tasks.models import Task
 from bluebottle.utils.admin import export_as_csv_action
-from bluebottle.votes.models import Vote
 from bluebottle.clients import properties
 
 from .models import Member
@@ -140,59 +142,52 @@ class UserAddressInline(admin.StackedInline):
         return False
 
 
-class MemberVotesInline(admin.TabularInline):
-    model = Vote
-    readonly_fields = ('project', 'created')
-    fields = ('project', 'created',)
-    extra = 0
-
-
-class MemberTasksInline(admin.TabularInline):
-    model = TaskMember
-    extra = 0
-    readonly_fields = ('task_admin_link', 'task_deadline', 'status', 'time_spent')
-    fields = readonly_fields
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request):
-        return False
-
-    def task_deadline(self, obj):
-        return obj.task.deadline.date()
-
-    def task_admin_link(self, obj):
-        task = obj.task
-        url = reverse('admin:tasks_task_change', args=[task.id])
-        return format_html(
-            u"<a href='{}'>{}</a>",
-            str(url), task.title.encode("utf8")
-        )
-
-
 class MemberAdmin(UserAdmin):
+
+    raw_id_fields = ('partner_organization', )
 
     @property
     def standard_fieldsets(self):
 
         standard_fieldsets = [
-            [None, {'fields': ['email', 'reset_password', 'remote_id']}],
-            [_('Personal info'),
-             {'fields': ['first_name', 'last_name', 'username', 'gender', 'birthdate', 'phone_number']}],
+            [_("Main"), {'fields': [
+                'remote_id',
+                'email',
+                'first_name',
+                'last_name',
+                'username',
+                'phone_number',
+                'reset_password',
+                'last_login',
+                'date_joined',
+                'deleted',
+                'is_co_financer',
+                'partner_organization',
+                'campaign_notifications',
+                'newsletter',
+                'primary_language',
+            ]}],
             [_("Profile"),
-             {'fields': ['user_type', 'is_co_financer', 'picture', 'about_me', 'location', 'partner_organization']}],
-            [_("Settings"),
-             {'fields': ['primary_language', 'newsletter', 'campaign_notifications']}],
-            [_('Skills & interests'),
-             {'fields': ['favourite_themes', 'skills']}],
-            [_('Important dates'),
-             {'fields': ['last_login', 'date_joined', 'deleted']}],
+             {'fields': [
+                 'picture',
+                 'about_me',
+                 'favourite_themes',
+                 'skills'
+             ]}],
+            [_('Engagement'),
+             {'fields': [
+                 'projects_managed',
+                 'tasks',
+                 'donations'
+             ]}],
         ]
+
+        if Location.objects.count():
+            standard_fieldsets[1][1]['fields'].append('location')
 
         for item in properties.PAYMENT_METHODS:
             if item['name'] == 'Pledge':
-                standard_fieldsets[2][1]['fields'].append('can_pledge')
+                standard_fieldsets[0][1]['fields'].append('can_pledge')
 
         if CustomMemberFieldSettings.objects.count():
             extra = (_('Extra fields'), {
@@ -220,7 +215,8 @@ class MemberAdmin(UserAdmin):
 
     readonly_fields = ('date_joined', 'last_login',
                        'updated', 'deleted', 'login_as_user',
-                       'reset_password')
+                       'reset_password', 'projects_managed',
+                       'tasks', 'donations')
 
     export_fields = (
         ('username', 'username'),
@@ -254,7 +250,59 @@ class MemberAdmin(UserAdmin):
     list_display = ('email', 'first_name', 'last_name', 'is_staff',
                     'date_joined', 'is_active', 'login_as_user')
     ordering = ('-date_joined', 'email',)
-    inlines = (UserAddressInline, MemberVotesInline, MemberTasksInline)
+
+    inlines = (UserAddressInline, )
+
+    def projects_managed(self, obj):
+        url = reverse('admin:projects_project_changelist')
+        completed = Project.objects.filter(owner=obj, status__slug__in=['done-complete', 'done-incomplete']).count()
+        campaign = Project.objects.filter(owner=obj, status__slug__in=['campaign', 'voting-running']).count()
+        submitted = Project.objects.filter(owner=obj, status__slug='plan-submitted').count()
+        plan = Project.objects.filter(owner=obj, status__slug__in=['plan-new', 'plan-needs-work']).count()
+        links = []
+        if completed:
+            links.append('<a href="{}?owner={}&status_filter=8%2C9">{} {}</a>'.format(
+                url, obj.id, completed, _('completed')
+            ))
+        if campaign:
+            links.append('<a href="{}?owner={}&status_filter=11%2C5">{} {}</a>'.format(
+                url, obj.id, campaign, _('campaigning')
+            ))
+        if plan:
+            links.append('<a href="{}?owner={}&status_filter=1%2C3">{} {}</a>'.format(
+                url, obj.id, plan, _('plan')
+            ))
+        if submitted:
+            links.append('<a href="{}?owner={}&status_filter=2">{} {}</a>'.format(
+                url, obj.id, submitted, _('submitted')
+            ))
+        return format_html(', '.join(links) or _('None'))
+
+    def tasks(self, obj):
+        url = reverse('admin:tasks_task_changelist')
+        owner = Task.objects.filter(author=obj, status__in=['open', 'full', 'running', 'realised']).count()
+        applied = Task.objects.filter(members__member=obj, members__status__in=['applied', 'accepted']).count()
+        realized = Task.objects.filter(members__member=obj, members__status__in=['realized']).count()
+        links = []
+        if owner:
+            links.append('<a href="{}?author={}">{} {}</a>'.format(
+                url, obj.id, owner, _('created')
+            ))
+        if applied:
+            links.append(
+                '<a href="{}?members__member_id={}&members__status[]=applied'
+                '&members__status[]=accepted">{} {}</a>'.format(url, obj.id, applied, _('applied'))
+            )
+        if realized:
+            links.append('<a href="{}?members__member_id={}">{} {}</a>'.format(
+                url, obj.id, realized, _('realised')
+            ))
+        return format_html(', '.join(links) or _('None'))
+
+    def donations(self, obj):
+        url = reverse('admin:donations_donation_changelist')
+        donations = Donation.objects.filter(order__status__in=['success', 'pending'], order__user=obj).count()
+        return format_html('<a href="{}?order__user_id={}">{} {}</a>', url, obj.id, donations, _('donations'))
 
     def reset_password(self, obj):
         reset_form_url = reverse('admin:auth_user_password_change', args=(obj.id, ))

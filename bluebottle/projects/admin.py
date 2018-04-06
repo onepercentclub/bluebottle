@@ -2,7 +2,7 @@ from collections import OrderedDict
 import csv
 import logging
 import six
-from decimal import InvalidOperation
+from decimal import InvalidOperation, DivisionByZero
 
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
@@ -421,7 +421,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         try:
             percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
             return "{0} %".format(percentage)
-        except (AttributeError, InvalidOperation):
+        except (AttributeError, InvalidOperation, DivisionByZero):
             return '-'
     donated_percentage.short_description = _('Donated')
 

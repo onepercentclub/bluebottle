@@ -1,8 +1,7 @@
 import json
 from datetime import timedelta, time
-import urlparse
-
 import httmock
+import urlparse
 
 from bluebottle.projects.admin import mark_as
 from django.db.models import Count

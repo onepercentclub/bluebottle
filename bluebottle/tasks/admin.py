@@ -93,9 +93,9 @@ class TaskMemberAdminInline(admin.StackedInline):
     model = TaskMember
     extra = 0
     raw_id_fields = ('member',)
-    readonly_fields = ('created',)
+    readonly_fields = ('created', 'resume_link')
     fields = readonly_fields + ('member', 'status', 'motivation',
-                                'time_spent', 'externals', 'resume')
+                                'time_spent', 'externals')
 
     def resume_link(self, obj):
         return resume_link(obj)
@@ -269,7 +269,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
     member_email.short_description = "Member Email"
 
     def resume_link(self, obj):
-        resume_link(obj)
+        return resume_link(obj)
 
     def lookup_allowed(self, key, value):
         if key in ('task__deadline__year',):

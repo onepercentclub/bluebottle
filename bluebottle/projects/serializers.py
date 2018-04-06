@@ -21,9 +21,14 @@ from bluebottle.projects.models import (
     ProjectPlatformSettings, ProjectSearchFilter, ProjectLocation,
     ProjectAddOn, ProjectCreateTemplate)
 from bluebottle.tasks.models import Task, TaskMember, Skill
-from bluebottle.utils.serializers import (MoneySerializer, ResourcePermissionField,
-                                          RelatedResourcePermissionField)
+from bluebottle.utils.serializers import (
+    MoneySerializer, ResourcePermissionField,
+    RelatedResourcePermissionField,
+)
 from bluebottle.utils.fields import SafeField
+from bluebottle.utils.permissions import (
+    ResourceOwnerPermission,
+)
 from bluebottle.utils.utils import get_class
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 from bluebottle.votes.models import Vote
@@ -153,6 +158,10 @@ class ProjectSerializer(serializers.ModelSerializer):
     latitude = serializers.FloatField(source='projectlocation.latitude')
     longitude = serializers.FloatField(source='projectlocation.longitude')
     project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
+    suporters_export_url = PrivateFileSerializer(
+        'project-supporters-export', url_args=('slug', ), permission=ResourceOwnerPermission,
+        read_only=True
+    )
 
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
@@ -209,7 +218,9 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'video_html',
                   'video_url',
                   'vote_count',
-                  'voting_deadline',)
+                  'voting_deadline',
+                  'suporters_export_url',
+                  )
 
 
 class ProjectPreviewSerializer(ProjectSerializer):
@@ -217,6 +228,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
     image = ImageSerializer(required=False)
     owner = UserProfileSerializer()
     skills = serializers.SerializerMethodField()
+    project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
     theme = ProjectThemeSerializer()
 
     def get_skills(self, obj):

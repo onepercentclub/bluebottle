@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 import json
 from StringIO import StringIO
 from random import randint
+from urllib import urlencode
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
@@ -2781,15 +2782,26 @@ class ProjectSupportersExportTest(BluebottleTestCase):
             )
 
         self.supporters_export_url = reverse(
-            'project-supporters-export', kwargs={'pk': self.project.slug}
+            'project-supporters-export', kwargs={'slug': self.project.slug}
         )
+        self.project_url = reverse(
+            'project_detail', kwargs={'slug': self.project.slug})
 
     def test_owner(self):
         # view allowed
-        response = self.client.get(
-            self.supporters_export_url, token=self.owner_token
+        detail_response = self.client.get(
+            self.project_url, token=self.owner_token
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertTrue(
+            detail_response.data['suporters_export_url']['url'].startswith(
+                self.supporters_export_url
+            )
+        )
+        response = self.client.get(
+            detail_response.data['suporters_export_url']['url']
+        )
+
         reader = csv.DictReader(StringIO(response.content))
         results = [result for result in reader]
         self.assertEqual(len(results), 2)
@@ -2798,25 +2810,39 @@ class ProjectSupportersExportTest(BluebottleTestCase):
                 self.assertTrue(field in row)
 
     def test_non_owner(self):
-        # view not allowed
-        response = self.client.get(
-            self.supporters_export_url,
+        # view allowed
+        detail_response = self.client.get(
+            self.project_url,
             token="JWT {0}".format(
                 BlueBottleUserFactory.create().get_jwt_token()
             )
         )
-        self.assertEqual(response.status_code, 403)
 
-    def test_no_user(self):
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertIsNone(
+            detail_response.data.get('suporters_export_url')
+        )
+
+    def test_no_signature(self):
         # view not allowed
         response = self.client.get(
             self.supporters_export_url
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 404)
+
+    def test_invalid_signature(self):
+        # view not allowed
+        response = self.client.get(
+            '{}?{}'.format(
+                self.supporters_export_url,
+                urlencode({'signature': 'blabla:blabla'})
+            )
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_does_not_exist(self):
         # view allowed
         response = self.client.get(
-            self.supporters_export_url + 'does-not-exist', token=self.owner_token
+            self.supporters_export_url + 'does-not-exist',
         )
         self.assertEqual(response.status_code, 404)

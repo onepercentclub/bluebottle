@@ -93,7 +93,7 @@ class ProjectDocumentFileView(PrivateFileView):
     )
 
 
-class ProjectSupportersExportView(RetrieveAPIView):
+class ProjectSupportersExportView(PrivateFileView):
     fields = (
         ('order__user__email', 'Email'),
         ('order__user__full_name', 'Name'),
@@ -101,24 +101,10 @@ class ProjectSupportersExportView(RetrieveAPIView):
         ('reward__title', 'Reward'),
     )
 
-    lookup_field = 'slug'
+    model = Project
 
-    queryset = Project.objects
-
-    permission_classes = (
-        ResourceOwnerPermission,
-    )
-
-    def get(self, request, pk):
-        try:
-            instance = self.queryset.get(slug=pk)
-        except Project.DoesNotExist:
-            return HttpResponseNotFound()
-
-        try:
-            self.check_object_permissions(request, instance)
-        except PermissionDenied:
-            return HttpResponseForbidden()
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
 
         response = HttpResponse()
         response['Content-Disposition'] = 'attachment; filename="supporters.csv"'

@@ -4,12 +4,15 @@ from os.path import isfile
 import re
 from StringIO import StringIO
 import sys
+import urllib
 from urllib2 import URLError
 import urlparse
+
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files import File
+from django.core.signing import TimestampSigner
 from django.core.urlresolvers import reverse
 from django.template import defaultfilters
 from django.template.defaultfilters import linebreaks
@@ -327,24 +330,52 @@ class PhotoSerializer(RestrictedImageField):
 
 
 class PrivateFileSerializer(FileSerializer):
-    def __init__(self, url_name, *args, **kwargs):
+    signer = TimestampSigner()
+
+    def __init__(
+        self, url_name, file_attr=None, filename=None, url_args=None,
+        permission=None, *args, **kwargs
+    ):
         self.url_name = url_name
+        self.url_args = url_args or []
+        self.permission = permission
+
+        if file_attr and filename:
+            raise ValueError('Either set the field or the filename, not both')
+
+        self.file_attr = file_attr
+        self.filename = filename
+
         super(PrivateFileSerializer, self).__init__(*args, **kwargs)
 
-    def get_attribute(self, obj):
-        return obj
+    def get_attribute(self, value):
+        return value  # Just pass the whole object back
 
-    def to_representation(self, obj):
-        value = super(PrivateFileSerializer, self).get_attribute(obj)
-
-        if not value or not obj:
+    def to_representation(self, value):
+        """
+        Return a signed url
+        """
+        if self.permission and not self.permission().has_object_action_permission(
+            'GET',
+            self.context['request'].user,
+            value
+        ):
+            import ipdb; ipdb.set_trace()
             return None
 
-        url = reverse(
-            self.url_name,
-            kwargs={'pk': obj.pk}
-        )
+        url_args = [getattr(value, arg) for arg in self.url_args]
+
+        url = reverse(self.url_name, args=url_args)
+        signature = self.signer.sign(url)
+
+        if self.filename:
+            filename = self.filename
+        elif self.file_attr:
+            filename = os.path.basename(getattr(value, self.file_attr).name)
+        else:
+            filename = None
+
         return {
-            'name': os.path.basename(value.name),
-            'url': url
+            'url': '{}?{}'.format(url, urllib.urlencode({'signature': signature})),
+            'name': filename
         }

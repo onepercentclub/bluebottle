@@ -298,7 +298,6 @@ class TaskMemberStatus(RetrieveUpdateAPIView):
 class TaskMemberResumeView(PrivateFileView):
     queryset = TaskMember.objects
     field = 'resume'
-    permission_classes = (ResumePermission, )
 
 
 class TaskFileList(OwnerListViewMixin, ListCreateAPIView):

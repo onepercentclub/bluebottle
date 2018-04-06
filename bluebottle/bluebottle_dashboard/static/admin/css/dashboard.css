@@ -100,7 +100,7 @@
 }
 
 #content .parler-language-tabs {
-    border-bottom: 2px solid #B9B7C8;
+    border-bottom: 2px solid #FFFFFF;
 }
 
 #content .parler-language-tabs span {
@@ -117,6 +117,6 @@
 
 #content .parler-language-tabs span.current {
     border: 0;
-    background-color: #B9B7C8;
+    background-color: #FFFFFF;
     color: #281E50;
 }

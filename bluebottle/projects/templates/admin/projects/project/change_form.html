@@ -4,7 +4,7 @@
 {% block object-tools-items %}
     <li>
         {% if perms.projects.approve_payout and original.payout_status == 'needs_approval' %}
-            <a href="{% url 'admin:projects_project_approve_payout' object_id %}" style="background-color: darkgreen">
+            <a href="{% url 'admin:projects_project_approve_payout' object_id %}" class="button default">
                 {% trans  "Approve payout" %}
             </a>
         {% elif original.payout_status %}
@@ -13,19 +13,19 @@
             </a>
         {% endif %}
     </li>
-    <li>
-        {% if perms.payments.refund_orderpayment and original.can_refund %}
-            <a href="{% url 'admin:projects_project_refund' object_id %}" style="background-color: darkred">
+    {% if perms.payments.refund_orderpayment and original.can_refund %}
+        <li>
+            <a href="{% url 'admin:projects_project_refund' object_id %}" class="button danger">
                 {% trans  "Refund donations" %}
             </a>
-        {% endif %}
-    </li>
+        </li>
+    {% endif %}
     {% if user.is_staff and original.reward_set.count %}
-    <li>
-        <a href="{% url 'admin:projects_project_export_rewards' object_id %}" style="background-color: darkgreen">
-            {% trans  "Export Rewards" %}
-        </a>
-    </li>
+        <li>
+            <a href="{% url 'admin:projects_project_export_rewards' object_id %}" class="button">
+                {% trans  "Export Rewards" %}
+            </a>
+        </li>
     {% endif %}
     {{ block.super }}
 {% endblock %}

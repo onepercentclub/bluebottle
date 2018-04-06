@@ -229,6 +229,10 @@ ul.actionlist li {
         float: right;
         line-height: 30px !important;
         margin-left: 10px;
+        cursor: move;
+        &:hover, &:active {
+          color: $hover-link-color;
+        }
 
         html.touchevents & {
           display: none;
@@ -261,12 +265,15 @@ ul.actionlist li {
       &:hover &-buttons {
         visibility: visible;
       }
+      a.dashboard-item-remove:hover {
+        color: $danger-button-background-color;
+      }
     }
 
     &-content {
       background: $content-background-color;
       border-radius: 4px;
-      box-shadow: 0 2px 0 0 $content-border2-color;
+      box-shadow: 0 2px 4px 0 rgba(0,0,0, 0.16);
       overflow: hidden;
       padding: 12px;
       line-height: 22px;

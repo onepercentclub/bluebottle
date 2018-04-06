@@ -4,6 +4,7 @@
 
 .button, input[type="submit"], input[type="button"], .object-tools a {
   &, &:visited, &:hover {
+    font-family: $font;
     display: inline-block;
     background-color: $button-background-color;
     border-bottom: darken($button-background-color, 10) 2px solid;
@@ -14,7 +15,7 @@
     line-height: 32px;
     outline: 0;
     font-size: 0.9rem;
-    font-weight: 700;
+    font-weight: 500;
     text-align: center;
     padding: 0 10px;
     white-space: nowrap;
@@ -29,8 +30,18 @@
     }
   }
 
+  &.danger {
+      background-color: $danger-button-background-color;
+      color: $danger-button-text-color;
+      border-bottom: darken($danger-button-background-color, 10) 2px solid;
+      &:hover, &:active {
+        background-color: darken($danger-button-background-color, 10);
+        color: $danger-button-text-color;
+      }
+  }
+
   &.default {
-    font-weight: 700;
+    font-weight: 500;
     background-color: $primary-button-background-color;
     color: $primary-button-text-color;
     border-bottom: darken($primary-button-background-color, 10) 2px solid;
@@ -53,7 +64,7 @@
 }
 
 input[type="text"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], textarea, select, .vTextField {
-  border-radius: 2px;
+  border-radius: 4px;
   font-size: 0.9rem;
   height: $input-height;
   white-space: nowrap;
@@ -79,7 +90,7 @@ input[type="text"], input[type="email"], input[type="password"], input[type="url
 
   &:focus, fieldset.module &:focus {
     box-shadow: 0 0 4px 0 $input-shadow-color;
-    border-color: $input-background-color;
+    //border-color: $input-background-color;
   }
 }
 

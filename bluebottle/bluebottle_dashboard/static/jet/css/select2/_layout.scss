@@ -51,7 +51,7 @@
   }
 
   .select2-dropdown {
-    border: 0;
+    border-width: 1px;
     border-radius: 4px;
     box-shadow: 0 0 4px 0 $input-shadow-color;
     overflow: hidden;
@@ -75,7 +75,7 @@
 
     .select2-search__field {
       outline: 0;
-      border: 0;
+      border-width: 1px 0 0 0;
       background-color: $input-background-color;
       color: $input-text-color;
       height: $input-height;

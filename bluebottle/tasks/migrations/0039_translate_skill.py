@@ -35,8 +35,4 @@ class Migration(migrations.Migration):
             name='status',
             field=models.CharField(choices=[(b'applied', 'Applied'), (b'accepted', 'Accepted'), (b'rejected', 'Rejected'), (b'stopped', 'Stopped'), (b'withdrew', 'Withdrew'), (b'realized', 'Realised'), (b'absent', 'Absent')], default=b'applied', max_length=20, verbose_name='status'),
         ),
-        migrations.AlterUniqueTogether(
-            name='skilltranslation',
-            unique_together=set([('language_code', 'master'), ('language_code', '_name')]),
-        ),
     ]

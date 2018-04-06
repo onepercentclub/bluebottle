@@ -294,8 +294,7 @@ class Skill(TranslatableModel):
 
     translations = TranslatedFields(
         name=models.CharField(_('name'), max_length=100, ),
-        description=models.TextField(_('description'), blank=True),
-        meta={'unique_together': [('language_code', 'name')]}
+        description=models.TextField(_('description'), blank=True)
     )
 
     def __unicode__(self):

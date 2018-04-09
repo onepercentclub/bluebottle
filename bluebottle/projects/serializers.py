@@ -162,7 +162,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     latitude = serializers.FloatField(source='projectlocation.latitude')
     longitude = serializers.FloatField(source='projectlocation.longitude')
     project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
-    suporters_export_url = PrivateFileSerializer(
+    supporters_export_url = PrivateFileSerializer(
         'project-supporters-export', url_args=('slug', ), permission=ResourceOwnerPermission,
         read_only=True
     )

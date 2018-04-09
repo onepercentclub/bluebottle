@@ -360,7 +360,6 @@ class PrivateFileSerializer(FileSerializer):
             self.context['request'].user,
             value
         ):
-            import ipdb; ipdb.set_trace()
             return None
 
         url_args = [getattr(value, arg) for arg in self.url_args]

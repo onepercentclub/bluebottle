@@ -23,8 +23,7 @@ from bluebottle.utils.views import (
     RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView, OwnerListViewMixin,
 )
 from bluebottle.bb_tasks.permissions import (
-    ActiveProjectOrReadOnlyPermission,
-    ResumePermission
+    ActiveProjectOrReadOnlyPermission
 )
 
 
@@ -298,7 +297,6 @@ class TaskMemberStatus(RetrieveUpdateAPIView):
 class TaskMemberResumeView(PrivateFileView):
     queryset = TaskMember.objects
     field = 'resume'
-    permission_classes = (ResumePermission, )
 
 
 class TaskFileList(OwnerListViewMixin, ListCreateAPIView):

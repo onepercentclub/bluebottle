@@ -272,7 +272,10 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'theme',
                   'title',
                   'vote_count',
-                  'voting_deadline',)
+                  'voting_deadline',
+                  'suporters_export_url',
+                  )
+
 
 
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):

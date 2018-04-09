@@ -223,7 +223,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'video_url',
                   'vote_count',
                   'voting_deadline',
-                  'suporters_export_url',
+                  'supporters_export_url',
                   )
 
 
@@ -273,9 +273,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'title',
                   'vote_count',
                   'voting_deadline',
-                  'suporters_export_url',
                   )
-
 
 
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):

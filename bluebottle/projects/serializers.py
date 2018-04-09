@@ -234,6 +234,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
     skills = serializers.SerializerMethodField()
     project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
     theme = ProjectThemeSerializer()
+    project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
 
     def get_skills(self, obj):
         return set(task.skill.id for task in obj.task_set.all() if task.skill)
@@ -340,7 +341,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     longitude = serializers.FloatField(source='projectlocation.longitude', required=False, allow_null=True)
     project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
 
-    editable_fields = ('pitch', 'story', 'image', 'video_url')
+    editable_fields = ('pitch', 'story', 'image', 'video_url', 'projectlocation')
 
     @staticmethod
     def validate_account_number(value):

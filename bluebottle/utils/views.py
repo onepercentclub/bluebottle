@@ -245,6 +245,7 @@ class PrivateFileView(DetailView):
         field = getattr(self.get_object(), self.field)
         response = HttpResponse()
         response['X-Accel-Redirect'] = field.url
+        response['Content-Type'] = 'text/csv'
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
             field.name
         )

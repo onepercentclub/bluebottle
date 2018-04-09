@@ -2,7 +2,6 @@ from HTMLParser import HTMLParser
 import json
 from moneyed import Money
 import re
-import urllib
 
 from django.core.urlresolvers import resolve, reverse
 from django.core.validators import BaseValidator

@@ -1,7 +1,6 @@
 import csv
 
-from django.core.exceptions import PermissionDenied
-from django.http.response import HttpResponseForbidden, HttpResponseNotFound, HttpResponse
+from django.http.response import HttpResponse
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import (

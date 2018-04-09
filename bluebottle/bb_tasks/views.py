@@ -23,8 +23,7 @@ from bluebottle.utils.views import (
     RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView, OwnerListViewMixin,
 )
 from bluebottle.bb_tasks.permissions import (
-    ActiveProjectOrReadOnlyPermission,
-    ResumePermission
+    ActiveProjectOrReadOnlyPermission
 )
 
 

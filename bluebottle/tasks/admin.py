@@ -1,8 +1,6 @@
 from datetime import timedelta
-import urllib
 
 from django.contrib import admin
-from django.core.signing import TimestampSigner
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.timezone import now
@@ -78,7 +76,6 @@ def mark_as_tm_realized(modeladmin, request, queryset):
 
 
 mark_as_tm_realized.short_description = _("Mark selected Task Members as Realised")
-
 
 
 def resume_link(obj):

@@ -227,7 +227,7 @@ class PrivateFileView(DetailView):
     """ Serve private files using X-sendfile header. """
     field = None  # Field on the model that is the actual file
     signer = TimestampSigner()
-    max_age = 6 * 60
+    max_age = 6 * 60 * 60
     query_pk_and_slug = True
 
     def get_object(self):
@@ -245,7 +245,6 @@ class PrivateFileView(DetailView):
         field = getattr(self.get_object(), self.field)
         response = HttpResponse()
         response['X-Accel-Redirect'] = field.url
-        response['Content-Type'] = 'text/csv'
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
             field.name
         )

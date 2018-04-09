@@ -772,13 +772,24 @@ class TaskMemberResumeTest(BluebottleTestCase):
     def test_task_member_resume_expired_signature(self):
         current_time = time.time()
 
-        with mock.patch.object(time, 'time', return_value=current_time - (7 * 60)):
+        with mock.patch.object(time, 'time', return_value=current_time - (7 * 60 * 60)):
             signature = self.signer.sign(self.resume_url)
 
         response = self.client.get(
             '{}?{}'.format(self.resume_url, urllib.urlencode({'signature': signature}))
         )
         self.assertEqual(response.status_code, 404)
+
+    def test_task_member_resume_expired_non_signature(self):
+        current_time = time.time()
+
+        with mock.patch.object(time, 'time', return_value=current_time - (3 * 60 * 60)):
+            signature = self.signer.sign(self.resume_url)
+
+        response = self.client.get(
+            '{}?{}'.format(self.resume_url, urllib.urlencode({'signature': signature}))
+        )
+        self.assertEqual(response.status_code, 200)
 
 
 class TestMyTasksPermissions(BluebottleTestCase):

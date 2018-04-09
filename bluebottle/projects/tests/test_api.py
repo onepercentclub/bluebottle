@@ -6,6 +6,7 @@ from random import randint
 from urllib import urlencode
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.signing import TimestampSigner
 from django.test import RequestFactory
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
@@ -871,6 +872,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         self.some_photo = './bluebottle/projects/test_images/upload.png'
 
+        self.signer = TimestampSigner()
+
     def test_project_create(self):
         """
         Tests for Project Create
@@ -1259,9 +1262,9 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         file_url = reverse('project-document-file', args=[document.pk])
         response = self.client.get(file_url)
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 404)
 
-    def test_project_document_download_author(self):
+    def test_project_document_download_signed(self):
         project = ProjectFactory(owner=self.some_user)
         document = ProjectDocumentFactory.create(
             author=self.some_user,
@@ -1269,22 +1272,47 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             file='private/projects/documents/test.jpg'
         )
         file_url = reverse('project-document-file', args=[document.pk])
-        response = self.client.get(file_url, token=self.some_user_token)
+        signature = self.signer.sign(file_url)
+        response = self.client.get(
+            '{}?{}'.format(file_url, urlencode({'signature': signature})),
+            token=self.some_user_token
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
         )
 
-    def test_project_document_download_non_author(self):
+    def test_project_document_download_no_signature(self):
+        project = ProjectFactory(owner=self.some_user)
         document = ProjectDocumentFactory.create(
             author=self.some_user,
+            project=project,
             file='private/projects/documents/test.jpg'
         )
         file_url = reverse('project-document-file', args=[document.pk])
-        response = self.client.get(file_url, token=self.another_user_token)
+        response = self.client.get(
+            file_url,
+            token=self.some_user_token
+        )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
+
+    def test_project_document_download_invalid_signature(self):
+        project = ProjectFactory(owner=self.some_user)
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            project=project,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        signature = 'bla:bli'
+        response = self.client.get(
+            '{}?{}'.format(file_url, urlencode({'signature': signature})),
+            token=self.some_user_token
+        )
+
+        self.assertEqual(response.status_code, 404)
 
     def test_project_document_delete_author(self):
         project = ProjectFactory(owner=self.some_user)
@@ -1305,36 +1333,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         )
         file_url = reverse('manage-project-document-detail', args=[document.pk])
         response = self.client.delete(file_url, token=self.another_user_token)
-
-        self.assertEqual(response.status_code, 403)
-
-    def test_project_document_staff_session_user(self):
-        self.another_user.groups.add(
-            Group.objects.get(name='Staff')
-        )
-        self.another_user.save()
-
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        self.client.force_login(self.another_user)
-        response = self.client.get(file_url)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
-        )
-
-    def test_project_document_non_staff_session_user(self):
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        self.client.force_login(self.another_user)
-        response = self.client.get(file_url)
 
         self.assertEqual(response.status_code, 403)
 
@@ -2794,12 +2792,22 @@ class ProjectSupportersExportTest(BluebottleTestCase):
         )
         self.assertEqual(detail_response.status_code, 200)
         self.assertTrue(
-            detail_response.data['suporters_export_url']['url'].startswith(
+            detail_response.data['supporters_export_url']['url'].startswith(
                 self.supporters_export_url
             )
         )
         response = self.client.get(
-            detail_response.data['suporters_export_url']['url']
+            detail_response.data['supporters_export_url']['url']
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'], 'text/csv'
+        )
+
+        self.assertEqual(
+            response['Content-Disposition'],
+            'attachment; filename="supporters.csv"'
         )
 
         reader = csv.DictReader(StringIO(response.content))
@@ -2820,7 +2828,7 @@ class ProjectSupportersExportTest(BluebottleTestCase):
 
         self.assertEqual(detail_response.status_code, 200)
         self.assertIsNone(
-            detail_response.data.get('suporters_export_url')
+            detail_response.data.get('supporters_export_url')
         )
 
     def test_no_signature(self):

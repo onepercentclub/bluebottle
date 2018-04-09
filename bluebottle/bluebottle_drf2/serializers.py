@@ -4,7 +4,6 @@ from os.path import isfile
 import re
 from StringIO import StringIO
 import sys
-import urllib
 from urllib2 import URLError
 import urlparse
 
@@ -12,8 +11,6 @@ import urlparse
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files import File
-from django.core.signing import TimestampSigner
-from django.core.urlresolvers import reverse
 from django.template import defaultfilters
 from django.template.defaultfilters import linebreaks
 from django.utils.encoding import smart_str
@@ -26,6 +23,8 @@ from micawber.exceptions import ProviderException
 from micawber.parsers import standalone_url_re, full_handler
 from rest_framework import serializers
 from sorl.thumbnail.shortcuts import get_thumbnail
+
+from bluebottle.utils.utils import reverse_signed
 
 logger = logging.getLogger(__name__)
 
@@ -330,8 +329,6 @@ class PhotoSerializer(RestrictedImageField):
 
 
 class PrivateFileSerializer(FileSerializer):
-    signer = TimestampSigner()
-
     def __init__(
         self, url_name, file_attr=None, filename=None, url_args=None,
         permission=None, *args, **kwargs
@@ -363,18 +360,20 @@ class PrivateFileSerializer(FileSerializer):
             return None
 
         url_args = [getattr(value, arg) for arg in self.url_args]
-
-        url = reverse(self.url_name, args=url_args)
-        signature = self.signer.sign(url)
+        url = reverse_signed(self.url_name, args=url_args)
 
         if self.filename:
             filename = self.filename
         elif self.file_attr:
-            filename = os.path.basename(getattr(value, self.file_attr).name)
+            file = getattr(value, self.file_attr)
+            if not file:
+                return
+
+            filename = os.path.basename(file.name)
         else:
             filename = None
 
         return {
-            'url': '{}?{}'.format(url, urllib.urlencode({'signature': signature})),
+            'url': url,
             'name': filename
         }

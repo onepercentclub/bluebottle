@@ -108,6 +108,7 @@ class ProjectSupportersExportView(PrivateFileView):
 
         response = HttpResponse()
         response['Content-Disposition'] = 'attachment; filename="supporters.csv"'
+        response['Content-Type'] = 'text/csv'
 
         writer = csv.writer(response)
 

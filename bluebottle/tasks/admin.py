@@ -1,6 +1,8 @@
 from datetime import timedelta
+import urllib
 
 from django.contrib import admin
+from django.core.signing import TimestampSigner
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.timezone import now
@@ -10,6 +12,7 @@ from daterange_filter.filter import DateRangeFilter
 
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
 from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.utils import reverse_signed
 
 
 # Bulk actions for Task
@@ -77,12 +80,11 @@ def mark_as_tm_realized(modeladmin, request, queryset):
 mark_as_tm_realized.short_description = _("Mark selected Task Members as Realised")
 
 
+
 def resume_link(obj):
     if obj.resume:
-        url = reverse(
-            'task-member-resume',
-            args=[obj.id]
-        )
+        url = reverse_signed('task-member-resume', args=(obj.id, ))
+
         return format_html(
             u"<a href='{}'>{}</a>",
             str(url), _('Resume')
@@ -269,7 +271,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
     member_email.short_description = "Member Email"
 
     def resume_link(self, obj):
-        resume_link(obj)
+        return resume_link(obj)
 
     def lookup_allowed(self, key, value):
         if key in ('task__deadline__year',):

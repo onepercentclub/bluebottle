@@ -85,7 +85,7 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
 
 class ProjectDocumentSerializer(serializers.ModelSerializer):
     file = PrivateFileSerializer(
-        'project-supporters-export', url_args=('id', ), permission=ResourceOwnerPermission,
+        'project-document-file', url_args=('pk', ), permission=ResourceOwnerPermission,
         read_only=True
     )
 

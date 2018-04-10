@@ -100,7 +100,7 @@ class ProjectDocument(BaseProjectDocument):
         # pk may be unset if not saved yet, in which case no url can be
         # generated.
         if self.pk is not None:
-            return reverse_signed('project_document_file', args=(self.pk, ))
+            return reverse_signed('project-document-file', args=(self.pk, ))
         return None
 
     @property

@@ -55,5 +55,3 @@ class CanExportSupportersPermission(ResourceOwnerPermission):
 
     def has_action_permission(self, action, user, model_cls):
         return user.has_perms(self.perms)
-
-

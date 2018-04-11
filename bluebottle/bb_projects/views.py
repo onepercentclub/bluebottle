@@ -39,6 +39,7 @@ class ProjectListSearchMixin(object):
         # Apply filters
         status = query.getlist(u'status[]', None)
         if status:
+            import ipdb; ipdb.set_trace()
             qs = qs.filter(status__slug__in=status)
         else:
             status = query.get('status', None)

@@ -141,13 +141,22 @@ class TestDonationEmails(BluebottleTestCase):
         # Test email to donor
         self.assertEqual(mail.outbox[1].to[0], self.user.email)
         self.assertEqual(mail.outbox[1].subject, _('Thanks for your donation'))
+        import ipdb; ipdb.set_trace()
 
         body = mail.outbox[1].body
 
         self.assertTrue(
-            "{0}".format(self.donation.amount.amount) in body)
+            "{0}".format(self.donation.amount.amount) in body
+        )
         self.assertTrue(
-            "Thanks {0}".format(self.user.first_name) in body)
+            "Thanks {0}".format(self.user.first_name) in body
+        )
+        self.assertTrue(
+            self.donation.project.owner.full_name in body
+        )
+        self.assertTrue(
+            self.donation.project.organization.name in body
+        )
 
     def test_mail_no_mail_not_one_off(self):
         """ Test that no email is sent when its not a one-off donation"""

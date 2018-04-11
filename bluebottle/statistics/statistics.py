@@ -152,7 +152,9 @@ class Statistics(object):
         phase_logs = ProjectPhaseLog.objects.filter(
             self.date_filter('start')
         ).filter(
-            status__slug__in=['done-complete', 'done-incomplete', 'voting-done']
+            status__slug__in=['done-complete', 'done-incomplete', 'voting-done'],
+            project__status__slug__in=['done-complete', 'done-incomplete', 'voting-done'],
+
         ).distinct(
             'project__id'
         ).order_by(

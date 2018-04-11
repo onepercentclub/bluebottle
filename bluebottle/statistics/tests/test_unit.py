@@ -85,16 +85,30 @@ class StatisticsTest(BluebottleTestCase):
             involved=1
         )
 
+    def test_project_complete_stats_changed(self):
+        self.some_project.status = ProjectPhase.objects.get(slug='done-complete')
+        self.some_project.save()
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='closed'
+            ),
+            online=0,
+            involved=0
+        )
+        self.assertEqual(self.stats.projects_realized, 0)
+        self.assertEqual(self.stats.projects_complete, 0)
+
     def test_project_complete_stats(self):
         self._test_project_stats(
             ProjectPhase.objects.get(
                 slug='done-complete'
             ),
             online=0,
-            involved=1
+            involved=0
         )
-        self.assertEqual(self.stats.projects_realized, 1)
-        self.assertEqual(self.stats.projects_complete, 1)
+        self.assertEqual(self.stats.projects_realized, 0)
+        self.assertEqual(self.stats.projects_complete, 0)
+
 
     def test_project_incomplete_stats(self):
         self._test_project_stats(

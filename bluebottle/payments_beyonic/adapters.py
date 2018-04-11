@@ -103,6 +103,5 @@ class BeyonicPaymentAdapter(BasePaymentAdapter):
         action = self.get_authorization_action()
         if self.payment.status == 'settled':
             self.order_payment.settled()
-        print action
         self.order_payment.set_authorization_action(action)
         self.order_payment.save()

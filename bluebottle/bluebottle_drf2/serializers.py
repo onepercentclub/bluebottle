@@ -352,10 +352,14 @@ class PrivateFileSerializer(FileSerializer):
         """
         Return a signed url
         """
-        if self.permission and not self.permission().has_object_action_permission(
-            'GET',
-            self.context['request'].user,
-            value
+        permission = self.permission()
+        if not (
+            permission.has_object_action_permission(
+                'GET', self.context['request'].user, value
+            ) and
+            permission.has_action_permission(
+                'GET', self.context['request'].user, value.__class__
+            )
         ):
             return None
 

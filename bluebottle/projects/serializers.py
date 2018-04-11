@@ -26,8 +26,9 @@ from bluebottle.utils.serializers import (
     RelatedResourcePermissionField,
 )
 from bluebottle.utils.fields import SafeField
-from bluebottle.utils.permissions import (
-    ResourceOwnerPermission,
+from bluebottle.utils.permissions import ResourceOwnerPermission
+from bluebottle.projects.permissions import (
+    CanExportSupportersPermission
 )
 from bluebottle.utils.utils import get_class
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
@@ -163,7 +164,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     longitude = serializers.FloatField(source='projectlocation.longitude')
     project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
     supporters_export_url = PrivateFileSerializer(
-        'project-supporters-export', url_args=('slug', ), permission=ResourceOwnerPermission,
+        'project-supporters-export', url_args=('slug', ), permission=CanExportSupportersPermission,
         read_only=True
     )
 

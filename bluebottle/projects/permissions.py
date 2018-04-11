@@ -47,3 +47,13 @@ class CanEditOwnRunningProjects(ResourceOwnerPermission):
 
     def has_parent_permission(self, method, user, parent, model=None):
         return self.has_object_action_permission(method, user, parent)
+
+
+class CanExportSupportersPermission(ResourceOwnerPermission):
+    """ Allows access only to obj owner. """
+    perms = ['projects.export_supporters']
+
+    def has_action_permission(self, action, user, model_cls):
+        return user.has_perms(self.perms)
+
+

@@ -2787,6 +2787,11 @@ class ProjectSupportersExportTest(BluebottleTestCase):
 
     def test_owner(self):
         # view allowed
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='export_supporters')
+        )
+
         detail_response = self.client.get(
             self.project_url, token=self.owner_token
         )
@@ -2817,7 +2822,21 @@ class ProjectSupportersExportTest(BluebottleTestCase):
             for field in ('Reward', 'Donation Date', 'Email', 'Name'):
                 self.assertTrue(field in row)
 
+    def test_owner_no_permission(self):
+        detail_response = self.client.get(
+            self.project_url, token=self.owner_token
+        )
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertIsNone(
+            detail_response.data['supporters_export_url']
+        )
+
     def test_non_owner(self):
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='export_supporters')
+        )
+
         # view allowed
         detail_response = self.client.get(
             self.project_url,

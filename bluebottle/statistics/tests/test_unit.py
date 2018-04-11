@@ -109,7 +109,6 @@ class StatisticsTest(BluebottleTestCase):
         self.assertEqual(self.stats.projects_realized, 0)
         self.assertEqual(self.stats.projects_complete, 0)
 
-
     def test_project_incomplete_stats(self):
         self._test_project_stats(
             ProjectPhase.objects.get(

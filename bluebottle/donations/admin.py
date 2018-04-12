@@ -102,7 +102,7 @@ class DonationAdmin(admin.ModelAdmin):
 
     form = DonationAdminForm
     date_hierarchy = 'created'
-    list_display = ('created_display', 'order_payment_links', 'admin_project', 'fundraiser',
+    list_display = ('created_display', 'order_payment_links', 'admin_project', 'admin_fundraiser',
                     'user_full_name', 'amount',
                     'related_payment_method', 'status')
     list_filter = (DonationStatusFilter, 'order__order_type',
@@ -120,7 +120,7 @@ class DonationAdmin(admin.ModelAdmin):
     )
 
     def created_display(self, obj):
-        return obj.created.strftime('%Y-%m-%d %H:%I')
+        return format_html('<span style="white-space:nowrap">{}</span>', obj.created.strftime('%Y-%m-%d %H:%I'))
     created_display.admin_order_field = 'created'
     created_display.short_description = _('Created')
 
@@ -201,9 +201,7 @@ class DonationAdmin(admin.ModelAdmin):
 
     def project_link(self, obj):
         project = obj.project
-        url = reverse('admin:{0}_{1}_change'.format(project._meta.app_label,
-                                                    project._meta.model_name),
-                      args=[project.id])
+        url = reverse('admin:projects_project_change', args=[project.id])
         return format_html(
             u"<a href='{}'>{}</a>",
             str(url),
@@ -213,9 +211,7 @@ class DonationAdmin(admin.ModelAdmin):
     def fundraiser_link(self, obj):
         fundraiser = obj.fundraiser
         url = reverse(
-            'admin:{0}_{1}_change'.format(fundraiser._meta.app_label,
-                                          fundraiser._meta.model_name),
-            args=[fundraiser.id])
+            'admin:fundraisers_fundraiser_change', args=[fundraiser.id])
         return format_html(
             u"<a href='{}'>{}</a>",
             str(url),
@@ -225,12 +221,19 @@ class DonationAdmin(admin.ModelAdmin):
     def order_type(self, obj):
         return obj.order.order_type
 
-    # Link to project
     admin_project = link_to(
         lambda obj: obj.project,
         'admin:projects_project_change',
         view_args=lambda obj: (obj.project.id,),
         short_description='project',
+        truncate=50
+    )
+
+    admin_fundraiser = link_to(
+        lambda obj: obj.fundraiser,
+        'admin:fundraisers_fundraiser_change',
+        view_args=lambda obj: (obj.fundraiser_id,),
+        short_description='fundraiser',
         truncate=50
     )
 

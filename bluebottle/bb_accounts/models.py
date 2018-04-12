@@ -292,8 +292,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         task member in
         """
         task_count = Task.objects.filter(author=self).count()
-        taskmember_count = TaskMember.objects.filter(
-            member=self, status__in=['applied', 'accepted', 'realized']).count()
+        taskmember_count = TaskMember.objects.filter(member=self).count()
 
         return task_count + taskmember_count
 

@@ -200,7 +200,8 @@ JWT_TOKEN_RENEWAL_DELTA = datetime.timedelta(minutes=30)
 LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_mock', '/payments_interswitch',
                           '/payments_vitepay', '/payments_flutterwave',
-                          '/payments_lipisha', '/media', '/downloads',
+                          '/payments_lipisha', '/payments_beyonic',
+                          '/media', '/downloads',
                           '/surveys', '/token', '/jet')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
@@ -339,6 +340,7 @@ TENANT_APPS = (
     'bluebottle.slides',
     'bluebottle.quotes',
     'bluebottle.payments',
+    'bluebottle.payments_beyonic',
     'bluebottle.payments_docdata',
     'bluebottle.payments_external',
     'bluebottle.payments_flutterwave',

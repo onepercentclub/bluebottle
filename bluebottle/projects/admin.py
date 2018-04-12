@@ -33,6 +33,7 @@ from django.http.response import HttpResponseRedirect, HttpResponseForbidden, Ht
 from django.utils.translation import ugettext_lazy as _
 
 from django_summernote.widgets import SummernoteWidget
+from moneyed.classes import Money
 
 from parler.admin import TranslatableAdmin
 from sorl.thumbnail.admin import AdminImageMixin
@@ -500,7 +501,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if not request.user.has_perm('payments.refund_orderpayment') or not project.can_refund:
             return HttpResponseForbidden('Missing permission: payments.refund_orderpayment')
 
+        project.status = ProjectPhase.objects.get(slug='refunded')
+        project.save()
+
         refund_project.delay(connection.tenant, project)
+
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)
 
@@ -547,7 +552,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     amount_donated_i18n.short_description = _('Amount Donated')
 
     def amount_needed_i18n(self, obj):
-        return obj.amount_needed
+        amount_needed = obj.amount_needed - obj.amount_extra
+        if amount_needed.amount > 0:
+            return amount_needed
+        else:
+            return Money(0, obj.amount_asked.currency)
 
     amount_needed_i18n.short_description = _('Amount Needed')
 

@@ -1,8 +1,12 @@
+import csv
 from datetime import timedelta, datetime
 import json
+from StringIO import StringIO
 from random import randint
+from urllib import urlencode
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.signing import TimestampSigner
 from django.test import RequestFactory
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
@@ -24,6 +28,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory, LocationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectDocumentFactory
 from bluebottle.test.factory_models.tasks import (
@@ -34,6 +39,7 @@ from bluebottle.test.factory_models.wallposts import (
     MediaWallpostFactory, MediaWallpostPhotoFactory,
     TextWallpostFactory)
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import StatusDefinition
 
 from ..models import Project
 
@@ -866,6 +872,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         self.some_photo = './bluebottle/projects/test_images/upload.png'
 
+        self.signer = TimestampSigner()
+
     def test_project_create(self):
         """
         Tests for Project Create
@@ -1254,9 +1262,9 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         file_url = reverse('project-document-file', args=[document.pk])
         response = self.client.get(file_url)
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 404)
 
-    def test_project_document_download_author(self):
+    def test_project_document_download_signed(self):
         project = ProjectFactory(owner=self.some_user)
         document = ProjectDocumentFactory.create(
             author=self.some_user,
@@ -1264,22 +1272,47 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             file='private/projects/documents/test.jpg'
         )
         file_url = reverse('project-document-file', args=[document.pk])
-        response = self.client.get(file_url, token=self.some_user_token)
+        signature = self.signer.sign(file_url)
+        response = self.client.get(
+            '{}?{}'.format(file_url, urlencode({'signature': signature})),
+            token=self.some_user_token
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
         )
 
-    def test_project_document_download_non_author(self):
+    def test_project_document_download_no_signature(self):
+        project = ProjectFactory(owner=self.some_user)
         document = ProjectDocumentFactory.create(
             author=self.some_user,
+            project=project,
             file='private/projects/documents/test.jpg'
         )
         file_url = reverse('project-document-file', args=[document.pk])
-        response = self.client.get(file_url, token=self.another_user_token)
+        response = self.client.get(
+            file_url,
+            token=self.some_user_token
+        )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
+
+    def test_project_document_download_invalid_signature(self):
+        project = ProjectFactory(owner=self.some_user)
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            project=project,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        signature = 'bla:bli'
+        response = self.client.get(
+            '{}?{}'.format(file_url, urlencode({'signature': signature})),
+            token=self.some_user_token
+        )
+
+        self.assertEqual(response.status_code, 404)
 
     def test_project_document_delete_author(self):
         project = ProjectFactory(owner=self.some_user)
@@ -1300,36 +1333,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         )
         file_url = reverse('manage-project-document-detail', args=[document.pk])
         response = self.client.delete(file_url, token=self.another_user_token)
-
-        self.assertEqual(response.status_code, 403)
-
-    def test_project_document_staff_session_user(self):
-        self.another_user.groups.add(
-            Group.objects.get(name='Staff')
-        )
-        self.another_user.save()
-
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        self.client.force_login(self.another_user)
-        response = self.client.get(file_url)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
-        )
-
-    def test_project_document_non_staff_session_user(self):
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        self.client.force_login(self.another_user)
-        response = self.client.get(file_url)
 
         self.assertEqual(response.status_code, 403)
 
@@ -2747,3 +2750,126 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(template['default_amount_asked'], {'currency': 'EUR', 'amount': 1500.00})
         self.assertEqual(len(template['image']), 4)
         self.assertEqual(template['default_title'], 'Sample project title')
+
+
+class ProjectSupportersExportTest(BluebottleTestCase):
+    """
+    Tests for the Project supporters export permissions.
+    """
+    def setUp(self):
+        super(ProjectSupportersExportTest, self).setUp()
+        self.init_projects()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.project = ProjectFactory.create(owner=self.owner)
+
+        reward = RewardFactory.create(project=self.project)
+
+        for order_type in ('one-off', 'recurring', 'one-off'):
+            order = OrderFactory.create(
+                status=StatusDefinition.SUCCESS,
+                order_type=order_type
+            )
+            self.donation = DonationFactory.create(
+                amount=Money(1000, 'EUR'),
+                order=order,
+                project=self.project,
+                fundraiser=None,
+                reward=reward
+            )
+
+        self.supporters_export_url = reverse(
+            'project-supporters-export', kwargs={'slug': self.project.slug}
+        )
+        self.project_url = reverse(
+            'project_detail', kwargs={'slug': self.project.slug})
+
+    def test_owner(self):
+        # view allowed
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='export_supporters')
+        )
+
+        detail_response = self.client.get(
+            self.project_url, token=self.owner_token
+        )
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertTrue(
+            detail_response.data['supporters_export_url']['url'].startswith(
+                self.supporters_export_url
+            )
+        )
+        response = self.client.get(
+            detail_response.data['supporters_export_url']['url']
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'], 'text/csv'
+        )
+
+        self.assertEqual(
+            response['Content-Disposition'],
+            'attachment; filename="supporters.csv"'
+        )
+
+        reader = csv.DictReader(StringIO(response.content))
+        results = [result for result in reader]
+        self.assertEqual(len(results), 2)
+        for row in results:
+            for field in ('Reward', 'Donation Date', 'Email', 'Name'):
+                self.assertTrue(field in row)
+
+    def test_owner_no_permission(self):
+        detail_response = self.client.get(
+            self.project_url, token=self.owner_token
+        )
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertIsNone(
+            detail_response.data['supporters_export_url']
+        )
+
+    def test_non_owner(self):
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='export_supporters')
+        )
+
+        # view allowed
+        detail_response = self.client.get(
+            self.project_url,
+            token="JWT {0}".format(
+                BlueBottleUserFactory.create().get_jwt_token()
+            )
+        )
+
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertIsNone(
+            detail_response.data.get('supporters_export_url')
+        )
+
+    def test_no_signature(self):
+        # view not allowed
+        response = self.client.get(
+            self.supporters_export_url
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_invalid_signature(self):
+        # view not allowed
+        response = self.client.get(
+            '{}?{}'.format(
+                self.supporters_export_url,
+                urlencode({'signature': 'blabla:blabla'})
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_does_not_exist(self):
+        # view allowed
+        response = self.client.get(
+            self.supporters_export_url + 'does-not-exist',
+        )
+        self.assertEqual(response.status_code, 404)

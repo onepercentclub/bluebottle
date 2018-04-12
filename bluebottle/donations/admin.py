@@ -106,7 +106,7 @@ class DonationAdmin(admin.ModelAdmin):
                     'user_full_name', 'amount',
                     'related_payment_method', 'status')
     list_filter = (DonationStatusFilter, 'order__order_type',
-                   DonationUserFilter)
+                   DonationUserFilter, 'amount_currency')
     ordering = ('-created',)
     raw_id_fields = ('project', 'fundraiser')
     readonly_fields = ('order_link', 'order_payment_links', 'created', 'updated', 'completed',

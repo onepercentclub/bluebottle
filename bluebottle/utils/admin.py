@@ -7,6 +7,7 @@ from django.db.models.aggregates import Sum
 
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
+from bluebottle.tasks.models import TaskMember
 from .models import Language
 import csv
 from django.db.models.fields.files import FieldFile
@@ -100,7 +101,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             if queryset.model is Project:
                 for field in CustomProjectFieldSettings.objects.all():
                     labels.append(field.name)
-            if queryset.model is Member:
+            if queryset.model is Member or queryset.model is TaskMember:
                 for field in CustomMemberFieldSettings.objects.all():
                     labels.append(field.name)
             writer.writerow(row)
@@ -119,6 +120,13 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                 for field in CustomMemberFieldSettings.objects.all():
                     try:
                         value = obj.extra.get(field=field).value
+                    except CustomMemberField.DoesNotExist:
+                        value = ''
+                    row.append(value.encode('utf-8'))
+            if queryset.model is TaskMember:
+                for field in CustomMemberFieldSettings.objects.all():
+                    try:
+                        value = obj.member.extra.get(field=field).value
                     except CustomMemberField.DoesNotExist:
                         value = ''
                     row.append(value.encode('utf-8'))

@@ -7,10 +7,10 @@ import sys
 from urllib2 import URLError
 import urlparse
 
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files import File
-from django.core.urlresolvers import reverse
 from django.template import defaultfilters
 from django.template.defaultfilters import linebreaks
 from django.utils.encoding import smart_str
@@ -23,6 +23,8 @@ from micawber.exceptions import ProviderException
 from micawber.parsers import standalone_url_re, full_handler
 from rest_framework import serializers
 from sorl.thumbnail.shortcuts import get_thumbnail
+
+from bluebottle.utils.utils import reverse_signed
 
 logger = logging.getLogger(__name__)
 
@@ -327,24 +329,55 @@ class PhotoSerializer(RestrictedImageField):
 
 
 class PrivateFileSerializer(FileSerializer):
-    def __init__(self, url_name, *args, **kwargs):
+    def __init__(
+        self, url_name, file_attr=None, filename=None, url_args=None,
+        permission=None, *args, **kwargs
+    ):
         self.url_name = url_name
+        self.url_args = url_args or []
+        self.permission = permission
+
+        if file_attr and filename:
+            raise ValueError('Either set the field or the filename, not both')
+
+        self.file_attr = file_attr
+        self.filename = filename
+
         super(PrivateFileSerializer, self).__init__(*args, **kwargs)
 
-    def get_attribute(self, obj):
-        return obj
+    def get_attribute(self, value):
+        return value  # Just pass the whole object back
 
-    def to_representation(self, obj):
-        value = super(PrivateFileSerializer, self).get_attribute(obj)
-
-        if not value or not obj:
+    def to_representation(self, value):
+        """
+        Return a signed url
+        """
+        permission = self.permission()
+        if not (
+            permission.has_object_action_permission(
+                'GET', self.context['request'].user, value
+            ) and
+            permission.has_action_permission(
+                'GET', self.context['request'].user, value.__class__
+            )
+        ):
             return None
 
-        url = reverse(
-            self.url_name,
-            kwargs={'pk': obj.pk}
-        )
+        url_args = [getattr(value, arg) for arg in self.url_args]
+        url = reverse_signed(self.url_name, args=url_args)
+
+        if self.filename:
+            filename = self.filename
+        elif self.file_attr:
+            file = getattr(value, self.file_attr)
+            if not file:
+                return
+
+            filename = os.path.basename(file.name)
+        else:
+            filename = None
+
         return {
-            'name': os.path.basename(value.name),
-            'url': url
+            'url': url,
+            'name': filename
         }

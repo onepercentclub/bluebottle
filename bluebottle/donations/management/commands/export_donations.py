@@ -1,6 +1,7 @@
 import json
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
+from django.db import connection
 
 from bluebottle.orders.models import Order
 from bluebottle.clients.models import Client
@@ -19,6 +20,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         results = []
         for client in Client.objects.all():
+            connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
                 ContentType.objects.clear_cache()
                 orders = Order.objects.filter(

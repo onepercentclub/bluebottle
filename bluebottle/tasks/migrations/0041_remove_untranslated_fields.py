@@ -24,9 +24,5 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='skill',
             name='name',
-        ),
-        migrations.AlterUniqueTogether(
-            name='skilltranslation',
-            unique_together=set([('language_code', 'master'), ('language_code', 'name')]),
-        ),
+        )
     ]

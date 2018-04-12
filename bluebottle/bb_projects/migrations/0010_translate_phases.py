@@ -34,8 +34,4 @@ class Migration(migrations.Migration):
             name='projecttheme',
             options={'ordering': ['slug'], 'permissions': (('api_read_projecttheme', 'Can view project theme through API'),), 'verbose_name': 'project theme', 'verbose_name_plural': 'project themes'},
         ),
-        migrations.AlterUniqueTogether(
-            name='projectphasetranslation',
-            unique_together=set([('language_code', 'master'), ('language_code', 'name')]),
-        ),
     ]

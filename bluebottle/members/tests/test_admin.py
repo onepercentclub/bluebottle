@@ -13,8 +13,6 @@ from bluebottle.members.admin import MemberAdmin, MemberChangeForm
 from bluebottle.members.models import CustomMemberFieldSettings, Member, CustomMemberField
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
-from bluebottle.test.factory_models.votes import VoteFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
 
 
 factory = RequestFactory()
@@ -99,20 +97,6 @@ class MemberAdminTest(BluebottleAdminTestCase):
         reset_mail = mail.outbox[0]
         self.assertEqual(reset_mail.to, [user.email])
         self.assertTrue('Please go to the following page and choose a new password' in reset_mail.body)
-
-
-class InlineModelTestCase(BluebottleAdminTestCase):
-    def setUp(self):
-        super(InlineModelTestCase, self).setUp()
-
-        self.client.force_login(self.superuser)
-
-    def test_inline_votes(self):
-        project = ProjectFactory.create(title='A Müller Project')
-        vote = VoteFactory.create(voter=self.superuser, project=project)
-        member_url = reverse('admin:members_member_change', args=(self.superuser.id,))
-        response = self.client.get(member_url)
-        self.assertIn(vote.project.title, response.content)
 
 
 class MemberCustomFieldAdminTest(BluebottleAdminTestCase):

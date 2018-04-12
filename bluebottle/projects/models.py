@@ -118,11 +118,6 @@ class ProjectDocument(BaseProjectDocument):
 
 
 class Project(BaseProject, PreviousStatusMixin):
-    latitude = models.DecimalField(
-        _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-    longitude = models.DecimalField(
-        _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-
     reach = models.PositiveIntegerField(
         _('Reach'), help_text=_('How many people do you expect to reach?'),
         blank=True, null=True)

@@ -141,7 +141,6 @@ class TestDonationEmails(BluebottleTestCase):
         # Test email to donor
         self.assertEqual(mail.outbox[1].to[0], self.user.email)
         self.assertEqual(mail.outbox[1].subject, _('Thanks for your donation'))
-        import ipdb; ipdb.set_trace()
 
         body = mail.outbox[1].body
 

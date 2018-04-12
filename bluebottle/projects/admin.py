@@ -531,7 +531,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if not request.user.has_perm('payments.refund_orderpayment') or not project.can_refund:
             return HttpResponseForbidden('Missing permission: payments.refund_orderpayment')
 
+        project.status = ProjectPhase.objects.get(slug='refunded')
+        project.save()
+
         refund_project.delay(connection.tenant, project)
+
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)
 

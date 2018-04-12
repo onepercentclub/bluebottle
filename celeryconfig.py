@@ -29,6 +29,10 @@ CELERYBEAT_SCHEDULE = {
         'task': 'bluebottle.projects.tasks.update_project_status_stats',
         'schedule': crontab(hour=0, minute=0),
     },
+    'task_reminder_mails': {
+        'task': 'bluebottle.tasks.tasks.send_task_reminder_mails',
+        'schedule': crontab(hour=9, minute=30),
+    },
     'sync_surveys': {
         'task': 'bluebottle.surveys.tasks.sync_surveys',
         'schedule': timedelta(hours=1),

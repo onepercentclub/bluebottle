@@ -66,22 +66,6 @@ class ProjectLocation(models.Model):
         verbose_name_plural = _('Location')
 
 
-class ProjectLocation(models.Model):
-    project = models.OneToOneField('projects.Project', primary_key=True)
-    place = models.CharField(max_length=80, null=True, blank=True)
-    street = models.TextField(max_length=80, null=True, blank=True)
-    neighborhood = models.TextField(max_length=80, null=True, blank=True)
-    city = models.TextField(max_length=80, null=True, blank=True)
-    postal_code = models.CharField(max_length=20, null=True, blank=True)
-    country = models.CharField(max_length=40, null=True, blank=True)
-    latitude = models.DecimalField(
-        _('latitude'), max_digits=21, decimal_places=18
-    )
-    longitude = models.DecimalField(
-        _('longitude'), max_digits=21, decimal_places=18
-    )
-
-
 class ProjectPhaseLog(models.Model):
     project = models.ForeignKey('projects.Project')
     status = models.ForeignKey('bb_projects.ProjectPhase')

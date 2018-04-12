@@ -104,10 +104,10 @@ class StatisticsTest(BluebottleTestCase):
                 slug='done-complete'
             ),
             online=0,
-            involved=0
+            involved=1
         )
-        self.assertEqual(self.stats.projects_realized, 0)
-        self.assertEqual(self.stats.projects_complete, 0)
+        self.assertEqual(self.stats.projects_realized, 1)
+        self.assertEqual(self.stats.projects_complete, 1)
 
     def test_project_incomplete_stats(self):
         self._test_project_stats(

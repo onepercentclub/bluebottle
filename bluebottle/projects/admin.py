@@ -2,7 +2,7 @@ from collections import OrderedDict
 import csv
 import logging
 import six
-from decimal import InvalidOperation
+from decimal import InvalidOperation, DivisionByZero
 
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
@@ -33,6 +33,7 @@ from django.http.response import HttpResponseRedirect, HttpResponseForbidden, Ht
 from django.utils.translation import ugettext_lazy as _
 
 from django_summernote.widgets import SummernoteWidget
+from moneyed.classes import Money
 
 from parler.admin import TranslatableAdmin
 from sorl.thumbnail.admin import AdminImageMixin
@@ -421,7 +422,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         try:
             percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
             return "{0} %".format(percentage)
-        except (AttributeError, InvalidOperation):
+        except (AttributeError, InvalidOperation, DivisionByZero):
             return '-'
     donated_percentage.short_description = _('Donated')
 
@@ -547,7 +548,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     amount_donated_i18n.short_description = _('Amount Donated')
 
     def amount_needed_i18n(self, obj):
-        return obj.amount_needed
+        amount_needed = obj.amount_needed - obj.amount_extra
+        if amount_needed.amount > 0:
+            return amount_needed
+        else:
+            return Money(0, obj.amount_asked.currency)
 
     amount_needed_i18n.short_description = _('Amount Needed')
 

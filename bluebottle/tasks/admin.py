@@ -307,7 +307,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
     member_email.short_description = "Member Email"
 
     def resume_link(self, obj):
-        resume_link(obj)
+        return resume_link(obj)
 
     def lookup_allowed(self, key, value):
         if key in ('task__deadline__year',):

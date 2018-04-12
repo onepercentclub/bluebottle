@@ -79,6 +79,9 @@ def save(sender, instance, **kwargs):
     except sender.DoesNotExist:
         pass  # Object is new, so field hasn't technically changed, but you may want to do something else here.
 
+    if not instance.latitude or not instance.longitude:
+        return
+
     if hasattr(settings, 'MAPS_API_KEY') and settings.MAPS_API_KEY:
         try:
             result = geocoder.google(

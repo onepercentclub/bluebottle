@@ -8,7 +8,7 @@ from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from parler.admin import TranslatableAdmin
-from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
+from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill, TaskStatusLog
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.utils import reverse_signed
 
@@ -162,10 +162,23 @@ class OnlineOnLocationFilter(admin.SimpleListFilter):
         return queryset
 
 
+class TaskStatusLogInline(admin.TabularInline):
+    model = TaskStatusLog
+    can_delete = False
+    ordering = ('-start',)
+    extra = 0
+
+    def has_add_permission(self, request):
+        return False
+
+    readonly_fields = ('status', 'start')
+    fields = readonly_fields
+
+
 class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
-    inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
+    inlines = (TaskMemberAdminInline, TaskFileAdminInline, TaskStatusLogInline)
     save_as = True
 
     raw_id_fields = ('author', 'project')
@@ -215,10 +228,27 @@ class TaskAdmin(admin.ModelAdmin):
     actions = [mark_as_open, mark_as_in_progress, mark_as_closed,
                mark_as_realized, export_as_csv_action(fields=export_fields)]
 
-    fields = ('title', 'description', 'skill', 'time_needed', 'status',
-              'accepting', 'needs_motivation', 'location',
-              'date_status_change', 'people_needed',
-              'project', 'author', 'type', 'deadline', 'deadline_to_apply')
+    fieldsets = (
+        (_('Main'), {'fields': [
+            'project',
+            'author',
+            'title',
+            'description',
+        ]}),
+        (_('Details'), {'fields': [
+            'status',
+            'people_needed',
+            'time_needed',
+            'skill',
+            'deadline',
+            'deadline_to_apply',
+            'type',
+            'location',
+            'accepting',
+            'needs_motivation',
+            'date_status_change',
+        ]}),
+    )
 
     def created_date(self, obj):
         return obj.created.date()

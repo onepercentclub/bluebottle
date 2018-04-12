@@ -30,8 +30,4 @@ class Migration(migrations.Migration):
                 'verbose_name': 'project theme Translation',
             },
         ),
-        migrations.AlterUniqueTogether(
-            name='projectthemetranslation',
-            unique_together=set([('language_code', 'master'), ('language_code', 'name')]),
-        ),
     ]

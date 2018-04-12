@@ -199,11 +199,11 @@ class MemberAdmin(UserAdmin):
         return tuple(standard_fieldsets)
 
     staff_fieldsets = (
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'groups')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'can_pledge', 'groups')}),
     )
 
     superuser_fieldsets = (
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'can_pledge', 'groups')}),
     )
 
     add_fieldsets = (

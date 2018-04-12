@@ -460,9 +460,11 @@ class TestProjectRefundAdmin(BluebottleTestCase):
         with mock.patch.object(refund_project, 'delay') as refund_mock:
             response = self.project_admin.refund(self.request, self.project.pk)
 
-            self.assertEqual(response.status_code, 302)
+            self.project.refresh_from_db()
 
+            self.assertEqual(response.status_code, 302)
             refund_mock.assert_called_with(connection.tenant, self.project)
+            self.assertEqual(self.project.status.slug, 'refunded')
 
     @override_settings(ENABLE_REFUNDS=True)
     def test_refunds_not_closed(self):
@@ -472,7 +474,9 @@ class TestProjectRefundAdmin(BluebottleTestCase):
         with mock.patch.object(refund_project, 'delay') as refund_mock:
             response = self.project_admin.refund(self.request, self.project.pk)
 
+            self.project.refresh_from_db()
             self.assertEqual(response.status_code, 403)
+            self.assertEqual(self.project.status.slug, 'campaign')
             refund_mock.assert_not_called()
 
     @override_settings(ENABLE_REFUNDS=True)

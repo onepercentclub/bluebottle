@@ -10,6 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
 from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.utils import reverse_signed
 
 
 # Bulk actions for Task
@@ -79,10 +80,8 @@ mark_as_tm_realized.short_description = _("Mark selected Task Members as Realise
 
 def resume_link(obj):
     if obj.resume:
-        url = reverse(
-            'task-member-resume',
-            args=[obj.id]
-        )
+        url = reverse_signed('task-member-resume', args=(obj.id, ))
+
         return format_html(
             u"<a href='{}'>{}</a>",
             str(url), _('Resume')

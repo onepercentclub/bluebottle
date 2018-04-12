@@ -19,7 +19,9 @@ from bluebottle.suggestions.models import Suggestion
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory, ProjectThemeFactory
+from bluebottle.test.factory_models.projects import (
+    ProjectFactory, ProjectPhaseFactory, ProjectThemeFactory, ProjectDocumentFactory
+)
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
@@ -621,3 +623,19 @@ class TestProjectLocation(BluebottleTestCase):
         self.assertEqual(
             self.location.street, None
         )
+
+
+class TestProjectDocumentDownload(BluebottleTestCase):
+    def setUp(self):
+        self.project = ProjectFactory.create(language=Language.objects.get(code='en'))
+        self.document = ProjectDocumentFactory.create(
+            project=self.project,
+            file='private/projects/documents/test.jpg'
+        )
+
+    def test_document_url(self):
+        self.assertTrue(self.document.document_url, '/downloads/project/documents')
+        response = self.client.get(self.document.document_url)
+
+        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg')

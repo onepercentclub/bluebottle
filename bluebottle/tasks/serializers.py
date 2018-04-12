@@ -1,4 +1,6 @@
+from datetime import timedelta
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.bluebottle_drf2.serializers import (
@@ -12,6 +14,29 @@ from bluebottle.utils.serializers import PermissionField, ResourcePermissionFiel
 from bluebottle.wallposts.serializers import TextWallpostSerializer
 from bluebottle.projects.models import Project
 from bluebottle.members.models import Member
+
+
+class UniqueTaskMemberValidator(object):
+    def set_context(self, serializer):
+        self.instance = serializer.instance
+        self.request = serializer.context['request']
+
+    def __call__(self, data):
+        if self.instance is None:
+            queryset = TaskMember.objects.filter(
+                member=self.request.user,
+                task=data['task']
+            ).exclude(
+                status__in=(
+                    TaskMember.TaskMemberStatuses.rejected,
+                    TaskMember.TaskMemberStatuses.withdrew
+                )
+            )
+
+            if queryset.exists():
+                raise ValidationError(
+                    _('It is not possible to apply twice for the same task')
+                )
 
 
 class BaseTaskMemberSerializer(serializers.ModelSerializer):
@@ -29,6 +54,7 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
         model = TaskMember
         fields = ('id', 'member', 'status', 'created', 'motivation', 'task',
                   'externals', 'time_spent', 'resume', 'permissions')
+        validators = (UniqueTaskMemberValidator(), )
 
     def validate(self, data):
         if 'time_spent' not in data or not self.instance:
@@ -91,7 +117,7 @@ class TaskPermissionsSerializer(serializers.Serializer):
 
 
 class BaseTaskSerializer(serializers.ModelSerializer):
-    members = BaseTaskMemberSerializer(many=True, read_only=True, source='members_applied')
+    members = BaseTaskMemberSerializer(many=True, read_only=True)
     files = TaskFileSerializer(many=True, read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug',
                                            queryset=Project.objects)
@@ -110,10 +136,22 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             # The date has not changed: Do not validate
             return data
 
-        if not data['deadline'] or data['deadline'] > data['project'].deadline:
-            raise serializers.ValidationError(
-                {'deadline': [_("The deadline must be before the project deadline.")]}
-            )
+        project_deadline = data['project'].deadline
+        project_is_funding = data['project'].project_type in ['funding', 'both']
+        if data.get('deadline') > project_deadline and project_is_funding:
+            raise serializers.ValidationError({
+                'deadline': [
+                    _("The deadline can not be more than the project deadline")
+                ]
+            })
+
+        project_started = data['project'].campaign_started or data['project'].created
+        if data.get('deadline') > project_started + timedelta(days=365):
+            raise serializers.ValidationError({
+                'deadline': [
+                    _("The deadline can not be more than a year after the project started")
+                ]
+            })
 
         if not data['deadline_to_apply'] or data['deadline_to_apply'] > data['deadline']:
             raise serializers.ValidationError(
@@ -145,6 +183,22 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             'title',
             'type',
         )
+
+    def _check_project_deadline(self, instance, validated_data):
+        project = validated_data['project']
+        if instance.deadline > project.deadline:
+            project.deadline = instance.deadline
+            project.save()
+
+    def create(self, validated_data):
+        instance = super(BaseTaskSerializer, self).create(validated_data)
+        self._check_project_deadline(instance, validated_data)
+        return instance
+
+    def update(self, instance, validated_data):
+        result = super(BaseTaskSerializer, self).update(instance, validated_data)
+        self._check_project_deadline(instance, validated_data)
+        return result
 
 
 class MyTaskPreviewSerializer(serializers.ModelSerializer):
@@ -201,7 +255,7 @@ class TaskWallpostSerializer(TextWallpostSerializer):
 
 
 class SkillSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='localized_name')
+    name = serializers.CharField()
 
     class Meta:
         model = Skill

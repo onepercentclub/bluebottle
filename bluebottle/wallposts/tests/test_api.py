@@ -427,7 +427,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
 
         # self.project = self.create_project(owner=self.user_a)
 
-        self.theme_1 = ProjectTheme.objects.get(name='Education')
+        self.theme_1 = ProjectTheme.objects.get(translations__name='Education')
         self.phase_1 = ProjectPhase.objects.get(slug='campaign')
 
         self.project_1 = ProjectFactory.create(
@@ -772,7 +772,7 @@ class TestDonationWallpost(BluebottleTestCase):
     def test_donation_wallposts(self):
         # Create a donation and set it to settled to trigger wallpost
         order = OrderFactory.create(user=self.user)
-        donation = DonationFactory.create(project=self.some_project, order=order)
+        donation = DonationFactory.create(project=self.some_project, order=order, fundraiser=None)
         order.locked()
         order.success()
         order.save()

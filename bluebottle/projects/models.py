@@ -3,6 +3,7 @@ import logging
 
 import pytz
 from adminsortable.models import SortableMixin
+
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.urlresolvers import reverse
@@ -19,6 +20,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 
 from django_summernote.models import AbstractAttachment
+
 from moneyed.classes import Money
 from polymorphic.models import PolymorphicModel
 from select_multiple_field.models import SelectMultipleField
@@ -43,6 +45,26 @@ from .mails import mail_project_complete, mail_project_incomplete
 from .signals import project_funded  # NOQA
 
 logger = logging.getLogger(__name__)
+
+
+class ProjectLocation(models.Model):
+    project = models.OneToOneField('projects.Project', primary_key=True)
+    place = models.CharField(max_length=80, null=True, blank=True)
+    street = models.TextField(max_length=80, null=True, blank=True)
+    neighborhood = models.TextField(max_length=80, null=True, blank=True)
+    city = models.TextField(max_length=80, null=True, blank=True)
+    postal_code = models.CharField(max_length=20, null=True, blank=True)
+    country = models.CharField(max_length=40, null=True, blank=True)
+    latitude = models.DecimalField(
+        _('latitude'), max_digits=21, decimal_places=18
+    )
+    longitude = models.DecimalField(
+        _('longitude'), max_digits=21, decimal_places=18
+    )
+
+    class Meta:
+        verbose_name = _('Location')
+        verbose_name_plural = _('Location')
 
 
 class ProjectPhaseLog(models.Model):
@@ -96,11 +118,6 @@ class ProjectDocument(BaseProjectDocument):
 
 
 class Project(BaseProject, PreviousStatusMixin):
-    latitude = models.DecimalField(
-        _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-    longitude = models.DecimalField(
-        _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-
     reach = models.PositiveIntegerField(
         _('Reach'), help_text=_('How many people do you expect to reach?'),
         blank=True, null=True)
@@ -144,6 +161,8 @@ class Project(BaseProject, PreviousStatusMixin):
                                             blank=True)
     campaign_ended = models.DateTimeField(_('Campaign Ended'), null=True,
                                           blank=True)
+    campaign_edited = models.DateTimeField(_('Campaign edited'), null=True,
+                                           blank=True)
     campaign_funded = models.DateTimeField(_('Campaign Funded'), null=True,
                                            blank=True)
     campaign_paid_out = models.DateTimeField(_('Campaign Paid Out'), null=True,
@@ -546,6 +565,13 @@ class Project(BaseProject, PreviousStatusMixin):
             self.status.slug == 'closed'
         )
 
+    @property
+    def days_left(self):
+        delta = (self.deadline - now()).days
+        if delta < 0:
+            delta = 0
+        return delta
+
     def get_absolute_url(self):
         """ Get the URL for the current project. """
         return 'https://{}/projects/{}'.format(properties.tenant.domain_url, self.slug)
@@ -561,6 +587,7 @@ class Project(BaseProject, PreviousStatusMixin):
             ('api_read_own_project', 'Can view own projects through the API'),
             ('api_add_own_project', 'Can add own projects through the API'),
             ('api_change_own_project', 'Can change own projects through the API'),
+            ('api_change_own_running_project', 'Can change own running projects through the API'),
             ('api_delete_own_project', 'Can delete own projects through the API'),
 
             ('api_read_projectdocument', 'Can view project documents through the API'),
@@ -598,8 +625,8 @@ class Project(BaseProject, PreviousStatusMixin):
         data = {
             "Project": self.title,
             "Owner": self.owner.email,
-            "old_status": old_status.name,
-            "new_status": new_status.name
+            "old_status": old_status.slug,
+            "new_status": new_status.slug
         }
 
         if old_status.slug in ('plan-new',
@@ -619,23 +646,24 @@ class Project(BaseProject, PreviousStatusMixin):
             self.save()
 
     def update_status_after_deadline(self):
-        if self.is_funding:
-            if self.amount_donated >= self.amount_asked:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
-                self.payout_status = 'needs_approval'
-            elif self.amount_donated.amount <= 20 or not self.campaign_started:
-                self.status = ProjectPhase.objects.get(slug="closed")
+        if self.status.slug == 'campaign':
+            if self.is_funding:
+                if self.amount_donated + self.amount_extra >= self.amount_asked:
+                    self.status = ProjectPhase.objects.get(slug="done-complete")
+                    self.payout_status = 'needs_approval'
+                elif self.amount_donated.amount <= 20 or not self.campaign_started:
+                    self.status = ProjectPhase.objects.get(slug="closed")
+                else:
+                    self.status = ProjectPhase.objects.get(slug="done-incomplete")
+                    self.payout_status = 'needs_approval'
             else:
-                self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                self.payout_status = 'needs_approval'
-        else:
-            if self.task_set.filter(
-                    status__in=[Task.TaskStatuses.in_progress,
-                                Task.TaskStatuses.open,
-                                Task.TaskStatuses.closed]).count() > 0:
-                self.status = ProjectPhase.objects.get(slug="done-incomplete")
-            else:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
+                if self.task_set.filter(
+                        status__in=[Task.TaskStatuses.in_progress,
+                                    Task.TaskStatuses.open,
+                                    Task.TaskStatuses.closed]).count() > 0:
+                    self.status = ProjectPhase.objects.get(slug="done-incomplete")
+                else:
+                    self.status = ProjectPhase.objects.get(slug="done-complete")
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
@@ -748,6 +776,51 @@ class ProjectSearchFilter(SortableMixin):
         ordering = ['sequence']
 
 
+class ProjectCreateTemplate(models.Model):
+
+    project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
+                                         null=True,
+                                         related_name='templates')
+    name = models.CharField(max_length=300)
+    sub_name = models.CharField(max_length=300)
+    description = models.TextField(null=True, blank=True)
+    image = models.ImageField(null=True, blank=True)
+
+    default_amount_asked = MoneyField(null=True, blank=True)
+    default_title = models.CharField(max_length=300, null=True, blank=True,
+                                     help_text=_('Default project title'))
+    default_pitch = models.TextField(null=True, blank=True,
+                                     help_text=_('Default project pitch'))
+    default_description = models.TextField(null=True, blank=True,
+                                           help_text=_('Default project description'))
+    default_image = models.ImageField(null=True, blank=True,
+                                      help_text=_('Default project image'))
+
+
+class CustomProjectFieldSettings(SortableMixin):
+
+    project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
+                                         null=True,
+                                         related_name='extra_fields')
+
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=200, null=True, blank=True)
+    sequence = models.PositiveIntegerField(default=0, editable=False, db_index=True)
+
+    @property
+    def slug(self):
+        return slugify(self.name)
+
+    class Meta:
+        ordering = ['sequence']
+
+
+class CustomProjectField(models.Model):
+    project = models.ForeignKey('projects.Project', related_name='extra')
+    field = models.ForeignKey('projects.CustomProjectFieldSettings')
+    value = models.CharField(max_length=5000, null=True, blank=True)
+
+
 class ProjectPlatformSettings(BasePlatformSettings):
     PROJECT_CREATE_OPTIONS = (
         ('sourcing', _('Sourcing')),
@@ -768,7 +841,6 @@ class ProjectPlatformSettings(BasePlatformSettings):
         ('mail', _('E-mail')),
         ('phone', _('Phone')),
     )
-
     create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
     contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
     allow_anonymous_rewards = models.BooleanField(default=True)

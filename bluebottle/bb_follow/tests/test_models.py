@@ -103,9 +103,12 @@ class FollowTests(BluebottleTestCase):
         self.assertEqual(Follow.objects.count(), 0)
 
         task_member_1 = TaskMemberFactory(task=self.task)
-        self.assertEqual(Follow.objects.count(), 1)
+        self.assertEqual(Follow.objects.count(), 2)
         self.assertEqual(Follow.objects.all()[0].followed_object, self.task)
         self.assertEqual(Follow.objects.all()[0].user, task_member_1.member)
+
+        self.assertEqual(Follow.objects.all()[1].followed_object, self.task.project)
+        self.assertEqual(Follow.objects.all()[1].user, task_member_1.member)
 
     def test_create_follow_create_fundraiser(self):
         """ Test that a Fundraiser also becomes a follower of a project """
@@ -295,10 +298,10 @@ class FollowTests(BluebottleTestCase):
 
         mail.outbox = []
 
-        self.assertEqual(Follow.objects.count(), 3)
+        self.assertEqual(Follow.objects.count(), 5)
         for follower in Follow.objects.all():
             if follower.user != task_owner1:
-                self.assertEqual(follower.followed_object, task)
+                self.assertTrue(follower.followed_object in (task, task.project))
 
         TextWallpostFactory.create(content_object=task,
                                    author=task_owner1,

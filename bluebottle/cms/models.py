@@ -13,6 +13,7 @@ from bluebottle.tasks.models import Task
 from bluebottle.utils.fields import ImageField
 from bluebottle.categories.models import Category
 from bluebottle.utils.models import BasePlatformSettings
+from bluebottle.utils.validators import FileExtensionValidator
 
 
 class ResultPage(TranslatableModel):
@@ -29,6 +30,7 @@ class ResultPage(TranslatableModel):
         'StatsBlockPlugin',
         'SurveyBlockPlugin',
         'TasksBlockPlugin',
+        'SupporterTotalBlockPlugin',
     ])
 
     translations = TranslatedFields(
@@ -137,6 +139,7 @@ class Stat(SortableMixin, models.Model):
         ('projects_online', _('Projects Online')),
         ('votes_cast', _('Votes casts')),
         ('time_spent', _('Time spent')),
+        ('members', _("Number of members"))
     ]
 
     type = models.CharField(
@@ -390,7 +393,7 @@ class LocationsContent(TitledContent):
         verbose_name = _('Locations')
 
     def __unicode__(self):
-        return unicode(self.locations)
+        return unicode(_('Locations'))
 
 
 class CategoriesContent(TitledContent):
@@ -419,9 +422,12 @@ class Logo(SortableMixin, models.Model):
 
 class LogosContent(TitledContent):
     type = 'logos'
-    action_text = models.CharField(max_length=40)
-    action_link = models.CharField(max_length=100, default="/start-project",
-                                   blank=True, null=True)
+    action_text = models.CharField(max_length=40, null=True, blank=True)
+    action_link = models.CharField(
+        max_length=100,
+        default="/start-project",
+        blank=True, null=True
+    )
 
     class Meta:
         verbose_name = _('Logos')
@@ -475,12 +481,19 @@ class WelcomeContent(ContentItem):
 
 
 class SitePlatformSettings(BasePlatformSettings):
+    logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
+
     contact_email = models.EmailField(null=True, blank=True)
     contact_phone = models.CharField(max_length=100, null=True, blank=True)
     copyright = models.CharField(max_length=100, null=True, blank=True)
     powered_by_text = models.CharField(max_length=100, null=True, blank=True)
     powered_by_link = models.CharField(max_length=100, null=True, blank=True)
     powered_by_logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
+    logo = models.FileField(
+        null=True, blank=True, upload_to='site_content/',
+        validators=[FileExtensionValidator(allowed_extensions=['svg'])]
+    )
+    favicon = models.ImageField(null=True, blank=True, upload_to='site_content/')
 
     class Meta:
         verbose_name_plural = _('site platform settings')

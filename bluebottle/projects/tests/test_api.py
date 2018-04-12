@@ -2,20 +2,23 @@ from datetime import timedelta, datetime
 import json
 from random import randint
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.test.utils import override_settings
 
-from moneyed import Money
+import httmock
+
+from moneyed.classes import Money
 
 from rest_framework import status
 from rest_framework.status import HTTP_200_OK
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import SitePlatformSettings
-from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter
+from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFilter, ProjectCreateTemplate
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -67,11 +70,137 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
                                    token=self.owner_token)
         self.assertEqual(response.status_code, 200)
+        self.project = Project.objects.get(pk=self.project.pk)
+        self.assertFalse(self.project.campaign_edited)
 
         # create allowed
         response = self.client.post(self.project_manage_list_url, {'title': 'Title 2'},
                                     token=self.owner_token)
         self.assertEqual(response.status_code, 201)
+
+    def test_owner_running_permissions(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+        response = self.client.get(self.project_url, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        # update allowed
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
+                                   token=self.owner_token)
+        self.assertEqual(response.status_code, 403)
+
+    def test_owner_running_permissions_has_permission(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        response = self.client.get(self.project_url, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+
+        # update allowed
+        response = self.client.put(
+            self.project_manage_url, {
+                'title': self.project.title,
+                'video_url': 'http://example.com/test',
+                'pitch': 'some pitch',
+                'story': 'some story'
+            },
+            token=self.owner_token
+        )
+        self.assertEqual(response.status_code, 200)
+
+        self.project = Project.objects.get(pk=self.project.pk)
+        self.assertTrue(self.project.campaign_edited)
+
+    def test_owner_running_permissions_categories(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+        categories = [CategoryFactory.create() for _ in range(10)]
+
+        for category in categories:
+            self.project.categories.add(category)
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        # update allowed
+        response = self.client.put(
+            self.project_manage_url,
+            {
+                'title': self.project.title,
+                'pitch': 'test',
+                'categories': [category.id for category in categories]
+            },
+            token=self.owner_token
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_owner_running_permissions_has_permission_wrong_field(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        # update allowed
+        response = self.client.put(
+            self.project_manage_url, {
+                'title': 'test',
+                'pitch': 'some pitch',
+                'amount_asked': {'amount': 200, 'currency': 'EUR'}},
+            token=self.owner_token
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_owner_running_permissions_has_permission_not_changed(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        # update allowed
+        response = self.client.put(
+            self.project_manage_url, {
+                'title': self.project.title,
+                'amount_asked': {
+                    'amount': self.project.amount_asked.amount,
+                    'currency': str(self.project.amount_asked.currency)
+                }
+            },
+            token=self.owner_token
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_non_owner_running_permissions_has_permission(self):
+        # view allowed
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='api_change_own_running_project')
+        )
+
+        # update not allowed
+        response = self.client.put(self.project_manage_url, {'title': 'Title 1'},
+                                   token=self.not_owner_token)
+        self.assertEqual(response.status_code, 403)
 
     def test_non_owner_permissions(self):
         # update denied
@@ -665,6 +794,51 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
         self.assertEqual(data['count'], 2)
 
 
+@httmock.urlmatch(netloc='maps.googleapis.com')
+def geocode_mock(url, request):
+    return json.dumps({
+        'results': [{
+            'geometry': {
+                'location': {'lat': 52.3721249, 'lng': 4.9070198},
+                'viewport': {
+                    'northeast': {'lat': 52.37347388029149, 'lng': 4.908368780291502},
+                    'southwest': {'lat': 52.37077591970849, 'lng': 4.905670819708497}
+                },
+                'location_type': 'ROOFTOP'
+            },
+            'place_id': u'ChIJMW3CZ7sJxkcRyhrLgJ6WbMk',
+            'address_components': [{
+                'long_name': '10', 'types': ['street_number'], 'short_name': '10'
+            }, {
+                'long_name': "'s-Gravenhekje", 'types': ['route'], 'short_name': "'s-Gravenhekje"
+            }, {
+                'long_name': 'Amsterdam-Centrum',
+                'types': ['political', 'sublocality', 'sublocality_level_1'],
+                'short_name': 'Amsterdam-Centrum'
+            }, {
+                'long_name': u'Amsterdam',
+                'types': ['locality', 'political'], 'short_name': 'Amsterdam'
+            }, {
+                'long_name': 'Amsterdam',
+                'types': ['administrative_area_level_2', 'political'],
+                'short_name': 'Amsterdam'
+            }, {
+                'long_name': 'Noord-Holland',
+                'types': ['administrative_area_level_1', 'political'],
+                'short_name': u'NH'
+            }, {
+                'long_name': 'Netherlands',
+                'types': [u'country', u'political'],
+                'short_name': u'NL'
+            }, {
+                'long_name': '1011 TG', 'types': [u'postal_code'], 'short_name': u'1011 TG'
+            }],
+            'types': ['street_address'],
+        }],
+        'status': 'OK'
+    })
+
+
 class ProjectManageApiIntegrationTest(BluebottleTestCase):
     """
     Integration tests for the Project API.
@@ -689,6 +863,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.manage_projects_url = reverse('project_manage_list')
         self.manage_budget_lines_url = reverse('project-budgetline-list')
         self.manage_project_document_url = reverse('manage-project-document-list')
+
         self.some_photo = './bluebottle/projects/test_images/upload.png'
 
     def test_project_create(self):
@@ -702,9 +877,14 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.data['count'], 0)
 
         # Let's throw a pitch (create a project really)
-        response = self.client.post(self.manage_projects_url,
-                                    {'title': 'This is my smart idea', 'story': ''},
-                                    token=self.some_user_token)
+        response = self.client.post(
+            self.manage_projects_url,
+            {
+                'title': 'This is my smart idea',
+                'story': '',
+            },
+            token=self.some_user_token
+        )
         self.assertEquals(
             response.status_code, status.HTTP_201_CREATED, response)
         self.assertEquals(response.data['title'], 'This is my smart idea')
@@ -712,7 +892,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         # Check that it's there, in pitch phase, has got a pitch but no plan
         # yet.
         response = self.client.get(
-            self.manage_projects_url, token=self.some_user_token)
+            self.manage_projects_url, token=self.some_user_token
+        )
         self.assertEquals(response.data['count'], 1)
         self.assertEquals(
             response.data['results'][0]['status'], self.phase_plan_new.id)
@@ -784,7 +965,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         project_data['slug'] = 'a-new-slug-should-not-be-possible'
         response_2 = self.client.put(project_url, project_data,
                                      token=self.another_user_token)
-        print(response_2.content)
         self.assertEquals(response_2.data['detail'],
                           'You do not have permission to perform this action.')
         self.assertEquals(response_2.status_code, 403)
@@ -821,6 +1001,141 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(
             response.status_code, status.HTTP_403_FORBIDDEN, response)
 
+    @override_settings(MAPS_API_KEY='somekey')
+    def test_project_create_location(self):
+        """
+        Tests for Project Create
+        """
+
+        # Check that a new user doesn't have any projects to manage
+        response = self.client.get(
+            self.manage_projects_url, token=self.some_user_token)
+        self.assertEquals(response.data['count'], 0)
+
+        with httmock.HTTMock(geocode_mock):
+            response = self.client.post(
+                self.manage_projects_url,
+                {
+                    'title': 'This is my smart idea',
+                    'story': '',
+                    'latitude': 52.389745,
+                    'longitude': 4.8863362,
+                },
+                token=self.some_user_token
+            )
+        self.assertEquals(
+            response.status_code, status.HTTP_201_CREATED, response)
+        self.assertEquals(response.data['title'], 'This is my smart idea')
+        self.assertEquals(response.data['latitude'], 52.389745)
+        self.assertEquals(response.data['longitude'], 4.8863362)
+
+        self.assertEquals(
+            response.data['project_location']['street'],
+            "'s-Gravenhekje"
+        )
+        self.assertEquals(
+            response.data['project_location']['city'],
+            "Amsterdam"
+        )
+
+    @override_settings(MAPS_API_KEY='somekey')
+    def test_project_update_location(self):
+        """
+        Tests for Project Create
+        """
+        response = self.client.post(
+            self.manage_projects_url,
+            {
+                'title': 'This is my smart idea',
+                'story': '',
+                'latitude': None,
+                'longitude': None
+            },
+            token=self.some_user_token
+        )
+
+        project_detail_url = reverse(
+            'project_manage_detail', kwargs={'slug': response.data['slug']}
+        )
+
+        # Let's throw a pitch (create a project really)
+        with httmock.HTTMock(geocode_mock):
+            response = self.client.put(
+                project_detail_url,
+                {
+                    'title': 'This is my even smarter idea',
+                    'story': '',
+                    'latitude': 52.389745,
+                    'longitude': 4.8863362,
+                },
+                token=self.some_user_token
+            )
+        self.assertEquals(
+            response.status_code, status.HTTP_200_OK, response)
+        self.assertEquals(response.data['title'], 'This is my even smarter idea')
+        self.assertEquals(response.data['latitude'], 52.389745)
+        self.assertEquals(response.data['longitude'], 4.8863362)
+        self.assertEquals(
+            response.data['project_location']['street'],
+            "'s-Gravenhekje"
+        )
+        self.assertEquals(
+            response.data['project_location']['city'],
+            "Amsterdam"
+        )
+        self.assertEquals(
+            response.data['project_location']['neighborhood'],
+            "Amsterdam-Centrum"
+        )
+
+    @override_settings(MAPS_API_KEY='somekey')
+    def test_project_set_location(self):
+        """
+        Tests for Project Create
+        """
+        response = self.client.post(
+            self.manage_projects_url,
+            {
+                'title': 'This is my smart idea',
+                'story': '',
+            },
+            token=self.some_user_token
+        )
+
+        project_detail_url = reverse(
+            'project_manage_detail', kwargs={'slug': response.data['slug']}
+        )
+
+        # Let's throw a pitch (create a project really)
+        with httmock.HTTMock(geocode_mock):
+            response = self.client.put(
+                project_detail_url,
+                {
+                    'title': 'This is my even smarter idea',
+                    'story': '',
+                    'latitude': 52.389745,
+                    'longitude': 4.8863362,
+                },
+                token=self.some_user_token
+            )
+        self.assertEquals(
+            response.status_code, status.HTTP_200_OK, response)
+        self.assertEquals(response.data['title'], 'This is my even smarter idea')
+        self.assertEquals(response.data['latitude'], 52.389745)
+        self.assertEquals(response.data['longitude'], 4.8863362)
+        self.assertEquals(
+            response.data['project_location']['street'],
+            "'s-Gravenhekje"
+        )
+        self.assertEquals(
+            response.data['project_location']['city'],
+            "Amsterdam"
+        )
+        self.assertEquals(
+            response.data['project_location']['neighborhood'],
+            "Amsterdam-Centrum"
+        )
+
     @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
     def test_project_type(self):
         # Add some values to this project
@@ -837,6 +1152,62 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED, response)
         self.assertEquals(response.data['project_type'], 'sourcing',
                           'Project should have a default project_type')
+
+    @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
+    def test_project_image_url(self):
+        # Add some values to this project
+        project_data = {
+            'title': 'My idea is way smarter!',
+            'pitch': 'Lorem ipsum, bla bla ',
+            'description': 'Some more text',
+            'amount_asked': 1000,
+            'image': 'http://example.com/image.jpg'
+        }
+
+        @httmock.urlmatch(path=r'/image.jpg')
+        def image_mock(url, request):
+            with open(self.some_photo, mode='rb') as image:
+                    return httmock.response(
+                        200,
+                        content=image.read(),
+                        headers={'content-type': 'image/jpeg'}
+                    )
+
+        with httmock.HTTMock(image_mock):
+            response = self.client.post(self.manage_projects_url,
+                                        project_data,
+                                        token=self.another_user_token)
+
+        self.assertEquals(response.status_code, 201)
+        self.assertTrue(
+            response.data['image']['large'].endswith('jpg')
+        )
+
+    @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
+    def test_project_image_url_404(self):
+        # Add some values to this project
+        project_data = {
+            'title': 'My idea is way smarter!',
+            'pitch': 'Lorem ipsum, bla bla ',
+            'description': 'Some more text',
+            'amount_asked': 1000,
+            'image': 'http://example.com/image.jpg'
+        }
+
+        @httmock.urlmatch(path=r'/image.jpg')
+        def image_mock(url, request):
+            return httmock.response(404)
+
+        with httmock.HTTMock(image_mock):
+            response = self.client.post(self.manage_projects_url,
+                                        project_data,
+                                        token=self.another_user_token)
+
+        self.assertEquals(response.status_code, 400)
+
+        self.assertTrue(
+            response.data['image'][0].startswith('404 Client Error')
+        )
 
     @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
     def test_project_type_defined(self):
@@ -2297,6 +2668,9 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
     def setUp(self):
         super(ProjectPlatformSettingsTestCase, self).setUp()
         self.init_projects()
+        image_file = './bluebottle/projects/test_images/upload.png'
+        self.some_image = SimpleUploadedFile(name='test_image.png', content=open(image_file, 'rb').read(),
+                                             content_type='image/png')
 
     def test_site_platform_settings_header(self):
         SitePlatformSettings.objects.create()
@@ -2341,3 +2715,35 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['projects']['filters'][2]['values'], None)
         self.assertEqual(response.data['platform']['projects']['filters'][2]['default'], 'campaign,voting')
         self.assertEqual(response.data['platform']['projects']['allow_anonymous_rewards'], False)
+
+    def test_site_platform_project_create_settings(self):
+
+        SitePlatformSettings.objects.create()
+        project_settings = ProjectPlatformSettings.objects.create(
+            contact_method='mail',
+            contact_types=['organization'],
+            create_flow='choice',
+            create_types=["funding", "sourcing"],
+            allow_anonymous_rewards=False
+        )
+
+        ProjectCreateTemplate.objects.create(
+            project_settings=project_settings,
+            default_amount_asked=Money(1500, 'EUR'),
+            description='<h2>Cool things</h2>Mighty awesome things!',
+            image=self.some_image,
+            default_title='Sample project title',
+        )
+
+        ProjectCreateTemplate.objects.create(
+            project_settings=project_settings,
+            default_amount_asked=Money(2500, 'EUR'),
+            description='<h2>Better things</h2>The dogs balls!'
+        )
+
+        response = self.client.get(reverse('settings'))
+        self.assertEqual(len(response.data['platform']['projects']['templates']), 2)
+        template = response.data['platform']['projects']['templates'][1]
+        self.assertEqual(template['default_amount_asked'], {'currency': 'EUR', 'amount': 1500.00})
+        self.assertEqual(len(template['image']), 4)
+        self.assertEqual(template['default_title'], 'Sample project title')

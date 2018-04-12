@@ -76,6 +76,26 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(stats['stats'][1]['title'], self.stat2.title)
         self.assertEqual(stats['stats'][1]['value'], {"amount": Decimal('0'), "currency": "EUR"})
 
+    def test_results_stats_dates(self):
+        self.page.start_date = None
+        self.page.end_date = None
+        self.page.save()
+
+        block = StatsContent.objects.create_for_placeholder(self.placeholder, title='Look at us!')
+        self.stat1 = StatFactory(type='manual', title='Poffertjes', value=3500, block=block)
+        self.stat2 = StatFactory(type='donated_total', title='Donations', value=None, block=block)
+
+        response = self.client.get(self.url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        stats = response.data['blocks'][0]
+        self.assertEqual(stats['type'], 'statistics')
+        self.assertEqual(stats['title'], 'Look at us!')
+        self.assertEqual(stats['stats'][0]['title'], self.stat1.title)
+        self.assertEqual(stats['stats'][0]['value'], str(self.stat1.value))
+        self.assertEqual(stats['stats'][1]['title'], self.stat2.title)
+        self.assertEqual(stats['stats'][1]['value'], {"amount": Decimal('0'), "currency": "EUR"})
+
     def test_results_quotes(self):
         block = QuotesContent.objects.create_for_placeholder(self.placeholder)
         self.quote = QuoteFactory(block=block)
@@ -426,3 +446,37 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['copyright'], 'GoodUp')
         self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
         self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://goodup.com')
+
+    def test_site_platform_settings_favicons(self):
+        favicon = File(open('./bluebottle/projects/test_images/upload.png'))
+        SitePlatformSettings.objects.create(favicon=favicon)
+
+        response = self.client.get(reverse('settings'))
+
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['large'].startswith(
+                '/media/cache'
+            )
+        )
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['small'].startswith(
+                '/media/cache'
+            )
+        )
+
+    def test_site_platform_settings_logo(self):
+        favicon = File(open('./bluebottle/projects/test_images/upload.png'))
+        SitePlatformSettings.objects.create(favicon=favicon)
+
+        response = self.client.get(reverse('settings'))
+
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['large'].startswith(
+                '/media/cache'
+            )
+        )
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['small'].startswith(
+                '/media/cache'
+            )
+        )

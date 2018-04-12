@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 
 import xlsxwriter
 from django.core.management.base import BaseCommand
-from django.db import connection
 from django.db.models import Count, Sum
 from django.utils import dateparse
 
@@ -97,7 +96,6 @@ class Command(BaseCommand):
 
         for client in Client.objects.all():
             if self.tenants is None or client.client_name in self.tenants:
-                connection.set_tenant(client)
                 with LocalTenant(client, clear_tenant=True):
                     logger.info('export tenant:{} start_date:{} end_date:{}'
                                 .format(client.client_name,
@@ -200,7 +198,6 @@ class Command(BaseCommand):
         with xlsxwriter.Workbook(file_name) as workbook:
             for client in Client.objects.all():
                 if self.tenants is None or client.client_name in self.tenants:
-                    connection.set_tenant(client)
                     with LocalTenant(client, clear_tenant=True):
                         logger.info('export tenant:{}'.format(client.client_name))
                         raw_data = self.generate_raw_data()

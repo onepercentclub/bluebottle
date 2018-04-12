@@ -15,7 +15,7 @@ from bluebottle.statistics.statistics import Statistics
 
 from bluebottle.cms.models import (
     SiteLinks, Link, LinkGroup, LinkPermission, SitePlatformSettings,
-    Stat, Quote, Slide, Step, Logo, ContentLink, ResultPage, HomePage,
+    Stat, Quote, Slide, Step, Logo, ResultPage, HomePage, ContentLink,
     Greeting
 )
 
@@ -36,7 +36,6 @@ class LinkInline(SortableStackedInline):
         'link_permissions',
         ('component', 'component_id'),
         'external_link',
-
     )
 
 
@@ -110,7 +109,7 @@ class LogoInline(NestedStackedInline, SortableStackedInline):
     extra = 0
 
 
-class LinkInline(NestedStackedInline, SortableStackedInline):
+class ContentLinkInline(NestedStackedInline, SortableStackedInline):
     model = ContentLink
     extra = 0
 
@@ -120,7 +119,7 @@ class GreetingInline(NestedStackedInline):
     extra = 0
 
 
-class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin):
+class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }

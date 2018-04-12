@@ -1,0 +1,60 @@
+/* CMS styling */
+
+.form-row .cp-placeholderfield {
+    clear: both;
+    margin-left: 0;
+}
+
+.form-row .cp-content .inline-related h2.cp-formset-item-title {
+    background-image: none;
+    text-transform: none;
+    font-size: 1rem;
+    color: #241C46;
+    border-bottom: 1px solid #cacaca;
+}
+
+.module h2 .cp-item-icons a,
+.module h2 .cp-item-delete a {
+    color: rgba(0,0,0,0);
+}
+
+.cp-content>.inline-related {
+    margin: 10px 0;
+}
+
+.form-row .cp-content .inline-related h2.cp-formset-item-title {
+    margin-top: 0;
+    border-left: 0;
+    border-right: 0;
+}
+
+.delete label.vCheckboxLabel {
+    color: #ffffff;
+}
+
+/* Hide hamburger */
+
+.sidebar-opened .icon-menu:before,
+.sidebar-dependent .icon-menu:before{
+    content: "";
+}
+
+/* Extra labels */
+
+.admin-label {
+    border-radius: 4px;
+    padding: 4px 8px;
+    color: #000000;
+    font-weight: 700;
+    background-color: #F5E625;
+}
+
+.admin-label-green {
+    color: white;
+    background-color: #2faa60;
+}
+
+.admin-label-gray {
+    color: white;
+    background-color: #333C47;
+}

@@ -172,7 +172,7 @@ class Statistics(object):
     def donated_total(self):
         """ Total amount donated to all projects"""
         donations = Donation.objects.filter(
-            self.date_filter('order__confirmed'),
+            self.date_filter('order__created'),
             order__status__in=['pending', 'success', 'pledged']
         )
         totals = donations.values('amount_currency').annotate(total=Sum('amount'))

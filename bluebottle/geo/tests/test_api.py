@@ -21,7 +21,7 @@ class GeoTestCase(BluebottleTestCase):
 
         self.init_projects()
 
-        self.country_1 = Country.objects.get(name="Abkhazia")
+        self.country_1 = Country.objects.get(translations__name="Abkhazia")
 
 
 class CountryListTestCase(GeoTestCase):

@@ -24,7 +24,7 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.project = ProjectFactory(theme=self.theme)
         self.task = TaskFactory(project=self.project)
 
-        self.survey = SurveyFactory(link='https://example.com/survey/1/')
+        self.survey = SurveyFactory(link='https://example.com/survey/1/', active=True)
 
     def test_survey_url(self):
         url = urlparse(
@@ -86,7 +86,7 @@ class TestSimpleProjectSurveyAggregation(BluebottleTestCase):
         self.project = ProjectFactory()
         self.project_2 = ProjectFactory()
 
-        self.survey = SurveyFactory(title='test survey')
+        self.survey = SurveyFactory(title='test survey', active=True)
 
         self.response = ResponseFactory.create(
             project=self.project,

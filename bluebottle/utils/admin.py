@@ -1,8 +1,12 @@
+from django.conf import settings
 from moneyed import Money
 
 from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
+
+from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
+from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
 from .models import Language
 import csv
 from django.db.models.fields.files import FieldFile
@@ -84,17 +88,41 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                 labels = field_names
 
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=%s.csv' % (
+        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
             unicode(opts).replace('.', '_')
         )
 
         writer = csv.writer(response)
 
         if header:
-            writer.writerow(labels if labels else field_names)
+            row = labels if labels else field_names
+            # For project check if we have extra fields
+            if queryset.model is Project:
+                for field in CustomProjectFieldSettings.objects.all():
+                    labels.append(field.name)
+            if queryset.model is Member:
+                for field in CustomMemberFieldSettings.objects.all():
+                    labels.append(field.name)
+            writer.writerow(row)
 
         for obj in queryset:
-            writer.writerow([prep_field(request, obj, field, manyToManySep) for field in field_names])
+            row = [prep_field(request, obj, field, manyToManySep) for field in field_names]
+            # Write extra field data
+            if queryset.model is Project:
+                for field in CustomProjectFieldSettings.objects.all():
+                    try:
+                        value = obj.extra.get(field=field).value
+                    except CustomProjectField.DoesNotExist:
+                        value = ''
+                    row.append(value)
+            if queryset.model is Member:
+                for field in CustomMemberFieldSettings.objects.all():
+                    try:
+                        value = obj.extra.get(field=field).value
+                    except CustomMemberField.DoesNotExist:
+                        value = ''
+                    row.append(value.encode('utf-8'))
+            writer.writerow(row)
         return response
 
     export_as_csv.short_description = description
@@ -115,3 +143,16 @@ class TotalAmountAdminChangeList(ChangeList):
         amounts = [Money(total['total'], total[currency_column]) for total in totals]
         amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
+
+
+class LatLongMapPickerMixin(object):
+
+    class Media:
+        if hasattr(settings, 'MAPS_API_KEY') and settings.MAPS_API_KEY:
+            css = {
+                'all': ('css/admin/location_picker.css',),
+            }
+            js = (
+                'https://maps.googleapis.com/maps/api/js?key={}'.format(settings.MAPS_API_KEY),
+                'js/admin/location_picker.js',
+            )

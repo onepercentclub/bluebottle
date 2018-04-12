@@ -91,21 +91,38 @@ class DonationAdminForm(forms.ModelForm):
 
 
 class DonationAdmin(admin.ModelAdmin):
+
+    def lookup_allowed(self, lookup, value):
+        # Fix for known Django bug
+        # https://code.djangoproject.com/ticket/28262
+        allow = super(DonationAdmin, self).lookup_allowed(lookup, value)
+        if lookup == 'order__user_id':
+            return True
+        return allow
+
     form = DonationAdminForm
     date_hierarchy = 'created'
-    list_display = ('created', 'completed', 'admin_project', 'fundraiser',
-                    'user', 'user_full_name', 'amount',
-                    'related_payment_method', 'order_type', 'status')
+    list_display = ('created_display', 'order_payment_links', 'admin_project', 'admin_fundraiser',
+                    'user_full_name', 'amount',
+                    'related_payment_method', 'status')
     list_filter = (DonationStatusFilter, 'order__order_type',
                    DonationUserFilter)
     ordering = ('-created',)
     raw_id_fields = ('project', 'fundraiser')
-    readonly_fields = ('order_link', 'created', 'updated', 'completed',
+    readonly_fields = ('order_link', 'order_payment_links', 'created', 'updated', 'completed',
                        'status', 'user_link', 'project_link',
                        'fundraiser_link')
     fields = readonly_fields + ('amount', 'project', 'fundraiser', 'reward', 'name')
-    search_fields = ('order__user__first_name', 'order__user__last_name',
-                     'order__user__email', 'project__title', 'name')
+    search_fields = (
+        'order__user__first_name', 'order__user__last_name',
+        'order__user__email', 'project__title', 'name',
+        'order__order_payments__id'
+    )
+
+    def created_display(self, obj):
+        return format_html('<span style="white-space:nowrap">{}</span>', obj.created.strftime('%Y-%m-%d %H:%I'))
+    created_display.admin_order_field = 'created'
+    created_display.short_description = _('Created')
 
     export_fields = [
         ('project', 'project'),
@@ -157,10 +174,19 @@ class DonationAdmin(admin.ModelAdmin):
                                                     object._meta.model_name),
                       args=[object.id])
         return format_html(
-            u"<a href='{}'>Order: {}</a>",
+            u"<a href='{}'>{}</a>",
             str(url),
             obj.id
         )
+
+    def order_payment_links(self, obj):
+        object = obj.order
+        list = []
+        for op in object.order_payments.all():
+            url = reverse('admin:payments_orderpayment_change', args=[op.id])
+            list.append("<a href='{}'>{}</a>".format(url, op.id))
+        return format_html(", ".join(list))
+    order_payment_links.short_description = _('Order payment')
 
     def user_link(self, obj):
         user = obj.order.user
@@ -175,9 +201,7 @@ class DonationAdmin(admin.ModelAdmin):
 
     def project_link(self, obj):
         project = obj.project
-        url = reverse('admin:{0}_{1}_change'.format(project._meta.app_label,
-                                                    project._meta.model_name),
-                      args=[project.id])
+        url = reverse('admin:projects_project_change', args=[project.id])
         return format_html(
             u"<a href='{}'>{}</a>",
             str(url),
@@ -187,9 +211,7 @@ class DonationAdmin(admin.ModelAdmin):
     def fundraiser_link(self, obj):
         fundraiser = obj.fundraiser
         url = reverse(
-            'admin:{0}_{1}_change'.format(fundraiser._meta.app_label,
-                                          fundraiser._meta.model_name),
-            args=[fundraiser.id])
+            'admin:fundraisers_fundraiser_change', args=[fundraiser.id])
         return format_html(
             u"<a href='{}'>{}</a>",
             str(url),
@@ -199,12 +221,19 @@ class DonationAdmin(admin.ModelAdmin):
     def order_type(self, obj):
         return obj.order.order_type
 
-    # Link to project
     admin_project = link_to(
         lambda obj: obj.project,
         'admin:projects_project_change',
         view_args=lambda obj: (obj.project.id,),
         short_description='project',
+        truncate=50
+    )
+
+    admin_fundraiser = link_to(
+        lambda obj: obj.fundraiser,
+        'admin:fundraisers_fundraiser_change',
+        view_args=lambda obj: (obj.fundraiser_id,),
+        short_description='fundraiser',
         truncate=50
     )
 

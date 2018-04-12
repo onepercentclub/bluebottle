@@ -100,6 +100,21 @@ class PartnerOrganizationMembersInline(admin.TabularInline):
         return False
 
 
+class OrganizationContactAdmin(admin.ModelAdmin):
+    model = Member
+    fields = ('name', 'organization', 'email', 'phone', )
+    list_display = ('name', 'organization', 'email', 'phone', )
+
+    export_fields = [
+        ('name', 'name'),
+        ('organization__name', 'organization'),
+        ('email', 'email'),
+        ('phone', 'Phone Number'),
+    ]
+
+    actions = (export_as_csv_action(fields=export_fields), merge)
+
+
 class OrganizationAdmin(admin.ModelAdmin):
     inlines = (OrganizationProjectInline, OrganizationContactInline, PartnerOrganizationMembersInline)
 
@@ -113,7 +128,7 @@ class OrganizationAdmin(admin.ModelAdmin):
     export_fields = [
         ('name', 'name'),
         ('website', 'website'),
-        ('phone_number', 'phone_number'),
+        ('email', 'email'),
         ('created', 'created'),
     ]
 
@@ -127,3 +142,4 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Organization, OrganizationAdmin)
+admin.site.register(OrganizationContact, OrganizationContactAdmin)

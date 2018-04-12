@@ -19,9 +19,9 @@ from bluebottle.utils.views import (
     RetrieveUpdateDestroyAPIView, OwnerListViewMixin
 )
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission
+    OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission,
 )
-from bluebottle.projects.permissions import IsEditableOrReadOnly
+from bluebottle.projects.permissions import IsEditableOrReadOnly, CanEditOwnRunningProjects
 from .models import ProjectTheme, ProjectPhase
 
 
@@ -294,7 +294,7 @@ class ManageProjectDetail(RetrieveUpdateAPIView):
     queryset = Project.objects.all()
     permission_classes = (
         ResourceOwnerPermission,
-        IsEditableOrReadOnly,
+        OneOf(IsEditableOrReadOnly, CanEditOwnRunningProjects)
     )
     serializer_class = ManageProjectSerializer
     lookup_field = 'slug'
@@ -311,7 +311,7 @@ class ManageProjectDetail(RetrieveUpdateAPIView):
 
 class ProjectThemeList(ListAPIView):
     serializer_class = ProjectThemeSerializer
-    queryset = ProjectTheme.objects.all().filter(disabled=False)
+    queryset = ProjectTheme.objects.filter(disabled=False)
 
 
 class ProjectUsedThemeList(ProjectThemeList):

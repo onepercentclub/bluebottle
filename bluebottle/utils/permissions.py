@@ -44,7 +44,6 @@ class BasePermission(permissions.BasePermission):
 
         Return `True` if permission is granted, `False` otherwise.
         """
-
         return self.has_object_action_permission(
             request.method, request.user, obj
         )

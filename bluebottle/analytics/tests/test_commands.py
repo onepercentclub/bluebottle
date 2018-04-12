@@ -1,15 +1,14 @@
 import os
 from argparse import ArgumentTypeError
 from datetime import datetime
-
+from mock import patch
+from openpyxl import load_workbook
 import pytz
+
 from django.conf import settings
 from django.core.management import call_command
 from django.core.urlresolvers import reverse
 from django.test import SimpleTestCase
-from mock import patch
-
-from bluebottle.tasks.models import TaskMember
 
 from bluebottle.analytics.management.commands.export_engagement_metrics import (
     Command as EngagementCommand
@@ -17,20 +16,20 @@ from bluebottle.analytics.management.commands.export_engagement_metrics import (
 from bluebottle.analytics.management.commands.export_participation_metrics import (
     Command as ParticipationCommand,
 )
-
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.tasks.models import TaskMember
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.surveys import SurveyFactory, QuestionFactory, AnswerFactory, ResponseFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.factory_models.wallposts import TextWallpostFactory
 from bluebottle.test.utils import BluebottleTestCase
+
 from .common import FakeInfluxDBClient
-from openpyxl import load_workbook
+
 
 fake_client = FakeInfluxDBClient()
 
@@ -76,6 +75,8 @@ class TestEngagementMetricsXls(BluebottleTestCase):
     def setUp(self):
         super(TestEngagementMetricsXls, self).setUp()
         self.init_projects()
+
+        self.year = datetime.now().year
 
         # Project Phases
         done_complete = ProjectPhase.objects.get(slug="done-complete")
@@ -135,9 +136,9 @@ class TestEngagementMetricsXls(BluebottleTestCase):
         self.command = EngagementCommand()
 
     def test_xls_generation(self):
-
         with patch.object(self.command, 'get_xls_file_name', return_value=self.xls_file_name):
-            call_command(self.command, '--start', '2017-01-01', '--end', '2017-12-31', '--export-to', 'xls')
+            call_command(self.command, '--start', '{}-01-01'.format(self.year),
+                         '--end', '{}-12-31'.format(self.year), '--export-to', 'xls')
             self.assertTrue(os.path.isfile(self.xls_file_path), True)
 
             workbook = load_workbook(filename=self.xls_file_path, read_only=True)
@@ -227,14 +228,6 @@ class TestParticipationXls(BluebottleTestCase):
                 task_member.status = TaskMember.TaskMemberStatuses.realized
                 task_member.save()
 
-        # Survey
-        self.survey = SurveyFactory(title="My Questionnaire")
-        self.questions = QuestionFactory.create_batch(10, survey=self.survey)
-        responses = ResponseFactory.create_batch(10, survey=self.survey, project=project1)
-        for response in responses:
-            for question in self.questions:
-                AnswerFactory.create(question=question, response=response)
-
         # xls export
         self.xls_file_name = 'test.xlsx'
         self.xls_file_path = os.path.join(settings.PROJECT_ROOT, self.xls_file_name)
@@ -256,12 +249,3 @@ class TestParticipationXls(BluebottleTestCase):
             self.assertEqual(workbook.worksheets[1].title, 'Totals - {}'.format(self.year))
             self.assertEqual(workbook.worksheets[6].title, 'Location Segmentation - {}'.format(self.year))
             self.assertEqual(workbook.worksheets[7].title, 'Theme Segmentation - {}'.format(self.year))
-            self.assertEqual(workbook.worksheets[8].title, 'Impact Survey - {}'.format(self.year))
-
-            # Check survey responses (should be 10, all in February)
-            self.assertEqual(workbook.worksheets[8]['G1'].value, 'Number responses for My Questionnaire')
-            self.assertEqual(workbook.worksheets[8]['G3'].value, 10)
-            self.assertEqual(workbook.worksheets[8]['D5'].value, 'January')
-            self.assertEqual(workbook.worksheets[8]['G5'].value, 0)
-            self.assertEqual(workbook.worksheets[8]['D6'].value, 'February')
-            self.assertEqual(workbook.worksheets[8]['G6'].value, 10)

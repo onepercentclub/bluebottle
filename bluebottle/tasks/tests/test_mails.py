@@ -10,6 +10,7 @@ from django.utils.timezone import now
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.tasks.models import TaskMember
 from bluebottle.tasks.taskmail import send_task_realized_mail
+from bluebottle.tasks.tasks import send_task_reminder_mails
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
@@ -137,7 +138,8 @@ class TestTaskMemberMail(TaskMailTestBase):
     def test_member_realized_mail(self):
         task_member = TaskMemberFactory.create(
             task=self.task,
-            status='accepted'
+            status='accepted',
+            time_spent=8
         )
 
         task_member.status = 'realized'
@@ -148,10 +150,11 @@ class TestTaskMemberMail(TaskMailTestBase):
         email = mail.outbox[-1]
 
         self.assertNotEquals(email.subject.find("realised"), -1)
+        self.assertTrue('spent {} hours'.format(task_member.time_spent) in email.body)
         self.assertEquals(email.to[0], task_member.member.email)
 
     def test_member_realized_mail_with_survey(self):
-        survey = SurveyFactory(link='https://example.com/survey/1/')
+        survey = SurveyFactory(link='https://example.com/survey/1/', active=True)
 
         task_member = TaskMemberFactory.create(
             task=self.task,
@@ -168,6 +171,26 @@ class TestTaskMemberMail(TaskMailTestBase):
         self.assertNotEquals(email.subject.find("realised"), -1)
         self.assertEquals(email.to[0], task_member.member.email)
         self.assertTrue(survey.url(self.task) in email.body)
+        self.assertTrue('survey' in email.body)
+
+    def test_member_realized_mail_with_inactive_survey(self):
+        SurveyFactory(link='https://example.com/survey/1/', active=False)
+
+        task_member = TaskMemberFactory.create(
+            task=self.task,
+            status='accepted'
+        )
+
+        task_member.status = 'realized'
+        task_member.save()
+
+        self.assertEquals(len(mail.outbox), 2)
+
+        email = mail.outbox[-1]
+
+        self.assertNotEquals(email.subject.find("realised"), -1)
+        self.assertEquals(email.to[0], task_member.member.email)
+        self.assertFalse('survey' in email.body)
 
     def test_member_realized_mail_not_sent_twice(self):
         task_member = TaskMemberFactory.create(
@@ -261,7 +284,7 @@ class TestTaskStatusMail(TaskMailTestBase):
             status='realized'
         )
         self.assertEquals(len(mail.outbox), 1)
-        self.assertTrue('You realised a task' in mail.outbox[0].subject)
+        self.assertTrue('marked as realised' in mail.outbox[0].subject)
 
         with patch('bluebottle.tasks.taskmail.send_task_realized_mail.apply_async'):
             self.task.status = "realized"
@@ -432,3 +455,82 @@ class TestDeadlineToApplyEmail(TaskMailTestBase):
         # running the status realised cron job should not send an new email
         call_command('cron_status_realised')
         self.assertEquals(len(mail.outbox), 5)
+
+
+class TestUpcomingDeadlineReminderEmail(TaskMailTestBase):
+
+    def test_deadline_is_nigh(self):
+        """
+        Deadline in 5 days should trigger
+        """
+        self.task.deadline = now() + timedelta(days=5)
+        self.task.people_needed = 3
+        self.task.type = 'event'
+        self.task.status = 'open'
+        self.task.save()
+
+        TaskMemberFactory.create_batch(3, task=self.task, status='accepted')
+        self.assertEquals(len(mail.outbox), 3)
+        # Empty
+        mail.outbox = []
+
+        # Run the (scheduled) task for reminder mails
+        send_task_reminder_mails()
+
+        # Now the outbox should have 3 new mails
+        self.assertEquals(len(mail.outbox), 3)
+        self.assertEquals(mail.outbox[0].subject, 'The task you subscribed to is due')
+        self.assertTrue('will take place' in mail.outbox[0].body)
+
+        # Running the task again shouldn't send the mails again
+        send_task_reminder_mails()
+        self.assertEquals(len(mail.outbox), 3)
+
+    def test_event_is_nigh(self):
+        """
+        Deadline in 5 days should trigger
+        """
+        self.task.deadline = now() + timedelta(days=5)
+        self.task.people_needed = 3
+        self.task.type = 'ongoing'
+        self.task.status = 'open'
+        self.task.save()
+
+        TaskMemberFactory.create_batch(3, task=self.task, status='accepted')
+        self.assertEquals(len(mail.outbox), 3)
+        # Empty
+        mail.outbox = []
+
+        # Run the (scheduled) task for reminder mails
+        send_task_reminder_mails()
+
+        # Now the outbox should have 3 new mails
+        self.assertEquals(len(mail.outbox), 3)
+        self.assertEquals(mail.outbox[0].subject, 'The task you subscribed to is due')
+        self.assertTrue('days to complete your task' in mail.outbox[0].body)
+
+        # Running the task again shouldn't send the mails again
+        send_task_reminder_mails()
+        self.assertEquals(len(mail.outbox), 3)
+
+    def test_deadline_is_far(self):
+        """
+        Deadline in 5 days should trigger
+        """
+        self.task.deadline = now() + timedelta(days=10)
+        self.task.people_needed = 3
+        self.task.type = 'event'
+        self.task.status = 'open'
+        self.task.save()
+
+        TaskMemberFactory.create_batch(3, task=self.task, status='accepted')
+        self.assertEquals(len(mail.outbox), 3)
+
+        # Empty
+        mail.outbox = []
+
+        # Run the (scheduled) task for reminder mails
+        send_task_reminder_mails()
+
+        # Now the outbox should not have new mails
+        self.assertEquals(len(mail.outbox), 0)

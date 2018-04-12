@@ -10,7 +10,6 @@ from moneyed.classes import Money
 
 from django.core.files import File
 from django.core.management.base import BaseCommand
-from django.db import connection
 from django.utils.timezone import now
 from django.contrib.contenttypes.models import ContentType
 
@@ -19,8 +18,8 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.bb_projects.models import ProjectPhase, ProjectTheme
 from bluebottle.donations.models import Donation
-from bluebottle.geo.models import Country
-from bluebottle.members.models import Member
+from bluebottle.geo.models import Country, Location
+from bluebottle.members.models import Member, CustomMemberFieldSettings
 from bluebottle.orders.models import Order
 from bluebottle.projects.models import Project
 from bluebottle.rewards.models import Reward
@@ -70,10 +69,7 @@ class Command(BaseCommand):
                             help="Models you want to import, can be multiple e.g. -m users wallposts")
 
     def handle(self, *args, **options):
-
         client = Client.objects.get(client_name=options['tenant'])
-        connection.set_tenant(client)
-
         self.upload = options['upload']
 
         with LocalTenant(client, clear_tenant=True):
@@ -105,8 +101,17 @@ class Command(BaseCommand):
     def _generic_import(self, instance, data, excludes=False):
         excludes = excludes or []
         for k in data:
-            if k not in excludes and hasattr(instance, k):
-                setattr(instance, k, data[k])
+            if k not in excludes:
+                if hasattr(instance, k):
+                    setattr(instance, k, data[k])
+                if k.startswith('extra.'):
+                    try:
+                        field = CustomMemberFieldSettings.objects.get(name=k.replace('extra.', ''))
+                    except CustomMemberFieldSettings.DoesNotExist:
+                        raise ImportError("Coud not find CustomMemberField {}".format(k.replace('extra.', '')))
+                    extra, _ = instance.extra.get_or_create(field=field)
+                    extra.value = data[k]
+                    extra.save()
 
     def _handle_users(self, data):
         """Expected fields for Users import:
@@ -122,11 +127,24 @@ class Command(BaseCommand):
         primary_language    (string)
         """
         if 'remote_id' in data:
-            user, _ = Member.objects.get_or_create(remote_id=data['remote_id'])
-            user.email = data['email'] or 'info+' + data['username'] + '@example.com'
+            try:
+                user, _ = Member.objects.get_or_create(remote_id=data['remote_id'])
+            except Member.MultipleObjectsReturned:
+                raise ImportError('Multiple users for remote_id {}'.format(data['remote_id']))
+            if 'email' in data:
+                user.email = data['email']
+            else:
+                user.email = 'temp+' + data['remote_id'] + '@example.com'
         else:
             user, _ = Member.objects.get_or_create(email=data['email'])
-        self._generic_import(user, data, excludes=['email', 'remote_id'])
+
+        user.is_active = True
+
+        if 'location' in data:
+            loc, _ = Location.objects.get_or_create(name=data['location'])
+            user.location = loc
+
+        self._generic_import(user, data, excludes=['email', 'remote_id', 'location'])
         user.save()
 
     def _handle_categories(self, data):

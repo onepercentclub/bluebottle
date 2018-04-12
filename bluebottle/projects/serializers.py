@@ -1,4 +1,5 @@
 import re
+from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
@@ -17,8 +18,8 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.projects.models import (
     ProjectBudgetLine, ProjectDocument, Project, ProjectImage,
-    ProjectPlatformSettings, ProjectSearchFilter,
-    ProjectAddOn)
+    ProjectPlatformSettings, ProjectSearchFilter, ProjectLocation,
+    ProjectAddOn, ProjectCreateTemplate)
 from bluebottle.tasks.models import Task, TaskMember, Skill
 from bluebottle.utils.serializers import (MoneySerializer, ResourcePermissionField,
                                           RelatedResourcePermissionField)
@@ -37,6 +38,8 @@ class ProjectPhaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectPhase
 
+        fields = ('id', 'slug', 'name', 'description', 'sequence', 'active', 'editable', 'viewable', 'owner_editable', )
+
 
 class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -50,6 +53,14 @@ class ProjectCountrySerializer(CountrySerializer):
     class Meta:
         model = Country
         fields = ('id', 'name', 'subregion', 'code')
+
+
+class ProjectLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectLocation
+        fields = (
+            'street', 'country', 'city', 'neighborhood', 'latitude', 'longitude'
+        )
 
 
 class ProjectBudgetLineSerializer(serializers.ModelSerializer):
@@ -85,9 +96,10 @@ class ProjectPermissionsSerializer(serializers.Serializer):
     rewards = RelatedResourcePermissionField('reward-list')
     donations = RelatedResourcePermissionField('order-manage-list')
     tasks = RelatedResourcePermissionField('task-list')
+    manage_project = RelatedResourcePermissionField('project_manage_detail', view_args=('slug', ))
 
     class Meta:
-        fields = ('rewards', 'donations', 'tasks')
+        fields = ('rewards', 'donations', 'tasks', 'manage_project')
 
 
 class BaseProjectAddOnSerializer(serializers.ModelSerializer):
@@ -140,6 +152,9 @@ class ProjectSerializer(serializers.ModelSerializer):
     task_manager = UserProfileSerializer(read_only=True)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
     vote_count = serializers.IntegerField()
+    latitude = serializers.FloatField(source='projectlocation.latitude')
+    longitude = serializers.FloatField(source='projectlocation.longitude')
+    project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
 
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
@@ -172,6 +187,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'latitude',
                   'location',
                   'longitude',
+                  'project_location',
                   'open_task_count',
                   'organization',
                   'owner',
@@ -226,6 +242,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'is_funding',
                   'latitude',
                   'location',
+                  'project_location',
                   'longitude',
                   'open_task_count',
                   'owner',
@@ -247,6 +264,8 @@ class ProjectPreviewSerializer(ProjectSerializer):
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     image = SorlImageField('400x300', crop='center')
+    latitude = serializers.FloatField(source='projectlocation.latitude')
+    longitude = serializers.FloatField(source='projectlocation.longitude')
 
     class Meta:
         model = Project
@@ -280,6 +299,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     amount_needed = MoneySerializer(read_only=True)
     budget_lines = ProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
     currencies = serializers.JSONField(read_only=True)
+    categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
     documents = ProjectDocumentSerializer(many=True, read_only=True)
     editable = serializers.BooleanField(read_only=True)
     image = ImageSerializer(required=False, allow_null=True)
@@ -300,6 +320,12 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     viewable = serializers.BooleanField(read_only=True)
     permissions = ResourcePermissionField('project_manage_detail', view_args=('slug', ))
     related_permissions = ProjectPermissionsSerializer(read_only=True)
+
+    latitude = serializers.FloatField(source='projectlocation.latitude', required=False, allow_null=True)
+    longitude = serializers.FloatField(source='projectlocation.longitude', required=False, allow_null=True)
+    project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
+
+    editable_fields = ('pitch', 'story', 'image', 'video_url')
 
     @staticmethod
     def validate_account_number(value):
@@ -365,6 +391,58 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError(_("You can not change the project state."))
         return value
 
+    def validate(self, data):
+        if self.instance and self.instance.status.slug in ('campaign', 'voting'):
+            # When project is running, only a subset of the fields canb be changed
+            for field, value in data.items():
+                current = getattr(self.instance, field)
+
+                if field not in self.editable_fields:
+                    try:
+                        # If we check a many to many field, make convert both sides to a set
+                        current = set(current.all())
+                        value = set(value)
+                    except (AttributeError, TypeError):
+                        # normal field: do nothing
+                        pass
+
+                    if value != current:
+                        raise serializers.ValidationError(
+                            _('Not allowed to edit {} when project is running').format(field)
+                        )
+                self.instance.campaign_edited = timezone.now()
+
+        return data
+
+    def update(self, instance, validated_data):
+        if 'projectlocation' in validated_data:
+            location = validated_data.pop('projectlocation')
+
+            if not hasattr(instance, 'projectlocation'):
+                instance.projectlocation = ProjectLocation.objects.create(
+                    project=instance
+                )
+
+            for field, value in location.items():
+                setattr(instance.projectlocation, field, value)
+
+            instance.projectlocation.save()
+
+        return super(ManageProjectSerializer, self).update(instance, validated_data)
+
+    def create(self, validated_data):
+        location_data = None
+        if 'projectlocation' in validated_data:
+            location_data = validated_data.pop('projectlocation')
+
+        instance = super(ManageProjectSerializer, self).create(validated_data)
+        if location_data:
+            ProjectLocation.objects.create(
+                project=instance,
+                **location_data
+            )
+        return instance
+
     class Meta:
         model = Project
         fields = ('id',
@@ -395,6 +473,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'latitude',
                   'location',
                   'longitude',
+                  'project_location',
                   'organization',
                   'people_needed',
                   'people_registered',
@@ -533,9 +612,32 @@ class ProjectSearchFilterSerializer(serializers.ModelSerializer):
         )
 
 
+class ProjectCreateTemplateSerializer(serializers.ModelSerializer):
+    default_amount_asked = MoneySerializer(min_amount=5.0)
+    image = ImageSerializer()
+    default_image = ImageSerializer()
+    default_story = serializers.CharField(source='default_description')
+
+    class Meta:
+        model = ProjectCreateTemplate
+        fields = (
+            'name',
+            'sub_name',
+            'image',
+            'description',
+
+            'default_amount_asked',
+            'default_title',
+            'default_pitch',
+            'default_story',
+            'default_image',
+        )
+
+
 class ProjectPlatformSettingsSerializer(serializers.ModelSerializer):
 
     filters = ProjectSearchFilterSerializer(many=True)
+    templates = ProjectCreateTemplateSerializer(many=True)
 
     class Meta:
         model = ProjectPlatformSettings
@@ -545,5 +647,6 @@ class ProjectPlatformSettingsSerializer(serializers.ModelSerializer):
             'contact_method',
             'contact_types',
             'filters',
+            'templates',
             'allow_anonymous_rewards'
         )

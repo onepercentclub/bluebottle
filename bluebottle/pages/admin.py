@@ -17,14 +17,16 @@ from .models import Page
 
 class PageAdmin(PlaceholderFieldAdmin):
     model = Page
-    list_display = ('title', 'slug', 'status_column', 'full_page',
-                    'modification_date', 'language')
+    list_display = ('title', 'slug', 'online', 'status',
+                    'publication_date', 'language')
     list_filter = ('status', 'language', 'slug')
     date_hierarchy = 'publication_date'
     search_fields = ('slug', 'title')
     actions = ['make_published']
     ordering = ('language', 'slug', 'title')
     prepopulated_fields = {'slug': ('title',)}
+    raw_id_fields = ('author', )
+    readonly_fields = ('online', )
 
     radio_fields = {
         'status': admin.HORIZONTAL,
@@ -33,12 +35,21 @@ class PageAdmin(PlaceholderFieldAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('title', 'body', 'language', 'slug', 'full_page'),
+            'fields': ('title', 'slug', 'author', 'language', 'full_page', 'body'),
         }),
         (_('Publication settings'), {
-            'fields': ('status', 'publication_date', 'publication_end_date'),
+            'fields': ('status', 'publication_date', 'publication_end_date', 'online'),
         }),
     )
+
+    def online(self, obj):
+        if obj.status == 'published' and \
+                obj.publication_date and \
+                obj.publication_date < now() and \
+                (obj.publication_end_date is None or obj.publication_end_date > now()):
+            return format_html('<span class="admin-label admin-label-green">{}</span>', _("Online"))
+        return format_html('<span class="admin-label admin-label-gray">{}</span>', _("Offline"))
+    online.help_text = _("Is this item currently visible online or not.")
 
     def preview_slide(self, obj):
         return obj.body
@@ -109,7 +120,7 @@ class PageAdmin(PlaceholderFieldAdmin):
 
     def save_model(self, request, obj, form, change):
         # Automatically store the user in the author field.
-        if not change:
+        if not obj.author:
             obj.author = request.user
 
         if not obj.publication_date:

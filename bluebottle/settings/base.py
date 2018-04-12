@@ -118,6 +118,7 @@ TEMPLATES = [
                 'admin_tools.template_loaders.Loader',
             ],
             'context_processors': [
+                'bluebottle.clients.context_processors.tenant',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.debug',
@@ -200,7 +201,7 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_mock', '/payments_interswitch',
                           '/payments_vitepay', '/payments_flutterwave',
                           '/payments_lipisha', '/media', '/downloads',
-                          '/surveys', '/token')
+                          '/surveys', '/token', '/jet')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
@@ -245,10 +246,6 @@ SOCIAL_AUTH_PIPELINE = (
 
 AFOM_ENABLED = False
 
-SOCIAL_AUTH_USER_FIELDS = ('username', 'email', 'first_name', 'last_name',)
-SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
-SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
-
 SHARED_APPS = (
     'tenant_schemas',
     'bluebottle.clients',  # you must list the app where your tenant model resides in
@@ -278,7 +275,6 @@ SHARED_APPS = (
     'adminsortable',
     'django_summernote',
     'django_singleton_admin'
-
 )
 
 TENANT_APPS = (
@@ -291,10 +287,14 @@ TENANT_APPS = (
     'bluebottle.common',
     'token_auth',
 
+    'bluebottle.bluebottle_dashboard',
+    'jet',
+    'jet.dashboard',
+
     'admin_tools',
-    'admin_tools.theming',
-    'admin_tools.menu',
-    'admin_tools.dashboard',
+    # 'admin_tools.theming',
+    # 'admin_tools.menu',
+    # 'admin_tools.dashboard',
 
     # Thumbnails
     'sorl.thumbnail',
@@ -314,11 +314,13 @@ TENANT_APPS = (
 
     'rest_framework.authtoken',
 
+    'bluebottle.looker',
+
     'bluebottle.members',
     'bluebottle.projects',
     'bluebottle.organizations',
+
     'bluebottle.tasks',
-    'bluebottle.bluebottle_dashboard',
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
@@ -353,11 +355,10 @@ TENANT_APPS = (
     'bluebottle.terms',
     'bluebottle.votes',
     'bluebottle.social',
-    'bluebottle.csvimport',
     'bluebottle.rewards',
 
     # Custom dashboard
-    'fluent_dashboard',
+    # 'fluent_dashboard',
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
@@ -392,6 +393,8 @@ TENANT_APPS = (
     'djmoney',
     'django_singleton_admin',
     'nested_inline',
+    'permissions_widget',
+
 )
 
 
@@ -508,6 +511,9 @@ LOGGING = {
 # Custom User model
 AUTH_USER_MODEL = 'members.Member'
 
+SOCIAL_AUTH_USER_FIELDS = ('username', 'email', 'first_name', 'last_name',)
+SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email', ]
+SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 SOCIAL_AUTH_USER_MODEL = 'members.Member'
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_friends', 'public_profile', 'user_birthday']
 SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [('birthday', 'birthday')]
@@ -538,7 +544,9 @@ ANALYTICS_BACKENDS = {
 
 ANALYTICS_FRONTEND = ''
 ANALYTICS_BACKOFFICE_ENABLED = True
+REPORTING_BACKOFFICE_ENABLED = False
 PARTICIPATION_BACKOFFICE_ENABLED = False
+REPORT_SQL_DIR = ''
 
 # PROJECT_TYPES = ['sourcing', 'funding'] or ['sourcing'] or ['funding']
 # PROJECT_CREATE_FLOW = 'combined' or 'choice'

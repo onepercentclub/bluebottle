@@ -92,9 +92,9 @@ class TaskMemberAdminInline(admin.StackedInline):
     model = TaskMember
     extra = 0
     raw_id_fields = ('member',)
-    readonly_fields = ('created',)
+    readonly_fields = ('created', 'resume_link')
     fields = readonly_fields + ('member', 'status', 'motivation',
-                                'time_spent', 'externals', 'resume')
+                                'time_spent', 'externals')
 
     def resume_link(self, obj):
         return resume_link(obj)

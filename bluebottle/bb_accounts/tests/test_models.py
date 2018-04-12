@@ -193,7 +193,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
             task=task
         )
 
-        self.assertEqual(self.user.task_count, 2)
+        self.assertEqual(self.user.task_count, 3)
 
     def test_calculate_donation_count(self):
         """ Test the counter for the number of donations a user has done """

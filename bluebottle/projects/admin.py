@@ -32,6 +32,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from daterange_filter.filter import DateRangeFilter
 from django_summernote.widgets import SummernoteWidget
+from moneyed.classes import Money
 from sorl.thumbnail.admin import AdminImageMixin
 from schwifty import IBAN, BIC
 
@@ -335,6 +336,9 @@ class ProjectAddOnInline(StackedPolymorphicInline):
 
 class ProjectLocationInline(admin.StackedInline):
     model = ProjectLocation
+    readonly_fields = (
+        'city', 'postal_code', 'street', 'neighborhood', 'country',
+    )
 
 
 class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):
@@ -578,7 +582,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     amount_donated_i18n.short_description = _('Amount Donated')
 
     def amount_needed_i18n(self, obj):
-        return obj.amount_needed
+        amount_needed = obj.amount_needed - obj.amount_extra
+        if amount_needed.amount > 0:
+            return amount_needed
+        else:
+            return Money(0, obj.amount_asked.currency)
 
     amount_needed_i18n.short_description = _('Amount Needed')
 

@@ -96,6 +96,27 @@ class TestProjectAdmin(BluebottleTestCase):
             'payout_status' in self.project_admin.get_fieldsets(request)[0][1]['fields']
         )
 
+    def test_amount_needed(self):
+        project = ProjectFactory(amount_asked=Money(100, 'EUR'))
+        self.assertEqual(
+            self.project_admin.amount_needed_i18n(project),
+            Money(100, 'EUR')
+        )
+
+    def test_amount_needed_with_extra(self):
+        project = ProjectFactory(amount_asked=Money(100, 'EUR'), amount_extra=Money(50, 'EUR'))
+        self.assertEqual(
+            self.project_admin.amount_needed_i18n(project),
+            Money(50, 'EUR')
+        )
+
+    def test_amount_needed_with_more_extra(self):
+        project = ProjectFactory(amount_asked=Money(100, 'EUR'), amount_extra=Money(150, 'EUR'))
+        self.assertEqual(
+            self.project_admin.amount_needed_i18n(project),
+            Money(0, 'EUR')
+        )
+
     def test_fieldsets_no_permissions(self):
         request = self.request_factory.get('/')
         request.user = MockUser()

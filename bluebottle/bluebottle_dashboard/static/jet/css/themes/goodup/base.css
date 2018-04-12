@@ -2350,15 +2350,11 @@ p img, h1 img, h2 img, h3 img, h4 img, td img {
     margin-right: 4px; }
 
 /* BOOLEAN ICONS */
-img[src$="admin/img/icon-yes.gif"], img[src$="admin/img/icon-yes.svg"],
-img[src$="admin/img/icon-no.gif"], img[src$="admin/img/icon-no.svg"],
-img[src$="admin/img/icon-unknown.gif"], img[src$="admin/img/icon-unknown.svg"] {
-  display: none; }
-  img[src$="admin/img/icon-yes.gif"] + span, img[src$="admin/img/icon-yes.svg"] + span,
-  img[src$="admin/img/icon-no.gif"] + span, img[src$="admin/img/icon-no.svg"] + span,
-  img[src$="admin/img/icon-unknown.gif"] + span, img[src$="admin/img/icon-unknown.svg"] + span {
-    font-weight: 700;
-    color: #fff; }
+img[src$="admin/img/icon-yes.gif"] + span, img[src$="admin/img/icon-yes.svg"] + span,
+img[src$="admin/img/icon-no.gif"] + span, img[src$="admin/img/icon-no.svg"] + span,
+img[src$="admin/img/icon-unknown.gif"] + span, img[src$="admin/img/icon-unknown.svg"] + span {
+  font-weight: 700;
+  color: #fff; }
 
 img[src$="admin/img/icon-yes.gif"] + span, img[src$="admin/img/icon-yes.svg"] + span {
   color: #fff; }

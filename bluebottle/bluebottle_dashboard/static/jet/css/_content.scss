@@ -265,7 +265,7 @@ p img, h1 img, h2 img, h3 img, h4 img, td img {
 img[src$="admin/img/icon-yes.gif"], img[src$="admin/img/icon-yes.svg"],
 img[src$="admin/img/icon-no.gif"], img[src$="admin/img/icon-no.svg"],
 img[src$="admin/img/icon-unknown.gif"], img[src$="admin/img/icon-unknown.svg"] {
-  display: none;
+  //display: none;
 
   + span {
     font-weight: 700;

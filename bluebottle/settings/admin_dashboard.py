@@ -181,6 +181,14 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         'permissions': ['terms.change_terms'],
         'items': [
             {
+                'name': 'mails.mail',
+                'permissions': ['mails.change_mail']
+            },
+            {
+                'name': 'mails.mailplatformsettings',
+                'permissions': ['mails.change_mailplatformsetting']
+            },
+            {
                 'name': 'terms.terms',
                 'permissions': ['terms.change_terms']
             },

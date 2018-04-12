@@ -103,7 +103,7 @@ class MailAdmin(TranslatableAdmin, SummernoteModelAdmin):
         html = 'Send test email<br/>'
         html += 'Email to {}<br/>'.format(obj.test_email)
         html += '{}<br />'.format(obj.test_model)
-        html += '<a href="{}">Send</a>'.format(reverse('mails_mail_test', kwargs={'pk': obj.id}))
+        html += '<a href="{}">Send</a>'.format(reverse('admin:mails_mail_test', kwargs={'pk': obj.id}))
         return mark_safe(html)
     send_test_mail.short_description = _('Send test email')
 

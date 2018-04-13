@@ -864,3 +864,5 @@ SUMMERNOTE_CONFIG = {
 }
 
 HOMEPAGE = {}
+
+LOGOUT_REDIRECT_URL = 'admin:index'

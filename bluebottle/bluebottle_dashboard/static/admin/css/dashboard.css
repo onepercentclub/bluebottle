@@ -120,3 +120,8 @@
     background-color: #FFFFFF;
     color: #281E50;
 }
+
+#content #content-main .cp-controls input.button {
+    padding-top: 0;
+    padding-bottom: 0;
+}

@@ -704,6 +704,12 @@ class ProjectPhaseAdmin(TranslatableAdmin):
         url = "{}?status_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)
         return format_html("<a href='{}'>{} projects</a>".format(url, obj.project_set.count()))
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
 
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)
 

@@ -831,8 +831,20 @@ class ProjectPlatformSettings(BasePlatformSettings):
         ('mail', _('E-mail')),
         ('phone', _('Phone')),
     )
+
+    PROJECT_SHARE_OPTIONS = (
+        ('twitter', _('Twitter')),
+        ('facebook', _('Facebook')),
+        ('facebookAtWork', _('Facebook at Work')),
+        ('linkedin', _('LinkedIn')),
+        ('whatsapp', _('Whatsapp')),
+        ('email', _('Email')),
+    )
+
     create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
     contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
+    share_options = SelectMultipleField(max_length=100, choices=PROJECT_SHARE_OPTIONS)
+    facebook_at_work_url = models.URLField(max_length=100, null=True, blank=False)
     allow_anonymous_rewards = models.BooleanField(default=True)
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)

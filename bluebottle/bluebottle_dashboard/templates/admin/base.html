@@ -215,13 +215,13 @@
                                 </span>
                             </a>
                         {% endblock %}
-                        <a href="{{ site_url }}" class="sidebar-link icon">
-                            <span class="sidebar-link-label">
-                                <span class="sidebar-link-icon icon-site"></span>
-                                {% trans 'View site' %}
-                            </span>
-                        </a>
                     {% endif %}
+                    <a href="{{ site_url }}" class="sidebar-link icon">
+                        <span class="sidebar-link-label">
+                            <span class="sidebar-link-icon icon-site"></span>
+                            {% trans 'View site' %}
+                        </span>
+                    </a>
                 </div>
 
                 {% if user.is_active and user.is_staff %}

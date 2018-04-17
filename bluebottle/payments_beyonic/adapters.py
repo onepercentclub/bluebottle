@@ -30,8 +30,12 @@ class BeyonicPaymentAdapter(BasePaymentAdapter):
         if 'mobile' not in self.card_data:
             raise PaymentException('Mobile is required')
 
+        mobile = self.card_data['mobile']
+        if mobile[0:2] == '07':
+            mobile = '+256' + mobile[1:]
+
         payment = BeyonicPayment(order_payment=self.order_payment,
-                                 mobile=self.card_data['mobile'])
+                                 mobile=mobile)
         payment.amount = int(self.order_payment.amount.amount)
         payment.currency = str(self.order_payment.amount.currency)
 

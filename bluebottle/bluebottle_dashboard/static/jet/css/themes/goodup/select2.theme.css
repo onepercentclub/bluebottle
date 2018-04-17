@@ -882,9 +882,11 @@
     .select2-container--jet .select2-selection .select2-selection__rendered {
       color: #4E4E4E;
       line-height: 32px;
+      font-weight: 700;
       font-size: 0.9rem; }
     .select2-container--jet .select2-selection .select2-selection__placeholder {
-      color: #999; }
+      color: #999;
+      font-weight: normal; }
   .select2-container--jet .select2-buttons {
     background-color: #E3ECF2;
     text-align: center;

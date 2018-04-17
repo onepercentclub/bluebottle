@@ -214,12 +214,10 @@ Select2.prototype = {
             if ($select.parents('.empty-form').length > 0) {
                 return;
             }
-
             self.initSelect($select, DropdownAdapter);
         });
 
         $('select').trigger('select:init');
-
         $('.inline-group').on('inline-group-row:added', function(e, $inlineItem) {
             $inlineItem.find('select').trigger('select:init');
         });
@@ -227,6 +225,9 @@ Select2.prototype = {
     run: function() {
         try {
             this.initSelect2();
+            // Now set classes for placeholders
+            $('.select2-hidden-accessible').find('option:first:selected').parent().parent().find('.select2-selection__rendered').addClass('select2-selection__placeholder');
+
         } catch (e) {
             console.error(e, e.stack);
         }

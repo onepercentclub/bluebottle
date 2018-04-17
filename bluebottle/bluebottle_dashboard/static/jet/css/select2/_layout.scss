@@ -20,11 +20,13 @@
     .select2-selection__rendered {
       color: $input-text-color;
       line-height: $input-height;
+      font-weight: 700;
       font-size: 0.9rem;
     }
 
     .select2-selection__placeholder {
       color: $input-placeholder-color;
+      font-weight: normal;
     }
   }
 

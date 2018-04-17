@@ -8,6 +8,16 @@ function removeRedundantTabs() {
     });
 }
 
+function higlightSelectedFilters() {
+
+    django.jQuery('.select2-hidden-accessible').
+        find('option:first:selected').
+        parent().parent().
+        find('.select2-selection__rendered').addClass('select2-selection__placeholder');
+};
+
 window.onload = function() {
     removeRedundantTabs();
+    higlightSelectedFilters();
 };
+

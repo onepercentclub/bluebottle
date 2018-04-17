@@ -1,12 +1,14 @@
 from collections import namedtuple
 
 from django.conf import settings
-from django.core.exceptions import PermissionDenied
-from django.http.response import HttpResponseForbidden, HttpResponseNotFound, HttpResponse
+from django.core.signing import TimestampSigner, BadSignature
+from django.http.response import HttpResponseNotFound, HttpResponse
+from django.http import Http404
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.views.generic.base import View
+from django.views.generic.detail import DetailView
 
 from rest_framework import generics
 from rest_framework import views, response
@@ -221,24 +223,26 @@ class RetrieveUpdateDestroyAPIView(ViewPermissionsMixin, generics.RetrieveUpdate
     base_permission_classes = (ResourcePermission,)
 
 
-class PrivateFileView(RetrieveAPIView):
+class PrivateFileView(DetailView):
     """ Serve private files using X-sendfile header. """
-
-    queryset = None  # Queryset that is used for finding ojects
     field = None  # Field on the model that is the actual file
+    signer = TimestampSigner()
+    max_age = 6 * 60 * 60
+    query_pk_and_slug = True
 
-    def get(self, request, pk):
+    def get_object(self):
         try:
-            instance = self.queryset.get(pk=pk)
-        except self.queryset.DoesNotExist:
-            return HttpResponseNotFound()
+            url = self.signer.unsign(self.request.GET['signature'], max_age=self.max_age)
+        except (KeyError, BadSignature):
+            raise Http404()
 
-        try:
-            self.check_object_permissions(request, instance)
-        except PermissionDenied:
-            return HttpResponseForbidden()
+        if not url == self.request.path:
+            raise Http404()
 
-        field = getattr(instance, self.field)
+        return super(PrivateFileView, self).get_object()
+
+    def get(self, request, *args, **kwargs):
+        field = getattr(self.get_object(), self.field)
         response = HttpResponse()
         response['X-Accel-Redirect'] = field.url
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(

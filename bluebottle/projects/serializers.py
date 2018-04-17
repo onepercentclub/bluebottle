@@ -21,9 +21,15 @@ from bluebottle.projects.models import (
     ProjectPlatformSettings, ProjectSearchFilter, ProjectLocation,
     ProjectAddOn, ProjectCreateTemplate)
 from bluebottle.tasks.models import Task, TaskMember, Skill
-from bluebottle.utils.serializers import (MoneySerializer, ResourcePermissionField,
-                                          RelatedResourcePermissionField)
+from bluebottle.utils.serializers import (
+    MoneySerializer, ResourcePermissionField,
+    RelatedResourcePermissionField,
+)
 from bluebottle.utils.fields import SafeField
+from bluebottle.utils.permissions import ResourceOwnerPermission
+from bluebottle.projects.permissions import (
+    CanExportSupportersPermission
+)
 from bluebottle.utils.utils import get_class
 from bluebottle.wallposts.models import MediaWallpostPhoto, MediaWallpost, TextWallpost
 from bluebottle.votes.models import Vote
@@ -79,7 +85,11 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
 
 
 class ProjectDocumentSerializer(serializers.ModelSerializer):
-    file = PrivateFileSerializer(url_name='project-document-file')
+    file = PrivateFileSerializer(
+        'project-document-file', url_args=('pk', ), permission=ResourceOwnerPermission,
+        read_only=True
+    )
+
     project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
 
     class Meta:
@@ -153,6 +163,10 @@ class ProjectSerializer(serializers.ModelSerializer):
     latitude = serializers.FloatField(source='projectlocation.latitude')
     longitude = serializers.FloatField(source='projectlocation.longitude')
     project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
+    supporters_export_url = PrivateFileSerializer(
+        'project-supporters-export', url_args=('slug', ), permission=CanExportSupportersPermission,
+        read_only=True
+    )
 
     def __init__(self, *args, **kwargs):
         super(ProjectSerializer, self).__init__(*args, **kwargs)
@@ -209,7 +223,9 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'video_html',
                   'video_url',
                   'vote_count',
-                  'voting_deadline',)
+                  'voting_deadline',
+                  'supporters_export_url',
+                  )
 
 
 class ProjectPreviewSerializer(ProjectSerializer):
@@ -217,7 +233,9 @@ class ProjectPreviewSerializer(ProjectSerializer):
     image = ImageSerializer(required=False)
     owner = UserProfileSerializer()
     skills = serializers.SerializerMethodField()
+    project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
     theme = ProjectThemeSerializer()
+    project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
 
     def get_skills(self, obj):
         return set(task.skill.id for task in obj.task_set.all() if task.skill)
@@ -256,7 +274,8 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'theme',
                   'title',
                   'vote_count',
-                  'voting_deadline',)
+                  'voting_deadline',
+                  )
 
 
 class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
@@ -323,7 +342,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     longitude = serializers.FloatField(source='projectlocation.longitude', required=False, allow_null=True)
     project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
 
-    editable_fields = ('pitch', 'story', 'image', 'video_url')
+    editable_fields = ('pitch', 'story', 'image', 'video_url', 'projectlocation')
 
     @staticmethod
     def validate_account_number(value):
@@ -644,6 +663,8 @@ class ProjectPlatformSettingsSerializer(serializers.ModelSerializer):
             'create_flow',
             'contact_method',
             'contact_types',
+            'share_options',
+            'facebook_at_work_url',
             'filters',
             'templates',
             'allow_anonymous_rewards'

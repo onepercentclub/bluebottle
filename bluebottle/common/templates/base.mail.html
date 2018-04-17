@@ -31,9 +31,9 @@
                                                 <table class="twelve columns">
                                                     <tr>
                                                         <td class="twelve columns">
-
-                                                            <img src="{{site}}/images/logo-email.gif">
-
+                                                            {% if settings.email_logo %}
+                                                                <img alt="logo" src="{{ site }}{{ settings.email_logo.url }}" />
+                                                            {% endif %}
                                                         </td>
                                                         <td class="expander"></td>
                                                     </tr>

@@ -10,7 +10,6 @@ from django.contrib.admin.widgets import AdminTextareaWidget
 from django.forms.models import ModelFormMetaclass
 from django.db import models
 from django.utils.text import slugify
-from django_singleton_admin.admin import SingletonAdmin
 from django_summernote.admin import SummernoteInlineModelAdmin
 from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
 from polymorphic.admin.inlines import StackedPolymorphicInline
@@ -47,7 +46,8 @@ from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
-from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin
+from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin
+from bluebottle.utils.widgets import CheckboxSelectMultipleWidget
 from bluebottle.votes.models import Vote
 
 from .forms import ProjectDocumentForm
@@ -211,7 +211,7 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
         model = Project
         fields = '__all__'
         widgets = {
-            'currencies': forms.CheckboxSelectMultiple,
+            'currencies': CheckboxSelectMultipleWidget,
             'story': SummernoteWidget()
         }
 
@@ -738,8 +738,8 @@ class ProjectCreateTemplateInline(admin.StackedInline, SummernoteInlineModelAdmi
 class ProjectPlatformSettingsAdminForm(forms.ModelForm):
     class Meta:
         widgets = {
-            'create_types': forms.CheckboxSelectMultiple,
-            'contact_types': forms.CheckboxSelectMultiple,
+            'create_types': CheckboxSelectMultipleWidget,
+            'contact_types': CheckboxSelectMultipleWidget,
         }
     extra = 0
 
@@ -750,7 +750,7 @@ class CustomProjectFieldSettingsInline(SortableTabularInline):
     extra = 0
 
 
-class ProjectPlatformSettingsAdmin(SingletonAdmin, NonSortableParentAdmin):
+class ProjectPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
 
     form = ProjectPlatformSettingsAdminForm
     inlines = [

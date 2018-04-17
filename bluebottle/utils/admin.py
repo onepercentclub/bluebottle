@@ -1,14 +1,16 @@
-from django.conf import settings
+import csv
 from moneyed import Money
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
 
+from django_singleton_admin.admin import SingletonAdmin
+
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
 from .models import Language
-import csv
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
@@ -156,3 +158,9 @@ class LatLongMapPickerMixin(object):
                 'https://maps.googleapis.com/maps/api/js?key={}'.format(settings.MAPS_API_KEY),
                 'js/admin/location_picker.js',
             )
+
+
+class BasePlatformSettingsAdmin(SingletonAdmin):
+
+    def has_delete_permission(self, request, obj=None):
+        return False

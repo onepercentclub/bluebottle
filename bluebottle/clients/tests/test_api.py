@@ -62,7 +62,7 @@ class ClientSettingsTestCase(BluebottleTestCase):
         'restricted_countries': ('NL', ),
         'supports_recurring': False,
         'currencies': {
-            'EUR': {'min_amount': 5, 'max_amount': 100}
+            'EUR': {'max_amount': 100}
         }
     }, {
         'provider': 'docdata',
@@ -90,6 +90,7 @@ class ClientSettingsTestCase(BluebottleTestCase):
     def test_settings_currencies(self):
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)
+        import ipdb; ipdb.set_trace()
 
         self.assertEqual(
             response.data['currencies'],
@@ -120,7 +121,7 @@ class ClientSettingsTestCase(BluebottleTestCase):
                     'code': 'EUR',
                     'name': u'Euro',
                     'rate': Decimal(1.5),
-                    'minAmount': 5
+                    'minAmount': 0
                 }
             ]
         )

@@ -54,7 +54,6 @@
             <span id="branding-menu" class="sidebar-header-menu-icon icon-menu-bold sidebar-toggle">
                 <img src="{% static "/admin/images/goodup_icon.jpg" %}" />
             </span>
-            <span id="branding-pin" class="sidebar-link-icon icon-arrow-down2 sidebar-pin"></span>
             {% block branding %}{% endblock %}
         </div>
         {% block usertools %}
@@ -215,13 +214,13 @@
                                 </span>
                             </a>
                         {% endblock %}
-                        <a href="{{ site_url }}" class="sidebar-link icon">
-                            <span class="sidebar-link-label">
-                                <span class="sidebar-link-icon icon-site"></span>
-                                {% trans 'View site' %}
-                            </span>
-                        </a>
                     {% endif %}
+                    <a href="{{ site_url }}" class="sidebar-link icon">
+                        <span class="sidebar-link-label">
+                            <span class="sidebar-link-icon icon-site"></span>
+                            {% trans 'View site' %}
+                        </span>
+                    </a>
                 </div>
 
                 {% if user.is_active and user.is_staff %}

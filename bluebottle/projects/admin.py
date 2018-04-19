@@ -10,7 +10,6 @@ from django.contrib.admin.widgets import AdminTextareaWidget
 from django.forms.models import ModelFormMetaclass
 from django.db import models
 from django.utils.text import slugify
-from django_singleton_admin.admin import SingletonAdmin
 from django_summernote.admin import SummernoteInlineModelAdmin
 from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
 from polymorphic.admin.inlines import StackedPolymorphicInline
@@ -47,7 +46,8 @@ from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
-from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin
+from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin
+from bluebottle.utils.widgets import CheckboxSelectMultipleWidget
 from bluebottle.votes.models import Vote
 
 from .forms import ProjectDocumentForm
@@ -211,7 +211,7 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
         model = Project
         fields = '__all__'
         widgets = {
-            'currencies': forms.CheckboxSelectMultiple,
+            'currencies': CheckboxSelectMultipleWidget,
             'story': SummernoteWidget()
         }
 
@@ -293,7 +293,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     ordering = ('-created',)
     save_as = True
     search_fields = (
-        'title', 'owner__first_name', 'owner__last_name',
+        'title', 'owner__first_name', 'owner__last_name', 'owner__email',
         'organization__name', 'organization__contacts__email'
     )
     raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization',)
@@ -398,21 +398,16 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     get_title_display.short_description = _('title')
 
     def get_owner_display(self, obj):
-        owner_name = obj.owner.get_full_name()
-        return format_html(u'<span title="{email}">{name}</a>', name=owner_name, email=obj.owner.email)
+        owner = obj.owner
+        url = reverse('admin:members_member_change', args=[owner.id])
+        return format_html(
+            u"<a href='{}'>{}</a>",
+            url,
+            owner.get_full_name()
+        )
 
     get_owner_display.admin_order_field = 'owner__last_name'
     get_owner_display.short_description = _('owner')
-
-    def project_owner(self, obj):
-        object = obj.owner
-        url = reverse('admin:{0}_{1}_change'.format(
-            object._meta.app_label, object._meta.model_name), args=[object.id])
-        return format_html(
-            u"<a href='{}'>{}</a>",
-            str(url),
-            object.first_name + ' ' + object.last_name
-        )
 
     def vote_count(self, obj):
         return obj.vote_set.count()
@@ -709,6 +704,12 @@ class ProjectPhaseAdmin(TranslatableAdmin):
         url = "{}?status_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)
         return format_html("<a href='{}'>{} projects</a>".format(url, obj.project_set.count()))
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
 
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)
 
@@ -738,8 +739,8 @@ class ProjectCreateTemplateInline(admin.StackedInline, SummernoteInlineModelAdmi
 class ProjectPlatformSettingsAdminForm(forms.ModelForm):
     class Meta:
         widgets = {
-            'create_types': forms.CheckboxSelectMultiple,
-            'contact_types': forms.CheckboxSelectMultiple,
+            'create_types': CheckboxSelectMultipleWidget,
+            'contact_types': CheckboxSelectMultipleWidget,
         }
     extra = 0
 
@@ -750,7 +751,7 @@ class CustomProjectFieldSettingsInline(SortableTabularInline):
     extra = 0
 
 
-class ProjectPlatformSettingsAdmin(SingletonAdmin, NonSortableParentAdmin):
+class ProjectPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
 
     form = ProjectPlatformSettingsAdminForm
     inlines = [

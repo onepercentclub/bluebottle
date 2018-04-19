@@ -5,7 +5,6 @@ from django.forms import Textarea
 from django.shortcuts import redirect
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
-from django_singleton_admin.admin import SingletonAdmin
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from parler.admin import TranslatableAdmin
 from adminsortable.admin import SortableStackedInline, NonSortableParentAdmin, SortableTabularInline
@@ -18,6 +17,7 @@ from bluebottle.cms.models import (
     Stat, Quote, Slide, Step, Logo, ResultPage, HomePage, ContentLink,
     Greeting
 )
+from bluebottle.utils.admin import BasePlatformSettingsAdmin
 
 
 class LinkPermissionAdmin(admin.ModelAdmin):
@@ -135,7 +135,7 @@ class ResultPageAdmin(PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParen
     fields = 'title', 'slug', 'description', 'start_date', 'end_date', 'image', 'content'
 
 
-class HomePageAdmin(SingletonAdmin, PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
+class HomePageAdmin(BasePlatformSettingsAdmin, PlaceholderFieldAdmin, TranslatableAdmin, NonSortableParentAdmin):
     formfield_overrides = {
         models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }
@@ -143,7 +143,7 @@ class HomePageAdmin(SingletonAdmin, PlaceholderFieldAdmin, TranslatableAdmin, No
     fields = ('content', )
 
 
-class SitePlatformSettingsAdmin(SingletonAdmin):
+class SitePlatformSettingsAdmin(BasePlatformSettingsAdmin):
     pass
 
 

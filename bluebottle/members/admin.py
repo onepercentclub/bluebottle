@@ -15,15 +15,13 @@ from django.http import HttpResponseRedirect
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
-from django_singleton_admin.admin import SingletonAdmin
-
 from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Location
 from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
-from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 from bluebottle.clients import properties
 
 from .models import Member
@@ -69,7 +67,7 @@ class CustomMemberFieldSettingsInline(SortableTabularInline):
     extra = 0
 
 
-class MemberPlatformSettingsAdmin(SingletonAdmin, NonSortableParentAdmin):
+class MemberPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
 
     inlines = [
         CustomMemberFieldSettingsInline
@@ -199,11 +197,11 @@ class MemberAdmin(UserAdmin):
         return tuple(standard_fieldsets)
 
     staff_fieldsets = (
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'groups')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'can_pledge', 'groups')}),
     )
 
     superuser_fieldsets = (
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups')}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'can_pledge', 'groups')}),
     )
 
     add_fieldsets = (

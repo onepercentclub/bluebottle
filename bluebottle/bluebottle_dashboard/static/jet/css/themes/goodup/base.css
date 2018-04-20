@@ -2350,15 +2350,11 @@ p img, h1 img, h2 img, h3 img, h4 img, td img {
     margin-right: 4px; }
 
 /* BOOLEAN ICONS */
-img[src$="admin/img/icon-yes.gif"], img[src$="admin/img/icon-yes.svg"],
-img[src$="admin/img/icon-no.gif"], img[src$="admin/img/icon-no.svg"],
-img[src$="admin/img/icon-unknown.gif"], img[src$="admin/img/icon-unknown.svg"] {
-  display: none; }
-  img[src$="admin/img/icon-yes.gif"] + span, img[src$="admin/img/icon-yes.svg"] + span,
-  img[src$="admin/img/icon-no.gif"] + span, img[src$="admin/img/icon-no.svg"] + span,
-  img[src$="admin/img/icon-unknown.gif"] + span, img[src$="admin/img/icon-unknown.svg"] + span {
-    font-weight: 700;
-    color: #fff; }
+img[src$="admin/img/icon-yes.gif"] + span, img[src$="admin/img/icon-yes.svg"] + span,
+img[src$="admin/img/icon-no.gif"] + span, img[src$="admin/img/icon-no.svg"] + span,
+img[src$="admin/img/icon-unknown.gif"] + span, img[src$="admin/img/icon-unknown.svg"] + span {
+  font-weight: 700;
+  color: #fff; }
 
 img[src$="admin/img/icon-yes.gif"] + span, img[src$="admin/img/icon-yes.svg"] + span {
   color: #fff; }
@@ -2789,6 +2785,31 @@ textarea {
   border-radius: 4px 0 0 4px; }
 .segmented-button.right {
   border-radius: 0 4px 4px 0; }
+
+input[type=checkbox] {
+  display: none; }
+  input[type=checkbox]#action-toggle {
+    display: none !important; }
+  input[type=checkbox] + label:before {
+    font-family: 'jet-icons';
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    display: inline-block;
+    color: #4E4E4E;
+    font-size: 0.9rem;
+    content: "";
+    letter-spacing: 5px; }
+    .action-checkbox-column input[type=checkbox] + label:before {
+      color: #FFFFFF; }
+  input[type=checkbox]:checked + label:before {
+    content: ""; }
 
 input[type=checkbox] {
   display: none; }
@@ -5652,7 +5673,7 @@ form ul.inline {
     .aligned label + p {
       margin-left: 0; } }
 .aligned ul label {
-  display: inline;
+  display: inline-block;
   float: none;
   width: auto; }
 .aligned .form-row input {

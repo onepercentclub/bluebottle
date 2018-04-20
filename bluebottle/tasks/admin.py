@@ -110,7 +110,7 @@ class TaskFileAdminInline(admin.StackedInline):
 
 
 class DeadlineFilter(admin.SimpleListFilter):
-    title = _('Deadline')
+    title = _('deadline')
     parameter_name = 'deadline'
 
     def lookups(self, request, model_admin):
@@ -137,12 +137,12 @@ class DeadlineFilter(admin.SimpleListFilter):
 
 
 class DeadlineToApplyFilter(DeadlineFilter):
-    title = _('Deadline to apply')
+    title = _('deadline to apply')
     parameter_name = 'deadline_to_apply'
 
 
 class OnlineOnLocationFilter(admin.SimpleListFilter):
-    title = _('Online or on location')
+    title = _('online / on location')
     parameter_name = 'online'
 
     def lookups(self, request, model_admin):
@@ -159,6 +159,28 @@ class OnlineOnLocationFilter(admin.SimpleListFilter):
 
         if value == 'on_location':
             queryset = queryset.filter(location__isnull=False)
+
+        return queryset
+
+
+class ExpertiseBasedFilter(admin.SimpleListFilter):
+    title = _('type')
+    parameter_name = 'expertise'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('hands_on', 'Hands on'),
+            ('expertise', 'Expertise based'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+
+        if value == 'hands_on':
+            queryset = queryset.filter(skill__expertise=False)
+
+        if value == 'expertise':
+            queryset = queryset.filter(skill__expertise=True)
 
         return queryset
 
@@ -186,7 +208,7 @@ class TaskAdmin(admin.ModelAdmin):
     list_filter = (
         'status',
         'type',
-        'skill__expertise',
+        ExpertiseBasedFilter,
         OnlineOnLocationFilter,
         ('skill', UnionFieldListFilter),
         DeadlineFilter,

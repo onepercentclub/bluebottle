@@ -136,7 +136,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             },
             {
                 'name': 'cms.sitelinks',
-                'label': _('Menu'),
+                'label': _('Header & footer'),
                 'permissions': ['cms.change_sitelinks']
             },
             {

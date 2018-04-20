@@ -90,7 +90,6 @@ class ClientSettingsTestCase(BluebottleTestCase):
     def test_settings_currencies(self):
         # Check that exposed property is in settings api, and other settings are not shown
         response = self.client.get(self.settings_url)
-        import ipdb; ipdb.set_trace()
 
         self.assertEqual(
             response.data['currencies'],

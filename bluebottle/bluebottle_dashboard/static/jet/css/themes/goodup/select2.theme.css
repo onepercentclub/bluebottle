@@ -913,11 +913,11 @@
     .select2-container--jet .select2-search--dropdown .select2-search__field {
       outline: 0;
       border-width: 1px 0 0 0;
-      background-color: #fff;
       color: #4E4E4E;
       height: 32px;
       -webkit-appearance: textfield;
-      box-shadow: none; }
+      box-shadow: none;
+      background: #fff url(/static/assets/admin/img/search.svg) no-repeat 136px 50%; }
   .select2-container--jet .select2-search--inline .select2-search__field {
     background: transparent;
     border: none;

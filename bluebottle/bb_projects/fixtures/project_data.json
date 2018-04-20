@@ -110,6 +110,17 @@
         }
     },
     {
+        "pk": 13,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": false,
+            "sequence": 11,
+            "editable": false,
+            "active": true,
+            "slug": "refunded"
+        }
+    },
+    {
         "pk": 0,
         "model": "bb_projects.projectphasetranslation",
         "fields": {
@@ -307,6 +318,26 @@
             "master": 10,
             "name": "Rejected / Cancelled",
             "language_code": "en"
+        }
+    },
+    {
+        "pk": 20,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 13,
+            "name": "Refunded",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 21,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 13,
+            "name": "Gerestitueerd",
+            "language_code": "nl"
         }
     },
     {

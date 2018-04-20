@@ -236,14 +236,11 @@ class MemberAdmin(UserAdmin):
     add_form = MemberCreationForm
 
     list_filter = (
-        'user_type',
         'is_active',
-        'is_staff',
-        'is_superuser',
         'newsletter',
         ('favourite_themes', UnionFieldListFilter),
         ('skills', UnionFieldListFilter),
-        'groups'
+        ('groups', UnionFieldListFilter)
     )
     list_display = ('email', 'first_name', 'last_name', 'is_staff',
                     'date_joined', 'is_active', 'login_as_user')

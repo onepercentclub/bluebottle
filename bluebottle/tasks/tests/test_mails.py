@@ -534,3 +534,24 @@ class TestUpcomingDeadlineReminderEmail(TaskMailTestBase):
 
         # Now the outbox should not have new mails
         self.assertEquals(len(mail.outbox), 0)
+
+    def test_deadline_is_passed(self):
+        """
+        Deadline in 5 days should trigger
+        """
+        self.task.deadline = now() - timedelta(days=10)
+        self.task.people_needed = 3
+        self.task.type = 'event'
+        self.task.status = 'open'
+        self.task.save()
+
+        TaskMemberFactory.create_batch(3, task=self.task, status='accepted')
+
+        # Empty
+        mail.outbox = []
+
+        # Run the (scheduled) task for reminder mails
+        send_task_reminder_mails()
+
+        # Now the outbox should not have new mails
+        self.assertEquals(len(mail.outbox), 0)

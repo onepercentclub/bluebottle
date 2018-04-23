@@ -121,6 +121,7 @@
 
     input[type="submit"] {
       &, &:visited, &:hover {
+        border-width: 0;
         background-color: $secondary-button-background-color;
         color: $secondary-button-text-color;
         font-size: 1rem;

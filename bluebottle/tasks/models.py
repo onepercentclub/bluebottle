@@ -77,7 +77,7 @@ class Task(models.Model, PreviousStatusMixin):
     objects = UpdateSignalsQuerySet.as_manager()
 
     # required resources
-    time_needed = models.FloatField(_('time_needed'),
+    time_needed = models.FloatField(_('time needed'),
                                     help_text=_('Estimated number of hours needed to perform this task.'))
 
     skill = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), null=True)

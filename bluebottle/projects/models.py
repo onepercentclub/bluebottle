@@ -6,7 +6,6 @@ from adminsortable.models import SortableMixin
 
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
@@ -37,7 +36,7 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.models import BasePlatformSettings
-from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
+from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin, reverse_signed
 from bluebottle.wallposts.models import (
     Wallpost, MediaWallpostPhoto, MediaWallpost, TextWallpost
 )
@@ -105,7 +104,7 @@ class ProjectDocument(BaseProjectDocument):
         # pk may be unset if not saved yet, in which case no url can be
         # generated.
         if self.pk is not None:
-            return reverse('project-document-file', kwargs={'pk': self.pk})
+            return reverse_signed('project-document-file', args=(self.pk, ))
         return None
 
     @property
@@ -562,7 +561,8 @@ class Project(BaseProject, PreviousStatusMixin):
         return (
             properties.ENABLE_REFUNDS and
             self.amount_donated.amount > 0 and
-            self.status.slug == 'closed'
+            (not self.payout_status or self.payout_status == StatusDefinition.NEEDS_APPROVAL) and
+            self.status.slug in ('done-incomplete', 'closed')
         )
 
     @property
@@ -579,6 +579,7 @@ class Project(BaseProject, PreviousStatusMixin):
     class Meta(BaseProject.Meta):
         permissions = (
             ('approve_payout', 'Can approve payouts for projects'),
+            ('export_supporters', 'Can export supporters for projects'),
             ('api_read_project', 'Can view projects through the API'),
             ('api_add_project', 'Can add projects through the API'),
             ('api_change_project', 'Can change projects through the API'),
@@ -841,8 +842,20 @@ class ProjectPlatformSettings(BasePlatformSettings):
         ('mail', _('E-mail')),
         ('phone', _('Phone')),
     )
+
+    PROJECT_SHARE_OPTIONS = (
+        ('twitter', _('Twitter')),
+        ('facebook', _('Facebook')),
+        ('facebookAtWork', _('Facebook at Work')),
+        ('linkedin', _('LinkedIn')),
+        ('whatsapp', _('Whatsapp')),
+        ('email', _('Email')),
+    )
+
     create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
     contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
+    share_options = SelectMultipleField(max_length=100, choices=PROJECT_SHARE_OPTIONS)
+    facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
     allow_anonymous_rewards = models.BooleanField(default=True)
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)

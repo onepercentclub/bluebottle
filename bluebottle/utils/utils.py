@@ -3,11 +3,14 @@ from importlib import import_module
 import logging
 import pygeoip
 import socket
+import urllib
 
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.signing import TimestampSigner
+from django.core.urlresolvers import reverse
 
 from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
@@ -263,3 +266,12 @@ class PreviousStatusMixin(object):
             self._original_status = self.status
         except ObjectDoesNotExist:
             self._original_status = None
+
+
+signer = TimestampSigner()
+
+
+def reverse_signed(name, args):
+    url = reverse(name, args=args)
+    signature = signer.sign(url)
+    return '{}?{}'.format(url, urllib.urlencode({'signature': signature}))

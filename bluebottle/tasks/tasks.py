@@ -26,5 +26,8 @@ def send_task_reminder_mails():
     for tenant in Client.objects.all():
         connection.set_tenant(tenant)
         with LocalTenant(tenant, clear_tenant=True):
-            for task in Task.objects.filter(deadline__lte=deadline):
+            for task in Task.objects.filter(
+                deadline__lte=deadline,
+                deadline__gte=timezone.now()
+            ):
                 send_upcoming_task_reminder(task)

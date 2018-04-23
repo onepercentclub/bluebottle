@@ -88,20 +88,20 @@ body.login {
     text-align: center;
 
     input[type="submit"] {
-      font-size: 0.9rem;
-      font-weight: lighter;
-      background-color: $primary-button-background-color;
-      color: $primary-button-text-color;
-
-      &:hover, &:focus {
-        background-color: $button-hover-background-color;
-        color: $button-hover-text-color;
+      font-weight: 500;
+      background-color: $secondary-button-background-color;
+      color: $secondary-button-text-color;
+      font-size: 1rem;
+      padding: 0 20px;
+      vertical-align: middle;
+      margin-bottom: 5px;
+      cursor: pointer;
+      border-bottom: darken($secondary-button-background-color, 10) 2px solid;
+      &:hover, &:focus, &:active {
+        background-color: darken($secondary-button-background-color, 10);
+        color: $secondary-button-text-color;
       }
 
-      &:active {
-        background-color: $button-active-background-color;
-        color: $button-active-text-color;
-      }
     }
   }
 

@@ -75,15 +75,22 @@
         {% endif %}
         {% endblock %}
     </div>
+
     <!-- END Header -->
     {% if user.is_authenticated %}
         <div class="site-title">
             {{ tenant.name }}
         </div>
     {% else %}
-        <div class="site-title site-title-login">
-            <img class="site-title-logo" alt="{{ tenant.name }}" src="{{ MEDIA_URL }}{{ logo }}" />
-        </div>
+        {% if logo %}
+            <div class="site-title site-title-login">
+                <img class="site-title-logo" alt="GoodUp Logo" src="{% static "/admin/images/logo_goodup.png" %}" />
+            </div>
+        {% else %}
+            <div class="site-title site-title-login">
+                {{ tenant.name }}
+            </div>
+        {% endif %}
     {% endif %}
 
     {% block breadcrumbs %}

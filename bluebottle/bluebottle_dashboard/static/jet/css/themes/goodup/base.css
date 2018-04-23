@@ -4239,12 +4239,12 @@ div.system-message {
   text-transform: capitalize; }
 
 .site-title-login {
-  padding-top: 20px;
+  margin: 20px 0px -30px;
   font-size: 1.4rem;
   text-align: center; }
 
 .site-title-logo {
-  width: 200px; }
+  height: 100px; }
 
 .dashboard-tools .reset-dashboard-link {
   background-color: rgba(40, 30, 80, 0.1); }
@@ -9392,16 +9392,18 @@ body.login {
     margin: 0;
     text-align: center; }
     body.login .submit-row input[type="submit"] {
-      font-size: 0.9rem;
-      font-weight: lighter;
-      background-color: #64A03C;
-      color: #fff; }
-      body.login .submit-row input[type="submit"]:hover, body.login .submit-row input[type="submit"]:focus {
-        background-color: rgba(40, 30, 80, 0.3);
-        color: #281E50; }
-      body.login .submit-row input[type="submit"]:active {
-        background-color: #3C96DC;
-        color: #281E50; }
+      font-weight: 500;
+      background-color: #3C96DC;
+      color: #fff;
+      font-size: 1rem;
+      padding: 0 20px;
+      vertical-align: middle;
+      margin-bottom: 5px;
+      cursor: pointer;
+      border-bottom: #237cc2 2px solid; }
+      body.login .submit-row input[type="submit"]:hover, body.login .submit-row input[type="submit"]:focus, body.login .submit-row input[type="submit"]:active {
+        background-color: #237cc2;
+        color: #fff; }
   body.login .password-reset-link {
     text-align: center; }
   body.login #footer {

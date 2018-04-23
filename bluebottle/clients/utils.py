@@ -73,7 +73,7 @@ def get_min_amounts(methods):
     result = defaultdict(list)
     for method in methods:
         for currency, data in method['currencies'].items():
-            result[currency].append(data.get('min_amount', float("inf")))
+            result[currency].append(data.get('min_amount', 0))
 
     return dict((currency, min(amounts)) for currency, amounts in result.items())
 

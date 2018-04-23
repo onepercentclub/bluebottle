@@ -8,8 +8,10 @@ from bluebottle.bluebottle_drf2.serializers import (
 )
 from bluebottle.members.serializers import UserPreviewSerializer, UserProfileSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
+from bluebottle.tasks.permissions import TaskMemberPermission, TaskManagerPermission
 from bluebottle.tasks.taskmail import TaskMemberMailAdapter
 from bluebottle.projects.serializers import ProjectPreviewSerializer
+from bluebottle.utils.permissions import OneOf
 from bluebottle.utils.serializers import PermissionField, ResourcePermissionField
 from bluebottle.wallposts.serializers import TextWallpostSerializer
 from bluebottle.projects.models import Project
@@ -46,7 +48,9 @@ class BaseTaskMemberSerializer(serializers.ModelSerializer):
         required=False, default=TaskMember.TaskMemberStatuses.applied)
     motivation = serializers.CharField(required=False, allow_blank=True)
     resume = PrivateFileSerializer(
-        url_name='task-member-resume', required=False, allow_null=True
+        url_name='task-member-resume', url_args=('pk', ), file_attr='resume',
+        required=False, allow_null=True,
+        permission=OneOf(TaskManagerPermission, TaskMemberPermission)
     )
     permissions = ResourcePermissionField('task-member-detail', view_args=('id',))
 

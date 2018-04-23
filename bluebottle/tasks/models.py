@@ -57,7 +57,7 @@ class Task(models.Model, PreviousStatusMixin):
                               max_length=20,
                               choices=TaskStatuses.choices,
                               default=TaskStatuses.open)
-    type = models.CharField(_('type'),
+    type = models.CharField(_('ongoing / event'),
                             max_length=20,
                             choices=TaskTypes.choices,
                             default=TaskTypes.ongoing)
@@ -67,12 +67,12 @@ class Task(models.Model, PreviousStatusMixin):
                                  choices=TaskAcceptingChoices.choices,
                                  default=TaskAcceptingChoices.manual)
 
-    needs_motivation = models.BooleanField(_('Needs motivation'),
+    needs_motivation = models.BooleanField(_('needs motivation'),
                                            default=False,
                                            help_text=_('Indicates if a task candidate needs to submit a motivation'))
 
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
-    deadline_to_apply = models.DateTimeField(_('Deadline to apply'), help_text=_('Deadline to apply'))
+    deadline_to_apply = models.DateTimeField(_('deadline to apply'), help_text=_('Deadline to apply'))
 
     objects = UpdateSignalsQuerySet.as_manager()
 
@@ -80,7 +80,7 @@ class Task(models.Model, PreviousStatusMixin):
     time_needed = models.FloatField(_('time needed'),
                                     help_text=_('Estimated number of hours needed to perform this task.'))
 
-    skill = models.ForeignKey('tasks.Skill', verbose_name=_('Skill needed'), null=True)
+    skill = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), null=True)
 
     # internal usage
     created = CreationDateTimeField(_('created'), help_text=_('When this task was created?'))

@@ -19,7 +19,7 @@ class PageAdmin(PlaceholderFieldAdmin):
     model = Page
     list_display = ('title', 'slug', 'online', 'status',
                     'publication_date', 'language')
-    list_filter = ('status', 'language', 'slug')
+    list_filter = ('status', 'language')
     date_hierarchy = 'publication_date'
     search_fields = ('slug', 'title')
     actions = ['make_published']

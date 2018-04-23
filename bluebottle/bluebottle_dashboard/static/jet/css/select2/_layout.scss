@@ -76,11 +76,11 @@
     .select2-search__field {
       outline: 0;
       border-width: 1px 0 0 0;
-      background-color: $input-background-color;
       color: $input-text-color;
       height: $input-height;
       -webkit-appearance: textfield;
       box-shadow: none;
+      background: $input-background-color url(/static/assets/admin/img/search.svg) no-repeat 136px 50%;
     }
   }
 

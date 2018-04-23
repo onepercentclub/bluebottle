@@ -202,7 +202,7 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
     base_model = Wallpost
     list_display = ('created', 'author', 'content_type', 'text', 'type', 'deleted')
     fields = ('title', 'text', 'author', 'ip_address')
-    list_filter = ('created', 'deleted')
+    list_filter = ('created', ('content_type', admin.RelatedOnlyFieldListFilter),)
     ordering = ('-created',)
     search_fields = ('textwallpost__text', 'mediawallpost__text')
     child_models = (
@@ -249,7 +249,6 @@ class ReactionAdmin(admin.ModelAdmin):
                        'editor', 'ip_address')
     list_display = ('author_full_name', 'created', 'updated',
                     'deleted', 'ip_address')
-    list_filter = ('created', 'updated', 'deleted')
     date_hierarchy = 'created'
     ordering = ('-created',)
     raw_id_fields = ('author', 'editor', 'wallpost')

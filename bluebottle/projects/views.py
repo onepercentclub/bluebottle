@@ -1,9 +1,13 @@
+import csv
+
+from django.http.response import HttpResponse
+
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import (
     ProjectBudgetLineSerializer, ProjectDocumentSerializer,
     ProjectMediaSerializer, ProjectImageSerializer,
     ProjectSupportSerializer, ProjectWallpostPhotoSerializer)
-from bluebottle.utils.utils import get_client_ip
+from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import (
     RetrieveAPIView, ListCreateAPIView, CreateAPIView, OwnerListViewMixin,
     RetrieveUpdateDestroyAPIView, PrivateFileView, UpdateAPIView
@@ -11,6 +15,7 @@ from bluebottle.utils.views import (
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission
 )
+from bluebottle.utils.utils import get_client_ip
 from bluebottle.wallposts.models import MediaWallpostPhoto
 from .models import ProjectDocument, ProjectBudgetLine, Project, ProjectImage
 
@@ -85,6 +90,34 @@ class ProjectDocumentFileView(PrivateFileView):
     permission_classes = (
         OneOf(ResourcePermission, RelatedResourceOwnerPermission),
     )
+
+
+class ProjectSupportersExportView(PrivateFileView):
+    fields = (
+        ('order__user__email', 'Email'),
+        ('order__user__full_name', 'Name'),
+        ('created', 'Donation Date'),
+        ('reward__title', 'Reward'),
+    )
+
+    model = Project
+
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        response = HttpResponse()
+        response['Content-Disposition'] = 'attachment; filename="supporters.csv"'
+        response['Content-Type'] = 'text/csv'
+
+        writer = csv.writer(response)
+
+        writer.writerow([field[1] for field in self.fields])
+        for donation in instance.donations.filter(order__order_type='one-off'):
+            writer.writerow([
+                prep_field(request, donation, field[0]) for field in self.fields
+            ])
+
+        return response
 
 
 class ProjectMediaDetail(RetrieveAPIView):

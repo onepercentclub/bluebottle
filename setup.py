@@ -21,7 +21,8 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-token-auth.git@0.3.5#egg=django-token-auth-0.3.5',
     'git+https://github.com/st4lk/django-select-multiple-field.git@1dc7733008150a111cd141ff7c3f42bf4953dc7d#egg=django-select-multiple-field-0.5.0a-draft',
     'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1',
-    'git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github'
+    'git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github',
+    'git+https://github.com/beyonic/beyonic-python.git#egg=beyonic'
 ]
 
 install_requires = [
@@ -71,6 +72,7 @@ install_requires = [
     'djangorestframework-jwt==1.11.0',
     'djangorestframework==3.3.3',
     'dkimpy==0.6.1',
+    'geocoder==1.37.0',
     'gunicorn==19.7.1',
     'html5lib==1.0b10',
     'influxdb==4.1.1',
@@ -78,11 +80,14 @@ install_requires = [
     'lxml==3.7.3',
     'micawber==0.3.4',
     'mixpanel==4.3.2',
+    'ndg-httpsclient==0.4.3',
     'openpyxl==2.4.8',
     'pendulum==1.2.4',
     'psycopg2==2.7.1',
+    'pyasn1==0.4.2',
     'pygeoip==0.3.2',
     'pyjwt==1.5.3',
+    'pyOpenSSL==17.5.0',
     'python-dateutil==2.6.1',
     'python-memcached==1.58',
     'python-social-auth==0.2.21',

@@ -124,7 +124,7 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
     def get_images(self, obj):
         projects = Project.objects.filter(
             status__slug__in=['done-complete', 'done-incomplete']
-        ).order_by('?')[:8]
+        ).order_by('?')
 
         if 'start_date' in self.context:
             projects = projects.filter(
@@ -136,7 +136,7 @@ class ProjectImagesContentSerializer(serializers.ModelSerializer):
                 campaign_ended__lte=self.context['end_date']
             )
 
-        return ProjectImageSerializer(projects, many=True).to_representation(projects)
+            return ProjectImageSerializer(projects, many=True).to_representation(projects[:8])
 
     class Meta:
         model = ProjectImagesContent
@@ -373,7 +373,7 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
             totals = totals.filter(confirmed__gte=self.context['start_date'])
 
         if 'end_date' in self.context:
-            totals = filter(confirmed__lte=self.context['end_date'])
+            totals = totals.filter(confirmed__lte=self.context['end_date'])
 
         return CoFinancerSerializer(
             totals, many=True, context=self.context

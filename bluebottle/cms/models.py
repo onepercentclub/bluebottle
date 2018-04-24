@@ -29,6 +29,7 @@ class ResultPage(TranslatableModel):
         'StatsBlockPlugin',
         'SurveyBlockPlugin',
         'TasksBlockPlugin',
+        'SupporterTotalBlockPlugin',
     ])
 
     translations = TranslatedFields(

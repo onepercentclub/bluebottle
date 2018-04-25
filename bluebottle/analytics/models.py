@@ -128,6 +128,7 @@ class AnalyticsAdapter(models.Model):
 
 
 class AnalyticsPlatformSettings(BasePlatformSettings):
+    fiscal_month_offset = models.PositiveIntegerField(_('Fiscal year offset'), default=0)
 
     class Meta:
         verbose_name_plural = _('analytics platform settings')

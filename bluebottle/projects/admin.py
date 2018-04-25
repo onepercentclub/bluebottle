@@ -749,7 +749,7 @@ class ProjectPlatformSettingsAdminForm(forms.ModelForm):
         widgets = {
             'create_types': CheckboxSelectMultipleWidget,
             'contact_types': CheckboxSelectMultipleWidget,
-            'share_options': forms.CheckboxSelectMultiple,
+            'share_options': CheckboxSelectMultipleWidget,
         }
     extra = 0
 

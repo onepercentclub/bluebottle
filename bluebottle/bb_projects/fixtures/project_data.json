@@ -98,7 +98,7 @@
             "name": "Project - Realised",
             "slug": "done-complete",
             "sequence": 8,
-            "editable": true,
+            "editable": false,
             "active": true,
             "description": ""
         }

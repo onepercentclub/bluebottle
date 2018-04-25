@@ -3,9 +3,9 @@ import logging
 
 import pytz
 from adminsortable.models import SortableMixin
+
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
@@ -19,6 +19,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 
 from django_summernote.models import AbstractAttachment
+
 from moneyed.classes import Money
 from polymorphic.models import PolymorphicModel
 from select_multiple_field.models import SelectMultipleField
@@ -35,7 +36,7 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.models import BasePlatformSettings
-from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
+from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin, reverse_signed
 from bluebottle.wallposts.models import (
     Wallpost, MediaWallpostPhoto, MediaWallpost, TextWallpost
 )
@@ -43,6 +44,22 @@ from .mails import mail_project_complete, mail_project_incomplete
 from .signals import project_funded  # NOQA
 
 logger = logging.getLogger(__name__)
+
+
+class ProjectLocation(models.Model):
+    project = models.OneToOneField('projects.Project', primary_key=True)
+    place = models.CharField(max_length=80, null=True, blank=True)
+    street = models.TextField(max_length=80, null=True, blank=True)
+    neighborhood = models.TextField(max_length=80, null=True, blank=True)
+    city = models.TextField(max_length=80, null=True, blank=True)
+    postal_code = models.CharField(max_length=20, null=True, blank=True)
+    country = models.CharField(max_length=40, null=True, blank=True)
+    latitude = models.DecimalField(
+        _('latitude'), max_digits=21, decimal_places=18
+    )
+    longitude = models.DecimalField(
+        _('longitude'), max_digits=21, decimal_places=18
+    )
 
 
 class ProjectPhaseLog(models.Model):
@@ -83,7 +100,7 @@ class ProjectDocument(BaseProjectDocument):
         # pk may be unset if not saved yet, in which case no url can be
         # generated.
         if self.pk is not None:
-            return reverse('project-document-file', kwargs={'pk': self.pk})
+            return reverse_signed('project-document-file', args=(self.pk, ))
         return None
 
     @property
@@ -96,11 +113,6 @@ class ProjectDocument(BaseProjectDocument):
 
 
 class Project(BaseProject, PreviousStatusMixin):
-    latitude = models.DecimalField(
-        _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-    longitude = models.DecimalField(
-        _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True)
-
     reach = models.PositiveIntegerField(
         _('Reach'), help_text=_('How many people do you expect to reach?'),
         blank=True, null=True)
@@ -545,7 +557,8 @@ class Project(BaseProject, PreviousStatusMixin):
         return (
             properties.ENABLE_REFUNDS and
             self.amount_donated.amount > 0 and
-            self.status.slug == 'closed'
+            (not self.payout_status or self.payout_status == StatusDefinition.NEEDS_APPROVAL) and
+            self.status.slug in ('done-incomplete', 'closed')
         )
 
     def get_absolute_url(self):
@@ -555,6 +568,7 @@ class Project(BaseProject, PreviousStatusMixin):
     class Meta(BaseProject.Meta):
         permissions = (
             ('approve_payout', 'Can approve payouts for projects'),
+            ('export_supporters', 'Can export supporters for projects'),
             ('api_read_project', 'Can view projects through the API'),
             ('api_add_project', 'Can add projects through the API'),
             ('api_change_project', 'Can change projects through the API'),
@@ -622,23 +636,24 @@ class Project(BaseProject, PreviousStatusMixin):
             self.save()
 
     def update_status_after_deadline(self):
-        if self.is_funding:
-            if self.amount_donated >= self.amount_asked:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
-                self.payout_status = 'needs_approval'
-            elif self.amount_donated.amount <= 20 or not self.campaign_started:
-                self.status = ProjectPhase.objects.get(slug="closed")
+        if self.status.slug == 'campaign':
+            if self.is_funding:
+                if self.amount_donated + self.amount_extra >= self.amount_asked:
+                    self.status = ProjectPhase.objects.get(slug="done-complete")
+                    self.payout_status = 'needs_approval'
+                elif self.amount_donated.amount <= 20 or not self.campaign_started:
+                    self.status = ProjectPhase.objects.get(slug="closed")
+                else:
+                    self.status = ProjectPhase.objects.get(slug="done-incomplete")
+                    self.payout_status = 'needs_approval'
             else:
-                self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                self.payout_status = 'needs_approval'
-        else:
-            if self.task_set.filter(
-                    status__in=[Task.TaskStatuses.in_progress,
-                                Task.TaskStatuses.open,
-                                Task.TaskStatuses.closed]).count() > 0:
-                self.status = ProjectPhase.objects.get(slug="done-incomplete")
-            else:
-                self.status = ProjectPhase.objects.get(slug="done-complete")
+                if self.task_set.filter(
+                        status__in=[Task.TaskStatuses.in_progress,
+                                    Task.TaskStatuses.open,
+                                    Task.TaskStatuses.closed]).count() > 0:
+                    self.status = ProjectPhase.objects.get(slug="done-incomplete")
+                else:
+                    self.status = ProjectPhase.objects.get(slug="done-complete")
 
     def deadline_reached(self):
         # BB-3616 "Funding projects should not look at (in)complete tasks for their status."
@@ -816,8 +831,20 @@ class ProjectPlatformSettings(BasePlatformSettings):
         ('mail', _('E-mail')),
         ('phone', _('Phone')),
     )
+
+    PROJECT_SHARE_OPTIONS = (
+        ('twitter', _('Twitter')),
+        ('facebook', _('Facebook')),
+        ('facebookAtWork', _('Facebook at Work')),
+        ('linkedin', _('LinkedIn')),
+        ('whatsapp', _('Whatsapp')),
+        ('email', _('Email')),
+    )
+
     create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
     contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
+    share_options = SelectMultipleField(max_length=100, choices=PROJECT_SHARE_OPTIONS)
+    facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
     allow_anonymous_rewards = models.BooleanField(default=True)
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)

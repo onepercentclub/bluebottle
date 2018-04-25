@@ -8,6 +8,7 @@ import re
 from babel.numbers import get_currency_symbol, get_currency_name
 from django.db import connection, ProgrammingError
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import get_language
 
 from djmoney_rates.utils import get_rate
@@ -34,7 +35,9 @@ class LocalTenant(object):
 
     def __enter__(self):
         if self.tenant:
+            connection.set_tenant(self.tenant)
             properties.set_tenant(self.tenant)
+            ContentType.objects.clear_cache()
 
     def __exit__(self, type, value, traceback):
         if self.clear_tenant:
@@ -70,7 +73,7 @@ def get_min_amounts(methods):
     result = defaultdict(list)
     for method in methods:
         for currency, data in method['currencies'].items():
-            result[currency].append(data.get('min_amount', float("inf")))
+            result[currency].append(data.get('min_amount', 0))
 
     return dict((currency, min(amounts)) for currency, amounts in result.items())
 

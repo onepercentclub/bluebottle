@@ -13,6 +13,7 @@ from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments.tasks import check_payment_statuses
+from bluebottle.payments_beyonic.admin import BeyonicPaymentAdmin
 from bluebottle.payments_external.admin import ExternalPaymentAdmin
 from bluebottle.payments_flutterwave.admin import FlutterwavePaymentAdmin, FlutterwaveMpesaPaymentAdmin
 from bluebottle.payments_interswitch.admin import InterswitchPaymentAdmin
@@ -88,7 +89,7 @@ class OrderPaymentAdmin(admin.ModelAdmin):
 
         self.message_user(
             request,
-            'Refund is requested. It may take a while for this to be visble here'
+            'Refund is requested.'
         )
 
         order_payment_url = reverse('admin:payments_orderpayment_change', args=(order_payment.id,))
@@ -159,7 +160,7 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
                 VoucherPaymentAdmin, InterswitchPaymentAdmin,
                 FlutterwavePaymentAdmin, FlutterwaveMpesaPaymentAdmin,
                 LipishaPaymentAdmin, TelesomPaymentAdmin, VitepayPaymentAdmin,
-                ExternalPaymentAdmin
+                BeyonicPaymentAdmin, ExternalPaymentAdmin
             )
         )
 

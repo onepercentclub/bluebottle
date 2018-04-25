@@ -6,11 +6,12 @@ from django.test.client import RequestFactory
 from bluebottle.payments.admin import OrderPaymentAdmin
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
+from bluebottle.payments_docdata.gateway import DocdataClient
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.utils import BluebottleTestCase, override_settings
-
+from bluebottle.utils.utils import StatusDefinition
 
 factory = RequestFactory()
 
@@ -45,20 +46,25 @@ class TestOrderPaymentAdminRefund(BluebottleTestCase):
             default_pm='ideal',
             total_gross_amount=100
         )
+        self.order_payment.transition_to(StatusDefinition.SETTLED)
+        self.order_payment.save()
 
     def test_refund(self):
         request = self.request_factory.post('/')
         request.user = MockUser(['payments.refund_orderpayment'])
 
         with mock.patch.object(self.order_payment_admin, 'message_user') as message_mock:
-            with mock.patch.object(DocdataPaymentAdapter, 'refund_payment') as refund_mock:
+            with mock.patch.object(DocdataClient, 'refund') as refund_mock:
                 response = self.order_payment_admin.refund(request, self.order_payment.pk)
 
                 self.assertEqual(response.status_code, 302)
                 message_mock.assert_called_with(
-                    request,
-                    'Refund is requested. It may take a while for this to be visble here'
+                    request, 'Refund is requested.'
                 )
+
+                order_payment = OrderPayment.objects.get(pk=self.order_payment.pk)
+                self.assertEqual(order_payment.status, StatusDefinition.REFUND_REQUESTED)
+                self.assertEqual(order_payment.order.status, StatusDefinition.FAILED)
                 refund_mock.assert_called()
 
     def test_refund_forbidden(self):
@@ -66,7 +72,7 @@ class TestOrderPaymentAdminRefund(BluebottleTestCase):
         request.user = MockUser([])
 
         with mock.patch.object(self.order_payment_admin, 'message_user') as message_mock:
-            with mock.patch.object(DocdataPaymentAdapter, 'refund_payment') as refund_mock:
+            with mock.patch.object(DocdataClient, 'refund') as refund_mock:
                 response = self.order_payment_admin.refund(request, self.order_payment.pk)
 
                 self.assertEqual(response.status_code, 403)
@@ -79,7 +85,7 @@ class TestOrderPaymentAdminRefund(BluebottleTestCase):
         request.user = MockUser(['payments.refund_orderpayment'])
 
         with mock.patch.object(self.order_payment_admin, 'message_user') as message_mock:
-            with mock.patch.object(DocdataPaymentAdapter, 'refund_payment') as refund_mock:
+            with mock.patch.object(DocdataClient, 'refund') as refund_mock:
                 response = self.order_payment_admin.refund(request, self.order_payment.pk)
 
                 self.assertEqual(response.status_code, 403)

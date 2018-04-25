@@ -2,7 +2,7 @@ from collections import OrderedDict
 import csv
 import logging
 import six
-from decimal import InvalidOperation
+from decimal import InvalidOperation, DivisionByZero
 
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
 from django.contrib.admin.widgets import AdminTextareaWidget
@@ -16,7 +16,7 @@ from polymorphic.admin.inlines import StackedPolymorphicInline
 from bluebottle.payments.adapters import has_payment_prodiver
 from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.projects.models import (
-    ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn,
+    ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn, ProjectLocation,
     CustomProjectField, CustomProjectFieldSettings, ProjectCreateTemplate)
 from bluebottle.tasks.models import Skill
 from django import forms
@@ -32,6 +32,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from daterange_filter.filter import DateRangeFilter
 from django_summernote.widgets import SummernoteWidget
+from moneyed.classes import Money
 from sorl.thumbnail.admin import AdminImageMixin
 from schwifty import IBAN, BIC
 
@@ -333,6 +334,13 @@ class ProjectAddOnInline(StackedPolymorphicInline):
         return instances
 
 
+class ProjectLocationInline(admin.StackedInline):
+    model = ProjectLocation
+    readonly_fields = (
+        'city', 'postal_code', 'street', 'neighborhood', 'country',
+    )
+
+
 class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):
     form = ProjectAdminForm
     date_hierarchy = 'created'
@@ -356,6 +364,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         TaskAdminInline,
         ProjectDocumentInline,
         ProjectPhaseLogInline,
+        ProjectLocationInline,
 
     )
 
@@ -444,7 +453,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         try:
             percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
             return "{0} %".format(percentage)
-        except (AttributeError, InvalidOperation):
+        except (AttributeError, InvalidOperation, DivisionByZero):
             return '-'
 
     def expertise_based(self, obj):
@@ -522,7 +531,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if not request.user.has_perm('payments.refund_orderpayment') or not project.can_refund:
             return HttpResponseForbidden('Missing permission: payments.refund_orderpayment')
 
+        project.status = ProjectPhase.objects.get(slug='refunded')
+        project.save()
+
         refund_project.delay(connection.tenant, project)
+
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)
 
@@ -569,7 +582,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     amount_donated_i18n.short_description = _('Amount Donated')
 
     def amount_needed_i18n(self, obj):
-        return obj.amount_needed
+        amount_needed = obj.amount_needed - obj.amount_extra
+        if amount_needed.amount > 0:
+            return amount_needed
+        else:
+            return Money(0, obj.amount_asked.currency)
 
     amount_needed_i18n.short_description = _('Amount Needed')
 
@@ -578,7 +595,9 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         fields = [
             'created', 'updated',
             'vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
-            'popularity', 'payout_status']
+            'popularity', 'payout_status',
+            'geocoding'
+        ]
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status', )
         return fields
@@ -648,8 +667,9 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         details = (_('Details'), {'fields': (
             'language', 'theme', 'categories',
-            'image', 'video_url', 'country', 'latitude',
-            'longitude', 'location', 'place')})
+            'image', 'video_url', 'country',
+            'location', 'place',
+        )})
 
         goal = (_('Goal'), {'fields': (
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
@@ -729,6 +749,7 @@ class ProjectPlatformSettingsAdminForm(forms.ModelForm):
         widgets = {
             'create_types': forms.CheckboxSelectMultiple,
             'contact_types': forms.CheckboxSelectMultiple,
+            'share_options': forms.CheckboxSelectMultiple,
         }
     extra = 0
 

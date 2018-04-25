@@ -26,6 +26,16 @@
                         <td>{% trans "Order" %}</td>
                         <td>{{donation.order.id}}</td>
                     </tr>
+                    <tr class="order-block">
+                        <td>{% trans "Recipient" %}</td>
+                        <td>{{donation.project.owner.full_name}}</td>
+                    </tr>
+                    {% if donation.project.organization %}
+                    <tr class="order-block">
+                        <td>{% trans "Organization" %}</td>
+                        <td>{{donation.project.organization.name}}</td>
+                    </tr>
+                    {% endif %}
                 </table>
             </td>
         </tr>

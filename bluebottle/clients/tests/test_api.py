@@ -62,7 +62,7 @@ class ClientSettingsTestCase(BluebottleTestCase):
         'restricted_countries': ('NL', ),
         'supports_recurring': False,
         'currencies': {
-            'EUR': {'min_amount': 5, 'max_amount': 100}
+            'EUR': {'max_amount': 100}
         }
     }, {
         'provider': 'docdata',
@@ -120,7 +120,7 @@ class ClientSettingsTestCase(BluebottleTestCase):
                     'code': 'EUR',
                     'name': u'Euro',
                     'rate': Decimal(1.5),
-                    'minAmount': 5
+                    'minAmount': 0
                 }
             ]
         )

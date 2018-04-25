@@ -750,6 +750,7 @@ class ProjectPlatformSettingsAdminForm(forms.ModelForm):
             'create_types': CheckboxSelectMultipleWidget,
             'contact_types': CheckboxSelectMultipleWidget,
             'share_options': CheckboxSelectMultipleWidget,
+            'share_options': forms.CheckboxSelectMultiple,
         }
     extra = 0
 

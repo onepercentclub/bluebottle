@@ -1,8 +1,12 @@
+import csv
 from datetime import timedelta, datetime
 import json
+from StringIO import StringIO
 from random import randint
+from urllib import urlencode
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.signing import TimestampSigner
 from django.test import RequestFactory
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
@@ -24,6 +28,7 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.geo import CountryFactory, LocationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectDocumentFactory
 from bluebottle.test.factory_models.tasks import (
@@ -34,6 +39,7 @@ from bluebottle.test.factory_models.wallposts import (
     MediaWallpostFactory, MediaWallpostPhotoFactory,
     TextWallpostFactory)
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import StatusDefinition
 
 from ..models import Project
 
@@ -794,6 +800,51 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
         self.assertEqual(data['count'], 2)
 
 
+@httmock.urlmatch(netloc='maps.googleapis.com')
+def geocode_mock(url, request):
+    return json.dumps({
+        'results': [{
+            'geometry': {
+                'location': {'lat': 52.3721249, 'lng': 4.9070198},
+                'viewport': {
+                    'northeast': {'lat': 52.37347388029149, 'lng': 4.908368780291502},
+                    'southwest': {'lat': 52.37077591970849, 'lng': 4.905670819708497}
+                },
+                'location_type': 'ROOFTOP'
+            },
+            'place_id': u'ChIJMW3CZ7sJxkcRyhrLgJ6WbMk',
+            'address_components': [{
+                'long_name': '10', 'types': ['street_number'], 'short_name': '10'
+            }, {
+                'long_name': "'s-Gravenhekje", 'types': ['route'], 'short_name': "'s-Gravenhekje"
+            }, {
+                'long_name': 'Amsterdam-Centrum',
+                'types': ['political', 'sublocality', 'sublocality_level_1'],
+                'short_name': 'Amsterdam-Centrum'
+            }, {
+                'long_name': u'Amsterdam',
+                'types': ['locality', 'political'], 'short_name': 'Amsterdam'
+            }, {
+                'long_name': 'Amsterdam',
+                'types': ['administrative_area_level_2', 'political'],
+                'short_name': 'Amsterdam'
+            }, {
+                'long_name': 'Noord-Holland',
+                'types': ['administrative_area_level_1', 'political'],
+                'short_name': u'NH'
+            }, {
+                'long_name': 'Netherlands',
+                'types': [u'country', u'political'],
+                'short_name': u'NL'
+            }, {
+                'long_name': '1011 TG', 'types': [u'postal_code'], 'short_name': u'1011 TG'
+            }],
+            'types': ['street_address'],
+        }],
+        'status': 'OK'
+    })
+
+
 class ProjectManageApiIntegrationTest(BluebottleTestCase):
     """
     Integration tests for the Project API.
@@ -818,7 +869,10 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.manage_projects_url = reverse('project_manage_list')
         self.manage_budget_lines_url = reverse('project-budgetline-list')
         self.manage_project_document_url = reverse('manage-project-document-list')
+
         self.some_photo = './bluebottle/projects/test_images/upload.png'
+
+        self.signer = TimestampSigner()
 
     def test_project_create(self):
         """
@@ -831,9 +885,14 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.data['count'], 0)
 
         # Let's throw a pitch (create a project really)
-        response = self.client.post(self.manage_projects_url,
-                                    {'title': 'This is my smart idea', 'story': ''},
-                                    token=self.some_user_token)
+        response = self.client.post(
+            self.manage_projects_url,
+            {
+                'title': 'This is my smart idea',
+                'story': '',
+            },
+            token=self.some_user_token
+        )
         self.assertEquals(
             response.status_code, status.HTTP_201_CREATED, response)
         self.assertEquals(response.data['title'], 'This is my smart idea')
@@ -841,7 +900,8 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         # Check that it's there, in pitch phase, has got a pitch but no plan
         # yet.
         response = self.client.get(
-            self.manage_projects_url, token=self.some_user_token)
+            self.manage_projects_url, token=self.some_user_token
+        )
         self.assertEquals(response.data['count'], 1)
         self.assertEquals(
             response.data['results'][0]['status'], self.phase_plan_new.id)
@@ -913,7 +973,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         project_data['slug'] = 'a-new-slug-should-not-be-possible'
         response_2 = self.client.put(project_url, project_data,
                                      token=self.another_user_token)
-        print(response_2.content)
         self.assertEquals(response_2.data['detail'],
                           'You do not have permission to perform this action.')
         self.assertEquals(response_2.status_code, 403)
@@ -949,6 +1008,141 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         response = self.client.get(project_url, token=self.some_user_token)
         self.assertEquals(
             response.status_code, status.HTTP_403_FORBIDDEN, response)
+
+    @override_settings(MAPS_API_KEY='somekey')
+    def test_project_create_location(self):
+        """
+        Tests for Project Create
+        """
+
+        # Check that a new user doesn't have any projects to manage
+        response = self.client.get(
+            self.manage_projects_url, token=self.some_user_token)
+        self.assertEquals(response.data['count'], 0)
+
+        with httmock.HTTMock(geocode_mock):
+            response = self.client.post(
+                self.manage_projects_url,
+                {
+                    'title': 'This is my smart idea',
+                    'story': '',
+                    'latitude': 52.389745,
+                    'longitude': 4.8863362,
+                },
+                token=self.some_user_token
+            )
+        self.assertEquals(
+            response.status_code, status.HTTP_201_CREATED, response)
+        self.assertEquals(response.data['title'], 'This is my smart idea')
+        self.assertEquals(response.data['latitude'], 52.389745)
+        self.assertEquals(response.data['longitude'], 4.8863362)
+
+        self.assertEquals(
+            response.data['project_location']['street'],
+            "'s-Gravenhekje"
+        )
+        self.assertEquals(
+            response.data['project_location']['city'],
+            "Amsterdam"
+        )
+
+    @override_settings(MAPS_API_KEY='somekey')
+    def test_project_update_location(self):
+        """
+        Tests for Project Create
+        """
+        response = self.client.post(
+            self.manage_projects_url,
+            {
+                'title': 'This is my smart idea',
+                'story': '',
+                'latitude': None,
+                'longitude': None
+            },
+            token=self.some_user_token
+        )
+
+        project_detail_url = reverse(
+            'project_manage_detail', kwargs={'slug': response.data['slug']}
+        )
+
+        # Let's throw a pitch (create a project really)
+        with httmock.HTTMock(geocode_mock):
+            response = self.client.put(
+                project_detail_url,
+                {
+                    'title': 'This is my even smarter idea',
+                    'story': '',
+                    'latitude': 52.389745,
+                    'longitude': 4.8863362,
+                },
+                token=self.some_user_token
+            )
+        self.assertEquals(
+            response.status_code, status.HTTP_200_OK, response)
+        self.assertEquals(response.data['title'], 'This is my even smarter idea')
+        self.assertEquals(response.data['latitude'], 52.389745)
+        self.assertEquals(response.data['longitude'], 4.8863362)
+        self.assertEquals(
+            response.data['project_location']['street'],
+            "'s-Gravenhekje"
+        )
+        self.assertEquals(
+            response.data['project_location']['city'],
+            "Amsterdam"
+        )
+        self.assertEquals(
+            response.data['project_location']['neighborhood'],
+            "Amsterdam-Centrum"
+        )
+
+    @override_settings(MAPS_API_KEY='somekey')
+    def test_project_set_location(self):
+        """
+        Tests for Project Create
+        """
+        response = self.client.post(
+            self.manage_projects_url,
+            {
+                'title': 'This is my smart idea',
+                'story': '',
+            },
+            token=self.some_user_token
+        )
+
+        project_detail_url = reverse(
+            'project_manage_detail', kwargs={'slug': response.data['slug']}
+        )
+
+        # Let's throw a pitch (create a project really)
+        with httmock.HTTMock(geocode_mock):
+            response = self.client.put(
+                project_detail_url,
+                {
+                    'title': 'This is my even smarter idea',
+                    'story': '',
+                    'latitude': 52.389745,
+                    'longitude': 4.8863362,
+                },
+                token=self.some_user_token
+            )
+        self.assertEquals(
+            response.status_code, status.HTTP_200_OK, response)
+        self.assertEquals(response.data['title'], 'This is my even smarter idea')
+        self.assertEquals(response.data['latitude'], 52.389745)
+        self.assertEquals(response.data['longitude'], 4.8863362)
+        self.assertEquals(
+            response.data['project_location']['street'],
+            "'s-Gravenhekje"
+        )
+        self.assertEquals(
+            response.data['project_location']['city'],
+            "Amsterdam"
+        )
+        self.assertEquals(
+            response.data['project_location']['neighborhood'],
+            "Amsterdam-Centrum"
+        )
 
     @override_settings(PROJECT_CREATE_TYPES=['sourcing'])
     def test_project_type(self):
@@ -1068,9 +1262,9 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         file_url = reverse('project-document-file', args=[document.pk])
         response = self.client.get(file_url)
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 404)
 
-    def test_project_document_download_author(self):
+    def test_project_document_download_signed(self):
         project = ProjectFactory(owner=self.some_user)
         document = ProjectDocumentFactory.create(
             author=self.some_user,
@@ -1078,22 +1272,47 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             file='private/projects/documents/test.jpg'
         )
         file_url = reverse('project-document-file', args=[document.pk])
-        response = self.client.get(file_url, token=self.some_user_token)
+        signature = self.signer.sign(file_url)
+        response = self.client.get(
+            '{}?{}'.format(file_url, urlencode({'signature': signature})),
+            token=self.some_user_token
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
         )
 
-    def test_project_document_download_non_author(self):
+    def test_project_document_download_no_signature(self):
+        project = ProjectFactory(owner=self.some_user)
         document = ProjectDocumentFactory.create(
             author=self.some_user,
+            project=project,
             file='private/projects/documents/test.jpg'
         )
         file_url = reverse('project-document-file', args=[document.pk])
-        response = self.client.get(file_url, token=self.another_user_token)
+        response = self.client.get(
+            file_url,
+            token=self.some_user_token
+        )
 
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
+
+    def test_project_document_download_invalid_signature(self):
+        project = ProjectFactory(owner=self.some_user)
+        document = ProjectDocumentFactory.create(
+            author=self.some_user,
+            project=project,
+            file='private/projects/documents/test.jpg'
+        )
+        file_url = reverse('project-document-file', args=[document.pk])
+        signature = 'bla:bli'
+        response = self.client.get(
+            '{}?{}'.format(file_url, urlencode({'signature': signature})),
+            token=self.some_user_token
+        )
+
+        self.assertEqual(response.status_code, 404)
 
     def test_project_document_delete_author(self):
         project = ProjectFactory(owner=self.some_user)
@@ -1114,36 +1333,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         )
         file_url = reverse('manage-project-document-detail', args=[document.pk])
         response = self.client.delete(file_url, token=self.another_user_token)
-
-        self.assertEqual(response.status_code, 403)
-
-    def test_project_document_staff_session_user(self):
-        self.another_user.groups.add(
-            Group.objects.get(name='Staff')
-        )
-        self.another_user.save()
-
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        self.client.force_login(self.another_user)
-        response = self.client.get(file_url)
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
-        )
-
-    def test_project_document_non_staff_session_user(self):
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        self.client.force_login(self.another_user)
-        response = self.client.get(file_url)
 
         self.assertEqual(response.status_code, 403)
 
@@ -2493,6 +2682,7 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
             contact_types=['organization'],
             create_flow='choice',
             create_types=["funding", "sourcing"],
+            share_options=["twitter", "facebook"],
             allow_anonymous_rewards=False
         )
 
@@ -2516,6 +2706,7 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['projects']['contact_types'], ['organization'])
         self.assertEqual(response.data['platform']['projects']['create_flow'], 'choice')
         self.assertEqual(response.data['platform']['projects']['create_types'], ["funding", "sourcing"])
+        self.assertEqual(response.data['platform']['projects']['share_options'], ["facebook", "twitter"])
 
         self.assertEqual(response.data['platform']['projects']['filters'][0]['name'], 'location')
         self.assertEqual(response.data['platform']['projects']['filters'][0]['values'], None)
@@ -2561,3 +2752,126 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(template['default_amount_asked'], {'currency': 'EUR', 'amount': 1500.00})
         self.assertEqual(len(template['image']), 4)
         self.assertEqual(template['default_title'], 'Sample project title')
+
+
+class ProjectSupportersExportTest(BluebottleTestCase):
+    """
+    Tests for the Project supporters export permissions.
+    """
+    def setUp(self):
+        super(ProjectSupportersExportTest, self).setUp()
+        self.init_projects()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.project = ProjectFactory.create(owner=self.owner)
+
+        reward = RewardFactory.create(project=self.project)
+
+        for order_type in ('one-off', 'recurring', 'one-off'):
+            order = OrderFactory.create(
+                status=StatusDefinition.SUCCESS,
+                order_type=order_type
+            )
+            self.donation = DonationFactory.create(
+                amount=Money(1000, 'EUR'),
+                order=order,
+                project=self.project,
+                fundraiser=None,
+                reward=reward
+            )
+
+        self.supporters_export_url = reverse(
+            'project-supporters-export', kwargs={'slug': self.project.slug}
+        )
+        self.project_url = reverse(
+            'project_detail', kwargs={'slug': self.project.slug})
+
+    def test_owner(self):
+        # view allowed
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='export_supporters')
+        )
+
+        detail_response = self.client.get(
+            self.project_url, token=self.owner_token
+        )
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertTrue(
+            detail_response.data['supporters_export_url']['url'].startswith(
+                self.supporters_export_url
+            )
+        )
+        response = self.client.get(
+            detail_response.data['supporters_export_url']['url']
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['Content-Type'], 'text/csv'
+        )
+
+        self.assertEqual(
+            response['Content-Disposition'],
+            'attachment; filename="supporters.csv"'
+        )
+
+        reader = csv.DictReader(StringIO(response.content))
+        results = [result for result in reader]
+        self.assertEqual(len(results), 2)
+        for row in results:
+            for field in ('Reward', 'Donation Date', 'Email', 'Name'):
+                self.assertTrue(field in row)
+
+    def test_owner_no_permission(self):
+        detail_response = self.client.get(
+            self.project_url, token=self.owner_token
+        )
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertIsNone(
+            detail_response.data['supporters_export_url']
+        )
+
+    def test_non_owner(self):
+        authenticated = Group.objects.get(name='Authenticated')
+        authenticated.permissions.add(
+            Permission.objects.get(codename='export_supporters')
+        )
+
+        # view allowed
+        detail_response = self.client.get(
+            self.project_url,
+            token="JWT {0}".format(
+                BlueBottleUserFactory.create().get_jwt_token()
+            )
+        )
+
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertIsNone(
+            detail_response.data.get('supporters_export_url')
+        )
+
+    def test_no_signature(self):
+        # view not allowed
+        response = self.client.get(
+            self.supporters_export_url
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_invalid_signature(self):
+        # view not allowed
+        response = self.client.get(
+            '{}?{}'.format(
+                self.supporters_export_url,
+                urlencode({'signature': 'blabla:blabla'})
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_does_not_exist(self):
+        # view allowed
+        response = self.client.get(
+            self.supporters_export_url + 'does-not-exist',
+        )
+        self.assertEqual(response.status_code, 404)

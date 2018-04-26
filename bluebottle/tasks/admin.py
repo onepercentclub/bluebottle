@@ -92,8 +92,9 @@ class TaskMemberAdminInline(admin.TabularInline):
     model = TaskMember
     extra = 0
     raw_id_fields = ('member',)
-    readonly_fields = ('motivation', 'resume_link')
-    fields = ('member', 'status', 'time_spent', 'externals', 'motivation', 'resume_link')
+    readonly_fields = ('created', 'resume_link')
+    fields = readonly_fields + ('member', 'status', 'motivation',
+                                'time_spent', 'externals')
 
     def resume_link(self, obj):
         return resume_link(obj)

@@ -4,7 +4,6 @@ from django.core.management.base import BaseCommand
 
 from bluebottle.orders.models import Order
 from bluebottle.clients.models import Client
-
 from bluebottle.clients.utils import LocalTenant
 
 

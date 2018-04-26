@@ -1,11 +1,10 @@
 from django.contrib import admin
 
-from django_singleton_admin.admin import SingletonAdmin
-
 from bluebottle.mails.models import MailPlatformSettings
+from bluebottle.utils.admin import BasePlatformSettingsAdmin
 
 
-class MailPlatformSettingsAdmin(SingletonAdmin):
+class MailPlatformSettingsAdmin(BasePlatformSettingsAdmin):
     pass
 
 

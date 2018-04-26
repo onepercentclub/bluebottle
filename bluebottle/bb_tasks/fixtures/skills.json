@@ -1,242 +1,752 @@
 [
-  {
-    "pk": 1,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "- No specific skill needed -"
+    {
+        "pk": 1, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 2, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 3, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 4, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 5, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 6, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 7, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 8, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 9, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 10, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 11, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 12, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 13, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 14, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 15, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 16, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 17, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 18, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 19, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 20, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 21, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 22, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 23, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 24, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 25, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 26, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 27, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 28, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 29, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 30, 
+        "model": "tasks.skill", 
+        "fields": {}
+    }, 
+    {
+        "pk": 0, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 1, 
+            "name": "- Geen specifieke vaardigheid nodig -", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 1, 
+            "name": "- No specific skill needed -", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 2, 
+            "name": "Natuur & Milieu", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 2, 
+            "name": "Agriculture", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 3, 
+            "name": "Architectuur / Bouwkunde", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 3, 
+            "name": "Architecture / Engineering", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 4, 
+            "name": "Brainstormen", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 4, 
+            "name": "Brainstorming", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 5, 
+            "name": "Business", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 9, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 5, 
+            "name": "Business", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 10, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 6, 
+            "name": "Buurtparticipatie", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 11, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 6, 
+            "name": "Community Engagement", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 12, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 7, 
+            "name": "Computer / ICT", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 13, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 7, 
+            "name": "Computer / ICT", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 14, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 8, 
+            "name": "Tekst schrijven / Bloggen", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 15, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 8, 
+            "name": "Copy writing / Blogging", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 16, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 9, 
+            "name": "Design", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 17, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 9, 
+            "name": "Design", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 18, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 10, 
+            "name": "Onderwijs / Trainingen", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 19, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 10, 
+            "name": "Education / Training", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 20, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 11, 
+            "name": "Financi\u00ebn", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 21, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 11, 
+            "name": "Finance", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 22, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 12, 
+            "name": "Fundraisen", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 23, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 12, 
+            "name": "Fundraising", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 24, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 13, 
+            "name": "Feedback geven", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 25, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 13, 
+            "name": "Giving feedback", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 26, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 14, 
+            "name": "Gezondheidszorg", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 27, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 14, 
+            "name": "Health care", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 28, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 15, 
+            "name": "HRM", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 29, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 15, 
+            "name": "HRM", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 30, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 16, 
+            "name": "Rechten / Politiek", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 31, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 16, 
+            "name": "Law / politics", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 32, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 17, 
+            "name": "Logistiek", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 33, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 17, 
+            "name": "Logistics", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 34, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 18, 
+            "name": "Marketing / PR", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 35, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 18, 
+            "name": "Marketing / PR", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 36, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 19, 
+            "name": "Foto / Video", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 37, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 19, 
+            "name": "Photo / Video", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 38, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 20, 
+            "name": "Presentaties", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 39, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 20, 
+            "name": "Presentations", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 40, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 21, 
+            "name": "Project Management", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 41, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 21, 
+            "name": "Project Management", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 42, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 22, 
+            "name": "Onderzoek", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 43, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 22, 
+            "name": "Research", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 44, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 23, 
+            "name": "Sociale Media", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 45, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 23, 
+            "name": "Social media", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 46, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 24, 
+            "name": "Sport", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 47, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 24, 
+            "name": "Sports", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 48, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 25, 
+            "name": "Duurzaamheid", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 49, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 25, 
+            "name": "Sustainability", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 50, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 26, 
+            "name": "Toerisme", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 51, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 26, 
+            "name": "Tourism", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 52, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 27, 
+            "name": "Vertalingen", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 53, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 27, 
+            "name": "Translations", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 54, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 28, 
+            "name": "Web Ontwikkeling", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 55, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 28, 
+            "name": "Web Development", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 56, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 29, 
+            "name": "Voorstellen schrijven", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 57, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 29, 
+            "name": "Writing proposals", 
+            "language_code": "en"
+        }
+    }, 
+    {
+        "pk": 58, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 30, 
+            "name": "Coachen", 
+            "language_code": "nl"
+        }
+    }, 
+    {
+        "pk": 59, 
+        "model": "tasks.skilltranslation", 
+        "fields": {
+            "description": "", 
+            "master": 30, 
+            "name": "Coaching", 
+            "language_code": "en"
+        }
     }
-  },
-  {
-    "pk": 2,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Agriculture"
-    }
-  },
-  {
-    "pk": 3,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Architecture / Engineering"
-    }
-  },
-  {
-    "pk": 4,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Brainstorming"
-    }
-  },
-  {
-    "pk": 5,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Business"
-    }
-  },
-  {
-    "pk": 6,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Community Engagement"
-    }
-  },
-  {
-    "pk": 7,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Computer / ICT"
-    }
-  },
-  {
-    "pk": 8,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Copy writing / Blogging"
-    }
-  },
-  {
-    "pk": 9,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Design"
-    }
-  },
-  {
-    "pk": 10,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Education / Training"
-    }
-  },
-  {
-    "pk": 11,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Finance"
-    }
-  },
-  {
-    "pk": 12,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Fundraising"
-    }
-  },
-  {
-    "pk": 13,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Giving feedback"
-    }
-  },
-  {
-    "pk": 14,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Health care"
-    }
-  },
-  {
-    "pk": 15,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "HRM"
-    }
-  },
-  {
-    "pk": 16,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Law / politics"
-    }
-  },
-  {
-    "pk": 17,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Logistics"
-    }
-  },
-  {
-    "pk": 18,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Marketing / PR"
-    }
-  },
-  {
-    "pk": 19,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Photo / Video"
-    }
-  },
-  {
-    "pk": 20,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Presentations"
-    }
-  },
-  {
-    "pk": 21,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Project Management"
-    }
-  },
-  {
-    "pk": 22,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Research"
-    }
-  },
-  {
-    "pk": 23,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Social media"
-    }
-  },
-  {
-    "pk": 24,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Sports"
-    }
-  },
-  {
-    "pk": 25,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Sustainability"
-    }
-  },
-  {
-    "pk": 26,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Tourism"
-    }
-  },
-  {
-    "pk": 27,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Translations"
-    }
-  },
-  {
-    "pk": 28,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Web Development"
-    }
-  },
-  {
-    "pk": 29,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Writing proposals"
-    }
-  },
-  {
-    "pk": 30,
-    "model": "tasks.skill",
-    "fields": {
-      "description": "",
-      "name": "Coaching"
-    }
-  }
 ]

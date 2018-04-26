@@ -9,6 +9,7 @@ from django.utils.timezone import now
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
+from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
@@ -16,16 +17,19 @@ from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition
 
 
-class ProjectTheme(models.Model):
+class ProjectTheme(TranslatableModel):
 
     """ Themes for Projects. """
 
     # The name is marked as unique so that users can't create duplicate
     # theme names.
-    name = models.CharField(_('name'), max_length=100, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
-    description = models.TextField(_('description'), blank=True)
     disabled = models.BooleanField(_('disabled'), default=False)
+
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=100),
+        description=models.TextField(_('description'), blank=True)
+    )
 
     def __unicode__(self):
         return self.name
@@ -37,7 +41,7 @@ class ProjectTheme(models.Model):
         super(ProjectTheme, self).save(**kwargs)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['slug']
         verbose_name = _('project theme')
         verbose_name_plural = _('project themes')
         permissions = (
@@ -45,13 +49,11 @@ class ProjectTheme(models.Model):
         )
 
 
-class ProjectPhase(models.Model):
+class ProjectPhase(TranslatableModel):
 
     """ Phase of a project """
 
     slug = models.SlugField(max_length=200, unique=True)
-    name = models.CharField(max_length=100, unique=True)
-    description = models.CharField(max_length=400, blank=True)
     sequence = models.IntegerField(unique=True,
                                    help_text=_('For ordering phases.'))
 
@@ -71,6 +73,11 @@ class ProjectPhase(models.Model):
                                                      'select between these '
                                                      'phases'))
 
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=100),
+        description=models.TextField(_('description'), blank=True)
+    )
+
     class Meta():
         ordering = ['sequence']
         permissions = (
@@ -78,7 +85,7 @@ class ProjectPhase(models.Model):
         )
 
     def __unicode__(self):
-        return u'{0} - {1}'.format(self.sequence, _(self.name))
+        return u'{0} - {1}'.format(self.sequence, self.name)
 
     def save(self, *args, **kwargs):
         if not self.slug:

@@ -160,5 +160,8 @@ class Member(BlueBottleBaseUser):
 
         return initials
 
+    def __unicode__(self):
+        return self.full_name if self.full_name else self.email
+
 
 import signals # noqa

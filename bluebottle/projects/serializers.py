@@ -44,6 +44,8 @@ class ProjectPhaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectPhase
 
+        fields = ('id', 'slug', 'name', 'description', 'sequence', 'active', 'editable', 'viewable', 'owner_editable', )
+
 
 class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:

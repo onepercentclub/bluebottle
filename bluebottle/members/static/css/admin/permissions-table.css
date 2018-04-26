@@ -1,0 +1,5 @@
+.aligned label {
+    display: inline;
+    float: none;
+    width: auto;
+}

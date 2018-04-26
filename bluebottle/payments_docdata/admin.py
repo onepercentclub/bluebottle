@@ -87,6 +87,9 @@ class DocdataPaymentAdmin(AbstractDocdataPaymentAdmin):
     fields = ('status',) + readonly_fields
 
 
+admin.site.register(DocdataPayment, DocdataPaymentAdmin)
+
+
 class DocdataDirectdebitPaymentAdmin(AbstractDocdataPaymentAdmin):
     model = DocdataDirectdebitPayment
 
@@ -97,3 +100,6 @@ class DocdataDirectdebitPaymentAdmin(AbstractDocdataPaymentAdmin):
         'account_city')
 
     fields = readonly_fields
+
+
+admin.site.register(DocdataDirectdebitPayment, DocdataDirectdebitPaymentAdmin)

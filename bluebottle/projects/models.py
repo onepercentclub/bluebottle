@@ -61,6 +61,10 @@ class ProjectLocation(models.Model):
         _('longitude'), max_digits=21, decimal_places=18
     )
 
+    class Meta:
+        verbose_name = _('Location')
+        verbose_name_plural = _('Location')
+
 
 class ProjectPhaseLog(models.Model):
     project = models.ForeignKey('projects.Project')
@@ -561,6 +565,13 @@ class Project(BaseProject, PreviousStatusMixin):
             self.status.slug in ('done-incomplete', 'closed')
         )
 
+    @property
+    def days_left(self):
+        delta = (self.deadline - now()).days
+        if delta < 0:
+            delta = 0
+        return delta
+
     def get_absolute_url(self):
         """ Get the URL for the current project. """
         return 'https://{}/projects/{}'.format(properties.tenant.domain_url, self.slug)
@@ -615,8 +626,8 @@ class Project(BaseProject, PreviousStatusMixin):
         data = {
             "Project": self.title,
             "Owner": self.owner.email,
-            "old_status": old_status.name,
-            "new_status": new_status.name
+            "old_status": old_status.slug,
+            "new_status": new_status.slug
         }
 
         if old_status.slug in ('plan-new',

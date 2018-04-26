@@ -198,6 +198,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['djmoney_rates.change_ratesource']
             },
             {
+                'name': 'geo.country',
+                'permissions': ['geo.change_country']
+            },
+            {
                 'name': 'utils.language',
                 'permissions': ['utils.change_language']
             },

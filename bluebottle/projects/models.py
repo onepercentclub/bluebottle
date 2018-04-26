@@ -62,8 +62,8 @@ class ProjectLocation(models.Model):
     )
 
     class Meta:
-        verbose_name = _('Location')
-        verbose_name_plural = _('Location')
+        verbose_name = _('Map')
+        verbose_name_plural = _('Map')
 
 
 class ProjectPhaseLog(models.Model):

@@ -427,7 +427,7 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
 
         # self.project = self.create_project(owner=self.user_a)
 
-        self.theme_1 = ProjectTheme.objects.get(name='Education')
+        self.theme_1 = ProjectTheme.objects.get(translations__name='Education')
         self.phase_1 = ProjectPhase.objects.get(slug='campaign')
 
         self.project_1 = ProjectFactory.create(

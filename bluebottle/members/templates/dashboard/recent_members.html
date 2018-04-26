@@ -1,0 +1,25 @@
+{% load i18n %}
+{% block module_content %}
+<ul style="line-height: 1.5em;">
+    {% spaceless %}
+    {% for member in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <span class="float-right" style="text-align: right" title="Date submitted">
+            {{ member.date_joined|date }}<br>
+        </span>
+        <a href="{% url 'admin:members_member_change' member.id %}" >{{ member.full_name }}</a>
+        <br>
+        {{ member.username }}
+        <br>
+
+        {% if member.location %}
+            {{ member.location }}
+        {% else %}
+            {{ member.country }}
+        {% endif %}
+
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

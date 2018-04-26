@@ -5,9 +5,12 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, connection
 from django.db.models import Sum
 from django.utils import timezone
+from django.utils.timezone import now
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
+
+from parler.models import TranslatableModel, TranslatedFields
 
 from bluebottle.utils.models import MailLog
 from tenant_extras.utils import TenantLanguage
@@ -54,7 +57,7 @@ class Task(models.Model, PreviousStatusMixin):
                               max_length=20,
                               choices=TaskStatuses.choices,
                               default=TaskStatuses.open)
-    type = models.CharField(_('type'),
+    type = models.CharField(_('ongoing / event'),
                             max_length=20,
                             choices=TaskTypes.choices,
                             default=TaskTypes.ongoing)
@@ -64,20 +67,20 @@ class Task(models.Model, PreviousStatusMixin):
                                  choices=TaskAcceptingChoices.choices,
                                  default=TaskAcceptingChoices.manual)
 
-    needs_motivation = models.BooleanField(_('Needs motivation'),
+    needs_motivation = models.BooleanField(_('needs motivation'),
                                            default=False,
                                            help_text=_('Indicates if a task candidate needs to submit a motivation'))
 
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
-    deadline_to_apply = models.DateTimeField(_('Deadline to apply'), help_text=_('Deadline to apply'))
+    deadline_to_apply = models.DateTimeField(_('deadline to apply'), help_text=_('Deadline to apply'))
 
     objects = UpdateSignalsQuerySet.as_manager()
 
     # required resources
-    time_needed = models.FloatField(_('time_needed'),
+    time_needed = models.FloatField(_('time needed'),
                                     help_text=_('Estimated number of hours needed to perform this task.'))
 
-    skill = models.ForeignKey('tasks.Skill', verbose_name=_('Skill needed'), null=True)
+    skill = models.ForeignKey('tasks.Skill', verbose_name=_('expertise'), null=True)
 
     # internal usage
     created = CreationDateTimeField(_('created'), help_text=_('When this task was created?'))
@@ -152,6 +155,13 @@ class Task(models.Model, PreviousStatusMixin):
             return queryset.get('time_spent', 0)
         else:
             return None
+
+    @property
+    def days_left(self):
+        delta = (self.deadline - now()).days
+        if delta < 0:
+            delta = 0
+        return delta
 
     @property
     def date_status_change(self):
@@ -276,20 +286,19 @@ class Task(models.Model, PreviousStatusMixin):
         )
 
 
-class Skill(models.Model):
-    name = models.CharField(_('english name'), max_length=100, unique=True)
-    description = models.TextField(_('description'), blank=True)
+class Skill(TranslatableModel):
     expertise = models.BooleanField(_('expertise'),
                                     help_text=_('Is this skill expertise based, or could anyone do it?'),
                                     default=True)
     disabled = models.BooleanField(_('disabled'), default=False)
 
-    @property
-    def localized_name(self):
-        return _(self.name)
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=100, ),
+        description=models.TextField(_('description'), blank=True)
+    )
 
     def __unicode__(self):
-        return unicode(self.localized_name)
+        return self.name
 
     class Meta:
         ordering = ('id',)

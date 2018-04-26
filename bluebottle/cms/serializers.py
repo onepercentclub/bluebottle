@@ -461,7 +461,13 @@ class HomePageSerializer(serializers.ModelSerializer):
         fields = ('id', 'blocks')
 
 
+class FaviconsSerializer(serializers.Serializer):
+    large = SorlImageField('194x194', source='*')
+    small = SorlImageField('32x32', source='*')
+
+
 class SitePlatformSettingsSerializer(serializers.ModelSerializer):
+    favicons = FaviconsSerializer(source='favicon')
 
     class Meta:
         model = SitePlatformSettings
@@ -471,5 +477,7 @@ class SitePlatformSettingsSerializer(serializers.ModelSerializer):
             'copyright',
             'powered_by_link',
             'powered_by_logo',
-            'powered_by_text'
+            'powered_by_text',
+            'logo',
+            'favicons'
         )

@@ -68,8 +68,9 @@ admin.site.register(SubRegion, SubRegionAdmin)
 
 class CountryAdmin(TranslatableAdmin):
     list_display = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
-    list_filter = ('oda_recipient', 'subregion__region', 'subregion')
+    list_filter = ('subregion__region', 'subregion')
     search_fields = ('name', 'alpha2_code', 'alpha3_code')
+    fields = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code', 'subregion')
 
 
 admin.site.register(Country, CountryAdmin)

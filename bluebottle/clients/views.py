@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-import time
-
-from django.utils.http import http_date
-
 from rest_framework import views, response
 
 from bluebottle.clients.utils import get_public_properties
@@ -21,5 +17,5 @@ class SettingsView(ExpiresMixin, views.APIView):
         """
         obj = get_public_properties(request)
         resp = response.Response(obj)
-        resp['Expires'] = http_date(time.time() + 300)
+        resp['cache-control'] = 'max-age=300'
         return resp

@@ -139,6 +139,7 @@ MIDDLEWARE_CLASSES = (
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
     'tenant_schemas.middleware.TenantMiddleware',
     'bluebottle.clients.middleware.TenantPropertiesMiddleware',
+    'django.middleware.cache.UpdateCacheMiddleware',
     'bluebottle.clients.middleware.MediaMiddleware',
     'tenant_extras.middleware.TenantLocaleMiddleware',
     'bluebottle.redirects.middleware.RedirectFallbackMiddleware',
@@ -156,6 +157,7 @@ MIDDLEWARE_CLASSES = (
     'django_tools.middlewares.ThreadLocal.ThreadLocalMiddleware',
     'bluebottle.auth.middleware.SlidingJwtTokenMiddleware',
     'bluebottle.auth.middleware.LogAuthFailureMiddleWare',
+    'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
 REST_FRAMEWORK = {

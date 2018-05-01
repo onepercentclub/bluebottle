@@ -269,7 +269,7 @@ class OwnerListViewMixin(object):
 class ExpiresMixin(object):
     def get(self, *args, **kwargs):
         response = super(ExpiresMixin, self).get(*args, **kwargs)
-        response['Expires'] = http_date(time.time() + 300)
+        response['cache-control'] = 'max-age=300'
 
         return response
 

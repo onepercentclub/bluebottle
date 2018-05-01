@@ -68,6 +68,12 @@ TENANT_APPS += (
     'bluebottle.payments_mock',
 )
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
+
 from bluebottle.payments_mock.settings import MOCK_PAYMENT_METHODS
 
 PAYMENT_METHODS = MOCK_PAYMENT_METHODS

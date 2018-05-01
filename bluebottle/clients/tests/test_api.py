@@ -31,7 +31,7 @@ class ClientSettingsTestCase(BluebottleTestCase):
     def test_expires(self):
         response = self.client.get(self.settings_url)
         expires = datetime(*parsedate(response['expires'])[:-2])
-        self.assertTrue((expires - datetime.now() ).seconds, 300)
+        self.assertTrue((expires - datetime.now()).seconds, 300)
 
     @override_settings(CLOSED_SITE=False, TOP_SECRET="*****", EXPOSED_TENANT_PROPERTIES=['closed_site'])
     def test_settings_show(self):

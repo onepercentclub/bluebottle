@@ -1,5 +1,4 @@
 from collections import namedtuple
-import time
 
 from django.conf import settings
 from django.core.signing import TimestampSigner, BadSignature
@@ -7,7 +6,6 @@ from django.http.response import HttpResponseNotFound, HttpResponse
 from django.http import Http404
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
-from django.utils.http import http_date
 from django.utils import translation
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
@@ -276,6 +274,3 @@ class ExpiresMixin(object):
         response['cache-control'] = 'max-age=300'
 
         return response
-
-
-

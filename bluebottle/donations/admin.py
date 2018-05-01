@@ -220,6 +220,9 @@ class DonationAdmin(admin.ModelAdmin):
     def order_type(self, obj):
         return obj.order.order_type
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     admin_project = link_to(
         lambda obj: obj.project,
         'admin:projects_project_change',

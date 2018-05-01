@@ -148,8 +148,12 @@ class TotalAmountAdminChangeList(ChangeList):
         total_column = self.model_admin.total_column or 'amount'
         currency_column = '{}_currency'.format(total_column)
 
-        totals = self.queryset.values(currency_column).annotate(total=Sum(total_column)).order_by(
-            '-{}'.format(total_column))
+        totals = self.queryset.values(
+            currency_column
+        ).annotate(
+            total=Sum(total_column)
+        ).order_by()
+
         amounts = [Money(total['total'], total[currency_column]) for total in totals]
         amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)

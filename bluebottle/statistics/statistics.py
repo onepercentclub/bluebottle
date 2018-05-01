@@ -23,8 +23,10 @@ class Statistics(object):
         self.start = start
         self.end = end
 
+    timeout = 3600
+
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def people_involved(self):
         """
         The (unique) total number of people that donated, fundraised, campaigned, or was a
@@ -108,7 +110,7 @@ class Statistics(object):
         return Q(**filter_args)
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def tasks_realized(self):
         """ Total number of realized tasks """
         """
@@ -134,7 +136,7 @@ class Statistics(object):
         return count
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def projects_realized(self):
         """ Total number of realized (done-complete and incomplete) projects """
         """
@@ -152,7 +154,9 @@ class Statistics(object):
         phase_logs = ProjectPhaseLog.objects.filter(
             self.date_filter('start')
         ).filter(
-            status__slug__in=['done-complete', 'done-incomplete', 'voting-done']
+            status__slug__in=['done-complete', 'done-incomplete', 'voting-done'],
+            project__status__slug__in=['done-complete', 'done-incomplete', 'voting-done'],
+
         ).distinct(
             'project__id'
         ).order_by(
@@ -161,14 +165,14 @@ class Statistics(object):
         return len(phase_logs)
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def projects_online(self):
         """ Total number of projects that have been in campaign mode"""
         return Project.objects.filter(self.date_filter('campaign_started'),
                                       status__slug__in=('voting', 'campaign')).count()
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def donated_total(self):
         """ Total amount donated to all projects"""
         donations = Donation.objects.filter(
@@ -185,12 +189,12 @@ class Statistics(object):
         return donated
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def votes_cast(self):
         return len(Vote.objects.filter(self.date_filter()))
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def time_spent(self):
         """ Total amount of time spent on realized tasks """
         logs = TaskMemberStatusLog.objects\
@@ -207,10 +211,14 @@ class Statistics(object):
         return count
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def amount_matched(self):
         """ Total amount matched on realized (done and incomplete) projects """
-        totals = Project.objects.values('amount_extra_currency').annotate(total=Sum('amount_extra'))
+        totals = Project.objects.filter(
+            self.date_filter('campaign_ended')
+        ).filter(
+            amount_extra__gt=0
+        ).values('amount_extra_currency').annotate(total=Sum('amount_extra'))
 
         amounts = [Money(total['total'], total['amount_extra_currency']) for total in totals]
         if totals:
@@ -219,7 +227,7 @@ class Statistics(object):
             return Money(0, properties.DEFAULT_CURRENCY)
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=timeout)
     def projects_complete(self):
         """ Total number of projects with the status complete """
         logs = ProjectPhaseLog.objects\
@@ -235,7 +243,7 @@ class Statistics(object):
         return count
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=timeout)
     def task_members(self):
         """ Total number of realized task members """
         logs = TaskMemberStatusLog.objects \
@@ -251,7 +259,7 @@ class Statistics(object):
         return count
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=timeout)
     def participants(self):
         """ Total numbers of participants (members that started a project, or where a realized task member) """
         project_owner_ids = Project.objects.filter(
@@ -273,7 +281,7 @@ class Statistics(object):
         return len(set(task_member_ids) | set(project_owner_ids))
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=timeout)
     def pledged_total(self):
         """ Total amount of pledged donations """
         donations = Donation.objects.filter(
@@ -290,7 +298,7 @@ class Statistics(object):
         return donated
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=timeout)
     def members(self):
         """ Total amount of members."""
         members = Member.objects.filter(

@@ -13,8 +13,8 @@ class CountryList(ExpiresMixin, generics.ListAPIView):
     queryset = Country.objects.all()
 
     def get_queryset(self):
-        return self.queryset.filter(alpha2_code__isnull=False).order_by(
-            'name').all()
+        return self.queryset.translated().filter(alpha2_code__isnull=False).order_by(
+            'translations__name').all()
 
 
 class CountryDetail(generics.RetrieveAPIView):

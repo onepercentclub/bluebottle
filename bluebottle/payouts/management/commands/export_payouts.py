@@ -1,6 +1,5 @@
 import json
 from django.core.management.base import BaseCommand
-from django.db import connection
 
 from bluebottle.donations.models import Donation
 from bluebottle.payouts.models import ProjectPayout
@@ -26,11 +25,11 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--start', type=str, default=None, action='store')
         parser.add_argument('--end', type=str, default=None, action='store')
+        parser.add_argument('--file', type=str, default=None, action='store')
 
     def handle(self, *args, **options):
         results = []
         for client in Client.objects.all():
-            connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
 
                 payouts = ProjectPayout.objects.filter(
@@ -75,4 +74,9 @@ class Command(BaseCommand):
 
                     results.append(result)
 
-        print json.dumps(results)
+        if options['file']:
+            text_file = open(options['file'], "w")
+            text_file.write(json.dumps(results))
+            text_file.close()
+        else:
+            print json.dumps(results)

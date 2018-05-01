@@ -15,6 +15,7 @@ from bluebottle.statistics.participation import Statistics
 from bluebottle.surveys.models import Survey
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.email_backend import send_mail
+from django.utils.translation import activate
 from .utils import initialize_work_sheet
 import tempfile
 import os
@@ -127,6 +128,9 @@ class Command(BaseCommand):
     def handle(self, **options):
         self.tenant = options['tenant']
         self.to_email = options['email']
+
+        activate('en')
+
         self.start_date = pendulum.create(options['start'], 1, 1, 0, 0, 0)
         self.end_date = pendulum.create(options['end'], 12, 31, 23, 59, 59)
         self.generate_participation_xls()
@@ -148,7 +152,6 @@ class Command(BaseCommand):
         file_name = self.get_file_name()
         self.file_path = self.get_xls_file_name(file_name)
         client = Client.objects.get(client_name=self.tenant)
-        connection.set_tenant(client)
 
         with xlsxwriter.Workbook(self.file_path,
                                  {'default_date_format': 'dd/mm/yy', 'remove_timezone': True}) as workbook:

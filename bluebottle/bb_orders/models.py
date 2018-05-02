@@ -27,7 +27,7 @@ class BaseOrder(models.Model, FSMTransition):
         StatusDefinition.AUTHORIZED: StatusDefinition.PENDING,
         StatusDefinition.SETTLED: StatusDefinition.SUCCESS,
         StatusDefinition.CHARGED_BACK: StatusDefinition.FAILED,
-        StatusDefinition.REFUNDED: StatusDefinition.FAILED,
+        StatusDefinition.REFUNDED: StatusDefinition.REFUNDED,
         StatusDefinition.FAILED: StatusDefinition.FAILED,
         StatusDefinition.UNKNOWN: StatusDefinition.FAILED
     }
@@ -38,7 +38,12 @@ class BaseOrder(models.Model, FSMTransition):
         (StatusDefinition.PLEDGED, _('Pledged')),
         (StatusDefinition.PENDING, _('Pending')),
         (StatusDefinition.SUCCESS, _('Success')),
+        (StatusDefinition.REFUNDED, _('Refunded')),
         (StatusDefinition.FAILED, _('Failed')),
+    )
+    REFUND_TYPE_CHOICES = (
+        ('one-off', _('One-off')),
+        ('project-refunded', _('Project Refunded')),
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"),
@@ -54,6 +59,8 @@ class BaseOrder(models.Model, FSMTransition):
                                      null=True)
     completed = models.DateTimeField(_("Completed"), blank=True, editable=False,
                                      null=True)
+
+    refund_type = models.CharField(max_length=20, null=True, choices=REFUND_TYPE_CHOICES)
 
     total = MoneyField(_("Amount"), )
 
@@ -96,6 +103,15 @@ class BaseOrder(models.Model, FSMTransition):
     def failed(self):
         self.completed = None
         self.confirmed = None
+
+    @transition(field=status,
+                source=[StatusDefinition.PENDING, StatusDefinition.SUCCESS, StatusDefinition.PLEDGED],
+                target=StatusDefinition.REFUNDED)
+    def refunded(self):
+        if any(donation.project.status.slug == 'refunded' for donation in self.donations.all()):
+            self.refund_type = 'project-refunded'
+        else:
+            self.refund_type = 'one-off'
 
     def update_total(self, save=True):
         donations = Donation.objects.filter(order=self, amount__gt=0).\

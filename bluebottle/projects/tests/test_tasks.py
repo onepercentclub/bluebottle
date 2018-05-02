@@ -5,6 +5,7 @@ from django.db import connection
 from moneyed import Money
 
 from bluebottle.projects.tasks import refund_project
+from bluebottle.projects.models import ProjectPhase
 
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory
@@ -22,7 +23,7 @@ class TestRefund(BluebottleTestCase):
 
         self.init_projects()
 
-        self.project = ProjectFactory.create()
+        self.project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='refunded'))
 
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(
@@ -47,10 +48,22 @@ class TestRefund(BluebottleTestCase):
         payment.status = 'settled'
         payment.save()
 
+    def mock_side_effect(self):
+        self.order_payment.payment.status = 'refunded'
+        self.order_payment.payment.save()
+        import ipdb; ipdb.set_trace()
+
     def test_refund(self):
-        with mock.patch.object(DocdataPaymentAdapter, 'refund_payment') as refund:
+        with mock.patch.object(
+            DocdataPaymentAdapter,
+            'refund_payment',
+            side_effect=self.mock_side_effect
+        ) as refund:
             refund_project(connection.tenant, self.project)
-            self.assertEqual(refund.call_count, 1)
+
+        self.assertEqual(refund.call_count, 1)
+        self.assertEqual(self.order.status, 'refunded')
+        self.assertEqual(self.order.refund_type, 'project-refunded')
 
     def test_refund_created_payment(self):
         order = OrderFactory.create()

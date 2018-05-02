@@ -71,7 +71,7 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
                     urlparts = urlparse.urlparse(obj.video_url)
                     data['youtubeid'] = urlparse.parse_qs(urlparts.query)['v'][
                         0]
-                except (ValueError, IndexError):
+                except (KeyError, ValueError, IndexError):
                     pass
 
         photos = MediaWallpostPhoto.objects.filter(mediawallpost=obj)

@@ -311,7 +311,7 @@ class MemberAdmin(UserAdmin):
         return format_html(
             u"<a href='/login/user/{}'>{}</a>",
             obj.id,
-            'Login as user'
+            _('Login as user')
         )
 
     def change_view(self, request, *args, **kwargs):

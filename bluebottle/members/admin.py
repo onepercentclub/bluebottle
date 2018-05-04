@@ -381,6 +381,9 @@ class MemberAdmin(UserAdmin):
             reverse('admin:index'), obj.pk, 'Login as user'
         )
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 admin.site.register(Member, MemberAdmin)
 

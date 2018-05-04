@@ -17,6 +17,9 @@ class NiceCheckboxChoiceInput(ChoiceInput):
             '{} <label{}>{}</label>', self.tag(attrs), label_for, self.choice_label
         )
 
+    def is_checked(self):
+        return self.choice_value in self.value
+
 
 class MultiCheckboxRenderer(CheckboxFieldRenderer):
     choice_input_class = NiceCheckboxChoiceInput

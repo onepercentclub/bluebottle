@@ -2821,7 +2821,7 @@ class ProjectSupportersExportTest(BluebottleTestCase):
         results = [result for result in reader]
         self.assertEqual(len(results), 2)
         for row in results:
-            for field in ('Reward', 'Donation Date', 'Email', 'Name'):
+            for field in ('Reward', 'Donation Date', 'Email', 'Name', 'Currency', 'Amount'):
                 self.assertTrue(field in row)
 
     def test_owner_no_permission(self):

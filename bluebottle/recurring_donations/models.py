@@ -4,7 +4,7 @@ from django_extensions.db.fields import CreationDateTimeField, \
     ModificationDateTimeField
 
 from localflavor.generic.models import IBANField, BICField
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from moneyed.classes import Money
 
 from bluebottle.utils.fields import MoneyField

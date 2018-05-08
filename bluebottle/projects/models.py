@@ -48,12 +48,12 @@ logger = logging.getLogger(__name__)
 
 class ProjectLocation(models.Model):
     project = models.OneToOneField('projects.Project', primary_key=True)
-    place = models.CharField(max_length=80, null=True, blank=True)
-    street = models.TextField(max_length=80, null=True, blank=True)
-    neighborhood = models.TextField(max_length=80, null=True, blank=True)
-    city = models.TextField(max_length=80, null=True, blank=True)
-    postal_code = models.CharField(max_length=20, null=True, blank=True)
-    country = models.CharField(max_length=40, null=True, blank=True)
+    place = models.CharField(_('place'), max_length=80, null=True, blank=True)
+    street = models.TextField(_('street'), max_length=80, null=True, blank=True)
+    neighborhood = models.TextField(_('neighborhood'), max_length=80, null=True, blank=True)
+    city = models.TextField(_('city'), max_length=80, null=True, blank=True)
+    postal_code = models.CharField(_('postal_code'), max_length=20, null=True, blank=True)
+    country = models.CharField(_('country'), max_length=40, null=True, blank=True)
     latitude = models.DecimalField(
         _('latitude'), max_digits=21, decimal_places=18
     )
@@ -191,7 +191,7 @@ class Project(BaseProject, PreviousStatusMixin):
         (StatusDefinition.FAILED, _('Failed'))
     )
 
-    payout_status = models.CharField(max_length=50, null=True, blank=True,
+    payout_status = models.CharField(_('payout_status'), max_length=50, null=True, blank=True,
                                      choices=PAYOUT_STATUS_CHOICES)
     wallposts = GenericRelation(Wallpost, related_query_name='project_wallposts')
     objects = UpdateSignalsQuerySet.as_manager()

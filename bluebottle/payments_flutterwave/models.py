@@ -2,7 +2,7 @@ from decimal import Decimal
 import json
 
 from django.db import models
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.payments.models import Payment
 

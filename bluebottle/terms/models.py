@@ -21,8 +21,9 @@ class Terms(models.Model):
         return 'Terms {0} - {1}'.format(self.version, self.date.date())
 
     class Meta:
-        verbose_name_plural = 'Terms'
         ordering = ('-date',)
+        verbose_name_plural = _('Terms')
+        verbose_name = _('Term')
 
     @classmethod
     def get_current(cls):
@@ -45,3 +46,11 @@ class TermsAgreement(models.Model):
             if queryset.count():
                 return queryset.all()[0]
         return None
+
+    class Meta:
+        ordering = ('-created',)
+        verbose_name_plural = _('Terms')
+        verbose_name = _('Term')
+
+
+

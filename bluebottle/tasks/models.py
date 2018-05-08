@@ -305,6 +305,8 @@ class Skill(TranslatableModel):
         permissions = (
             ('api_read_skill', 'Can view skills through the API'),
         )
+        verbose_name = _(u'Skill')
+        verbose_name_plural = _(u'Skills')
 
 
 class TaskMember(models.Model, PreviousStatusMixin):
@@ -391,7 +393,7 @@ class TaskMember(models.Model, PreviousStatusMixin):
 
 class TaskFile(models.Model):
     author = models.ForeignKey('members.Member', related_name='%(app_label)s_%(class)s_related')
-    title = models.CharField(max_length=255)
+    title = models.CharField(_('title'), max_length=255)
     file = models.FileField(_('file'), upload_to='task_files/')
     created = CreationDateTimeField(_('created'))
     updated = ModificationDateTimeField(_('Updated'))

@@ -378,8 +378,9 @@ class MemberAdmin(UserAdmin):
     def login_as_link(self, obj):
         return format_html(
             u"<a target='_blank' href='{}members/member/login-as/{}/'>{}</a>",
-            reverse('admin:index'), obj.pk, 'Login as user'
+            reverse('admin:index'), obj.pk, _('Login as user')
         )
+    login_as_link.short_description = _('Login as link')
 
     def has_delete_permission(self, request, obj=None):
         return False

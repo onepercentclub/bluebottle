@@ -97,6 +97,7 @@ class TaskMemberAdminInline(admin.TabularInline):
 
     def resume_link(self, obj):
         return resume_link(obj)
+    resume_link.short_description = _("resume link")
 
 
 class TaskFileAdminInline(admin.StackedInline):
@@ -359,6 +360,7 @@ class TaskMemberAdmin(admin.ModelAdmin):
 
     def resume_link(self, obj):
         return resume_link(obj)
+    resume_link.short_description = _("resume link")
 
     def lookup_allowed(self, key, value):
         if key in ('task__deadline__year',):

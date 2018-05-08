@@ -4,7 +4,7 @@ from bluebottle.members.dashboard import RecentMembersDashboard
 from bluebottle.projects.dashboard import RecentProjects, MyReviewingProjects, ClosingFundingProjects
 from django.urls.base import reverse, reverse_lazy
 from django.utils.timezone import now
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from jet.dashboard import modules
 from jet.dashboard.dashboard import Dashboard, DefaultAppIndexDashboard

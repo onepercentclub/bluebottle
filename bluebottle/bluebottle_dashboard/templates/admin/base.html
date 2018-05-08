@@ -51,9 +51,10 @@
     <!-- Header -->
     <div id="header">
         <div id="branding">
-            <span id="branding-menu" class="sidebar-header-menu-icon icon-menu-bold sidebar-toggle">
+            <span id="branding-menu" class="sidebar-header-menu-icon icon-menu-bold">
                 <img src="{% static "/admin/images/goodup_icon.jpg" %}" />
             </span>
+            <span id="branding-pin" class="sidebar-link-icon icon-arrow-down2 sidebar-toggle"></span>
             {% block branding %}{% endblock %}
         </div>
         {% block usertools %}
@@ -74,15 +75,22 @@
         {% endif %}
         {% endblock %}
     </div>
+
     <!-- END Header -->
     {% if user.is_authenticated %}
         <div class="site-title">
             {{ tenant.name }}
         </div>
     {% else %}
-        <div class="site-title site-title-login">
-            <img class="site-title-logo" alt="{{ tenant.name }}" src="{{ MEDIA_URL }}{{ logo }}" />
-        </div>
+        {% if logo %}
+            <div class="site-title site-title-login">
+                <img class="site-title-logo" alt="GoodUp Logo" src="{% static "/admin/images/logo_goodup.png" %}" />
+            </div>
+        {% else %}
+            <div class="site-title site-title-login">
+                {{ tenant.name }}
+            </div>
+        {% endif %}
     {% endif %}
 
     {% block breadcrumbs %}

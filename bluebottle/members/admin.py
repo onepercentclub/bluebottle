@@ -29,7 +29,7 @@ from .models import Member
 
 class MemberCreationForm(forms.ModelForm):
     """
-    A form that creates a member, with no privileges, from the given email.
+    A form that creates a member.
     """
     error_messages = {
         'duplicate_email': _("A user with that email already exists."),
@@ -41,8 +41,9 @@ class MemberCreationForm(forms.ModelForm):
 
     class Meta:
         model = Member
-        fields = ('email', 'first_name', 'last_name',
-                  'is_active', 'is_staff', 'is_superuser')
+        # Mind you these fields are also set in MemberAdmin.add_fieldsets
+        fields = ('first_name', 'last_name', 'email',
+                  'is_active', 'is_staff', 'is_superuser', 'groups')
 
     def clean_email(self):
         # Since BlueBottleUser.email is unique, this check is redundant
@@ -206,8 +207,8 @@ class MemberAdmin(UserAdmin):
 
     add_fieldsets = (
         (None, {'classes': ('wide',),
-                'fields': ('email', 'first_name', 'last_name',
-                           'is_active', 'is_staff', 'is_superuser')}
+                'fields': ('first_name', 'last_name', 'email',
+                           'is_active', 'is_staff', 'is_superuser', 'groups')}
          ),
     )
 
@@ -310,7 +311,7 @@ class MemberAdmin(UserAdmin):
         return format_html(
             u"<a href='/login/user/{}'>{}</a>",
             obj.id,
-            'Login as user'
+            _('Login as user')
         )
 
     def change_view(self, request, *args, **kwargs):
@@ -377,8 +378,12 @@ class MemberAdmin(UserAdmin):
     def login_as_link(self, obj):
         return format_html(
             u"<a target='_blank' href='{}members/member/login-as/{}/'>{}</a>",
-            reverse('admin:index'), obj.pk, 'Login as user'
+            reverse('admin:index'), obj.pk, _('Login as user')
         )
+    login_as_link.short_description = _('Login as link')
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 admin.site.register(Member, MemberAdmin)

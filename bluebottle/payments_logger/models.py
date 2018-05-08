@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django.utils.text import Truncator
 from djchoices import DjangoChoices, ChoiceItem
 from django_extensions.db.fields import CreationDateTimeField

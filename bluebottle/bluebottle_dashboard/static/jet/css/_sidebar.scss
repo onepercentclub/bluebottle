@@ -427,7 +427,7 @@
     background-color: $sidebar-popup-background-color;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    top: 440px;
+    top: 410px;
 
     @include for-mobile {
       width: 360px;

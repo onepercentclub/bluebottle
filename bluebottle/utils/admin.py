@@ -15,7 +15,7 @@ from .models import Language
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.clients import properties
 from bluebottle.bb_projects.models import ProjectPhase
@@ -148,8 +148,12 @@ class TotalAmountAdminChangeList(ChangeList):
         total_column = self.model_admin.total_column or 'amount'
         currency_column = '{}_currency'.format(total_column)
 
-        totals = self.queryset.values(currency_column).annotate(total=Sum(total_column)).order_by(
-            '-{}'.format(total_column))
+        totals = self.queryset.values(
+            currency_column
+        ).annotate(
+            total=Sum(total_column)
+        ).order_by()
+
         amounts = [Money(total['total'], total[currency_column]) for total in totals]
         amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)

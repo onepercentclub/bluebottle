@@ -178,9 +178,6 @@
         <div class="sidebar sidebar-dependent">
             <div class="sidebar-wrapper scrollable">
                 <div class="sidebar-section">
-                    <div class="sidebar-title">
-                        {% trans 'Quick links' %}
-                    </div>
                     {% if user.is_active and user.is_staff %}
                         <a href="{% url 'admin:index' %}" class="sidebar-link icon">
                             <span class="sidebar-link-label">
@@ -234,10 +231,6 @@
                 {% if user.is_active and user.is_staff %}
                     {% jet_get_menu as app_list %}
                     <div class="sidebar-section">
-                        <div class="sidebar-title">
-                            {% trans 'Menu' %}
-                        </div>
-
                         <div class="apps-list-pinned">
                             {% for app in app_list %}
                                 <a{% if app.url %} href="{{ app.url }}"{% endif %} class="sidebar-link popup-section-link app-item" data-app-label="{{ app.app_label }}" data-popup-section-class="sidebar-popup-section-{{ app.app_label }}" data-order="{{ forloop.counter }}"{% if app.url_blank %} target="_blank"{% endif %}>

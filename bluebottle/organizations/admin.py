@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 from django.core.urlresolvers import reverse
 from django.template.response import TemplateResponse
 from django.http.response import HttpResponseRedirect
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django.utils.html import format_html
 
 from bluebottle.organizations.models import Organization, OrganizationContact

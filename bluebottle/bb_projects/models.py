@@ -3,7 +3,7 @@ from django.db.models import Count, Sum
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
 
 from django_extensions.db.fields import (ModificationDateTimeField,
@@ -79,6 +79,8 @@ class ProjectPhase(TranslatableModel):
     )
 
     class Meta():
+        verbose_name = _('project theme')
+        verbose_name_plural = _('project themes')
         ordering = ['sequence']
         permissions = (
             ('api_read_projectphase', 'Can view project phase through API'),

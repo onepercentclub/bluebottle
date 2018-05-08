@@ -59,7 +59,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         ]
     },
     {
-        'label': _('Volunteering'),
+        'label': _('Tasks'),
         'app_label': 'tasks',
         'permissions': ['tasks.change_task'],
         'items': [
@@ -69,7 +69,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         ]
     },
     {
-        'label': _('Giving'),
+        'label': _('Donations'),
         'app_label': 'donations',
         'permissions': ['donations.change_donation'],
         'items': [
@@ -143,13 +143,6 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'redirects.redirect',
                 'permissions': ['redirects.change_redirect']
             },
-
-        ]
-    },
-    {
-        'label': _('Wall Posts'),
-        'permissions': ['wallposts.change_wallpost'],
-        'items': [
             {
                 'name': 'wallposts.wallpost',
                 'permissions': ['wallposts.change_wallpost']
@@ -203,6 +196,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'name': 'djmoney_rates.ratesource',
                 'permissions': ['djmoney_rates.change_ratesource']
+            },
+            {
+                'name': 'geo.country',
+                'permissions': ['geo.change_country']
             },
             {
                 'name': 'utils.language',

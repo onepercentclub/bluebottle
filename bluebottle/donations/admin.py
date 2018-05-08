@@ -102,7 +102,7 @@ class DonationAdmin(admin.ModelAdmin):
 
     form = DonationAdminForm
     date_hierarchy = 'created'
-    list_display = ('created_display', 'order_payment_links', 'admin_project', 'admin_fundraiser',
+    list_display = ('created', 'completed', 'order_payment_links', 'admin_project', 'fundraiser',
                     'user_full_name', 'amount',
                     'related_payment_method', 'status')
     list_filter = (DonationStatusFilter, DonationUserFilter, 'amount_currency')
@@ -219,6 +219,9 @@ class DonationAdmin(admin.ModelAdmin):
 
     def order_type(self, obj):
         return obj.order.order_type
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
     admin_project = link_to(
         lambda obj: obj.project,

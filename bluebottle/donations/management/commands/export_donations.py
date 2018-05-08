@@ -23,6 +23,7 @@ class Command(BaseCommand):
             connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
                 ContentType.objects.clear_cache()
+
                 orders = Order.objects.filter(
                     status__in=('pending', 'success')
                 ).exclude(

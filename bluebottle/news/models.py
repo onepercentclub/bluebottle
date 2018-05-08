@@ -76,3 +76,7 @@ class NewsItem(models.Model):
         s = MLStripper()
         s.feed(mark_safe(render_placeholder(request, self.contents).html))
         return truncatechars(s.get_data(), 250)
+
+    class Meta:
+        verbose_name = _("news item")
+        verbose_name_plural = _("news items")

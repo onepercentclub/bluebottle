@@ -275,16 +275,24 @@ class ProjectLocationForm(forms.ModelForm):
             'longitude': forms.TextInput(attrs={'size': 50, 'id': 'id_longitude'}),
 
         }
-        fields = ('latitude', 'longitude', 'place', 'street', 'neighborhood', 'city', 'postal_code', 'country')
+        fields = ('latitude', 'longitude')
 
 
 class ProjectLocationInline(LatLongMapPickerMixin, admin.StackedInline):
     model = ProjectLocation
+    readonly_fields = ('place', 'street', 'neighborhood', 'city', 'postal_code', 'country')
+
     form = ProjectLocationForm
     formfield_overrides = {
         models.TextField: {'widget': forms.TextInput(attrs={'size': 70})},
         models.CharField: {'widget': forms.TextInput(attrs={'size': 70})},
     }
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):
@@ -749,7 +757,7 @@ class ProjectPlatformSettingsAdminForm(forms.ModelForm):
         widgets = {
             'create_types': CheckboxSelectMultipleWidget,
             'contact_types': CheckboxSelectMultipleWidget,
-            'share_options': forms.CheckboxSelectMultiple,
+            'share_options': CheckboxSelectMultipleWidget,
         }
     extra = 0
 

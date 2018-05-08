@@ -11,12 +11,14 @@ from urllib import urlencode, quote_plus
 from django.db import connection
 from django.conf import settings
 
+from bluebottle.clients import properties
+from bluebottle.analytics.models import AnalyticsPlatformSettings
 from bluebottle.utils.utils import get_current_host
 
 
 class LookerSSOEmbed(object):
     session_length = 60 * 10
-    models = ('First', )
+    models = ('Projects', )
     permissions = ('see_user_dashboards', 'see_lookml_dashboards', 'access_data', 'see_looks', )
 
     def __init__(self, user, type, id):
@@ -63,6 +65,8 @@ class LookerSSOEmbed(object):
     @property
     def url(self):
         schema_name = connection.tenant.schema_name
+        fiscal_month_offset = AnalyticsPlatformSettings.objects.get().fiscal_month_offset
+
         params = OrderedDict([
             ('nonce', self.nonce),
             ('time', self.time),
@@ -75,7 +79,11 @@ class LookerSSOEmbed(object):
             ('last_name', self.user.last_name),
             ('group_ids', [3]),
             ('external_group_id', 'Back-office Users'),
-            ('user_attributes', {'tenant': schema_name}),
+            ('user_attributes', {
+                'tenant': schema_name,
+                'fiscal_month_offset': fiscal_month_offset,
+                'language': properties.LANGUAGE_CODE,
+            }),
             ('force_logout_login', True),
         ])
         json_params = OrderedDict((key, json.dumps(value)) for key, value in params.items())

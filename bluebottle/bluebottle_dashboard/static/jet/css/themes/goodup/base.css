@@ -7544,7 +7544,7 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
     background-color: #f7f8fa;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    top: 440px; }
+    top: 410px; }
     @media only screen and (max-width: 960px) {
       .sidebar-popup {
         width: 360px; } }
@@ -7578,6 +7578,11 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
           padding: 24px 0 24px 20px;
           margin-bottom: 0;
           font-size: 1rem; } }
+    .sidebar-popup-title:after { 
+      font-family: 'dashboard' !important;
+      float: right;
+      content: "\e921"; }
+ 
     .sidebar-popup-search {
       background-color: #E3ECF2;
       color: #7f8fa4;

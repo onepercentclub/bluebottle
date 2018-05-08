@@ -11,9 +11,9 @@ from polymorphic.models import PolymorphicModel
 
 from .managers import ReactionManager, WallpostManager
 
-WALLPOST_TEXT_MAX_LENGTH = getattr(settings, 'WALLPOST_TEXT_MAX_LENGTH', 300)
+WALLPOST_TEXT_MAX_LENGTH = getattr(settings, 'WALLPOST_TEXT_MAX_LENGTH', 1000)
 WALLPOST_REACTION_MAX_LENGTH = getattr(settings, 'WALLPOST_REACTION_MAX_LENGTH',
-                                       300)
+                                       1000)
 
 
 class Wallpost(PolymorphicModel):
@@ -123,7 +123,7 @@ class MediaWallpost(Wallpost):
     def wallpost_type(self):
         return 'media'
 
-    title = models.CharField(max_length=60)
+    title = models.CharField(max_length=60, blank=True, default='')
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH, blank=True,
                             default='')
     video_url = models.URLField(max_length=100, blank=True, default='')

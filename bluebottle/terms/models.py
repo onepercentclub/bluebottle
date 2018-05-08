@@ -49,8 +49,5 @@ class TermsAgreement(models.Model):
 
     class Meta:
         ordering = ('-created',)
-        verbose_name_plural = _('Terms')
-        verbose_name = _('Term')
-
-
-
+        verbose_name_plural = _('Terms agreement')
+        verbose_name = _('Term agreements')

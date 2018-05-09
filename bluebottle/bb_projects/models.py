@@ -79,8 +79,8 @@ class ProjectPhase(TranslatableModel):
     )
 
     class Meta():
-        verbose_name = _('project theme')
-        verbose_name_plural = _('project themes')
+        verbose_name = _('project phase')
+        verbose_name_plural = _('project phase')
         ordering = ['sequence']
         permissions = (
             ('api_read_projectphase', 'Can view project phase through API'),

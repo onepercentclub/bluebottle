@@ -64,5 +64,3 @@ class BaseFundraiser(models.Model):
         abstract = True
         verbose_name = _('fundraiser')
         verbose_name_plural = _('fundraisers')
-
-

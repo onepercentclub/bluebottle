@@ -36,6 +36,10 @@ class Donation(models.Model):
     anonymous = models.BooleanField(_("Anonymous"), default=False)
     name = models.CharField(_("Name of donor"), max_length=200, blank=True, null=True, db_index=True)
 
+    class Meta:
+        verbose_name = _('donation')
+        verbose_name_plural = _('donations')
+
     @property
     def status(self):
         return self.order.status

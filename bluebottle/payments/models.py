@@ -86,6 +86,8 @@ class Payment(PolymorphicModel):
 
     class Meta:
         ordering = ('-created', '-updated')
+        verbose_name = _('payment')
+        verbose_name_plural = _('payments')
 
 
 class OrderPaymentAction(models.Model):
@@ -156,6 +158,8 @@ class OrderPayment(models.Model, FSMTransition):
         permissions = (
             ('refund_orderpayment', 'Can refund order payments'),
         )
+        verbose_name = _('order payment')
+        verbose_name_plural = _('order payments')
 
     @classmethod
     def get_latest_by_order(cls, order):

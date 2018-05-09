@@ -119,6 +119,8 @@ class Location(models.Model):
 
     class Meta(GeoBaseModel.Meta):
         ordering = ['name']
+        verbose_name = _('location')
+        verbose_name_plural = _('locations')
 
     def __unicode__(self):
         return self.name

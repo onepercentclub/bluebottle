@@ -158,6 +158,9 @@ class BaseOrder(models.Model, FSMTransition):
             ('api_delete_own_order', 'Can delete own order through the API'),
 
         )
+        verbose_name = _('order')
+        verbose_name_plural = _('orders')
+
 
 
 import signals  # noqa

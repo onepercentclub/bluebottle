@@ -79,9 +79,10 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
         data['remains'] = max(0, data['count'] - 1)
 
         if len(photos):
-            data['firstimage'] = get_thumbnail(photos[0].photo, "120x120",
-                                               crop="center").url
-            data['firstimage_url'] = photos[0].photo.url
+            if photos[0].photo:
+                data['firstimage'] = get_thumbnail(photos[0].photo, "120x120",
+                                                   crop="center").url
+                data['firstimage_url'] = photos[0].photo.url
 
         return mark_safe(render_to_string("admin/wallposts/preview_thumbnail.html", data))
 

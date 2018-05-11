@@ -293,7 +293,7 @@ class TaskAdmin(admin.ModelAdmin):
         title = obj.project.title
         title = (title[:30] + '&hellip;') if len(title) > 30 else title
         return format_html(u"<a href='{}'>{}</a>".format(url, title))
-
+    project_link.short_description = _('Project link')
 
 admin.site.register(Task, TaskAdmin)
 

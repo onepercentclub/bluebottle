@@ -413,6 +413,10 @@ class TaskStatusLog(models.Model):
     status = models.CharField(_('status'), max_length=20)
     start = CreationDateTimeField(_('created'), help_text=_('When this task entered in this status.'))
 
+    class Meta:
+        verbose_name = _(u'task status log')
+        verbose_name_plural = _(u'task status logs')
+
     class Analytics:
         type = 'task'
         tags = {
@@ -441,6 +445,10 @@ class TaskMemberStatusLog(models.Model):
     task_member = models.ForeignKey('tasks.TaskMember')
     status = models.CharField(_('status'), max_length=20)
     start = CreationDateTimeField(_('created'), help_text=_('When this task member entered in this status.'))
+
+    class Meta:
+        verbose_name = _(u'task member status log')
+        verbose_name_plural = _(u'task member status logs')
 
     class Analytics:
         type = 'task_member'

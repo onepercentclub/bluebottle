@@ -73,6 +73,10 @@ class ProjectPhaseLog(models.Model):
         _('created'), help_text=_('When this project entered in this status.')
     )
 
+    class Meta:
+        verbose_name = _('project phase log')
+        verbose_name_plural = _('project phase logs')
+
     class Analytics:
         type = 'project'
         tags = {

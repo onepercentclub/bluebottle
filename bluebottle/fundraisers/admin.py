@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fundraisers.models import Fundraiser
 
@@ -36,6 +37,7 @@ class FundraiserAdmin(admin.ModelAdmin):
             str(url),
             object.title
         )
+    project_link.short_description = _('Project link')
 
     def owner_link(self, obj):
         object = obj.owner

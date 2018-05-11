@@ -81,6 +81,7 @@ class ProjectThemeAdmin(TranslatableAdmin):
     def project_link(self, obj):
         url = "{}?theme_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)
         return format_html("<a href='{}'>{} projects</a>".format(url, obj.project_set.count()))
+    project_link.short_description = _('Project link')
 
 
 admin.site.register(ProjectTheme, ProjectThemeAdmin)

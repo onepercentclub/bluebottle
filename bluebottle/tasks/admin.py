@@ -295,6 +295,7 @@ class TaskAdmin(admin.ModelAdmin):
         return format_html(u"<a href='{}'>{}</a>".format(url, title))
     project_link.short_description = _('Project link')
 
+
 admin.site.register(Task, TaskAdmin)
 
 

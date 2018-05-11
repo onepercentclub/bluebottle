@@ -51,7 +51,6 @@ class TestRefund(BluebottleTestCase):
     def mock_side_effect(self):
         self.order_payment.payment.status = 'refunded'
         self.order_payment.payment.save()
-        import ipdb; ipdb.set_trace()
 
     def test_refund(self):
         with mock.patch.object(
@@ -62,8 +61,7 @@ class TestRefund(BluebottleTestCase):
             refund_project(connection.tenant, self.project)
 
         self.assertEqual(refund.call_count, 1)
-        self.assertEqual(self.order.status, 'refunded')
-        self.assertEqual(self.order.refund_type, 'project-refunded')
+        self.assertEqual(self.order.status, 'cancelled')
 
     def test_refund_created_payment(self):
         order = OrderFactory.create()
@@ -86,6 +84,12 @@ class TestRefund(BluebottleTestCase):
             amount=Money(100, 'EUR'),
         )
 
-        with mock.patch.object(DocdataPaymentAdapter, 'refund_payment') as refund:
+        with mock.patch.object(
+            DocdataPaymentAdapter,
+            'refund_payment',
+            side_effect=self.mock_side_effect
+        ) as refund:
             refund_project(connection.tenant, self.project)
-            self.assertEqual(refund.call_count, 1)
+
+        self.assertEqual(refund.call_count, 1)
+        self.assertEqual(self.order.status, 'cancelled')

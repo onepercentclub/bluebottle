@@ -1,4 +1,6 @@
 import logging
+
+from django.db.models import Q
 from django.http.response import Http404
 
 from rest_framework import permissions, generics
@@ -30,9 +32,14 @@ class ValidDonationsMixin(object):
     """
     def get_queryset(self):
         queryset = super(ValidDonationsMixin, self).get_queryset()
-        queryset = queryset.filter(order__status__in=[StatusDefinition.PLEDGED,
-                                                      StatusDefinition.SUCCESS,
-                                                      StatusDefinition.PENDING])
+        queryset = queryset.filter(
+            order__status__in=[
+                StatusDefinition.PLEDGED,
+                StatusDefinition.SUCCESS,
+                StatusDefinition.PENDING,
+                StatusDefinition.CANCELLED,
+            ]
+        )
         return queryset
 
 

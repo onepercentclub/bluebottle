@@ -142,6 +142,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     amount_donated = MoneySerializer()
     amount_extra = MoneySerializer()
     amount_needed = MoneySerializer()
+    amount_cancelled = MoneySerializer()
     budget_lines = BasicProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
     categories = serializers.SlugRelatedField(slug_field='slug', many=True, queryset=Category.objects)
     country = ProjectCountrySerializer()
@@ -185,6 +186,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'amount_donated',
                   'amount_extra',
                   'amount_needed',
+                  'amount_cancelled',
                   'budget_lines',
                   'categories',
                   'celebrate_results',
@@ -250,6 +252,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'amount_donated',
                   'amount_extra',
                   'amount_needed',
+                  'amount_cancelled',
                   'categories',
                   'celebrate_results',
                   'country',
@@ -316,6 +319,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     amount_asked = MoneySerializer(required=False, allow_null=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_needed = MoneySerializer(read_only=True)
+    amount_cancelled = MoneySerializer()
     budget_lines = ProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
     currencies = serializers.JSONField(read_only=True)
     categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
@@ -477,6 +481,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'amount_asked',
                   'amount_donated',
                   'amount_needed',
+                  'amount_cancelled',
                   'budget_lines',
                   'categories',
                   'country',

@@ -40,10 +40,7 @@ class BaseOrder(models.Model, FSMTransition):
         (StatusDefinition.SUCCESS, _('Success')),
         (StatusDefinition.REFUNDED, _('Refunded')),
         (StatusDefinition.FAILED, _('Failed')),
-    )
-    REFUND_TYPE_CHOICES = (
-        ('one-off', _('One-off')),
-        ('project-refunded', _('Project Refunded')),
+        (StatusDefinition.CANCELLED, _('CANCELLED')),
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"),
@@ -59,8 +56,6 @@ class BaseOrder(models.Model, FSMTransition):
                                      null=True)
     completed = models.DateTimeField(_("Completed"), blank=True, editable=False,
                                      null=True)
-
-    refund_type = models.CharField(max_length=20, null=True, choices=REFUND_TYPE_CHOICES)
 
     total = MoneyField(_("Amount"), )
 
@@ -105,13 +100,24 @@ class BaseOrder(models.Model, FSMTransition):
         self.confirmed = None
 
     @transition(field=status,
-                source=[StatusDefinition.PENDING, StatusDefinition.SUCCESS, StatusDefinition.PLEDGED],
+                source=[
+                    StatusDefinition.PENDING, StatusDefinition.SUCCESS,
+                    StatusDefinition.PLEDGED, StatusDefinition.FAILED,
+                ],
                 target=StatusDefinition.REFUNDED)
     def refunded(self):
         if any(donation.project.status.slug == 'refunded' for donation in self.donations.all()):
-            self.refund_type = 'project-refunded'
-        else:
-            self.refund_type = 'one-off'
+            self.cancelled()
+
+    @transition(field=status,
+                source=[
+                    StatusDefinition.PENDING, StatusDefinition.SUCCESS,
+                    StatusDefinition.PLEDGED, StatusDefinition.FAILED,
+
+                ],
+                target=StatusDefinition.CANCELLED)
+    def cancelled(self):
+        pass
 
     def update_total(self, save=True):
         donations = Donation.objects.filter(order=self, amount__gt=0).\

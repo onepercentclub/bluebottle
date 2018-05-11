@@ -440,9 +440,14 @@ class Project(BaseProject, PreviousStatusMixin):
         # something like /projects/<slug>/donations
         donations = self.donation_set
         donations = donations.filter(
-            order__status__in=[StatusDefinition.PLEDGED,
-                               StatusDefinition.PENDING,
-                               StatusDefinition.SUCCESS])
+            order__status__in=[
+                StatusDefinition.PLEDGED,
+                StatusDefinition.PENDING,
+                StatusDefinition.SUCCESS,
+                StatusDefinition.CANCELLED,
+            ]
+        )
+
         count = donations.all().aggregate(total=Count('order__user', distinct=True))['total']
 
         if with_guests:
@@ -510,6 +515,10 @@ class Project(BaseProject, PreviousStatusMixin):
     @property
     def amount_pledged(self):
         return self.get_money_total([StatusDefinition.PLEDGED])
+
+    @property
+    def amount_cancelled(self):
+        return self.get_money_total([StatusDefinition.CANCELLED])
 
     @property
     def donated_percentage(self):

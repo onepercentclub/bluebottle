@@ -107,7 +107,7 @@ class ProjectDocument(BaseProjectDocument):
     def document_url(self):
         # pk may be unset if not saved yet, in which case no url can be
         # generated.
-        if self.pk is not None:
+        if self.pk is not None and self.file:
             return reverse_signed('project-document-file', args=(self.pk, ))
         return None
 

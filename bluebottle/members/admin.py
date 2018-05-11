@@ -273,6 +273,7 @@ class MemberAdmin(UserAdmin):
                 url, obj.id, submitted, _('submitted')
             ))
         return format_html(', '.join(links) or _('None'))
+    projects_managed.short_description = _('Projects Managed')
 
     def tasks(self, obj):
         url = reverse('admin:tasks_task_changelist')
@@ -294,11 +295,13 @@ class MemberAdmin(UserAdmin):
                 url, obj.id, realized, _('realised')
             ))
         return format_html(', '.join(links) or _('None'))
+    tasks.short_description = _('Tasks')
 
     def donations(self, obj):
         url = reverse('admin:donations_donation_changelist')
         donations = Donation.objects.filter(order__status__in=['success', 'pending'], order__user=obj).count()
         return format_html('<a href="{}?order__user_id={}">{} {}</a>', url, obj.id, donations, _('donations'))
+    donations.short_description = _('Donations')
 
     def reset_password(self, obj):
         reset_form_url = reverse('admin:auth_user_password_change', args=(obj.id, ))

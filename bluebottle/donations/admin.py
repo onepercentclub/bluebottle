@@ -206,6 +206,7 @@ class DonationAdmin(admin.ModelAdmin):
             str(url),
             project
         )
+    project_link.short_description = _('Project link')
 
     def fundraiser_link(self, obj):
         fundraiser = obj.fundraiser

@@ -184,6 +184,7 @@ class SystemWallpostAdmin(PolymorphicChildModelAdmin):
                 u"<a href='{}'>{}</a>",
                 link, obj.donation.project.title
             )
+    project_link.short_description = _('Project link')
 
     def donation_link(self, obj):
         if obj.donation:

@@ -1,9 +1,7 @@
-from urlparse import urlparse
-
 from django.contrib import admin
 from django.contrib.admin.sites import site
 from django.contrib.admin.widgets import (
-    ManyToManyRawIdWidget, ForeignKeyRawIdWidget, AdminURLFieldWidget
+    ManyToManyRawIdWidget, ForeignKeyRawIdWidget
 )
 from django.core.urlresolvers import reverse
 from django.utils.encoding import smart_unicode

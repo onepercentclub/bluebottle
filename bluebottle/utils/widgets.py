@@ -7,7 +7,6 @@ from django.forms.widgets import CheckboxFieldRenderer, CheckboxSelectMultiple, 
 from django.utils.html import format_html
 
 
-
 class NiceCheckboxChoiceInput(CheckboxChoiceInput):
 
     def render(self, name=None, value=None, attrs=None):
@@ -38,6 +37,3 @@ class SecureAdminURLFieldWidget(AdminURLFieldWidget):
             return super(AdminURLFieldWidget, self).render(name, value, attrs)
         else:
             return super(SecureAdminURLFieldWidget, self).render(name, value, attrs)
-
-
-

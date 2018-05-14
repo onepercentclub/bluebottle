@@ -1,6 +1,7 @@
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
+from django.db import models
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -14,6 +15,7 @@ from django.forms.models import ModelFormMetaclass
 from django.http import HttpResponseRedirect
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.donations.models import Donation
@@ -142,8 +144,11 @@ class UserAddressInline(admin.StackedInline):
 
 
 class MemberAdmin(UserAdmin):
-
     raw_id_fields = ('partner_organization', )
+
+    formfield_overrides = {
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
+    }
 
     @property
     def standard_fieldsets(self):

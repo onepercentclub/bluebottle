@@ -1,3 +1,5 @@
+from urlparse import urlparse
+
 from django.contrib import admin
 from django.contrib.admin.sites import site
 from django.contrib.admin.widgets import (
@@ -55,14 +57,6 @@ class VerboseManyToManyRawIdWidget(ManyToManyRawIdWidget):
             except self.rel.to.DoesNotExist:
                 str_values += [u'???']
         return u', '.join(str_values)
-
-
-class SecureAdminURLFieldWidget(AdminURLFieldWidget):
-    def render(self, name, value, attrs=None):
-        if value:
-            pass
-
-        return super(AdminURLFieldWidget, self).render(name, value, attrs)
 
 
 class ImprovedModelForm(admin.ModelAdmin):

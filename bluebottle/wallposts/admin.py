@@ -2,6 +2,7 @@ import urlparse
 
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.utils.html import format_html, mark_safe
 from django.template.loader import render_to_string
@@ -12,6 +13,7 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.utils.utils import set_author_editor_ip
 from bluebottle.wallposts.models import SystemWallpost
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 from .models import (Wallpost, MediaWallpost, TextWallpost,
                      MediaWallpostPhoto, Reaction)
@@ -55,6 +57,10 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 
     ordering = ('-created',)
     inlines = (MediaWallpostPhotoInline,)
+
+    formfield_overrides = {
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
+    }
 
     def get_text(self, obj):
         if len(obj.text) > 150:

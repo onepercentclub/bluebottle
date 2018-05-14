@@ -18,6 +18,7 @@ from bluebottle.cms.models import (
     Greeting
 )
 from bluebottle.utils.admin import BasePlatformSettingsAdmin
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 
 class LinkPermissionAdmin(admin.ModelAdmin):
@@ -102,6 +103,9 @@ class SlideInline(NestedStackedInline, SortableStackedInline):
 class StepInline(NestedStackedInline, SortableStackedInline):
     model = Step
     extra = 0
+    formfield_overrides = {
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
+    }
 
 
 class LogoInline(NestedStackedInline, SortableStackedInline):

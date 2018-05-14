@@ -1,8 +1,11 @@
 from datetime import date
+
+from django.db import models
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 from bluebottle.suggestions.models import Suggestion
 
@@ -47,6 +50,10 @@ class SuggestionAdmin(admin.ModelAdmin):
     list_filter = ('status', 'destination', ExpiredFilter)
 
     readonly_fields = ('created', 'updated', 'expired')
+
+    formfield_overrides = {
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
+    }
 
     def updated(self, obj):
         return obj.updated

@@ -37,7 +37,7 @@ class UserProfileDetail(RetrieveAPIView):
     serializer_class = UserProfileSerializer
 
 
-class ManageProfileDetail(generics.RetrieveUpdateAPIView):
+class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):
     """
     Manage User Details
     ---
@@ -86,6 +86,9 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
             pass
 
         super(ManageProfileDetail, self).perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        instance.anonymize()
 
 
 class CurrentUser(RetrieveAPIView):
@@ -203,22 +206,6 @@ class PasswordSet(views.APIView):
             return response.Response(status=status.HTTP_200_OK)
         return response.Response({'message': 'Token expired'},
                                  status=status.HTTP_400_BAD_REQUEST)
-
-
-class DisableAccount(views.APIView):
-
-    def post(self, request, *args, **kwargs):
-        user_id = self.kwargs.get("user_id")
-        token = self.kwargs.get("token")
-
-        user = USER_MODEL.objects.get(id=int(user_id))
-
-        if user.get_disable_token() != token:
-            return response.Response(status=status.HTTP_400_BAD_REQUEST)
-
-        user.is_active = False
-        user.save()
-        return response.Response(status=status.HTTP_200_OK)
 
 
 class UserVerification(generics.CreateAPIView):

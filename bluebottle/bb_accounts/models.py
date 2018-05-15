@@ -240,6 +240,29 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         full_name = u'{0} {1}'.format(self.first_name, self.last_name)
         return full_name.strip()
 
+    def anonymize(self):
+        self.is_active = False
+        self.email = '{}-anonymous@example.com'.format(self.pk)  # disabled emails need to be unique too
+        self.set_unusable_password()
+        self.first_name = ''
+        self.last_name = ''
+        self.user_name = ''
+        self.place = ''
+        self.picture = ''
+        self.avatar = ''
+        self.abount_me = ''
+        self.gender = ''
+        self.birthdate = '1000-01-01'
+        self.location = None
+        self.website = ''
+        self.facebook = ''
+        self.twitter = ''
+        self.skypename = ''
+        self.partner_organization = None
+        self.address.delete()
+
+        self.save()
+
     @property
     def full_name(self):
         return self.get_full_name()

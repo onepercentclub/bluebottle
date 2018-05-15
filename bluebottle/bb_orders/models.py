@@ -99,23 +99,22 @@ class BaseOrder(models.Model, FSMTransition):
         self.completed = None
         self.confirmed = None
 
-    @transition(field=status,
-                source=[
-                    StatusDefinition.PENDING, StatusDefinition.SUCCESS,
-                    StatusDefinition.PLEDGED, StatusDefinition.FAILED,
-                ],
-                target=StatusDefinition.REFUNDED)
+    @transition(
+        field=status,
+        source=[
+            StatusDefinition.PENDING, StatusDefinition.SUCCESS,
+            StatusDefinition.PLEDGED, StatusDefinition.FAILED,
+        ],
+        target=StatusDefinition.REFUNDED
+    )
     def refunded(self):
-        if any(donation.project.status.slug == 'refunded' for donation in self.donations.all()):
-            self.cancelled()
+        pass
 
-    @transition(field=status,
-                source=[
-                    StatusDefinition.PENDING, StatusDefinition.SUCCESS,
-                    StatusDefinition.PLEDGED, StatusDefinition.FAILED,
-
-                ],
-                target=StatusDefinition.CANCELLED)
+    @transition(
+        field=status,
+        source=[StatusDefinition.REFUNDED, ],
+        target=StatusDefinition.CANCELLED
+    )
     def cancelled(self):
         pass
 

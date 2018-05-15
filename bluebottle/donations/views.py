@@ -101,7 +101,6 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
            self.request.query_params['co_financing'] == 'true':
             filter_kwargs['order__user__is_co_financer'] = True
         else:
-            from django.db.models import Q
             queryset = queryset.filter(Q(order__user__is_co_financer=False) |
                                        Q(order__user__isnull=True) |
                                        Q(anonymous=True))

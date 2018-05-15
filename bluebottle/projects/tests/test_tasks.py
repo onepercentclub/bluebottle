@@ -8,6 +8,7 @@ from bluebottle.projects.tasks import refund_project
 from bluebottle.projects.models import ProjectPhase
 
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.orders.models import Order
 from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
@@ -61,6 +62,7 @@ class TestRefund(BluebottleTestCase):
             refund_project(connection.tenant, self.project)
 
         self.assertEqual(refund.call_count, 1)
+        self.order = Order.objects.get(pk=self.order.pk)
         self.assertEqual(self.order.status, 'cancelled')
 
     def test_refund_created_payment(self):
@@ -91,5 +93,6 @@ class TestRefund(BluebottleTestCase):
         ) as refund:
             refund_project(connection.tenant, self.project)
 
+        self.order = Order.objects.get(pk=self.order.pk)
         self.assertEqual(refund.call_count, 1)
         self.assertEqual(self.order.status, 'cancelled')

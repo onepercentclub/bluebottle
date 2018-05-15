@@ -67,7 +67,7 @@ class BlueBottleOrderTestCase(BluebottleTestCase):
         self.order_payment.save()
 
         self.order_payment.refunded()
-        self.assertEqual(self.order.refund_type, 'one-off')
+        self.assertEqual(self.order.status, StatusDefinition.REFUNDED)
 
     def test_refund_project(self):
         donation = DonationFactory.create(order=self.order)
@@ -81,6 +81,4 @@ class BlueBottleOrderTestCase(BluebottleTestCase):
         self.order_payment.save()
 
         self.order_payment.refunded()
-        self.assertEqual(self.order.refund_type, 'project-refunded')
-
-
+        self.assertEqual(self.order.status, StatusDefinition.CANCELLED)

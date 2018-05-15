@@ -26,6 +26,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('orders', '0006_auto_20180509_1436'),
+        ('payments', '0005_auto_20170919_1621'),
     ]
 
     operations = [

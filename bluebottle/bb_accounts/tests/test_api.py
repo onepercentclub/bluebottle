@@ -79,6 +79,21 @@ class UserApiIntegrationTest(BluebottleTestCase):
         for field in excluded_fields:
             self.assertFalse(field in response.data)
 
+    def test_user_profile_not_from_facebook(self):
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
+        response = self.client.get(user_profile_url, token=self.user_1_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['from_facebook'])
+
+    def test_user_profile_from_facebook(self):
+        self.user_1.social_auth.create(provider='facebook')
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
+        response = self.client.get(user_profile_url, token=self.user_1_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['from_facebook'])
+
     def test_user_profile_returned_private_fields(self):
         group = Group.objects.get(name='Anonymous')
         group.permissions.remove(Permission.objects.get(codename='api_read_full_member'))

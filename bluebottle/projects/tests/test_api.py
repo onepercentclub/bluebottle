@@ -995,8 +995,10 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST,
                          response.data)
-        self.assertEqual(response.data['title'][0],
-                         u'Project with this title already exists.')
+        self.assertEqual(
+            unicode(response.data['title'][0]),
+            u'project with this title already exists.'
+        )
 
         # Anonymous user should not be able to find this project through
         # management API.

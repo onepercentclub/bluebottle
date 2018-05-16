@@ -105,7 +105,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
             'country', 'verified', 'permissions', 'partner_organization',
-         )
+        )
 
 
 class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
@@ -144,13 +144,15 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'url', 'full_name', 'short_name', 'initials', 'picture',
-                  'primary_language', 'about_me', 'location', 'avatar',
-                  'project_count', 'donation_count', 'date_joined',
-                  'fundraiser_count', 'task_count', 'time_spent',
-                  'tasks_performed', 'website', 'twitter', 'facebook',
-                  'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization',
+        fields = (
+            'id', 'url', 'full_name', 'short_name', 'initials', 'picture',
+            'primary_language', 'about_me', 'location', 'avatar',
+            'project_count', 'donation_count', 'date_joined',
+            'fundraiser_count', 'task_count', 'time_spent',
+            'tasks_performed', 'website', 'twitter', 'facebook',
+            'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization',
         )
+
 
 class ManageProfileSerializer(UserProfileSerializer):
     """

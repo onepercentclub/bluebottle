@@ -5,6 +5,8 @@ from django.contrib import admin
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.projects.models import Project
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
+
 from .models import Category, CategoryContent
 from adminsortable.admin import NonSortableParentAdmin, SortableStackedInline
 
@@ -12,7 +14,9 @@ from adminsortable.admin import NonSortableParentAdmin, SortableStackedInline
 class CategoryContentInline(SortableStackedInline):
     formfield_overrides = {
         models.TextField: {'widget': forms.Textarea(attrs={'rows': 3, 'cols': 80})},
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
+
     model = CategoryContent
     extra = 0
     max_num = 3

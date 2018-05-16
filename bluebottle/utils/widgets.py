@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
 
+from urlparse import urlparse
+
+from django.contrib.admin.widgets import AdminURLFieldWidget
 from django.forms.widgets import CheckboxFieldRenderer, CheckboxSelectMultiple, CheckboxChoiceInput
 from django.utils.html import format_html
 
@@ -26,3 +29,11 @@ class MultiCheckboxRenderer(CheckboxFieldRenderer):
 
 class CheckboxSelectMultipleWidget(CheckboxSelectMultiple):
     renderer = MultiCheckboxRenderer
+
+
+class SecureAdminURLFieldWidget(AdminURLFieldWidget):
+    def render(self, name, value, attrs=None):
+        if urlparse(value).scheme not in ('http', 'https', ):
+            return super(AdminURLFieldWidget, self).render(name, value, attrs)
+        else:
+            return super(SecureAdminURLFieldWidget, self).render(name, value, attrs)

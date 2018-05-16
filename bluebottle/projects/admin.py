@@ -47,7 +47,7 @@ from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
 from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin
-from bluebottle.utils.widgets import CheckboxSelectMultipleWidget
+from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
 from bluebottle.votes.models import Vote
 
 from .forms import ProjectDocumentForm
@@ -307,6 +307,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     )
     raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization',)
     prepopulated_fields = {'slug': ('title',)}
+
+    formfield_overrides = {
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
+    }
 
     class Media:
         css = {

@@ -40,7 +40,7 @@ class BaseOrder(models.Model, FSMTransition):
         (StatusDefinition.SUCCESS, _('Success')),
         (StatusDefinition.REFUNDED, _('Refunded')),
         (StatusDefinition.FAILED, _('Failed')),
-        (StatusDefinition.CANCELLED, _('CANCELLED')),
+        (StatusDefinition.CANCELLED, _('Cancelled')),
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"),

@@ -6,6 +6,7 @@ from adminsortable.models import SortableMixin
 
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
@@ -200,6 +201,12 @@ class Project(BaseProject, PreviousStatusMixin):
     wallposts = GenericRelation(Wallpost, related_query_name='project_wallposts')
     objects = UpdateSignalsQuerySet.as_manager()
 
+    bank_details_reviewed = models.BooleanField(
+        _('Bank details reviewed'),
+        help_text=_('A staff memmber has reviewed the bank details for this project'),
+        default=False
+    )
+
     def __unicode__(self):
         if self.title:
             return u'{}'.format(self.title)
@@ -356,6 +363,10 @@ class Project(BaseProject, PreviousStatusMixin):
 
         if not self.task_manager:
             self.task_manager = self.owner
+
+        if self.bank_details_reviewed:
+            for document in self.documents.all():
+                document.delete()
 
         # Set all task.author to project.task_manager
         self.task_set.exclude(author=self.task_manager).update(author=self.task_manager)

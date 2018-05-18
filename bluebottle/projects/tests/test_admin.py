@@ -10,6 +10,7 @@ from django.db import connection
 from django.contrib.admin.sites import AdminSite
 from django.contrib import messages
 from django.forms.models import modelform_factory
+from django.forms import ValidationError
 from django.test.client import RequestFactory
 from django.urls.base import reverse
 from django.utils.timezone import now
@@ -609,6 +610,20 @@ class ProjectAdminFormTest(BluebottleTestCase):
         )
         parameters = widget.url_parameters()
         self.assertTrue(parameters['is_staff'], True)
+
+    def test_bank_details_reviewed(self):
+        self.form.cleaned_data = {
+            'status': ProjectPhase.objects.get(slug='campaign'),
+            'bank_details_reviewed': False,
+            'amount_asked': Money(100, 'EUR')
+        }
+        with self.assertRaises(ValidationError) as error:
+            self.form.clean()
+
+        self.assertEqual(
+            error.exception.message,
+            'The bank details need to be reviewed before approving a project'
+        )
 
 
 class ProjectCustomFieldAdminTest(BluebottleAdminTestCase):

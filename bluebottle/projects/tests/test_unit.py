@@ -625,7 +625,7 @@ class TestProjectLocation(BluebottleTestCase):
         )
 
 
-class TestProjectDocumentDownload(BluebottleTestCase):
+class TestProjectDocument(BluebottleTestCase):
     def setUp(self):
         self.project = ProjectFactory.create(language=Language.objects.get(code='en'))
         self.document = ProjectDocumentFactory.create(
@@ -639,3 +639,9 @@ class TestProjectDocumentDownload(BluebottleTestCase):
 
         self.assertEquals(response.status_code, 200)
         self.assertEqual(response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg')
+
+    def test_review_documents(self):
+        self.project.bank_details_reviewed = True
+        self.project.save()
+
+        self.assertEqual(len(self.project.documents.all()), 0)

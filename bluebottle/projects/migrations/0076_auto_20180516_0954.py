@@ -10,7 +10,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('geo', '0008_auto_20180516_0954'),
+        ('geo', '0007_remove_translated_fields'),
         ('projects', '0075_auto_20180515_1556'),
     ]
 

@@ -1,3 +1,4 @@
+from django.db import models
 from django.contrib import admin, messages
 from django.core.urlresolvers import reverse
 from django.template.response import TemplateResponse
@@ -9,6 +10,7 @@ from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.projects.models import Project
 from bluebottle.members.models import Member
 from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 
 def merge(modeladmin, request, queryset):
@@ -131,6 +133,10 @@ class OrganizationAdmin(admin.ModelAdmin):
         ('email', 'email'),
         ('created', 'created'),
     ]
+
+    formfield_overrides = {
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
+    }
 
     def get_inline_instances(self, request, obj=None):
         """ Override get_inline_instances so that add form do not show inlines """

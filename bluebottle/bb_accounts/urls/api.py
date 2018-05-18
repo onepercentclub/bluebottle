@@ -2,8 +2,7 @@ from django.conf.urls import url
 
 from ..views import (
     ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
-    PasswordReset, PasswordSet, UserVerification
-)
+    PasswordReset, PasswordSet, UserVerification, UserDataExport)
 
 # Public User API:
 #
@@ -32,4 +31,7 @@ urlpatterns = [
         name='user-profile-detail'),
     url(r'^verification/$', UserVerification.as_view(),
         name='user-verification'),
+    url(r'^export/$', UserDataExport.as_view(),
+        name='user-export'),
+
 ]

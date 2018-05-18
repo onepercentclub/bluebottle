@@ -162,8 +162,7 @@ MIDDLEWARE_CLASSES = (
 )
 
 REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
-    'FILTER_BACKEND': 'rest_framework.filters.DjangoFilterBackend',
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
@@ -870,3 +869,5 @@ HOMEPAGE = {}
 
 LOGOUT_REDIRECT_URL = 'admin:index'
 LOGIN_REDIRECT_URL = 'admin:index'
+
+TINYMCE_INCLUDE_JQUERY = False

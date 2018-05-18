@@ -5,7 +5,8 @@ from django.db.models.query_utils import Q
 from django.utils import timezone
 
 import django_filters
-from rest_framework import filters, serializers
+from rest_framework import serializers
+from django_filters import rest_framework as filters
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.tasks.permissions import TaskPermission, TaskMemberPermission, TaskManagerPermission
@@ -67,7 +68,7 @@ class TaskPreviewFilter(filters.FilterSet):
     country = django_filters.NumberFilter(name='project__country')
     location = django_filters.NumberFilter(name='project__location')
     project = django_filters.CharFilter(name='project__slug')
-    text = django_filters.MethodFilter(action='text_filter')
+    text = django_filters.CharFilter(method='text_filter')
 
     def text_filter(self, queryset, filter):
         return queryset.filter(

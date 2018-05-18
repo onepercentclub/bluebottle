@@ -22,7 +22,7 @@ from bluebottle.clients import properties
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
-    UserVerificationSerializer
+    UserVerificationSerializer, UserDataExportSerializer
 )
 
 USER_MODEL = get_user_model()
@@ -228,3 +228,16 @@ class UserVerification(generics.CreateAPIView):
             self.request.user.save()
         else:
             raise PermissionDenied('Could not verify token')
+
+
+class UserDataExport(generics.RetrieveAPIView):
+    queryset = USER_MODEL.objects.all()
+    serializer_class = UserDataExportSerializer
+
+    permission_classes = (CurrentUserPermission, )
+
+    def get_object(self):
+        if isinstance(self.request.user, AnonymousUser):
+            raise Http404()
+
+        return self.request.user

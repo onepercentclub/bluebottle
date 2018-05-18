@@ -1,4 +1,6 @@
 import logging
+
+from django.db.models import Q
 from django.http.response import Http404
 
 from rest_framework import permissions, generics
@@ -30,9 +32,14 @@ class ValidDonationsMixin(object):
     """
     def get_queryset(self):
         queryset = super(ValidDonationsMixin, self).get_queryset()
-        queryset = queryset.filter(order__status__in=[StatusDefinition.PLEDGED,
-                                                      StatusDefinition.SUCCESS,
-                                                      StatusDefinition.PENDING])
+        queryset = queryset.filter(
+            order__status__in=[
+                StatusDefinition.PLEDGED,
+                StatusDefinition.SUCCESS,
+                StatusDefinition.PENDING,
+                StatusDefinition.CANCELLED,
+            ]
+        )
         return queryset
 
 
@@ -94,7 +101,6 @@ class ProjectDonationList(ValidDonationsMixin, generics.ListAPIView):
            self.request.query_params['co_financing'] == 'true':
             filter_kwargs['order__user__is_co_financer'] = True
         else:
-            from django.db.models import Q
             queryset = queryset.filter(Q(order__user__is_co_financer=False) |
                                        Q(order__user__isnull=True) |
                                        Q(anonymous=True))

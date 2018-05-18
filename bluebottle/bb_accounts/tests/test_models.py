@@ -257,8 +257,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
         for prop in [
             'is_active',
-            'first_name',
-            'last_name',
             'user_name',
             'place',
             'picture',
@@ -277,6 +275,8 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertIsNone(self.user.address.pk)
         self.assertEqual(self.user.birthdate, '1000-01-01')
         self.assertTrue(self.user.email.endswith('anonymous@example.com'))
+        self.assertEqual(self.user.first_name, 'Deactivated')
+        self.assertEqual(self.user.last_name, 'Member')
         self.assertFalse(self.user.has_usable_password())
 
     def test_anonymize_twice(self):

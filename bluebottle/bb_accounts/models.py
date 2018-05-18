@@ -246,8 +246,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         self.username = '{}-anonymous@example.com'.format(self.pk)  # disabled emails need to be unique too
         self.remote_id = '{}-anonymous@example.com'.format(self.pk)  # disabled emails need to be unique too
         self.set_unusable_password()
-        self.first_name = ''
-        self.last_name = ''
+        self.first_name = 'Deactivated'
+        self.last_name = 'Member'
         self.user_name = ''
         self.place = ''
         self.picture = ''

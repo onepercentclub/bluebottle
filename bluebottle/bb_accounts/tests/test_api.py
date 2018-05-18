@@ -365,8 +365,8 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         self.assertFalse(self.user_1.is_active)
         self.assertTrue(self.user_1.email.endswith('anonymous@example.com'))
-        self.assertFalse(self.user_1.first_name)
-        self.assertFalse(self.user_1.last_name)
+        self.assertEqual(self.user_1.first_name, 'Deactivated')
+        self.assertEqual(self.user_1.last_name, 'Member')
 
     def test_deactivate_no_token(self):
         response = self.client.delete(

@@ -6,7 +6,6 @@ from adminsortable.models import SortableMixin
 
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
@@ -203,7 +202,10 @@ class Project(BaseProject, PreviousStatusMixin):
 
     bank_details_reviewed = models.BooleanField(
         _('Bank details reviewed'),
-        help_text=_('Review the project documents before marking the bank details as reviewed. The documents will be removed after marking the bank details as reviewed'),
+        help_text=_(
+            'Review the project documents before marking the bank details as reviewed. '
+            'The documents will be removed after marking the bank details as reviewed'
+        ),
         default=False
     )
 

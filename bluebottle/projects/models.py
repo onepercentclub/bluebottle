@@ -362,6 +362,12 @@ class Project(BaseProject, PreviousStatusMixin):
 
         super(Project, self).save(*args, **kwargs)
 
+        # Set a default deadline of 30 days
+        try:
+            self.projectlocation
+        except ProjectLocation.DoesNotExist:
+            ProjectLocation.objects.create(project=self)
+
     def update_status_after_donation(self, save=True):
         if not self.campaign_funded and not self.campaign_ended and \
                 self.status.slug not in ["done-complete", "done-incomplete"] and \

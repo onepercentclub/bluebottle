@@ -106,7 +106,8 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'country', 'verified', 'permissions', 'partner_organization')
+            'country', 'verified', 'permissions', 'partner_organization',
+        )
 
 
 class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
@@ -145,12 +146,14 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'url', 'full_name', 'short_name', 'initials', 'picture',
-                  'primary_language', 'about_me', 'location', 'avatar',
-                  'project_count', 'donation_count', 'date_joined',
-                  'fundraiser_count', 'task_count', 'time_spent',
-                  'tasks_performed', 'website', 'twitter', 'facebook',
-                  'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization')
+        fields = (
+            'id', 'url', 'full_name', 'short_name', 'initials', 'picture',
+            'primary_language', 'about_me', 'location', 'avatar',
+            'project_count', 'donation_count', 'date_joined',
+            'fundraiser_count', 'task_count', 'time_spent',
+            'tasks_performed', 'website', 'twitter', 'facebook',
+            'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization',
+        )
 
 
 class ManageProfileSerializer(UserProfileSerializer):
@@ -159,12 +162,21 @@ class ManageProfileSerializer(UserProfileSerializer):
     """
     partial = True
     address = UserAddressSerializer(allow_null=True)
+    from_facebook = serializers.SerializerMethodField()
+
+    def get_from_facebook(self, instance):
+        try:
+            instance.social_auth.get(provider='facebook')
+            return True
+        except instance.social_auth.model.DoesNotExist:
+            return False
 
     class Meta:
         model = BB_USER_MODEL
         fields = UserProfileSerializer.Meta.fields + (
             'email', 'address', 'newsletter', 'campaign_notifications', 'location',
             'birthdate', 'gender', 'first_name', 'last_name', 'phone_number',
+            'from_facebook',
         )
 
     def update(self, instance, validated_data):

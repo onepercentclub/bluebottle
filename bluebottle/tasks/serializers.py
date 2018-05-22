@@ -150,7 +150,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             })
 
         project_started = data['project'].campaign_started or data['project'].created
-        if data.get('deadline') > project_started + timedelta(days=365):
+        if data.get('deadline') > project_started + timedelta(days=366):
             raise serializers.ValidationError({
                 'deadline': [
                     _("The deadline can not be more than a year after the project started")

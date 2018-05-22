@@ -62,11 +62,12 @@ class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     # TODO: Remove first/last name and only use these
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
     short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'first_name', 'last_name', 'initials',
-                  'avatar', 'full_name', 'short_name')
+                  'avatar', 'full_name', 'short_name', 'is_active')
 
 
 class UserPermissionsSerializer(serializers.Serializer):
@@ -143,6 +144,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     time_spent = serializers.ReadOnlyField()
     tasks_performed = serializers.ReadOnlyField()
     partner_organization = OrganizationPreviewSerializer(allow_null=True, read_only=True, required=False)
+    is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = BB_USER_MODEL
@@ -150,7 +152,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'id', 'url', 'full_name', 'short_name', 'initials', 'picture',
             'primary_language', 'about_me', 'location', 'avatar',
             'project_count', 'donation_count', 'date_joined',
-            'fundraiser_count', 'task_count', 'time_spent',
+            'fundraiser_count', 'task_count', 'time_spent', 'is_active',
             'tasks_performed', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization',
         )

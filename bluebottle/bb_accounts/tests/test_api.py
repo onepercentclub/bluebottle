@@ -51,6 +51,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.user_with_partner_organization.save()
 
         self.current_user_api_url = reverse('user-current')
+        self.manage_profile_url = reverse('manage-profile', args=(self.user_1.pk, ))
         self.user_create_api_url = reverse('user-user-create')
         self.user_password_reset_api_url = reverse('password-reset')
 
@@ -372,6 +373,38 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND,
                          response.data)
+
+    def test_deactivate(self):
+        response = self.client.delete(
+            self.manage_profile_url,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.user_1.refresh_from_db()
+
+        self.assertFalse(self.user_1.is_active)
+        self.assertTrue(self.user_1.email.endswith('anonymous@example.com'))
+        self.assertEqual(self.user_1.first_name, 'Deactivated')
+        self.assertEqual(self.user_1.last_name, 'Member')
+
+    def test_deactivate_no_token(self):
+        response = self.client.delete(
+            self.manage_profile_url
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.user_1.refresh_from_db()
+        self.assertTrue(self.user_1.is_active)
+
+    def test_deactivate_wrong_user(self):
+        response = self.client.delete(
+            self.manage_profile_url,
+            token=self.user_2_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.user_1.refresh_from_db()
+        self.assertTrue(self.user_1.is_active)
 
 
 class AuthLocaleMiddlewareTest(BluebottleTestCase):

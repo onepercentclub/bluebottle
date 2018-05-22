@@ -251,3 +251,37 @@ class BlueBottleUserTestCase(BluebottleTestCase):
 
         self.assertEquals(
             set(f.name for f in Member._meta.fields) & user_fields, user_fields)
+
+    def test_anonymize(self):
+        self.user.anonymize()
+
+        for prop in [
+            'is_active',
+            'user_name',
+            'place',
+            'picture',
+            'avatar',
+            'abount_me',
+            'gender',
+            'location',
+            'website',
+            'facebook',
+            'twitter',
+            'skypename',
+            'partner_organization',
+        ]:
+            self.assertFalse(getattr(self.user, prop))
+
+        self.assertIsNone(self.user.address.pk)
+        self.assertEqual(self.user.birthdate, '1000-01-01')
+        self.assertTrue(self.user.email.endswith('anonymous@example.com'))
+        self.assertEqual(self.user.first_name, 'Deactivated')
+        self.assertEqual(self.user.last_name, 'Member')
+        self.assertFalse(self.user.has_usable_password())
+
+    def test_anonymize_twice(self):
+        self.user.anonymize()
+
+        other_user = BlueBottleUserFactory.create()
+        other_user.anonymize()
+        self.assertFalse(other_user.is_active)

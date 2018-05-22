@@ -421,7 +421,7 @@ class StatisticsDateTest(BluebottleTestCase):
         self.assertEqual(stats.donated_total, Money(1000, 'EUR'))
         self.assertEqual(stats.projects_online, 1)
         self.assertEqual(stats.projects_realized, 2)
-        self.assertEqual(stats.tasks_realized, 2)
+        self.assertEqual(stats.tasks_realized, 1)
         self.assertEqual(stats.votes_cast, 1)
         self.assertEqual(stats.amount_matched, Money(100, 'EUR'))
 
@@ -436,7 +436,7 @@ class StatisticsDateTest(BluebottleTestCase):
         self.assertEqual(stats.donated_total, Money(1000, 'EUR'))
         self.assertEqual(stats.projects_online, 1)
         self.assertEqual(stats.projects_realized, 0)
-        self.assertEqual(stats.tasks_realized, 0)
+        self.assertEqual(stats.tasks_realized, 1)
         self.assertEqual(stats.votes_cast, 1)
         self.assertEqual(stats.amount_matched, Money(200, 'EUR'))
 

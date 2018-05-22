@@ -41,6 +41,11 @@ class MemberCreationForm(forms.ModelForm):
 
     is_active = forms.BooleanField(label=_("Is active"), initial=True)
 
+    def __init__(self, *args, **kwargs):
+        super(MemberCreationForm, self).__init__(*args, **kwargs)
+        authenticated = Group.objects.get(name='Authenticated')
+        self.initial['groups'] = [authenticated]
+
     class Meta:
         model = Member
         # Mind you these fields are also set in MemberAdmin.add_fieldsets

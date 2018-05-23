@@ -261,7 +261,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
             'place',
             'picture',
             'avatar',
-            'abount_me',
+            'about_me',
             'gender',
             'location',
             'website',

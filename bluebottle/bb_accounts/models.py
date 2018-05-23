@@ -252,7 +252,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         self.place = ''
         self.picture = ''
         self.avatar = ''
-        self.abount_me = ''
+        self.about_me = ''
         self.gender = ''
         self.birthdate = '1000-01-01'
         self.location = None

@@ -15,21 +15,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='ProjectBankAccount',
-            fields=[
-                ('project', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='bank_account', serialize=False, to='projects.Project')),
-                ('name', models.CharField(blank=True, max_length=255, null=True, verbose_name='account holder name')),
-                ('address', models.CharField(blank=True, max_length=255, null=True, verbose_name='account holder address')),
-                ('postal_code', models.CharField(blank=True, max_length=20, null=True, verbose_name='account holder postal code')),
-                ('city', models.CharField(blank=True, max_length=255, null=True, verbose_name='account holder city')),
-                ('number', models.CharField(blank=True, max_length=255, null=True, verbose_name='Account number')),
-                ('details', models.CharField(blank=True, max_length=500, null=True, verbose_name='account details')),
-                ('bank_country', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='account_details_bank_country', to='geo.Country')),
-                ('country', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='account_details_country', to='geo.Country')),
-            ],
-        ),
-        migrations.AlterField(
+       migrations.AlterField(
             model_name='project',
             name='bank_details_reviewed',
             field=models.BooleanField(default=False, help_text='A staff memmber has reviewed the bank details for this project', verbose_name='Bank details reviewed'),

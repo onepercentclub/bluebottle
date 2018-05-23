@@ -40,7 +40,7 @@ class ProjectDashboardTest(BluebottleAdminTestCase):
     def test_project_dashboard(self):
         response = self.client.get(self.member_admin_url)
         self.assertContains(response, 'Recently submitted project')
-        self.assertContains(response, 'Crowdfunding projects nearing deadline')
+        self.assertContains(response, 'Projects nearing deadline')
 
         # Project 2 is recently submitted
         self.assertContains(response, self.projects[2].title)

@@ -241,6 +241,16 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
                     value = CustomProjectField.objects.filter(project=self.instance, field=field).get().value
                     self.initial[field.slug] = value
 
+    def clean(self):
+        if (
+            self.cleaned_data['status'].slug == 'campaign' and
+            self.cleaned_data['amount_asked'].amount > 0 and
+            not self.cleaned_data['bank_details_reviewed']
+        ):
+            raise forms.ValidationError(
+                _('The bank details need to be reviewed before approving a project')
+            )
+
     def save(self, commit=True):
         project = super(ProjectAdminForm, self).save(commit=commit)
         for field in CustomProjectFieldSettings.objects.all():
@@ -389,7 +399,6 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             actions[action_name] = (
                 mark_as, action_name, _('Mark selected as "{}"'.format(_(phase.name)))
             )
-        print actions
         return OrderedDict(reversed(actions.items()))
 
     # Fields
@@ -683,7 +692,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'account_holder_country',
             'account_number',
             'account_details',
-            'account_bank_country'
+            'account_bank_country',
+            'bank_details_reviewed'
         ]})
 
         extra = (_('Extra fields'), {

@@ -332,9 +332,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         self.inlines = self.all_inlines
         if obj:
             # We need to reload project, or we get an error when changing project type
-            proj = Project.objects.get(pk=obj.id)
-            if obj and proj.project_type == 'sourcing':
+            project = Project.objects.get(pk=obj.id)
+            if project.project_type == 'sourcing':
                 self.inlines = self.sourcing_inlines
+        elif request.POST.get('project_type', '') == 'sourcing':
+            self.inlines = self.sourcing_inlines
 
         instances = super(ProjectAdmin, self).get_inline_instances(request, obj)
         add_on_inline = ProjectAddOnInline(self.model, self.admin_site)
@@ -702,8 +704,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         fieldsets = (main, story, dates)
 
-        if obj and obj.project_type != 'sourcing':
-            fieldsets += (amount, bank)
+        if obj:
+            project = Project.objects.get(pk=obj.id)
+            if project.project_type != 'sourcing':
+                fieldsets += (amount, bank)
 
         if CustomProjectFieldSettings.objects.count():
             fieldsets += (extra, )

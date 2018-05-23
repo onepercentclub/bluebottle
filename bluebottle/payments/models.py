@@ -264,6 +264,10 @@ class OrderPayment(models.Model, FSMTransition):
             return ""
 
     @property
+    def can_refund(self):
+        return self.status in ('settled', 'success', )
+
+    @property
     def info_text(self):
         """ The description on the payment receipt.
         """

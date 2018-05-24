@@ -26,3 +26,4 @@ class SuggestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Suggestion
+        fields = '__all__'

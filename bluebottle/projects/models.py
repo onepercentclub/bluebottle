@@ -48,18 +48,22 @@ logger = logging.getLogger(__name__)
 
 class ProjectLocation(models.Model):
     project = models.OneToOneField('projects.Project', primary_key=True)
-    place = models.CharField(max_length=80, null=True, blank=True)
-    street = models.TextField(max_length=80, null=True, blank=True)
-    neighborhood = models.TextField(max_length=80, null=True, blank=True)
-    city = models.TextField(max_length=80, null=True, blank=True)
-    postal_code = models.CharField(max_length=20, null=True, blank=True)
-    country = models.CharField(max_length=40, null=True, blank=True)
+    place = models.CharField(_('place'), max_length=80, null=True, blank=True)
+    street = models.TextField(_('street'), max_length=80, null=True, blank=True)
+    neighborhood = models.TextField(_('neighborhood'), max_length=80, null=True, blank=True)
+    city = models.TextField(_('city'), max_length=80, null=True, blank=True)
+    postal_code = models.CharField(_('postal_code'), max_length=20, null=True, blank=True)
+    country = models.CharField(_('country'), max_length=40, null=True, blank=True)
     latitude = models.DecimalField(
         _('latitude'), max_digits=21, decimal_places=18
     )
     longitude = models.DecimalField(
         _('longitude'), max_digits=21, decimal_places=18
     )
+
+    class Meta:
+        verbose_name = _('Map')
+        verbose_name_plural = _('Map')
 
 
 class ProjectPhaseLog(models.Model):
@@ -68,6 +72,10 @@ class ProjectPhaseLog(models.Model):
     start = CreationDateTimeField(
         _('created'), help_text=_('When this project entered in this status.')
     )
+
+    class Meta:
+        verbose_name = _('project phase log')
+        verbose_name_plural = _('project phase logs')
 
     class Analytics:
         type = 'project'
@@ -99,7 +107,7 @@ class ProjectDocument(BaseProjectDocument):
     def document_url(self):
         # pk may be unset if not saved yet, in which case no url can be
         # generated.
-        if self.pk is not None:
+        if self.pk is not None and self.file:
             return reverse_signed('project-document-file', args=(self.pk, ))
         return None
 
@@ -187,10 +195,19 @@ class Project(BaseProject, PreviousStatusMixin):
         (StatusDefinition.FAILED, _('Failed'))
     )
 
-    payout_status = models.CharField(max_length=50, null=True, blank=True,
+    payout_status = models.CharField(_('payout_status'), max_length=50, null=True, blank=True,
                                      choices=PAYOUT_STATUS_CHOICES)
     wallposts = GenericRelation(Wallpost, related_query_name='project_wallposts')
     objects = UpdateSignalsQuerySet.as_manager()
+
+    bank_details_reviewed = models.BooleanField(
+        _('Bank details reviewed'),
+        help_text=_(
+            'Review the project documents before marking the bank details as reviewed. '
+            'The documents will be removed after marking the bank details as reviewed'
+        ),
+        default=False
+    )
 
     def __unicode__(self):
         if self.title:
@@ -349,10 +366,20 @@ class Project(BaseProject, PreviousStatusMixin):
         if not self.task_manager:
             self.task_manager = self.owner
 
+        if self.bank_details_reviewed:
+            for document in self.documents.all():
+                document.delete()
+
         # Set all task.author to project.task_manager
         self.task_set.exclude(author=self.task_manager).update(author=self.task_manager)
 
         super(Project, self).save(*args, **kwargs)
+
+        # Set a default deadline of 30 days
+        try:
+            self.projectlocation
+        except ProjectLocation.DoesNotExist:
+            ProjectLocation.objects.create(project=self)
 
     def update_status_after_donation(self, save=True):
         if not self.campaign_funded and not self.campaign_ended and \
@@ -436,9 +463,14 @@ class Project(BaseProject, PreviousStatusMixin):
         # something like /projects/<slug>/donations
         donations = self.donation_set
         donations = donations.filter(
-            order__status__in=[StatusDefinition.PLEDGED,
-                               StatusDefinition.PENDING,
-                               StatusDefinition.SUCCESS])
+            order__status__in=[
+                StatusDefinition.PLEDGED,
+                StatusDefinition.PENDING,
+                StatusDefinition.SUCCESS,
+                StatusDefinition.CANCELLED,
+            ]
+        )
+
         count = donations.all().aggregate(total=Count('order__user', distinct=True))['total']
 
         if with_guests:
@@ -508,6 +540,10 @@ class Project(BaseProject, PreviousStatusMixin):
         return self.get_money_total([StatusDefinition.PLEDGED])
 
     @property
+    def amount_cancelled(self):
+        return self.get_money_total([StatusDefinition.CANCELLED])
+
+    @property
     def donated_percentage(self):
         if not self.amount_asked.amount:
             return 0
@@ -560,6 +596,13 @@ class Project(BaseProject, PreviousStatusMixin):
             (not self.payout_status or self.payout_status == StatusDefinition.NEEDS_APPROVAL) and
             self.status.slug in ('done-incomplete', 'closed')
         )
+
+    @property
+    def days_left(self):
+        delta = (self.deadline - now()).days
+        if delta < 0:
+            delta = 0
+        return delta
 
     def get_absolute_url(self):
         """ Get the URL for the current project. """
@@ -615,8 +658,8 @@ class Project(BaseProject, PreviousStatusMixin):
         data = {
             "Project": self.title,
             "Owner": self.owner.email,
-            "old_status": old_status.name,
-            "new_status": new_status.name
+            "old_status": old_status.slug,
+            "new_status": new_status.slug
         }
 
         if old_status.slug in ('plan-new',

@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.timezone import now
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
@@ -86,6 +86,8 @@ class Payment(PolymorphicModel):
 
     class Meta:
         ordering = ('-created', '-updated')
+        verbose_name = _('payment')
+        verbose_name_plural = _('payments')
 
 
 class OrderPaymentAction(models.Model):
@@ -156,6 +158,8 @@ class OrderPayment(models.Model, FSMTransition):
         permissions = (
             ('refund_orderpayment', 'Can refund order payments'),
         )
+        verbose_name = _('order payment')
+        verbose_name_plural = _('order payments')
 
     @classmethod
     def get_latest_by_order(cls, order):
@@ -185,6 +189,8 @@ class OrderPayment(models.Model, FSMTransition):
     @transition(field=status, source=[StatusDefinition.AUTHORIZED,
                                       StatusDefinition.STARTED,
                                       StatusDefinition.CANCELLED,
+                                      StatusDefinition.REFUNDED,
+                                      StatusDefinition.REFUND_REQUESTED,
                                       StatusDefinition.FAILED,
                                       StatusDefinition.UNKNOWN],
                 target=StatusDefinition.SETTLED)
@@ -192,8 +198,12 @@ class OrderPayment(models.Model, FSMTransition):
         self.closed = now()
 
     @transition(field=status,
-                source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED,
-                        StatusDefinition.CANCELLED, StatusDefinition.SETTLED],
+                source=[StatusDefinition.STARTED,
+                        StatusDefinition.AUTHORIZED,
+                        StatusDefinition.REFUND_REQUESTED,
+                        StatusDefinition.REFUNDED,
+                        StatusDefinition.CANCELLED,
+                        StatusDefinition.SETTLED],
                 target=StatusDefinition.FAILED)
     def failed(self):
         self.closed = None

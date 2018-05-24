@@ -50,6 +50,7 @@ class TestPayoutAdapter(BluebottleTestCase):
 
         self.adapter = DoradoPayoutAdapter(self.project)
 
+    @override_settings(PAYOUT_SERVICE={'url': 'http://test.nu'})
     def test_payouts_created_trigger_called(self):
         """
         Check trigger to service is been called.

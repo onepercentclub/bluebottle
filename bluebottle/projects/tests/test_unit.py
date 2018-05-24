@@ -1,10 +1,11 @@
 import json
 from datetime import timedelta, time
+import httmock
 import urlparse
 
-import httmock
-
+from bluebottle.projects.admin import mark_as
 from django.db.models import Count
+from django.test.client import RequestFactory
 from django.test.utils import override_settings
 from django.utils import timezone
 from moneyed.classes import Money
@@ -12,7 +13,6 @@ from moneyed.classes import Money
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
-from bluebottle.projects.admin import mark_as_plan_new
 from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectBudgetLine, ProjectPlatformSettings, \
     CustomProjectFieldSettings, CustomProjectField, ProjectLocation
 from bluebottle.suggestions.models import Suggestion
@@ -350,15 +350,16 @@ class TestProjectBulkActions(BluebottleTestCase):
         self.init_projects()
 
         self.projects = [ProjectFactory.create(title='test {}'.format(i)) for i in range(10)]
+        self.request = RequestFactory().post('/admin/some', data={'action': 'plan-new'})
 
     def test_mark_as_plan_new(self):
-        mark_as_plan_new(None, None, Project.objects)
+        mark_as(None, self.request, Project.objects)
 
         for project in Project.objects.all():
             self.assertEqual(project.status.slug, 'plan-new')
 
     def test_project_phase_log_creation(self):
-        mark_as_plan_new(None, None, Project.objects)
+        mark_as(None, self.request, Project.objects)
 
         for project in Project.objects.all():
             log = ProjectPhaseLog.objects.filter(project=project).order_by('start').last()
@@ -368,7 +369,7 @@ class TestProjectBulkActions(BluebottleTestCase):
         queryset = Project.objects.annotate(
             admin_vote_count=Count('vote', distinct=True)
         )
-        mark_as_plan_new(None, None, queryset)
+        mark_as(None, self.request, queryset)
 
         for project in Project.objects.all():
             self.assertEqual(project.status.slug, 'plan-new')
@@ -517,11 +518,10 @@ class TestProjectPlatformSettings(BluebottleTestCase):
 class TestProjectLocation(BluebottleTestCase):
     def setUp(self):
         self.project = ProjectFactory.create(language=Language.objects.get(code='en'))
-        self.location = ProjectLocation(
-            project=self.project,
-            latitude=52.3721249,
-            longitude=4.9070198
-        )
+        self.project.projectlocation.latitude = 52.3721249
+        self.project.projectlocation.longitude = 4.9070198
+        self.project.projectlocation.save()
+
         self.mock_result = {
             'results': [{
                 'geometry': {
@@ -577,54 +577,54 @@ class TestProjectLocation(BluebottleTestCase):
 
     def save_location(self):
         with httmock.HTTMock(self.geocode_mock_factory):
-            self.location.save()
+            self.project.projectlocation.save()
 
     def test_adjusting_geolocation(self):
-        self.location.latitude = 52.166315
-        self.location.longitude = 4.490936
-        self.location.save()
-        self.location.latitude = 43.059269
-        self.location.longitude = 23.681429
-        self.location.save()
+        self.project.projectlocation.latitude = 52.166315
+        self.project.projectlocation.longitude = 4.490936
+        self.project.projectlocation.save()
+        self.project.projectlocation.latitude = 43.059269
+        self.project.projectlocation.longitude = 23.681429
+        self.project.projectlocation.save()
 
     def test_geocode(self):
         self.save_location()
         self.assertEqual(
-            self.location.street, "'s-Gravenhekje"
+            self.project.projectlocation.street, "'s-Gravenhekje"
         )
         self.assertEqual(
-            self.location.country, "Netherlands"
+            self.project.projectlocation.country, "Netherlands"
         )
         self.assertEqual(
-            self.location.neighborhood, "Amsterdam-Centrum"
+            self.project.projectlocation.neighborhood, "Amsterdam-Centrum"
         )
         self.assertEqual(
-            self.location.city, "Amsterdam"
+            self.project.projectlocation.city, "Amsterdam"
         )
 
     def test_geocode_different_langauge(self):
         self.project.language = Language.objects.get(code='nl')
         self.save_location()
         self.assertEqual(
-            self.location.street, "'s-Gravenhekje"
+            self.project.projectlocation.street, "'s-Gravenhekje"
         )
 
     @override_settings(MAPS_API_KEY=None)
     def test_geocode_no_key(self):
         self.save_location()
         self.assertEqual(
-            self.location.street, None
+            self.project.projectlocation.street, None
         )
 
     def test_geocode_unnamed_street(self):
         self.mock_result['results'][0]['address_components'][1]['long_name'] = 'Unnamed Road'
         self.save_location()
         self.assertEqual(
-            self.location.street, None
+            self.project.projectlocation.street, None
         )
 
 
-class TestProjectDocumentDownload(BluebottleTestCase):
+class TestProjectDocument(BluebottleTestCase):
     def setUp(self):
         self.project = ProjectFactory.create(language=Language.objects.get(code='en'))
         self.document = ProjectDocumentFactory.create(
@@ -638,3 +638,9 @@ class TestProjectDocumentDownload(BluebottleTestCase):
 
         self.assertEquals(response.status_code, 200)
         self.assertEqual(response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg')
+
+    def test_review_documents(self):
+        self.project.bank_details_reviewed = True
+        self.project.save()
+
+        self.assertEqual(len(self.project.documents.all()), 0)

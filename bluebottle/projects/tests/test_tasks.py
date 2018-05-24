@@ -5,8 +5,10 @@ from django.db import connection
 from moneyed import Money
 
 from bluebottle.projects.tasks import refund_project
+from bluebottle.projects.models import ProjectPhase
 
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.orders.models import Order
 from bluebottle.payments_docdata.tests.factory_models import DocdataPaymentFactory
 from bluebottle.payments_docdata.adapters import DocdataPaymentAdapter
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
@@ -22,7 +24,7 @@ class TestRefund(BluebottleTestCase):
 
         self.init_projects()
 
-        self.project = ProjectFactory.create()
+        self.project = ProjectFactory.create(status=ProjectPhase.objects.get(slug='refunded'))
 
         self.order = OrderFactory.create()
         self.order_payment = OrderPaymentFactory.create(
@@ -47,10 +49,21 @@ class TestRefund(BluebottleTestCase):
         payment.status = 'settled'
         payment.save()
 
+    def mock_side_effect(self):
+        self.order_payment.payment.status = 'refunded'
+        self.order_payment.payment.save()
+
     def test_refund(self):
-        with mock.patch.object(DocdataPaymentAdapter, 'refund_payment') as refund:
+        with mock.patch.object(
+            DocdataPaymentAdapter,
+            'refund_payment',
+            side_effect=self.mock_side_effect
+        ) as refund:
             refund_project(connection.tenant, self.project)
-            self.assertEqual(refund.call_count, 1)
+
+        self.assertEqual(refund.call_count, 1)
+        self.order = Order.objects.get(pk=self.order.pk)
+        self.assertEqual(self.order.status, 'cancelled')
 
     def test_refund_created_payment(self):
         order = OrderFactory.create()
@@ -73,6 +86,13 @@ class TestRefund(BluebottleTestCase):
             amount=Money(100, 'EUR'),
         )
 
-        with mock.patch.object(DocdataPaymentAdapter, 'refund_payment') as refund:
+        with mock.patch.object(
+            DocdataPaymentAdapter,
+            'refund_payment',
+            side_effect=self.mock_side_effect
+        ) as refund:
             refund_project(connection.tenant, self.project)
-            self.assertEqual(refund.call_count, 1)
+
+        self.order = Order.objects.get(pk=self.order.pk)
+        self.assertEqual(refund.call_count, 1)
+        self.assertEqual(self.order.status, 'cancelled')

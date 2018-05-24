@@ -13,6 +13,7 @@ from bluebottle.tasks.models import Task
 from bluebottle.utils.fields import ImageField
 from bluebottle.categories.models import Category
 from bluebottle.utils.models import BasePlatformSettings
+from bluebottle.utils.validators import FileExtensionValidator
 
 
 class ResultPage(TranslatableModel):
@@ -480,12 +481,19 @@ class WelcomeContent(ContentItem):
 
 
 class SitePlatformSettings(BasePlatformSettings):
+    logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
+
     contact_email = models.EmailField(null=True, blank=True)
     contact_phone = models.CharField(max_length=100, null=True, blank=True)
     copyright = models.CharField(max_length=100, null=True, blank=True)
     powered_by_text = models.CharField(max_length=100, null=True, blank=True)
     powered_by_link = models.CharField(max_length=100, null=True, blank=True)
     powered_by_logo = models.ImageField(null=True, blank=True, upload_to='site_content/')
+    logo = models.FileField(
+        null=True, blank=True, upload_to='site_content/',
+        validators=[FileExtensionValidator(allowed_extensions=['svg'])]
+    )
+    favicon = models.ImageField(null=True, blank=True, upload_to='site_content/')
 
     class Meta:
         verbose_name_plural = _('site platform settings')

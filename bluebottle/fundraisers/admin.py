@@ -1,8 +1,11 @@
+from django.db import models
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.fundraisers.models import Fundraiser
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 
 class FundraiserAdmin(admin.ModelAdmin):
@@ -14,6 +17,10 @@ class FundraiserAdmin(admin.ModelAdmin):
     search_fields = ('title', 'project__title')
 
     readonly_fields = ('project_link', 'owner_link')
+
+    formfield_overrides = {
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
+    }
 
     def amount_override(self, obj):
         return obj.amount
@@ -36,6 +43,7 @@ class FundraiserAdmin(admin.ModelAdmin):
             str(url),
             object.title
         )
+    project_link.short_description = _('Project link')
 
     def owner_link(self, obj):
         object = obj.owner

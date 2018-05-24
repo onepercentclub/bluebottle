@@ -51,6 +51,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.user_with_partner_organization.save()
 
         self.current_user_api_url = reverse('user-current')
+        self.manage_profile_url = reverse('manage-profile', args=(self.user_1.pk, ))
         self.user_create_api_url = reverse('user-user-create')
         self.user_password_reset_api_url = reverse('password-reset')
 
@@ -78,6 +79,21 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         for field in excluded_fields:
             self.assertFalse(field in response.data)
+
+    def test_user_profile_not_from_facebook(self):
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
+        response = self.client.get(user_profile_url, token=self.user_1_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['from_facebook'])
+
+    def test_user_profile_from_facebook(self):
+        self.user_1.social_auth.create(provider='facebook')
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
+        response = self.client.get(user_profile_url, token=self.user_1_token)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['from_facebook'])
 
     def test_user_profile_returned_private_fields(self):
         group = Group.objects.get(name='Anonymous')
@@ -292,8 +308,12 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         self.assertEqual(response.data['non_field_errors'][0]['type'], 'email')
         self.assertEqual(response.data['non_field_errors'][0]['email'], 'nijntje27@hetkonijntje.nl')
-        self.assertEqual(response.data['non_field_errors'][0]['id'], user_1.pk)
-        self.assertEqual(response.data['email'][0], 'Member with this email address already exists.')
+        self.assertEqual(
+            unicode(response.data['non_field_errors'][0]['id']), unicode(user_1.pk)
+        )
+        self.assertEqual(
+            unicode(response.data['email'][0]), 'member with this email address already exists.'
+        )
 
     def test_generate_username(self):
         new_user_email = 'nijntje74@hetkonijntje.nl'
@@ -353,6 +373,38 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND,
                          response.data)
+
+    def test_deactivate(self):
+        response = self.client.delete(
+            self.manage_profile_url,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.user_1.refresh_from_db()
+
+        self.assertFalse(self.user_1.is_active)
+        self.assertTrue(self.user_1.email.endswith('anonymous@example.com'))
+        self.assertEqual(self.user_1.first_name, 'Deactivated')
+        self.assertEqual(self.user_1.last_name, 'Member')
+
+    def test_deactivate_no_token(self):
+        response = self.client.delete(
+            self.manage_profile_url
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        self.user_1.refresh_from_db()
+        self.assertTrue(self.user_1.is_active)
+
+    def test_deactivate_wrong_user(self):
+        response = self.client.delete(
+            self.manage_profile_url,
+            token=self.user_2_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.user_1.refresh_from_db()
+        self.assertTrue(self.user_1.is_active)
 
 
 class AuthLocaleMiddlewareTest(BluebottleTestCase):

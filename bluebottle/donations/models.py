@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
@@ -27,6 +27,7 @@ class Donation(models.Model):
     reward = models.ForeignKey('rewards.Reward',
                                verbose_name=_("Reward"),
                                related_name='donations',
+                               on_delete=models.SET_NULL,
                                null=True, blank=True)
 
     created = CreationDateTimeField(_("Created"))
@@ -34,6 +35,10 @@ class Donation(models.Model):
     completed = models.DateTimeField(_("Ready"), blank=True, editable=False, null=True)
     anonymous = models.BooleanField(_("Anonymous"), default=False)
     name = models.CharField(_("Name of donor"), max_length=200, blank=True, null=True, db_index=True)
+
+    class Meta:
+        verbose_name = _('donation')
+        verbose_name_plural = _('donations')
 
     @property
     def status(self):

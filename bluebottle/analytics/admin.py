@@ -1,8 +1,7 @@
 from django.contrib import admin
 
-from django_singleton_admin.admin import SingletonAdmin
-
 from bluebottle.analytics.models import AnalyticsPlatformSettings, AnalyticsAdapter
+from bluebottle.utils.admin import BasePlatformSettingsAdmin
 
 
 class AnalyticsAdapterInline(admin.TabularInline):
@@ -10,7 +9,7 @@ class AnalyticsAdapterInline(admin.TabularInline):
     extra = 0
 
 
-class AnalyticsPlatformSettingsAdmin(SingletonAdmin):
+class AnalyticsPlatformSettingsAdmin(BasePlatformSettingsAdmin):
 
     inlines = [AnalyticsAdapterInline]
 

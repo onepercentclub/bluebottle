@@ -1,5 +1,7 @@
+from bluebottle.projects.models import ProjectPhase
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
 
@@ -54,3 +56,29 @@ class BlueBottleOrderTestCase(BluebottleTestCase):
         self.order.save()
         self.assertEqual(self.order_payment.status, StatusDefinition.STARTED,
                          'Changing the Order status should not change the Order Payment status')
+
+    def test_refunded(self):
+        DonationFactory.create(order=self.order)
+        self.order_payment.started()
+
+        self.order_payment.save()
+
+        self.order_payment.authorized()
+        self.order_payment.save()
+
+        self.order_payment.refunded()
+        self.assertEqual(self.order.status, StatusDefinition.REFUNDED)
+
+    def test_refund_project(self):
+        donation = DonationFactory.create(order=self.order)
+        donation.project.status = ProjectPhase.objects.get(slug='refunded')
+        donation.project.save()
+        self.order_payment.started()
+
+        self.order_payment.save()
+
+        self.order_payment.authorized()
+        self.order_payment.save()
+
+        self.order_payment.refunded()
+        self.assertEqual(self.order.status, StatusDefinition.CANCELLED)

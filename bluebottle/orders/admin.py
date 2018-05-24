@@ -67,5 +67,8 @@ class BaseOrderAdmin(admin.ModelAdmin):
 
     reload_status.short_description = _("Reload status from docdata")
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 admin.site.register(Order, BaseOrderAdmin)

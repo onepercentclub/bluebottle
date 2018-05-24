@@ -44,6 +44,8 @@ class ProjectPhaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectPhase
 
+        fields = ('id', 'slug', 'name', 'description', 'sequence', 'active', 'editable', 'viewable', 'owner_editable', )
+
 
 class ProjectThemeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -140,6 +142,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     amount_donated = MoneySerializer()
     amount_extra = MoneySerializer()
     amount_needed = MoneySerializer()
+    amount_cancelled = MoneySerializer(read_only=True)
     budget_lines = BasicProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
     categories = serializers.SlugRelatedField(slug_field='slug', many=True, queryset=Category.objects)
     country = ProjectCountrySerializer()
@@ -183,6 +186,7 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'amount_donated',
                   'amount_extra',
                   'amount_needed',
+                  'amount_cancelled',
                   'budget_lines',
                   'categories',
                   'celebrate_results',
@@ -248,6 +252,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'amount_donated',
                   'amount_extra',
                   'amount_needed',
+                  'amount_cancelled',
                   'categories',
                   'celebrate_results',
                   'country',
@@ -314,6 +319,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     amount_asked = MoneySerializer(required=False, allow_null=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_needed = MoneySerializer(read_only=True)
+    amount_cancelled = MoneySerializer(read_only=True)
     budget_lines = ProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
     currencies = serializers.JSONField(read_only=True)
     categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
@@ -435,11 +441,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
         if 'projectlocation' in validated_data:
             location = validated_data.pop('projectlocation')
 
-            if not hasattr(instance, 'projectlocation'):
-                instance.projectlocation = ProjectLocation.objects.create(
-                    project=instance
-                )
-
             for field, value in location.items():
                 setattr(instance.projectlocation, field, value)
 
@@ -454,10 +455,11 @@ class ManageProjectSerializer(serializers.ModelSerializer):
 
         instance = super(ManageProjectSerializer, self).create(validated_data)
         if location_data:
-            ProjectLocation.objects.create(
-                project=instance,
-                **location_data
-            )
+            for field, value in location_data.items():
+                setattr(instance.projectlocation, field, value)
+
+            instance.projectlocation.save()
+
         return instance
 
     class Meta:
@@ -475,6 +477,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'amount_asked',
                   'amount_donated',
                   'amount_needed',
+                  'amount_cancelled',
                   'budget_lines',
                   'categories',
                   'country',

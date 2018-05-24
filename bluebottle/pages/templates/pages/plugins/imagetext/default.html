@@ -1,0 +1,25 @@
+{% if instance.align == 'left' %}
+    <div class="row">
+        <article class="col{{ instance.image_width }}">
+            <figure class="picture {{ instance.align_class }}">
+                <img src="{{ instance.image.url }}" width="{{ instance.image.width }}"
+                     height="{{ instance.image.height }}" alt=""/>
+            </figure>
+        </article>
+        <article class="col{{ instance.text_width }}">
+            {{ instance.text|safe }}
+        </article>
+    </div>
+{% else %}
+    <div class="row">
+        <article class="col{{ instance.text_width }}">
+            {{ instance.text|safe }}
+        </article>
+        <article class="col{{ instance.image_width }}">
+            <figure class="picture {{ instance.align_class }}">
+                <img src="{{ instance.image.url }}" width="{{ instance.image.width }}"
+                     height="{{ instance.image.height }}" alt=""/>
+            </figure>
+        </article>
+    </div>
+{% endif %}

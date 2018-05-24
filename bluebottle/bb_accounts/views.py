@@ -22,7 +22,7 @@ from bluebottle.clients import properties
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
-    UserVerificationSerializer
+    UserVerificationSerializer, UserDataExportSerializer
 )
 
 USER_MODEL = get_user_model()
@@ -37,7 +37,7 @@ class UserProfileDetail(RetrieveAPIView):
     serializer_class = UserProfileSerializer
 
 
-class ManageProfileDetail(generics.RetrieveUpdateAPIView):
+class ManageProfileDetail(generics.RetrieveUpdateDestroyAPIView):
     """
     Manage User Details
     ---
@@ -86,6 +86,9 @@ class ManageProfileDetail(generics.RetrieveUpdateAPIView):
             pass
 
         super(ManageProfileDetail, self).perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        instance.anonymize()
 
 
 class CurrentUser(RetrieveAPIView):
@@ -205,22 +208,6 @@ class PasswordSet(views.APIView):
                                  status=status.HTTP_400_BAD_REQUEST)
 
 
-class DisableAccount(views.APIView):
-
-    def post(self, request, *args, **kwargs):
-        user_id = self.kwargs.get("user_id")
-        token = self.kwargs.get("token")
-
-        user = USER_MODEL.objects.get(id=int(user_id))
-
-        if user.get_disable_token() != token:
-            return response.Response(status=status.HTTP_400_BAD_REQUEST)
-
-        user.is_active = False
-        user.save()
-        return response.Response(status=status.HTTP_200_OK)
-
-
 class UserVerification(generics.CreateAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = USER_MODEL.objects.all()
@@ -241,3 +228,16 @@ class UserVerification(generics.CreateAPIView):
             self.request.user.save()
         else:
             raise PermissionDenied('Could not verify token')
+
+
+class UserDataExport(generics.RetrieveAPIView):
+    queryset = USER_MODEL.objects.all()
+    serializer_class = UserDataExportSerializer
+
+    permission_classes = (CurrentUserPermission, )
+
+    def get_object(self):
+        if isinstance(self.request.user, AnonymousUser):
+            raise Http404()
+
+        return self.request.user

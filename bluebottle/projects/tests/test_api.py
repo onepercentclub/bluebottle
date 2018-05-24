@@ -995,8 +995,10 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code,
                          status.HTTP_400_BAD_REQUEST,
                          response.data)
-        self.assertEqual(response.data['title'][0],
-                         u'Project with this title already exists.')
+        self.assertEqual(
+            unicode(response.data['title'][0]),
+            u'project with this title already exists.'
+        )
 
         # Anonymous user should not be able to find this project through
         # management API.
@@ -2821,7 +2823,7 @@ class ProjectSupportersExportTest(BluebottleTestCase):
         results = [result for result in reader]
         self.assertEqual(len(results), 2)
         for row in results:
-            for field in ('Reward', 'Donation Date', 'Email', 'Name'):
+            for field in ('Reward', 'Donation Date', 'Email', 'Name', 'Currency', 'Amount'):
                 self.assertTrue(field in row)
 
     def test_owner_no_permission(self):

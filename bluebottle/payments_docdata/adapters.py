@@ -364,11 +364,11 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             'Attempting to refund payment {0}.'.format(self.payment.id)
         )
 
+        self.order_payment.payment.status = StatusDefinition.REFUND_REQUESTED
+        self.order_payment.payment.save()
         client.refund(
             self.order_payment.payment.payment_cluster_key,
         )
-        self.order_payment.payment.status = StatusDefinition.REFUND_REQUESTED
-        self.order_payment.payment.save()
 
     def _store_payment_transaction(self, transaction):
         dd_transaction, _created = DocdataTransaction.objects.get_or_create(

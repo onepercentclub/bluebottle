@@ -1,6 +1,16 @@
+import json
+
+from fluent_contents.models import Placeholder
+from fluent_contents.rendering import render_content_items
+
+from django.db import models
+from django.conf import settings
+from django.conf.urls import url
 from django.contrib import admin
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from .models import Slide
 
@@ -14,6 +24,10 @@ class SlideAdmin(admin.ModelAdmin):
     actions = ['make_published']
     model = Slide
     ordering = ('language', 'sequence', 'title')
+
+    formfield_overrides = {
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
+    }
 
     fieldsets = (
         (None, {

@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from ..views import (
     ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
-    PasswordReset, PasswordSet, DisableAccount, UserVerification)
+    PasswordReset, PasswordSet, UserVerification, UserDataExport)
 
 # Public User API:
 #
@@ -20,8 +20,6 @@ from ..views import (
 
 urlpatterns = [
     url(r'^$', UserCreate.as_view(), name='user-user-create'),
-    url(r'^disable-account/(?P<user_id>\d+)/(?P<token>[0-9A-Za-z]+)/$',
-        DisableAccount.as_view(), name='disable-account'),
     url(r'^current$', CurrentUser.as_view(), name='user-current'),
     url(r'^passwordreset$', PasswordReset.as_view(), name='password-reset'),
     url(
@@ -33,4 +31,7 @@ urlpatterns = [
         name='user-profile-detail'),
     url(r'^verification/$', UserVerification.as_view(),
         name='user-verification'),
+    url(r'^export/$', UserDataExport.as_view(),
+        name='user-export'),
+
 ]

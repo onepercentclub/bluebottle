@@ -97,6 +97,8 @@ class ProjectSupportersExportView(PrivateFileView):
         ('order__user__email', 'Email'),
         ('order__user__full_name', 'Name'),
         ('created', 'Donation Date'),
+        ('amount_currency', 'Currency'),
+        ('amount', 'Amount'),
         ('reward__title', 'Reward'),
     )
 

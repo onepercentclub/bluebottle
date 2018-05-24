@@ -1,14 +1,12 @@
-from datetime import timedelta
-
 from django.contrib.admin.sites import AdminSite
 from django.test.client import RequestFactory
-from django.utils.timezone import now
+from django.urls.base import reverse
 
-from bluebottle.tasks.models import Task
-from bluebottle.tasks.admin import TaskAdmin, DeadlineToAppliedFilter
-from bluebottle.test.factory_models.tasks import TaskFactory
-from bluebottle.test.utils import BluebottleTestCase
-
+from bluebottle.tasks.models import Task, Skill
+from bluebottle.tasks.admin import TaskAdmin, DeadlineToApplyFilter, DeadlineFilter, SkillAdmin
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory
+from bluebottle.test.utils import BluebottleTestCase, BluebottleAdminTestCase
 
 factory = RequestFactory()
 
@@ -37,8 +35,8 @@ class TestTaskAdmin(BluebottleTestCase):
         request = self.request_factory.get('/')
         request.user = MockUser()
 
-        self.assertIn('deadline', self.task_admin.get_list_filter(request))
-        self.assertIn(DeadlineToAppliedFilter, self.task_admin.get_list_filter(request))
+        self.assertIn(DeadlineFilter, self.task_admin.get_list_filter(request))
+        self.assertIn(DeadlineToApplyFilter, self.task_admin.get_list_filter(request))
 
     def test_fields_appear(self):
         request = self.request_factory.get('/')
@@ -50,33 +48,33 @@ class TestTaskAdmin(BluebottleTestCase):
             self.assertIn(field, self.task_admin.get_fields(request))
 
 
-class TestDeadlineToApplyFilter(BluebottleTestCase):
+class TestSkillAdmin(BluebottleAdminTestCase):
     def setUp(self):
-        super(TestDeadlineToApplyFilter, self).setUp()
+        super(TestSkillAdmin, self).setUp()
         self.init_projects()
-        self.request = RequestFactory().get('/')
+        self.client.force_login(self.superuser)
+        self.request_factory = RequestFactory()
         self.site = AdminSite()
-        self.task_admin = TaskAdmin(Task, self.site)
+        self.skill_admin = SkillAdmin(Skill, self.site)
 
-        for days in [-5, 3, 10]:
-            TaskFactory.create(deadline_to_apply=now() + timedelta(days=days))
+    def test_fields_appear(self):
+        request = self.request_factory.get('/')
+        request.user = MockUser()
 
-    def test_deadline_to_apply_filter_deadline_passed(self):
-        filter = DeadlineToAppliedFilter(None, {'deadline_to_apply': 0}, Task, self.task_admin)
-        queryset = filter.queryset(self.request, Task.objects.all())
-        self.assertEqual(len(queryset), 1)
+        for field in ['member_link', 'task_link']:
+            self.assertIn(field, self.skill_admin.get_fields(request))
 
-    def test_deadline_to_apply_filter_7_days(self):
-        filter = DeadlineToAppliedFilter(None, {'deadline_to_apply': 7}, Task, self.task_admin)
-        queryset = filter.queryset(self.request, Task.objects.all())
-        self.assertEqual(len(queryset), 1)
+        skill = SkillFactory.create()
+        members = BlueBottleUserFactory.create_batch(3)
+        for member in members:
+            member.skills = [skill]
+            member.save()
 
-    def test_deadline_to_apply_filter_30_days(self):
-        filter = DeadlineToAppliedFilter(None, {'deadline_to_apply': 30}, Task, self.task_admin)
-        queryset = filter.queryset(self.request, Task.objects.all())
-        self.assertEqual(len(queryset), 2)
+        TaskFactory.create_batch(2, skill=skill)
 
-    def test_deadline_to_apply_filter_not_set(self):
-        filter = DeadlineToAppliedFilter(None, {}, Task, self.task_admin)
-        queryset = filter.queryset(self.request, Task.objects.all())
-        self.assertEqual(len(queryset), 3)
+        skill_url = reverse('admin:tasks_skill_change', args=(skill.id, ))
+        response = self.client.get(skill_url)
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, '3 users')
+        self.assertContains(response, '2 tasks')

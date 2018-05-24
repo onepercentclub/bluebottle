@@ -32,13 +32,6 @@
     color: #ffffff;
 }
 
-/* Hide hamburger */
-
-.sidebar-opened .icon-menu:before,
-.sidebar-dependent .icon-menu:before{
-    content: "";
-}
-
 /* Extra labels */
 
 .admin-label {

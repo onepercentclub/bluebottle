@@ -7578,11 +7578,6 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
           padding: 24px 0 24px 20px;
           margin-bottom: 0;
           font-size: 1rem; } }
-    .sidebar-popup-title:after { 
-      font-family: 'dashboard' !important;
-      float: right;
-      content: "\e921"; }
- 
     .sidebar-popup-search {
       background-color: #E3ECF2;
       color: #7f8fa4;
@@ -9440,11 +9435,6 @@ body.login {
 
 .delete label.vCheckboxLabel {
   color: #ffffff; }
-
-/* Hide hamburger */
-.sidebar-opened .icon-menu:before,
-.sidebar-dependent .icon-menu:before {
-  content: ""; }
 
 /* Extra labels */
 .admin-label {

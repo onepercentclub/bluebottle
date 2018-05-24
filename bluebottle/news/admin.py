@@ -1,4 +1,6 @@
+from django.conf.urls import url
 from django.contrib import admin
+from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 

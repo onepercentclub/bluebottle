@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     fixtures = [
         ('bb_projects', 'project_data.json'),
-        ('bb_tasks', 'skills.json'),
+        ('tasks', 'skills.json'),
         ('geo', 'geo_data.json'),
     ]
 

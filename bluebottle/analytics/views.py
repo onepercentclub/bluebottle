@@ -53,7 +53,7 @@ class ParticipationMetricsFormView(FormView):
 
     def get_initial(self):
         initial = super(ParticipationMetricsFormView, self).get_initial()
-        initial['email'] = self.request.user
+        initial['email'] = self.request.user.email
         return initial
 
     def form_valid(self, form):

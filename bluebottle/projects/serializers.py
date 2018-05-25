@@ -440,11 +440,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
         if 'projectlocation' in validated_data:
             location = validated_data.pop('projectlocation')
 
-            if not hasattr(instance, 'projectlocation'):
-                instance.projectlocation = ProjectLocation.objects.create(
-                    project=instance
-                )
-
             for field, value in location.items():
                 setattr(instance.projectlocation, field, value)
 
@@ -459,10 +454,11 @@ class ManageProjectSerializer(serializers.ModelSerializer):
 
         instance = super(ManageProjectSerializer, self).create(validated_data)
         if location_data:
-            ProjectLocation.objects.create(
-                project=instance,
-                **location_data
-            )
+            for field, value in location_data.items():
+                setattr(instance.projectlocation, field, value)
+
+            instance.projectlocation.save()
+
         return instance
 
     class Meta:

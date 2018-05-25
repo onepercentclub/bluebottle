@@ -189,6 +189,8 @@ class OrderPayment(models.Model, FSMTransition):
     @transition(field=status, source=[StatusDefinition.AUTHORIZED,
                                       StatusDefinition.STARTED,
                                       StatusDefinition.CANCELLED,
+                                      StatusDefinition.REFUNDED,
+                                      StatusDefinition.REFUND_REQUESTED,
                                       StatusDefinition.FAILED,
                                       StatusDefinition.UNKNOWN],
                 target=StatusDefinition.SETTLED)
@@ -196,8 +198,12 @@ class OrderPayment(models.Model, FSMTransition):
         self.closed = now()
 
     @transition(field=status,
-                source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED,
-                        StatusDefinition.CANCELLED, StatusDefinition.SETTLED],
+                source=[StatusDefinition.STARTED,
+                        StatusDefinition.AUTHORIZED,
+                        StatusDefinition.REFUND_REQUESTED,
+                        StatusDefinition.REFUNDED,
+                        StatusDefinition.CANCELLED,
+                        StatusDefinition.SETTLED],
                 target=StatusDefinition.FAILED)
     def failed(self):
         self.closed = None

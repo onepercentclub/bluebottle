@@ -93,6 +93,7 @@ class Country(GeoBaseModel):
         ordering = ['translations__name']
         verbose_name = _("country")
         verbose_name_plural = _("countries")
+        ordering = ["translations__name"]
 
 
 class LocationGroup(models.Model):

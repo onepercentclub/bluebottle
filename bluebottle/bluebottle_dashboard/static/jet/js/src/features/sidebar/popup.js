@@ -98,6 +98,11 @@ SideBarPopup.prototype = {
                     $(document.body).one('click', function(e) {
                         if (!$(e.target).parent('.popup-section-link').length) {
                             self.closePopup($popupContainer);
+                            if ($(window).width() < 960) {
+                                var open = !$(document.body).hasClass('menu-pinned');
+                                $(document.body).toggleClass('menu-pinned', open);
+                                $.cookie('sidebar_pinned', false, { expires: 365, path: '/' });
+                            }
                         }
                     });
                 }, 

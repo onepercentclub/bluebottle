@@ -29,7 +29,6 @@ SideBar.prototype = {
 
     sideBarToggle: function() {
         var open = !$(document.body).hasClass('menu-pinned');
-
         $(document.body).toggleClass('menu-pinned', open);
         this.storePinStatus(open);
     },

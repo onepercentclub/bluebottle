@@ -886,7 +886,9 @@ class ProjectPlatformSettings(BasePlatformSettings):
 
     create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
     contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
-    share_options = SelectMultipleField(max_length=100, choices=PROJECT_SHARE_OPTIONS)
+    share_options = SelectMultipleField(
+        max_length=100, choices=PROJECT_SHARE_OPTIONS, blank=True, include_blank=False
+    )
     facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
     allow_anonymous_rewards = models.BooleanField(default=True)
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)

@@ -25,29 +25,15 @@ SideBar.prototype = {
         };
 
         $('.sidebar-toggle').on('click', toggle.bind(this));
-        $(document.body).on('click', '.sidebar-backdrop', toggle.bind(this));
     },
+
     sideBarToggle: function() {
-        var $dependent = $('.sidebar-dependent');
-        var open = !$dependent.hasClass('sidebar-opened') && !$(document.body).hasClass('menu-pinned');
+        var open = !$(document.body).hasClass('menu-pinned');
 
-        $(document.body).toggleClass('non-scrollable', open).removeClass('menu-pinned');
-        $dependent.toggleClass('sidebar-opened', open);
-
+        $(document.body).toggleClass('menu-pinned', open);
         this.storePinStatus(false);
-        this.toggleBackdrop(open);
     },
-    toggleBackdrop: function(open) {
-        if (open) {
-            var backdrop = $('<div/>', {class: 'sidebar-backdrop'});
-            $(document.body).append(backdrop);
-            backdrop.animate({opacity: 0.5}, 300);
-        } else {
-            $('.sidebar-backdrop').animate({opacity: 0}, 300, function () {
-                $(this).remove();
-            });
-        }
-    },
+
     initPinSideBar: function($sidebar) {
         $sidebar.on('click', '.sidebar-pin', (function () {
             var $dependent = $('.sidebar-dependent');
@@ -88,7 +74,6 @@ SideBar.prototype = {
             this.initScrollBars($sidebar);
             this.addToggleButton();
             this.initSideBarToggle();
-            this.initPinSideBar($sidebar);
         } catch (e) {
             console.error(e, e.stack);
         }

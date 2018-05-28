@@ -90,20 +90,9 @@ SideBarPopup.prototype = {
         var $popupContainer = $sidebar.find('.sidebar-popup-container');
         var $popup = $sidebar.find('.sidebar-popup');
 
-        $sidebar.find('.popup-section-link').on('mouseenter', function() {
-            if (!$(document.documentElement).hasClass('touchevents')) {
-                self.onSectionLinkInteracted($popupContainer, $(this));
-            }
-        }).on('mouseleave', function() {
-            self.closePopup($popupContainer);
-        }).on('click', function(e) {
+        $sidebar.find('.popup-section-link').on('click', function(e) {
             e.preventDefault();
-
-            if (!$(document.documentElement).hasClass('touchevents') && $(this).attr('href')) {
-                document.location = $(this).attr('href');
-            } else {
-                self.onSectionLinkInteracted($popupContainer, $(this));
-            }
+            self.onSectionLinkInteracted($popupContainer, $(this));
         });
 
         $sidebar.find('.sidebar-back').on('click touchend', function(e) {

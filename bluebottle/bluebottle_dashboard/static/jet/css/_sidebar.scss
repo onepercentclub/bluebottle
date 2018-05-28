@@ -13,13 +13,19 @@
   transform: translate3d(-100%, 0, 0);
 
   @include for-mobile {
-    width: 360px;
+    width: 200px;
+    body.menu-pinned & {
+      transform: translate3d(0px, 0, 0);
+    }
     padding-bottom: 0;
     transition: transform $transitions-duration cubic-bezier(0, 0.5, 0.5, 1);
   }
 
   @include for-phone {
-    width: 80%;
+    width: 200px;
+    body.menu-pinned & {
+      transform: translate3d(0px, 0, 0);
+    }
   }
 
   &.sidebar-opened {
@@ -34,6 +40,7 @@
     @include for-desktop {
       transform: none;
     }
+
   }
 
   &-backdrop {
@@ -52,13 +59,13 @@
     line-height: $sidebar-header-height;
     transition: transform $transitions-duration;
 
-    &.sidebar-opened {
+    body.menu-pinned & {
       @include for-mobile {
-        transform: translate3d(360px, 0, 0);
+        transform: translate3d(200px, 0, 0);
       }
 
       @include for-phone {
-        transform: translate3d(80%, 0, 0);
+        transform: translate3d(200px, 0, 0);
       }
     }
 
@@ -109,7 +116,7 @@
       }
     }
 
-    &.sidebar-opened &-menu-icon {
+    body.menu-pinned &-menu-icon {
       &.icon-menu {
         display: none;
       }
@@ -430,7 +437,10 @@
     top: 410px;
 
     @include for-mobile {
-      width: 360px;
+      width: 200px;
+      body.menu-pinned & {
+        left: 200px;
+      }
     }
 
     @include for-phone {

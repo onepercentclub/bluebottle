@@ -3,7 +3,7 @@ import mock
 from django.test import TestCase
 
 from bluebottle.clients import TenantProperties
-from bluebottle.clients.middleware import properties
+from bluebottle.clients import properties
 
 Mock = mock.Mock
 

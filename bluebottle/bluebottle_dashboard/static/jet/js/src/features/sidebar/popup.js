@@ -93,16 +93,20 @@ SideBarPopup.prototype = {
         $sidebar.find('.popup-section-link').on('click', function(e) {
             e.preventDefault();
             self.onSectionLinkInteracted($popupContainer, $(this));
+            setTimeout(
+                function () {
+                    $(document.body).one('click', function(e) {
+                        if (!$(e.target).parent('.popup-section-link').length) {
+                            self.closePopup($popupContainer);
+                        }
+                    });
+                }, 
+                500
+            );
         });
 
         $sidebar.find('.sidebar-back').on('click touchend', function(e) {
             e.preventDefault();
-            self.closePopup($popupContainer);
-        });
-
-        $popup.on('mouseenter', function() {
-            self.openPopup($popupContainer, 0);
-        }).on('mouseleave', function() {
             self.closePopup($popupContainer);
         });
     },

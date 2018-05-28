@@ -11,7 +11,7 @@ Mock = mock.Mock
 class TestProperties(TestCase):
     def test_property_match(self):
         """ A match found in the client properties """
-        with mock.patch("bluebottle.clients.middleware.settings", foo=1):
+        with mock.patch("bluebottle.clients.settings", foo=1):
             p = TenantProperties()
             p.tenant_properties = {'foo': 2}
 
@@ -20,7 +20,7 @@ class TestProperties(TestCase):
 
     def test_settings_match(self):
         """ No match in properties but match in settings """
-        with mock.patch("bluebottle.clients.middleware.settings", foo=1):
+        with mock.patch("bluebottle.clients.settings", foo=1):
             p = TenantProperties()
 
             self.failUnless(p.foo == 1)
@@ -28,14 +28,14 @@ class TestProperties(TestCase):
 
     def test_nomatch(self):
         """ No match in either properties or settings """
-        with mock.patch("bluebottle.clients.middleware.settings", Mock(spec_set=[])):
+        with mock.patch("bluebottle.clients.settings", Mock(spec_set=[])):
             p = TenantProperties()
             with self.assertRaises(AttributeError):
                 p.foo == 1
             self.failIf(hasattr(p, 'foo'))
 
     def test_verify_settings(self):
-        with mock.patch("bluebottle.clients.middleware.settings",
+        with mock.patch("bluebottle.clients.settings",
                         MULTI_TENANT_DIR='/tmp/') as settings, \
                 mock.patch("__builtin__.execfile") as execfile:
             properties.set_tenant(Mock(client_name='testtenant'))

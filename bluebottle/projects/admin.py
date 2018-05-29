@@ -46,7 +46,8 @@ from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
-from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin
+from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin, \
+    TranslatedUnionFieldListFilter
 from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
 from bluebottle.votes.models import Vote
 
@@ -606,10 +607,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     def get_list_filter(self, request):
         filters = [
             ('status', UnionFieldListFilter),
-            ('theme', UnionFieldListFilter),
-            ('task__skill', UnionFieldListFilter),
+            ('theme', TranslatedUnionFieldListFilter),
+            ('task__skill', TranslatedUnionFieldListFilter),
+            'categories', 
             'project_type',
-            'categories'
         ]
 
         if request.user.has_perm('projects.approve_payout'):

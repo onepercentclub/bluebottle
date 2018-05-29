@@ -215,7 +215,7 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
     search_fields = (
         'textwallpost__text', 'mediawallpost__text',
         'author__username', 'author__email',
-         'author__first_name', 'author__last_name', 'ip_address'
+        'author__first_name', 'author__last_name', 'ip_address'
     )
     child_models = (
         (MediaWallpost, MediaWallpostAdmin),

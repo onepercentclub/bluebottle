@@ -98,19 +98,19 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 
         if obj.content_type.name == 'project':
             return format_html(
-                u'<a href="/go/projects/{}">{}</a>',
+                u'<a href="/projects/{}">{}</a>',
                 obj.content_object.slug, obj.content_object.title
             )
         if obj.content_type.name == 'task':
             if obj.content_object:
                 return format_html(
-                    u'<a href="/go/tasks/{}">{}</a>',
+                    u'<a href="/tasks/{}">{}</a>',
                     obj.content_object.id,
-                    obj.content_object.project.title
+                    obj.content_object.title
                 )
         if obj.content_type.name == 'fundraiser':
             return format_html(
-                u'<a href="/go/fundraisers/{}">{}</a>',
+                u'<a href="/fundraisers/{}">{}</a>',
                 obj.content_object.id, obj.content_object.title
             )
         return '---'
@@ -143,20 +143,25 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
     ordering = ('-created',)
 
     def posted_on(self, obj):
-        type = str(obj.content_type).title()
-        title = obj.content_object.title
-        if type == 'Task':
+        type = obj.content_type.name
+        type_name = unicode(obj.content_type).title()
+
+        if type == 'task':
             url = reverse('admin:tasks_task_change',
                           args=(obj.content_object.id,))
-        if type == 'Project':
+        elif type == 'project':
             url = reverse('admin:projects_project_change',
                           args=(obj.content_object.id,))
-        if type == 'Fundraiser':
+        elif type == 'fundraiser':
             url = reverse('admin:fundraisers_fundraiser_change',
                           args=(obj.content_object.id,))
+        else:
+            return ''
+
+        title = obj.content_object.title
         return format_html(
             u'{}: <a href="{}">{}</a>',
-            type, url, title
+            type_name, url, title
         )
 
     def donation_link(self, obj):

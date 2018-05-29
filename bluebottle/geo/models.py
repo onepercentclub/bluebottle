@@ -89,6 +89,7 @@ class Country(GeoBaseModel):
             "Assistance from the OECD's Development Assistance Committee."))
 
     class Meta(GeoBaseModel.Meta):
+        ordering = ['translations__name']
         verbose_name = _("country")
         verbose_name_plural = _("countries")
 

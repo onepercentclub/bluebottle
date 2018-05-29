@@ -9,6 +9,7 @@ from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
+from parler.utils.i18n import get_language
 
 from rest_framework import generics
 from rest_framework import views, response
@@ -266,3 +267,9 @@ class OwnerListViewMixin(object):
             qs = qs.filter(**{self.owner_filter_field: user})
 
         return qs
+
+
+class TranslatedApiViewMixin(object):
+
+    def get_queryset(self):
+        return self.queryset.translated(get_language())

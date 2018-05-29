@@ -33,7 +33,7 @@ class MyReviewingProjects(DashboardModule):
 
 
 class ClosingFundingProjects(DashboardModule):
-    title = _('Crowdfunding projects nearing deadline')
+    title = _('Projects nearing deadline')
     title_url = "{}?o=6&status_filter=5".format(reverse('admin:projects_project_changelist'))
     template = 'dashboard/closing_funding_projects.html'
     limit = 5

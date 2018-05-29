@@ -20,9 +20,6 @@ from bluebottle.analytics.management.commands.export_analytics_data import (
     Command as AnalyticsCommand,
 )
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.members.models import Member
-from bluebottle.organizations.models import Organization
-from bluebottle.projects.models import Project
 from bluebottle.tasks.models import TaskMember
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory

@@ -42,23 +42,6 @@ class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
         return format_html('<span class="admin-label admin-label-gray">{}</span>', _("Offline"))
     online.help_text = _("Is this item currently visible online or not.")
 
-    def get_urls(self):
-        # Include extra API views in this admin page
-        base_urls = super(NewsItemAdmin, self).get_urls()
-        info = self.model._meta.app_label, self.model._meta.model_name
-        urlpatterns = [
-            url(r'^(?P<pk>\d+)/preview-canvas/$',
-                self.admin_site.admin_view(
-                    self.preview_canvas),
-                name="{0}_{1}_preview_canvas".format(*info)),
-            url(r'^(?P<pk>\d+)/get_preview/$',
-                self.admin_site.admin_view(
-                    self.get_preview_html),
-                name="{0}_{1}_get_preview".format(*info))
-        ]
-
-        return urlpatterns + base_urls
-
     def get_base_object(self, pk):
         # Give a workable object, no matter whether it's a news or blogpost.
         pk = long(pk)

@@ -9,7 +9,6 @@ from django.utils import translation
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_projects.models import BaseProject
-from bluebottle.donations.models import Donation
 from bluebottle.bb_fundraisers.models import BaseFundraiser
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url

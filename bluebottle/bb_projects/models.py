@@ -62,7 +62,7 @@ class ProjectPhase(TranslatableModel):
                                              'has been discarded.'))
     editable = models.BooleanField(default=True,
                                    help_text=_('Whether the project owner can '
-                                               'change the details of the'
+                                               'change the details of the '
                                                'project.'))
     viewable = models.BooleanField(default=True,
                                    help_text=_('Whether this phase, and '

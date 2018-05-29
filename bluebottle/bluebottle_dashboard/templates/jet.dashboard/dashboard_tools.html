@@ -10,16 +10,12 @@
         {% csrf_token %}
         <select class="add-dashboard" name="module">
             <option>{% trans "widgets" %}</option>
-            <optgroup label="{% trans "available" %}">
                 {% for module in available_children %}
                     <option value="{{ forloop.counter0 }}" data-type="available_children">{{ module.title }}</option>
                 {% endfor %}
-            </optgroup>
-            <optgroup label="{% trans "In use" %}">
                 {% for module in children %}
                     <option value="{{ forloop.counter0 }}" data-type="children">{{ module.title }}</option>
                 {% endfor %}
-            </optgroup>
         </select><a href="#" class="button add-dashboard-link" title="{% trans "Add" %}"><span class="add-dashboard-link-icon icon-add"></span><span class="add-dashboard-link-label">{% trans "Add" %}</span></a>
         <input type="hidden" name="app_label" value="{% if app_label %}{{ app_label }}{% endif %}">
         <input type="hidden" name="type" value="">

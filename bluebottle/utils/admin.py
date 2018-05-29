@@ -1,8 +1,6 @@
 import csv
 
 from adminfilters.multiselect import UnionFieldListFilter
-from django.db.models import AutoField
-from django.forms import IntegerField
 from moneyed import Money
 
 from django.conf import settings
@@ -11,14 +9,11 @@ from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
 
 from django_singleton_admin.admin import SingletonAdmin
-from parler import is_multilingual_project
 from parler.admin import TranslatableAdmin
-from parler.utils.i18n import get_language
 
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
 from bluebottle.tasks.models import TaskMember
-from bluebottle.utils.monkey_patch_parler import appsettings
 from .models import Language
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet

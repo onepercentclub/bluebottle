@@ -1,13 +1,11 @@
 from datetime import timedelta
 
-from adminfilters.multiselect import UnionFieldListFilter
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
-from parler.admin import TranslatableAdmin
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill, TaskStatusLog
 from bluebottle.utils.admin import export_as_csv_action, SortableTranslatableAdmin, TranslatedUnionFieldListFilter
 from bluebottle.utils.utils import reverse_signed

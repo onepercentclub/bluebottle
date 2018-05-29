@@ -609,7 +609,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             ('status', UnionFieldListFilter),
             ('theme', TranslatedUnionFieldListFilter),
             ('task__skill', TranslatedUnionFieldListFilter),
-            'categories', 
+            'categories',
             'project_type',
         ]
 

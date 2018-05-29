@@ -1,4 +1,3 @@
-from django.db import connection
 from django.core.mail import \
     EmailMultiAlternatives as BaseEmailMultiAlternatives
 
@@ -17,9 +16,6 @@ def construct_from_header():
     # properties first.
     # properties.tenant_properties will be an empty dict if the tenant
     # properties has not be initialised yet.
-    if not properties.tenant_properties and connection.tenant:
-        properties.set_tenant(connection.tenant)
-
     mail_address = properties.TENANT_MAIL_PROPERTIES.get('address')
     mail_name = properties.TENANT_MAIL_PROPERTIES.get('sender')
     if not mail_name:

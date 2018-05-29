@@ -13,6 +13,7 @@ from bluebottle.donations.models import Donation
 from bluebottle.bb_fundraisers.models import BaseFundraiser
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
+from bluebottle.orders.models import Order
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.votes.models import Vote
@@ -68,64 +69,57 @@ def create_follow(sender, instance, created, **kwargs):
             Users do not follow their own project or task.
 
     """
-    if not created:
-        return
-
     # A user does a donation
-    if isinstance(instance, Donation):
+    if isinstance(instance, Order):
         # Create a Follow to the specific Project or Task if a donation was
         # made
+        if instance.status not in ['success', 'pending']:
+            return
 
         # Don't setup following for monthly donation.
-        if instance.order.order_type == 'recurring':
+        if instance.order_type == 'recurring':
             return
 
         user = instance.user
-        followed_object = instance.fundraiser or instance.project
+        followed_object = instance.donations.first().fundraiser or instance.donations.first().project
 
-        if user and followed_object:
+        if not user or not followed_object:
+            return
 
-            content_type = ContentType.objects.get_for_model(followed_object)
+        content_type = ContentType.objects.get_for_model(followed_object)
 
-            # A Follow object should link the project to the user, not the
-            # donation and the user
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=followed_object.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != followed_object.owner:
-                    follow = Follow(user=user, followed_object=followed_object)
-                    follow.save()
+        # A Follow object should link the project to the user, not the
+        # donation and the user
+        if user != followed_object.owner:
+            Follow.objects.get_or_create(user=user, object_id=followed_object.id, content_type=content_type)
 
     # A user applies for a task
     elif isinstance(instance, TaskMember):
         # Create a Follow to the specific Task if a user applies for the task
+        if instance.status not in ['accepted', 'realized']:
+            return
+
         user = instance.member
         followed_object = instance.task
 
-        if user and followed_object:
+        if not user or not followed_object:
+            return
 
-            content_type = ContentType.objects.get_for_model(followed_object)
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=followed_object.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != followed_object.author and user != followed_object.project.owner:
-                    follow = Follow(user=user, followed_object=followed_object)
-                    follow.save()
+        content_type = ContentType.objects.get_for_model(followed_object)
+        if user != followed_object.author:
+            Follow.objects.get_or_create(
+                user=user,
+                object_id=followed_object.id,
+                content_type=content_type)
 
-            # Also follow the project
-            content_type = ContentType.objects.get_for_model(followed_object.project)
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=followed_object.project.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != followed_object.author and user != followed_object.project.owner:
-                    follow = Follow(user=user, followed_object=followed_object.project)
-                    follow.save()
+        # Also follow the project
+        followed_object = followed_object.project
+        content_type = ContentType.objects.get_for_model(followed_object)
+        if user != followed_object.owner:
+            Follow.objects.get_or_create(
+                user=user,
+                object_id=followed_object.id,
+                content_type=content_type)
 
     # A user creates a task for a project
     elif isinstance(instance, Task):
@@ -134,18 +128,15 @@ def create_follow(sender, instance, created, **kwargs):
         user = instance.author
         followed_object = instance.project
 
-        if user and followed_object:
+        if not user or not followed_object:
+            return
 
+        if user != followed_object.owner:
             content_type = ContentType.objects.get_for_model(followed_object)
-
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=followed_object.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != followed_object.owner:
-                    follow = Follow(user=user, followed_object=followed_object)
-                    follow.save()
+            Follow.objects.get_or_create(
+                user=user,
+                object_id=followed_object.id,
+                content_type=content_type)
 
     # A user creates a fundraiser for a project
     elif isinstance(instance, BaseFundraiser):
@@ -153,34 +144,29 @@ def create_follow(sender, instance, created, **kwargs):
         user = instance.owner
         followed_object = instance.project
 
-        if user and followed_object:
+        if not user or not followed_object:
+            return
 
+        if user != followed_object.owner:
             content_type = ContentType.objects.get_for_model(followed_object)
-
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=followed_object.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != followed_object.owner:
-                    follow = Follow(user=user, followed_object=followed_object)
-                    follow.save()
+            Follow.objects.get_or_create(
+                user=user,
+                object_id=followed_object.id,
+                content_type=content_type)
 
     elif isinstance(instance, Vote):
         user = instance.voter
-        project = instance.project
+        followed_object = instance.project
 
-        if user and project:
-            content_type = ContentType.objects.get_for_model(project)
+        if not user or not followed_object:
+            return
 
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=project.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != project.owner:
-                    follow = Follow(user=user, followed_object=project)
-                    follow.save()
+        if user != followed_object.owner:
+            content_type = ContentType.objects.get_for_model(followed_object)
+            Follow.objects.get_or_create(
+                user=user,
+                object_id=followed_object.id,
+                content_type=content_type)
 
 
 @receiver(post_save)

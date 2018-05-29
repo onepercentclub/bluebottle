@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
+
+from django.contrib.admin.sites import AdminSite
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.fundraisers import FundraiserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.test.factory_models.wallposts import MediaWallpostFactory, MediaWallpostPhotoFactory
+from bluebottle.test.factory_models.tasks import TaskFactory
+from bluebottle.test.factory_models.wallposts import (
+    MediaWallpostFactory, MediaWallpostPhotoFactory, TextWallpostFactory
+)
 from bluebottle.test.utils import BluebottleAdminTestCase
+from bluebottle.wallposts.admin import TextWallpostAdmin
 from django.urls.base import reverse
 
 
@@ -36,7 +42,7 @@ class TestWallpostAdmin(BluebottleAdminTestCase):
         self.assertContains(response, fundraiser.title)
 
     def test_task_textwallpost_admin(self):
-        task = FundraiserFactory()
+        task = TaskFactory.create()
         self.wallpost = MediaWallpostFactory.create(content_object=task)
         url = reverse('admin:wallposts_mediawallpost_change', args=(self.wallpost.id, ))
         response = self.client.get(url)
@@ -51,3 +57,48 @@ class TestWallpostAdmin(BluebottleAdminTestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200, response.content)
         self.assertContains(response, project.title)
+
+
+class TestTextWallpostAdmin(BluebottleAdminTestCase):
+    def setUp(self):
+        super(TestTextWallpostAdmin, self).setUp()
+        self.site = AdminSite()
+        self.wallpost = TextWallpostFactory.create()
+        self.admin = TextWallpostAdmin(self.wallpost, self.site)
+
+    def test_posted_on(self):
+        posted_on = self.admin.posted_on(self.wallpost)
+        self.assertTrue(
+            'Project:' in posted_on
+        )
+        self.assertTrue(
+            self.wallpost.content_object.title in posted_on
+        )
+
+    def test_posted_on_fundraiser(self):
+        self.wallpost.content_object = FundraiserFactory.create()
+        self.wallpost.save()
+        posted_on = self.admin.posted_on(self.wallpost)
+        self.assertTrue(
+            'Fundraiser:' in posted_on
+        )
+        self.assertTrue(
+            self.wallpost.content_object.title in posted_on
+        )
+
+    def test_posted_on_task(self):
+        self.wallpost.content_object = TaskFactory.create()
+        self.wallpost.save()
+        posted_on = self.admin.posted_on(self.wallpost)
+        self.assertTrue(
+            'Task:' in posted_on
+        )
+        self.assertTrue(
+            self.wallpost.content_object.title in posted_on
+        )
+
+    def test_posted_on_other(self):
+        self.wallpost.content_object = DonationFactory.create()
+        self.wallpost.save()
+        posted_on = self.admin.posted_on(self.wallpost)
+        self.assertEqual(posted_on, '')

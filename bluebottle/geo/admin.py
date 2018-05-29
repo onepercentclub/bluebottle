@@ -51,6 +51,24 @@ class LocationGroupFilter(admin.SimpleListFilter):
             return queryset
 
 
+class CountryFilter(admin.SimpleListFilter):
+    title = _('country')
+    parameter_name = 'country'
+
+    def lookups(self, request, model_admin):
+        countries = [obj.country for obj in model_admin.model.objects.
+            exclude(country__isnull=True).
+            order_by('country__translations__name').
+            distinct('country__translations__name').all()]
+        return [(c.id, c.name) for c in countries]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(country=self.value())
+        else:
+            return queryset
+
+
 class RegionAdmin(admin.ModelAdmin):
     list_display = ('name', 'numeric_code')
 

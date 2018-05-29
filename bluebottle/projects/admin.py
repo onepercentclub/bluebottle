@@ -44,7 +44,7 @@ from bluebottle.payouts_dorado.adapters import (
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
+from bluebottle.geo.admin import LocationFilter, LocationGroupFilter, CountryFilter
 from bluebottle.geo.models import Location
 from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin
 from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
@@ -321,6 +321,12 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
+
+    def lookup_allowed(self, key, value):
+        if key in ('country__translations__name',):
+            return True
+
+        return super(ProjectAdmin, self).lookup_allowed(key, value)
 
     class Media:
         css = {
@@ -619,7 +625,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if Location.objects.count():
             filters += [LocationGroupFilter, LocationFilter]
         else:
-            filters += [('country', admin.RelatedOnlyFieldListFilter), ]
+
+            filters += [CountryFilter]
         return filters
 
     def get_list_display(self, request):

@@ -1,18 +1,21 @@
+import csv
 from moneyed import Money
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
+
+from django_singleton_admin.admin import SingletonAdmin
 
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
 from bluebottle.tasks.models import TaskMember
 from .models import Language
-import csv
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.clients import properties
 from bluebottle.bb_projects.models import ProjectPhase
@@ -145,8 +148,33 @@ class TotalAmountAdminChangeList(ChangeList):
         total_column = self.model_admin.total_column or 'amount'
         currency_column = '{}_currency'.format(total_column)
 
-        totals = self.queryset.values(currency_column).annotate(total=Sum(total_column)).order_by(
-            '-{}'.format(total_column))
+        totals = self.queryset.values(
+            currency_column
+        ).annotate(
+            total=Sum(total_column)
+        ).order_by()
+
         amounts = [Money(total['total'], total[currency_column]) for total in totals]
         amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
+
+
+class LatLongMapPickerMixin(object):
+
+    class Media:
+        if hasattr(settings, 'MAPS_API_KEY') and settings.MAPS_API_KEY:
+            css = {
+                'all': ('css/admin/location_picker.css',),
+            }
+            js = (
+                'https://maps.googleapis.com/maps/api/js?key={}'.format(settings.MAPS_API_KEY),
+                'js/admin/location_picker.js',
+            )
+
+
+class BasePlatformSettingsAdmin(SingletonAdmin):
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False

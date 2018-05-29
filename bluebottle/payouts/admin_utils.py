@@ -1,6 +1,7 @@
 import urllib
 
 from django.core.urlresolvers import reverse
+from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html
 
 
@@ -34,7 +35,10 @@ def link_to(value, url_name, view_args=(), view_kwargs={}, query={},
             kwargs = view_kwargs
 
         # Construct URL
-        url = reverse(url_name, args=args, kwargs=kwargs)
+        try:
+            url = reverse(url_name, args=args, kwargs=kwargs)
+        except NoReverseMatch:
+            url = ''
 
         if callable(query):
             params = query(obj)
@@ -59,10 +63,14 @@ def link_to(value, url_name, view_args=(), view_kwargs={}, query={},
             new_value = (new_value[:truncate] + '...') if len(
                 new_value) > truncate else new_value
 
-        return format_html(
-            u'<a href="{}">{}</a>',
-            url, new_value
-        )
+        if url and new_value:
+            return format_html(
+                u'<a href="{}">{}</a>',
+                url, new_value
+            )
+        if url:
+            return None
+        return new_value
 
     if not short_description:
         # No short_description set, use property name

@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
@@ -9,18 +10,20 @@ from .models import NewsItem
 
 
 class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
-    list_display = ('title', 'status', 'modification_date')
+    list_display = ('title', 'online', 'status', 'publication_date')
     list_filter = ('status',)
     date_hierarchy = 'publication_date'
     search_fields = ('slug', 'title')
     actions = ['make_published']
+    raw_id_fields = ['author']
+    readonly_fields = ('online', )
 
     fieldsets = (
         (None, {
-            'fields': ('title', 'slug', 'language', 'main_image', 'contents'),
+            'fields': ('title', 'slug', 'author', 'language', 'main_image', 'contents'),
         }),
         (_('Publication settings'), {
-            'fields': ('status', 'publication_date', 'publication_end_date', 'allow_comments'),
+            'fields': ('status', 'publication_date', 'publication_end_date', 'online'),
         }),
     )
 
@@ -29,6 +32,15 @@ class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
         'status': admin.HORIZONTAL,
         'language': admin.HORIZONTAL,
     }
+
+    def online(self, obj):
+        if obj.status == 'published' and \
+                obj.publication_date and \
+                obj.publication_date < now() and \
+                (obj.publication_end_date is None or obj.publication_end_date > now()):
+            return format_html('<span class="admin-label admin-label-green">{}</span>', _("Online"))
+        return format_html('<span class="admin-label admin-label-gray">{}</span>', _("Offline"))
+    online.help_text = _("Is this item currently visible online or not.")
 
     def get_base_object(self, pk):
         # Give a workable object, no matter whether it's a news or blogpost.
@@ -68,7 +80,7 @@ class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
 
     def save_model(self, request, obj, form, change):
         # Automatically store the user in the author field.
-        if not change:
+        if not obj.author:
             obj.author = request.user
 
         if not obj.publication_date:

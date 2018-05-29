@@ -11,7 +11,9 @@ from bluebottle.clients import properties
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
 from bluebottle.members.models import MemberPlatformSettings
-from bluebottle.tasks.models import Skill
+from bluebottle.projects.models import Project
+from bluebottle.donations.models import Donation
+from bluebottle.tasks.models import Skill, Task, TaskMember
 from bluebottle.utils.serializers import PermissionField
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 
@@ -60,11 +62,12 @@ class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     # TODO: Remove first/last name and only use these
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
     short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
+    is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = BB_USER_MODEL
         fields = ('id', 'first_name', 'last_name', 'initials',
-                  'avatar', 'full_name', 'short_name')
+                  'avatar', 'full_name', 'short_name', 'is_active')
 
 
 class UserPermissionsSerializer(serializers.Serializer):
@@ -104,7 +107,8 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'country', 'verified', 'permissions', 'partner_organization')
+            'country', 'verified', 'permissions', 'partner_organization',
+        )
 
 
 class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
@@ -140,15 +144,18 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
     time_spent = serializers.ReadOnlyField()
     tasks_performed = serializers.ReadOnlyField()
     partner_organization = OrganizationPreviewSerializer(allow_null=True, read_only=True, required=False)
+    is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('id', 'url', 'full_name', 'short_name', 'initials', 'picture',
-                  'primary_language', 'about_me', 'location', 'avatar',
-                  'project_count', 'donation_count', 'date_joined',
-                  'fundraiser_count', 'task_count', 'time_spent',
-                  'tasks_performed', 'website', 'twitter', 'facebook',
-                  'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization')
+        fields = (
+            'id', 'url', 'full_name', 'short_name', 'initials', 'picture',
+            'primary_language', 'about_me', 'location', 'avatar',
+            'project_count', 'donation_count', 'date_joined',
+            'fundraiser_count', 'task_count', 'time_spent', 'is_active',
+            'tasks_performed', 'website', 'twitter', 'facebook',
+            'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization',
+        )
 
 
 class ManageProfileSerializer(UserProfileSerializer):
@@ -157,12 +164,21 @@ class ManageProfileSerializer(UserProfileSerializer):
     """
     partial = True
     address = UserAddressSerializer(allow_null=True)
+    from_facebook = serializers.SerializerMethodField()
+
+    def get_from_facebook(self, instance):
+        try:
+            instance.social_auth.get(provider='facebook')
+            return True
+        except instance.social_auth.model.DoesNotExist:
+            return False
 
     class Meta:
         model = BB_USER_MODEL
         fields = UserProfileSerializer.Meta.fields + (
             'email', 'address', 'newsletter', 'campaign_notifications', 'location',
             'birthdate', 'gender', 'first_name', 'last_name', 'phone_number',
+            'from_facebook',
         )
 
     def update(self, instance, validated_data):
@@ -173,6 +189,64 @@ class ManageProfileSerializer(UserProfileSerializer):
         instance.address.save()
 
         return super(ManageProfileSerializer, self).update(instance, validated_data)
+
+
+class UserDataExportSerializer(UserProfileSerializer):
+    """
+    Serializer for the a member's data dump.
+    """
+    address = UserAddressSerializer(allow_null=True)
+
+    tasks = serializers.SerializerMethodField()
+    projects = serializers.SerializerMethodField()
+    task_members = serializers.SerializerMethodField()
+    donations = serializers.SerializerMethodField()
+
+    def get_tasks(self, obj):
+        from bluebottle.tasks.serializers import MyTasksSerializer
+
+        tasks = Task.objects.filter(author=obj)
+        return MyTasksSerializer(
+            tasks, many=True, context=self.context
+        ).to_representation(tasks)
+
+    def get_projects(self, obj):
+        from bluebottle.projects.serializers import ProjectSerializer
+
+        projects = Project.objects.filter(owner=obj)
+        return ProjectSerializer(
+            projects, many=True, context=self.context
+        ).to_representation(projects)
+
+    def get_task_members(self, obj):
+        from bluebottle.tasks.serializers import MyTaskMemberSerializer
+
+        task_members = TaskMember.objects.filter(member=obj)
+        return MyTaskMemberSerializer(
+            task_members, many=True, context=self.context
+        ).to_representation(task_members)
+
+    def get_donations(self, obj):
+        from bluebottle.donations.serializers import ManageDonationSerializer
+
+        donations = Donation.objects.filter(order__user=obj)
+        return ManageDonationSerializer(
+            donations, many=True, context=self.context
+        ).to_representation(donations)
+
+    class Meta:
+        model = BB_USER_MODEL
+        fields = (
+            'id', 'email', 'address', 'location', 'birthdate',
+            'url', 'full_name', 'short_name', 'initials', 'picture',
+            'gender', 'first_name', 'last_name', 'phone_number',
+            'primary_language', 'about_me', 'location', 'avatar',
+            'project_count', 'donation_count', 'date_joined',
+            'fundraiser_count', 'task_count', 'time_spent',
+            'tasks_performed', 'website', 'twitter', 'facebook',
+            'skypename', 'skills', 'favourite_themes',
+            'projects', 'tasks', 'task_members', 'donations'
+        )
 
 
 # Thanks to Neamar Tucote for this code:

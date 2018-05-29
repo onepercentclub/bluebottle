@@ -1,3 +1,5 @@
+from django.contrib import admin
+
 from polymorphic.admin import PolymorphicChildModelAdmin
 
 from bluebottle.payments.models import Payment
@@ -13,3 +15,6 @@ class TelesomPaymentAdmin(PolymorphicChildModelAdmin):
                        'description',
                        'transaction_reference',
                        'response', 'update_response')
+
+
+admin.site.register(TelesomPayment, TelesomPaymentAdmin)

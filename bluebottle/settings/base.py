@@ -118,6 +118,7 @@ TEMPLATES = [
                 'admin_tools.template_loaders.Loader',
             ],
             'context_processors': [
+                'bluebottle.clients.context_processors.tenant',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.debug',
@@ -161,8 +162,7 @@ MIDDLEWARE_CLASSES = (
 )
 
 REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': ('rest_framework.filters.DjangoFilterBackend',),
-    'FILTER_BACKEND': 'rest_framework.filters.DjangoFilterBackend',
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
@@ -201,7 +201,7 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_vitepay', '/payments_flutterwave',
                           '/payments_lipisha', '/payments_beyonic',
                           '/media', '/downloads',
-                          '/surveys', '/token')
+                          '/surveys', '/token', '/jet')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
 SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
@@ -287,10 +287,14 @@ TENANT_APPS = (
     'bluebottle.common',
     'token_auth',
 
+    'bluebottle.bluebottle_dashboard',
+    'jet',
+    'jet.dashboard',
+
     'admin_tools',
-    'admin_tools.theming',
-    'admin_tools.menu',
-    'admin_tools.dashboard',
+    # 'admin_tools.theming',
+    # 'admin_tools.menu',
+    # 'admin_tools.dashboard',
 
     # Thumbnails
     'sorl.thumbnail',
@@ -310,11 +314,13 @@ TENANT_APPS = (
 
     'rest_framework.authtoken',
 
+    'bluebottle.looker',
+
     'bluebottle.members',
     'bluebottle.projects',
     'bluebottle.organizations',
+
     'bluebottle.tasks',
-    'bluebottle.bluebottle_dashboard',
     'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
@@ -353,7 +359,7 @@ TENANT_APPS = (
     'bluebottle.rewards',
 
     # Custom dashboard
-    'fluent_dashboard',
+    # 'fluent_dashboard',
 
     # Bluebottle apps with abstract models
     'bluebottle.bb_accounts',
@@ -388,12 +394,15 @@ TENANT_APPS = (
     'djmoney',
     'django_singleton_admin',
     'nested_inline',
+    'permissions_widget',
+
 )
 
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
 CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"
@@ -857,3 +866,8 @@ SUMMERNOTE_CONFIG = {
 }
 
 HOMEPAGE = {}
+
+LOGOUT_REDIRECT_URL = 'admin:index'
+LOGIN_REDIRECT_URL = 'admin:index'
+
+TINYMCE_INCLUDE_JQUERY = False

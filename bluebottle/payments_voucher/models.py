@@ -3,7 +3,7 @@ from django.db import models
 from decimal import Decimal
 from bluebottle.payments.models import Payment
 from djchoices.choices import DjangoChoices, ChoiceItem
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, \
     CreationDateTimeField
 

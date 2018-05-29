@@ -1,0 +1,127 @@
+.video-container {
+    position: relative;
+}
+
+.video-container .play-btn {
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    width: 40px;
+    height: 40px;
+    background: url("/static/assets/images/img/icons/icon-play-video.svg") no-repeat;
+    background-size: 40px;
+}
+
+.video-container .play-btn:hover {
+    width: 45px;
+    height: 45px;
+    background-size: 45px;
+}
+
+.video-container .video-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -40px;
+    padding: 3px 6px;
+    margin-left: auto;
+    margin-right: auto;
+    background: #003580;
+    color: #fff;
+    text-align: right;
+}
+
+.photo-container {
+    position: relative;
+}
+
+.photo-container .photo-text {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 3px 6px;
+    margin-left: auto;
+    margin-right: auto;
+    background: #003580;
+    color: #fff;
+    text-align: right;
+}
+
+#header ul#navigation-menu li a {
+    text-transform: none;
+}
+
+/* Fluent Contents */
+
+.cp-item-icons .cp-item-down,
+.cp-item-icons .cp-item-up,
+.cp-item-controls .cp-item-delete a {
+    background: none;
+
+}
+
+.cp-item-down:hover:before,
+.cp-item-up:hover:before {
+    color: #3C96DC;
+}
+
+.cp-item-down:before {
+    content: "\ea3e";
+    font-size: 1rem;
+    color: #281E50;
+}
+
+.cp-item-up:before {
+    content: "\ea3a";
+    font-size: 1rem;
+    color: #281E50;
+}
+
+.cp-item-controls .cp-item-delete a {
+    padding: 0 3px;
+}
+
+.cp-item-controls .cp-item-delete a:before {
+    content: "\ea0f";
+    font-size: 1rem;
+    color: #281E50;
+}
+
+.cp-item-controls .cp-item-delete a:hover:before {
+    color: #c7254e;
+}
+
+.aligned .cp-item-controls label {
+    display: none;
+}
+
+#content .parler-language-tabs {
+    border-bottom: 2px solid #FFFFFF;
+}
+
+#content .parler-language-tabs span {
+    border: 0;
+    top: 0;
+    background-color: #E3E4EA;
+    color: #281E50;
+}
+
+#content .parler-language-tabs span a {
+    color: #281E50;
+    font-weight: 700;
+}
+
+#content .parler-language-tabs span.current {
+    border: 0;
+    background-color: #FFFFFF;
+    color: #281E50;
+}
+
+#content #content-main .cp-controls input.button {
+    padding-top: 0;
+    padding-bottom: 0;
+}

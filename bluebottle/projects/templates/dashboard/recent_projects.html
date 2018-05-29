@@ -1,0 +1,24 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for project in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <span class="float-right" title="Date submitted">
+            {{ project.date_submitted|date }}<br>
+        </span>
+        <a href="{% url 'admin:projects_project_change' project.id %}" >{{ project.title }}</a>
+        <br>
+        <b>{{ project.owner.full_name }}</b>
+        {% if project.location %}
+            {{ project.location }}
+        {% else %}
+            {{ project.place }}
+        {% endif %}
+        <br>
+        {% trans 'Reviewer:' %} <b>{{ project.reviewer }}</b>
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

@@ -69,7 +69,7 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
                                     token=self.user_token)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data['non_field_errors'], ['The fields project, voter must make a unique set.']
+            unicode(response.data['non_field_errors'][0]), 'You already voted.'
         )
 
     def test_vote_on_second_project(self):
@@ -96,7 +96,7 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
                                     token=self.user_token)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data['non_field_errors'], [u'You already voted']
+            unicode(response.data['non_field_errors'][0]), u'You already voted.'
         )
 
     def test_vote_already_votes_twice(self):
@@ -119,7 +119,7 @@ class ProjectVotesAPITestCase(BluebottleTestCase):
                                     token=self.user_token)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data['non_field_errors'], [u'You already voted']
+            unicode(response.data['non_field_errors'][0]), u'You already voted.'
         )
 
     def test_get_votes(self):

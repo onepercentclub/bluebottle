@@ -2,7 +2,6 @@ from collections import OrderedDict
 import csv
 import logging
 import six
-from decimal import InvalidOperation, DivisionByZero
 
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
@@ -26,7 +25,7 @@ from django.conf.urls import url
 from django.contrib import admin, messages
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, F, When, Case
 from django.utils.html import format_html
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden, HttpResponse
 from django.utils.translation import ugettext_lazy as _
@@ -438,12 +437,13 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         return obj.vote_set.count()
 
     def donated_percentage(self, obj):
-        try:
-            percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
-            return "{0} %".format(percentage)
-        except (AttributeError, InvalidOperation, DivisionByZero):
-            return '-'
+        if obj.amount_donated.amount:
+            percentage = 100 * obj.admin_donated_percentage
+        else:
+            percentage = 0
+        return "{0:.2f} %".format(percentage)
     donated_percentage.short_description = _('Donated')
+    donated_percentage.admin_order_field = 'admin_donated_percentage'
 
     def expertise_based(self, obj):
         return obj.expertise_based
@@ -643,6 +643,12 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             fields += ('vote_count',)
         return fields
 
+    def lookup_allowed(self, key, value):
+        if key == 'task__skill__expertise__exact':
+            return True
+        else:
+            return super(ProjectAdmin, self).lookup_allowed(key, value)
+
     def created_date(self, obj):
         return obj.created.date()
     created_date.admin_order_field = 'created'
@@ -723,6 +729,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'owner', 'organization'
         ).annotate(
             admin_vote_count=Count('vote', distinct=True),
+            admin_donated_percentage=Case(
+                When(amount_asked__gt=0, then=F('amount_donated') / F('amount_asked')),
+                default=0
+            ),
             time_spent=Sum('task__members__time_spent')
         )
 

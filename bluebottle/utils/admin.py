@@ -9,6 +9,7 @@ from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
 
 from django_singleton_admin.admin import SingletonAdmin
+
 from parler.admin import TranslatableAdmin
 
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField

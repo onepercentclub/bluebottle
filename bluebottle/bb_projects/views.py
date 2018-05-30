@@ -313,7 +313,7 @@ class ManageProjectDetail(RetrieveUpdateAPIView):
         return object
 
 
-class ProjectThemeList(ListAPIView, TranslatedApiViewMixin):
+class ProjectThemeList(TranslatedApiViewMixin, ListAPIView):
     serializer_class = ProjectThemeSerializer
     queryset = ProjectTheme.objects.filter(disabled=False)
 

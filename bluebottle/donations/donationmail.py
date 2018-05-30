@@ -88,10 +88,6 @@ def new_oneoff_donation(instance):
     project_url = '/projects/{0}'.format(donation.project.slug)
     pledged = (donation.order.status == StatusDefinition.PLEDGED)
 
-    # Setup tenant properties for accessing tenant admin email
-    if not properties.tenant_properties and connection.tenant:
-        properties.set_tenant(connection.tenant)
-
     try:
         admin_email = properties.TENANT_MAIL_PROPERTIES.get('address')
     except AttributeError:

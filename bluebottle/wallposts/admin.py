@@ -217,7 +217,11 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
     fields = ('title', 'text', 'author', 'ip_address')
     list_filter = ('created', ('content_type', admin.RelatedOnlyFieldListFilter),)
     ordering = ('-created',)
-    search_fields = ('textwallpost__text', 'mediawallpost__text')
+    search_fields = (
+        'textwallpost__text', 'mediawallpost__text',
+        'author__username', 'author__email',
+        'author__first_name', 'author__last_name', 'ip_address'
+    )
     child_models = (
         (MediaWallpost, MediaWallpostAdmin),
         (TextWallpost, TextWallpostAdmin),

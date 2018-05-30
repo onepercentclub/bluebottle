@@ -80,6 +80,10 @@ def create_follow(sender, instance, created, **kwargs):
             return
 
         user = instance.user
+
+        if not instance.donations.first():
+            return
+
         followed_object = instance.donations.first().fundraiser or instance.donations.first().project
 
         if not user or not followed_object:
@@ -130,7 +134,7 @@ def create_follow(sender, instance, created, **kwargs):
         if not user or not followed_object:
             return
 
-        if user != followed_object.owner:
+        if user not in [followed_object.owner, followed_object.task_manager]:
             content_type = ContentType.objects.get_for_model(followed_object)
             Follow.objects.get_or_create(
                 user=user,

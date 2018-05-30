@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='project',
             name='bank_details_reviewed',
-            field=models.BooleanField(default=True, help_text='A staff memmber has reviewed the bank details for this project', verbose_name='Bank details reviewed'),
+            field=models.BooleanField(default=False, help_text='A staff memmber has reviewed the bank details for this project', verbose_name='Bank details reviewed'),
         ),
         migrations.AlterField(
             model_name='project',

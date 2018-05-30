@@ -94,7 +94,8 @@ def create_follow(sender, instance, created, **kwargs):
         # A Follow object should link the project to the user, not the
         # donation and the user
         if user != followed_object.owner:
-            Follow.objects.get_or_create(user=user, object_id=followed_object.id, content_type=content_type)
+            if not Follow.objects.filter(user=user, object_id=followed_object.id, content_type=content_type).count():
+                Follow.objects.create(user=user, object_id=followed_object.id, content_type=content_type)
 
     if not created:
         return

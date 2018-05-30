@@ -301,7 +301,7 @@ class Skill(TranslatableModel):
         return self.name
 
     class Meta:
-        ordering = ('id',)
+        ordering = ['translations__name']
         permissions = (
             ('api_read_skill', 'Can view skills through the API'),
         )

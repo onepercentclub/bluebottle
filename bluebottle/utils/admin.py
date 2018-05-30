@@ -1,4 +1,6 @@
 import csv
+
+from adminfilters.multiselect import UnionFieldListFilter
 from moneyed import Money
 
 from django.conf import settings
@@ -7,6 +9,7 @@ from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
 
 from django_singleton_admin.admin import SingletonAdmin
+from parler.admin import TranslatableAdmin
 
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
@@ -178,3 +181,27 @@ class BasePlatformSettingsAdmin(SingletonAdmin):
 
     def has_add_permission(self, request, obj=None):
         return False
+
+
+class SortableTranslatableAdmin(TranslatableAdmin):
+
+    def get_ordering(self, request):
+        if self.ordering:
+            return self.ordering
+        return self.model._meta.ordering
+
+    def get_queryset(self, request):
+        qs = super(SortableTranslatableAdmin, self).get_queryset(request)
+        qs = qs.translated(self.get_queryset_language(request))
+        for order in self.get_ordering(request):
+            qs = qs.order_by(order)
+        return qs
+
+
+class TranslatedUnionFieldListFilter(UnionFieldListFilter):
+
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        super(TranslatedUnionFieldListFilter, self).__init__(
+            field, request, params, model, model_admin, field_path)
+        # Remove duplicates and order by title
+        self.lookup_choices = sorted(list(set(self.lookup_choices)), key=lambda tup: tup[1])

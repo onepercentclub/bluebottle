@@ -626,7 +626,10 @@ class TestProjectLocation(BluebottleTestCase):
 
 class TestProjectDocument(BluebottleTestCase):
     def setUp(self):
-        self.project = ProjectFactory.create(language=Language.objects.get(code='en'))
+        self.project = ProjectFactory.create(
+            language=Language.objects.get(code='en'),
+            status=ProjectPhase.objects.get(slug='plan-submitted')
+        )
         self.document = ProjectDocumentFactory.create(
             project=self.project,
             file='private/projects/documents/test.jpg'
@@ -639,8 +642,26 @@ class TestProjectDocument(BluebottleTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertEqual(response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg')
 
-    def test_review_documents(self):
-        self.project.bank_details_reviewed = True
+    def test_delete_camppaign(self):
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        self.assertEqual(len(self.project.documents.all()), 0)
+
+    def test_delete_submitted(self):
+        self.project.status = ProjectPhase.objects.get(slug='plan-submitted')
+        self.project.save()
+
+        self.assertEqual(len(self.project.documents.all()), 1)
+
+    def test_delete_needs_work(self):
+        self.project.status = ProjectPhase.objects.get(slug='plan-needs-work')
+        self.project.save()
+
+        self.assertEqual(len(self.project.documents.all()), 1)
+
+    def test_delete_closed(self):
+        self.project.status = ProjectPhase.objects.get(slug='closed')
         self.project.save()
 
         self.assertEqual(len(self.project.documents.all()), 0)

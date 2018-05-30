@@ -204,7 +204,6 @@ class Project(BaseProject, PreviousStatusMixin):
         _('Bank details reviewed'),
         help_text=_(
             'Review the project documents before marking the bank details as reviewed. '
-            'The documents will be removed after marking the bank details as reviewed'
         ),
         default=False
     )
@@ -366,7 +365,9 @@ class Project(BaseProject, PreviousStatusMixin):
         if not self.task_manager:
             self.task_manager = self.owner
 
-        if self.bank_details_reviewed:
+        if self.status.slug not in (
+            'plan-new', 'plan-submitted', 'plan-needs-work',
+        ):
             for document in self.documents.all():
                 document.delete()
 

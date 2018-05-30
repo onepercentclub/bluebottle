@@ -10,7 +10,9 @@ def fix_followers(apps, schema_editor):
     Follow = apps.get_model('bb_follow', 'Follow')
     ContentType = apps.get_model('contenttypes', 'ContentType')
 
-    for donation in Donation.objects.filter(order__status__in=['success', 'pending']).exclude(order__order_type='recurring').all():
+    for donation in Donation.objects.\
+            filter(order__status__in=['success', 'pending']).\
+            exclude(order__order_type='recurring').all():
         user = donation.order.user
         followed_object = donation.project
         content_type = ContentType.objects.get_for_model(followed_object)

@@ -12,7 +12,10 @@ class FollowAdmin(admin.ModelAdmin):
     fields = ('user', 'content_type', 'object_id')
 
     def title(self, obj):
-        return obj.followed_object.title
+        if obj.followed_object:
+            return obj.followed_object.title
+        else:
+            return '-'
 
 
 admin.site.register(Follow, FollowAdmin)

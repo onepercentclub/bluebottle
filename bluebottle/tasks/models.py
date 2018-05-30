@@ -287,7 +287,7 @@ class Task(models.Model, PreviousStatusMixin):
 
 
 class Skill(TranslatableModel):
-    expertise = models.BooleanField(_('expertise'),
+    expertise = models.BooleanField(_('expertise based'),
                                     help_text=_('Is this skill expertise based, or could anyone do it?'),
                                     default=True)
     disabled = models.BooleanField(_('disabled'), default=False)

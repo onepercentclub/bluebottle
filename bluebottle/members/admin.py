@@ -171,6 +171,7 @@ class MemberAdmin(UserAdmin):
                 'date_joined',
                 'deleted',
                 'is_co_financer',
+                'can_pledge',
                 'partner_organization',
                 'campaign_notifications',
                 'newsletter',
@@ -194,9 +195,8 @@ class MemberAdmin(UserAdmin):
         if Location.objects.count():
             standard_fieldsets[1][1]['fields'].append('location')
 
-        for item in properties.PAYMENT_METHODS:
-            if item['name'] == 'Pledge':
-                standard_fieldsets[0][1]['fields'].append('can_pledge')
+        if 'Pledge' not in (item['name'] for item in properties.PAYMENT_METHODS):
+            standard_fieldsets[0][1]['fields'].remove('can_pledge')
 
         if CustomMemberFieldSettings.objects.count():
             extra = (_('Extra fields'), {

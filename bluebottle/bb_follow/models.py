@@ -96,7 +96,6 @@ def create_follow(sender, instance, created, **kwargs):
         if user != followed_object.owner:
             Follow.objects.get_or_create(user=user, object_id=followed_object.id, content_type=content_type)
 
-
     if not created:
         return
 

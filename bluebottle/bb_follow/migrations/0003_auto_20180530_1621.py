@@ -32,6 +32,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('bb_follow', '0002_follow_user'),
+        ('donations', '0008_auto_20170927_1021')
     ]
 
     operations = [

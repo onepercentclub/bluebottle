@@ -101,7 +101,6 @@ def create_follow(sender, instance, created, **kwargs):
         if user != followed_object.owner:
             _create_follow_object(followed_object, user)
 
-
     # A user applies for a task
     elif isinstance(instance, TaskMember):
         # Create a Follow to the specific Task if a user applies for the task

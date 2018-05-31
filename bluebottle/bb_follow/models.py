@@ -47,6 +47,12 @@ class Follow(models.Model):
             super(Follow, self).save(*args, **kwargs)
 
 
+def _create_follow_object(followed_object, user):
+    content_type = ContentType.objects.get_for_model(followed_object)
+    if not Follow.objects.filter(user=user, object_id=followed_object.id, content_type=content_type).count():
+        Follow.objects.create(user=user, object_id=followed_object.id, content_type=content_type)
+
+
 @receiver(post_save)
 def create_follow(sender, instance, created, **kwargs):
     """
@@ -68,6 +74,7 @@ def create_follow(sender, instance, created, **kwargs):
             Users do not follow their own project or task.
 
     """
+
     # A user does a donation
     if isinstance(instance, Order):
         # Create a Follow to the specific Project or Task if a donation was
@@ -89,12 +96,11 @@ def create_follow(sender, instance, created, **kwargs):
         if not user or not followed_object:
             return
 
-        content_type = ContentType.objects.get_for_model(followed_object)
-
         # A Follow object should link the project to the user, not the
         # donation and the user
         if user != followed_object.owner:
-            Follow.objects.get_or_create(user=user, object_id=followed_object.id, content_type=content_type)
+            _create_follow_object(followed_object, user)
+
 
     # A user applies for a task
     elif isinstance(instance, TaskMember):
@@ -108,21 +114,14 @@ def create_follow(sender, instance, created, **kwargs):
         if not user or not followed_object:
             return
 
-        content_type = ContentType.objects.get_for_model(followed_object)
         if user != followed_object.author:
-            Follow.objects.get_or_create(
-                user=user,
-                object_id=followed_object.id,
-                content_type=content_type)
+            _create_follow_object(followed_object, user)
 
         # Also follow the project
         followed_object = followed_object.project
-        content_type = ContentType.objects.get_for_model(followed_object)
+
         if user != followed_object.owner:
-            Follow.objects.get_or_create(
-                user=user,
-                object_id=followed_object.id,
-                content_type=content_type)
+            _create_follow_object(followed_object, user)
 
     # A user creates a task for a project
     elif isinstance(instance, Task):
@@ -135,11 +134,7 @@ def create_follow(sender, instance, created, **kwargs):
             return
 
         if user not in [followed_object.owner, followed_object.task_manager]:
-            content_type = ContentType.objects.get_for_model(followed_object)
-            Follow.objects.get_or_create(
-                user=user,
-                object_id=followed_object.id,
-                content_type=content_type)
+            _create_follow_object(followed_object, user)
 
     # A user creates a fundraiser for a project
     elif isinstance(instance, BaseFundraiser):
@@ -151,11 +146,7 @@ def create_follow(sender, instance, created, **kwargs):
             return
 
         if user != followed_object.owner:
-            content_type = ContentType.objects.get_for_model(followed_object)
-            Follow.objects.get_or_create(
-                user=user,
-                object_id=followed_object.id,
-                content_type=content_type)
+            _create_follow_object(followed_object, user)
 
     elif isinstance(instance, Vote):
         user = instance.voter
@@ -165,11 +156,7 @@ def create_follow(sender, instance, created, **kwargs):
             return
 
         if user != followed_object.owner:
-            content_type = ContentType.objects.get_for_model(followed_object)
-            Follow.objects.get_or_create(
-                user=user,
-                object_id=followed_object.id,
-                content_type=content_type)
+            _create_follow_object(followed_object, user)
 
 
 @receiver(post_save)

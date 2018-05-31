@@ -15,6 +15,8 @@ from django.forms.models import ModelFormMetaclass
 from django.http import HttpResponseRedirect
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+
+from bluebottle.bb_follow.models import Follow
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 from bluebottle.bb_accounts.models import UserAddress
@@ -188,7 +190,8 @@ class MemberAdmin(UserAdmin):
              {'fields': [
                  'projects_managed',
                  'tasks',
-                 'donations'
+                 'donations',
+                 'following'
              ]}],
         ]
 
@@ -225,7 +228,7 @@ class MemberAdmin(UserAdmin):
     readonly_fields = ('date_joined', 'last_login',
                        'updated', 'deleted', 'login_as_user',
                        'reset_password', 'projects_managed',
-                       'tasks', 'donations')
+                       'tasks', 'donations', 'following')
 
     export_fields = (
         ('username', 'username'),
@@ -312,6 +315,12 @@ class MemberAdmin(UserAdmin):
         donations = Donation.objects.filter(order__status__in=['success', 'pending'], order__user=obj).count()
         return format_html('<a href="{}?order__user_id={}">{} {}</a>', url, obj.id, donations, _('donations'))
     donations.short_description = _('Donations')
+
+    def following(self, obj):
+        url = reverse('admin:bb_follow_follow_changelist')
+        follow_count = Follow.objects.filter(user=obj).count()
+        return format_html('<a href="{}?user_id={}">{} objects</a>', url, obj.id, follow_count)
+    following.short_description = _('Following')
 
     def reset_password(self, obj):
         reset_form_url = reverse('admin:auth_user_password_change', args=(obj.id, ))

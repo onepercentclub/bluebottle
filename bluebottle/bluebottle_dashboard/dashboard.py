@@ -39,6 +39,12 @@ class CustomIndexDashboard(Dashboard):
         self.children.append(MyReviewingProjects())
         self.children.append(ClosingFundingProjects())
         self.children.append(ClosingTasks())
+        self.children.append(modules.RecentActions(
+            _('Recent Actions'),
+            10,
+            column=0,
+            order=0
+        ))
         self.children.append(RecentMembersDashboard())
         if context['request'].user.has_perm('sites.export'):
             metrics_children = [

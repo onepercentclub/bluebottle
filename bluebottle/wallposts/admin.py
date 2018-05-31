@@ -29,6 +29,7 @@ class ReactionInline(admin.TabularInline):
         url = reverse('admin:wallposts_reaction_change', args=(obj.id, ))
         return format_html("<a href='{}'>Reaction #{}</a>", url, obj.id)
 
+
 class MediaWallpostPhotoInline(admin.TabularInline):
     model = MediaWallpostPhoto
     extra = 0

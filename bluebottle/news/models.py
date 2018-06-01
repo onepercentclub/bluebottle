@@ -40,6 +40,7 @@ class NewsItem(models.Model):
     contents = PlaceholderField("blog_contents", plugins=[
         'TextPlugin',
         'ImageTextPlugin',
+        'OEmbedPlugin',
         'RawHtmlPlugin',
         'PicturePlugin'
     ])

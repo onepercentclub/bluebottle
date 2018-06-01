@@ -23,7 +23,7 @@ class MainDashboardTest(BluebottleAdminTestCase):
     def test_main_dashboard(self):
         response = self.client.get(self.admin_url)
         self.assertContains(response, 'Recently submitted project')
-        self.assertContains(response, 'Crowdfunding projects nearing deadline')
+        self.assertContains(response, 'Projects nearing deadline')
         self.assertContains(response, 'Recently joined users')
         self.assertContains(response, 'Tasks nearing application deadline')
         self.assertContains(response, 'Export metrics')

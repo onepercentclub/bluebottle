@@ -204,7 +204,6 @@ class Project(BaseProject, PreviousStatusMixin):
         _('Bank details reviewed'),
         help_text=_(
             'Review the project documents before marking the bank details as reviewed. '
-            'The documents will be removed after marking the bank details as reviewed'
         ),
         default=False
     )
@@ -366,7 +365,9 @@ class Project(BaseProject, PreviousStatusMixin):
         if not self.task_manager:
             self.task_manager = self.owner
 
-        if self.bank_details_reviewed:
+        if self.status.slug not in (
+            'plan-new', 'plan-submitted', 'plan-needs-work',
+        ):
             for document in self.documents.all():
                 document.delete()
 
@@ -886,9 +887,13 @@ class ProjectPlatformSettings(BasePlatformSettings):
 
     create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
     contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
-    share_options = SelectMultipleField(max_length=100, choices=PROJECT_SHARE_OPTIONS)
+    share_options = SelectMultipleField(
+        max_length=100, choices=PROJECT_SHARE_OPTIONS, blank=True, include_blank=False
+    )
     facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
-    allow_anonymous_rewards = models.BooleanField(default=True)
+    allow_anonymous_rewards = models.BooleanField(
+        _('Allow guests to donate rewards'), default=True
+    )
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)
 

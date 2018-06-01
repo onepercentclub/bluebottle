@@ -287,7 +287,7 @@ class Task(models.Model, PreviousStatusMixin):
 
 
 class Skill(TranslatableModel):
-    expertise = models.BooleanField(_('expertise'),
+    expertise = models.BooleanField(_('expertise based'),
                                     help_text=_('Is this skill expertise based, or could anyone do it?'),
                                     default=True)
     disabled = models.BooleanField(_('disabled'), default=False)
@@ -301,7 +301,7 @@ class Skill(TranslatableModel):
         return self.name
 
     class Meta:
-        ordering = ('id',)
+        ordering = ['translations__name']
         permissions = (
             ('api_read_skill', 'Can view skills through the API'),
         )

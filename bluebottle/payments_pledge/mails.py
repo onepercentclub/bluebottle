@@ -20,10 +20,6 @@ def mail_pledge_platform_admin(donation):
 
     project_url = '/projects/{0}'.format(donation.project.slug)
 
-    # Setup tenant properties for accessing tenant admin email
-    if not properties.tenant_properties and connection.tenant:
-        properties.set_tenant(connection.tenant)
-
     try:
         admin_email = properties.TENANT_MAIL_PROPERTIES.get('address')
     except AttributeError:

@@ -2,7 +2,6 @@ from collections import OrderedDict
 import csv
 import logging
 import six
-from decimal import InvalidOperation, DivisionByZero
 
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
@@ -26,7 +25,7 @@ from django.conf.urls import url
 from django.contrib import admin, messages
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, F, When, Case
 from django.utils.html import format_html
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden, HttpResponse
 from django.utils.translation import ugettext_lazy as _
@@ -46,7 +45,8 @@ from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
-from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin
+from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin, \
+    TranslatedUnionFieldListFilter
 from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
 from bluebottle.votes.models import Vote
 
@@ -244,6 +244,7 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
     def clean(self):
         if (
             self.cleaned_data['status'].slug == 'campaign' and
+            'amount_asked' in self.cleaned_data and
             self.cleaned_data['amount_asked'].amount > 0 and
             not self.cleaned_data['bank_details_reviewed']
         ):
@@ -332,9 +333,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         self.inlines = self.all_inlines
         if obj:
             # We need to reload project, or we get an error when changing project type
-            proj = Project.objects.get(pk=obj.id)
-            if obj and proj.project_type == 'sourcing':
+            project = Project.objects.get(pk=obj.id)
+            if project.project_type == 'sourcing':
                 self.inlines = self.sourcing_inlines
+        elif request.POST.get('project_type', '') == 'sourcing':
+            self.inlines = self.sourcing_inlines
 
         instances = super(ProjectAdmin, self).get_inline_instances(request, obj)
         add_on_inline = ProjectAddOnInline(self.model, self.admin_site)
@@ -435,12 +438,13 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         return obj.vote_set.count()
 
     def donated_percentage(self, obj):
-        try:
-            percentage = "%.2f" % (100 * obj.amount_donated.amount / obj.amount_asked.amount)
-            return "{0} %".format(percentage)
-        except (AttributeError, InvalidOperation, DivisionByZero):
-            return '-'
+        if obj.amount_donated.amount:
+            percentage = 100 * obj.admin_donated_percentage
+        else:
+            percentage = 0
+        return "{0:.2f} %".format(percentage)
     donated_percentage.short_description = _('Donated')
+    donated_percentage.admin_order_field = 'admin_donated_percentage'
 
     def expertise_based(self, obj):
         return obj.expertise_based
@@ -606,10 +610,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     def get_list_filter(self, request):
         filters = [
             ('status', UnionFieldListFilter),
-            ('theme', UnionFieldListFilter),
-            ('task__skill', UnionFieldListFilter),
+            ('theme', TranslatedUnionFieldListFilter),
+            ('task__skill', TranslatedUnionFieldListFilter),
+            'categories',
             'project_type',
-            'categories'
         ]
 
         if request.user.has_perm('projects.approve_payout'):
@@ -639,6 +643,12 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if Vote.objects.count():
             fields += ('vote_count',)
         return fields
+
+    def lookup_allowed(self, key, value):
+        if key == 'task__skill__expertise__exact':
+            return True
+        else:
+            return super(ProjectAdmin, self).lookup_allowed(key, value)
 
     def created_date(self, obj):
         return obj.created.date()
@@ -702,8 +712,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         fieldsets = (main, story, dates)
 
-        if obj and obj.project_type != 'sourcing':
-            fieldsets += (amount, bank)
+        if obj:
+            project = Project.objects.get(pk=obj.id)
+            if project.project_type != 'sourcing':
+                fieldsets += (amount, bank)
 
         if CustomProjectFieldSettings.objects.count():
             fieldsets += (extra, )
@@ -718,6 +730,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'owner', 'organization'
         ).annotate(
             admin_vote_count=Count('vote', distinct=True),
+            admin_donated_percentage=Case(
+                When(amount_asked__gt=0, then=F('amount_donated') / F('amount_asked')),
+                default=0
+            ),
             time_spent=Sum('task__members__time_spent')
         )
 

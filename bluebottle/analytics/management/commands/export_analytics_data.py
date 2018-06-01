@@ -4,7 +4,6 @@ import logging
 
 import django.apps
 from django.core.management.base import BaseCommand
-from django.db import connection
 from django.test.utils import override_settings
 from django.utils import dateparse
 
@@ -49,8 +48,6 @@ class Command(BaseCommand):
 
         for client in Client.objects.all():
             if tenants is None or client.client_name in tenants:
-                connection.set_tenant(client)
-
                 with LocalTenant(client, clear_tenant=True):
                     logger.info('export tenant:{}'.format(client.schema_name))
                     models = django.apps.apps.get_models()

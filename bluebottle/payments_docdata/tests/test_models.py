@@ -208,7 +208,7 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
         self.assert_status(self.order_payment.payment,
                            StatusDefinition.REFUNDED)
         self.assert_status(self.order_payment, StatusDefinition.REFUNDED)
-        self.assert_status(self.order, StatusDefinition.FAILED)
+        self.assert_status(self.order, StatusDefinition.REFUNDED)
 
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
     @patch.object(DocdataPaymentAdapter, '_fetch_status')
@@ -233,7 +233,7 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
         self.assert_status(self.order_payment.payment,
                            StatusDefinition.REFUNDED)
         self.assert_status(self.order_payment, StatusDefinition.REFUNDED)
-        self.assert_status(self.order, StatusDefinition.FAILED)
+        self.assert_status(self.order, StatusDefinition.REFUNDED)
 
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
     @patch.object(DocdataPaymentAdapter, '_fetch_status')

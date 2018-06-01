@@ -4,7 +4,7 @@ from django_extensions.db.fields import CreationDateTimeField, \
     ModificationDateTimeField
 
 from localflavor.generic.models import IBANField, BICField
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from moneyed.classes import Money
 
 from bluebottle.utils.fields import MoneyField
@@ -44,6 +44,10 @@ class MonthlyDonor(models.Model):
             return False
 
         return True
+
+    class Meta:
+        verbose_name = _('monthly donor')
+        verbose_name_plural = _('monthly donors')
 
 
 class MonthlyDonorProject(models.Model):
@@ -104,6 +108,10 @@ class MonthlyOrder(models.Model):
         default=False)
     error = models.CharField(max_length=1000, blank=True, null=True, default='')
 
+    class Meta:
+        verbose_name = _('monthly order')
+        verbose_name_plural = _('monthly orders')
+
     def __unicode__(self):
         return "{0}: {1} {2}".format(self.user, self.amount.currency, self.amount.amount)
 
@@ -113,3 +121,7 @@ class MonthlyDonation(models.Model):
     order = models.ForeignKey(MonthlyOrder, related_name='donations')
     project = models.ForeignKey('projects.Project')
     amount = MoneyField(_("Amount"), default=0)
+
+    class Meta:
+        verbose_name = _('monthly donation')
+        verbose_name_plural = _('monthly donations')

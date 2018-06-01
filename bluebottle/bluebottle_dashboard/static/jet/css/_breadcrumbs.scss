@@ -1,0 +1,54 @@
+@import "globals";
+
+/* BREADCRUMBS */
+
+div.breadcrumbs {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: $top-height;
+  color: $top-text-color;
+  padding: 10px 175px + 20px + 20px 10px 20px;
+  visibility: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  min-height: 32px;
+
+  @include for-mobile {
+    padding: 20px 20px 10px 20px;
+    white-space: normal;
+    text-overflow: clip;
+    overflow: auto;
+  }
+
+  @include for-phone {
+    padding: 10px;
+  }
+
+  &.initialized {
+    visibility: inherit;
+  }
+
+  a {
+    &, &:visited {
+      color: $top-link-color;
+    }
+
+    &:focus, &:hover {
+      color: $top-hover-link-color;
+    }
+  }
+}
+
+.breadcrumbs {
+  a {
+    font-weight: 700;
+  }
+  &-separator {
+    color: $top-separator-color;
+    font-weight: 500;
+    margin: 0 6px 0 6px;
+    font-size: 0.8rem;
+    vertical-align: middle;
+  }
+}

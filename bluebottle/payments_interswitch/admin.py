@@ -23,3 +23,6 @@ class InterswitchPaymentAdmin(PolymorphicChildModelAdmin):
     model = InterswitchPayment
     inlines = [InterswitchPaymentStatusInlineAdmin]
     raw_id_fields = ('order_payment', )
+
+
+admin.site.register(InterswitchPayment, InterswitchPaymentAdmin)

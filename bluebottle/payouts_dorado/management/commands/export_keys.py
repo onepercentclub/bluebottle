@@ -1,6 +1,5 @@
 import json
 
-from django.db import connection
 from django.core.management.base import BaseCommand, CommandError
 
 from rest_framework.authtoken.models import Token
@@ -44,7 +43,6 @@ class Command(BaseCommand):
 
         tokens = []
         for tenant in tenants:
-            connection.set_tenant(tenant)
             with LocalTenant(tenant):
                 tokens += [
                     {

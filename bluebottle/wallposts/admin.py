@@ -2,6 +2,7 @@ import urlparse
 
 from django.contrib import admin
 from django.core.urlresolvers import reverse
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.utils.html import format_html, mark_safe
 from django.template.loader import render_to_string
@@ -12,6 +13,7 @@ from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.utils.utils import set_author_editor_ip
 from bluebottle.wallposts.models import SystemWallpost
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 from .models import (Wallpost, MediaWallpost, TextWallpost,
                      MediaWallpostPhoto, Reaction)
@@ -56,6 +58,10 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     ordering = ('-created',)
     inlines = (MediaWallpostPhotoInline,)
 
+    formfield_overrides = {
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
+    }
+
     def get_text(self, obj):
         if len(obj.text) > 150:
             return format_html(
@@ -71,7 +77,7 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
                     urlparts = urlparse.urlparse(obj.video_url)
                     data['youtubeid'] = urlparse.parse_qs(urlparts.query)['v'][
                         0]
-                except (ValueError, IndexError):
+                except (KeyError, ValueError, IndexError):
                     pass
 
         photos = MediaWallpostPhoto.objects.filter(mediawallpost=obj)
@@ -79,9 +85,10 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
         data['remains'] = max(0, data['count'] - 1)
 
         if len(photos):
-            data['firstimage'] = get_thumbnail(photos[0].photo, "120x120",
-                                               crop="center").url
-            data['firstimage_url'] = photos[0].photo.url
+            if photos[0].photo:
+                data['firstimage'] = get_thumbnail(photos[0].photo, "120x120",
+                                                   crop="center").url
+                data['firstimage_url'] = photos[0].photo.url
 
         return mark_safe(render_to_string("admin/wallposts/preview_thumbnail.html", data))
 
@@ -183,6 +190,7 @@ class SystemWallpostAdmin(PolymorphicChildModelAdmin):
                 u"<a href='{}'>{}</a>",
                 link, obj.donation.project.title
             )
+    project_link.short_description = _('Project link')
 
     def donation_link(self, obj):
         if obj.donation:
@@ -200,10 +208,15 @@ class SystemWallpostAdmin(PolymorphicChildModelAdmin):
 class WallpostParentAdmin(PolymorphicParentModelAdmin):
     """ The parent model admin """
     base_model = Wallpost
-    list_display = ('created', 'author', 'content_type', 'type', 'deleted')
+    list_display = ('created', 'author', 'content_type', 'text', 'type', 'deleted')
     fields = ('title', 'text', 'author', 'ip_address')
-    list_filter = ('created', 'deleted')
+    list_filter = ('created', ('content_type', admin.RelatedOnlyFieldListFilter),)
     ordering = ('-created',)
+    search_fields = (
+        'textwallpost__text', 'mediawallpost__text',
+        'author__username', 'author__email',
+        'author__first_name', 'author__last_name', 'ip_address'
+    )
     child_models = (
         (MediaWallpost, MediaWallpostAdmin),
         (TextWallpost, TextWallpostAdmin),
@@ -217,11 +230,26 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
         """ The Admin needs to show all the Reactions. """
         return self.model.objects_with_deleted.all()
 
+    def text(self, obj):
+        text = '-empty-'
+        try:
+            text = obj.systemwallpost.text
+        except SystemWallpost.DoesNotExist:
+            pass
+        try:
+            text = obj.textwallpost.text
+        except TextWallpost.DoesNotExist:
+            pass
+        try:
+            text = obj.mediawallpost.text
+        except MediaWallpost.DoesNotExist:
+            pass
+        if len(text) > 40:
+            return format_html(text[:38] + '&hellip;')
+        return text
 
-# Only the parent needs to be registered:
+
 admin.site.register(Wallpost, WallpostParentAdmin)
-
-# So why you are also registering the child?
 admin.site.register(MediaWallpost, MediaWallpostAdmin)
 admin.site.register(TextWallpost, TextWallpostAdmin)
 admin.site.register(SystemWallpost, SystemWallpostAdmin)
@@ -233,7 +261,6 @@ class ReactionAdmin(admin.ModelAdmin):
                        'editor', 'ip_address')
     list_display = ('author_full_name', 'created', 'updated',
                     'deleted', 'ip_address')
-    list_filter = ('created', 'updated', 'deleted')
     date_hierarchy = 'created'
     ordering = ('-created',)
     raw_id_fields = ('author', 'editor', 'wallpost')

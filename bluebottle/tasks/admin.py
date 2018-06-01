@@ -1,15 +1,16 @@
 from datetime import timedelta
 
+from adminfilters.multiselect import UnionFieldListFilter
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
-from daterange_filter.filter import DateRangeFilter
-
-from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill
+from parler.admin import TranslatableAdmin
+from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill, TaskStatusLog
 from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.utils import reverse_signed
 
 
 # Bulk actions for Task
@@ -79,26 +80,24 @@ mark_as_tm_realized.short_description = _("Mark selected Task Members as Realise
 
 def resume_link(obj):
     if obj.resume:
-        url = reverse(
-            'task-member-resume',
-            args=[obj.id]
-        )
+        url = reverse_signed('task-member-resume', args=(obj.id, ))
+
         return format_html(
             u"<a href='{}'>{}</a>",
             str(url), _('Resume')
         )
 
 
-class TaskMemberAdminInline(admin.StackedInline):
+class TaskMemberAdminInline(admin.TabularInline):
     model = TaskMember
     extra = 0
     raw_id_fields = ('member',)
-    readonly_fields = ('created',)
-    fields = readonly_fields + ('member', 'status', 'motivation',
-                                'time_spent', 'externals', 'resume')
+    readonly_fields = ('motivation', 'resume_link')
+    fields = ('member', 'status', 'time_spent', 'externals', 'motivation', 'resume_link')
 
     def resume_link(self, obj):
         return resume_link(obj)
+    resume_link.short_description = _("resume link")
 
 
 class TaskFileAdminInline(admin.StackedInline):
@@ -110,9 +109,9 @@ class TaskFileAdminInline(admin.StackedInline):
     extra = 0
 
 
-class DeadlineToAppliedFilter(admin.SimpleListFilter):
-    title = _('Deadline to apply')
-    parameter_name = 'deadline_to_apply'
+class DeadlineFilter(admin.SimpleListFilter):
+    title = _('deadline')
+    parameter_name = 'deadline'
 
     def lookups(self, request, model_admin):
         return (
@@ -137,8 +136,13 @@ class DeadlineToAppliedFilter(admin.SimpleListFilter):
             return queryset
 
 
+class DeadlineToApplyFilter(DeadlineFilter):
+    title = _('deadline to apply')
+    parameter_name = 'deadline_to_apply'
+
+
 class OnlineOnLocationFilter(admin.SimpleListFilter):
-    title = _('Online or on location')
+    title = _('online / on location')
     parameter_name = 'online'
 
     def lookups(self, request, model_admin):
@@ -159,20 +163,66 @@ class OnlineOnLocationFilter(admin.SimpleListFilter):
         return queryset
 
 
+class ExpertiseBasedFilter(admin.SimpleListFilter):
+    title = _('type')
+    parameter_name = 'expertise'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('hands_on', 'Hands on'),
+            ('expertise', 'Expertise based'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+
+        if value == 'hands_on':
+            queryset = queryset.filter(skill__expertise=False)
+
+        if value == 'expertise':
+            queryset = queryset.filter(skill__expertise=True)
+
+        return queryset
+
+
+class TaskStatusLogInline(admin.TabularInline):
+    model = TaskStatusLog
+    can_delete = False
+    ordering = ('-start',)
+    extra = 0
+
+    def has_add_permission(self, request):
+        return False
+
+    readonly_fields = ('status', 'start')
+    fields = readonly_fields
+
+
 class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
-    inlines = (TaskMemberAdminInline, TaskFileAdminInline,)
+    inlines = (TaskMemberAdminInline, TaskFileAdminInline, TaskStatusLogInline)
+    save_as = True
 
     raw_id_fields = ('author', 'project')
-    list_filter = ('status', 'type', 'skill__expertise',
-                   OnlineOnLocationFilter,
-                   ('skill', admin.RelatedOnlyFieldListFilter),
-                   'deadline', ('deadline', DateRangeFilter),
-                   DeadlineToAppliedFilter, ('deadline_to_apply', DateRangeFilter),
-                   'accepting'
-                   )
-    list_display = ('title', 'project', 'status', 'created', 'deadline', 'expertise_based')
+    list_filter = (
+        'status',
+        'type',
+        ExpertiseBasedFilter,
+        OnlineOnLocationFilter,
+        ('skill', UnionFieldListFilter),
+        DeadlineFilter,
+        DeadlineToApplyFilter,
+        'accepting'
+    )
+    list_display = (
+        'title',
+        'project_link',
+        'status',
+        'created_date',
+        'deadline_date',
+        'deadline_to_apply_date',
+    )
 
     readonly_fields = ('date_status_change',)
 
@@ -201,10 +251,49 @@ class TaskAdmin(admin.ModelAdmin):
     actions = [mark_as_open, mark_as_in_progress, mark_as_closed,
                mark_as_realized, export_as_csv_action(fields=export_fields)]
 
-    fields = ('title', 'description', 'skill', 'time_needed', 'status',
-              'accepting', 'needs_motivation', 'location',
-              'date_status_change', 'people_needed',
-              'project', 'author', 'type', 'deadline', 'deadline_to_apply')
+    fieldsets = (
+        (_('Main'), {'fields': [
+            'project',
+            'author',
+            'title',
+            'description',
+        ]}),
+        (_('Details'), {'fields': [
+            'status',
+            'people_needed',
+            'time_needed',
+            'skill',
+            'deadline',
+            'deadline_to_apply',
+            'type',
+            'location',
+            'accepting',
+            'needs_motivation',
+            'date_status_change',
+        ]}),
+    )
+
+    def created_date(self, obj):
+        return obj.created.date()
+    created_date.admin_order_field = 'created'
+    created_date.short_description = _('Created')
+
+    def deadline_date(self, obj):
+        return obj.deadline.date()
+    deadline_date.admin_order_field = 'deadline'
+    deadline_date.short_description = _('Deadline')
+
+    def deadline_to_apply_date(self, obj):
+        return obj.deadline_to_apply.date()
+    deadline_to_apply_date.admin_order_field = 'deadline_to_apply'
+    deadline_to_apply_date.short_description = _('Deadline to apply')
+
+    def project_link(self, obj):
+        url = reverse('admin:projects_project_change', args=(obj.project.id,))
+        title = obj.project.title
+        title = (title[:30] + '&hellip;') if len(title) > 30 else title
+        return format_html(u"<a href='{}'>{}</a>".format(url, title))
+    project_link.short_description = _('Project link')
 
 
 admin.site.register(Task, TaskAdmin)
@@ -213,9 +302,11 @@ admin.site.register(Task, TaskAdmin)
 class TaskAdminInline(admin.TabularInline):
     model = Task
     extra = 0
-    fields = ('title', 'project', 'status', 'deadline', 'deadline_to_apply',
-              'time_needed', 'task_admin_link')
-    readonly_fields = ('task_admin_link',)
+    show_change_link = True
+    readonly_fields = (
+        'title', 'project', 'status',
+        'deadline', 'deadline_to_apply', 'time_needed')
+    fields = readonly_fields
 
     def task_admin_link(self, obj):
         object = obj
@@ -269,7 +360,8 @@ class TaskMemberAdmin(admin.ModelAdmin):
     member_email.short_description = "Member Email"
 
     def resume_link(self, obj):
-        resume_link(obj)
+        return resume_link(obj)
+    resume_link.short_description = _("resume link")
 
     def lookup_allowed(self, key, value):
         if key in ('task__deadline__year',):
@@ -281,21 +373,29 @@ class TaskMemberAdmin(admin.ModelAdmin):
 admin.site.register(TaskMember, TaskMemberAdmin)
 
 
-class SkillAdmin(admin.ModelAdmin):
-    list_display = ('translated_name', 'disabled', 'expertise')
-    readonly_fields = ('translated_name',)
-    fields = readonly_fields + ('disabled', 'description', 'expertise')
-
-    def translated_name(self, obj):
-        return _(obj.name)
-
-    translated_name.short_description = _('Name')
+class SkillAdmin(TranslatableAdmin):
+    list_display = ('name', 'task_link', 'member_link')
+    readonly_fields = ('task_link', 'member_link')
+    fields = readonly_fields + ('name', 'disabled', 'description', 'expertise')
 
     def has_delete_permission(self, request, obj=None):
+        if obj and obj.task_set.count() == 0:
+            return True
         return False
 
-    def has_add_permission(self, request):
-        return False
+    def task_link(self, obj):
+        url = "{}?skill_filter={}".format(reverse('admin:tasks_task_changelist'), obj.id)
+        return format_html("<a href='{}'>{} {}</a>".format(
+            url, obj.task_set.count(), _('tasks')
+        ))
+    task_link.short_description = _('Tasks with this skill')
+
+    def member_link(self, obj):
+        url = "{}?skills__id__exact={}".format(reverse('admin:members_member_changelist'), obj.id)
+        return format_html("<a href='{}'>{} {}</a>".format(
+            url, obj.member_set.count(), _('users')
+        ))
+    member_link.short_description = _('Users with this skill')
 
 
 admin.site.register(Skill, SkillAdmin)

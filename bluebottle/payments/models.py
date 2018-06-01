@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.timezone import now
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
@@ -44,6 +44,7 @@ class Payment(PolymorphicModel):
         (StatusDefinition.AUTHORIZED, _('Authorized')),
         (StatusDefinition.SETTLED, _('Settled')),
         (StatusDefinition.CHARGED_BACK, _('Charged_back')),
+        (StatusDefinition.REFUND_REQUESTED, _('Refund requested')),
         (StatusDefinition.REFUNDED, _('Refunded')),
         (StatusDefinition.FAILED, _('Failed')),
         (StatusDefinition.UNKNOWN, _('Unknown'))
@@ -85,6 +86,8 @@ class Payment(PolymorphicModel):
 
     class Meta:
         ordering = ('-created', '-updated')
+        verbose_name = _('payment')
+        verbose_name_plural = _('payments')
 
 
 class OrderPaymentAction(models.Model):
@@ -155,6 +158,8 @@ class OrderPayment(models.Model, FSMTransition):
         permissions = (
             ('refund_orderpayment', 'Can refund order payments'),
         )
+        verbose_name = _('order payment')
+        verbose_name_plural = _('order payments')
 
     @classmethod
     def get_latest_by_order(cls, order):
@@ -184,6 +189,8 @@ class OrderPayment(models.Model, FSMTransition):
     @transition(field=status, source=[StatusDefinition.AUTHORIZED,
                                       StatusDefinition.STARTED,
                                       StatusDefinition.CANCELLED,
+                                      StatusDefinition.REFUNDED,
+                                      StatusDefinition.REFUND_REQUESTED,
                                       StatusDefinition.FAILED,
                                       StatusDefinition.UNKNOWN],
                 target=StatusDefinition.SETTLED)
@@ -191,7 +198,11 @@ class OrderPayment(models.Model, FSMTransition):
         self.closed = now()
 
     @transition(field=status,
-                source=[StatusDefinition.STARTED, StatusDefinition.AUTHORIZED,
+                source=[StatusDefinition.STARTED,
+                        StatusDefinition.AUTHORIZED,
+                        StatusDefinition.REFUND_REQUESTED,
+                        StatusDefinition.REFUNDED,
+                        StatusDefinition.CANCELLED,
                         StatusDefinition.SETTLED],
                 target=StatusDefinition.FAILED)
     def failed(self):
@@ -222,6 +233,17 @@ class OrderPayment(models.Model, FSMTransition):
     def unknown(self):
         pass
 
+    @transition(
+        field=status,
+        source=[
+            StatusDefinition.AUTHORIZED,
+            StatusDefinition.SETTLED
+        ],
+        target=StatusDefinition.REFUND_REQUESTED
+    )
+    def refund_requested(self):
+        pass
+
     def get_status_mapping(self, payment_status):
         # Currently the status in Payment and OrderPayment is one to one.
         return payment_status
@@ -246,6 +268,10 @@ class OrderPayment(models.Model, FSMTransition):
             return self.payment.status_description
         except Payment.DoesNotExist:
             return ""
+
+    @property
+    def can_refund(self):
+        return self.status in ('settled', 'success', )
 
     @property
     def info_text(self):

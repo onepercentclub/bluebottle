@@ -3,11 +3,14 @@ from importlib import import_module
 import logging
 import pygeoip
 import socket
+import urllib
 
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.signing import TimestampSigner
+from django.core.urlresolvers import reverse
 
 from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
@@ -49,6 +52,7 @@ class StatusDefinition(object):
     SETTLED = 'settled'
     CONFIRMED = 'confirmed'
     CHARGED_BACK = 'charged_back'
+    REFUND_REQUESTED = 'refund_requested'
     REFUNDED = 'refunded'
     PAID = 'paid'
     FAILED = 'failed'
@@ -168,17 +172,21 @@ def get_class(cls):
         raise GetClassError(error_message)
 
 
-def get_current_host():
+def get_current_host(include_scheme=True):
     """
     Get the current hostname with protocol
     E.g. http://localhost:8000 or https://bluebottle.org
     """
     request = ThreadLocal.get_current_request()
-    if request.is_secure():
-        scheme = 'https'
+    host = request.get_host()
+    if include_scheme:
+        if request.is_secure():
+            scheme = 'https'
+        else:
+            scheme = 'http'
+        return '{0}://{1}'.format(scheme, request.get_host())
     else:
-        scheme = 'http'
-    return '{0}://{1}'.format(scheme, request.get_host())
+        return host
 
 
 class InvalidIpError(Exception):
@@ -258,3 +266,12 @@ class PreviousStatusMixin(object):
             self._original_status = self.status
         except ObjectDoesNotExist:
             self._original_status = None
+
+
+signer = TimestampSigner()
+
+
+def reverse_signed(name, args):
+    url = reverse(name, args=args)
+    signature = signer.sign(url)
+    return '{}?{}'.format(url, urllib.urlencode({'signature': signature}))

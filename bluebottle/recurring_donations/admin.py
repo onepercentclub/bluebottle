@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.utils.html import format_html
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.clients import properties
 from bluebottle.recurring_donations.models import MonthlyProject

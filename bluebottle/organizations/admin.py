@@ -1,14 +1,16 @@
+from django.db import models
 from django.contrib import admin, messages
 from django.core.urlresolvers import reverse
 from django.template.response import TemplateResponse
 from django.http.response import HttpResponseRedirect
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django.utils.html import format_html
 
 from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.projects.models import Project
 from bluebottle.members.models import Member
 from bluebottle.utils.admin import export_as_csv_action
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 
 def merge(modeladmin, request, queryset):
@@ -100,6 +102,21 @@ class PartnerOrganizationMembersInline(admin.TabularInline):
         return False
 
 
+class OrganizationContactAdmin(admin.ModelAdmin):
+    model = Member
+    fields = ('name', 'organization', 'email', 'phone', )
+    list_display = ('name', 'organization', 'email', 'phone', )
+
+    export_fields = [
+        ('name', 'name'),
+        ('organization__name', 'organization'),
+        ('email', 'email'),
+        ('phone', 'Phone Number'),
+    ]
+
+    actions = (export_as_csv_action(fields=export_fields), merge)
+
+
 class OrganizationAdmin(admin.ModelAdmin):
     inlines = (OrganizationProjectInline, OrganizationContactInline, PartnerOrganizationMembersInline)
 
@@ -113,9 +130,13 @@ class OrganizationAdmin(admin.ModelAdmin):
     export_fields = [
         ('name', 'name'),
         ('website', 'website'),
-        ('phone_number', 'phone_number'),
+        ('email', 'email'),
         ('created', 'created'),
     ]
+
+    formfield_overrides = {
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
+    }
 
     def get_inline_instances(self, request, obj=None):
         """ Override get_inline_instances so that add form do not show inlines """
@@ -127,3 +148,4 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Organization, OrganizationAdmin)
+admin.site.register(OrganizationContact, OrganizationContactAdmin)

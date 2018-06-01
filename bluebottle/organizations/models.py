@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import (CreationDateTimeField,
                                          ModificationDateTimeField)
 from djchoices import DjangoChoices, ChoiceItem
@@ -102,6 +102,10 @@ class OrganizationContact(models.Model):
     created = CreationDateTimeField(
         _('created'), help_text=_('When this contact was created.'))
     updated = ModificationDateTimeField(_('updated'))
+
+    class Meta:
+        verbose_name = _('Partner Organization Contact')
+        verbose_name_plural = _('Partner Organization Contacts')
 
 
 class OrganizationMember(models.Model):

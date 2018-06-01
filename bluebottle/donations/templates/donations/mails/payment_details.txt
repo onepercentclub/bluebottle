@@ -1,16 +1,18 @@
 {% load i18n %}
 
 {% block content %}
-    {% if not donation.anonymous and 'members.api_read_full_member' in to.get_all_permissions %}
-        {{donation.user.full_name}}
-        {{donation.user.address.line1}}
-        {{donation.user.address.postal_code}} {{donation.user.address.city}}
-    {% else %}
-        {{donation.user.first_name}}
-    {% endif %}
+{% if not donation.anonymous and 'members.api_read_full_member' in to.get_all_permissions %}
+{{donation.user.full_name}}
+{{donation.user.address.line1}}
+{{donation.user.address.postal_code}} {{donation.user.address.city}}
+{% else %}
+{{donation.user.first_name}}
+{% endif %}
 
-    {% trans "Date" %}: {{donation.created}}
-    {% trans "Method" %}: {{payment_method}}
-    {% trans "Order" %}: {{donation.order.id}}
+{% trans "Date" %}: {{donation.created}}
+{% trans "Method" %}: {{payment_method}}
+{% trans "Order" %}: {{donation.order.id}}
+{% trans "Recipient" %}: {{donation.project.owner.full_name}}
+{% if donation.project.organization %}{% trans "Organization" %}: {{donation.project.organization.name}}{% endif %}
 
 {% endblock content %}

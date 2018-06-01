@@ -13,8 +13,8 @@ from bluebottle.donations.models import Donation
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.members.models import Member
 from bluebottle.orders.models import Order
-from bluebottle.projects.models import Project, ProjectPhaseLog
-from bluebottle.tasks.models import Task, TaskMember, TaskStatusLog, TaskMemberStatusLog
+from bluebottle.projects.models import Project
+from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.votes.models import Vote
 
 
@@ -23,8 +23,10 @@ class Statistics(object):
         self.start = start
         self.end = end
 
+    timeout = 3600
+
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def people_involved(self):
         """
         The (unique) total number of people that donated, fundraised, campaigned, or was a
@@ -108,71 +110,38 @@ class Statistics(object):
         return Q(**filter_args)
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def tasks_realized(self):
         """ Total number of realized tasks """
-        """
-        Reference:
-        SELECT
-            DISTINCT ON ("tasks_taskstatuslog"."task_id") "tasks_taskstatuslog"."id",
-                         "tasks_taskstatuslog"."task_id", "tasks_taskstatuslog"."status",
-                         "tasks_taskstatuslog"."start"
-            FROM "tasks_taskstatuslog"
-            WHERE "tasks_taskstatuslog"."start" BETWEEN '2017-01-01 00:00:00' AND '2017-12-31 23:59:59'
-            ORDER BY "tasks_taskstatuslog"."task_id" DESC, "tasks_taskstatuslog"."start" DESC
-        """
-        logs = TaskStatusLog.objects\
-            .filter(self.date_filter('start'))\
-            .distinct('task__id')\
-            .order_by('-task__id', '-start')
-
-        # TODO: Refactor to use django filters for sub-queries
-        count = 0
-        for log in logs:
-            if log.status == 'realized':
-                count += 1
-        return count
+        tasks = Task.objects.filter(
+            self.date_filter('deadline'),
+            status='realized'
+        )
+        return len(tasks)
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def projects_realized(self):
         """ Total number of realized (done-complete and incomplete) projects """
-        """
-        Reference:
-        SELECT DISTINCT ON ("projects_projectphaselog"."project_id") "projects_projectphaselog"."id",
-        "projects_projectphaselog"."project_id",
-        "projects_projectphaselog"."status_id", "projects_projectphaselog"."start"
-        FROM "projects_projectphaselog"
-        WHERE "projects_projectphaselog"."start" BETWEEN '2017-01-01 00:00:00' AND '2017-12-31 23:59:59'
-        ORDER BY "projects_projectphaselog"."project_id" DESC, "projects_projectphaselog"."start" DESC
-
-        This will get the last status log entry for all project phase logs
-        """
-
-        phase_logs = ProjectPhaseLog.objects.filter(
-            self.date_filter('start')
-        ).filter(
-            status__slug__in=['done-complete', 'done-incomplete', 'voting-done']
-        ).distinct(
-            'project__id'
-        ).order_by(
-            '-project__id', '-start'
+        projects = Project.objects.filter(
+            self.date_filter('deadline'),
+            status__slug__in=['done-complete', 'done-incomplete', 'voting-done'],
         )
-        return len(phase_logs)
+        return len(projects)
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def projects_online(self):
         """ Total number of projects that have been in campaign mode"""
         return Project.objects.filter(self.date_filter('campaign_started'),
                                       status__slug__in=('voting', 'campaign')).count()
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def donated_total(self):
         """ Total amount donated to all projects"""
         donations = Donation.objects.filter(
-            self.date_filter('order__confirmed'),
+            self.date_filter('order__created'),
             order__status__in=['pending', 'success', 'pledged']
         )
         totals = donations.values('amount_currency').annotate(total=Sum('amount'))
@@ -185,32 +154,29 @@ class Statistics(object):
         return donated
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def votes_cast(self):
         return len(Vote.objects.filter(self.date_filter()))
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def time_spent(self):
         """ Total amount of time spent on realized tasks """
-        logs = TaskMemberStatusLog.objects\
-            .filter(self.date_filter('start')) \
-            .distinct('task_member__id') \
-            .order_by('-task_member__id', '-start') \
-
-        # TODO: Refactor to use django filters for sub-queries
-        count = 0
-        for log in logs:
-            if log.status == 'realized':
-                count += log.task_member.time_spent
-
-        return count
+        members = TaskMember.objects.filter(
+            self.date_filter('task__deadline'),
+            status='realized'
+        )
+        return members.aggregate(total_time_spent=Sum('time_spent'))['total_time_spent']
 
     @property
-    @memoize(timeout=60 * 60)
+    @memoize(timeout=timeout)
     def amount_matched(self):
         """ Total amount matched on realized (done and incomplete) projects """
-        totals = Project.objects.values('amount_extra_currency').annotate(total=Sum('amount_extra'))
+        totals = Project.objects.filter(
+            self.date_filter('campaign_ended')
+        ).filter(
+            amount_extra__gt=0
+        ).values('amount_extra_currency').annotate(total=Sum('amount_extra'))
 
         amounts = [Money(total['total'], total['amount_extra_currency']) for total in totals]
         if totals:
@@ -219,39 +185,27 @@ class Statistics(object):
             return Money(0, properties.DEFAULT_CURRENCY)
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=timeout)
     def projects_complete(self):
         """ Total number of projects with the status complete """
-        logs = ProjectPhaseLog.objects\
-            .filter(self.date_filter('start'))\
-            .distinct('project__id')\
-            .order_by('-project__id', '-start')
-
-        # TODO: Refactor to use django filters for sub-queries
-        count = 0
-        for log in logs:
-            if log.status.slug == 'done-complete':
-                count += 1
-        return count
+        projects = Project.objects.filter(
+            self.date_filter('deadline'),
+            status__slug='done-complete'
+        )
+        return len(projects)
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=timeout)
     def task_members(self):
         """ Total number of realized task members """
-        logs = TaskMemberStatusLog.objects \
-            .filter(self.date_filter('start')) \
-            .distinct('task_member__id') \
-            .order_by('-task_member__id', '-start')
-
-        # TODO: Refactor to use django filters for sub-queries
-        count = 0
-        for log in logs:
-            if log.status == 'realized':
-                count += 1
-        return count
+        members = TaskMember.objects.filter(
+            self.date_filter('task__deadline'),
+            status='realized'
+        )
+        return len(members)
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=timeout)
     def participants(self):
         """ Total numbers of participants (members that started a project, or where a realized task member) """
         project_owner_ids = Project.objects.filter(
@@ -273,7 +227,7 @@ class Statistics(object):
         return len(set(task_member_ids) | set(project_owner_ids))
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=timeout)
     def pledged_total(self):
         """ Total amount of pledged donations """
         donations = Donation.objects.filter(
@@ -290,7 +244,7 @@ class Statistics(object):
         return donated
 
     @property
-    @memoize(timeout=300)
+    @memoize(timeout=timeout)
     def members(self):
         """ Total amount of members."""
         members = Member.objects.filter(

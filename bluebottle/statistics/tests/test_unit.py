@@ -85,6 +85,19 @@ class StatisticsTest(BluebottleTestCase):
             involved=1
         )
 
+    def test_project_complete_stats_changed(self):
+        self.some_project.status = ProjectPhase.objects.get(slug='done-complete')
+        self.some_project.save()
+        self._test_project_stats(
+            ProjectPhase.objects.get(
+                slug='closed'
+            ),
+            online=0,
+            involved=0
+        )
+        self.assertEqual(self.stats.projects_realized, 0)
+        self.assertEqual(self.stats.projects_complete, 0)
+
     def test_project_complete_stats(self):
         self._test_project_stats(
             ProjectPhase.objects.get(
@@ -339,7 +352,7 @@ class StatisticsDateTest(BluebottleTestCase):
 
         new_project = ProjectFactory.create(
             amount_asked=5000, status=status_realized, owner=old_user,
-            campaign_ended=now, campaign_started=now
+            campaign_ended=now, campaign_started=now, amount_extra=100
         )
         ProjectFactory.create(
             amount_asked=5000, status=status_campaign, owner=old_user,
@@ -347,11 +360,12 @@ class StatisticsDateTest(BluebottleTestCase):
         )
         old_project = ProjectFactory.create(
             amount_asked=5000, status=status_realized, owner=old_user,
-            campaign_ended=last_year, campaign_started=last_year
+            campaign_ended=last_year, campaign_started=last_year,
+            amount_extra=200
         )
         ProjectFactory.create(
             amount_asked=5000, status=status_campaign, owner=old_user,
-            campaign_started=last_year
+            campaign_started=last_year, amount_extra=1000
         )
 
         VoteFactory.create(voter=old_user, created=now)
@@ -371,15 +385,19 @@ class StatisticsDateTest(BluebottleTestCase):
         )
         TaskMemberFactory.create(task=new_task, member=new_user, status='realized')
 
-        order1 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS,
-                                     confirmed=now)
+        order1 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS)
+        order1.created = now
+        order1.save()
+
         DonationFactory.create(
             amount=Money(1000, 'EUR'), order=order1, project=old_project,
             fundraiser=None
         )
 
-        order2 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS,
-                                     confirmed=last_year)
+        order2 = OrderFactory.create(user=old_user, status=StatusDefinition.SUCCESS)
+        order2.created = last_year
+        order2.save()
+
         DonationFactory.create(
             amount=Money(1000, 'EUR'), order=order2, project=old_project,
             fundraiser=None
@@ -394,6 +412,7 @@ class StatisticsDateTest(BluebottleTestCase):
         self.assertEqual(stats.projects_realized, 2)
         self.assertEqual(stats.tasks_realized, 2)
         self.assertEqual(stats.votes_cast, 2)
+        self.assertEqual(stats.amount_matched, Money(1300, 'EUR'))
 
     def test_since_yesterday(self):
         stats = Statistics(start=timezone.now() - datetime.timedelta(days=1))
@@ -402,8 +421,9 @@ class StatisticsDateTest(BluebottleTestCase):
         self.assertEqual(stats.donated_total, Money(1000, 'EUR'))
         self.assertEqual(stats.projects_online, 1)
         self.assertEqual(stats.projects_realized, 2)
-        self.assertEqual(stats.tasks_realized, 2)
+        self.assertEqual(stats.tasks_realized, 1)
         self.assertEqual(stats.votes_cast, 1)
+        self.assertEqual(stats.amount_matched, Money(100, 'EUR'))
 
     def test_last_year(self):
         stats = Statistics(
@@ -416,8 +436,9 @@ class StatisticsDateTest(BluebottleTestCase):
         self.assertEqual(stats.donated_total, Money(1000, 'EUR'))
         self.assertEqual(stats.projects_online, 1)
         self.assertEqual(stats.projects_realized, 0)
-        self.assertEqual(stats.tasks_realized, 0)
+        self.assertEqual(stats.tasks_realized, 1)
         self.assertEqual(stats.votes_cast, 1)
+        self.assertEqual(stats.amount_matched, Money(200, 'EUR'))
 
     def test_since_last_year(self):
         stats = Statistics(
@@ -430,6 +451,7 @@ class StatisticsDateTest(BluebottleTestCase):
         self.assertEqual(stats.projects_realized, 2)
         self.assertEqual(stats.tasks_realized, 2)
         self.assertEqual(stats.votes_cast, 2)
+        self.assertEqual(stats.amount_matched, Money(300, 'EUR'))
 
 
 @override_settings(

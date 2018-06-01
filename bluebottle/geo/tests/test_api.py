@@ -21,7 +21,7 @@ class GeoTestCase(BluebottleTestCase):
 
         self.init_projects()
 
-        self.country_1 = Country.objects.get(name="Abkhazia")
+        self.country_1 = Country.objects.get(translations__name="Abkhazia")
 
 
 class CountryListTestCase(GeoTestCase):
@@ -88,8 +88,11 @@ class LocationListTestCase(GeoTestCase):
         self.count = 10
         self.locations = []
         for i in range(0, self.count):
-            self.locations.append(Location.objects.create(name="Name {}".format(i),
-                                                          description="Description {}".format(i)))
+            self.locations.append(Location.objects.create(
+                name="Name {}".format(i),
+                position='10.0,20.0',
+                description="Description {}".format(i))
+            )
 
     def test_api_country_list_endpoint(self):
         """

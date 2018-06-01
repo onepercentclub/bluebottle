@@ -1,4 +1,5 @@
 import json
+from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.db import connection
 
@@ -14,13 +15,21 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--start', type=str, default=None, action='store')
         parser.add_argument('--end', type=str, default=None, action='store')
+        parser.add_argument('--file', type=str, default=None, action='store')
 
     def handle(self, *args, **options):
         results = []
         for client in Client.objects.all():
             connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
-                orders = Order.objects.filter(status__in=('pending', 'success'))
+                ContentType.objects.clear_cache()
+
+                orders = Order.objects.filter(
+                    status__in=('pending', 'success')
+                ).exclude(
+                    order_payments__payment_method=''
+                )
+
                 if options['start']:
                     orders = orders.filter(created__gte=options['start'])
                 if options['end']:
@@ -31,8 +40,6 @@ class Command(BaseCommand):
                         transaction_reference = order.order_payment.payment.transaction_reference
                     except Exception:
                         transaction_reference = ''
-
-                    print transaction_reference
 
                     results.append({
                         'id': order.id,
@@ -50,8 +57,14 @@ class Command(BaseCommand):
                                 'amount': float(donation.amount.amount),
                                 'currency': str(donation.amount.currency)
                             },
-                            'donation_id': donation.pk
+                            'donation_id': donation.pk,
+                            'project_id': donation.project.pk
                         } for donation in order.donations.all()]
                     })
 
-        print json.dumps(results)
+        if options['file']:
+            text_file = open(options['file'], "w")
+            text_file.write(json.dumps(results))
+            text_file.close()
+        else:
+            print json.dumps(results)

@@ -33,7 +33,7 @@ lipisha_success_response = {
             u'transaction': u'A35EE9256',
             u'transaction_account_name': u'Donations',
             u'transaction_account_number': u'03858',
-            u'transaction_amount': u'1500.0000',
+            u'transaction_amount': u'2500.0000',
             u'transaction_currency': u'KES',
             u'transaction_date': u'2017-05-19 00:15:02',
             u'transaction_email': u'',
@@ -69,7 +69,7 @@ class LipishaPaymentAdapterTestCase(BluebottleTestCase):
 
     def setUp(self):
         self.order = OrderFactory.create()
-        DonationFactory.create(amount=Money(1500, KES), order=self.order)
+        self.donation = DonationFactory.create(amount=Money(1500, KES), order=self.order)
         self.order_payment = OrderPaymentFactory.create(
             payment_method='lipishaMpesa',
             order=self.order
@@ -103,11 +103,14 @@ class LipishaPaymentAdapterTestCase(BluebottleTestCase):
         adapter = LipishaPaymentAdapter(self.order_payment)
         adapter.check_payment_status()
         authorization_action = adapter.get_authorization_action()
-        self.assertEqual(adapter.payment.transaction_amount, '1500.0000')
+        self.assertEqual(adapter.payment.transaction_amount, '2500.0000')
         self.assertEqual(adapter.payment.status, 'settled')
         self.assertEqual(authorization_action, {
             "type": "success"
         })
+        # Donation amount should have been updated
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.amount, Money(2500.00, 'KES'))
 
     @patch('bluebottle.payments_lipisha.adapters.Lipisha')
     def test_create_failed_payment(self, mock_client):

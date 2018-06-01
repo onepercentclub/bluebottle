@@ -3,7 +3,7 @@ from django.db.models.signals import post_save
 from django.contrib.contenttypes import fields
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django.utils import translation
 
 from tenant_extras.utils import TenantLanguage
@@ -107,7 +107,6 @@ def create_follow(sender, instance, created, **kwargs):
         if user and followed_object:
 
             content_type = ContentType.objects.get_for_model(followed_object)
-
             try:
                 follow = Follow.objects.get(user=user,
                                             object_id=followed_object.id,
@@ -115,6 +114,17 @@ def create_follow(sender, instance, created, **kwargs):
             except Follow.DoesNotExist:
                 if user != followed_object.author and user != followed_object.project.owner:
                     follow = Follow(user=user, followed_object=followed_object)
+                    follow.save()
+
+            # Also follow the project
+            content_type = ContentType.objects.get_for_model(followed_object.project)
+            try:
+                follow = Follow.objects.get(user=user,
+                                            object_id=followed_object.project.id,
+                                            content_type=content_type)
+            except Follow.DoesNotExist:
+                if user != followed_object.author and user != followed_object.project.owner:
+                    follow = Follow(user=user, followed_object=followed_object.project)
                     follow.save()
 
     # A user creates a task for a project

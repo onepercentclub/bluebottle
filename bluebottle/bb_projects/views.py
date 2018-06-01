@@ -187,10 +187,14 @@ class ProjectPreviewDetail(RetrieveAPIView):
         return qs
 
 
+class ProjectPhasePagination(BluebottlePagination):
+    page_size = 20
+
+
 class ProjectPhaseList(ListAPIView):
     queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseSerializer
-    pagination_class = BluebottlePagination
+    pagination_class = ProjectPhasePagination
     filter_fields = ('viewable',)
 
     def get_query(self):
@@ -311,7 +315,7 @@ class ManageProjectDetail(RetrieveUpdateAPIView):
 
 class ProjectThemeList(ListAPIView):
     serializer_class = ProjectThemeSerializer
-    queryset = ProjectTheme.objects.all().filter(disabled=False)
+    queryset = ProjectTheme.objects.filter(disabled=False)
 
 
 class ProjectUsedThemeList(ProjectThemeList):

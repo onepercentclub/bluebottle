@@ -75,7 +75,7 @@ def get_min_amounts(methods):
     result = defaultdict(list)
     for method in methods:
         for currency, data in method['currencies'].items():
-            result[currency].append(data.get('min_amount', float("inf")))
+            result[currency].append(data.get('min_amount', 0))
 
     return dict((currency, min(amounts)) for currency, amounts in result.items())
 
@@ -168,7 +168,6 @@ def get_user_site_links(user):
 
 
 def get_platform_settings(name):
-
     app_name, model_name = name.split('.')
     model_app_name = 'bluebottle.{}.models'.format(app_name)
     settings_class = getattr(importlib.import_module(model_app_name), model_name)
@@ -233,7 +232,8 @@ def get_public_properties(request):
             'platform': {
                 'content': get_platform_settings('cms.SitePlatformSettings'),
                 'projects': get_platform_settings('projects.ProjectPlatformSettings'),
-                'analytics': get_platform_settings('analytics.AnalyticsPlatformSettings')
+                'analytics': get_platform_settings('analytics.AnalyticsPlatformSettings'),
+                'members': get_platform_settings('members.MemberPlatformSettings'),
             }
         }
         try:

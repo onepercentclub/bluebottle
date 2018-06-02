@@ -1,5 +1,7 @@
+from django.db import models
 from django.contrib import admin
 from django.utils.html import format_html
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 from bluebottle.surveys.models import Survey, Question, Response, Answer, AggregateAnswer
 
@@ -36,6 +38,10 @@ class SurveyAdmin(admin.ModelAdmin):
     inlines = [QuestionAdminInline]
 
     actions = ['synchronize_surveys']
+
+    formfield_overrides = {
+        models.URLField: {'widget': SecureAdminURLFieldWidget()},
+    }
 
     def response_count(self, obj):
         return obj.response_set.count()

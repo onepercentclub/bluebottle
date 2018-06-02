@@ -1,17 +1,25 @@
+import csv
+
+from adminfilters.multiselect import UnionFieldListFilter
 from moneyed import Money
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
 from django.db.models.aggregates import Sum
 
+from django_singleton_admin.admin import SingletonAdmin
+
+from parler.admin import TranslatableAdmin
+
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
+from bluebottle.tasks.models import TaskMember
 from .models import Language
-import csv
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.clients import properties
 from bluebottle.bb_projects.models import ProjectPhase
@@ -87,7 +95,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                 labels = field_names
 
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename=%s.csv' % (
+        response['Content-Disposition'] = 'attachment; filename="%s.csv"' % (
             unicode(opts).replace('.', '_')
         )
 
@@ -99,7 +107,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             if queryset.model is Project:
                 for field in CustomProjectFieldSettings.objects.all():
                     labels.append(field.name)
-            if queryset.model is Member:
+            if queryset.model is Member or queryset.model is TaskMember:
                 for field in CustomMemberFieldSettings.objects.all():
                     labels.append(field.name)
             writer.writerow(row)
@@ -120,7 +128,14 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                         value = obj.extra.get(field=field).value
                     except CustomMemberField.DoesNotExist:
                         value = ''
-                    row.append(value)
+                    row.append(value.encode('utf-8'))
+            if queryset.model is TaskMember:
+                for field in CustomMemberFieldSettings.objects.all():
+                    try:
+                        value = obj.member.extra.get(field=field).value
+                    except CustomMemberField.DoesNotExist:
+                        value = ''
+                    row.append(value.encode('utf-8'))
             writer.writerow(row)
         return response
 
@@ -137,8 +152,57 @@ class TotalAmountAdminChangeList(ChangeList):
         total_column = self.model_admin.total_column or 'amount'
         currency_column = '{}_currency'.format(total_column)
 
-        totals = self.queryset.values(currency_column).annotate(total=Sum(total_column)).order_by(
-            '-{}'.format(total_column))
+        totals = self.queryset.values(
+            currency_column
+        ).annotate(
+            total=Sum(total_column)
+        ).order_by()
+
         amounts = [Money(total['total'], total[currency_column]) for total in totals]
         amounts = [convert(amount, properties.DEFAULT_CURRENCY) for amount in amounts]
         self.total = sum(amounts) or Money(0, properties.DEFAULT_CURRENCY)
+
+
+class LatLongMapPickerMixin(object):
+
+    class Media:
+        if hasattr(settings, 'MAPS_API_KEY') and settings.MAPS_API_KEY:
+            css = {
+                'all': ('css/admin/location_picker.css',),
+            }
+            js = (
+                'https://maps.googleapis.com/maps/api/js?key={}'.format(settings.MAPS_API_KEY),
+                'js/admin/location_picker.js',
+            )
+
+
+class BasePlatformSettingsAdmin(SingletonAdmin):
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+class SortableTranslatableAdmin(TranslatableAdmin):
+
+    def get_ordering(self, request):
+        if self.ordering:
+            return self.ordering
+        return self.model._meta.ordering
+
+    def get_queryset(self, request):
+        qs = super(SortableTranslatableAdmin, self).get_queryset(request)
+        qs = qs.translated(self.get_queryset_language(request))
+        for order in self.get_ordering(request):
+            qs = qs.order_by(order)
+        return qs
+
+
+class TranslatedUnionFieldListFilter(UnionFieldListFilter):
+
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        super(TranslatedUnionFieldListFilter, self).__init__(
+            field, request, params, model, model_admin, field_path)
+        # Remove duplicates and order by title
+        self.lookup_choices = sorted(list(set(self.lookup_choices)), key=lambda tup: tup[1])

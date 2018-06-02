@@ -1,122 +1,222 @@
 from django.utils.translation import ugettext_lazy as _
 
-# Custom dashboard configuration
-# ADMIN_TOOLS_INDEX_DASHBOARD = 'fluent_dashboard.dashboard.FluentIndexDashboard'
-ADMIN_TOOLS_INDEX_DASHBOARD = 'dashboard.CustomIndexDashboard'
-ADMIN_TOOLS_APP_INDEX_DASHBOARD = 'fluent_dashboard.dashboard.FluentAppIndexDashboard'
-ADMIN_TOOLS_MENU = 'bluebottle.clients.admin_menu.AdminMenu'
+
+JET_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomIndexDashboard'
+JET_APP_INDEX_DASHBOARD = 'bluebottle.bluebottle_dashboard.dashboard.CustomAppIndexDashboard'
+
+JET_DEFAULT_THEME = 'goodup'
 
 
-# Further customize the dashboard
-FLUENT_DASHBOARD_DEFAULT_MODULE = 'admin_tools.dashboard.modules.AppList'
-FLUENT_DASHBOARD_APP_GROUPS = (
-    (_('Site content'), {
-        'models': [
-            'bluebottle.pages.*',
-            'bluebottle.news.*',
-            'bluebottle.slides.*',
-            'bluebottle.banners.*',
-            'bluebottle.quotes.*',
-            'bluebottle.terms.*',
-            'bluebottle.contact.*',
-            'bluebottle.redirects.*',
-            'bluebottle.cms.models.ResultPage',
-            'bluebottle.cms.models.HomePage',
-            'bluebottle.cms.models.SiteLinks'
-        ],
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Projects'), {
-        'models': (
-            'bluebottle.projects.models.Project',
-            'bluebottle.bb_projects.*',
-            'bluebottle.fundraisers.*',
-            'bluebottle.categories.*',
-            'bluebottle.organizations.*',
-            'bluebottle.votes.*',
-            'bluebottle.geo.models.Location',
-            'bluebottle.rewards.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Tasks'), {
-        'models': (
-            'bluebottle.tasks.*',
-            'bluebottle.bb_tasks.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Surveys'), {
-        'models': (
-            'bluebottle.surveys.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Wallposts'), {
-        'models': (
-            'bluebottle.wallposts.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Donations'), {
-        'models': (
-            'bluebottle.donations.*',
-            'bluebottle.orders.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Monthly Donations'), {
-        'models': (
-            'bluebottle.recurring_donations.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Finances'), {
-        'models': (
-            'bluebottle.payments.*',
-            'bluebottle.payments_docdata.*',
-            'bluebottle.payments_logger.*',
-            'bluebottle.payouts.*',
-            'bluebottle.accounting.*',
-            'bluebottle.journals.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Members'), {
-        'models': (
-            'django.contrib.auth.*',
-            'registration.*',
-            'bluebottle.members.*',
-            'bluebottle.bb_accounts.*',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    (_('Settings'), {
-        'models': (
-            'bluebottle.cms.models.SitePlatformSettings',
-            'bluebottle.projects.models.ProjectPlatformSettings',
-            'bluebottle.analytics.models.AnalyticsPlatformSettings',
-            'bluebottle.mails.models.MailPlatformSettings',
-        ),
-        'module': 'fluent_dashboard.modules.AppIconList',
-        'collapsible': False,
-    }),
-    # The '*' selector acts like a fallback for all other apps. This section mainly displays models
-    # with tabular data that is rarely touched. The important models have an icon.
-    (_('Applications'), {
-        'models': ('*',),
-        'module': FLUENT_DASHBOARD_DEFAULT_MODULE,
-        'collapsible': False,
-    }),
-)
+JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
+    {
+        'label': _('Projects'),
+        'app_label': 'projects',
+        'permissions': ['projects.change_project'],
+        'items': [
+            {
+                'name': 'projects.project',
+                'permissions': ['projects.change_project']
+            },
+            {
+                'name': 'categories.category',
+                'permissions': ['categories.change_category']
+            },
+            {
+                'name': 'fundraisers.fundraiser',
+                'permissions': ['fundraisers.change_fundraiser']
+            },
+            {
+                'name': 'bb_projects.projectphase',
+                'permissions': ['bb_projects.change_projectphase']
+            },
+            {
+                'name': 'bb_projects.projecttheme',
+                'permissions': ['bb_projects.change_projecttheme']
+            },
+            {
+                'name': 'organizations.organization',
+                'permissions': ['organizations.organization']
+            },
+            {
+                'name': 'geo.location',
+                'permissions': ['geo.location']
+            },
+            {
+                'name': 'votes.vote',
+                'permissions': ['votes.vote']
+            },
 
-ADMIN_TOOLS_THEMING_CSS = 'css/admin/dashboard.css'
+        ]
+    },
+    {
+        'label': _('Users'),
+        'app_label': 'members',
+        'permissions': ['members.change_member'],
+        'items': [
+            {
+                'name': 'members.member',
+                'permissions': ['members.change_member']
+            },
+            {
+                'name': 'auth.group',
+                'permissions': ['auth.change_group']
+            },
+        ]
+    },
+    {
+        'label': _('Tasks'),
+        'app_label': 'tasks',
+        'permissions': ['tasks.change_task'],
+        'items': [
+            {'name': 'tasks.task', 'permissions': ['tasks.change_task']},
+            {'name': 'tasks.taskmember', 'permissions': ['tasks.change_task']},
+            {'name': 'tasks.skill', 'permissions': ['tasks.change_skill']},
+        ]
+    },
+    {
+        'label': _('Donations'),
+        'app_label': 'donations',
+        'permissions': ['donations.change_donation'],
+        'items': [
+            {
+                'name': 'donations.donation',
+                'permissions': ['donations.change_donation']
+            },
+            {
+                'name': 'orders.order',
+                'permissions': ['orders.change_order']
+            },
+            {
+                'name': 'recurring_donations.monthlybatch',
+                'permissions': ['recurring_donations.change_monthlybatch']
+            },
+            {
+                'name': 'recurring_donations.monthlydonation',
+                'permissions': ['recurring_donations.change_monthlydonation']
+            },
+            {
+                'name': 'recurring_donations.monthlydonor',
+                'permissions': ['recurring_donations.change_monthlydonor']
+            },
+            {
+                'name': 'recurring_donations.monthlyorder',
+                'permissions': ['recurring_donations.change_monthlyorder']
+            },
+            {
+                'name': 'payments.orderpayment',
+                'permissions': ['payments.change_orderpayment']
+            },
+            {
+                'name': 'payments.payment',
+                'permissions': ['payments.change_payment']
+            },
+        ]
+    },
+    {
+        'label': _('Content'),
+        'permissions': ['pages.change_page'],
+        'items': [
+            {
+                'name': 'pages.page',
+                'permissions': ['pages.change_page']
+            },
+            {
+                'name': 'news.newsitem',
+                'label': _('News'),
+                'permissions': ['news.change_newsitem']
+            },
+            {
+                'name': 'cms.homepage',
+                'label': _('Homepage'),
+                'permissions': ['cms.change_homepage']
+            },
+            {
+                'name': 'slides.slide',
+                'permissions': ['slides.change_slide']
+            },
+            {
+                'name': 'cms.resultpage',
+                'label': _('Result page'),
+                'permissions': ['cms.change_resultpage']
+            },
+            {
+                'name': 'cms.sitelinks',
+                'label': _('Header & footer'),
+                'permissions': ['cms.change_sitelinks']
+            },
+            {
+                'name': 'redirects.redirect',
+                'permissions': ['redirects.change_redirect']
+            },
+            {
+                'name': 'wallposts.wallpost',
+                'permissions': ['wallposts.change_wallpost']
+            },
+            {
+                'url': '/admin/wallposts/mediawallpost/',
+                'label': _('Media wall posts'),
+                'permissions': ['wallposts.change_wallpost']
+            },
+            {
+                'name': 'wallposts.reaction',
+                'permissions': ['wallposts.change_wallpost']
+            },
+        ]
+    },
+    {
+        'label': _('Analytics'),
+        'app_label': 'looker',
+        'permissions': ['looker.lookerembed'],
+        'items': [
+            {
+                'label': _('Manage Dashboards'),
+                'name': 'looker.lookerembed',
+            },
+        ]
+    },
+    {
+        'label': _('Settings'),
+        'permissions': ['terms.change_terms'],
+        'items': [
+            {
+                'name': 'terms.terms',
+                'permissions': ['terms.change_terms']
+            },
+            {
+                'name': 'projects.projectplatformsettings',
+                'permissions': ['projects.change_projectplatformsettings']
+            },
+            {
+                'name': 'members.memberplatformsettings',
+                'permissions': ['members.change_memberplatformsettings']
+            },
+            {
+                'name': 'cms.siteplatformsettings',
+                'permissions': ['cms.change_siteplatformsettings']
+            },
+            {
+                'name': 'analytics.analyticsplatformsettings',
+                'permissions': ['analytics.change_analyticsplatformsettings']
+            },
+            {
+                'name': 'djmoney_rates.ratesource',
+                'permissions': ['djmoney_rates.change_ratesource']
+            },
+            {
+                'name': 'geo.country',
+                'permissions': ['geo.change_country']
+            },
+            {
+                'name': 'utils.language',
+                'permissions': ['utils.change_language']
+            },
+            {
+                'name': 'authtoken.token',
+                'permissions': ['authtoken.change_token']
+            },
+        ]
+    },
+
+]
+
+JET_SIDE_MENU_COMPACT = False

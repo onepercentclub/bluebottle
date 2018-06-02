@@ -5,7 +5,8 @@ from django.db.models.query_utils import Q
 from django.utils import timezone
 
 import django_filters
-from rest_framework import filters, serializers
+from rest_framework import serializers
+from django_filters import rest_framework as filters
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.tasks.permissions import TaskPermission, TaskMemberPermission, TaskManagerPermission
@@ -21,10 +22,9 @@ from bluebottle.utils.permissions import (
 from bluebottle.utils.views import (
     PrivateFileView, ListAPIView, ListCreateAPIView,
     RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView, OwnerListViewMixin,
-)
+    TranslatedApiViewMixin)
 from bluebottle.bb_tasks.permissions import (
-    ActiveProjectOrReadOnlyPermission,
-    ResumePermission
+    ActiveProjectOrReadOnlyPermission
 )
 
 
@@ -68,7 +68,7 @@ class TaskPreviewFilter(filters.FilterSet):
     country = django_filters.NumberFilter(name='project__country')
     location = django_filters.NumberFilter(name='project__location')
     project = django_filters.CharFilter(name='project__slug')
-    text = django_filters.MethodFilter(action='text_filter')
+    text = django_filters.CharFilter(method='text_filter')
 
     def text_filter(self, queryset, filter):
         return queryset.filter(
@@ -298,7 +298,6 @@ class TaskMemberStatus(RetrieveUpdateAPIView):
 class TaskMemberResumeView(PrivateFileView):
     queryset = TaskMember.objects
     field = 'resume'
-    permission_classes = (ResumePermission, )
 
 
 class TaskFileList(OwnerListViewMixin, ListCreateAPIView):
@@ -326,7 +325,7 @@ class TaskFileDetail(RetrieveUpdateAPIView):
     )
 
 
-class SkillList(ListAPIView):
+class SkillList(TranslatedApiViewMixin, ListAPIView):
     queryset = Skill.objects.filter(disabled=False)
     serializer_class = SkillSerializer
 
@@ -334,6 +333,5 @@ class SkillList(ListAPIView):
 class UsedSkillList(SkillList):
     def get_queryset(self):
         qs = super(UsedSkillList, self).get_queryset()
-        skill_ids = Task.objects.values_list('skill',
-                                             flat=True).distinct()
+        skill_ids = Task.objects.values_list('skill', flat=True).distinct()
         return qs.filter(id__in=skill_ids)

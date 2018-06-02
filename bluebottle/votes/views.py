@@ -1,4 +1,5 @@
-from rest_framework import generics, filters, permissions
+from rest_framework import generics, permissions
+from django_filters import rest_framework as filters
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.utils.utils import get_client_ip

@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.aggregates import Sum
 from django.utils.timezone import now
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
@@ -27,7 +27,7 @@ class BaseOrder(models.Model, FSMTransition):
         StatusDefinition.AUTHORIZED: StatusDefinition.PENDING,
         StatusDefinition.SETTLED: StatusDefinition.SUCCESS,
         StatusDefinition.CHARGED_BACK: StatusDefinition.FAILED,
-        StatusDefinition.REFUNDED: StatusDefinition.FAILED,
+        StatusDefinition.REFUNDED: StatusDefinition.REFUNDED,
         StatusDefinition.FAILED: StatusDefinition.FAILED,
         StatusDefinition.UNKNOWN: StatusDefinition.FAILED
     }
@@ -38,7 +38,9 @@ class BaseOrder(models.Model, FSMTransition):
         (StatusDefinition.PLEDGED, _('Pledged')),
         (StatusDefinition.PENDING, _('Pending')),
         (StatusDefinition.SUCCESS, _('Success')),
+        (StatusDefinition.REFUNDED, _('Refunded')),
         (StatusDefinition.FAILED, _('Failed')),
+        (StatusDefinition.CANCELLED, _('Cancelled')),
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("user"),
@@ -96,6 +98,25 @@ class BaseOrder(models.Model, FSMTransition):
     def failed(self):
         self.completed = None
         self.confirmed = None
+
+    @transition(
+        field=status,
+        source=[
+            StatusDefinition.PENDING, StatusDefinition.SUCCESS,
+            StatusDefinition.PLEDGED, StatusDefinition.FAILED,
+        ],
+        target=StatusDefinition.REFUNDED
+    )
+    def refunded(self):
+        pass
+
+    @transition(
+        field=status,
+        source=[StatusDefinition.REFUNDED, ],
+        target=StatusDefinition.CANCELLED
+    )
+    def cancelled(self):
+        pass
 
     def update_total(self, save=True):
         donations = Donation.objects.filter(order=self, amount__gt=0).\
@@ -158,6 +179,9 @@ class BaseOrder(models.Model, FSMTransition):
             ('api_delete_own_order', 'Can delete own order through the API'),
 
         )
+        verbose_name = _('order')
+        verbose_name_plural = _('orders')
+
 
 
 import signals  # noqa

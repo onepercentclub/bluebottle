@@ -7,6 +7,7 @@ from bluebottle.payments_docdata.settings import *
 
 import warnings
 
+
 # Raise exception on naive datetime...
 warnings.filterwarnings(
     'error',
@@ -48,7 +49,7 @@ GRAPH_MODELS = {
 DEFAULT_DB_ALIAS = 'default'
 DATABASES = {
     'default': {
-        'ENGINE': 'tenant_schemas.postgresql_backend',
+        "ENGINE": "bluebottle.clients.postgresql_backend",
         'HOST': '',
         'PORT': '',
         'NAME': 'bluebottle_test',

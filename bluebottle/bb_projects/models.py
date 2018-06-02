@@ -3,12 +3,13 @@ from django.db.models import Count, Sum
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
 
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
+from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
@@ -16,16 +17,19 @@ from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition
 
 
-class ProjectTheme(models.Model):
+class ProjectTheme(TranslatableModel):
 
     """ Themes for Projects. """
 
     # The name is marked as unique so that users can't create duplicate
     # theme names.
-    name = models.CharField(_('name'), max_length=100, unique=True)
     slug = models.SlugField(_('slug'), max_length=100, unique=True)
-    description = models.TextField(_('description'), blank=True)
     disabled = models.BooleanField(_('disabled'), default=False)
+
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=100),
+        description=models.TextField(_('description'), blank=True)
+    )
 
     def __unicode__(self):
         return self.name
@@ -37,7 +41,7 @@ class ProjectTheme(models.Model):
         super(ProjectTheme, self).save(**kwargs)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['translations__name']
         verbose_name = _('project theme')
         verbose_name_plural = _('project themes')
         permissions = (
@@ -45,13 +49,11 @@ class ProjectTheme(models.Model):
         )
 
 
-class ProjectPhase(models.Model):
+class ProjectPhase(TranslatableModel):
 
     """ Phase of a project """
 
     slug = models.SlugField(max_length=200, unique=True)
-    name = models.CharField(max_length=100, unique=True)
-    description = models.CharField(max_length=400, blank=True)
     sequence = models.IntegerField(unique=True,
                                    help_text=_('For ordering phases.'))
 
@@ -60,7 +62,7 @@ class ProjectPhase(models.Model):
                                              'has been discarded.'))
     editable = models.BooleanField(default=True,
                                    help_text=_('Whether the project owner can '
-                                               'change the details of the'
+                                               'change the details of the '
                                                'project.'))
     viewable = models.BooleanField(default=True,
                                    help_text=_('Whether this phase, and '
@@ -71,14 +73,21 @@ class ProjectPhase(models.Model):
                                                      'select between these '
                                                      'phases'))
 
+    translations = TranslatedFields(
+        name=models.CharField(_('name'), max_length=100),
+        description=models.TextField(_('description'), blank=True)
+    )
+
     class Meta():
+        verbose_name = _('project phase')
+        verbose_name_plural = _('project phases')
         ordering = ['sequence']
         permissions = (
             ('api_read_projectphase', 'Can view project phase through API'),
         )
 
     def __unicode__(self):
-        return u'{0} - {1}'.format(self.sequence, _(self.name))
+        return u'{0} - {1}'.format(self.sequence, self.name)
 
     def save(self, *args, **kwargs):
         if not self.slug:

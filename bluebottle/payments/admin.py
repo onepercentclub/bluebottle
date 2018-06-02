@@ -13,8 +13,9 @@ from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import Payment, OrderPayment
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments.tasks import check_payment_statuses
+from bluebottle.payments_beyonic.admin import BeyonicPaymentAdmin
 from bluebottle.payments_external.admin import ExternalPaymentAdmin
-from bluebottle.payments_flutterwave.admin import FlutterwavePaymentAdmin, FlutterwaveMpesaPaymentAdmin
+from bluebottle.payments_flutterwave.admin import FlutterwavePaymentAdmin
 from bluebottle.payments_interswitch.admin import InterswitchPaymentAdmin
 from bluebottle.payments_docdata.admin import (
     DocdataPaymentAdmin,
@@ -120,6 +121,9 @@ class OrderPaymentAdmin(admin.ModelAdmin):
             object.id
         )
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 admin.site.register(OrderPayment, OrderPaymentAdmin)
 
@@ -157,9 +161,9 @@ class PaymentAdmin(PolymorphicParentModelAdmin):
             (admin.model, admin) for admin in (
                 DocdataPaymentAdmin, DocdataDirectdebitPaymentAdmin,
                 VoucherPaymentAdmin, InterswitchPaymentAdmin,
-                FlutterwavePaymentAdmin, FlutterwaveMpesaPaymentAdmin,
-                LipishaPaymentAdmin, TelesomPaymentAdmin, VitepayPaymentAdmin,
-                ExternalPaymentAdmin
+                FlutterwavePaymentAdmin, LipishaPaymentAdmin,
+                TelesomPaymentAdmin, VitepayPaymentAdmin,
+                BeyonicPaymentAdmin, ExternalPaymentAdmin
             )
         )
 

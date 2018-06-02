@@ -1,6 +1,6 @@
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
@@ -19,6 +19,7 @@ class Category(models.Model):
     class Meta:
         verbose_name = _("category")
         verbose_name_plural = _("categories")
+        ordering = ['title']
 
     def __unicode__(self):
         return self.title

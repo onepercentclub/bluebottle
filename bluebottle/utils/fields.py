@@ -25,7 +25,7 @@ def get_currency_choices():
     for method in properties.PAYMENT_METHODS:
         currencies += method['currencies'].keys()
 
-    return [(currency, get_currency_name(currency)) for currency in set(currencies)]
+    return [(currency, get_currency_name(currency, locale='en')) for currency in set(currencies)]
 
 
 def get_default_currency():

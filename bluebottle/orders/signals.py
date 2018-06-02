@@ -85,6 +85,18 @@ def _order_status_post_transition(sender, instance, **kwargs):
                     post.save()
 
 
+@receiver(post_transition, sender=Order)
+def cancel_order(sender, instance, target, **kwargs):
+    """
+    - Get the status from the Order and Send an Email.
+    """
+    if (
+        target == StatusDefinition.REFUNDED and
+        any(donation.project.status.slug == 'refunded' for donation in instance.donations.all())
+    ):
+        instance.transition_to(StatusDefinition.CANCELLED)
+
+
 @receiver(post_save, sender=Order)
 def _timeout_new_order(sender, instance, created=None, **kwargs):
     """

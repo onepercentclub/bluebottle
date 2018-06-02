@@ -68,3 +68,6 @@ class BasePlatformSettings(models.Model):
             return cls.objects.get()
         except cls.DoesNotExist:
             return cls()
+
+    def __unicode__(self):
+        return 'Settings'

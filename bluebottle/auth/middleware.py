@@ -27,9 +27,11 @@ LAST_SEEN_DELTA = 10  # in minutes
 
 
 def isAdminRequest(request):
-    admin_base = reverse('admin:index')
-
-    return request.path.startswith(admin_base) or request.path.startswith('/downloads')
+    parts = request.path.split('/')
+    base_path = None
+    if len(parts) > 2:
+        base_path = parts[2]
+    return request.path.startswith('/downloads') or base_path in ['jet', 'admin']
 
 
 class UserJwtTokenMiddleware:
@@ -174,8 +176,7 @@ class AdminOnlyAuthenticationMiddleware(AuthenticationMiddleware):
 
     def process_request(self, request):
         if isAdminRequest(request) and not hasattr(request, 'user'):
-            super(AdminOnlyAuthenticationMiddleware, self).process_request(
-                request)
+            super(AdminOnlyAuthenticationMiddleware, self).process_request(request)
 
 
 class AdminOnlyCsrf(object):

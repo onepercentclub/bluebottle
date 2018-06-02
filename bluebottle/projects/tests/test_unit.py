@@ -1,25 +1,33 @@
+import json
 from datetime import timedelta, time
+import httmock
+import urlparse
 
+from bluebottle.projects.admin import mark_as
 from django.db.models import Count
+from django.test.client import RequestFactory
+from django.test.utils import override_settings
 from django.utils import timezone
 from moneyed.classes import Money
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
-from bluebottle.projects.admin import mark_as_plan_new
 from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectBudgetLine, ProjectPlatformSettings, \
     CustomProjectFieldSettings, CustomProjectField
 from bluebottle.suggestions.models import Suggestion
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectPhaseFactory, ProjectThemeFactory
+from bluebottle.test.factory_models.projects import (
+    ProjectFactory, ProjectPhaseFactory, ProjectThemeFactory, ProjectDocumentFactory
+)
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.models import Language
 
 
 class TestProjectStatusUpdate(BluebottleTestCase):
@@ -140,6 +148,26 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.campaign)
         self.assertEqual(self.expired_project.payout_status, None)
+
+    def test_expired_enough_by_matching(self):
+        """ Less donated than requested  but with matching- status done complete """
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=self.expired_project,
+            order=order,
+            amount=2500
+        )
+        donation.save()
+
+        order.locked()
+        order.save()
+        order.success()
+        order.save()
+        self.expired_project.amount_extra = Money(2500, 'EUR')
+        self.expired_project.save()
+        self.assertEqual(self.expired_project.payout_status, 'needs_approval')
+        self.failUnless(self.expired_project.status == self.complete)
 
     def test_expired_sourcing(self):
         """ A crowdsourcing project should never get a payout status """
@@ -322,15 +350,16 @@ class TestProjectBulkActions(BluebottleTestCase):
         self.init_projects()
 
         self.projects = [ProjectFactory.create(title='test {}'.format(i)) for i in range(10)]
+        self.request = RequestFactory().post('/admin/some', data={'action': 'plan-new'})
 
     def test_mark_as_plan_new(self):
-        mark_as_plan_new(None, None, Project.objects)
+        mark_as(None, self.request, Project.objects)
 
         for project in Project.objects.all():
             self.assertEqual(project.status.slug, 'plan-new')
 
     def test_project_phase_log_creation(self):
-        mark_as_plan_new(None, None, Project.objects)
+        mark_as(None, self.request, Project.objects)
 
         for project in Project.objects.all():
             log = ProjectPhaseLog.objects.filter(project=project).order_by('start').last()
@@ -340,7 +369,7 @@ class TestProjectBulkActions(BluebottleTestCase):
         queryset = Project.objects.annotate(
             admin_vote_count=Count('vote', distinct=True)
         )
-        mark_as_plan_new(None, None, queryset)
+        mark_as(None, self.request, queryset)
 
         for project in Project.objects.all():
             self.assertEqual(project.status.slug, 'plan-new')
@@ -483,3 +512,156 @@ class TestProjectPlatformSettings(BluebottleTestCase):
         # And now it should be there
         project.refresh_from_db()
         self.assertEqual(project.extra.count(), 1)
+
+
+@override_settings(MAPS_API_KEY='somekey')
+class TestProjectLocation(BluebottleTestCase):
+    def setUp(self):
+        self.project = ProjectFactory.create(language=Language.objects.get(code='en'))
+        self.project.projectlocation.latitude = 52.3721249
+        self.project.projectlocation.longitude = 4.9070198
+        self.project.projectlocation.save()
+
+        self.mock_result = {
+            'results': [{
+                'geometry': {
+                    'location': {'lat': 52.3721249, 'lng': 4.9070198},
+                    'viewport': {
+                        'northeast': {'lat': 52.37347388029149, 'lng': 4.908368780291502},
+                        'southwest': {'lat': 52.37077591970849, 'lng': 4.905670819708497}
+                    },
+                    'location_type': 'ROOFTOP'
+                },
+                'place_id': u'ChIJMW3CZ7sJxkcRyhrLgJ6WbMk',
+                'address_components': [{
+                    'long_name': '10', 'types': ['street_number'], 'short_name': '10'
+                }, {
+                    'long_name': "'s-Gravenhekje", 'types': ['route'], 'short_name': "'s-Gravenhekje"
+                }, {
+                    'long_name': 'Amsterdam-Centrum',
+                    'types': ['political', 'sublocality', 'sublocality_level_1'],
+                    'short_name': 'Amsterdam-Centrum'
+                }, {
+                    'long_name': u'Amsterdam',
+                    'types': ['locality', 'political'], 'short_name': 'Amsterdam'
+                }, {
+                    'long_name': 'Amsterdam',
+                    'types': ['administrative_area_level_2', 'political'],
+                    'short_name': 'Amsterdam'
+                }, {
+                    'long_name': 'Noord-Holland',
+                    'types': ['administrative_area_level_1', 'political'],
+                    'short_name': u'NH'
+                }, {
+                    'long_name': 'Netherlands',
+                    'types': [u'country', u'political'],
+                    'short_name': u'NL'
+                }, {
+                    'long_name': '1011 TG', 'types': [u'postal_code'], 'short_name': u'1011 TG'
+                }],
+                'types': ['street_address'],
+            }],
+            'status': 'OK'
+        }
+
+    @property
+    def geocode_mock_factory(self):
+        @httmock.urlmatch(netloc='maps.googleapis.com')
+        def geocode_mock(url, request):
+            self.assertEqual(
+                urlparse.parse_qs(url.query)['language'][0], self.project.language.code
+            )
+            return json.dumps(self.mock_result)
+
+        return geocode_mock
+
+    def save_location(self):
+        with httmock.HTTMock(self.geocode_mock_factory):
+            self.project.projectlocation.save()
+
+    def test_adjusting_geolocation(self):
+        self.project.projectlocation.latitude = 52.166315
+        self.project.projectlocation.longitude = 4.490936
+        self.project.projectlocation.save()
+        self.project.projectlocation.latitude = 43.059269
+        self.project.projectlocation.longitude = 23.681429
+        self.project.projectlocation.save()
+
+    def test_geocode(self):
+        self.save_location()
+        self.assertEqual(
+            self.project.projectlocation.street, "'s-Gravenhekje"
+        )
+        self.assertEqual(
+            self.project.projectlocation.country, "Netherlands"
+        )
+        self.assertEqual(
+            self.project.projectlocation.neighborhood, "Amsterdam-Centrum"
+        )
+        self.assertEqual(
+            self.project.projectlocation.city, "Amsterdam"
+        )
+
+    def test_geocode_different_langauge(self):
+        self.project.language = Language.objects.get(code='nl')
+        self.save_location()
+        self.assertEqual(
+            self.project.projectlocation.street, "'s-Gravenhekje"
+        )
+
+    @override_settings(MAPS_API_KEY=None)
+    def test_geocode_no_key(self):
+        self.save_location()
+        self.assertEqual(
+            self.project.projectlocation.street, None
+        )
+
+    def test_geocode_unnamed_street(self):
+        self.mock_result['results'][0]['address_components'][1]['long_name'] = 'Unnamed Road'
+        self.save_location()
+        self.assertEqual(
+            self.project.projectlocation.street, None
+        )
+
+
+class TestProjectDocument(BluebottleTestCase):
+    def setUp(self):
+        self.project = ProjectFactory.create(
+            language=Language.objects.get(code='en'),
+            status=ProjectPhase.objects.get(slug='plan-submitted')
+        )
+        self.document = ProjectDocumentFactory.create(
+            project=self.project,
+            file='private/projects/documents/test.jpg'
+        )
+
+    def test_document_url(self):
+        self.assertTrue(self.document.document_url, '/downloads/project/documents')
+        response = self.client.get(self.document.document_url)
+
+        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg')
+
+    def test_delete_camppaign(self):
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        self.assertEqual(len(self.project.documents.all()), 0)
+
+    def test_delete_submitted(self):
+        self.project.status = ProjectPhase.objects.get(slug='plan-submitted')
+        self.project.save()
+
+        self.assertEqual(len(self.project.documents.all()), 1)
+
+    def test_delete_needs_work(self):
+        self.project.status = ProjectPhase.objects.get(slug='plan-needs-work')
+        self.project.save()
+
+        self.assertEqual(len(self.project.documents.all()), 1)
+
+    def test_delete_closed(self):
+        self.project.status = ProjectPhase.objects.get(slug='closed')
+        self.project.save()
+
+        self.assertEqual(len(self.project.documents.all()), 0)

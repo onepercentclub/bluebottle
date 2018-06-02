@@ -17,8 +17,8 @@ from bluebottle.projects.serializers import (
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    RetrieveUpdateDestroyAPIView, OwnerListViewMixin
-)
+    RetrieveUpdateDestroyAPIView, OwnerListViewMixin,
+    TranslatedApiViewMixin)
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission,
 )
@@ -271,10 +271,14 @@ class ProjectPreviewDetail(RetrieveAPIView):
         return qs
 
 
+class ProjectPhasePagination(BluebottlePagination):
+    page_size = 20
+
+
 class ProjectPhaseList(ListAPIView):
     queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseSerializer
-    pagination_class = BluebottlePagination
+    pagination_class = ProjectPhasePagination
     filter_fields = ('viewable',)
 
     def get_query(self):
@@ -393,14 +397,14 @@ class ManageProjectDetail(RetrieveUpdateAPIView):
         return object
 
 
-class ProjectThemeList(ListAPIView):
+class ProjectThemeList(TranslatedApiViewMixin, ListAPIView):
     serializer_class = ProjectThemeSerializer
-    queryset = ProjectTheme.objects.all().filter(disabled=False)
+    queryset = ProjectTheme.objects.filter(disabled=False)
 
 
 class ProjectUsedThemeList(ProjectThemeList):
     def get_queryset(self):
-        qs = super(ProjectUsedThemeList, self).get_queryset()
+        qs = super(ProjectThemeList, self).get_queryset()
         theme_ids = Project.objects.filter(
             status__viewable=True).values_list('theme', flat=True).distinct()
         return qs.filter(id__in=theme_ids)

@@ -14,6 +14,9 @@ class LipishaPaymentAdmin(PolymorphicChildModelAdmin):
     raw_id_fields = ('order_payment', )
 
 
+admin.site.register(LipishaPayment, LipishaPaymentAdmin)
+
+
 class LipishaProjectAdmin(admin.ModelAdmin):
     raw_id_fields = ('project', )
 

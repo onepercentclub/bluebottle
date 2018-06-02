@@ -1,27 +1,24 @@
+# -*- coding: utf-8 -*-
 import csv
 import json
 import mock
+from moneyed import Money
 import StringIO
+import requests
 
 from django.db import connection
-import requests
+from django.contrib.admin.sites import AdminSite
+from django.contrib import messages
+from django.forms.models import modelform_factory
+from django.forms import ValidationError
+from django.test.client import RequestFactory
 from django.urls.base import reverse
 from django.utils.timezone import now
 
-from bluebottle.test.factory_models.tasks import TaskFactory
-
-from bluebottle.tasks.models import Skill
-
-from django.contrib.admin.sites import AdminSite
-from django.contrib import messages
-from django.test.client import RequestFactory
-
-from moneyed import Money
 
 from bluebottle.projects.admin import (
     LocationFilter, ProjectReviewerFilter, ProjectAdminForm,
-    ReviewerWidget, ProjectAdmin,
-    ProjectSkillFilter)
+    ReviewerWidget, ProjectAdmin)
 from bluebottle.projects.models import Project, ProjectPhase, CustomProjectFieldSettings, CustomProjectField
 from bluebottle.projects.tasks import refund_project
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -31,8 +28,6 @@ from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.test.utils import BluebottleTestCase, override_settings, BluebottleAdminTestCase
-
-from django.forms.models import modelform_factory
 
 
 factory = RequestFactory()
@@ -87,12 +82,40 @@ class TestProjectAdmin(BluebottleTestCase):
         project.deadline_reached()
         return project
 
-    def test_fieldsets(self):
+    def test_sourcing_fieldsets(self):
         request = self.request_factory.get('/')
         request.user = MockUser(['projects.approve_payout'])
+        project = ProjectFactory.create(project_type='sourcing')
+        self.assertEqual(len(self.project_admin.get_fieldsets(request, project)), 3)
 
-        self.assertTrue(
-            'payout_status' in self.project_admin.get_fieldsets(request)[0][1]['fields']
+    def test_payout_status(self):
+        request = self.request_factory.get('/')
+        request.user = MockUser(['projects.approve_payout'])
+        project = ProjectFactory.create(project_type='funding')
+        self.assertIn('payout_status', self.project_admin.get_fieldsets(request, project)[3][1]['fields'])
+
+    def test_search_fields(self):
+        self.assertIn('organization__contacts__email', self.project_admin.search_fields)
+
+    def test_amount_needed(self):
+        project = ProjectFactory(amount_asked=Money(100, 'EUR'))
+        self.assertEqual(
+            self.project_admin.amount_needed_i18n(project),
+            Money(100, 'EUR')
+        )
+
+    def test_amount_needed_with_extra(self):
+        project = ProjectFactory(amount_asked=Money(100, 'EUR'), amount_extra=Money(50, 'EUR'))
+        self.assertEqual(
+            self.project_admin.amount_needed_i18n(project),
+            Money(50, 'EUR')
+        )
+
+    def test_amount_needed_with_more_extra(self):
+        project = ProjectFactory(amount_asked=Money(100, 'EUR'), amount_extra=Money(150, 'EUR'))
+        self.assertEqual(
+            self.project_admin.amount_needed_i18n(project),
+            Money(0, 'EUR')
         )
 
     def test_fieldsets_no_permissions(self):
@@ -107,9 +130,8 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.get('/')
         request.user = MockUser(['projects.approve_payout'])
 
-        self.assertTrue(
-            'payout_status' in self.project_admin.get_list_filter(request)
-        )
+        self.assertIn('payout_status', self.project_admin.get_list_filter(request))
+        self.assertIn('categories', self.project_admin.get_list_filter(request))
 
     def test_list_filter_no_permissions(self):
         request = self.request_factory.get('/')
@@ -330,7 +352,7 @@ class TestProjectAdmin(BluebottleTestCase):
         request = self.request_factory.get('/')
         request.user = MockUser()
 
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(title="¡Tést, with löt's of weird things!")
         reward = RewardFactory.create(project=project, amount=Money(10, 'EUR'))
 
         reward_order = OrderFactory.create(status='success')
@@ -345,6 +367,11 @@ class TestProjectAdmin(BluebottleTestCase):
         DonationFactory.create(project=project, order=order)
 
         response = self.project_admin.export_rewards(request, project.id)
+        header = 'Content-Type: text/csv\r\n' \
+                 'Content-Disposition: attachment; ' \
+                 'filename="test-with-lots-of-weird-things.csv"'
+        self.assertEqual(response.serialize_headers(), header)
+
         reader = csv.DictReader(StringIO.StringIO(response.content))
 
         result = [line for line in reader]
@@ -407,6 +434,7 @@ class TestProjectAdmin(BluebottleTestCase):
 class TestProjectRefundAdmin(BluebottleTestCase):
     def setUp(self):
         super(TestProjectRefundAdmin, self).setUp()
+
         self.site = AdminSite()
         self.request_factory = RequestFactory()
 
@@ -434,9 +462,11 @@ class TestProjectRefundAdmin(BluebottleTestCase):
         with mock.patch.object(refund_project, 'delay') as refund_mock:
             response = self.project_admin.refund(self.request, self.project.pk)
 
-            self.assertEqual(response.status_code, 302)
+        self.project.refresh_from_db()
 
-            refund_mock.assert_called_with(connection.tenant, self.project)
+        self.assertEqual(response.status_code, 302)
+        refund_mock.assert_called_with(connection.tenant, self.project)
+        self.assertEqual(self.project.status.slug, 'refunded')
 
     @override_settings(ENABLE_REFUNDS=True)
     def test_refunds_not_closed(self):
@@ -446,7 +476,9 @@ class TestProjectRefundAdmin(BluebottleTestCase):
         with mock.patch.object(refund_project, 'delay') as refund_mock:
             response = self.project_admin.refund(self.request, self.project.pk)
 
+            self.project.refresh_from_db()
             self.assertEqual(response.status_code, 403)
+            self.assertEqual(self.project.status.slug, 'campaign')
             refund_mock.assert_not_called()
 
     @override_settings(ENABLE_REFUNDS=True)
@@ -579,35 +611,26 @@ class ProjectAdminFormTest(BluebottleTestCase):
         parameters = widget.url_parameters()
         self.assertTrue(parameters['is_staff'], True)
 
+    def test_bank_details_reviewed(self):
+        self.form.cleaned_data = {
+            'status': ProjectPhase.objects.get(slug='campaign'),
+            'bank_details_reviewed': False,
+            'amount_asked': Money(100, 'EUR')
+        }
+        with self.assertRaises(ValidationError) as error:
+            self.form.clean()
 
-class ProjectSkillFilterTest(BluebottleTestCase):
-    """
-    Test project task skill filter
-    """
+        self.assertEqual(
+            error.exception.message,
+            'The bank details need to be reviewed before approving a project'
+        )
 
-    def setUp(self):
-        super(ProjectSkillFilterTest, self).setUp()
-        self.init_projects()
-
-        self.skill = Skill.objects.all()[0]
-        self.project_with_skill = ProjectFactory.create()
-        TaskFactory(project=self.project_with_skill, skill=self.skill)
-        ProjectFactory.create()
-        self.user = BlueBottleUserFactory.create()
-        self.request = factory.get('/')
-        self.request.user = self.user
-        self.admin = ProjectAdmin(Project, AdminSite())
-
-    def test_unfiltered(self):
-        filter = ProjectSkillFilter(None, {}, Project, self.admin)
-        queryset = filter.queryset(self.request, Project.objects.all())
-        self.assertEqual(len(queryset), 2)
-
-    def test_filter(self):
-        filter = ProjectSkillFilter(None, {'skill': self.skill.id}, Project, self.admin)
-        queryset = filter.queryset(self.request, Project.objects.all())
-        self.assertEqual(len(queryset), 1)
-        self.assertEqual(queryset.get(), self.project_with_skill)
+    def test_bank_details_reviewed_no_amount(self):
+        self.form.cleaned_data = {
+            'status': ProjectPhase.objects.get(slug='campaign'),
+            'bank_details_reviewed': False,
+        }
+        self.form.clean()
 
 
 class ProjectCustomFieldAdminTest(BluebottleAdminTestCase):
@@ -689,7 +712,7 @@ class ProjectAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'title')
-        self.assertEqual(headers[27], 'Extra Info')
+        self.assertEqual(headers[28], 'Extra Info')
         self.assertEqual(data[0], 'Just an example')
-        self.assertEqual(data[27], '')
-        self.assertEqual(data[28], 'This is nice!')
+        self.assertEqual(data[28], '')
+        self.assertEqual(data[29], 'This is nice!')

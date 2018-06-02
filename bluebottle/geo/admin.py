@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from parler.admin import TranslatableAdmin
 
 from bluebottle.geo.models import Location, LocationGroup, Region, SubRegion, Country
 from bluebottle.projects.models import Project
@@ -65,10 +66,11 @@ class SubRegionAdmin(admin.ModelAdmin):
 admin.site.register(SubRegion, SubRegionAdmin)
 
 
-class CountryAdmin(admin.ModelAdmin):
+class CountryAdmin(TranslatableAdmin):
     list_display = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code')
-    list_filter = ('oda_recipient', 'subregion__region', 'subregion')
+    list_filter = ('subregion__region', 'subregion')
     search_fields = ('name', 'alpha2_code', 'alpha3_code')
+    fields = ('name', 'alpha2_code', 'alpha3_code', 'numeric_code', 'subregion')
 
 
 admin.site.register(Country, CountryAdmin)
@@ -102,6 +104,11 @@ class LocationAdmin(admin.ModelAdmin):
 
     def get_actions(self, request):
         return dict([self.make_action(group) for group in LocationGroup.objects.all()])
+
+    fieldsets = (
+        (_('Info'), {'fields': ('name', 'description', 'group', 'city', 'country', 'image')}),
+        (_('Map'), {'fields': ('position', )})
+    )
 
 
 admin.site.register(Location, LocationAdmin)

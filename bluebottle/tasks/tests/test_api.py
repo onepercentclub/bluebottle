@@ -1,8 +1,11 @@
 from datetime import timedelta
 import mock
+import time
+import urllib
 
 from django.contrib.auth.models import Group, Permission
 from django.core import mail
+from django.core.signing import TimestampSigner
 from django.core.urlresolvers import reverse
 
 from rest_framework import status
@@ -321,6 +324,30 @@ class TaskApiTestcase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_task_member_confirm_as_taskmember(self):
+        task = TaskFactory.create(
+            status=Task.TaskStatuses.open,
+            author=self.some_user,
+            project=self.some_project,
+            people_needed=1
+        )
+
+        TaskMemberFactory.create(
+            member=self.some_user, task=task, status='accepted'
+        )
+        task_member = TaskMemberFactory.create(
+            member=self.another_user, task=task, status='accepted'
+        )
+        data = {
+            'status': 'realized',
+            'task': task.pk,
+            'message': 'Just a test message\nWith a newline'
+        }
+
+        task_member_url = reverse('task-member-detail', kwargs={'pk': task_member.pk})
+        response = self.client.put(task_member_url, data=data, token=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_time_spent(self):
         task = TaskFactory.create(
             status=Task.TaskStatuses.open,
@@ -395,6 +422,10 @@ class TaskApiTestcase(BluebottleTestCase):
         self.assertTrue(
             resume['url'].startswith('/downloads/taskmember/resume')
         )
+        self.assertTrue(
+            resume['name'].startswith('upload')
+        )
+
         task_member = TaskMember.objects.get(pk=response.data['id'])
         self.assertTrue(
             task_member.resume.name.startswith('private')
@@ -650,20 +681,14 @@ class TaskMemberResumeTest(BluebottleTestCase):
         super(TaskMemberResumeTest, self).setUp()
 
         self.init_projects()
-
         self.some_user = BlueBottleUserFactory.create()
         self.some_token = "JWT {0}".format(self.some_user.get_jwt_token())
 
         self.another_user = BlueBottleUserFactory.create()
         self.another_token = "JWT {0}".format(self.another_user.get_jwt_token())
 
-        self.yet_another_user = BlueBottleUserFactory.create()
-        self.yet_another_token = "JWT {0}".format(
-            self.yet_another_user.get_jwt_token()
-        )
-
         self.task = TaskFactory.create(
-            author=self.some_user
+            project=ProjectFactory.create(owner=self.some_user),
         )
 
         self.member = TaskMemberFactory.create(
@@ -671,11 +696,58 @@ class TaskMemberResumeTest(BluebottleTestCase):
             member=self.another_user,
             resume='private/tasks/resume/test.jpg'
         )
+        self.signer = TimestampSigner()
+
         self.resume_url = reverse('task-member-resume', args=(self.member.id, ))
+        self.task_member_url = reverse('task-member-detail', args=(self.member.id, ))
 
-    def test_task_member_resume_download_member(self):
+    def test_task_member_detail_includes_download_url_task_owner(self):
         response = self.client.get(
-            self.resume_url, token=self.another_token
+            self.task_member_url, token=self.some_token
+        )
+        self.assertTrue(
+            response.data['resume']['url'].startswith('/downloads/taskmember/resume/')
+        )
+        self.assertEqual(
+            response.data['resume']['name'],
+            'test.jpg'
+        )
+
+    def test_task_member_detail_includes_download_url_task_member(self):
+        response = self.client.get(
+            self.task_member_url, token=self.another_token
+        )
+        self.assertTrue(
+            response.data['resume']['url'].startswith('/downloads/taskmember/resume/')
+        )
+        self.assertEqual(
+            response.data['resume']['name'],
+            'test.jpg'
+        )
+
+    def test_task_member_detail_includes_download_url_other_user(self):
+        response = self.client.get(
+            self.task_member_url,
+            token="JWT {0}".format(
+                BlueBottleUserFactory.create().get_jwt_token()
+            )
+        )
+        self.assertIsNone(
+            response.data.get('resume')
+        )
+
+    def test_task_member_detail_includes_download_url_anonymous(self):
+        response = self.client.get(
+            self.task_member_url
+        )
+        self.assertIsNone(
+            response.data.get('resume')
+        )
+
+    def test_task_member_resume_signed(self):
+        signature = self.signer.sign(self.resume_url)
+        response = self.client.get(
+            '{}?{}'.format(self.resume_url, urllib.urlencode({'signature': signature}))
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -683,49 +755,41 @@ class TaskMemberResumeTest(BluebottleTestCase):
             '/media/private/tasks/resume/test.jpg'
         )
 
-    def test_task_member_resume_download_task_owner(self):
+    def test_task_member_resume_no_signature(self):
         response = self.client.get(
-            self.resume_url, token=self.some_token
+            self.resume_url
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_task_member_resume_incorrect_signature(self):
+        response = self.client.get(
+            '{}?{}'.format(
+                self.resume_url,
+                urllib.urlencode({'signature': '{}:blabla'.format(self.resume_url)}))
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_task_member_resume_expired_signature(self):
+        current_time = time.time()
+
+        with mock.patch.object(time, 'time', return_value=current_time - (7 * 60 * 60)):
+            signature = self.signer.sign(self.resume_url)
+
+        response = self.client.get(
+            '{}?{}'.format(self.resume_url, urllib.urlencode({'signature': signature}))
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_task_member_resume_expired_non_signature(self):
+        current_time = time.time()
+
+        with mock.patch.object(time, 'time', return_value=current_time - (3 * 60 * 60)):
+            signature = self.signer.sign(self.resume_url)
+
+        response = self.client.get(
+            '{}?{}'.format(self.resume_url, urllib.urlencode({'signature': signature}))
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response['x-accel-redirect'],
-            '/media/private/tasks/resume/test.jpg'
-        )
-
-    def test_task_member_resume_download_task_anonymous(self):
-        response = self.client.get(self.resume_url)
-        self.assertEqual(response.status_code, 401)
-
-    def test_task_member_resume_download_unrelated_user(self):
-        response = self.client.get(
-            self.resume_url, token=self.yet_another_token
-        )
-        self.assertEqual(response.status_code, 403)
-
-    def test_task_member_resume_download_staff_session(self):
-        self.yet_another_user.groups.add(
-            Group.objects.get(name='Staff')
-        )
-
-        self.client.force_login(self.yet_another_user)
-        response = self.client.get(
-            self.resume_url, token=self.yet_another_token
-        )
-        self.assertEqual(response.status_code, 200)
-
-        self.assertEqual(
-            response['x-accel-redirect'],
-            '/media/private/tasks/resume/test.jpg'
-        )
-
-    def test_task_member_resume_download_non_staff_session(self):
-        self.client.force_login(self.yet_another_user)
-        response = self.client.get(
-            self.resume_url, token=self.yet_another_token
-        )
-
-        self.assertEqual(response.status_code, 403)
 
 
 class TestMyTasksPermissions(BluebottleTestCase):

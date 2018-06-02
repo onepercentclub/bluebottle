@@ -13,4 +13,4 @@ class SlideSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Slide
-        # fields = ('title', 'contents', 'language', 'sequence')
+        fields = '__all__'

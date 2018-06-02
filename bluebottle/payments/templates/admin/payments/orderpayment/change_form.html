@@ -3,14 +3,14 @@
 
 {% block object-tools-items %}
     <li>
-        {% if perms.payments.refund_orderpayment and properties.ENABLE_REFUNDS and original.status == 'settled' %}
-            <a href="{% url 'admin:payments_orderpayment_refund' object_id %}" style="background-color: darkred">
+        {% if perms.payments.refund_orderpayment and properties.ENABLE_REFUNDS and original.can_refund %}
+            <a href="{% url 'admin:payments_orderpayment_refund' object_id %}" style="color: white; background-color: darkred">
                 {% trans  "Refund" %}
             </a>
         {% endif %}
     </li>
     <li>
-        <a href="{% url 'admin:payments_orderpayment_check' object_id %}" style="background-color: darkgreen">
+        <a href="{% url 'admin:payments_orderpayment_check' object_id %}" style="color: white; background-color: darkgreen">
             Check status at PSP
         </a>
     </li>

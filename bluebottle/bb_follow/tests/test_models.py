@@ -41,6 +41,35 @@ class FollowTests(BluebottleTestCase):
         DonationFactory(order=order, amount=35,
                         project=self.project,
                         fundraiser=None)
+        order.locked()
+        order.success()
+        order.save()
+        self.assertEqual(Follow.objects.count(), 1)
+        self.assertEqual(Follow.objects.all()[0].followed_object, self.project)
+        self.assertEqual(Follow.objects.all()[0].user, self.another_user)
+
+    def test_create_follow_donation_with_login(self):
+        """
+        Test that a Follow object is created if a user does a donation
+        to a project with login during donation flow
+        """
+        self.assertEqual(Follow.objects.count(), 0)
+
+        order = OrderFactory.create(
+            user=None,
+            status=StatusDefinition.CREATED
+        )
+        # Make sure to set Fundraiser to None. Otherwise, a fundraiser is created
+        DonationFactory(
+            order=order,
+            amount=35,
+            project=self.project,
+            fundraiser=None)
+        order.user = self.another_user
+        order.locked()
+        order.success()
+        order.save()
+
         self.assertEqual(Follow.objects.count(), 1)
         self.assertEqual(Follow.objects.all()[0].followed_object, self.project)
         self.assertEqual(Follow.objects.all()[0].user, self.another_user)
@@ -103,9 +132,12 @@ class FollowTests(BluebottleTestCase):
         self.assertEqual(Follow.objects.count(), 0)
 
         task_member_1 = TaskMemberFactory(task=self.task)
-        self.assertEqual(Follow.objects.count(), 1)
+        self.assertEqual(Follow.objects.count(), 2)
         self.assertEqual(Follow.objects.all()[0].followed_object, self.task)
         self.assertEqual(Follow.objects.all()[0].user, task_member_1.member)
+
+        self.assertEqual(Follow.objects.all()[1].followed_object, self.task.project)
+        self.assertEqual(Follow.objects.all()[1].user, task_member_1.member)
 
     def test_create_follow_create_fundraiser(self):
         """ Test that a Fundraiser also becomes a follower of a project """
@@ -127,11 +159,19 @@ class FollowTests(BluebottleTestCase):
         # Make sure to set Fundraiser to None. Otherwise, fundraiser is created
         DonationFactory(order=order, amount=35,
                         project=self.project, fundraiser=None)
+        order.locked()
+        order.success()
+        order.save()
+
+        self.assertEqual(Follow.objects.count(), 1)
 
         order = OrderFactory.create(user=user, status=StatusDefinition.CREATED)
         # Make sure to set Fundraiser to None. Otherwise, fundraiser is created
         DonationFactory(order=order, amount=35,
                         project=self.project, fundraiser=None)
+        order.locked()
+        order.success()
+        order.save()
 
         self.assertEqual(Follow.objects.count(), 1)
         # Make sure to inspect the second Follow object, this is the Follow
@@ -168,6 +208,9 @@ class FollowTests(BluebottleTestCase):
         # Make sure that no fundraisers are created. A new fundraiser will also create a follower
         DonationFactory(order=order, amount=35,
                         project=self.project, fundraiser=None)
+        order.locked()
+        order.success()
+        order.save()
 
         self.assertEqual(Follow.objects.count(), 0)
 
@@ -186,6 +229,9 @@ class FollowTests(BluebottleTestCase):
         # Make sure to set Fundraiser to None. Otherwise, a fundraiser is created
         DonationFactory(order=order, amount=35,
                         project=self.project, fundraiser=None)
+        order.locked()
+        order.success()
+        order.save()
 
         # Create follower by creating a task owner
 
@@ -245,6 +291,9 @@ class FollowTests(BluebottleTestCase):
         DonationFactory(order=order, amount=35,
                         project=self.project,
                         fundraiser=None)
+        order.locked()
+        order.success()
+        order.save()
 
         # Create a follower by being a fundraiser for the project
         fundraiser_person = BlueBottleUserFactory.create()
@@ -295,10 +344,10 @@ class FollowTests(BluebottleTestCase):
 
         mail.outbox = []
 
-        self.assertEqual(Follow.objects.count(), 3)
+        self.assertEqual(Follow.objects.count(), 5)
         for follower in Follow.objects.all():
             if follower.user != task_owner1:
-                self.assertEqual(follower.followed_object, task)
+                self.assertTrue(follower.followed_object in (task, task.project))
 
         TextWallpostFactory.create(content_object=task,
                                    author=task_owner1,
@@ -336,6 +385,9 @@ class FollowTests(BluebottleTestCase):
         DonationFactory(order=order, amount=35,
                         project=self.project,
                         fundraiser=fundraiser)
+        order.locked()
+        order.success()
+        order.save()
 
         donator2 = BlueBottleUserFactory.create()
         order2 = OrderFactory.create(user=donator2,
@@ -343,6 +395,10 @@ class FollowTests(BluebottleTestCase):
         DonationFactory(order=order2, amount=35,
                         project=self.project,
                         fundraiser=fundraiser)
+
+        order2.locked()
+        order2.success()
+        order2.save()
 
         # The fundraiser owner creates a wallpost to followers
         TextWallpostFactory.create(content_object=fundraiser,
@@ -366,7 +422,9 @@ class FollowTests(BluebottleTestCase):
         self.assertEqual(receivers, [])
 
     def test_no_mail_no_campaign_notifications(self):
-        """ Test that users who have campaign_notifications turned off don't get email """
+        """
+        Test that users who have campaign_notifications turned off don't get email
+        """
         task_owner1 = BlueBottleUserFactory.create(campaign_notifications=False)
 
         TaskFactory.create(
@@ -385,6 +443,9 @@ class FollowTests(BluebottleTestCase):
         DonationFactory(order=order, amount=35,
                         project=self.project,
                         fundraiser=None)
+        order.locked()
+        order.success()
+        order.save()
 
         # Create a follower by being a fundraiser for the project
         fundraiser_person = BlueBottleUserFactory.create(campaign_notifications=False)
@@ -447,6 +508,9 @@ class FollowTests(BluebottleTestCase):
         DonationFactory(order=order, amount=35,
                         project=self.project,
                         fundraiser=None)
+        order.locked()
+        order.success()
+        order.save()
 
         # Create a follower by being a fundraiser for the project
         fundraiser_person = BlueBottleUserFactory.create()

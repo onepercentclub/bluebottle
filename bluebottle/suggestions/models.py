@@ -2,7 +2,7 @@ import uuid
 from datetime import date, timedelta
 from django.db import models
 from djchoices import DjangoChoices, ChoiceItem
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import pgettext
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)

@@ -4,12 +4,10 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": false,
-            "slug": "plan-new",
-            "name": "Plan - Draft",
             "sequence": 1,
             "editable": true,
             "active": true,
-            "description": ""
+            "slug": "plan-new"
         }
     },
     {
@@ -17,12 +15,10 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": false,
-            "slug": "plan-submitted",
-            "name": "Plan - Submitted",
             "sequence": 2,
             "editable": false,
             "active": true,
-            "description": ""
+            "slug": "plan-submitted"
         }
     },
     {
@@ -30,12 +26,10 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": false,
-            "slug": "plan-needs-work",
-            "name": "Plan - Needs Work",
             "sequence": 3,
             "editable": true,
             "active": true,
-            "description": ""
+            "slug": "plan-needs-work"
         }
     },
     {
@@ -43,12 +37,10 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "name": "Voting - Running",
-            "slug": "voting",
             "sequence": 4,
             "editable": false,
             "active": true,
-            "description": ""
+            "slug": "voting"
         }
     },
     {
@@ -56,12 +48,10 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "name": "Voting - Done",
-            "slug": "voting-done",
             "sequence": 5,
             "editable": false,
             "active": true,
-            "description": ""
+            "slug": "voting-done"
         }
     },
     {
@@ -69,12 +59,10 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "slug": "campaign",
-            "name": "Project - Running",
             "sequence": 6,
             "editable": false,
             "active": true,
-            "description": ""
+            "slug": "campaign"
         }
     },
     {
@@ -82,12 +70,10 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "slug": "to-be-continued",
-            "name": "Project - To be continued",
             "sequence": 7,
             "editable": false,
             "active": true,
-            "description": ""
+            "slug": "to-be-continued"
         }
     },
     {
@@ -95,12 +81,10 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "name": "Project - Realised",
-            "slug": "done-complete",
             "sequence": 8,
-            "editable": true,
+            "editable": false,
             "active": true,
-            "description": ""
+            "slug": "done-complete"
         }
     },
     {
@@ -108,12 +92,10 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": true,
-            "name": "Project - Done",
-            "slug": "done-incomplete",
             "sequence": 9,
             "editable": false,
             "active": true,
-            "description": ""
+            "slug": "done-incomplete"
         }
     },
     {
@@ -121,165 +103,700 @@
         "model": "bb_projects.projectphase",
         "fields": {
             "viewable": false,
-            "name": "Rejected / Cancelled",
-            "slug": "closed",
             "sequence": 10,
             "editable": false,
             "active": true,
-            "description": ""
+            "slug": "closed"
+        }
+    },
+    {
+        "pk": 13,
+        "model": "bb_projects.projectphase",
+        "fields": {
+            "viewable": false,
+            "sequence": 11,
+            "editable": false,
+            "active": true,
+            "slug": "refunded"
+        }
+    },
+    {
+        "pk": 0,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 1,
+            "name": "Plan - Concept",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 1,
+            "name": "Plan - Draft",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 2,
+            "name": "Plan - Ingediend",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 2,
+            "name": "Plan - Submitted",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 3,
+            "name": "Plan - Bewerk Concept",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 5,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 3,
+            "name": "Plan - Needs Work",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 6,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 4,
+            "name": "Stemmen - Lopend",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 7,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 4,
+            "name": "Voting - Running",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 8,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 5,
+            "name": "Stemmen - Afgerond",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 9,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 5,
+            "name": "Voting - Done",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 10,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 6,
+            "name": "Project - Lopend",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 11,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 6,
+            "name": "Project - Running",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 12,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 7,
+            "name": "Project - Wordt vervolgd",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 13,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 7,
+            "name": "Project - To be continued",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 14,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 8,
+            "name": "Project - Gerealiseerd",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 15,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 8,
+            "name": "Project - Realised",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 16,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 9,
+            "name": "Project - Afgerond",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 17,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 9,
+            "name": "Project - Done",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 18,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 10,
+            "name": "Afgekeurd / Gestopt",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 19,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 10,
+            "name": "Rejected / Cancelled",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 20,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 13,
+            "name": "Refunded",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 21,
+        "model": "bb_projects.projectphasetranslation",
+        "fields": {
+            "description": "",
+            "master": 13,
+            "name": "Gerestitueerd",
+            "language_code": "nl"
         }
     },
     {
         "pk": 1,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "agriculture",
-            "description": "",
-            "name": "Agriculture"
+            "slug": "agriculture"
         }
     },
     {
         "pk": 2,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "animal-welfare",
-            "description": "",
-            "name": "Animal welfare"
+            "slug": "animal-welfare"
         }
     },
     {
         "pk": 3,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "arts-culture",
-            "description": "",
-            "name": "Arts & Culture"
+            "slug": "arts-culture"
         }
     },
     {
         "pk": 5,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "climate",
-            "description": "",
-            "name": "Climate"
+            "slug": "climate"
         }
     },
     {
         "pk": 6,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "community-building",
-            "description": "",
-            "name": "Community building"
+            "slug": "community-building"
         }
     },
     {
         "pk": 7,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "education",
-            "description": "",
-            "name": "Education"
+            "slug": "education"
         }
     },
     {
         "pk": 8,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "emergency-relief",
-            "description": "",
-            "name": "Emergency relief"
+            "slug": "emergency-relief"
         }
     },
     {
         "pk": 9,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "food",
-            "description": "",
-            "name": "Food"
+            "slug": "food"
         }
     },
     {
         "pk": 10,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "health",
-            "description": "",
-            "name": "Health"
+            "slug": "health"
         }
     },
     {
         "pk": 11,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "human-rights",
-            "description": "",
-            "name": "Human rights"
+            "slug": "human-rights"
         }
     },
     {
         "pk": 12,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "ict",
-            "description": "",
-            "name": "ICT"
+            "slug": "ict"
         }
     },
     {
         "pk": 13,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "media-journalism",
-            "description": "",
-            "name": "Media & Journalism"
+            "slug": "media-journalism"
         }
     },
     {
         "pk": 14,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "social-entrepreneurship",
-            "description": "",
-            "name": "Social entrepreneurship"
+            "slug": "social-entrepreneurship"
         }
     },
     {
         "pk": 15,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "sport",
-            "description": "",
-            "name": "Sport"
+            "slug": "sport"
         }
     },
     {
         "pk": 16,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "tourism",
-            "description": "",
-            "name": "Tourism"
+            "slug": "tourism"
         }
     },
     {
         "pk": 17,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "water",
-            "description": "",
-            "name": "Water"
+            "slug": "water"
         }
     },
     {
         "pk": 18,
         "model": "bb_projects.projecttheme",
         "fields": {
-            "slug": "mobility",
+            "slug": "mobility"
+        }
+    },
+    {
+        "pk": 0,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
             "description": "",
-            "name": "Mobility"
+            "master": 1,
+            "name": "Natuur & Milieu",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 1,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 1,
+            "name": "Agriculture",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 2,
+            "name": "Dierenwelzijn",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 2,
+            "name": "Animal welfare",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 3,
+            "name": "Kunst & Cultuur",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 5,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 3,
+            "name": "Arts & Culture",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 6,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 5,
+            "name": "Klimaat",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 7,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 5,
+            "name": "Climate",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 8,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 6,
+            "name": "Leefbaarheid",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 9,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 6,
+            "name": "Community building",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 10,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 7,
+            "name": "Onderwijs",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 11,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 7,
+            "name": "Education",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 12,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 8,
+            "name": "Noodhulp",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 13,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 8,
+            "name": "Emergency relief",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 14,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 9,
+            "name": "Voedsel",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 15,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 9,
+            "name": "Food",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 16,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 10,
+            "name": "Gezondheid & Zorg",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 17,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 10,
+            "name": "Health",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 18,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 11,
+            "name": "Mensenrechten",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 19,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 11,
+            "name": "Human rights",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 20,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 12,
+            "name": "ICT",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 21,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 12,
+            "name": "ICT",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 22,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 13,
+            "name": "Media & Journalistiek",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 23,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 13,
+            "name": "Media & Journalism",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 24,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 14,
+            "name": "Sociaal Ondernemerschap",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 25,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 14,
+            "name": "Social entrepreneurship",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 26,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 15,
+            "name": "Sport & Recreatie",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 27,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 15,
+            "name": "Sport",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 28,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 16,
+            "name": "Toerisme",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 29,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 16,
+            "name": "Tourism",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 30,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 17,
+            "name": "Water",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 31,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 17,
+            "name": "Water",
+            "language_code": "en"
+        }
+    },
+    {
+        "pk": 32,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 18,
+            "name": "Mobiliteit",
+            "language_code": "nl"
+        }
+    },
+    {
+        "pk": 33,
+        "model": "bb_projects.projectthemetranslation",
+        "fields": {
+            "description": "",
+            "master": 18,
+            "name": "Mobility",
+            "language_code": "en"
         }
     }
 ]

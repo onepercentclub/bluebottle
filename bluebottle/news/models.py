@@ -37,7 +37,13 @@ class NewsItem(models.Model):
     language = models.CharField(_("language"),
                                 max_length=5,
                                 choices=lazy(get_languages, tuple)())
-    contents = PlaceholderField("blog_contents")
+    contents = PlaceholderField("blog_contents", plugins=[
+        'TextPlugin',
+        'ImageTextPlugin',
+        'OEmbedPlugin',
+        'RawHtmlPlugin',
+        'PicturePlugin'
+    ])
     # This should not be nessecary, but fixes deletion of some news items
     # See https://github.com/edoburu/django-fluent-contents/issues/19
     contentitem_set = ContentItemRelation()
@@ -57,8 +63,7 @@ class NewsItem(models.Model):
 
     # Metadata
     author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('author'), editable=False,
-                               null=True)
+                               verbose_name=_('author'), blank=True, null=True)
     creation_date = CreationDateTimeField(_('creation date'))
     modification_date = ModificationDateTimeField(_('last modification'))
 
@@ -72,3 +77,7 @@ class NewsItem(models.Model):
         s = MLStripper()
         s.feed(mark_safe(render_placeholder(request, self.contents).html))
         return truncatechars(s.get_data(), 250)
+
+    class Meta:
+        verbose_name = _("news item")
+        verbose_name_plural = _("news items")

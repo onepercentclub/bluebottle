@@ -4,6 +4,7 @@ from decimal import Decimal
 import mock
 
 from django.contrib.auth.models import Permission, Group
+from django.core.cache import cache
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
 from django.utils.timezone import now
@@ -45,6 +46,7 @@ class ResultPageTestCase(BluebottleTestCase):
         self.page = ResultPageFactory(title='Results last year', image=image)
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='content')
         self.url = reverse('result-page-detail', kwargs={'pk': self.page.id})
+        cache.clear()
 
     def test_results_header(self):
         def watermark(self, image, *args, **kwargs):
@@ -60,6 +62,19 @@ class ResultPageTestCase(BluebottleTestCase):
             self.assertEqual(watermark_mock.call_args[0][1]['watermark'], 'test/logo-overlay.png')
 
     def test_results_stats(self):
+        yesterday = now() - timedelta(days=1)
+        long_ago = now() - timedelta(days=365 * 2)
+        user = BlueBottleUserFactory(is_co_financer=False)
+        project = ProjectFactory(owner=user)
+        order1 = OrderFactory(user=user, confirmed=yesterday, status='success')
+        order1.created = yesterday
+        order1.save()
+        order2 = OrderFactory(user=user, confirmed=long_ago, status='success')
+        order1.created = long_ago
+        order1.save()
+
+        DonationFactory(order=order1, amount=Money(50, 'EUR'), project=project)
+        DonationFactory(order=order2, amount=Money(50, 'EUR'), project=project)
 
         block = StatsContent.objects.create_for_placeholder(self.placeholder, title='Look at us!')
         self.stat1 = StatFactory(type='manual', title='Poffertjes', value=3500, block=block)
@@ -74,7 +89,42 @@ class ResultPageTestCase(BluebottleTestCase):
         self.assertEqual(stats['stats'][0]['title'], self.stat1.title)
         self.assertEqual(stats['stats'][0]['value'], str(self.stat1.value))
         self.assertEqual(stats['stats'][1]['title'], self.stat2.title)
-        self.assertEqual(stats['stats'][1]['value'], {"amount": Decimal('0'), "currency": "EUR"})
+        self.assertEqual(stats['stats'][1]['value'], {"amount": Decimal('50'), "currency": "EUR"})
+
+    def test_results_stats_no_dates(self):
+        self.page.start_date = None
+        self.page.end_date = None
+        self.page.save()
+
+        long_ago = now() - timedelta(days=365 * 2)
+        yesterday = now() - timedelta(days=1)
+        user = BlueBottleUserFactory(is_co_financer=False)
+        project = ProjectFactory(created=yesterday, owner=user)
+        project = ProjectFactory(owner=user)
+        order1 = OrderFactory(user=user, confirmed=yesterday, status='success')
+        order1.created = yesterday
+        order1.save()
+        order2 = OrderFactory(user=user, confirmed=long_ago, status='success')
+        order1.created = long_ago
+        order1.save()
+
+        DonationFactory(order=order1, amount=Money(50, 'EUR'), project=project)
+        DonationFactory(order=order2, amount=Money(50, 'EUR'), project=project)
+
+        block = StatsContent.objects.create_for_placeholder(self.placeholder, title='Look at us!')
+        self.stat1 = StatFactory(type='manual', title='Poffertjes', value=3500, block=block)
+        self.stat2 = StatFactory(type='donated_total', title='Donations', value=None, block=block)
+
+        response = self.client.get(self.url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        stats = response.data['blocks'][0]
+        self.assertEqual(stats['type'], 'statistics')
+        self.assertEqual(stats['title'], 'Look at us!')
+        self.assertEqual(stats['stats'][0]['title'], self.stat1.title)
+        self.assertEqual(stats['stats'][0]['value'], str(self.stat1.value))
+        self.assertEqual(stats['stats'][1]['title'], self.stat2.title)
+        self.assertEqual(stats['stats'][1]['value'], {"amount": Decimal('100'), "currency": "EUR"})
 
     def test_results_quotes(self):
         block = QuotesContent.objects.create_for_placeholder(self.placeholder)
@@ -426,3 +476,37 @@ class SitePlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['content']['copyright'], 'GoodUp')
         self.assertEqual(response.data['platform']['content']['powered_by_text'], 'Powered by')
         self.assertEqual(response.data['platform']['content']['powered_by_link'], 'https://goodup.com')
+
+    def test_site_platform_settings_favicons(self):
+        favicon = File(open('./bluebottle/projects/test_images/upload.png'))
+        SitePlatformSettings.objects.create(favicon=favicon)
+
+        response = self.client.get(reverse('settings'))
+
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['large'].startswith(
+                '/media/cache'
+            )
+        )
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['small'].startswith(
+                '/media/cache'
+            )
+        )
+
+    def test_site_platform_settings_logo(self):
+        favicon = File(open('./bluebottle/projects/test_images/upload.png'))
+        SitePlatformSettings.objects.create(favicon=favicon)
+
+        response = self.client.get(reverse('settings'))
+
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['large'].startswith(
+                '/media/cache'
+            )
+        )
+        self.assertTrue(
+            response.data['platform']['content']['favicons']['small'].startswith(
+                '/media/cache'
+            )
+        )

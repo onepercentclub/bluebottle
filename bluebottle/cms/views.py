@@ -18,15 +18,18 @@ class ResultPageDetail(RetrieveAPIView):
         obj = self.get_object()
         tz = timezone(settings.TIME_ZONE)
 
-        context['start_date'] = tz.localize(
-            datetime(*obj.start_date.timetuple()[:3])
-        )
-        context['end_date'] = tz.localize(
-            datetime.combine(
-                datetime(*obj.end_date.timetuple()[:3]),
-                time.max,
+        if obj.start_date:
+            context['start_date'] = tz.localize(
+                datetime(*obj.start_date.timetuple()[:3])
             )
-        )
+
+        if obj.end_date:
+            context['end_date'] = tz.localize(
+                datetime.combine(
+                    datetime(*obj.end_date.timetuple()[:3]),
+                    time.max,
+                )
+            )
         return context
 
 

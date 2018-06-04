@@ -242,6 +242,7 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
 
     def clean(self):
         if (
+            'status' in self.cleaned_data and
             self.cleaned_data['status'].slug == 'campaign' and
             'amount_asked' in self.cleaned_data and
             self.cleaned_data['amount_asked'].amount > 0 and

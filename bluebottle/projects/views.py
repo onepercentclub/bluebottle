@@ -4,18 +4,17 @@ from django.http.response import HttpResponse
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import (
-    ProjectBudgetLineSerializer, ProjectDocumentSerializer,
+    ProjectBudgetLineSerializer,
     ProjectMediaSerializer, ProjectImageSerializer,
     ProjectSupportSerializer, ProjectWallpostPhotoSerializer)
 from bluebottle.utils.admin import prep_field
 from bluebottle.utils.views import (
-    RetrieveAPIView, ListCreateAPIView, CreateAPIView, OwnerListViewMixin, ListAPIView,
+    RetrieveAPIView, ListCreateAPIView, CreateAPIView, OwnerListViewMixin,
     RetrieveUpdateDestroyAPIView, PrivateFileView, UpdateAPIView
 )
 from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission
 )
-from bluebottle.utils.utils import get_client_ip
 from bluebottle.wallposts.models import MediaWallpostPhoto
 from .models import ProjectDocument, ProjectBudgetLine, Project, ProjectImage
 

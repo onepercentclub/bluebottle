@@ -233,15 +233,18 @@
                     <div class="sidebar-section">
                         <div class="apps-list-pinned">
                             {% for app in app_list %}
-                                <a{% if app.url %} href="{{ app.url }}"{% endif %} class="sidebar-link popup-section-link app-item" data-app-label="{{ app.app_label }}" data-popup-section-class="sidebar-popup-section-{{ app.app_label }}" data-order="{{ forloop.counter }}"{% if app.url_blank %} target="_blank"{% endif %}>
-                                    <span class="sidebar-right">
-                                        <span class="sidebar-right-arrow icon-arrow-right"></span>
-                                    </span>
+                                {% if app.has_perms %}
+                                    <a{% if app.url %} href="{{ app.url }}"{% endif %} class="sidebar-link popup-section-link app-item" data-app-label="{{ app.app_label }}" data-popup-section-class="sidebar-popup-section-{{ app.app_label }}" data-order="{{ forloop.counter }}"{% if app.url_blank %} target="_blank"{% endif %}>
+                                        <span class="sidebar-right">
+                                            <span class="sidebar-right-arrow icon-arrow-right"></span>
+                                        </span>
 
-                                    <span class="sidebar-link-label">
-                                        {{ app.label }}
-                                    </span>
-                                </a>
+                                        <span class="sidebar-link-label">
+                                            {{ app.label }}
+                                        </span>
+
+                                    </a>
+                                {% endif %}
                             {% endfor %}
                         </div>
                     </div>

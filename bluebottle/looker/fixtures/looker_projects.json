@@ -1,0 +1,11 @@
+[
+{
+    "model": "looker.lookerembed",
+    "pk": null,
+    "fields": {
+        "title": "Projects",
+        "type": "dashboard",
+        "looker_id": 12
+    }
+}
+]

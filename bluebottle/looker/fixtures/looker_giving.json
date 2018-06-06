@@ -1,0 +1,20 @@
+[
+{
+    "model": "looker.lookerembed",
+    "pk": null,
+    "fields": {
+        "title": "Giving - Donations",
+        "type": "dashboard",
+        "looker_id": 10
+    }
+},
+{
+    "model": "looker.lookerembed",
+    "pk": null,
+    "fields": {
+        "title": "Giving - Supporters",
+        "type": "dashboard",
+        "looker_id": 11
+    }
+}
+]

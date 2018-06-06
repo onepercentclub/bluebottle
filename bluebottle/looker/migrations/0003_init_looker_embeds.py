@@ -31,6 +31,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('looker', '0002_auto_20180328_1054'),
+        ('projects', '0078_auto_20180528_1414'),
     ]
 
     operations = [

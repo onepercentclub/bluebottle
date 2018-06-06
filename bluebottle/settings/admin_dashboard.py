@@ -164,15 +164,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
         ]
     },
     {
-        'label': _('Analytics'),
+        'label': _('Reporting'),
         'app_label': 'looker',
-        'permissions': ['looker.lookerembed'],
-        'items': [
-            {
-                'label': _('Manage Dashboards'),
-                'name': 'looker.lookerembed',
-            },
-        ]
+        'permissions': ['looker.access_looker_embeds'],
+        'items': []
     },
     {
         'label': _('Settings'),
@@ -201,6 +196,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
             {
                 'name': 'djmoney_rates.ratesource',
                 'permissions': ['djmoney_rates.change_ratesource']
+            },
+            {
+                'label': _('Manage Reporting'),
+                'name': 'looker.lookerembed',
             },
             {
                 'name': 'geo.country',

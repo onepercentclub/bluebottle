@@ -312,16 +312,25 @@
                                                 </a>
                                             </li>
                                         {% endif %}
-
-                                        {% for model in app.items %}
-                                            {% if model.has_perms %}
-                                                <li class="sidebar-popup-list-item{% if model.name %} model-{{ model.name }}{% endif %}{{ model.current|yesno:" current," }}">
-                                                    <a{% if model.url %} href="{{ model.url }}"{% endif %} class="sidebar-popup-list-item-link"{% if model.url_blank %} target="_blank"{% endif %}>
-                                                        {{ model.label }}
+                                        {% if app.app_label == 'looker' %}
+                                            {% for dashboard in looker_items %}
+                                                <li class="sidebar-popup-list-item">
+                                                    <a href="{% url 'jet-dashboard:looker-embed' dashboard.pk %}" class="sidebar-popup-list-item-link">
+                                                        {{ dashboard.title }}
                                                     </a>
                                                 </li>
-                                            {% endif %}
-                                        {% endfor %}
+                                            {% endfor %}
+                                        {% else %}
+                                            {% for model in app.items %}
+                                                {% if model.has_perms %}
+                                                    <li class="sidebar-popup-list-item{% if model.name %} model-{{ model.name }}{% endif %}{{ model.current|yesno:" current," }}">
+                                                        <a{% if model.url %} href="{{ model.url }}"{% endif %} class="sidebar-popup-list-item-link"{% if model.url_blank %} target="_blank"{% endif %}>
+                                                            {{ model.label }}
+                                                        </a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
                                     </ul>
                                 </div>
                             {% endif %}

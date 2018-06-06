@@ -32,8 +32,6 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
         url = urlparse(embed.url)
         query = parse_qs(url.query)
 
-        get_current_host.assert_called_with(False)
-
         self.assertEqual(url.scheme, 'https')
         self.assertEqual(
             url.netloc, 'looker.{}'.format(get_current_host.return_value)

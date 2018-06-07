@@ -13,7 +13,7 @@ def tenant(request):
         'properties': properties,
         'logo': site_settings.logo,
     }
-    if request.user.has_perm('looker.access_looker_embeds'):
+    if hasattr(request, 'user') and request.user.has_perm('looker.access_looker_embeds'):
         context['looker_items'] = LookerEmbed.objects.all()
 
     return context

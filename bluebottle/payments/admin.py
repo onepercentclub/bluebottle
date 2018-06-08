@@ -25,10 +25,12 @@ from bluebottle.payments_logger.admin import PaymentLogEntryInline
 from bluebottle.payments_telesom.admin import TelesomPaymentAdmin
 from bluebottle.payments_vitepay.admin import VitepayPaymentAdmin
 from bluebottle.payments_voucher.admin import VoucherPaymentAdmin
+from bluebottle.utils.admin import export_as_csv_action
 
 
 class OrderPaymentAdmin(admin.ModelAdmin):
     model = OrderPayment
+    date_hierarchy = 'created'
     raw_id_fields = ('user',)
     readonly_fields = ('order_link', 'payment_link', 'authorization_action',
                        'amount', 'integration_data', 'payment_method',
@@ -40,7 +42,19 @@ class OrderPaymentAdmin(admin.ModelAdmin):
     list_filter = ('status', 'payment_method')
     ordering = ('-created',)
 
-    actions = ['batch_check_status']
+    export_fields = (
+        ('user', 'user'),
+        ('order__id', 'order'),
+        ('amount_currency', 'currency'),
+        ('amount', 'amount'),
+        ('transaction_fee', 'transaction fee'),
+        ('status', 'status'),
+        ('created', 'created'),
+        ('closed', 'closed'),
+        ('payment_method', 'payment method'),
+    )
+
+    actions = [export_as_csv_action(fields=export_fields), 'batch_check_status']
 
     def get_urls(self):
         urls = super(OrderPaymentAdmin, self).get_urls()

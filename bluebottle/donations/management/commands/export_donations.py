@@ -1,4 +1,5 @@
 import json
+
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.db import connection
@@ -26,9 +27,7 @@ class Command(BaseCommand):
 
                 orders = Order.objects.filter(
                     status__in=('pending', 'success')
-                ).exclude(
-                    order_payments__payment_method=''
-                )
+                ).exclude(order_payments__payment_method='')
 
                 if options['start']:
                     orders = orders.filter(created__gte=options['start'])

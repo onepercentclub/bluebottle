@@ -32,6 +32,7 @@ class CategoryAdmin(AdminImageMixin, NonSortableParentAdmin):
     model = Category
     list_display = ('title', 'slug')
     inlines = (CategoryContentInline, CategoryProjectsInline)
+    ordering = ['title']
 
 
 admin.site.register(Category, CategoryAdmin)

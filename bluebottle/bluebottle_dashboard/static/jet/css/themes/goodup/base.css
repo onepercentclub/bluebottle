@@ -6807,6 +6807,9 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
       color: #281E50; }
     .change-list ul.toplinks li a {
       color: #281E50; }
+    .change-list ul.toplinks li.label, .change-list ul.toplinks li.label:hover, .change-list ul.toplinks li.label:active {
+      background-color: transparent;
+      color: #4E4E4E; }
 
 /* PAGINATOR */
 .paginator {
@@ -7578,11 +7581,6 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
           padding: 24px 0 24px 20px;
           margin-bottom: 0;
           font-size: 1rem; } }
-    .sidebar-popup-title:after { 
-      font-family: 'dashboard' !important;
-      float: right;
-      content: "\e921"; }
- 
     .sidebar-popup-search {
       background-color: #E3ECF2;
       color: #7f8fa4;

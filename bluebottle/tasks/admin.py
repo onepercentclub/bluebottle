@@ -199,7 +199,7 @@ class TaskStatusLogInline(admin.TabularInline):
 
 
 class TaskAdmin(admin.ModelAdmin):
-    date_hierarchy = 'created'
+    date_hierarchy = 'deadline'
 
     inlines = (TaskMemberAdminInline, TaskFileAdminInline, TaskStatusLogInline)
     save_as = True

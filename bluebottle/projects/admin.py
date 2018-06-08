@@ -309,8 +309,9 @@ class ProjectLocationInline(LatLongMapPickerMixin, admin.StackedInline):
 
 class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):
     form = ProjectAdminForm
-    date_hierarchy = 'created'
+    date_hierarchy = 'deadline'
     ordering = ('-created',)
+
     save_as = True
     search_fields = (
         'title', 'owner__first_name', 'owner__last_name', 'owner__email',

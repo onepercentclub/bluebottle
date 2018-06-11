@@ -17,6 +17,7 @@ class Category(models.Model):
                             help_text=_("Category Logo image"))
 
     class Meta:
+        ordering = ('title', )
         verbose_name = _("category")
         verbose_name_plural = _("categories")
 

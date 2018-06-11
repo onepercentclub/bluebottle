@@ -1,22 +1,23 @@
-from rest_framework import generics
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from bluebottle.geo.models import Location
 from bluebottle.geo.serializers import LocationSerializer
 from bluebottle.projects.models import Project
+from bluebottle.utils.views import TranslatedApiViewMixin
 
 from .serializers import CountrySerializer
 from .models import Country
 
 
-class CountryList(generics.ListAPIView):
+class CountryList(TranslatedApiViewMixin, ListAPIView):
     serializer_class = CountrySerializer
-    queryset = Country.objects.all()
+    queryset = Country.objects
 
     def get_queryset(self):
-        return self.queryset.translated().filter(alpha2_code__isnull=False).order_by(
-            'translations__name').all()
+        qs = super(CountryList, self).get_queryset()
+        return qs.filter(alpha2_code__isnull=False).all()
 
 
-class CountryDetail(generics.RetrieveAPIView):
+class CountryDetail(RetrieveAPIView):
     serializer_class = CountrySerializer
     queryset = Country.objects.all()
 
@@ -34,6 +35,6 @@ class UsedCountryList(CountryList):
         return qs.filter(id__in=project_country_ids)
 
 
-class LocationList(generics.ListAPIView):
+class LocationList(ListAPIView):
     serializer_class = LocationSerializer
     queryset = Location.objects.all()

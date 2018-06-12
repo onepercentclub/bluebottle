@@ -625,6 +625,13 @@ class ProjectAdminFormTest(BluebottleTestCase):
             'The bank details need to be reviewed before approving a project'
         )
 
+    def test_bank_details_reviewed_no_amount(self):
+        self.form.cleaned_data = {
+            'status': ProjectPhase.objects.get(slug='campaign'),
+            'bank_details_reviewed': False,
+        }
+        self.form.clean()
+
 
 class ProjectCustomFieldAdminTest(BluebottleAdminTestCase):
     """

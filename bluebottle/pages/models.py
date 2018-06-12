@@ -112,6 +112,7 @@ class Page(models.Model):
     body = PlaceholderField('blog_contents', plugins=[
         'TextPlugin',
         'ImageTextPlugin',
+        'OEmbedPlugin',
         'RawHtmlPlugin',
         'PicturePlugin',
         'DocumentPlugin'

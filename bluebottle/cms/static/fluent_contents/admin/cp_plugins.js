@@ -308,7 +308,9 @@ var cp_plugins = {};
       $fs_item = $("#" + itemId);
 
       // Re-enable the item
-      cp_plugins._set_input_values($fs_item, values);
+      if (!$fs_item.find('input[type=file]')) {
+        cp_plugins._set_input_values($fs_item, values);
+      }
       cp_plugins.enable_pageitem($fs_item);
       return $fs_item;
     };
@@ -536,9 +538,9 @@ var cp_plugins = {};
       return $.when(anim1, anim2).done(function() {
         // Only at the moment supreme, disable editor, swap DOM elements and restore editor.
         cp_plugins._fixate_item_height($fs_item);
-        // beforeMove();
+        beforeMove();
         fs_item[isUp ? 'insertBefore' : 'insertAfter'](relative);
-        // afterMove();
+        afterMove();
         cp_plugins._restore_item_height($fs_item);
 
         // Reset DOM positions

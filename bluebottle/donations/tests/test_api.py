@@ -622,8 +622,9 @@ class TestProjectDonationList(DonationApiTestCase):
         self.project3.set_status('campaign')
 
         order = OrderFactory.create(user=self.user1, status=StatusDefinition.SUCCESS)
-        self.donation = DonationFactory.create(amount=1000, project=self.project3,
-                               order=order)
+        self.donation = DonationFactory.create(
+            amount=1000, project=self.project3, order=order
+        )
 
         self.project_donation_list_url = reverse('project-donation-list')
 

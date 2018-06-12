@@ -96,7 +96,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEquals(response.status_code, 302)
         reset_mail = mail.outbox[0]
         self.assertEqual(reset_mail.to, [user.email])
-        self.assertTrue('Please go to the following page and choose a new password' in reset_mail.body)
+        self.assertTrue('Seems you\'ve requested a password reset for' in reset_mail.body)
 
 
 class MemberCustomFieldAdminTest(BluebottleAdminTestCase):

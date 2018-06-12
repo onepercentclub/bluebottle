@@ -146,7 +146,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
 class TotalAmountAdminChangeList(ChangeList):
     def get_results(self, *args, **kwargs):
-        self.model_admin.change_list_template = 'utils/admin/change_list.html'
+        self.model_admin.change_list_template = 'utils/admin/total_amount_change_list.html'
         super(TotalAmountAdminChangeList, self).get_results(*args, **kwargs)
 
         total_column = self.model_admin.total_column or 'amount'

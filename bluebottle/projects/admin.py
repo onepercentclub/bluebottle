@@ -243,6 +243,7 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
 
     def clean(self):
         if (
+            'status' in self.cleaned_data and
             self.cleaned_data['status'].slug == 'campaign' and
             'amount_asked' in self.cleaned_data and
             self.cleaned_data['amount_asked'].amount > 0 and
@@ -309,8 +310,9 @@ class ProjectLocationInline(LatLongMapPickerMixin, admin.StackedInline):
 
 class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):
     form = ProjectAdminForm
-    date_hierarchy = 'created'
+    date_hierarchy = 'deadline'
     ordering = ('-created',)
+
     save_as = True
     search_fields = (
         'title', 'owner__first_name', 'owner__last_name', 'owner__email',

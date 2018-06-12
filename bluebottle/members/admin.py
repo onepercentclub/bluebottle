@@ -330,12 +330,6 @@ class MemberAdmin(UserAdmin):
         reset_mail_url = reverse('admin:auth_user_password_reset_mail', kwargs={'user_id': obj.id})
         properties.set_tenant(connection.tenant)
 
-        # Don't show frontend password reset mail link for closed sites.
-        if properties.CLOSED_SITE:
-            return format_html(
-                "<a href='{}'>{}</a>",
-                reset_form_url, _("Reset password form")
-            )
         return format_html(
             "<a href='{}'>{}</a>  | <a href='{}'>{}</a>",
             reset_form_url, _("Reset password form"),

@@ -22,8 +22,11 @@ def _order_status_post_save(sender, instance, **kwargs):
     - Update amount on project when order is in an ending status.
     """
 
-    if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.PENDING,
-                           StatusDefinition.PLEDGED, StatusDefinition.FAILED]:
+    if instance.status in [
+        StatusDefinition.SUCCESS, StatusDefinition.PENDING,
+        StatusDefinition.REFUNDED, StatusDefinition.PLEDGED,
+        StatusDefinition.FAILED
+    ]:
 
         # Process each donation in the order
         for donation in instance.donations.all():

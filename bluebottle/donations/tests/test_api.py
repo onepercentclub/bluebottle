@@ -622,7 +622,7 @@ class TestProjectDonationList(DonationApiTestCase):
         self.project3.set_status('campaign')
 
         order = OrderFactory.create(user=self.user1, status=StatusDefinition.SUCCESS)
-        DonationFactory.create(amount=1000, project=self.project3,
+        self.donation = DonationFactory.create(amount=1000, project=self.project3,
                                order=order)
 
         self.project_donation_list_url = reverse('project-donation-list')
@@ -638,6 +638,25 @@ class TestProjectDonationList(DonationApiTestCase):
         self.assertEqual(donation['amount']['amount'], 1000.00)
         self.assertEqual(donation['amount']['currency'], 'EUR')
         self.assertEqual(donation['project'], self.project3.id)
+
+    def test_project_donation_failed(self, check_status_psp):
+        self.donation.order.transition_to('failed')
+        self.order.save()
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 0)
+
+    def test_project_donation_cancelled(self, check_status_psp):
+        self.donation.order.transition_to('refunded')
+        self.donation.order.transition_to('cancelled')
+        self.order.save()
+        response = self.client.get(self.project_donation_list_url,
+                                   {'project': self.project3.slug})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
 
     def test_successful_project_donation_list(self, check_status_psp):
         setattr(properties, 'SHOW_DONATION_AMOUNTS', True)

@@ -1,6 +1,8 @@
 /**
  * This file deals with the internal DOM manipulations within a content placeholder.
  * namely the plugin ("content item types") which are added, reordered, and removed there.
+ *
+ * Loek added an if-statement on line #314
  */
 var cp_plugins = {};
 
@@ -308,6 +310,7 @@ var cp_plugins = {};
       $fs_item = $("#" + itemId);
 
       // Re-enable the item
+      // Loek: Added this if statement
       if (!$fs_item.find('input[type=file]')) {
         cp_plugins._set_input_values($fs_item, values);
       }

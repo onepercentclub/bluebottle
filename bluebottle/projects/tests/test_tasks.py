@@ -50,7 +50,7 @@ class TestRefund(BluebottleTestCase):
         payment.save()
 
     def mock_side_effect(self):
-        self.order_payment.payment.status = 'refunded'
+        self.order_payment.payment.status = 'refund_requested'
         self.order_payment.payment.save()
 
     def test_refund(self):
@@ -62,6 +62,12 @@ class TestRefund(BluebottleTestCase):
             refund_project(connection.tenant, self.project)
 
         self.assertEqual(refund.call_count, 1)
+        self.order = Order.objects.get(pk=self.order.pk)
+        self.assertEqual(self.order.status, 'refund_requested')
+
+        self.order_payment.payment.status = 'refunded'
+        self.order_payment.payment.save()
+
         self.order = Order.objects.get(pk=self.order.pk)
         self.assertEqual(self.order.status, 'cancelled')
 
@@ -95,4 +101,10 @@ class TestRefund(BluebottleTestCase):
 
         self.order = Order.objects.get(pk=self.order.pk)
         self.assertEqual(refund.call_count, 1)
+        self.assertEqual(self.order.status, 'refund_requested')
+
+        self.order_payment.payment.status = 'refunded'
+        self.order_payment.payment.save()
+
+        self.order = Order.objects.get(pk=self.order.pk)
         self.assertEqual(self.order.status, 'cancelled')

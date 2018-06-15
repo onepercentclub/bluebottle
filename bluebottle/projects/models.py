@@ -357,10 +357,7 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.payout_status == 're_scheduled' and self.campaign_paid_out:
             self.campaign_paid_out = None
 
-        # If the project is re-opened, payout-status should be cleaned
-        if self.status.slug not in ["done-complete", "done-incomplete"] and  \
-                self.payout_status == 'needs_approval':
-            self.payout_status = None
+        self.update_payout_approval()
 
         if not self.task_manager:
             self.task_manager = self.owner
@@ -679,17 +676,27 @@ class Project(BaseProject, PreviousStatusMixin):
             self.status = ProjectPhase.objects.get(slug='done-complete')
             self.save()
 
+    def update_payout_approval(self):
+        if self.is_funding \
+                and self.status.slug in ["done-complete", "done-incomplete"] \
+                and not self.payout_status:
+            self.payout_status = 'needs_approval'
+
+        # If the project is re-opened, payout-status should be cleaned
+        if self.status.slug not in ["done-complete", "done-incomplete"] \
+                and self.payout_status == 'needs_approval':
+            self.payout_status = None
+
     def update_status_after_deadline(self):
         if self.status.slug == 'campaign':
             if self.is_funding:
                 if self.amount_donated + self.amount_extra >= self.amount_asked:
                     self.status = ProjectPhase.objects.get(slug="done-complete")
-                    self.payout_status = 'needs_approval'
                 elif self.amount_donated.amount <= 20 or not self.campaign_started:
                     self.status = ProjectPhase.objects.get(slug="closed")
                 else:
                     self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                    self.payout_status = 'needs_approval'
+                self.update_payout_approval()
             else:
                 if self.task_set.filter(
                         status__in=[Task.TaskStatuses.in_progress,

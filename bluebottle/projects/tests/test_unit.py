@@ -55,6 +55,12 @@ class TestProjectStatusUpdate(BluebottleTestCase):
 
         self.expired_project.deadline = timezone.now() - timedelta(days=1)
 
+        self.running_project = ProjectFactory.create(
+            amount_asked=5000, campaign_started=some_days_ago,
+            status=self.campaign)
+
+        self.running_project.deadline = timezone.now() + timedelta(days=1)
+
     def test_deadline_end_of_day(self):
         self.expired_project.save()
 
@@ -148,6 +154,28 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.campaign)
         self.assertEqual(self.expired_project.payout_status, None)
+
+    def test_admin_closed_more_than_enough(self):
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=self.running_project,
+            order=order,
+            amount=5001
+        )
+        donation.save()
+
+        order.locked()
+        order.save()
+        order.success()
+        order.save()
+        self.running_project.save()
+        self.assertEqual(self.running_project.payout_status, None)
+        #  Now manually close it (e.g. through admin). Payout status should be set to needs_approval
+        self.running_project.status = self.complete
+        self.running_project.campaign_ended = timezone.now()
+        self.running_project.save()
+        self.assertEqual(self.running_project.payout_status, 'needs_approval')
 
     def test_expired_enough_by_matching(self):
         """ Less donated than requested  but with matching- status done complete """

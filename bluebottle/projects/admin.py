@@ -77,6 +77,7 @@ class ProjectThemeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'project_link')
     readonly_fields = ('project_link', )
     fields = ('name', 'slug', 'description', 'disabled') + readonly_fields
+    ordering = ['translations__name']
 
     def project_link(self, obj):
         url = "{}?theme_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)

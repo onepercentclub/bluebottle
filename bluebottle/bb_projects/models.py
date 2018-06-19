@@ -41,7 +41,6 @@ class ProjectTheme(TranslatableModel):
         super(ProjectTheme, self).save(**kwargs)
 
     class Meta:
-        ordering = ['translations__name']
         verbose_name = _('project theme')
         verbose_name_plural = _('project themes')
         permissions = (

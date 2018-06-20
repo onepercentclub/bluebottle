@@ -6,28 +6,31 @@ from django import forms
 from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.models import Group
 from django.contrib.auth.tokens import default_token_generator
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.forms.models import ModelFormMetaclass
 from django.http import HttpResponseRedirect
+from django.template import loader
 from django.utils.html import format_html
+from django.utils.http import int_to_base36
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.bb_follow.models import Follow
-from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 
 from bluebottle.bb_accounts.models import UserAddress
+from bluebottle.bb_follow.models import Follow
+from bluebottle.clients import properties
+from bluebottle.clients.utils import tenant_url
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Location
 from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
-from bluebottle.clients import properties
 
+from bluebottle.utils.email_backend import send_mail
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member
 
 
@@ -325,9 +328,13 @@ class MemberAdmin(UserAdmin):
     def reset_password(self, obj):
         reset_form_url = reverse('admin:auth_user_password_change', args=(obj.id, ))
         reset_mail_url = reverse('admin:auth_user_password_reset_mail', kwargs={'user_id': obj.id})
-        return format_html("<a href='{}'>{}</a>  | <a href='{}'>{}</a>  ",
-                           reset_form_url, _("Reset password form"),
-                           reset_mail_url, _("Send reset password mail"))
+        properties.set_tenant(connection.tenant)
+
+        return format_html(
+            "<a href='{}'>{}</a>  | <a href='{}'>{}</a>",
+            reset_form_url, _("Reset password form"),
+            reset_mail_url, _("Send reset password mail")
+        )
 
     def login_as_user(self, obj):
         return format_html(
@@ -378,15 +385,22 @@ class MemberAdmin(UserAdmin):
 
     def send_password_reset_mail(self, request, user_id):
         user = Member.objects.get(pk=user_id)
-        form = PasswordResetForm({'email': user.email})
-        form.is_valid()
-        opts = {
-            'use_https': True,
-            'token_generator': default_token_generator,
-            'from_email': properties.TENANT_MAIL_PROPERTIES['address'],
-            'request': request,
+        context = {
+            'email': user.email,
+            'site': tenant_url(),
+            'site_name': tenant_url(),
+            'uid': int_to_base36(user.pk),
+            'user': user,
+            'token': default_token_generator.make_token(user),
         }
-        form.save(**opts)
+        subject = loader.render_to_string('bb_accounts/password_reset_subject.txt', context)
+        subject = ''.join(subject.splitlines())
+        send_mail(
+            template_name='bb_accounts/password_reset_email',
+            to=user,
+            subject=subject,
+            **context
+        )
         message = _('User {name} will receive an email to reset password.').format(name=user.full_name)
         self.message_user(request, message)
         return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))

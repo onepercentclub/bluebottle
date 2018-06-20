@@ -298,7 +298,10 @@ class Skill(TranslatableModel):
     )
 
     def __unicode__(self):
-        return self.name
+        try:
+            return self.name
+        except Exception:
+            return "theme {}".format(self.id)
 
     class Meta:
         ordering = ['translations__name']

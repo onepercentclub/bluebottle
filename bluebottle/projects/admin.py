@@ -252,6 +252,7 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
             raise forms.ValidationError(
                 _('The bank details need to be reviewed before approving a project')
             )
+        super(ProjectAdminForm, self).clean()
 
     def save(self, commit=True):
         project = super(ProjectAdminForm, self).save(commit=commit)

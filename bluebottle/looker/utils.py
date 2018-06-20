@@ -17,7 +17,7 @@ from bluebottle.utils.utils import get_current_host
 
 
 class LookerSSOEmbed(object):
-    session_length = 60 * 10
+    session_length = settings.LOOKER_SESSION_LENGTH
     models = ('Projects', )
     permissions = ('see_user_dashboards', 'see_lookml_dashboards', 'access_data', 'see_looks', )
 

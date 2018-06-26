@@ -4,11 +4,12 @@ from geoposition.fields import GeopositionField
 from sorl.thumbnail import ImageField
 from parler.models import TranslatableModel, TranslatedFields
 
+from bluebottle.utils.models import SortableTranslatableModel
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
 
 
-class GeoBaseModel(TranslatableModel):
+class GeoBaseModel(SortableTranslatableModel):
     """
     Abstract base model for the UN M.49 geoscheme.
     Refs: http://unstats.un.org/unsd/methods/m49/m49.htm

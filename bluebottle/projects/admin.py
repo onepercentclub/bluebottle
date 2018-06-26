@@ -46,7 +46,7 @@ from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
 from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin, \
-    TranslatedUnionFieldListFilter, SortableTranslatableAdmin
+    TranslatedUnionFieldListFilter
 from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
 from bluebottle.votes.models import Vote
 
@@ -73,11 +73,10 @@ def mark_as(model_admin, request, queryset):
         project.save()
 
 
-class ProjectThemeAdmin(SortableTranslatableAdmin):
+class ProjectThemeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'project_link')
     readonly_fields = ('project_link', )
     fields = ('name', 'slug', 'description', 'disabled') + readonly_fields
-    ordering = ['translations__name']
 
     def project_link(self, obj):
         url = "{}?theme_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)

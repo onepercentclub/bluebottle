@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -203,6 +203,14 @@ class TestProjectThemeList(ProjectEndpointTestCase):
 
     Endpoint: /api/projects/themes
     """
+    def setUp(self):
+        super(TestProjectThemeList, self).setUp()
+        for theme in ProjectTheme.objects.order_by('pk'):
+            for translation in theme.translations.all():
+                translation.name = '{}:{}'.format(translation.language_code, translation.name)
+                translation.save()
+
+
     def test_api_project_theme_list_endpoint(self):
         """
         Test the API endpoint for Project theme list.
@@ -219,6 +227,59 @@ class TestProjectThemeList(ProjectEndpointTestCase):
             self.assertIn('id', item)
             self.assertIn('name', item)
             self.assertIn('description', item)
+
+    def test_api_project_theme_list_translations_en(self):
+        """
+        Test the API endpoint for Project theme list.
+        """
+        response = self.client.get(
+            reverse('project_theme_list'),
+            headers={'X-Application-Language': 'en'}
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(len(data), 17)
+
+        for item in data:
+            self.assertTrue(item['name'].startswith('en'))
+
+    def test_api_project_theme_list_translations_nl(self):
+        """
+        Test the API endpoint for Project theme list.
+        """
+        response = self.client.get(
+            reverse('project_theme_list'),
+            **{'HTTP_X_APPLICATION_LANGUAGE': 'nl'}
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(len(data), 17)
+
+        for item in data:
+            self.assertTrue(item['name'].startswith('nl'))
+
+    def test_api_project_theme_list_translations_fallback(self):
+        """
+        Test the API endpoint for Project theme list.
+        """
+        english_only_theme = ProjectTheme.objects.all()[0]
+        english_only_theme.delete_translation('nl')
+        response = self.client.get(
+            reverse('project_theme_list'),
+            **{'HTTP_X_APPLICATION_LANGUAGE': 'nl'}
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        data = json.loads(response.content)
+
+        self.assertEqual(len(data), 17)
 
     def test_api_project_theme_list_endpoint_disabled(self):
         """

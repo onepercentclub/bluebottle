@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from geoposition.fields import GeopositionField
 from sorl.thumbnail import ImageField
-from parler.models import TranslatableModel, TranslatedFields
+from parler.models import TranslatedFields
 
 from bluebottle.utils.models import SortableTranslatableModel
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \

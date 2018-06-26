@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 
 from rest_framework import status
 
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -209,7 +209,6 @@ class TestProjectThemeList(ProjectEndpointTestCase):
             for translation in theme.translations.all():
                 translation.name = '{}:{}'.format(translation.language_code, translation.name)
                 translation.save()
-
 
     def test_api_project_theme_list_endpoint(self):
         """

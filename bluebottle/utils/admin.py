@@ -6,13 +6,9 @@ from moneyed import Money
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
-from django.db.models import Case, When, fields
 from django.db.models.aggregates import Sum
 
 from django_singleton_admin.admin import SingletonAdmin
-
-from parler.admin import TranslatableAdmin
-from django_subquery.expressions import Subquery, OuterRef
 
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField

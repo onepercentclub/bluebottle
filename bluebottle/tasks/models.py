@@ -10,7 +10,7 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from parler.models import TranslatableModel, TranslatedFields
+from parler.models import TranslatedFields
 
 from bluebottle.utils.models import MailLog
 from tenant_extras.utils import TenantLanguage

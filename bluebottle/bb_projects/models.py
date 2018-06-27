@@ -13,11 +13,12 @@ from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
+from bluebottle.utils.models import SortableTranslatableModel
 from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition
 
 
-class ProjectTheme(TranslatableModel):
+class ProjectTheme(SortableTranslatableModel):
 
     """ Themes for Projects. """
 

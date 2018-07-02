@@ -2,6 +2,9 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
+from parler.models import TranslatableModel
+from bluebottle.utils.managers import SortableTranslatableManager
+
 import bluebottle.utils.monkey_patch_migration  # noqa
 import bluebottle.utils.monkey_patch_corsheaders  # noqa
 import bluebottle.utils.monkey_patch_parler  # noqa
@@ -71,3 +74,10 @@ class BasePlatformSettings(models.Model):
 
     def __unicode__(self):
         return 'Settings'
+
+
+class SortableTranslatableModel(TranslatableModel):
+    class Meta:
+        abstract = True
+
+    objects = SortableTranslatableManager()

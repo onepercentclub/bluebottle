@@ -6807,6 +6807,9 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
       color: #281E50; }
     .change-list ul.toplinks li a {
       color: #281E50; }
+    .change-list ul.toplinks li.label, .change-list ul.toplinks li.label:hover, .change-list ul.toplinks li.label:active {
+      background-color: transparent;
+      color: #4E4E4E; }
 
 /* PAGINATOR */
 .paginator {
@@ -7277,12 +7280,16 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
   transform: translate3d(-100%, 0, 0); }
   @media only screen and (max-width: 960px) {
     .sidebar {
-      width: 360px;
+      width: 200px;
       padding-bottom: 0;
-      transition: transform 0.3s cubic-bezier(0, 0.5, 0.5, 1); } }
+      transition: transform 0.3s cubic-bezier(0, 0.5, 0.5, 1); }
+      body.menu-pinned .sidebar {
+        transform: translate3d(0px, 0, 0); } }
   @media only screen and (max-width: 480px) {
     .sidebar {
-      width: 80%; } }
+      width: 200px; }
+      body.menu-pinned .sidebar {
+        transform: translate3d(0px, 0, 0); } }
   .sidebar.sidebar-opened {
     transform: none; }
     @media only screen and (max-width: 960px) {
@@ -7305,11 +7312,11 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
     line-height: 44px;
     transition: transform 0.3s; }
     @media only screen and (max-width: 960px) {
-      .sidebar-header.sidebar-opened {
-        transform: translate3d(360px, 0, 0); } }
+      body.menu-pinned .sidebar-header {
+        transform: translate3d(200px, 0, 0); } }
     @media only screen and (max-width: 480px) {
-      .sidebar-header.sidebar-opened {
-        transform: translate3d(80%, 0, 0); } }
+      body.menu-pinned .sidebar-header {
+        transform: translate3d(200px, 0, 0); } }
     .sidebar-header-wrapper {
       display: none;
       background-color: #281E50;
@@ -7342,23 +7349,20 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
         display: none;
         font-size: 20px;
         color: #FFFFFF; }
-    .sidebar-header.sidebar-opened .sidebar-header-menu-icon.icon-menu {
+    body.menu-pinned .sidebar-header-menu-icon.icon-menu {
       display: none; }
-    .sidebar-header.sidebar-opened .sidebar-header-menu-icon.icon-cross {
+    body.menu-pinned .sidebar-header-menu-icon.icon-cross {
       display: inline; }
   .sidebar-close {
-    display: none;
     float: right;
     padding: 4px;
-    margin: 12px 18px 0 12px;
-    background-color: #E3ECF2;
-    border-radius: 5px; }
+    margin: 12px 12px 0 12px; }
     @media only screen and (max-width: 960px) {
       .sidebar-close {
         display: inline-block; } }
     .sidebar-close-icon {
       color: #7f8fa4;
-      font-size: 28px;
+      font-size: 18px;
       vertical-align: middle; }
   .sidebar-wrapper {
     height: 100%;
@@ -7547,7 +7551,10 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
     top: 410px; }
     @media only screen and (max-width: 960px) {
       .sidebar-popup {
-        width: 360px; } }
+        top: 360px;
+        width: 200px; }
+        body.menu-pinned .sidebar-popup {
+          left: 200px; } }
     @media only screen and (max-width: 480px) {
       .sidebar-popup {
         width: 80%; } }
@@ -7578,11 +7585,6 @@ fieldset a, fieldset a:visited, fieldset a:hover, fieldset a:focus {
           padding: 24px 0 24px 20px;
           margin-bottom: 0;
           font-size: 1rem; } }
-    .sidebar-popup-title:after { 
-      font-family: 'dashboard' !important;
-      float: right;
-      content: "\e921"; }
- 
     .sidebar-popup-search {
       background-color: #E3ECF2;
       color: #7f8fa4;
@@ -9440,11 +9442,6 @@ body.login {
 
 .delete label.vCheckboxLabel {
   color: #ffffff; }
-
-/* Hide hamburger */
-.sidebar-opened .icon-menu:before,
-.sidebar-dependent .icon-menu:before {
-  content: ""; }
 
 /* Extra labels */
 .admin-label {

@@ -20,6 +20,7 @@ class Category(models.Model):
         ordering = ('title', )
         verbose_name = _("category")
         verbose_name_plural = _("categories")
+        ordering = ['title']
 
     def __unicode__(self):
         return self.title

@@ -16,7 +16,7 @@ class TenantAwareParlerAppsettings(object):
         return add_default_language_settings({
             1: [{'code': lang[0]} for lang in properties.LANGUAGES],
             'default': {
-                'fallbacks': [properties.LANGUAGE_CODE],
+                'fallbacks': [lang[0] for lang in properties.LANGUAGES],
                 'hide_untranslated': False
             }
         })

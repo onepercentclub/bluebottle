@@ -90,30 +90,28 @@ SideBarPopup.prototype = {
         var $popupContainer = $sidebar.find('.sidebar-popup-container');
         var $popup = $sidebar.find('.sidebar-popup');
 
-        $sidebar.find('.popup-section-link').on('mouseenter', function() {
-            if (!$(document.documentElement).hasClass('touchevents')) {
-                self.onSectionLinkInteracted($popupContainer, $(this));
-            }
-        }).on('mouseleave', function() {
-            self.closePopup($popupContainer);
-        }).on('click', function(e) {
+        $sidebar.find('.popup-section-link').on('click', function(e) {
             e.preventDefault();
-
-            if (!$(document.documentElement).hasClass('touchevents') && $(this).attr('href')) {
-                document.location = $(this).attr('href');
-            } else {
-                self.onSectionLinkInteracted($popupContainer, $(this));
-            }
+            self.onSectionLinkInteracted($popupContainer, $(this));
+            setTimeout(
+                function () {
+                    $(document.body).one('click', function(e) {
+                        if (!$(e.target).parent('.popup-section-link').length) {
+                            self.closePopup($popupContainer);
+                            if ($(window).width() < 960) {
+                                var open = !$(document.body).hasClass('menu-pinned');
+                                $(document.body).toggleClass('menu-pinned', open);
+                                $.cookie('sidebar_pinned', false, { expires: 365, path: '/' });
+                            }
+                        }
+                    });
+                }, 
+                500
+            );
         });
 
         $sidebar.find('.sidebar-back').on('click touchend', function(e) {
             e.preventDefault();
-            self.closePopup($popupContainer);
-        });
-
-        $popup.on('mouseenter', function() {
-            self.openPopup($popupContainer, 0);
-        }).on('mouseleave', function() {
             self.closePopup($popupContainer);
         });
     },

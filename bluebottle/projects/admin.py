@@ -615,6 +615,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             ('status', UnionFieldListFilter),
             ('theme', TranslatedUnionFieldListFilter),
             ('task__skill', TranslatedUnionFieldListFilter),
+            ProjectReviewerFilter,
             'categories',
             'project_type',
         ]

@@ -11,7 +11,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.urlresolvers import reverse
 from django.db import connection
 from django.forms.models import ModelFormMetaclass
-from django.http import HttpResponseRedirect
+from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
@@ -19,6 +19,7 @@ from django.utils.translation import ugettext_lazy as _
 
 
 from bluebottle.bb_accounts.models import UserAddress
+from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.bb_follow.models import Follow
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
@@ -172,6 +173,7 @@ class MemberAdmin(UserAdmin):
                 'username',
                 'phone_number',
                 'reset_password',
+                'resend_welcome_link',
                 'last_login',
                 'date_joined',
                 'deleted',
@@ -230,8 +232,8 @@ class MemberAdmin(UserAdmin):
 
     readonly_fields = ('date_joined', 'last_login',
                        'updated', 'deleted', 'login_as_user',
-                       'reset_password', 'projects_managed',
-                       'tasks', 'donations', 'following')
+                       'reset_password', 'resend_welcome_link',
+                       'projects_managed', 'tasks', 'donations', 'following')
 
     export_fields = (
         ('username', 'username'),
@@ -336,6 +338,13 @@ class MemberAdmin(UserAdmin):
             reset_mail_url, _("Send reset password mail")
         )
 
+    def resend_welcome_link(self, obj):
+        welcome_mail_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'user_id': obj.id})
+        return format_html(
+            "<a href='{}'>{}</a>",
+            welcome_mail_url, _("Resend welcome email"),
+        )
+
     def login_as_user(self, obj):
         return format_html(
             u"<a href='/login/user/{}'>{}</a>",
@@ -379,12 +388,20 @@ class MemberAdmin(UserAdmin):
             url(r'^password-reset/(?P<user_id>\d+)/$',
                 self.send_password_reset_mail,
                 name='auth_user_password_reset_mail'
+                ),
+            url(r'^resend_welcome_email/(?P<user_id>\d+)/$',
+                self.resend_welcome_email,
+                name='auth_user_resend_welcome_mail'
                 )
         ]
         return extra_urls + urls
 
     def send_password_reset_mail(self, request, user_id):
+        if not request.user.has_perm('members.change_member'):
+            return HttpResponseForbidden('Not allowed to change user')
+
         user = Member.objects.get(pk=user_id)
+
         context = {
             'email': user.email,
             'site': tenant_url(),
@@ -403,6 +420,17 @@ class MemberAdmin(UserAdmin):
         )
         message = _('User {name} will receive an email to reset password.').format(name=user.full_name)
         self.message_user(request, message)
+        return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
+
+    def resend_welcome_email(self, request, user_id):
+        if not request.user.has_perm('members.change_member'):
+            return HttpResponseForbidden('Not allowed to change user')
+
+        user = Member.objects.get(pk=user_id)
+        send_welcome_mail(user)
+        message = _('User {name} will receive an welcome email.').format(name=user.full_name)
+        self.message_user(request, message)
+
         return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
 
     def login_as_redirect(self, *args, **kwargs):

@@ -203,7 +203,9 @@ class Project(BaseProject, PreviousStatusMixin):
     bank_details_reviewed = models.BooleanField(
         _('Bank details reviewed'),
         help_text=_(
-            'Review the project documents before marking the bank details as reviewed. '
+            'Review the project documents before marking the bank details as reviewed.'
+            'After setting this project to running, the project documents will be deleted.'
+            'Also, make sure to remove the documents from your device after downloading them.'
         ),
         default=False
     )

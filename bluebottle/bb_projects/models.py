@@ -175,7 +175,7 @@ class BaseProject(models.Model):
 
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
-    location = models.ForeignKey('geo.Location', null=True, blank=True)
+    location = models.ForeignKey('geo.Location', null=True, blank=True, on_delete=models.SET_NULL)
     place = models.CharField(help_text=_('Geographical location'),
                              max_length=200, null=True, blank=True)
 

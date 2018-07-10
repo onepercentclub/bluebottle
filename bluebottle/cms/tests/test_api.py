@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+import os
 
 import mock
 
@@ -12,7 +13,12 @@ from moneyed.classes import Money
 
 from rest_framework import status
 from fluent_contents.models import Placeholder
+
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
+from fluent_contents.plugins.text.models import TextItem
+from bluebottle.contentplugins.models import PictureItem
+
+from bluebottle.pages.models import DocumentItem, ImageTextItem
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.cms.models import (
@@ -23,8 +29,10 @@ from bluebottle.cms.models import (
 )
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.news import NewsItemFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.surveys import SurveyFactory
+from bluebottle.test.factory_models.pages import PageFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.cms import (
     ResultPageFactory, HomePageFactory, StatFactory, StepFactory,
@@ -302,8 +310,8 @@ class HomePageTestCase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(response.data['blocks'][0]['type'], 'rawhtmlitem')
-        self.assertEqual(response.data['blocks'][0]['content'], 'Test content')
+        self.assertEqual(response.data['blocks'][0]['type'], 'raw-html')
+        self.assertEqual(response.data['blocks'][0]['html'], '<p>Test content</p>')
 
     def test_projects_from_homepage(self):
         done_complete = ProjectPhase.objects.get(slug='done-complete')
@@ -450,6 +458,100 @@ class HomePageTestCase(BluebottleTestCase):
 
         self.assertEqual(block['preamble'], 'Hi')
         self.assertTrue(block['greeting'] in greetings)
+
+
+class NewsItemTestCase(BluebottleTestCase):
+    """
+    Test the page cms endpoint.
+    """
+
+    def setUp(self):
+        super(NewsItemTestCase, self).setUp()
+        self.init_projects()
+        self.news_item = NewsItemFactory.create()
+        self.placeholder = self.news_item.contents
+
+        self.url = reverse('news-item-detail', args=(self.news_item.slug, ))
+
+    def test_news_item(self):
+        html = RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(response.data['title'], self.news_item.title)
+        self.assertEqual(response.data['language'], self.news_item.language)
+        self.assertEqual(response.data['author']['id'], self.news_item.author.pk)
+        self.assertEqual(response.data['allow_comments'], self.news_item.allow_comments)
+        self.assertTrue(response.data['main_image'].startswith('/media/cache'))
+        self.assertEqual(response.data['blocks'][0]['type'], 'raw-html')
+        self.assertEqual(response.data['blocks'][0]['html'], html.html)
+
+
+class PageTestCase(BluebottleTestCase):
+    """
+    Test the page cms endpoint.
+    """
+
+    def setUp(self):
+        super(PageTestCase, self).setUp()
+        self.init_projects()
+        self.page = PageFactory.create()
+        self.placeholder = Placeholder.objects.create_for_object(self.page, slot='blog_contents')
+
+        self.url = reverse('page-detail', args=(self.page.slug, ))
+
+    def test_page(self):
+        html = RawHtmlItem.objects.create_for_placeholder(self.placeholder, html='<p>Test content</p>')
+        text = TextItem.objects.create_for_placeholder(self.placeholder, text='<p>Test content</p>')
+        document = DocumentItem.objects.create_for_placeholder(
+            self.placeholder,
+            document=File(open('./bluebottle/projects/test_images/upload.png')),
+            text='Some file upload'
+        )
+        picture = PictureItem.objects.create_for_placeholder(
+            self.placeholder,
+            image=File(open('./bluebottle/projects/test_images/upload.png')),
+            align='center'
+        )
+        image_text = ImageTextItem.objects.create_for_placeholder(
+            self.placeholder,
+            image=File(open('./bluebottle/projects/test_images/upload.png')),
+            text='some text',
+            align='center'
+        )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(response.data['title'], self.page.title)
+        self.assertEqual(response.data['language'], self.page.language)
+        self.assertEqual(response.data['full_page'], self.page.full_page)
+
+        self.assertEqual(response.data['blocks'][0]['type'], 'raw-html')
+        self.assertEqual(response.data['blocks'][0]['html'], html.html)
+
+        self.assertEqual(response.data['blocks'][1]['type'], 'text')
+        self.assertEqual(response.data['blocks'][1]['text'], text.text)
+
+        self.assertEqual(response.data['blocks'][2]['type'], 'document')
+        self.assertEqual(
+            os.path.basename(response.data['blocks'][2]['document']),
+            os.path.basename(document.document.name)
+        )
+
+        self.assertEqual(response.data['blocks'][3]['type'], 'image')
+        self.assertEqual(response.data['blocks'][3]['align'], picture.align)
+        self.assertTrue(
+            response.data['blocks'][3]['image'].startswith('/media/cache/')
+        )
+
+        self.assertEqual(response.data['blocks'][4]['type'], 'image-text')
+        self.assertEqual(response.data['blocks'][4]['align'], image_text.align)
+        self.assertTrue(
+            response.data['blocks'][4]['image'].startswith('/media/cache/')
+        )
 
 
 class SitePlatformSettingsTestCase(BluebottleTestCase):

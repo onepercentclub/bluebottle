@@ -81,3 +81,10 @@ class NewsItem(models.Model):
     class Meta:
         verbose_name = _("news item")
         verbose_name_plural = _("news items")
+
+        permissions = (
+            ('api_read_newsitem', 'Can view news items through the API'),
+            ('api_add_newsitem', 'Can add news items through the API'),
+            ('api_change_newsitem', 'Can change news items through the API'),
+            ('api_delete_newsitem', 'Can delete news items through the API'),
+        )

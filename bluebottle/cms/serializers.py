@@ -2,12 +2,19 @@ from bluebottle.tasks.serializers import TaskPreviewSerializer
 from django.db import connection
 from django.db.models import Sum
 
+from fluent_contents.plugins.rawhtml.models import RawHtmlItem
+from fluent_contents.plugins.text.models import TextItem
+from fluent_contents.plugins.oembeditem.models import OEmbedItem
+
 from bluebottle.bluebottle_drf2.serializers import (
     ImageSerializer, SorlImageField
 )
+from bluebottle.contentplugins.models import PictureItem
 from bluebottle.members.models import Member
 from bluebottle.members.serializers import UserPreviewSerializer
+from bluebottle.news.models import NewsItem
 from bluebottle.orders.models import Order
+from bluebottle.pages.models import Page, DocumentItem, ImageTextItem
 from bluebottle.projects.models import Project
 from bluebottle.statistics.statistics import Statistics
 
@@ -28,11 +35,62 @@ from bluebottle.surveys.serializers import QuestionSerializer
 from bluebottle.utils.fields import SafeField
 
 
-class RichTextContentSerializer(serializers.Serializer):
-    text = serializers.CharField()
+class ItemSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField()
+
+    def get_type(self, obj):
+        return self.item_type
+
+
+class RawHtmlItemSerializer(ItemSerializer):
+    html = serializers.CharField()
+    item_type = 'raw-html'
 
     class Meta:
-        fields = ('text', 'type')
+        model = RawHtmlItem
+        fields = ('id', 'html', 'type', )
+
+
+class DocumentItemSerializer(ItemSerializer):
+    item_type = 'document'
+
+    class Meta:
+        model = DocumentItem
+        fields = ('id', 'text', 'document', 'type', )
+
+
+class ImageTextItemSerializer(ItemSerializer):
+    image = SorlImageField('100x100', crop='center')
+    item_type = 'image-text'
+
+    class Meta:
+        model = ImageTextItem
+        fields = ('id', 'text', 'image', 'ratio', 'align', 'type', )
+
+
+class PictureItemSerializer(ItemSerializer):
+    image = SorlImageField('100x100', crop='center')
+    item_type = 'image'
+
+    class Meta:
+        model = PictureItem
+        fields = ('id', 'align', 'image', 'type', )
+
+
+class OEmbedItemSerializer(ItemSerializer):
+    item_type = 'embed'
+
+    class Meta:
+        model = OEmbedItem
+        fields = ('id', 'title', 'width', 'height', 'html', 'type', )
+
+
+class TextItemSerializer(ItemSerializer):
+    item_type = 'text'
+
+    class Meta:
+        model = TextItem
+        fields = ('id', 'text', 'type', )
 
 
 class MediaFileContentSerializer(serializers.Serializer):
@@ -43,7 +101,7 @@ class MediaFileContentSerializer(serializers.Serializer):
         return obj.file.url
 
     class Meta:
-        fields = ('url', 'type')
+        fields = ('id', 'url', 'type')
 
 
 class StatSerializer(serializers.ModelSerializer):
@@ -388,6 +446,7 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
 
 class DefaultBlockSerializer(serializers.Serializer):
     def to_representation(self, obj):
+        import ipdb; ipdb.set_trace()
         return {
             'type': obj.__class__._meta.model_name,
             'content': str(obj)
@@ -428,6 +487,18 @@ class BlockSerializer(serializers.Serializer):
             serializer = LinksContentSerializer
         elif isinstance(obj, WelcomeContent):
             serializer = WelcomeContentSerializer
+        elif isinstance(obj, RawHtmlItem):
+            serializer = RawHtmlItemSerializer
+        elif isinstance(obj, TextItem):
+            serializer = TextItemSerializer
+        elif isinstance(obj, OEmbedItem):
+            serializer = OEmbedItemSerializer
+        elif isinstance(obj, DocumentItem):
+            serializer = DocumentItemSerializer
+        elif isinstance(obj, PictureItem):
+            serializer = PictureItemSerializer
+        elif isinstance(obj, ImageTextItem):
+            serializer = ImageTextItemSerializer
         else:
             serializer = DefaultBlockSerializer
 
@@ -459,6 +530,28 @@ class HomePageSerializer(serializers.ModelSerializer):
     class Meta:
         model = HomePage
         fields = ('id', 'blocks')
+
+
+class PageSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source='slug', read_only=True)
+    blocks = BlockSerializer(source='body.contentitems.all', many=True)
+
+    class Meta:
+        model = Page
+        fields = ('title', 'id', 'blocks', 'language', 'full_page')
+
+
+class NewsItemSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source='slug')
+    blocks = BlockSerializer(source='contents.contentitems.all', many=True)
+    main_image = SorlImageField('800x400')
+    author = UserPreviewSerializer()
+
+    class Meta:
+        model = NewsItem
+        fields = ('id', 'title', 'blocks', 'main_image', 'author',
+                  'publication_date', 'allow_comments', 'language',
+                  'main_image')
 
 
 class FaviconsSerializer(serializers.Serializer):

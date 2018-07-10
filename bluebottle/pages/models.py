@@ -141,6 +141,13 @@ class Page(models.Model):
         ordering = ('language', 'slug')
         unique_together = ('language', 'slug')
 
+        permissions = (
+            ('api_read_page', 'Can view pages through the API'),
+            ('api_add_page', 'Can add pages through the API'),
+            ('api_change_page', 'Can change pages through the API'),
+            ('api_delete_page', 'Can delete pages through the API'),
+        )
+
     def __unicode__(self):
         return self.title
 

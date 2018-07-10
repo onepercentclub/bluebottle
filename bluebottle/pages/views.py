@@ -1,6 +1,6 @@
 from django.db.models import Q
 from django.core.exceptions import ObjectDoesNotExist
-
+from django.http import Http404
 from django.utils.timezone import now
 
 from rest_framework import generics

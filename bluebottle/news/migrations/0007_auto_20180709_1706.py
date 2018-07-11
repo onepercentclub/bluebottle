@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='newsitem',
-            options={'permissions': (('api_read_news_item', 'Can view news items through the API'), ('api_add_news_item', 'Can add news items through the API'), ('api_change_news_item', 'Can change news items through the API'), ('api_delete_news_item', 'Can delete news items through the API')), 'verbose_name': 'news item', 'verbose_name_plural': 'news items'},
+            options={'permissions': (('api_read_newsitem', 'Can view news items through the API'), ('api_add_newsitem', 'Can add news items through the API'), ('api_change_newsitem', 'Can change news items through the API'), ('api_delete_newsitem', 'Can delete news items through the API')), 'verbose_name': 'news item', 'verbose_name_plural': 'news items'},
         ),
         migrations.AlterField(
             model_name='newsitem',

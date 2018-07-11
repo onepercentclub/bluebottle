@@ -1,8 +1,9 @@
 from django.db import models
 from django.conf import settings
 from django.utils.timezone import now
-from django_extensions.db.fields import CreationDateTimeField, \
-    ModificationDateTimeField
+from django_extensions.db.fields import (
+    CreationDateTimeField, ModificationDateTimeField
+)
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -13,8 +14,9 @@ class Terms(models.Model):
     updated = ModificationDateTimeField(_('last modification'))
 
     date = models.DateTimeField()
-
+    page = models.ForeignKey('pages.Page', null=True)
     contents = models.CharField(max_length=500000)
+
     version = models.CharField(max_length=40)
 
     def __unicode__(self):

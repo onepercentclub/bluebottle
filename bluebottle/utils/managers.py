@@ -1,9 +1,11 @@
 from django.db import models, transaction
 from django.db.models import Case, When, fields
+from django.db.models.query_utils import Q
 from django.db.models.signals import pre_save, post_save
 from django.db.models.query import QuerySet
 from django.contrib.contenttypes.models import ContentType
 from django.utils.encoding import force_unicode
+from django.utils.timezone import now
 
 from django_subquery.expressions import Subquery, OuterRef
 
@@ -91,3 +93,29 @@ class SortableTranslatableQuerySet(TranslatableQuerySet):
 
 class SortableTranslatableManager(TranslatableManager):
     queryset_class = SortableTranslatableQuerySet
+
+
+class PublishedQuerySet(QuerySet):
+
+    def published(self):
+        """
+        Return only published entries
+        """
+        qs = self
+        qs = qs.filter(status='published')
+        qs = qs.filter(
+            Q(publication_date__isnull=True) | Q(publication_date__lte=now()))
+        qs = qs.filter(Q(publication_end_date__isnull=True) | Q(
+            publication_end_date__gte=now()))
+        return qs
+
+
+class PublishedManager(models.Manager):
+    def get_queryset(self):
+        return PublishedQuerySet(self.model, using=self._db)
+
+    def published(self):
+        """
+        Return only published entries
+        """
+        return self.get_queryset().published()

@@ -1,9 +1,7 @@
 from datetime import datetime, time
-from pytz import timezone
 
-from django.db.models import Q
 from django.conf import settings
-from django.utils.timezone import now
+from pytz import timezone
 
 from bluebottle.cms.models import ResultPage, HomePage
 from bluebottle.cms.serializers import (
@@ -12,7 +10,6 @@ from bluebottle.cms.serializers import (
 )
 from bluebottle.news.models import NewsItem
 from bluebottle.pages.models import Page
-
 from bluebottle.utils.views import RetrieveAPIView
 
 
@@ -46,20 +43,12 @@ class HomePageDetail(RetrieveAPIView):
 
 
 class PageDetail(RetrieveAPIView):
-    queryset = Page.objects.all()
+    queryset = Page.objects.published()
     serializer_class = PageSerializer
     lookup_field = 'slug'
 
-    def get_queryset(self):
-        return super(PageDetail, self).get_queryset().filter(
-            Q(publication_end_date__gte=now()) | Q(publication_end_date__isnull=True),
-            status=Page.PageStatus.published,
-            publication_date__lte=now(),
-            language=self.request.LANGUAGE_CODE
-        )
-
 
 class NewsItemDetail(RetrieveAPIView):
-    queryset = NewsItem.objects.all().published()
+    queryset = NewsItem.objects.published()
     serializer_class = NewsItemSerializer
     lookup_field = 'slug'

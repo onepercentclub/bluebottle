@@ -6,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from fluent_contents.admin.placeholderfield import PlaceholderFieldAdmin
 from sorl.thumbnail.admin import AdminImageMixin
 
+from bluebottle.utils.models import PublishedStatus
 from .models import NewsItem
 
 
@@ -90,12 +91,12 @@ class NewsItemAdmin(AdminImageMixin, PlaceholderFieldAdmin):
         obj.save()
 
     STATUS_ICONS = {
-        NewsItem.PostStatus.published: 'icon-yes.gif',
-        NewsItem.PostStatus.draft: 'icon-unknown.gif',
+        PublishedStatus.published: 'icon-yes.gif',
+        PublishedStatus.draft: 'icon-unknown.gif',
     }
 
     def make_published(self, request, queryset):
-        rows_updated = queryset.update(status=NewsItem.PostStatus.published)
+        rows_updated = queryset.update(status=PublishedStatus.published)
 
         if rows_updated == 1:
             message = "1 entry was marked as published."

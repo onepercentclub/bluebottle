@@ -10,7 +10,7 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField, CreationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
 
-from parler.models import TranslatableModel, TranslatedFields
+from parler.models import TranslatedFields
 
 from bluebottle.utils.models import MailLog
 from tenant_extras.utils import TenantLanguage
@@ -19,6 +19,7 @@ from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
 from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
+from bluebottle.utils.models import SortableTranslatableModel
 from bluebottle.utils.utils import PreviousStatusMixin
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.wallposts.models import Wallpost
@@ -286,7 +287,7 @@ class Task(models.Model, PreviousStatusMixin):
         )
 
 
-class Skill(TranslatableModel):
+class Skill(SortableTranslatableModel):
     expertise = models.BooleanField(_('expertise based'),
                                     help_text=_('Is this skill expertise based, or could anyone do it?'),
                                     default=True)

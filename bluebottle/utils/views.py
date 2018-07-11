@@ -270,6 +270,9 @@ class OwnerListViewMixin(object):
 
 
 class TranslatedApiViewMixin(object):
-
     def get_queryset(self):
-        return self.queryset.translated(get_language())
+        qs = super(TranslatedApiViewMixin, self).get_queryset().language(
+            get_language()
+        )
+        qs = qs.order_by(*qs.model._meta.ordering)
+        return qs

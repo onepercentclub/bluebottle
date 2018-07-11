@@ -238,6 +238,10 @@
     a {
       color: $button-text-color;
     }
+    &.label, &.label:hover, &.label:active  {
+      background-color: transparent;
+      color: $text-color;
+    }
   }
 }
 

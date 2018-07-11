@@ -64,7 +64,7 @@ class TestOrderPaymentAdminRefund(BluebottleTestCase):
 
                 order_payment = OrderPayment.objects.get(pk=self.order_payment.pk)
                 self.assertEqual(order_payment.status, StatusDefinition.REFUND_REQUESTED)
-                self.assertEqual(order_payment.order.status, StatusDefinition.FAILED)
+                self.assertEqual(order_payment.order.status, StatusDefinition.REFUND_REQUESTED)
                 refund_mock.assert_called()
 
     def test_refund_forbidden(self):

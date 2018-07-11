@@ -446,7 +446,6 @@ class SupporterTotalContentSerializer(serializers.ModelSerializer):
 
 class DefaultBlockSerializer(serializers.Serializer):
     def to_representation(self, obj):
-        import ipdb; ipdb.set_trace()
         return {
             'type': obj.__class__._meta.model_name,
             'content': str(obj)

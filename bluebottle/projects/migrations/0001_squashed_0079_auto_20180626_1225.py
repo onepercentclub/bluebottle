@@ -780,9 +780,6 @@ class Migration(migrations.Migration):
             name='project',
             options={'ordering': ['title'], 'permissions': (('approve_payout', 'Can approve payouts for projects'), ('export_supporters', 'Can export supporters for projects'), ('api_read_project', 'Can view projects through the API'), ('api_add_project', 'Can add projects through the API'), ('api_change_project', 'Can change projects through the API'), ('api_delete_project', 'Can delete projects through the API'), ('api_read_own_project', 'Can view own projects through the API'), ('api_add_own_project', 'Can add own projects through the API'), ('api_change_own_project', 'Can change own projects through the API'), ('api_change_own_running_project', 'Can change own running projects through the API'), ('api_delete_own_project', 'Can delete own projects through the API'), ('api_read_projectdocument', 'Can view project documents through the API'), ('api_add_projectdocument', 'Can add project documents through the API'), ('api_change_projectdocument', 'Can change project documents through the API'), ('api_delete_projectdocument', 'Can delete project documents through the API'), ('api_read_own_projectdocument', 'Can view project own documents through the API'), ('api_add_own_projectdocument', 'Can add own project documents through the API'), ('api_change_own_projectdocument', 'Can change own project documents through the API'), ('api_delete_own_projectdocument', 'Can delete own project documents through the API'), ('api_read_projectbudgetline', 'Can view project budget lines through the API'), ('api_add_projectbudgetline', 'Can add project budget lines through the API'), ('api_change_projectbudgetline', 'Can change project budget lines through the API'), ('api_delete_projectbudgetline', 'Can delete project budget lines through the API'), ('api_read_own_projectbudgetline', 'Can view own project budget lines through the API'), ('api_add_own_projectbudgetline', 'Can add own project budget lines through the API'), ('api_change_own_projectbudgetline', 'Can change own project budget lines through the API'), ('api_delete_own_projectbudgetline', 'Can delete own project budget lines through the API')), 'verbose_name': 'project', 'verbose_name_plural': 'projects'},
         ),
-        migrations.RunPython(
-            code=bluebottle.projects.migrations.0070_auto_20180328_1401.add_group_permissions,
-        ),
         migrations.AddField(
             model_name='projectplatformsettings',
             name='facebook_at_work_url',
@@ -793,9 +790,6 @@ class Migration(migrations.Migration):
             name='share_options',
             field=select_multiple_field.models.SelectMultipleField(choices=[(b'twitter', 'Twitter'), (b'facebook', 'Facebook'), (b'facebookAtWork', 'Facebook at Work'), (b'linkedin', 'LinkedIn'), (b'whatsapp', 'Whatsapp'), (b'email', 'Email')], default=[], max_length=100),
             preserve_default=False,
-        ),
-        migrations.RunPython(
-            code=bluebottle.projects.migrations.0073_auto_20180416_1115.migrate_share_options,
         ),
         migrations.AlterField(
             model_name='projectplatformsettings',
@@ -878,9 +872,6 @@ class Migration(migrations.Migration):
             model_name='projectcreatetemplate',
             name='default_amount_asked',
             field=bluebottle.utils.fields.MoneyField(blank=True, currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=None, max_digits=12, null=True),
-        ),
-        migrations.RunPython(
-            code=bluebottle.projects.migrations.0077_auto_20180518_1050.set_reviewed,
         ),
         migrations.AlterField(
             model_name='projectplatformsettings',

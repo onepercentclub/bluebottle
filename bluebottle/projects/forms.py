@@ -31,3 +31,7 @@ class ProjectDocumentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ProjectDocumentForm, self).__init__(*args, **kwargs)
         self.fields['file'].required = False
+
+
+class ProjectRefundForm(forms.Form):
+    title = 'Refund project?!'

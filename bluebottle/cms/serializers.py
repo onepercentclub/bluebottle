@@ -60,7 +60,7 @@ class DocumentItemSerializer(ItemSerializer):
 
 
 class ImageTextItemSerializer(ItemSerializer):
-    image = SorlImageField('100x100', crop='center')
+    image = ImageSerializer()
     item_type = 'image-text'
 
     class Meta:
@@ -69,7 +69,7 @@ class ImageTextItemSerializer(ItemSerializer):
 
 
 class PictureItemSerializer(ItemSerializer):
-    image = SorlImageField('100x100', crop='center')
+    image = ImageSerializer()
     item_type = 'image'
 
     class Meta:

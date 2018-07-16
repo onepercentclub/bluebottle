@@ -544,13 +544,13 @@ class PageTestCase(BluebottleTestCase):
         self.assertEqual(response.data['blocks'][3]['type'], 'image')
         self.assertEqual(response.data['blocks'][3]['align'], picture.align)
         self.assertTrue(
-            response.data['blocks'][3]['image'].startswith('/media/cache/')
+            '/media/cache' in response.data['blocks'][3]['image']['large']
         )
 
         self.assertEqual(response.data['blocks'][4]['type'], 'image-text')
         self.assertEqual(response.data['blocks'][4]['align'], image_text.align)
         self.assertTrue(
-            response.data['blocks'][4]['image'].startswith('/media/cache/')
+            '/media/cache' in response.data['blocks'][4]['image']['large']
         )
 
 

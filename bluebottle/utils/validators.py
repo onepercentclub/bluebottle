@@ -64,3 +64,15 @@ class FileExtensionValidator:
             self.code == other.code
 
         )
+
+    def deconstruct(self):
+        return (
+            'bluebottlle.utitls.validators.FileExtensionValidator',
+            (
+                self.allowed_extensions,
+                getattr(self, 'messsage', None),
+                getattr(self, 'code', None),
+            ),
+            {}
+        )
+

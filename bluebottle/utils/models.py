@@ -1,9 +1,12 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-
+from django.utils.translation import ugettext_lazy as _
+from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
+from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel
-from bluebottle.utils.managers import SortableTranslatableManager
+
+from bluebottle.utils.managers import SortableTranslatableManager, PublishedManager
 
 import bluebottle.utils.monkey_patch_migration  # noqa
 import bluebottle.utils.monkey_patch_corsheaders  # noqa
@@ -81,3 +84,33 @@ class SortableTranslatableModel(TranslatableModel):
         abstract = True
 
     objects = SortableTranslatableManager()
+
+
+class PublishedStatus(DjangoChoices):
+    published = ChoiceItem('published', label=_("Published"))
+    draft = ChoiceItem('draft', label=_("Draft"))
+
+
+class PublishableModel(models.Model):
+
+    # Publication
+    status = models.CharField(_('status'), max_length=20,
+                              choices=PublishedStatus.choices,
+                              default=PublishedStatus.draft, db_index=True)
+    publication_date = models.DateTimeField(
+        _('publication date'), null=True, db_index=True,
+        help_text=_("To go live, status must be 'Published'."))
+
+    publication_end_date = models.DateTimeField(_('publication end date'),
+                                                null=True, blank=True,
+                                                db_index=True)
+    # Metadata
+    author = models.ForeignKey('members.Member',
+                               verbose_name=_('author'), blank=True, null=True)
+    creation_date = CreationDateTimeField(_('creation date'))
+    modification_date = ModificationDateTimeField(_('last modification'))
+
+    objects = PublishedManager()
+
+    class Meta:
+        abstract = True

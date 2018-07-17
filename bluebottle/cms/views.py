@@ -1,11 +1,15 @@
 from datetime import datetime, time
-from pytz import timezone
 
 from django.conf import settings
+from pytz import timezone
 
 from bluebottle.cms.models import ResultPage, HomePage
-from bluebottle.cms.serializers import ResultPageSerializer, HomePageSerializer
-
+from bluebottle.cms.serializers import (
+    ResultPageSerializer, HomePageSerializer, NewsItemSerializer,
+    PageSerializer
+)
+from bluebottle.news.models import NewsItem
+from bluebottle.pages.models import Page
 from bluebottle.utils.views import RetrieveAPIView
 
 
@@ -36,3 +40,15 @@ class ResultPageDetail(RetrieveAPIView):
 class HomePageDetail(RetrieveAPIView):
     queryset = HomePage.objects.all()
     serializer_class = HomePageSerializer
+
+
+class PageDetail(RetrieveAPIView):
+    queryset = Page.objects.published()
+    serializer_class = PageSerializer
+    lookup_field = 'slug'
+
+
+class NewsItemDetail(RetrieveAPIView):
+    queryset = NewsItem.objects.published()
+    serializer_class = NewsItemSerializer
+    lookup_field = 'slug'

@@ -6,7 +6,7 @@ from django.template.response import TemplateResponse
 from bluebottle.projects.models import Project
 
 
-def refund_confirmation_form(form_class=None):
+def confirmation_form(form_class, template):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(self, request, pk):
@@ -22,10 +22,13 @@ def refund_confirmation_form(form_class=None):
                 title=form_class.title,
                 action=func.__name__,
                 opts=self.model._meta,
-                obj=obj, pk=pk, form=form,
-                action_checkbox_name=helpers.ACTION_CHECKBOX_NAME)
+                obj=obj,
+                pk=pk,
+                form=form,
+                action_checkbox_name=helpers.ACTION_CHECKBOX_NAME
+            )
 
-            return TemplateResponse(request, 'admin/refund_confirmation.html', context)
+            return TemplateResponse(request, template, context)
 
         wrapper.short_description = form_class.title
 

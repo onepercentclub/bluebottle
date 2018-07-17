@@ -37,8 +37,8 @@ from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.payouts_dorado.adapters import (
     DoradoPayoutAdapter, PayoutValidationError, PayoutCreationError
 )
-from bluebottle.projects.decorators import refund_confirmation_form
-from bluebottle.projects.forms import ProjectRefundForm
+from bluebottle.projects.decorators import confirmation_form
+from bluebottle.projects.forms import RefundConfirmationForm, PayoutApprovalConfirmationForm
 from bluebottle.projects.models import (
     ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn, ProjectLocation,
     CustomProjectField, CustomProjectFieldSettings, ProjectCreateTemplate)
@@ -452,6 +452,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
     expertise_based.boolean = True
 
+    @confirmation_form(PayoutApprovalConfirmationForm, 'admin/payout_approval_confirmation.html')
     def approve_payout(self, request, pk=None):
         project = Project.objects.get(pk=pk)
         project_url = reverse('admin:projects_project_change', args=(project.id,))
@@ -516,7 +517,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         return HttpResponseRedirect(project_url)
 
-    @refund_confirmation_form(ProjectRefundForm)
+    @confirmation_form(RefundConfirmationForm, 'admin/refund_confirmation.html')
     def refund(self, request, pk=None, form=None):
         project = Project.objects.get(pk=pk)
 

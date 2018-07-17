@@ -33,5 +33,9 @@ class ProjectDocumentForm(forms.ModelForm):
         self.fields['file'].required = False
 
 
-class ProjectRefundForm(forms.Form):
+class RefundConfirmationForm(forms.Form):
     title = 'Refund project?!'
+
+
+class PayoutApprovalConfirmationForm(forms.Form):
+    title = 'Approve Payout?!'

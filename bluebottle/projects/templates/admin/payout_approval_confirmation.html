@@ -2,7 +2,7 @@
 {% load i18n l10n admin_urls %}
 
 {% block confirmation_message %}
-    <p>{% trans "Are you sure you want to REFUND ALL donations to: " %}</p>
+    <p>{% trans "Are you sure you want to approve the payout to: " %}</p>
 {% endblock %} 
 
 {% block confirmation_content %}
@@ -12,7 +12,8 @@
   </ul>
   <h2>Donations</h2>
   <ul>
-      <li>Total amount: {{ obj.amount_donated }}</li>
+      <li>Total amount confirmed: {{ obj.amount_safe }}</li>
+      <li>Total amount pending: {{ obj.amount_pending }}</li>
       <li>Number of donations: {{ obj.donations.count }}</li>
   </ul>
 {% endblock %}

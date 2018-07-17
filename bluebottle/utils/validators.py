@@ -67,7 +67,7 @@ class FileExtensionValidator:
 
     def deconstruct(self):
         return (
-            'bluebottlle.utitls.validators.FileExtensionValidator',
+            'bluebottle.utils.validators.FileExtensionValidator',
             (
                 self.allowed_extensions,
                 getattr(self, 'messsage', None),

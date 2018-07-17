@@ -51,7 +51,6 @@ class MockUser:
         return perm in self.perms
 
 
-
 @override_settings(PAYOUT_SERVICE={
     'service': 'dorado',
     'url': PAYOUT_URL

@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from django.db import migrations
 
 def create_empty_settings(apps, schema_editor):
+    return
     MemberPlatformSettings = apps.get_model('members', 'MemberPlatformSettings')
     MemberPlatformSettings.objects.get_or_create()
 

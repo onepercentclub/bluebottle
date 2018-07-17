@@ -41,12 +41,15 @@ class MockRequest:
 
 
 class MockUser:
+    is_active = True
+
     def __init__(self, perms=None, is_staff=True):
         self.perms = perms or []
         self.is_staff = is_staff
 
     def has_perm(self, perm):
         return perm in self.perms
+
 
 
 @override_settings(PAYOUT_SERVICE={
@@ -455,7 +458,7 @@ class TestProjectRefundAdmin(BluebottleTestCase):
             amount=Money(100, 'EUR'),
         )
 
-        self.request = self.request_factory.post('/')
+        self.request = self.request_factory.post('/', data={'confirm': True})
         self.request.user = MockUser(['payments.refund_orderpayment'])
 
     def test_refunds(self):
@@ -507,6 +510,15 @@ class TestProjectRefundAdmin(BluebottleTestCase):
             response = self.project_admin.refund(self.request, self.project.pk)
 
             self.assertEqual(response.status_code, 403)
+            refund_mock.assert_not_called()
+
+    @override_settings(ENABLE_REFUNDS=False)
+    def test_refunds_not_confirmed(self):
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            del self.request.POST['confirm']
+            response = self.project_admin.refund(self.request, self.project.pk)
+
+            self.assertEqual(response.status_code, 200)
             refund_mock.assert_not_called()
 
 

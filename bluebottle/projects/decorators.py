@@ -12,7 +12,7 @@ def refund_confirmation_form(form_class=None):
         def wrapper(self, request, pk):
             form = form_class()
             obj = Project.objects.get(pk=pk)
-            if 'confirm' in request.POST and request.POST:
+            if 'confirm' in request.POST and request.POST['confirm']:
                 form = form_class(request.POST)
                 if form.is_valid():
                     return func(self, request, pk)

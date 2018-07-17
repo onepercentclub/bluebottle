@@ -50,5 +50,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(create_refunded_phase),
     ]

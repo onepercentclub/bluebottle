@@ -84,7 +84,7 @@ def _order_status_post_transition(sender, instance, **kwargs):
                         author=author,
                         ip_address='127.0.0.1'
                     )
-                else:
+                elif TextWallpost.objects.filter(donation=donation).count() == 0:
                     # Create Wallpost on project wall if there isn't a wallpost for this donation yet
                     SystemWallpost.objects.get_or_create(
                         content_type=ContentType.objects.get_for_model(

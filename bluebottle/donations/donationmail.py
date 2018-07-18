@@ -63,7 +63,6 @@ def successful_donation_fundraiser_mail(instance):
             else:
                 donor_name = _('a guest')
 
-
     with LogMail(donation.mail_logs, 'new_oneoff_donation_fundraiser') as sent:
         if not sent:
             send_mail(

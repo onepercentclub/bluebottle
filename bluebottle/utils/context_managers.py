@@ -8,5 +8,3 @@ def LogMail(logs, type):
 
     if not already_send:
         logs.create(type=type)
-
-

@@ -168,7 +168,7 @@ class TestProjectAdmin(BluebottleTestCase):
         )
 
     def test_mark_payout_as_approved(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -188,7 +188,7 @@ class TestProjectAdmin(BluebottleTestCase):
         self.assertEqual(project.account_number, 'NL86INGB0002445588')
 
     def test_mark_payout_as_approved_remote_validation_error(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -210,7 +210,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
     def test_mark_payout_as_approved_local_iban_validation_error(self):
         # Test with invalid IBAN, but starting with letter
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -226,7 +226,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
     def test_mark_payout_as_approved_local_validation_error(self):
         # Test with valid IBAN and invalid BIC
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -241,7 +241,7 @@ class TestProjectAdmin(BluebottleTestCase):
         )
 
     def test_mark_payout_as_approved_internal_server_error(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -264,7 +264,7 @@ class TestProjectAdmin(BluebottleTestCase):
         )
 
     def test_mark_payout_as_approved_connection_error(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -286,7 +286,7 @@ class TestProjectAdmin(BluebottleTestCase):
         )
 
     def test_mark_payout_as_approved_no_permissions(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser()
 
         project = ProjectFactory.create(payout_status='needs_approval')
@@ -304,7 +304,7 @@ class TestProjectAdmin(BluebottleTestCase):
         )
 
     def test_mark_payout_as_approved_wrong_status(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -323,7 +323,7 @@ class TestProjectAdmin(BluebottleTestCase):
         message_mock.assert_called()
 
     def test_read_only_status_after_payout_approved(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()

@@ -2,6 +2,7 @@ from datetime import timedelta
 from django.db import connection
 from django.dispatch.dispatcher import receiver
 from django.db.models.signals import post_save
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 
 from django_fsm.signals import post_transition
@@ -41,7 +42,7 @@ def _order_status_post_transition(sender, instance, **kwargs):
     """
 
     if instance.status in [StatusDefinition.SUCCESS, StatusDefinition.PENDING,
-                           StatusDefinition.PLEDGED, StatusDefinition.FAILED]:
+                           StatusDefinition.PLEDGED]:
         # Is order transitioning into the success or pending state - this should
         # only happen once.
 
@@ -70,22 +71,34 @@ def _order_status_post_transition(sender, instance, **kwargs):
 
                 if donation.fundraiser:
                     # Create Wallpost on fundraiser wall (if FR present)
-                    fr_post = SystemWallpost()
-                    fr_post.content_object = donation.fundraiser
-                    fr_post.related_object = donation
-                    fr_post.donation = donation
-                    fr_post.author = author
-                    fr_post.ip = '127.0.0.1'
-                    fr_post.save()
+                    SystemWallpost.objects.create(
+                        content_type=ContentType.objects.get_for_model(
+                            donation.fundraiser
+                        ),
+                        object_id=donation.fundraiser.pk,
+                        related_type=ContentType.objects.get_for_model(
+                            donation
+                        ),
+                        related_id=donation.pk,
+                        donation=donation,
+                        author=author,
+                        ip_address='127.0.0.1'
+                    )
                 elif TextWallpost.objects.filter(donation=donation).count() == 0:
                     # Create Wallpost on project wall if there isn't a wallpost for this donation yet
-                    post = SystemWallpost()
-                    post.content_object = donation.project
-                    post.related_object = donation
-                    post.donation = donation
-                    post.author = author
-                    post.ip = '127.0.0.1'
-                    post.save()
+                    SystemWallpost.objects.get_or_create(
+                        content_type=ContentType.objects.get_for_model(
+                            donation.project
+                        ),
+                        object_id=donation.project.pk,
+                        related_type=ContentType.objects.get_for_model(
+                            donation
+                        ),
+                        related_id=donation.pk,
+                        donation=donation,
+                        author=author,
+                        ip_address='127.0.0.1'
+                    )
 
 
 @receiver(post_transition, sender=Order)

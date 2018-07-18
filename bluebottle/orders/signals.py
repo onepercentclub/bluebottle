@@ -24,8 +24,9 @@ def _order_status_post_save(sender, instance, **kwargs):
 
     if instance.status in [
         StatusDefinition.SUCCESS, StatusDefinition.PENDING,
-        StatusDefinition.REFUNDED, StatusDefinition.PLEDGED,
-        StatusDefinition.FAILED
+        StatusDefinition.REFUNDED, StatusDefinition.REFUND_REQUESTED,
+        StatusDefinition.PLEDGED, StatusDefinition.FAILED,
+        StatusDefinition.CANCELLED
     ]:
 
         # Process each donation in the order

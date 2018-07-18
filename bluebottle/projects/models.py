@@ -428,7 +428,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def donations(self):
-        success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+        success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS, StatusDefinition.PLEDGED]
         return self.donation_set.filter(order__status__in=success)
 
     @property

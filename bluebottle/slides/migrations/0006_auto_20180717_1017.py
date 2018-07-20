@@ -16,11 +16,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name='slide',
-            name='author',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='author'),
-        ),
-        migrations.AlterField(
-            model_name='slide',
             name='publication_date',
             field=models.DateTimeField(db_index=True, help_text="To go live, status must be 'Published'.", null=True, verbose_name='publication date'),
         ),

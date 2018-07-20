@@ -31,8 +31,6 @@ class Migration(migrations.Migration):
     dependencies = [
         ('projects', '0018_merge_20170118_1533'),
         ('authtoken', '0001_initial'),
-        ('quotes', '0005_auto_20180717_1017'),
-        ('slides', '0006_auto_20180717_1017'),
     ]
 
     operations = [

@@ -275,3 +275,7 @@ def reverse_signed(name, args):
     url = reverse(name, args=args)
     signature = signer.sign(url)
     return '{}?{}'.format(url, urllib.urlencode({'signature': signature}))
+
+
+def get_language_from_request(request):
+    return request.META.get('HTTP_X_APPLICATION_LANGUAGE', None)

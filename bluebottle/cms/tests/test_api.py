@@ -497,9 +497,8 @@ class PageTestCase(BluebottleTestCase):
     def setUp(self):
         super(PageTestCase, self).setUp()
         self.init_projects()
-        self.page = PageFactory.create()
+        self.page = PageFactory.create(language='en', slug='about', title='About us')
         self.placeholder = Placeholder.objects.create_for_object(self.page, slot='blog_contents')
-
         self.url = reverse('page-detail', args=(self.page.slug, ))
 
     def test_page(self):
@@ -553,6 +552,18 @@ class PageTestCase(BluebottleTestCase):
         self.assertTrue(
             '/media/cache' in response.data['blocks'][4]['image']['large']
         )
+
+    def test_multi_language_page(self):
+        # Should default to main language
+        response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
+        self.assertEqual(response.data['title'], 'About us')
+        self.assertEqual(response.data['language'], 'en')
+
+        # If we do have a Dutch page, it shoudl return that
+        self.page = PageFactory.create(language='nl', slug='about', title='Over ons')
+        response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
+        self.assertEqual(response.data['title'], 'Over ons')
+        self.assertEqual(response.data['language'], 'nl')
 
 
 class SitePlatformSettingsTestCase(BluebottleTestCase):

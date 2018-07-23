@@ -16,7 +16,7 @@ from django.template import loader
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import ugettext_lazy as _
-
+from permissions_widget.forms import PermissionSelectMultipleField
 
 from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.bb_accounts.utils import send_welcome_mail
@@ -453,8 +453,13 @@ class MemberAdmin(UserAdmin):
 admin.site.register(Member, MemberAdmin)
 
 
+class NewGroupChangeForm(forms.ModelForm):
+    permissions = PermissionSelectMultipleField(required=False)
+
+
 class GroupsAdmin(admin.ModelAdmin):
     list_display = ["name", ]
+    form = NewGroupChangeForm
 
     class Media:
         css = {

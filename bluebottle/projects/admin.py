@@ -618,6 +618,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             ProjectReviewerFilter,
             'categories',
             'project_type',
+            'is_campaign'
         ]
 
         if request.user.has_perm('projects.approve_payout'):

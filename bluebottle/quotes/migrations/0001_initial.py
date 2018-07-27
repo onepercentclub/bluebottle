@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ('publication_end_date', models.DateTimeField(blank=True, db_index=True, null=True, verbose_name='publication end date')),
                 ('creation_date', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='creation date')),
                 ('modification_date', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='last modification')),
-                ('author', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='quote_author', to=settings.AUTH_USER_MODEL, verbose_name='Author')),
+                ('author', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='quote_author', to=settings.AUTH_USER_MODEL, verbose_name='Author')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='quote_user', to=settings.AUTH_USER_MODEL, verbose_name='Quoted member')),
             ],
         ),

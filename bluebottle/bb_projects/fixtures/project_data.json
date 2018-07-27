@@ -331,16 +331,6 @@
         }
     },
     {
-        "pk": 21,
-        "model": "bb_projects.projectphasetranslation",
-        "fields": {
-            "description": "",
-            "master": 13,
-            "name": "Gerestitueerd",
-            "language_code": "nl"
-        }
-    },
-    {
         "pk": 1,
         "model": "bb_projects.projecttheme",
         "fields": {

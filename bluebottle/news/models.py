@@ -1,31 +1,22 @@
-from django.conf import settings
 from django.db import models
 from django.template.defaultfilters import truncatechars
-from django.utils.translation import ugettext_lazy as _
-from django.utils.safestring import mark_safe
 from django.utils.functional import lazy
-
-from django_extensions.db.fields import (CreationDateTimeField,
-                                         ModificationDateTimeField)
-from djchoices import DjangoChoices, ChoiceItem
+from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext_lazy as _
 from fluent_contents.models import PlaceholderField, ContentItemRelation
 from fluent_contents.rendering import render_placeholder
 
-from bluebottle.utils.fields import ImageField
-from bluebottle.utils.serializers import MLStripper
 from bluebottle.clients import properties
-
-from .managers import NewsItemManager
+from bluebottle.utils.fields import ImageField
+from bluebottle.utils.models import PublishableModel
+from bluebottle.utils.serializers import MLStripper
 
 
 def get_languages():
     return properties.LANGUAGES
 
 
-class NewsItem(models.Model):
-    class PostStatus(DjangoChoices):
-        published = ChoiceItem('published', label=_("Published"))
-        draft = ChoiceItem('draft', label=_("Draft"))
+class NewsItem(PublishableModel):
 
     title = models.CharField(_("Title"), max_length=200)
     slug = models.SlugField(_("Slug"))
@@ -44,30 +35,11 @@ class NewsItem(models.Model):
         'RawHtmlPlugin',
         'PicturePlugin'
     ])
-    # This should not be nessecary, but fixes deletion of some news items
+    # This should not be necessary, but fixes deletion of some news items
     # See https://github.com/edoburu/django-fluent-contents/issues/19
     contentitem_set = ContentItemRelation()
 
-    # Publication
-    status = models.CharField(_('status'), max_length=20,
-                              choices=PostStatus.choices,
-                              default=PostStatus.draft, db_index=True)
-    publication_date = models.DateTimeField(
-        _('publication date'), null=True, db_index=True,
-        help_text=_("To go live, status must be 'Published'."))
-
-    publication_end_date = models.DateTimeField(_('publication end date'),
-                                                null=True, blank=True,
-                                                db_index=True)
     allow_comments = models.BooleanField(_("Allow comments"), default=True)
-
-    # Metadata
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('author'), blank=True, null=True)
-    creation_date = CreationDateTimeField(_('creation date'))
-    modification_date = ModificationDateTimeField(_('last modification'))
-
-    objects = NewsItemManager()
 
     def __unicode__(self):
         return self.title
@@ -81,3 +53,10 @@ class NewsItem(models.Model):
     class Meta:
         verbose_name = _("news item")
         verbose_name_plural = _("news items")
+
+        permissions = (
+            ('api_read_newsitem', 'Can view news items through the API'),
+            ('api_add_newsitem', 'Can add news items through the API'),
+            ('api_change_newsitem', 'Can change news items through the API'),
+            ('api_delete_newsitem', 'Can delete news items through the API'),
+        )

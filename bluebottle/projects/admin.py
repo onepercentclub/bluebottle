@@ -589,7 +589,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'created', 'updated',
             'vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
             'popularity', 'payout_status',
-            'geocoding'
+            'geocoding', 'donations_link'
         ]
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status', )
@@ -686,7 +686,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         amount = (_('Amount'), {'fields': [
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
-            'currencies', 'popularity', 'vote_count'
+            'currencies', 'donations_link', 'popularity', 'vote_count'
         ]})
 
         if request.user.has_perm('projects.approve_payout'):
@@ -743,6 +743,12 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         )
 
         return queryset
+
+    def donations_link(self, obj):
+        url = reverse('admin:donations_donation_changelist')
+        total = obj.donations.count()
+        return format_html('<a href="{}?project_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
+    donations_link.short_description = _("Donations")
 
 
 admin.site.register(Project, ProjectAdmin)

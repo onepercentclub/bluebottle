@@ -392,9 +392,7 @@ TENANT_APPS = (
     # https://github.com/django-money/django-money/issues/232
     'djmoney',
     'django_singleton_admin',
-    'nested_inline',
-    'permissions_widget',
-
+    'nested_inline'
 )
 
 

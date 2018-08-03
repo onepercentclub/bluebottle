@@ -5,8 +5,8 @@ from django.db import models
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import Group
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.core.urlresolvers import reverse
 from django.db import connection
@@ -16,6 +16,7 @@ from django.template import loader
 from django.utils.html import format_html
 from django.utils.http import int_to_base36
 from django.utils.translation import ugettext_lazy as _
+from permissions_widget.forms import PermissionSelectMultipleField
 
 from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.bb_accounts.utils import send_welcome_mail
@@ -452,8 +453,22 @@ class MemberAdmin(UserAdmin):
 admin.site.register(Member, MemberAdmin)
 
 
-class GroupsAdmin(admin.ModelAdmin):
+class NewGroupChangeForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        # Dynamically set permission widget to make it Tenant aware
+        super(NewGroupChangeForm, self).__init__(*args, **kwargs)
+        permissions = Permission.objects.all()
+        self.fields['permissions'] = PermissionSelectMultipleField(queryset=permissions, required=False)
+
+
+class GroupsAdmin(GroupAdmin):
     list_display = ["name", ]
+    form = NewGroupChangeForm
+
+    class Media:
+        css = {
+            'all': ('css/admin/permissions-table.css',)
+        }
 
     class Meta:
         model = Group

@@ -5,8 +5,8 @@ from django.db import models
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import Group
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.core.urlresolvers import reverse
 from django.db import connection
@@ -454,10 +454,14 @@ admin.site.register(Member, MemberAdmin)
 
 
 class NewGroupChangeForm(forms.ModelForm):
-    permissions = PermissionSelectMultipleField(required=False)
+    def __init__(self, *args, **kwargs):
+        # Dynamically set permission widget to make it Tenant aware
+        super(NewGroupChangeForm, self).__init__(*args, **kwargs)
+        permissions = Permission.objects.all()
+        self.fields['permissions'] = PermissionSelectMultipleField(queryset=permissions, required=False)
 
 
-class GroupsAdmin(admin.ModelAdmin):
+class GroupsAdmin(GroupAdmin):
     list_display = ["name", ]
     form = NewGroupChangeForm
 

@@ -541,7 +541,11 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def amount_cancelled(self):
-        return self.get_money_total([StatusDefinition.CANCELLED])
+        return self.get_money_total([
+            StatusDefinition.CANCELLED,
+            StatusDefinition.REFUND_REQUESTED,
+            StatusDefinition.REFUNDED,
+        ])
 
     @property
     def donated_percentage(self):

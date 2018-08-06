@@ -468,6 +468,7 @@ class Project(BaseProject, PreviousStatusMixin):
                 StatusDefinition.PENDING,
                 StatusDefinition.SUCCESS,
                 StatusDefinition.CANCELLED,
+                StatusDefinition.REFUND_REQUESTED,
             ]
         )
 

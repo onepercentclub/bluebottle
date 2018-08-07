@@ -1,8 +1,7 @@
 from django.conf.urls import url
 
-from ..views import (
+from bluebottle.projects.views import (
     ManageProjectBudgetLineDetail, ManageProjectBudgetLineList,
-    ManageProjectDocumentList, ManageProjectDocumentDetail,
     ProjectMediaDetail, ProjectSupportDetail,
     ProjectMediaPhotoDetail, ProjectImageCreate
 )
@@ -28,17 +27,7 @@ urlpatterns = [
     url(r'^budgetlines/(?P<pk>\d+)$',
         ManageProjectBudgetLineDetail.as_view(),
         name='project-budgetline-detail'),
-
-    url(r'^documents/manage/$',
-        ManageProjectDocumentList.as_view(),
-        name='manage-project-document-list'),
-    url(r'^documents/manage/(?P<pk>\d+)$',
-        ManageProjectDocumentDetail.as_view(),
-        name='manage-project-document-detail'),
-
     url(r'^project-images/$',
         ProjectImageCreate.as_view(),
         name='project-image-create'),
-
-
 ]

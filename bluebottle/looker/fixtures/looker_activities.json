@@ -1,0 +1,29 @@
+[
+{
+    "model": "looker.lookerembed",
+    "pk": null,
+    "fields": {
+        "title": "Activities - Members",
+        "type": "dashboard",
+        "looker_id": 13
+    }
+},
+{
+    "model": "looker.lookerembed",
+    "pk": null,
+    "fields": {
+        "title": "Activities - Hours",
+        "type": "dashboard",
+        "looker_id": 15
+    }
+},
+{
+    "model": "looker.lookerembed",
+    "pk": null,
+    "fields": {
+        "title": "Activities",
+        "type": "dashboard",
+        "looker_id": 14
+    }
+}
+]

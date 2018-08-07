@@ -13,11 +13,12 @@ from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
+from bluebottle.utils.models import SortableTranslatableModel
 from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition
 
 
-class ProjectTheme(TranslatableModel):
+class ProjectTheme(SortableTranslatableModel):
 
     """ Themes for Projects. """
 
@@ -174,7 +175,7 @@ class BaseProject(models.Model):
 
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
 
-    location = models.ForeignKey('geo.Location', null=True, blank=True)
+    location = models.ForeignKey('geo.Location', null=True, blank=True, on_delete=models.SET_NULL)
     place = models.CharField(help_text=_('Geographical location'),
                              max_length=200, null=True, blank=True)
 

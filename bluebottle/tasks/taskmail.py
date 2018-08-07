@@ -10,6 +10,7 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.clients.utils import tenant_url, LocalTenant
 from bluebottle.tasks.models import TaskMember, Task
 from bluebottle.surveys.models import Survey
+from bluebottle.utils.context_managers import LogMail
 from bluebottle.utils.email_backend import send_mail
 
 
@@ -206,10 +207,10 @@ def send_upcoming_task_reminder(task):
     statuses = [TaskMember.TaskMemberStatuses.accepted]
 
     # Send all applicable task members a mail if not send yet
-    if not task.mail_logs.filter(type='upcoming_deadline').exists():
-        for taskmember in task.members.filter(status__in=statuses).all():
-            TaskMemberReminderMail(taskmember).send()
-        task.mail_logs.create(type='upcoming_deadline')
+    with LogMail(task.mail_logs, 'upcoming_deadline') as sent:
+        if not sent:
+            for taskmember in task.members.filter(status__in=statuses).all():
+                TaskMemberReminderMail(taskmember).send()
 
 
 @shared_task
@@ -249,18 +250,17 @@ def send_deadline_to_apply_passed_mail(task, subject, tenant):
                 type=task.type, status=status
             )
 
-        if not task.mail_logs.filter(type='deadline_to_apply_passed').exists():
-            send_mail(
-                template_name='tasks/mails/{}.mail'.format(template),
-                subject=subject,
-                task=task,
-                to=task.author,
-                site=tenant_url(),
-                edit_link='/tasks/{0}/edit'.format(task.id),
-                link='/tasks/{0}'.format(task.id),
-
-            )
-            task.mail_logs.create(type='deadline_to_apply_passed')
+        with LogMail(task.mail_logs, 'deadline_to_apply_passed') as sent:
+            if not sent:
+                send_mail(
+                    template_name='tasks/mails/{}.mail'.format(template),
+                    subject=subject,
+                    task=task,
+                    to=task.author,
+                    site=tenant_url(),
+                    edit_link='/tasks/{0}/edit'.format(task.id),
+                    link='/tasks/{0}'.format(task.id)
+                )
 
 
 @receiver(post_save, weak=False, sender=TaskMember)

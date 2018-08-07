@@ -1,5 +1,6 @@
 from bluebottle.payments.adapters import BasePaymentAdapter
 from bluebottle.payments.exception import PaymentException
+from bluebottle.utils.utils import StatusDefinition
 
 
 class PledgePaymentAdapter(BasePaymentAdapter):
@@ -13,8 +14,9 @@ class PledgePaymentAdapter(BasePaymentAdapter):
         if not can_pledge:
             raise PaymentException('User does not have permission to pledge')
         # A little hacky but we can set the status to pledged here
-        self.order_payment.pledged()
-        self.order_payment.save()
+        if self.order_payment.status == StatusDefinition.CREATED:
+            self.order_payment.pledged()
+            self.order_payment.save()
 
     def get_authorization_action(self):
         # Return type success to indicate no further authorization is required.
@@ -22,3 +24,7 @@ class PledgePaymentAdapter(BasePaymentAdapter):
 
     def check_payment_status(self):
         pass
+
+    def refund_payment(self):
+        self.order_payment.refunded()
+        self.order_payment.save()

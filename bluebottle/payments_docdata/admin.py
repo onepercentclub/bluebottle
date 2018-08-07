@@ -94,12 +94,32 @@ class DocdataDirectdebitPaymentAdmin(AbstractDocdataPaymentAdmin):
     model = DocdataDirectdebitPayment
 
     readonly_fields = AbstractDocdataPaymentAdmin.readonly_fields + (
-        'total_registered', 'total_shopper_pending', 'total_acquirer_pending',
-        'total_acquirer_approved', 'total_captured', 'total_refunded',
-        'total_charged_back', 'iban', 'bic', 'agree', 'account_name',
+        'address',
+        'city',
+        'country',
+        'customer_id',
+        'email',
+        'first_name',
+        'ip_address',
+        'language',
+        'last_name',
+        'order_payment',
+        'postal_code',
+        'payment_cluster_id',
+        'total_registered',
+        'total_shopper_pending',
+        'total_acquirer_pending',
+        'total_acquirer_approved',
+        'total_captured',
+        'total_refunded',
+        'total_charged_back',
+        'iban',
+        'bic',
+        'agree',
+        'account_name',
         'account_city')
 
-    fields = readonly_fields
+    fields = ('status',) + readonly_fields
 
 
 admin.site.register(DocdataDirectdebitPayment, DocdataDirectdebitPaymentAdmin)

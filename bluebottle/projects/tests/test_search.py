@@ -6,7 +6,6 @@ from django.core.urlresolvers import reverse
 from django.utils.timezone import get_current_timezone, now
 
 from django_elasticsearch_dsl.test import ESTestCase
-from django_elasticsearch_dsl.registries import registry
 
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
@@ -20,7 +19,6 @@ from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.bb_projects.views import ProjectPreviewList
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.projects.models import Project
 
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients.models import Client
@@ -32,11 +30,11 @@ from bluebottle.clients.models import Client
 )
 class ProjectSearchTest(ESTestCase, BluebottleTestCase):
     def setUp(self):
+        super(ProjectSearchTest, self).setUp()
+
         self.factory = RequestFactory()
         self.view = ProjectPreviewList().as_view()
-
-        for index in registry.get_indices([Project]):
-            index.create()
+        self.status = ProjectPhase.objects.get(slug='campaign')
 
     def search(self, query=None):
         url = reverse('project_preview_list')
@@ -45,7 +43,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         return self.view(request)
 
     def test_no_filter(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
 
         result = self.search()
         self.assertEqual(result.data['count'], 1)
@@ -53,7 +51,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
 
     def test_location_filter(self):
         location = LocationFactory.create()
-        project = ProjectFactory.create(location=location)
+        project = ProjectFactory.create(status=self.status, location=location)
         ProjectFactory.create()
 
         result = self.search({'location': location.id})
@@ -62,7 +60,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
 
     def test_country_filter(self):
         country = CountryFactory.create()
-        project = ProjectFactory.create(country=country)
+        project = ProjectFactory.create(status=self.status, country=country)
         ProjectFactory.create()
 
         result = self.search({'country': country.id})
@@ -87,17 +85,17 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['count'], 2)
 
     def test_type_sourcing_filter(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
         TaskFactory.create(project=project)
-        ProjectFactory.create()
+        ProjectFactory.create(status=self.status)
 
         result = self.search({'project_type': 'volunteering'})
         self.assertEqual(result.data['count'], 1)
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
     def test_type_funding_filter(self):
-        project = ProjectFactory.create(amount_asked=100)
-        ProjectFactory.create(amount_asked=0)
+        project = ProjectFactory.create(status=self.status, amount_asked=100)
+        ProjectFactory.create(status=self.status, amount_asked=0)
 
         result = self.search({'project_type': 'funding'})
         self.assertEqual(result.data['count'], 1)
@@ -113,12 +111,12 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
     def test_start_filter(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status, )
         TaskFactory.create(
             project=project,
             deadline=datetime(2017, 01, 02, tzinfo=get_current_timezone())
         )
-        other_project = ProjectFactory.create()
+        other_project = ProjectFactory.create(status=self.status)
         TaskFactory.create(
             project=other_project,
             deadline=datetime(2016, 01, 02, tzinfo=get_current_timezone())
@@ -129,13 +127,13 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
     def test_start_end_filter(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
         TaskFactory.create(
             project=project,
             type='event',
             deadline=datetime(2017, 01, 02, tzinfo=get_current_timezone())
         )
-        other_project = ProjectFactory.create()
+        other_project = ProjectFactory.create(status=self.status)
         TaskFactory.create(
             project=other_project,
             type='event',
@@ -147,13 +145,13 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
     def test_start_end_filter_ongoing(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
         TaskFactory.create(
             project=project,
             type='event',
             deadline=datetime(2017, 01, 02, tzinfo=get_current_timezone())
         )
-        other_project = ProjectFactory.create()
+        other_project = ProjectFactory.create(status=self.status)
         TaskFactory.create(
             project=other_project,
             type='ongoing',
@@ -165,32 +163,32 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
 
     def test_theme_filter(self):
         theme = ProjectThemeFactory.create()
-        project = ProjectFactory.create(theme=theme)
+        project = ProjectFactory.create(status=self.status, theme=theme)
         other_theme = ProjectThemeFactory.create()
-        ProjectFactory.create(theme=other_theme)
+        ProjectFactory.create(status=self.status, theme=other_theme)
 
         result = self.search({'theme': theme.id})
         self.assertEqual(result.data['count'], 1)
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
     def test_category_filter(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
 
         category = CategoryFactory.create()
         project.categories.add(category)
         project.categories.add(CategoryFactory.create())
 
-        ProjectFactory.create()
+        ProjectFactory.create(status=self.status)
 
         result = self.search({'category': category.id})
         self.assertEqual(result.data['count'], 1)
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
     def test_skill_filter(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
         skill = SkillFactory.create()
         TaskFactory.create(project=project, skill=skill)
-        ProjectFactory.create()
+        ProjectFactory.create(status=self.status)
 
         result = self.search({'skill': skill.id})
         self.assertEqual(result.data['count'], 1)
@@ -198,17 +196,21 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
 
     def test_text_query(self):
         project = ProjectFactory.create(
+            status=self.status,
             title='Amsterdam Rotterdam Eindhoven Utrecht'
         )
         ProjectFactory.create(
+            status=self.status,
             title='Rotterdam Eindhoven Utrecht Makkum',
             pitch='Amsterdam'
         )
         ProjectFactory.create(
+            status=self.status,
             title='Rotterdam Eindhoven Utrecht Bolsward',
             story='Amsterdam'
         )
         task_title_project = ProjectFactory.create(
+            status=self.status,
             title='Rotterdam Eindhoven Utrecht Harlingen',
         )
         TaskFactory.create(title='Amsterdam', project=task_title_project)
@@ -216,10 +218,10 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             title='Rotterdam Eindhoven Utrecht Franeker',
         )
         TaskFactory.create(description='Amsterdam', project=task_description_project)
-        ProjectFactory.create()
+        ProjectFactory.create(status=self.status)
 
         result = self.search({'text': 'Amsterdam'})
-        self.assertEqual(result.data['count'], 5)
+        self.assertEqual(result.data['count'], 4)
         # We boost the title, so the project with Amsterdam in the title should be first
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
@@ -227,13 +229,16 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         location = LocationFactory.create()
         country = CountryFactory.create()
         project = ProjectFactory.create(
+            status=self.status,
             location=location,
             country=country
         )
         ProjectFactory.create(
+            status=self.status,
             country=country
         )
         ProjectFactory.create(
+            status=self.status,
             location=location,
         )
 
@@ -246,9 +251,8 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
     def test_score_status(self):
-        campaign = ProjectPhase.objects.get(slug='campaign')
-        project = ProjectFactory.create(status=campaign)
-        ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
+        ProjectFactory.create(status=self.status)
         result = self.search({})
 
         self.assertEqual(result.data['count'], 2)
@@ -256,7 +260,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
 
     def test_score_donations(self):
         order = OrderFactory.create(status='settled')
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
         DonationFactory(
             order=order,
             project=project,
@@ -276,7 +280,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             created=now() - timedelta(days=10)
         )
 
-        other_project = ProjectFactory.create()
+        other_project = ProjectFactory.create(status=self.status)
         DonationFactory(
             order=order,
             project=other_project,
@@ -295,7 +299,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], other_project.title)
 
     def test_score_taskmembers(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
         task = TaskFactory.create(project=project)
         TaskMemberFactory(
             task=task,
@@ -310,7 +314,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             created=now() - timedelta(days=10)
         )
 
-        other_project = ProjectFactory.create()
+        other_project = ProjectFactory.create(status=self.status)
         other_task = TaskFactory.create(project=other_project)
         TaskMemberFactory(
             task=other_task,
@@ -327,7 +331,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], other_project.title)
 
     def test_score_votes(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
         VoteFactory(
             project=project,
             created=now() - timedelta(days=10)
@@ -341,7 +345,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             created=now() - timedelta(days=10)
         )
 
-        other_project = ProjectFactory.create()
+        other_project = ProjectFactory.create(status=self.status)
         VoteFactory(
             project=other_project,
             created=now() - timedelta(days=1)
@@ -356,7 +360,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], other_project.title)
 
     def test_combined_scores(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
         task = TaskFactory.create(project=project)
         TaskMemberFactory(
             task=task,
@@ -371,7 +375,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             created=now() - timedelta(days=10)
         )
 
-        other_project = ProjectFactory.create()
+        other_project = ProjectFactory.create(status=self.status)
         VoteFactory(
             project=other_project,
             created=now() - timedelta(days=1)
@@ -479,10 +483,10 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
     def test_multi_tenant(self):
-        project = ProjectFactory.create()
+        project = ProjectFactory.create(status=self.status)
 
         with LocalTenant(Client.objects.get(client_name='test2')):
-            ProjectFactory.create()
+            ProjectFactory.create(status=self.status)
 
         result = self.search({})
 

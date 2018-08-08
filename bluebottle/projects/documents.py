@@ -7,7 +7,7 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Location, Country
-from bluebottle.projects.models import Project
+from bluebottle.projects.models import Project, ProjectLocation
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.votes.models import Vote
 
@@ -23,19 +23,21 @@ project.settings(
 @project.doc_type
 class ProjectDocument(DocType):
     client_name = fields.KeywordField()
+    title = fields.TextField()
+    story = fields.TextField()
+    pitch = fields.TextField()
 
     task_set = fields.NestedField(properties={
-        'title': fields.StringField(),
-        'description': fields.StringField(),
+        'title': fields.TextField(),
+        'description': fields.TextField(),
         'type': fields.KeywordField(),
-        'status': fields.StringField(),
+        'status': fields.TextField(),
         'deadline': fields.DateField(),
         'deadline_to_apply': fields.DateField(),
-        'location': fields.StringField(),
+        'location': fields.TextField(),
         'skill': fields.ObjectField(
             properties={
                 'id': fields.LongField(),
-                'name': fields.KeywordField()
             }
         ),
     })
@@ -50,29 +52,25 @@ class ProjectDocument(DocType):
         'viewable': fields.BooleanField()
     })
 
+    position = fields.GeoPointField()
+
     location = fields.ObjectField(properties={
         'id': fields.LongField(),
-        'name': fields.StringField(),
         'position': fields.GeoPointField(attr='position_tuple'),
-        'city': fields.StringField()
+        'city': fields.TextField()
     })
 
     country = fields.ObjectField(properties={
         'id': fields.LongField(),
-        'name': fields.StringField(),
     })
 
     theme = fields.ObjectField(properties={
         'id': fields.LongField(),
-        'name': fields.StringField(),
     })
 
     categories = fields.NestedField(properties={
         'id': fields.LongField(),
-        'title': fields.StringField(),
     })
-
-    project_location = fields.GeoPointField()
 
     amount_asked = fields.FloatField()
     amount_needed = fields.FloatField()
@@ -83,12 +81,6 @@ class ProjectDocument(DocType):
 
     class Meta:
         model = Project
-        fields = [
-            'title',
-            'story',
-            'pitch',
-            'popularity',
-        ]
         related_models = (
             Task, TaskMember, ProjectPhase, Location, Country, Vote, Donation,
         )
@@ -132,19 +124,19 @@ class ProjectDocument(DocType):
         return instance.amount_asked.amount
 
     def prepare_amount_needed(self, instance):
-        return instance.amount_asked.amount - instance.amount_donated.amount
-
-    def prepare_project_location(self, instance):
-        if instance.latitude and instance.longitude:
-            return (instance.longitude, instance.latitude)
-        else:
-            return None
+        return instance.amount_needed.amount
 
     def prepare_votes(self, instance):
         return [vote.created for vote in instance.vote_set.all()]
 
     def prepare_donations(self, instance):
         return [donation.created for donation in instance.donation_set.all()]
+
+    def prepare_position(self, instance):
+        try:
+            return instance.projectlocation.position
+        except ProjectLocation.DoesNotExist:
+            return None
 
     def prepare_task_members(self, instance):
         result = []

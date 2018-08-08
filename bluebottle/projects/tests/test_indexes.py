@@ -5,7 +5,7 @@ from django.utils.timezone import now
 from django_elasticsearch_dsl.test import ESTestCase
 from elasticsearch_dsl import Q, SF
 
-from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectLocationFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -30,26 +30,31 @@ class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
             title='One two three',
             pitch='One two',
             story='One two',
-            latitude=52.3737123,
-            longitude=4.9057741,
             status=ProjectPhase.objects.get(slug='campaign')
         )
+        self.project1.projectlocation.latitude = 52.3737123
+        self.project1.projectlocation.longitude = 4.9057741
+        self.project1.projectlocation.save()
+
         self.project2 = ProjectFactory.create(
             title='One two',
             pitch='One two three',
             story='One two three four',
-            latitude=52.389901,
-            longitude=4.8829646,
             status=ProjectPhase.objects.get(slug='done-complete')
         )
+        self.project2.projectlocation.latitude = 52.389901
+        self.project2.projectlocation.longitude = 4.8829646
+        self.project2.projectlocation.save()
+
         self.project3 = ProjectFactory.create(
             title='One two four',
             pitch='One two four',
             story='One two four',
-            latitude=52.0907322,
-            longitude=5.0864009,
             status=ProjectPhase.objects.get(slug='done-complete')
         )
+        self.project3.projectlocation.latitude = 52.0907322
+        self.project3.projectlocation.longitude = 5.0864009
+        self.project3.projectlocation.save()
 
     def test_search(self):
         result = self.search.query(
@@ -83,14 +88,17 @@ class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
 
     def test_search_filter(self):
         result = self.search.query(
-            Q('match', title='One') |
-            Q('match', pitch='One') |
-            Q('match', story='One')
+            Q('match', title={'query': 'three', 'boost': 2}) |
+            Q('match', pitch='three') |
+            Q('match', story='three')
         ).to_queryset()
 
-        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result), 2)
         self.assertEqual(
             result[0], self.project1
+        )
+        self.assertEqual(
+            result[1], self.project2
         )
 
     def test_search_task_title(self):
@@ -125,8 +133,8 @@ class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
             Q('match', title='three') |
             Q(
                 'nested',
-                path='task_set.skill',
-                query=Q('match', **{'task_set.skill.name': {'query': 'Skill', 'boost': 4}})
+                path='task_set',
+                query=Q('match', **{'task_set.skill.id': {'query': skill.id, 'boost': 4}})
             )
         )
         result = query.to_queryset()
@@ -147,7 +155,7 @@ class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
                 functions=[
                     SF(
                         'gauss',
-                        project_location={
+                        position={
                             'origin': (52.389901, 4.8829646),
                             'offset': "2km",
                             'scale': "50km"
@@ -170,48 +178,43 @@ class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
 
     def test_search_recent_donation(self):
         order = OrderFactory.create()
-        for days in [2, 2, 3, 4]:
+        for days in [1]:
             donation = Donation.objects.create(
                 project=self.project1, order=order
             )
             donation.created = now() - timedelta(days=days)
             donation.save()
-        for days in [2, 2]:
+        for days in [2]:
             donation = DonationFactory.create(
-                project=self.project2, order=order, created=now() - timedelta(days=days)
+                project=self.project2, order=order
             )
             donation.created = now() - timedelta(days=days)
             donation.save()
 
-        for days in [3, 4]:
+        for days in [4]:
             donation = DonationFactory.create(
-                project=self.project3, order=order, created=now() - timedelta(days=days)
+                project=self.project3, order=order
             )
             donation.created = now() - timedelta(days=days)
             donation.save()
 
         query = self.search.query(
             Q(
-                'nested',
-                path='donation_set',
-                score_mode='sum',
-                query=Q(
-                    'function_score',
-                    functions=[
-                        SF(
-                            'gauss',
-                            **{
-                                'donation_set.created': {
-                                    'origin': now(),
-                                    'offset': "1d",
-                                    'scale': "5d"
-                                }
-                            }
-                        ),
-                    ]
-                )
+                'function_score',
+                query=Q('exists', field='donations'),
+                functions=[
+                    SF({
+                        'gauss': {
+                            'donations': {
+                                'scale': "10d",
+                            },
+                            'multi_value_mode': 'sum',
+                        },
+                    })
+                ]
             )
-        )
+        ).extra(explain=True)
+
         result = query.to_queryset()
 
         self.assertEqual(len(result), 3)

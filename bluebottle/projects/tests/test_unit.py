@@ -479,6 +479,28 @@ class TestModel(BluebottleTestCase):
         self.project.amount_donated = Money(10, 'EUR')
         self.assertEqual(self.project.donated_percentage, 50)
 
+    def test_campaign_duration(self):
+        self.project.deadline = None
+        self.project.campaign_duration = 10
+        self.project.save()
+
+        self.assertEqual(self.project.deadline, None)
+
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        self.assertEqual((self.project.deadline - timezone.now()).days, 10)
+
+    def test_campaign_ended_and_deadline(self):
+        self.project.deadline = timezone.now() + timedelta(days=20)
+        self.project.campaign_duration = 10
+        self.project.save()
+
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        self.assertEqual((self.project.deadline - timezone.now()).days, 20)
+
 
 class TestProjectTheme(BluebottleTestCase):
     def setUp(self):

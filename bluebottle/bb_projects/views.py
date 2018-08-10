@@ -132,48 +132,49 @@ class ProjectListSearchMixin(object):
     def _scoring(self):
         return ESQ(
             'function_score',
+            query=ESQ('exists', field='donations'),
+            boost=0.2,
             functions=[
-                SF({
-                    'filter': (
-                        ESQ('match', **{'status.slug': 'campaign'}) | ESQ('match', **{'status.slug': 'voting'})
-                    ),
-                    'weight': 2
-                }),
                 SF({
                     'gauss': {
                         'donations': {
-                            'origin': timezone.now(),
-                            'offset': "1d",
-                            'scale': "5d",
+                            'scale': "10d",
                         },
                         'multi_value_mode': 'sum'
                     },
-                    'weight': 4
                 }),
+            ]
+        ) | ESQ(
+            'function_score',
+            boost=0.2,
+            query=ESQ('exists', field='task_members'),
+            functions=[
                 SF({
                     'gauss': {
                         'task_members': {
-                            'origin': timezone.now(),
-                            'offset': "1d",
-                            'scale': "5d"
+                            'scale': "10d"
                         },
                         'multi_value_mode': 'sum'
                     },
-                    'weight': 4
                 }),
+            ]
+        ) | ESQ(
+            'function_score',
+            boost=0.1,
+            query=ESQ('exists', field='votes'),
+            functions=[
                 SF({
                     'gauss': {
                         'votes': {
-                            'origin': timezone.now(),
-                            'offset': "1d",
-                            'scale': "5d"
+                            'scale': "10d"
                         },
                         'multi_value_mode': 'sum'
                     },
-                    'weight': 4
                 }),
-            ],
-            boost_mode='sum',
+            ]
+        ) | (
+            ESQ('match', **{'status.slug': {'query': 'campaign', 'boost': 0.4}}) |
+            ESQ('match', **{'status.slug': {'query': 'voting', 'boost': 0.4}})
         )
 
     def search(self):
@@ -206,7 +207,7 @@ class ProjectListSearchMixin(object):
 
             text = self.request.query_params.get('text')
             if text:
-                scoring.query = self._text_query(text)
+                scoring = scoring & self._text_query(text)
 
             return search.query(scoring).filter(filter)
 

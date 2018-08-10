@@ -293,10 +293,12 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             fundraiser=None,
             created=now() - timedelta(days=1)
         )
+        ProjectFactory.create(status=self.status)
         result = self.search({})
 
-        self.assertEqual(result.data['count'], 2)
+        self.assertEqual(result.data['count'], 3)
         self.assertEqual(result.data['results'][0]['title'], other_project.title)
+        self.assertEqual(result.data['results'][1]['title'], project.title)
 
     def test_score_taskmembers(self):
         project = ProjectFactory.create(status=self.status)
@@ -324,11 +326,13 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             task=other_task,
             created=now() - timedelta(days=1)
         )
+        ProjectFactory.create(status=self.status)
 
         result = self.search({})
 
-        self.assertEqual(result.data['count'], 2)
+        self.assertEqual(result.data['count'], 3)
         self.assertEqual(result.data['results'][0]['title'], other_project.title)
+        self.assertEqual(result.data['results'][1]['title'], project.title)
 
     def test_score_votes(self):
         project = ProjectFactory.create(status=self.status)
@@ -354,40 +358,42 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             project=other_project,
             created=now() - timedelta(days=1)
         )
+        ProjectFactory.create(status=self.status)
+
         result = self.search({})
 
-        self.assertEqual(result.data['count'], 2)
+        self.assertEqual(result.data['count'], 3)
         self.assertEqual(result.data['results'][0]['title'], other_project.title)
+        self.assertEqual(result.data['results'][1]['title'], project.title)
 
     def test_combined_scores(self):
-        project = ProjectFactory.create(status=self.status)
-        task = TaskFactory.create(project=project)
-        TaskMemberFactory(
-            task=task,
-            created=now() - timedelta(days=10)
-        )
-        TaskMemberFactory(
-            task=task,
-            created=now() - timedelta(days=10)
-        )
+        task_project = ProjectFactory.create(status=self.status)
+        task = TaskFactory.create(project=task_project)
         TaskMemberFactory(
             task=task,
             created=now() - timedelta(days=10)
         )
 
-        other_project = ProjectFactory.create(status=self.status)
-        VoteFactory(
-            project=other_project,
-            created=now() - timedelta(days=1)
+        donation_project = ProjectFactory.create(status=self.status)
+        order = OrderFactory.create(status='settled')
+        DonationFactory.create(
+            order=order,
+            project=donation_project,
+            fundraiser=None,
+            created=now() - timedelta(days=4)
         )
+        vote_project = ProjectFactory.create(status=self.status)
         VoteFactory(
-            project=other_project,
-            created=now() - timedelta(days=1)
+            project=vote_project,
+            created=now() - timedelta(days=10)
         )
+        ProjectFactory.create(status=self.status)
+
         result = self.search({})
-
-        self.assertEqual(result.data['count'], 2)
-        self.assertEqual(result.data['results'][0]['title'], other_project.title)
+        self.assertEqual(result.data['count'], 4)
+        self.assertEqual(result.data['results'][0]['title'], donation_project.title)
+        self.assertEqual(result.data['results'][1]['title'], task_project.title)
+        self.assertEqual(result.data['results'][2]['title'], vote_project.title)
 
     def test_order_deadline(self):
         campaign = ProjectPhase.objects.get(slug='campaign')

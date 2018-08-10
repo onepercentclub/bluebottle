@@ -13,6 +13,8 @@ from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.test.utils import override_settings
 
+from django_elasticsearch_dsl.test import ESTestCase
+
 import httmock
 
 from moneyed.classes import Money
@@ -671,7 +673,11 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
 
-class ProjectDateSearchTestCase(BluebottleTestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+class ProjectDateSearchTestCase(ESTestCase, BluebottleTestCase):
     """
     Integration tests for the Project API.
     """

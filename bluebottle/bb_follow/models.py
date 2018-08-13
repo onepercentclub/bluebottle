@@ -246,8 +246,6 @@ def email_followers(sender, instance, created, **kwargs):
 
             wallpost_text = instance.text
 
-            site = tenant_url()
-
             for mailee in mailers:
                 if mailee.campaign_notifications:
 

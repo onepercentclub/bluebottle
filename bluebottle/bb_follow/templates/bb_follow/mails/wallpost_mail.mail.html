@@ -13,6 +13,9 @@
 {% endblock %}
 
 {% block action %}
-    <a href="{{ link }}"
+    <a href="{{ site }}{{ link }}"
        class="action-email">{% trans 'View full update' context 'email' %}</a>
+    <a href="{{ site }}{{ unsubscribe_link }}"
+       class="action-email">{% trans 'Unsubscribe' context 'email' %}</a>
+
 {% endblock %}

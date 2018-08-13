@@ -265,6 +265,7 @@ def email_followers(sender, instance, created, **kwargs):
                     send_mail(
                         template_name='bb_follow/mails/wallpost_mail.mail',
                         subject=subject,
+                        site=tenant_url(),
                         wallpost_text=wallpost_text[:250],
                         to=mailee,
                         link=link,

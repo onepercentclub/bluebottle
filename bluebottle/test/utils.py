@@ -12,10 +12,6 @@ from rest_framework.test import APIClient as RestAPIClient
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_tenant_model
 
-from django_elasticsearch_dsl.test import ESTestCase as BaseESTestCase
-from django_elasticsearch_dsl.registries import registry
-
-from bluebottle.projects.models import Project
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
@@ -237,24 +233,3 @@ class FsmTestMixin(object):
                          '{0} should change to {1} not {2}'.format(
                              instance.__class__.__name__, new_status,
                              instance.status))
-
-
-@override_settings(
-    ELASTICSEARCH_DSL_AUTOSYNC=True,
-    ELASTICSEARCH_DSL_AUTO_REFRESH=True
-)
-class ESTestCase(BaseESTestCase, BluebottleTestCase):
-    @classmethod
-    def setUpClass(cls):
-        super(ESTestCase, cls).setUpClass()
-        for index in registry.get_indices([Project]):
-            index.create()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(ESTestCase, cls).tearDownClass()
-        for index in registry.get_indices([Project]):
-            try:
-                index.delete()
-            except Exception:
-                pass

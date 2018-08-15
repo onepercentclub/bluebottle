@@ -3,13 +3,16 @@ import json
 from decimal import Decimal
 
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 from django.utils.timezone import get_current_timezone
+
+from django_elasticsearch_dsl.test import ESTestCase
 
 from rest_framework import status
 
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.utils import BluebottleTestCase, ESTestCase
+from bluebottle.test.utils import BluebottleTestCase
 
 from ..models import ProjectPhase, ProjectTheme
 
@@ -76,7 +79,11 @@ class TestProjectPhaseList(ProjectEndpointTestCase):
             self.assertIn('viewable', item)
 
 
-class TestProjectList(ProjectEndpointTestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+class TestProjectList(ESTestCase, ProjectEndpointTestCase):
     """
     Test case for the ``ProjectList`` API view.
 
@@ -513,11 +520,17 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
         self.assertTrue('permission' in response.content)
 
 
-class TestTinyProjectList(ESTestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+class TestTinyProjectList(ESTestCase, BluebottleTestCase):
     """
     Test case for the ``TinyProjectList`` API view.
     """
     def setUp(self):
+        super(TestTinyProjectList, self).setUp()
+
         self.init_projects()
         campaign = ProjectPhase.objects.get(slug='campaign')
         new = ProjectPhase.objects.get(slug='plan-new')

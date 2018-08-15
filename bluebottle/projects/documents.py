@@ -35,6 +35,7 @@ class ProjectDocument(DocType):
         'deadline': fields.DateField(),
         'deadline_to_apply': fields.DateField(),
         'location': fields.TextField(),
+        'location_keyword': fields.KeywordField(attr='location'),
         'skill': fields.ObjectField(
             properties={
                 'id': fields.LongField(),
@@ -54,10 +55,11 @@ class ProjectDocument(DocType):
 
     position = fields.GeoPointField()
 
-    location = fields.ObjectField(properties={
+    location = fields.NestedField(properties={
         'id': fields.LongField(),
         'position': fields.GeoPointField(attr='position_tuple'),
-        'city': fields.TextField()
+        'city': fields.TextField(),
+        'name': fields.TextField()
     })
 
     country = fields.ObjectField(properties={

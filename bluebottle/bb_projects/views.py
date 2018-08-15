@@ -1,8 +1,11 @@
-from django.db.models.query_utils import Q
+import datetime
 
-from django.contrib.auth.models import AnonymousUser
+from django.db.models.query_utils import Q
 from django.utils import timezone
 
+from django.contrib.auth.models import AnonymousUser
+
+from dateutil import parser
 
 from elasticsearch_dsl import Q as ESQ, SF
 from rest_framework.response import Response
@@ -54,13 +57,20 @@ class ProjectListSearchMixin(object):
 
     def _text_query(self, value):
         return (
-            ESQ('match', title={'query': value, 'boost': 2}) |
-            ESQ('match', pitch=value) |
-            ESQ('match', story=value) |
+            ESQ('match_phrase_prefix', title={'query': value, 'boost': 2}) |
+            ESQ('match_phrase_prefix', pitch=value) |
+            ESQ('match_phrase_prefix', story=value) |
+            ESQ(
+                'nested', path='location', query=(
+                    ESQ('match_phrase_prefix', **{'location.name': value}) |
+                    ESQ('match_phrase_prefix', **{'location.city': value})
+                )
+            ) |
             ESQ(
                 'nested', path='task_set', query=(
-                    ESQ('match', **{'task_set.title': value}) |
-                    ESQ('match', **{'task_set.description': value})
+                    ESQ('match_phrase_prefix', **{'task_set.title': value}) |
+                    ESQ('match_phrase_prefix', **{'task_set.description': value}) |
+                    ESQ('match_phrase_prefix', **{'task_set.location': value})
                 )
             )
         )
@@ -111,23 +121,42 @@ class ProjectListSearchMixin(object):
 
     def _filter_anywhere(self, query, value):
         return query & ESQ(
-            'nested', path='task_set', query=~ESQ('exists', field='task_set.location')
+            'nested',
+            path='task_set',
+            query=(
+                ~ESQ('exists', field='task_set.location') |
+                ESQ('term', **{'task_set.location_keyword': ''})
+            )
         )
 
     def _filter_start(self, query, start):
-        end = self.request.query_params.get('end', start)
+        start = timezone.get_current_timezone().localize(parser.parse(start))
+        if 'end' in self.request.query_params:
+            end = timezone.get_current_timezone().localize(
+                parser.parse(self.request.query_params['end'])
+            )
+        else:
+            end = datetime.date.max
 
-        return query & (ESQ(
-            'nested', path='task_set', query=(
-                ESQ('term', **{'task_set.type': 'event'}) &
-                ESQ('range', **{'task_set.deadline': {'gte': start, 'lte': end}})
+        return query & (
+            ESQ(
+                'nested', path='task_set', query=(
+                    ESQ('term', **{'task_set.type': 'event'}) &
+                    ESQ('range', **{
+                        'task_set.deadline': {
+                            'gte': start,
+                            'lte': end
+                        }
+                    })
+                )
+            ) |
+            ESQ(
+                'nested', path='task_set', query=(
+                    ESQ('term', **{'task_set.type': 'ongoing'}) &
+                    ESQ('range', **{'task_set.deadline': {'gte': start}})
+                )
             )
-        ) | ESQ(
-            'nested', path='task_set', query=(
-                ESQ('term', **{'task_set.type': 'ongoing'}) &
-                ESQ('range', **{'task_set.deadline': {'gte': start}})
-            )
-        ))
+        )
 
     def _scoring(self):
         return ESQ(

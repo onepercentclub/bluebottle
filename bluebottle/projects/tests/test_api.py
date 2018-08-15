@@ -711,14 +711,21 @@ class ProjectDateSearchTestCase(ESTestCase, BluebottleTestCase):
                 deadline=datetime(2017, 1, 10, tzinfo=timezone.get_current_timezone())
             )
 
+        for project in self.projects[7:]:
+            TaskFactory.create(
+                project=project,
+                type='event',
+                deadline=datetime(2017, 1, 30, tzinfo=timezone.get_current_timezone())
+            )
+
     def test_project_list_filter_date(self):
         response = self.client.get(
-            self.projects_preview_url + '?start={}'.format('2017-01-10')
+            self.projects_preview_url + '?start={}'.format('2017-01-10 00:00:01')
         )
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content)
-        self.assertEqual(data['count'], 6)
+        self.assertEqual(data['count'], 9)
 
     def test_project_list_filter_date_end(self):
         response = self.client.get(
@@ -731,7 +738,7 @@ class ProjectDateSearchTestCase(ESTestCase, BluebottleTestCase):
 
     def test_project_list_filter_date_ongoing(self):
         response = self.client.get(
-            self.projects_preview_url + '?start={}'.format('2017-01-20')
+            self.projects_preview_url + '?start={}&end={}'.format('2017-01-18', '2017-01-19')
         )
         self.assertEqual(response.status_code, 200)
 
@@ -762,7 +769,7 @@ class ProjectDateSearchTestCase(ESTestCase, BluebottleTestCase):
     def test_project_list_filter_date_passed(self):
         self.projects[-1].task_set.all().update(location=None)
         response = self.client.get(
-            self.projects_preview_url + '?start={}'.format('2017-01-21')
+            self.projects_preview_url + '?start={}'.format('2017-01-31')
         )
         self.assertEqual(response.status_code, 200)
 
@@ -794,7 +801,7 @@ class ProjectDateSearchTestCase(ESTestCase, BluebottleTestCase):
     def test_project_list_search_location(self):
         self.projects[1].location = LocationFactory(name='Lyutidol')
         self.projects[1].save()
-        self.projects[2].location = LocationFactory(name='Honolyulyu')
+        self.projects[2].location = LocationFactory(name='Lyukobanya')
         self.projects[2].save()
 
         response = self.client.get(

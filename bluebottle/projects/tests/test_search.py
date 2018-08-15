@@ -221,7 +221,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         ProjectFactory.create(status=self.status)
 
         result = self.search({'text': 'Amsterdam'})
-        self.assertEqual(result.data['count'], 4)
+        self.assertEqual(result.data['count'], 5)
         # We boost the title, so the project with Amsterdam in the title should be first
         self.assertEqual(result.data['results'][0]['title'], project.title)
 

@@ -230,7 +230,11 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 401)
 
 
-class OwnProjectPermissionsTestCase(BluebottleTestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+class OwnProjectPermissionsTestCase(ESTestCase, BluebottleTestCase):
     """
     Tests for the Project API permissions.
     """
@@ -416,7 +420,11 @@ class ProjectEndpointTestCase(BluebottleTestCase):
         self.manage_projects_url = reverse('project_manage_list')
 
 
-class ProjectApiIntegrationTest(ProjectEndpointTestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+class ProjectApiIntegrationTest(ESTestCase, ProjectEndpointTestCase):
     def test_project_list_view(self):
         """
         Tests for Project List view. These basic tests are here because Project
@@ -441,7 +449,7 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
 
         # Tests that the phase filter works.
         response = self.client.get(
-            '%s?status=%s' % (self.projects_preview_url, self.plan_phase.slug))
+            '%s?status[]=%s' % (self.projects_preview_url, self.plan_phase.slug))
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data['count'], 13)
         self.assertEquals(len(response.data['results']), 8)
@@ -454,8 +462,6 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
 
         # Test that ordering works
         response = self.client.get(self.projects_preview_url + '?ordering=newest')
-        self.assertEquals(response.status_code, 200)
-        response = self.client.get(self.projects_preview_url + '?ordering=title')
         self.assertEquals(response.status_code, 200)
         response = self.client.get(self.projects_preview_url + '?ordering=deadline')
         self.assertEquals(response.status_code, 200)

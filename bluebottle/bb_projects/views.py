@@ -87,7 +87,9 @@ class ProjectListSearchMixin(object):
         return query & ESQ('term', **{'country.id': value})
 
     def _filter_location(self, query, value):
-        return query & ESQ('term', **{'location.id': value})
+        return query & ESQ(
+            'nested', path='location', query=ESQ('term', **{'location.id': value})
+        )
 
     def _filter_theme(self, query, value):
         return query & ESQ('term', **{'theme.id': value})
@@ -158,6 +160,10 @@ class ProjectListSearchMixin(object):
             )
         )
 
+    def _filter_owner(self, filter):
+        user = self.request.user if self.request.user.is_authenticated else None
+        return filter & ESQ('term', owner_id=user.pk)
+
     def _scoring(self):
         return ESQ(
             'function_score',
@@ -201,14 +207,23 @@ class ProjectListSearchMixin(object):
                     },
                 }),
             ]
-        ) | (
-            ESQ('match', **{'status.slug': {'query': 'campaign', 'boost': 0.4}}) |
-            ESQ('match', **{'status.slug': {'query': 'voting', 'boost': 0.4}})
+        ) | ESQ(
+            'function_score',
+            boost=0.4,
+            functions=[
+                SF({
+                    'filter': ESQ('terms', status=['campaign', 'voting']),
+                    'weight': 1
+                })
+            ]
         )
 
-    def search(self):
+    def search(self, viewable=True):
         search = documents.ProjectDocument.search()
-        filter = ESQ('term', **{'status.viewable': True})
+        if viewable:
+            filter = ESQ('term', **{'status.viewable': True})
+        else:
+            filter = ESQ()
 
         for field in self.search_fields:
             value = self.request.query_params.get(field)
@@ -218,6 +233,9 @@ class ProjectListSearchMixin(object):
         statuses = self.request.query_params.getlist('status[]')
         if statuses:
             filter = self._filter_status(filter, statuses)
+
+        if not self.request.user.has_perm('projects.api_read_project'):
+            filter = self._filter_owner(filter)
 
         ordering = self.request.query_params.get('ordering')
         if ordering and ordering != 'popularity':
@@ -230,18 +248,19 @@ class ProjectListSearchMixin(object):
             elif ordering == 'status':
                 sort = ('status.sequence', )
 
-            return search.query().filter(filter).sort(*sort)
+            query = search.query().filter(filter).sort(*sort)
         else:
             scoring = self._scoring()
+            query = search.filter(filter).query(scoring)
 
-            text = self.request.query_params.get('text')
-            if text:
-                scoring = scoring & self._text_query(text)
+        text = self.request.query_params.get('text')
+        if text:
+            return query.query(self._text_query(text))
 
-            return search.query(scoring).filter(filter)
+        return query
 
 
-class ProjectTinyPreviewList(ProjectListSearchMixin, OwnerListViewMixin, ListAPIView):
+class ProjectTinyPreviewList(ProjectListSearchMixin, ListAPIView):
     queryset = Project.objects.all()
     pagination_class = TinyProjectPagination
     serializer_class = ProjectTinyPreviewSerializer
@@ -264,7 +283,7 @@ class ProjectTinyPreviewList(ProjectListSearchMixin, OwnerListViewMixin, ListAPI
         return Response(serializer.data)
 
 
-class ProjectPreviewList(ProjectListSearchMixin, OwnerListViewMixin, ListAPIView):
+class ProjectPreviewList(ProjectListSearchMixin, ListAPIView):
     queryset = Project.objects.all()
     pagination_class = ProjectPagination
     serializer_class = ProjectPreviewSerializer
@@ -276,7 +295,7 @@ class ProjectPreviewList(ProjectListSearchMixin, OwnerListViewMixin, ListAPIView
     )
 
     def list(self, request):
-        result = self.search().extra(explain=True)
+        result = self.search(viewable=False)
 
         page = self.paginate_queryset(result)
         if page is not None:

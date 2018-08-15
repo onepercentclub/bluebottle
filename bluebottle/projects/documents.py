@@ -26,6 +26,7 @@ class ProjectDocument(DocType):
     title = fields.TextField()
     story = fields.TextField()
     pitch = fields.TextField()
+    owner_id = fields.KeywordField()
 
     task_set = fields.NestedField(properties={
         'title': fields.TextField(),

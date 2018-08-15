@@ -5,7 +5,7 @@ from django.utils.timezone import now
 from django_elasticsearch_dsl.test import ESTestCase
 from elasticsearch_dsl import Q, SF
 
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectLocationFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory

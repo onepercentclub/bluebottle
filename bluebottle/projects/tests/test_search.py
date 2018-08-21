@@ -214,10 +214,13 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             title='Rotterdam Eindhoven Utrecht Harlingen',
         )
         TaskFactory.create(title='Amsterdam', project=task_title_project)
+
         task_description_project = ProjectFactory.create(
+            status=self.status,
             title='Rotterdam Eindhoven Utrecht Franeker',
         )
         TaskFactory.create(description='Amsterdam', project=task_description_project)
+
         ProjectFactory.create(status=self.status)
 
         result = self.search({'text': 'Amsterdam'})

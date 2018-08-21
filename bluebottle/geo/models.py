@@ -129,4 +129,4 @@ class Location(models.Model):
 
     @property
     def position_tuple(self):
-        return (self.position.latitude, self.position.longitude)
+        return (self.position.longitude, self.position.latitude)

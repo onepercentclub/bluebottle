@@ -1,7 +1,6 @@
 from django.db import connection
 
-from django_elasticsearch_dsl import Index, DocType, fields, search
-from elasticsearch_dsl import Q
+from django_elasticsearch_dsl import Index, DocType, fields
 
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.categories.models import Category
@@ -11,8 +10,24 @@ from bluebottle.projects.models import Project, ProjectLocation
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.votes.models import Vote
 
+
+class MultiTenantIndex(Index):
+    @property
+    def _name(self):
+        if connection.tenant.schema_name != 'public':
+            return '{}-{}'.format(connection.tenant.schema_name, self.__name)
+        return self.__name
+
+    @_name.setter
+    def _name(self, value):
+        if value and value.startswith(connection.tenant.schema_name):
+            value = value.replace(connection.tenant.schema_name + '-', '')
+
+        self.__name = value
+
+
 # The name of your index
-project = Index('projects')
+project = MultiTenantIndex('projects')
 # See Elasticsearch Indices API reference for available settings
 project.settings(
     number_of_shards=1,
@@ -22,7 +37,6 @@ project.settings(
 
 @project.doc_type
 class ProjectDocument(DocType):
-    client_name = fields.KeywordField()
     title = fields.TextField()
     story = fields.TextField()
     pitch = fields.TextField()
@@ -45,6 +59,7 @@ class ProjectDocument(DocType):
     })
 
     task_members = fields.DateField()
+    people_needed = fields.IntegerField()
     donations = fields.DateField()
     votes = fields.DateField()
 
@@ -88,15 +103,6 @@ class ProjectDocument(DocType):
             Task, TaskMember, ProjectPhase, Location, Country, Vote, Donation,
         )
 
-    @classmethod
-    def search(cls, using=None, index=None):
-        return search.Search(
-            using=using or cls._doc_type.using,
-            index=index or cls._doc_type.index,
-            doc_type=[cls],
-            model=cls._doc_type.model
-        ).filter(Q('term', client_name=connection.tenant.client_name))
-
     def get_queryset(self):
         return super(ProjectDocument, self).get_queryset().select_related(
             'location', 'country', 'theme', 'status'
@@ -119,9 +125,6 @@ class ProjectDocument(DocType):
             return related_instance.project
         elif isinstance(related_instance, Donation):
             return related_instance.project
-
-    def prepare_client_name(self, instance):
-        return connection.tenant.client_name
 
     def prepare_amount_asked(self, instance):
         return instance.amount_asked.amount

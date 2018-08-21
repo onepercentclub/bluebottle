@@ -168,7 +168,7 @@ class ProjectListSearchMixin(object):
         return ESQ(
             'function_score',
             query=ESQ('exists', field='donations'),
-            boost=0.2,
+            boost=0.02,
             functions=[
                 SF({
                     'gauss': {
@@ -181,7 +181,7 @@ class ProjectListSearchMixin(object):
             ]
         ) | ESQ(
             'function_score',
-            boost=0.2,
+            boost=0.02,
             query=ESQ('exists', field='task_members'),
             functions=[
                 SF({
@@ -195,7 +195,7 @@ class ProjectListSearchMixin(object):
             ]
         ) | ESQ(
             'function_score',
-            boost=0.1,
+            boost=0.01,
             query=ESQ('exists', field='votes'),
             functions=[
                 SF({
@@ -209,12 +209,27 @@ class ProjectListSearchMixin(object):
             ]
         ) | ESQ(
             'function_score',
-            boost=0.4,
             functions=[
                 SF({
-                    'filter': ESQ('terms', status=['campaign', 'voting']),
-                    'weight': 1
-                })
+                    'filter': ESQ('terms', **{'status.slug': ['campaign', 'voting']}),
+                    'weight': 30
+                }),
+                SF({
+                    'filter': ESQ('term', **{'status.slug': 'done-complete'}),
+                    'weight': 20
+                }),
+                SF({
+                    'filter': ESQ('terms', **{'status.slug': ['done-incomplete', 'voting-done', 'refunded']}),
+                    'weight': 10
+                }),
+                SF({
+                    'filter': ESQ('range', people_needed={'gt': 1}),
+                    'weight': 5
+                }),
+                SF({
+                    'filter': ESQ('range', amount_needed={'gt': 1}),
+                    'weight': 5
+                }),
             ]
         )
 
@@ -273,7 +288,6 @@ class ProjectTinyPreviewList(ProjectListSearchMixin, ListAPIView):
 
     def list(self, request):
         result = self.search().sort('created')
-
         page = self.paginate_queryset(result)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -295,7 +309,7 @@ class ProjectPreviewList(ProjectListSearchMixin, ListAPIView):
     )
 
     def list(self, request):
-        result = self.search(viewable=False)
+        result = self.search()
 
         page = self.paginate_queryset(result)
         if page is not None:

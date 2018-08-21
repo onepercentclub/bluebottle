@@ -14,7 +14,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.clients.models import Client
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.projects.documents import ProjectDocument
+from bluebottle.projects.documents import ProjectDocument, project
 from bluebottle.donations.models import Donation
 
 
@@ -55,6 +55,14 @@ class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
         self.project3.projectlocation.latitude = 52.0907322
         self.project3.projectlocation.longitude = 5.0864009
         self.project3.projectlocation.save()
+
+    def test_index_name(self):
+        self.assertEqual(ProjectDocument._doc_type.index, 'test-projects_ded_test')
+        self.assertEqual(project._name, 'test-projects_ded_test')
+
+        with LocalTenant(Client.objects.get(client_name='test2')):
+            self.assertEqual(ProjectDocument._doc_type.index, 'test2-projects_ded_test')
+            self.assertEqual(project._name, 'test2-projects_ded_test')
 
     def test_search(self):
         result = self.search.query(

@@ -122,11 +122,6 @@ class PageAdmin(PlaceholderFieldAdmin):
         # Automatically store the user in the author field.
         if not obj.author:
             obj.author = request.user
-
-        if not obj.publication_date:
-            # auto_now_add makes the field uneditable.
-            # default fills the field before the post is written (too early)
-            obj.publication_date = now()
         obj.save()
 
     STATUS_ICONS = {

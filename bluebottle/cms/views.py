@@ -47,12 +47,12 @@ class HomePageDetail(RetrieveAPIView):
 
 
 class PageDetail(RetrieveAPIView):
-    queryset = Page.objects.published()
+    queryset = Page.objects
     serializer_class = PageSerializer
     lookup_field = 'slug'
 
     def get_object(self, queryset=None):
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().published()
         language = get_language_from_request(self.request)
         try:
             return queryset.get(
@@ -70,12 +70,12 @@ class PageDetail(RetrieveAPIView):
 
 
 class NewsItemDetail(RetrieveAPIView):
-    queryset = NewsItem.objects.published()
+    queryset = NewsItem.objects
     serializer_class = NewsItemSerializer
     lookup_field = 'slug'
 
     def get_object(self, queryset=None):
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().published()
         language = get_language_from_request(self.request)
         try:
             return queryset.get(

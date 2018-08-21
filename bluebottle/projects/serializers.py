@@ -88,8 +88,7 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
 
 class ProjectDocumentSerializer(serializers.ModelSerializer):
     file = PrivateFileSerializer(
-        'project-document-file', url_args=('pk', ), permission=ResourceOwnerPermission,
-        read_only=True
+        'project-document-file', url_args=('pk', ), permission=ResourceOwnerPermission
     )
 
     project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
@@ -237,6 +236,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
     image = ImageSerializer(required=False)
     owner = UserProfileSerializer()
     skills = serializers.SerializerMethodField()
+    project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
     theme = ProjectThemeSerializer()
     project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
 

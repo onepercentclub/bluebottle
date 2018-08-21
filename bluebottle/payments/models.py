@@ -220,9 +220,14 @@ class OrderPayment(models.Model, FSMTransition):
     def charged_back(self):
         self.closed = None
 
-    @transition(field=status, source=[StatusDefinition.AUTHORIZED,
-                                      StatusDefinition.SETTLED],
-                target=StatusDefinition.REFUNDED)
+    @transition(
+        field=status,
+        source=[
+            StatusDefinition.AUTHORIZED, StatusDefinition.SETTLED,
+            StatusDefinition.REFUND_REQUESTED, StatusDefinition.PLEDGED
+        ],
+        target=StatusDefinition.REFUNDED
+    )
     def refunded(self):
         self.closed = None
 

@@ -8,6 +8,7 @@ from tenant_extras.utils import TenantLanguage
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
 from bluebottle.payments.models import Payment
+from bluebottle.utils.context_managers import LogMail
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.utils import StatusDefinition
 
@@ -62,16 +63,18 @@ def successful_donation_fundraiser_mail(instance):
             else:
                 donor_name = _('a guest')
 
-    send_mail(
-        template_name='donations/mails/new_oneoff_donation_fundraiser.mail',
-        subject=subject,
-        site=tenant_url(),
-        to=receiver,
-        link=fundraiser_link,
-        donation=donation,
-        pledged=pledged,
-        donor_name=donor_name
-    )
+    with LogMail(donation.mail_logs, 'new_oneoff_donation_fundraiser') as sent:
+        if not sent:
+            send_mail(
+                template_name='donations/mails/new_oneoff_donation_fundraiser.mail',
+                subject=subject,
+                site=tenant_url(),
+                to=receiver,
+                link=fundraiser_link,
+                donation=donation,
+                pledged=pledged,
+                donor_name=donor_name
+            )
 
 
 def new_oneoff_donation(instance):
@@ -107,19 +110,20 @@ def new_oneoff_donation(instance):
                 donor_name = _('a guest')
 
         payment_method = get_payment_method(donation)
-
-        # Send email to the project owner.
-        send_mail(
-            template_name='donations/mails/new_oneoff_donation.mail',
-            subject=subject,
-            to=receiver,
-            link=project_url,
-            donor_name=donor_name,
-            donation=donation,
-            pledged=pledged,
-            admin_email=admin_email,
-            payment_method=payment_method
-        )
+        with LogMail(donation.mail_logs, 'new_oneoff_donation') as sent:
+            if not sent:
+                # Send email to the project owner.
+                send_mail(
+                    template_name='donations/mails/new_oneoff_donation.mail',
+                    subject=subject,
+                    to=receiver,
+                    link=project_url,
+                    donor_name=donor_name,
+                    donation=donation,
+                    pledged=pledged,
+                    admin_email=admin_email,
+                    payment_method=payment_method
+                )
 
     if donation.order.user and donation.order.user.email:
         # Send email to the project supporter
@@ -130,12 +134,14 @@ def new_oneoff_donation(instance):
 
         payment_method = get_payment_method(donation)
 
-        send_mail(
-            template_name="donations/mails/confirmation.mail",
-            subject=subject,
-            to=donor,
-            link=project_url,
-            donation=donation,
-            pledged=pledged,
-            payment_method=payment_method
-        )
+        with LogMail(donation.mail_logs, 'confirmation') as sent:
+            if not sent:
+                send_mail(
+                    template_name="donations/mails/confirmation.mail",
+                    subject=subject,
+                    to=donor,
+                    link=project_url,
+                    donation=donation,
+                    pledged=pledged,
+                    payment_method=payment_method
+                )

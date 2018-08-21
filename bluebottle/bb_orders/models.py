@@ -27,6 +27,7 @@ class BaseOrder(models.Model, FSMTransition):
         StatusDefinition.AUTHORIZED: StatusDefinition.PENDING,
         StatusDefinition.SETTLED: StatusDefinition.SUCCESS,
         StatusDefinition.CHARGED_BACK: StatusDefinition.FAILED,
+        StatusDefinition.REFUND_REQUESTED: StatusDefinition.REFUND_REQUESTED,
         StatusDefinition.REFUNDED: StatusDefinition.REFUNDED,
         StatusDefinition.FAILED: StatusDefinition.FAILED,
         StatusDefinition.UNKNOWN: StatusDefinition.FAILED
@@ -38,6 +39,7 @@ class BaseOrder(models.Model, FSMTransition):
         (StatusDefinition.PLEDGED, _('Pledged')),
         (StatusDefinition.PENDING, _('Pending')),
         (StatusDefinition.SUCCESS, _('Success')),
+        (StatusDefinition.REFUND_REQUESTED, _('Refund requested')),
         (StatusDefinition.REFUNDED, _('Refunded')),
         (StatusDefinition.FAILED, _('Failed')),
         (StatusDefinition.CANCELLED, _('Cancelled')),
@@ -84,7 +86,8 @@ class BaseOrder(models.Model, FSMTransition):
 
     @transition(field=status,
                 source=[StatusDefinition.PENDING, StatusDefinition.LOCKED,
-                        StatusDefinition.FAILED],
+                        StatusDefinition.FAILED, StatusDefinition.REFUND_REQUESTED,
+                        StatusDefinition.REFUNDED],
                 target=StatusDefinition.SUCCESS)
     def success(self):
         if not self.confirmed:
@@ -104,10 +107,22 @@ class BaseOrder(models.Model, FSMTransition):
         source=[
             StatusDefinition.PENDING, StatusDefinition.SUCCESS,
             StatusDefinition.PLEDGED, StatusDefinition.FAILED,
+            StatusDefinition.REFUND_REQUESTED
         ],
         target=StatusDefinition.REFUNDED
     )
     def refunded(self):
+        pass
+
+    @transition(
+        field=status,
+        source=[
+            StatusDefinition.PENDING, StatusDefinition.SUCCESS,
+            StatusDefinition.PLEDGED, StatusDefinition.FAILED,
+        ],
+        target=StatusDefinition.REFUND_REQUESTED
+    )
+    def refund_requested(self):
         pass
 
     @transition(

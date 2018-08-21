@@ -55,10 +55,10 @@ class ProjectLocation(models.Model):
     postal_code = models.CharField(_('postal_code'), max_length=20, null=True, blank=True)
     country = models.CharField(_('country'), max_length=40, null=True, blank=True)
     latitude = models.DecimalField(
-        _('latitude'), max_digits=21, decimal_places=18
+        _('latitude'), max_digits=21, decimal_places=18, null=True, blank=True
     )
     longitude = models.DecimalField(
-        _('longitude'), max_digits=21, decimal_places=18
+        _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True
     )
 
     class Meta:
@@ -203,7 +203,9 @@ class Project(BaseProject, PreviousStatusMixin):
     bank_details_reviewed = models.BooleanField(
         _('Bank details reviewed'),
         help_text=_(
-            'Review the project documents before marking the bank details as reviewed. '
+            'Review the project documents before marking the bank details as reviewed.'
+            'After setting this project to running, the project documents will be deleted.'
+            'Also, make sure to remove the documents from your device after downloading them.'
         ),
         default=False
     )
@@ -357,10 +359,7 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.payout_status == 're_scheduled' and self.campaign_paid_out:
             self.campaign_paid_out = None
 
-        # If the project is re-opened, payout-status should be cleaned
-        if self.status.slug not in ["done-complete", "done-incomplete"] and  \
-                self.payout_status == 'needs_approval':
-            self.payout_status = None
+        self.update_payout_approval()
 
         if not self.task_manager:
             self.task_manager = self.owner
@@ -429,7 +428,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def donations(self):
-        success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+        success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS, StatusDefinition.PLEDGED]
         return self.donation_set.filter(order__status__in=success)
 
     @property
@@ -469,6 +468,7 @@ class Project(BaseProject, PreviousStatusMixin):
                 StatusDefinition.PENDING,
                 StatusDefinition.SUCCESS,
                 StatusDefinition.CANCELLED,
+                StatusDefinition.REFUND_REQUESTED,
             ]
         )
 
@@ -542,7 +542,11 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def amount_cancelled(self):
-        return self.get_money_total([StatusDefinition.CANCELLED])
+        return self.get_money_total([
+            StatusDefinition.CANCELLED,
+            StatusDefinition.REFUND_REQUESTED,
+            StatusDefinition.REFUNDED,
+        ])
 
     @property
     def donated_percentage(self):
@@ -679,17 +683,27 @@ class Project(BaseProject, PreviousStatusMixin):
             self.status = ProjectPhase.objects.get(slug='done-complete')
             self.save()
 
+    def update_payout_approval(self):
+        if self.is_funding \
+                and self.status.slug in ["done-complete", "done-incomplete"] \
+                and not self.payout_status:
+            self.payout_status = 'needs_approval'
+
+        # If the project is re-opened, payout-status should be cleaned
+        if self.status.slug not in ["done-complete", "done-incomplete"] \
+                and self.payout_status == 'needs_approval':
+            self.payout_status = None
+
     def update_status_after_deadline(self):
         if self.status.slug == 'campaign':
             if self.is_funding:
                 if self.amount_donated + self.amount_extra >= self.amount_asked:
                     self.status = ProjectPhase.objects.get(slug="done-complete")
-                    self.payout_status = 'needs_approval'
                 elif self.amount_donated.amount <= 20 or not self.campaign_started:
                     self.status = ProjectPhase.objects.get(slug="closed")
                 else:
                     self.status = ProjectPhase.objects.get(slug="done-incomplete")
-                    self.payout_status = 'needs_approval'
+                self.update_payout_approval()
             else:
                 if self.task_set.filter(
                         status__in=[Task.TaskStatuses.in_progress,

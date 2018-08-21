@@ -1,54 +1,53 @@
-from collections import OrderedDict
 import csv
 import logging
-import six
+from collections import OrderedDict
 
+import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
-from django.contrib.admin.widgets import AdminTextareaWidget
-from django.forms.models import ModelFormMetaclass
-from django.db import models
-from django.utils.text import slugify
-from django_summernote.admin import SummernoteInlineModelAdmin
-from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
-from polymorphic.admin.inlines import StackedPolymorphicInline
-
-from bluebottle.payments.adapters import has_payment_prodiver
-from bluebottle.payments_lipisha.models import LipishaProject
-from bluebottle.projects.models import (
-    ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn, ProjectLocation,
-    CustomProjectField, CustomProjectFieldSettings, ProjectCreateTemplate)
-
 from django import forms
-from django.db import connection
 from django.conf.urls import url
 from django.contrib import admin, messages
+from django.contrib.admin.widgets import AdminTextareaWidget
 from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
+from django.db import connection
+from django.db import models
 from django.db.models import Count, Sum, F, When, Case
-from django.utils.html import format_html
+from django.forms.models import ModelFormMetaclass
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden, HttpResponse
+from django.utils.html import format_html
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
-
+from django_summernote.admin import SummernoteInlineModelAdmin
 from django_summernote.widgets import SummernoteWidget
 from moneyed.classes import Money
 from parler.admin import TranslatableAdmin
-from sorl.thumbnail.admin import AdminImageMixin
+from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
+from polymorphic.admin.inlines import StackedPolymorphicInline
 from schwifty import IBAN, BIC
+from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.payouts_dorado.adapters import (
-    DoradoPayoutAdapter, PayoutValidationError, PayoutCreationError
-)
-from bluebottle.rewards.models import Reward
-from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
-from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin
+from bluebottle.payments.adapters import has_payment_prodiver
+from bluebottle.payments_lipisha.models import LipishaProject
+from bluebottle.payouts_dorado.adapters import (
+    DoradoPayoutAdapter, PayoutValidationError, PayoutCreationError
+)
+from bluebottle.projects.decorators import confirmation_form
+from bluebottle.projects.forms import RefundConfirmationForm, PayoutApprovalConfirmationForm
+from bluebottle.projects.models import (
+    ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn, ProjectLocation,
+    CustomProjectField, CustomProjectFieldSettings, ProjectCreateTemplate)
+from bluebottle.rewards.models import Reward
+from bluebottle.tasks.admin import TaskAdminInline
+from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin, \
+    TranslatedUnionFieldListFilter
 from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
 from bluebottle.votes.models import Vote
-
 from .forms import ProjectDocumentForm
 from .models import (ProjectBudgetLine, Project,
                      ProjectDocument, ProjectPhaseLog)
@@ -242,6 +241,7 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
 
     def clean(self):
         if (
+            'status' in self.cleaned_data and
             self.cleaned_data['status'].slug == 'campaign' and
             'amount_asked' in self.cleaned_data and
             self.cleaned_data['amount_asked'].amount > 0 and
@@ -250,6 +250,7 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
             raise forms.ValidationError(
                 _('The bank details need to be reviewed before approving a project')
             )
+        super(ProjectAdminForm, self).clean()
 
     def save(self, commit=True):
         project = super(ProjectAdminForm, self).save(commit=commit)
@@ -308,8 +309,9 @@ class ProjectLocationInline(LatLongMapPickerMixin, admin.StackedInline):
 
 class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModelForm):
     form = ProjectAdminForm
-    date_hierarchy = 'created'
+    date_hierarchy = 'deadline'
     ordering = ('-created',)
+
     save_as = True
     search_fields = (
         'title', 'owner__first_name', 'owner__last_name', 'owner__email',
@@ -332,9 +334,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         self.inlines = self.all_inlines
         if obj:
             # We need to reload project, or we get an error when changing project type
-            proj = Project.objects.get(pk=obj.id)
-            if obj and proj.project_type == 'sourcing':
+            project = Project.objects.get(pk=obj.id)
+            if project.project_type == 'sourcing':
                 self.inlines = self.sourcing_inlines
+        elif request.POST.get('project_type', '') == 'sourcing':
+            self.inlines = self.sourcing_inlines
 
         instances = super(ProjectAdmin, self).get_inline_instances(request, obj)
         add_on_inline = ProjectAddOnInline(self.model, self.admin_site)
@@ -448,6 +452,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
     expertise_based.boolean = True
 
+    @confirmation_form(PayoutApprovalConfirmationForm, 'admin/payout_approval_confirmation.html')
     def approve_payout(self, request, pk=None):
         project = Project.objects.get(pk=pk)
         project_url = reverse('admin:projects_project_change', args=(project.id,))
@@ -512,7 +517,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         return HttpResponseRedirect(project_url)
 
-    def refund(self, request, pk=None):
+    @confirmation_form(RefundConfirmationForm, 'admin/refund_confirmation.html')
+    def refund(self, request, pk=None, form=None):
         project = Project.objects.get(pk=pk)
 
         if not request.user.has_perm('payments.refund_orderpayment') or not project.can_refund:
@@ -583,7 +589,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'created', 'updated',
             'vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
             'popularity', 'payout_status',
-            'geocoding'
+            'geocoding', 'donations_link'
         ]
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status', )
@@ -607,11 +613,12 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     def get_list_filter(self, request):
         filters = [
             ('status', UnionFieldListFilter),
-            ('theme', UnionFieldListFilter),
-            ('task__skill', UnionFieldListFilter),
-            'task__skill__expertise',
+            ('theme', TranslatedUnionFieldListFilter),
+            ('task__skill', TranslatedUnionFieldListFilter),
+            ProjectReviewerFilter,
+            'categories',
             'project_type',
-            'categories'
+            'is_campaign'
         ]
 
         if request.user.has_perm('projects.approve_payout'):
@@ -679,7 +686,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         amount = (_('Amount'), {'fields': [
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
-            'currencies', 'popularity', 'vote_count'
+            'currencies', 'donations_link', 'popularity', 'vote_count'
         ]})
 
         if request.user.has_perm('projects.approve_payout'):
@@ -710,8 +717,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         fieldsets = (main, story, dates)
 
-        if obj and obj.project_type != 'sourcing':
-            fieldsets += (amount, bank)
+        if obj:
+            project = Project.objects.get(pk=obj.id)
+            if project.project_type != 'sourcing':
+                fieldsets += (amount, bank)
 
         if CustomProjectFieldSettings.objects.count():
             fieldsets += (extra, )
@@ -734,6 +743,12 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         )
 
         return queryset
+
+    def donations_link(self, obj):
+        url = reverse('admin:donations_donation_changelist')
+        total = obj.donations.count()
+        return format_html('<a href="{}?project_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
+    donations_link.short_description = _("Donations")
 
 
 admin.site.register(Project, ProjectAdmin)

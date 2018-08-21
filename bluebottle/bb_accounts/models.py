@@ -136,7 +136,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(_('first name'), blank=True, max_length=100)
     last_name = models.CharField(_('last name'), blank=True, max_length=100)
     place = models.CharField(_('Location your at now'), blank=True, max_length=100)
-    location = models.ForeignKey('geo.Location', blank=True, help_text=_('Location'), null=True)
+    location = models.ForeignKey('geo.Location', blank=True, help_text=_('Location'),
+                                 null=True, on_delete=models.SET_NULL)
     favourite_themes = models.ManyToManyField(ProjectTheme, blank=True)
     skills = models.ManyToManyField('tasks.Skill', blank=True)
     phone_number = models.CharField(_('phone number'), blank=True, max_length=50)

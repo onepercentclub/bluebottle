@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import factory
 from django.utils.timezone import now
 
@@ -14,4 +16,4 @@ class PageFactory(factory.DjangoModelFactory):
     author = factory.SubFactory(BlueBottleUserFactory)
     slug = factory.Sequence(lambda n: 'slug-{0}'.format(n))
     status = Page.PageStatus.published
-    publication_date = now()
+    publication_date = now() - timedelta(days=4)

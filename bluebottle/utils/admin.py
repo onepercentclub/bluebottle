@@ -1,4 +1,6 @@
 import csv
+
+from adminfilters.multiselect import UnionFieldListFilter
 from moneyed import Money
 
 from django.conf import settings
@@ -142,7 +144,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
 
 class TotalAmountAdminChangeList(ChangeList):
     def get_results(self, *args, **kwargs):
-        self.model_admin.change_list_template = 'utils/admin/change_list.html'
+        self.model_admin.change_list_template = 'utils/admin/total_amount_change_list.html'
         super(TotalAmountAdminChangeList, self).get_results(*args, **kwargs)
 
         total_column = self.model_admin.total_column or 'amount'
@@ -178,3 +180,12 @@ class BasePlatformSettingsAdmin(SingletonAdmin):
 
     def has_add_permission(self, request, obj=None):
         return False
+
+
+class TranslatedUnionFieldListFilter(UnionFieldListFilter):
+
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        super(TranslatedUnionFieldListFilter, self).__init__(
+            field, request, params, model, model_admin, field_path)
+        # Remove duplicates and order by title
+        self.lookup_choices = sorted(list(set(self.lookup_choices)), key=lambda tup: tup[1])

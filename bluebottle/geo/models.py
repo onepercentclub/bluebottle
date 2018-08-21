@@ -2,13 +2,14 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from geoposition.fields import GeopositionField
 from sorl.thumbnail import ImageField
-from parler.models import TranslatableModel, TranslatedFields
+from parler.models import TranslatedFields
 
+from bluebottle.utils.models import SortableTranslatableModel
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \
     NumericCodeValidator
 
 
-class GeoBaseModel(TranslatableModel):
+class GeoBaseModel(SortableTranslatableModel):
     """
     Abstract base model for the UN M.49 geoscheme.
     Refs: http://unstats.un.org/unsd/methods/m49/m49.htm
@@ -89,6 +90,7 @@ class Country(GeoBaseModel):
             "Assistance from the OECD's Development Assistance Committee."))
 
     class Meta(GeoBaseModel.Meta):
+        ordering = ['translations__name']
         verbose_name = _("country")
         verbose_name_plural = _("countries")
 

@@ -3,6 +3,7 @@ import mock
 import time
 from urlparse import urlparse, parse_qs
 
+from django.conf import settings
 from django.test.utils import override_settings
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -32,8 +33,6 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
         url = urlparse(embed.url)
         query = parse_qs(url.query)
 
-        get_current_host.assert_called_with(False)
-
         self.assertEqual(url.scheme, 'https')
         self.assertEqual(
             url.netloc, 'looker.{}'.format(get_current_host.return_value)
@@ -61,7 +60,7 @@ class LookerEmbedDashboardTest(BluebottleTestCase):
             json.loads(query['user_attributes'][0])['tenant'], 'test'
         )
         self.assertEqual(
-            int(query['session_length'][0]), LookerSSOEmbed.session_length
+            int(query['session_length'][0]), settings.LOOKER_SESSION_LENGTH
         )
         self.assertEqual(
             json.loads(query['permissions'][0]), list(LookerSSOEmbed.permissions)

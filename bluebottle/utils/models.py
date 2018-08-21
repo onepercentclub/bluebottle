@@ -1,5 +1,3 @@
-import pytz
-from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -103,7 +101,7 @@ class PublishableModel(models.Model):
     publication_date = models.DateTimeField(
         _('publication date'),
         null=True, db_index=True,
-        default=now().replace(tzinfo=pytz.timezone(settings.TIME_ZONE)),
+        default=now(),
         help_text=_("To go live, status must be 'Published'."))
 
     publication_end_date = models.DateTimeField(_('publication end date'),

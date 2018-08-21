@@ -126,3 +126,7 @@ class Location(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    @property
+    def position_tuple(self):
+        return (self.position.longitude, self.position.latitude)

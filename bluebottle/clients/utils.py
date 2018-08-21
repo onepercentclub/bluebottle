@@ -36,6 +36,7 @@ class LocalTenant(object):
     def __enter__(self):
         if self.tenant:
             connection.set_tenant(self.tenant)
+            properties.set_tenant(self.tenant)
             ContentType.objects.clear_cache()
 
     def __exit__(self, type, value, traceback):
@@ -46,7 +47,9 @@ class LocalTenant(object):
             except AttributeError:
                 logger.info("Attempted to clear missing tenant properties.")
         elif self.previous_tenant:
-            connection.set_tenant(self.tenant)
+            connection.set_tenant(self.previous_tenant)
+            properties.set_tenant(self.previous_tenant)
+            ContentType.objects.clear_cache()
 
 
 def tenant_url():

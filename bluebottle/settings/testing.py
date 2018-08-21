@@ -128,3 +128,4 @@ try:
 except ImportError:
     pass
 
+ELASTICSEARCH_DSL_AUTOSYNC = False

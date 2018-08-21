@@ -16,3 +16,12 @@ class DonationFactory(factory.DjangoModelFactory):
     project = factory.SubFactory(ProjectFactory)
     reward = None
     amount = Money(25, 'EUR')
+
+    @classmethod
+    def create(cls, *args, **kwargs):
+        created = kwargs.pop('created', None)
+        obj = super(DonationFactory, cls).create(*args, **kwargs)
+        if created is not None:
+            obj.created = created
+            obj.save()
+        return obj

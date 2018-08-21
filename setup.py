@@ -43,7 +43,7 @@ install_requires = [
     'django-cors-headers==2.1.0',
     'django-daterange-filter==1.3.0',
     'django-dynamic-fixture==1.9.5',
-    'django-elasticsearch-dsl==0.4.4',
+    'django-elasticsearch-dsl==0.5.0',
     'django-extensions==1.7.9',
     'django-exportdb==0.4.7',
     'django-filetransfers==0.1.1',

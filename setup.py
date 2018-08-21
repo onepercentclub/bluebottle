@@ -77,6 +77,8 @@ install_requires = [
     'djangorestframework-jwt==1.11.0',
     'djangorestframework==3.8.2',
     'dkimpy==0.6.1',
+    'elasticsearch==6.3.0',
+    'elasticsearch-dsl==6.1.0',
     'geocoder==1.37.0',
     'gunicorn==19.7.1',
     'html5lib==1.0b10',

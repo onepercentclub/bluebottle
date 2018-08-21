@@ -484,7 +484,13 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             slug='done-incomplete'
         )
         project = ProjectFactory.create(status=campaign)
-        ProjectFactory.create(status=done_incomplete)
+        incomplete_project = ProjectFactory.create(status=done_incomplete)
+        task = TaskFactory.create(project=incomplete_project)
+        for _ in range(10):
+            TaskMemberFactory(
+                task=task,
+                created=now() - timedelta(days=10)
+            )
 
         result = self.search({'ordering': 'status'})
 

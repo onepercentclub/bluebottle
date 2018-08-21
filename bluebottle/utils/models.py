@@ -1,6 +1,9 @@
+import pytz
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -98,7 +101,9 @@ class PublishableModel(models.Model):
                               choices=PublishedStatus.choices,
                               default=PublishedStatus.draft, db_index=True)
     publication_date = models.DateTimeField(
-        _('publication date'), null=True, db_index=True,
+        _('publication date'),
+        null=True, db_index=True,
+        default=now().replace(tzinfo=pytz.timezone(settings.TIME_ZONE)),
         help_text=_("To go live, status must be 'Published'."))
 
     publication_end_date = models.DateTimeField(_('publication end date'),

@@ -54,25 +54,6 @@ class ManagementCommandTests(TestCase):
             self.assertEqual(kwargs['domain_url'], 'test.localhost')
 
 
-class ManagementCommandNewTenantTests(TestCase):
-
-    def test_create_new_tenant(self):
-        from ..management.commands.new_tenant import Command as NewTenantCommand
-        connection.set_schema_to_public()
-        cmd = NewTenantCommand()
-        call_command(
-            cmd,
-            full_name='New Tenant',
-            schema_name='new',
-            domain_url='http://new.localhost:8000',
-            client_name='new'
-        )
-
-        new_client = Client.objects.get(schema_name='new')
-        self.assertEqual(new_client.name, 'New Tenant')
-        self.assertEqual(new_client.client_name, 'new')
-
-
 @override_settings(TENANT_APPS=('django_nose',),
                    TENANT_MODEL='clients.Client',
                    DATABASE_ROUTERS=('tenant_schemas.routers.TenantSyncRouter',))

@@ -3,7 +3,7 @@ from django.core.urlresolvers import resolve
 
 def resource_access_handler(request, resource):
     """Callback for resource access. Determines who can see the documentation for which API."""
-    # See: http://django-rest-swagger.readthedocs.org/en/latest/settings.html#resource-access-handler
+    # See: https://django-rest-swagger.readthedocs.io/en/stable-0.3.x/settings.html#resource-access-handler
 
     # superusers and staff can see whatever they want
     if request.user.is_superuser or request.user.is_staff:

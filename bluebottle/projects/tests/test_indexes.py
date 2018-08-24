@@ -105,7 +105,6 @@ class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
         ).to_queryset()
 
         self.assertEqual(len(result), 2)
-        self.assertEqual(len(result), 3)
         for proj in result:
             self.assertTrue(proj in [self.project1, self.project2])
 

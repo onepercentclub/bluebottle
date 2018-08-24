@@ -1,5 +1,6 @@
 from datetime import timedelta
 from django.test.utils import override_settings
+from django.test import tag
 from django.utils.timezone import now
 
 from django_elasticsearch_dsl.test import ESTestCase
@@ -19,8 +20,10 @@ from bluebottle.donations.models import Donation
 
 
 @override_settings(
-    ELASTICSEARCH_DSL_AUTOSYNC=True
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
 )
+@tag('elasticsearch')
 class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super(ProjectIndexTestCase, self).setUp()

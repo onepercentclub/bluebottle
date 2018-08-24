@@ -3,6 +3,7 @@ import json
 from decimal import Decimal
 
 from django.core.urlresolvers import reverse
+from django.test import tag
 from django.test.utils import override_settings
 from django.utils.timezone import get_current_timezone
 
@@ -83,6 +84,7 @@ class TestProjectPhaseList(ProjectEndpointTestCase):
     ELASTICSEARCH_DSL_AUTOSYNC=True,
     ELASTICSEARCH_DSL_AUTO_REFRESH=True
 )
+@tag('elasticsearch')
 class TestProjectList(ESTestCase, ProjectEndpointTestCase):
     """
     Test case for the ``ProjectList`` API view.
@@ -524,6 +526,7 @@ class TestManageProjectDetail(ProjectEndpointTestCase):
     ELASTICSEARCH_DSL_AUTOSYNC=True,
     ELASTICSEARCH_DSL_AUTO_REFRESH=True
 )
+@tag('elasticsearch')
 class TestTinyProjectList(ESTestCase, BluebottleTestCase):
     """
     Test case for the ``TinyProjectList`` API view.

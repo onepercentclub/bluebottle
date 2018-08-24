@@ -3,6 +3,10 @@ services:
 - elasticsearch
 sudo: false
 language: python
+matrix:
+    include:
+    - env: TEST_RUNNER_OPTIONS='--tags=elasticsearch'
+    - env: TEST_RUNNER_OPTIONS='--exclude-tag=elasticsearch --parallel=8'
 addons:
   apt:
     packages:
@@ -30,7 +34,7 @@ before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
 - flake8 .
 script:
-- python -m coverage run --source=bluebottle manage.py test
+- python -m coverage run --parallel-mode --source=bluebottle manage.py test ${TEST_RUNNER_OPTIONS}
 notifications:
   hipchat:
     rooms:

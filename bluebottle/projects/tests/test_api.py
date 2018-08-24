@@ -7,7 +7,7 @@ from urllib import urlencode
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.signing import TimestampSigner
-from django.test import RequestFactory
+from django.test import RequestFactory, tag
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.utils import timezone
@@ -234,6 +234,7 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
     ELASTICSEARCH_DSL_AUTOSYNC=True,
     ELASTICSEARCH_DSL_AUTO_REFRESH=True
 )
+@tag('elasticsearch')
 class OwnProjectPermissionsTestCase(ESTestCase, BluebottleTestCase):
     """
     Tests for the Project API permissions.
@@ -424,6 +425,7 @@ class ProjectEndpointTestCase(BluebottleTestCase):
     ELASTICSEARCH_DSL_AUTOSYNC=True,
     ELASTICSEARCH_DSL_AUTO_REFRESH=True
 )
+@tag('elasticsearch')
 class ProjectApiIntegrationTest(ESTestCase, ProjectEndpointTestCase):
     def test_project_list_view(self):
         """
@@ -683,6 +685,7 @@ class ProjectApiIntegrationTest(ESTestCase, ProjectEndpointTestCase):
     ELASTICSEARCH_DSL_AUTOSYNC=True,
     ELASTICSEARCH_DSL_AUTO_REFRESH=True
 )
+@tag('elasticsearch')
 class ProjectDateSearchTestCase(ESTestCase, BluebottleTestCase):
     """
     Integration tests for the Project API.

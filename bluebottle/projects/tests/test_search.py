@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from django.test.utils import override_settings
 from django.test.client import RequestFactory
+from django.test import tag
 from django.core.urlresolvers import reverse
 from django.utils.timezone import get_current_timezone, now
 
@@ -28,6 +29,7 @@ from bluebottle.clients.models import Client
     ELASTICSEARCH_DSL_AUTOSYNC=True,
     ELASTICSEARCH_DSL_AUTO_REFRESH=True
 )
+@tag('elasticsearch')
 class ProjectSearchTest(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super(ProjectSearchTest, self).setUp()

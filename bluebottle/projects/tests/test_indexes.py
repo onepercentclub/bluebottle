@@ -122,15 +122,8 @@ class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
         ).to_queryset()
 
         self.assertEqual(len(result), 3)
-        self.assertEqual(
-            result[0], self.project2,
-        )
-        self.assertEqual(
-            result[1], self.project1,
-        )
-        self.assertEqual(
-            result[2], self.project3,
-        )
+        for proj in result:
+            self.assertTrue(proj in [self.project1, self.project2, self.project3])
 
     def test_search_task_skill(self):
         skill = SkillFactory.create(name="Skill")

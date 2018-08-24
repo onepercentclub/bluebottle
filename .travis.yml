@@ -5,7 +5,7 @@ sudo: false
 language: python
 matrix:
     include:
-    - env: TEST_RUNNER_OPTIONS='--tags=elasticsearch'
+    - env: TEST_RUNNER_OPTIONS='--tag=elasticsearch'
     - env: TEST_RUNNER_OPTIONS='--exclude-tag=elasticsearch --parallel=8'
 addons:
   apt:

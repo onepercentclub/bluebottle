@@ -86,7 +86,8 @@ class BaseOrder(models.Model, FSMTransition):
 
     @transition(field=status,
                 source=[StatusDefinition.PENDING, StatusDefinition.LOCKED,
-                        StatusDefinition.FAILED],
+                        StatusDefinition.FAILED, StatusDefinition.REFUND_REQUESTED,
+                        StatusDefinition.REFUNDED],
                 target=StatusDefinition.SUCCESS)
     def success(self):
         if not self.confirmed:

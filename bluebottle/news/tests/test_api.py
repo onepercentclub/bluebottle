@@ -3,7 +3,7 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.test.factory_models.news import NewsItemFactory, DraftNewsItemFactory
+from bluebottle.test.factory_models.news import NewsItemFactory
 
 
 class NewsItemApiTestCase(BluebottleTestCase):
@@ -20,8 +20,7 @@ class NewsItemApiTestCase(BluebottleTestCase):
 
         self.some_english_news = NewsItemFactory.create(language='en')
         self.some_other_english_news = NewsItemFactory.create(language='en')
-        self.some_unpublished_english_news = DraftNewsItemFactory.create(
-            language='en')
+        self.some_unpublished_english_news = NewsItemFactory.create(status='draft', language='en')
 
 
 class NewsItemsApiTest(NewsItemApiTestCase):

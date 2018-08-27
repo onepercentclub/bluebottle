@@ -171,7 +171,7 @@ def get_platform_settings(name):
     app_name, model_name = name.split('.')
     model_app_name = 'bluebottle.{}.models'.format(app_name)
     settings_class = getattr(importlib.import_module(model_app_name), model_name)
-    settings_object = settings_class.objects.get()
+    settings_object = settings_class.load()
     serializer_app_name = 'bluebottle.{}.serializers'.format(app_name)
     serializer_class = getattr(importlib.import_module(serializer_app_name), "{}Serializer".format(model_name))
     return serializer_class(settings_object).to_representation(settings_object)

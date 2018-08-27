@@ -194,6 +194,10 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['analytics.change_analyticsplatformsettings']
             },
             {
+                'name': 'mails.mailplatformsettings',
+                'permissions': ['mails.change_mailplatformsettings']
+            },
+            {
                 'name': 'djmoney_rates.ratesource',
                 'permissions': ['djmoney_rates.change_ratesource']
             },

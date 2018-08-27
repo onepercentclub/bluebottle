@@ -433,7 +433,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def donations(self):
-        success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+        success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS, StatusDefinition.PLEDGED]
         return self.donation_set.filter(order__status__in=success)
 
     @property
@@ -473,6 +473,7 @@ class Project(BaseProject, PreviousStatusMixin):
                 StatusDefinition.PENDING,
                 StatusDefinition.SUCCESS,
                 StatusDefinition.CANCELLED,
+                StatusDefinition.REFUND_REQUESTED,
             ]
         )
 
@@ -546,7 +547,11 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def amount_cancelled(self):
-        return self.get_money_total([StatusDefinition.CANCELLED])
+        return self.get_money_total([
+            StatusDefinition.CANCELLED,
+            StatusDefinition.REFUND_REQUESTED,
+            StatusDefinition.REFUNDED,
+        ])
 
     @property
     def donated_percentage(self):

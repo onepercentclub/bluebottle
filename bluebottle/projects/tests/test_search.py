@@ -8,6 +8,7 @@ from django.utils.timezone import get_current_timezone, now
 
 from django_elasticsearch_dsl.test import ESTestCase
 
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
@@ -38,10 +39,14 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.view = ProjectPreviewList().as_view()
         self.status = ProjectPhase.objects.get(slug='campaign')
 
-    def search(self, query=None):
+    def search(self, query=None, user=None):
         url = reverse('project_preview_list')
 
         request = self.factory.get(url, query)
+
+        if user:
+            request.user = user
+
         return self.view(request)
 
     def test_no_filter(self):
@@ -227,6 +232,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
 
         result = self.search({'text': 'Amsterdam'})
         self.assertEqual(result.data['count'], 5)
+
         # We boost the title, so the project with Amsterdam in the title should be first
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
@@ -370,6 +376,41 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['count'], 3)
         self.assertEqual(result.data['results'][0]['title'], other_project.title)
         self.assertEqual(result.data['results'][1]['title'], project.title)
+
+    def test_score_user_skill(self):
+        skill = SkillFactory.create(name='User skill')
+        user = BlueBottleUserFactory.create()
+        user.skills.add(skill)
+
+        project = ProjectFactory.create(status=self.status)
+        TaskFactory.create(project=project, skill=skill)
+        other_project = ProjectFactory.create(status=self.status)
+        TaskFactory.create(
+            project=project,
+            skill=SkillFactory.create(name='Other skill')
+        )
+        ProjectFactory.create(status=self.status)
+
+        result = self.search({}, user=user)
+
+        self.assertEqual(result.data['count'], 3)
+        self.assertEqual(result.data['results'][0]['title'], project.title)
+        self.assertEqual(result.data['results'][1]['title'], other_project.title)
+
+    def test_score_user_location(self):
+        location = LocationFactory.create(name='Amsterdam')
+        user = BlueBottleUserFactory.create()
+        user.location = location
+
+        project = ProjectFactory.create(status=self.status, location=location)
+        other_project = ProjectFactory.create(status=self.status, location=location)
+        ProjectFactory.create(status=self.status)
+
+        result = self.search({}, user=user)
+
+        self.assertEqual(result.data['count'], 3)
+        self.assertEqual(result.data['results'][0]['title'], project.title)
+        self.assertEqual(result.data['results'][1]['title'], other_project.title)
 
     def test_combined_scores(self):
         task_project = ProjectFactory.create(status=self.status)

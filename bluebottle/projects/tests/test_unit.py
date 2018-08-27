@@ -7,6 +7,7 @@ from bluebottle.projects.admin import mark_as
 from django.db.models import Count
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
+from django.urls.base import reverse
 from django.utils import timezone
 from moneyed.classes import Money
 
@@ -25,7 +26,7 @@ from bluebottle.test.factory_models.projects import (
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, BluebottleAdminTestCase
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.utils.models import Language
 
@@ -384,7 +385,7 @@ class TestProjectPopularity(BluebottleTestCase):
         self.assertEqual(Project.objects.get(id=self.project.id).popularity, 11)
 
 
-class TestProjectBulkActions(BluebottleTestCase):
+class TestProjectBulkActions(BluebottleAdminTestCase):
     def setUp(self):
         super(TestProjectBulkActions, self).setUp()
         self.init_projects()
@@ -398,6 +399,10 @@ class TestProjectBulkActions(BluebottleTestCase):
 
         for project in Project.objects.all():
             self.assertEqual(project.status.slug, 'plan-new')
+        self.client.force_login(self.superuser)
+        url = reverse('admin:projects_project_history', args=(project.id, ))
+        response = self.client.get(url)
+        self.assertContains(response, 'Changed project status to Plan - Draft')
 
     def test_project_phase_log_creation(self):
         mark_as(None, self.request, Project.objects)

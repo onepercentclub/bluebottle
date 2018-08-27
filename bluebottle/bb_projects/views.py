@@ -222,11 +222,11 @@ class ProjectListSearchMixin(object):
                 }),
                 SF({
                     'filter': ESQ('range', people_needed={'gt': 0}),
-                    'weight': 1
+                    'weight': 2
                 }),
                 SF({
                     'filter': ESQ('range', amount_needed={'gt': 0}),
-                    'weight': 1
+                    'weight': 2
                 }),
             ]
         )
@@ -250,10 +250,11 @@ class ProjectListSearchMixin(object):
             if len(self.request.user.skills.all()):
                 scoring = scoring | ESQ(
                     'function_score',
+                    score_mode='first',
                     functions=[
                         SF({
                             'filter': ESQ('term', **{'skills': skill.id}),
-                            'weight': 4
+                            'weight': 2
                         }) for skill in self.request.user.skills.all()
                     ]
                 )

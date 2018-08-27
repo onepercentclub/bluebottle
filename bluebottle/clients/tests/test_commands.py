@@ -1,6 +1,7 @@
 import mock
 from shutil import copyfile
 
+from bluebottle.clients.models import Client
 from django.db import connection
 from django.test import TestCase
 from django.test.utils import override_settings
@@ -15,6 +16,7 @@ from bluebottle.rewards.models import Reward
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.wallposts.models import Wallpost
 from bluebottle.orders.models import Order
+from bluebottle.clients.management.commands.new_tenant import Command as NewTenantCommand
 
 
 @override_settings(TENANT_APPS=('django_nose',),
@@ -56,7 +58,6 @@ class ManagementCommandTests(TestCase):
 class ManagementCommandNewTenantTests(TestCase):
 
     def test_create_new_tenant(self):
-        from ..management.commands.new_tenant import Command as NewTenantCommand
         connection.set_schema_to_public()
         cmd = NewTenantCommand()
         store_func = 'bluebottle.clients.management.commands.new_tenant.Command.store_client'
@@ -76,6 +77,25 @@ class ManagementCommandNewTenantTests(TestCase):
         self.assertEqual(store_kwargs['name'], 'New Tenant')
         self.assertEqual(store_kwargs['client_name'], 'new')
         self.assertEqual(super_args, ('new',))
+
+    def test_create_superuser(self):
+        cmd = NewTenantCommand()
+        tenant = 'test'
+        cmd.create_client_superuser(tenant)
+        connection.set_tenant(Client.objects.get(schema_name='test'))
+        user = Member.objects.get(email='admin@example.com')
+        self.assertEqual(user.last_name, 'example')
+
+    def test_load_fixtures(self):
+        cmd = NewTenantCommand()
+        tenant = 'test'
+        with mock.patch('bluebottle.clients.management.commands.new_tenant.call_command') as command_mock:
+            cmd.load_fixtures(tenant)
+            calls = [mock.call('loaddata', 'skills'),
+                     mock.call('loaddata', 'redirects'),
+                     mock.call('loaddata', 'project_data'),
+                     mock.call('loaddata', 'geo_data')]
+            command_mock.assert_has_calls(calls)
 
 
 @override_settings(TENANT_APPS=('django_nose',),

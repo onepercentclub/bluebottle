@@ -9,31 +9,40 @@ from bluebottle.utils.utils import StatusDefinition
 
 
 class AdapterTestCase(BluebottleTestCase, FsmTestMixin):
+    def setUp(self):
+        self.user = BlueBottleUserFactory.create(can_pledge=True)
+
+        self.order = OrderFactory.create(user=self.user)
+        self.order_payment = OrderPaymentFactory.create(
+            order=self.order, user=self.user, payment_method='pledgeStandard'
+        )
+
     def test_order_status_cannot_pledge(self):
         """
         Normal user can not pledge
         """
-        user = BlueBottleUserFactory()
-
-        order = OrderFactory.create(user=user)
-        order_payment = OrderPaymentFactory.create(
-            order=order, user=user, payment_method='pledgeStandard'
-        )
+        self.user.can_pledge = False
+        self.user.save()
 
         with self.assertRaises(PaymentException):
-            self.service = PaymentService(order_payment=order_payment)
+            self.service = PaymentService(order_payment=self.order_payment)
 
     def test_order_status_can_pledge(self):
         """
         User with can_pledge setting enabled is allowed to pledge
         """
-        user = BlueBottleUserFactory(can_pledge=True)
-
-        order = OrderFactory.create(user=user)
-        order_payment = OrderPaymentFactory.create(
-            order=order, user=user, payment_method='pledgeStandard'
-        )
-        PaymentService(order_payment=order_payment)
+        PaymentService(order_payment=self.order_payment)
 
         # Check that the status propagated through to order
-        self.assert_status(order, StatusDefinition.PLEDGED)
+        self.assert_status(self.order, StatusDefinition.PLEDGED)
+
+    def test_refund(self):
+        """
+        User with can_pledge setting enabled is allowed to pledge
+        """
+        service = PaymentService(order_payment=self.order_payment)
+
+        service.refund_payment()
+
+        # Check that the status propagated through to order
+        self.assert_status(self.order_payment, StatusDefinition.REFUNDED)

@@ -1,10 +1,7 @@
 import mock
 from shutil import copyfile
 
-<<<<<<< HEAD
-=======
 from django.db import connection
->>>>>>> hotfix/speed-up-tests
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.core.management import call_command

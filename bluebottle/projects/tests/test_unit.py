@@ -35,12 +35,8 @@ class MockUser:
     is_active = True
 
     def __init__(self, perms=None, is_staff=True):
-        self.perms = perms or []
         self.is_staff = is_staff
         self.id = 1
-
-    def has_perm(self, perm):
-        return perm in self.perms
 
 
 class TestProjectStatusUpdate(BluebottleTestCase):

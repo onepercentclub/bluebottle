@@ -206,11 +206,13 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             status=self.status,
             title='Amsterdam Rotterdam Eindhoven Utrecht'
         )
-        ProjectFactory.create(
+        TaskFactory.create(project=project)
+        other_project = ProjectFactory.create(
             status=self.status,
             title='Rotterdam Eindhoven Utrecht Makkum',
             pitch='Amsterdam'
         )
+        TaskFactory.create(project=other_project)
         ProjectFactory.create(
             status=self.status,
             title='Rotterdam Eindhoven Utrecht Bolsward',

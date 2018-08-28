@@ -57,7 +57,7 @@ class ProjectListSearchMixin(object):
 
     def _text_query(self, value):
         return (
-            ESQ('match_phrase_prefix', title={'query': value, 'boost': 2}) |
+            ESQ('match_phrase_prefix', title={'query': value, 'boost': 10}) |
             ESQ('match_phrase_prefix', pitch=value) |
             ESQ('match_phrase_prefix', story=value) |
             ESQ(

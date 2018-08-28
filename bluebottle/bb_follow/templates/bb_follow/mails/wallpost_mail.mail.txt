@@ -9,10 +9,13 @@ Hello {{ first_name }},
 {{ author }} added a new post on a {{ follow_object }} you follow:
 
 '{{ wallpost_text }}...'
+
+You received this email because you support {{ title }}.
+Don't want to receive project updates anymore?
+Unsubscribe via your account page:
+{{ site }}{{ unsubscribe_link }}
 {% endblocktrans %}
 {% endblock %}
-
 {% block action %}
 {% trans 'View full update' context 'email' %}: {{ site }}{{ link }}
-{% trans 'Unsubscribe' context 'email' %}: {{ site }}{{ unsubscribe_link }}
 {% endblock %}

@@ -241,6 +241,7 @@ def email_followers(sender, instance, created, **kwargs):
                         site=tenant_url(),
                         wallpost_text=wallpost_text[:250],
                         to=mailee,
+                        title=instance.content_object.title,
                         link=link,
                         unsubscribe_link='/member/profile',
                         follow_object=follow_object,

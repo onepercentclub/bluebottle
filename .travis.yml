@@ -7,10 +7,9 @@ addons:
     - libxmlsec1
     - libxmlsec1-dev
     - swig
-cache:
-  directories:
-  - "$HOME/.pip-cache/"
-  - "$HOME/virtualenv/python2.7.9/lib/python2.7/site-packages"
+cache: pip
+  - "$HOME/.cache/pip/"
+  - "$HOME/virtualenv/python2.7.3/lib/python2.7/site-packages"
 python:
 - 2.7.3
 env:

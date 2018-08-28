@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from bluebottle.test.factory_models.utils import LanguageFactory
 from django.utils import timezone
 
 import factory
@@ -51,6 +52,8 @@ class ProjectFactory(factory.DjangoModelFactory):
     theme = factory.SubFactory(ProjectThemeFactory, slug='education')
     country = factory.SubFactory(CountryFactory)
     currencies = ['EUR']
+
+    language = factory.SubFactory(LanguageFactory)
 
     deadline = timezone.now() + timedelta(days=100)
     amount_needed = 100

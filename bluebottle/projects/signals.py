@@ -88,7 +88,7 @@ def save(sender, instance, **kwargs):
                 [instance.latitude, instance.longitude],
                 method='reverse',
                 key=settings.MAPS_API_KEY,
-                language=instance.project.language.code if instance.project.language else None
+                language=None
             )[0]
 
             if result.street_long != 'Unnamed Road':

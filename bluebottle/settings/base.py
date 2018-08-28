@@ -321,7 +321,6 @@ TENANT_APPS = (
     'bluebottle.organizations',
 
     'bluebottle.tasks',
-    'bluebottle.homepage',
     'bluebottle.recurring_donations',
     'bluebottle.payouts',
     'bluebottle.payouts_dorado',

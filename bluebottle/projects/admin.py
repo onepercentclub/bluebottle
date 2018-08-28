@@ -680,7 +680,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         story = (_('Story'), {'fields': [
             'pitch', 'story',
             'image', 'video_url',
-            'theme', 'categories', 'language',
+            'theme', 'categories',
             'country', 'place',
         ]})
 

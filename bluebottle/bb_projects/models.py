@@ -189,7 +189,6 @@ class BaseProject(models.Model):
         help_text=_('Main project picture'))
 
     country = models.ForeignKey('geo.Country', blank=True, null=True)
-    language = models.ForeignKey('utils.Language', blank=True, null=True)
 
     # For convenience and performance we also store money donated and needed
     # here.

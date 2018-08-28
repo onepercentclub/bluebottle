@@ -1,3 +1,4 @@
+import logging
 from mock import patch
 
 from bluebottle.payments_logger.adapters import PaymentLogAdapter
@@ -10,9 +11,11 @@ from bluebottle.test.utils import BluebottleTestCase, FsmTestMixin
 
 
 class TestPaymentLogger(BluebottleTestCase, FsmTestMixin):
+
     @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
     def setUp(self, mock_client):
         super(TestPaymentLogger, self).setUp()
+        logging.disable(logging.DEBUG)
 
         # Mock response to creating the payment at docdata
         instance = mock_client.return_value
@@ -23,6 +26,10 @@ class TestPaymentLogger(BluebottleTestCase, FsmTestMixin):
             payment_method='docdataIdeal', order=self.order,
             integration_data={'default_pm': 'ideal'})
         self.service = PaymentService(self.order_payment)
+
+    def tearDown(self):
+        super(TestPaymentLogger, self).tearDown()
+        logging.disable(logging.CRITICAL)
 
     def test_create_payment_create_log(self):
         """
@@ -59,6 +66,7 @@ class TestPaymentLoggerAdapter(BluebottleTestCase):
     @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
     def setUp(self, mock_client):
         super(TestPaymentLoggerAdapter, self).setUp()
+        logging.disable(logging.DEBUG)
 
         # Mock response to creating the payment at docdata
         instance = mock_client.return_value
@@ -71,6 +79,10 @@ class TestPaymentLoggerAdapter(BluebottleTestCase):
         self.service = PaymentService(self.order_payment)
 
         PaymentLogEntry.objects.all().delete()
+
+    def tearDown(self):
+        super(TestPaymentLoggerAdapter, self).tearDown()
+        logging.disable(logging.CRITICAL)
 
     def test_payment_log_adapter(self):
         """

@@ -1,33 +1,19 @@
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
 from django.utils.functional import lazy
-from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
-
-from django_extensions.db.fields import CreationDateTimeField, \
-    ModificationDateTimeField
 from djchoices import DjangoChoices, ChoiceItem
 
 from bluebottle.clients import properties
 from bluebottle.utils.fields import ImageField
+from bluebottle.utils.models import PublishableModel
 
 
 def get_languages():
     return properties.LANGUAGES
 
 
-class SlideManager(models.Manager):
-    def published(self):
-        qs = self.get_queryset()
-        qs = qs.filter(status=Slide.SlideStatus.published)
-        qs = qs.filter(publication_date__lte=now())
-        qs = qs.filter(Q(publication_end_date__gte=now()) | Q(
-            publication_end_date__isnull=True))
-        return qs
-
-
-class Slide(models.Model):
+class Slide(PublishableModel):
     """
     Slides for homepage
     """
@@ -61,27 +47,8 @@ class Slide(models.Model):
                              help_text=_("Styling class name"),
                              default='default', blank=True)
 
-    # Publication
-    status = models.CharField(_('status'), max_length=20,
-                              choices=SlideStatus.choices,
-                              default=SlideStatus.draft, db_index=True)
-    publication_date = models.DateTimeField(
-        _('publication date'), null=True, db_index=True,
-        help_text=_("When the entry should go live, "
-                    "status must be 'Published'."))
-    publication_end_date = models.DateTimeField(_('publication end date'),
-                                                null=True, blank=True,
-                                                db_index=True)
-
     # Metadata
     sequence = models.IntegerField()
-    author = models.ForeignKey(settings.AUTH_USER_MODEL,
-                               verbose_name=_('author'), editable=False,
-                               null=True)
-    creation_date = CreationDateTimeField(_('creation date'))
-    modification_date = ModificationDateTimeField(_('last modification'))
-
-    objects = SlideManager()
 
     @property
     def background_image_full_path(self):

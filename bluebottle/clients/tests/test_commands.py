@@ -1,6 +1,7 @@
 import mock
 from shutil import copyfile
 
+from django.db import connection
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.core.management import call_command
@@ -50,6 +51,30 @@ class ManagementCommandTests(TestCase):
             self.assertEqual(kwargs['schema_name'], 'test_schema')
             self.assertEqual(kwargs['client_name'], 'test')
             self.assertEqual(kwargs['domain_url'], 'test.localhost')
+
+
+class ManagementCommandNewTenantTests(TestCase):
+    def test_create_new_tenant(self):
+        from ..management.commands.new_tenant import Command as NewTenantCommand
+        connection.set_schema_to_public()
+        cmd = NewTenantCommand()
+        store_func = 'bluebottle.clients.management.commands.new_tenant.Command.store_client'
+        super_func = 'bluebottle.clients.management.commands.new_tenant.Command.create_client_superuser'
+        with mock.patch(store_func) as store_mock, mock.patch(super_func) as super_mock:
+            call_command(
+                cmd,
+                full_name='New Tenant',
+                schema_name='new',
+                domain_url='http://new.localhost:8000',
+                client_name='new'
+            )
+            store_args, store_kwargs = store_mock.call_args_list[0]
+
+            super_args, super_kwargs = super_mock.call_args_list[0]
+
+        self.assertEqual(store_kwargs['name'], 'New Tenant')
+        self.assertEqual(store_kwargs['client_name'], 'new')
+        self.assertEqual(super_args, ('new',))
 
 
 @override_settings(TENANT_APPS=('django_nose',),

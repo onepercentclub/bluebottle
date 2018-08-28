@@ -351,27 +351,6 @@ class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
         self.assertEquals(suggestion.status, 'in_progress')
 
 
-class TestProjectPopularity(BluebottleTestCase):
-    def setUp(self):
-        super(TestProjectPopularity, self).setUp()
-        self.init_projects()
-
-        self.project = ProjectFactory.create()
-
-        VoteFactory.create(project=self.project)
-        task = TaskFactory.create(project=self.project)
-        TaskMemberFactory.create(task=task)
-
-        order = OrderFactory.create(status=StatusDefinition.SUCCESS)
-
-        DonationFactory(order=order, project=self.project)
-
-    def test_update_popularity(self):
-        Project.update_popularity()
-
-        self.assertEqual(Project.objects.get(id=self.project.id).popularity, 11)
-
-
 class TestProjectBulkActions(BluebottleTestCase):
     def setUp(self):
         super(TestProjectBulkActions, self).setUp()

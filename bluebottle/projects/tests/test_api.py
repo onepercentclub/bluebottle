@@ -2621,7 +2621,6 @@ class ProjectVotesTest(BluebottleTestCase):
     'profile': 'ideal',
     'name': 'iDEAL',
     'restricted_countries': ('NL', ),
-    'supports_recurring': False,
     'currencies': {
         'EUR': {'min_amount': 5, 'max_amount': 100},
         'USD': {'min_amount': 5, 'max_amount': 100},

@@ -7,7 +7,6 @@ from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save, pre_save
 from django.dispatch import receiver

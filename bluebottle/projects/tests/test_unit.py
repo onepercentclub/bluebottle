@@ -23,8 +23,7 @@ from bluebottle.test.factory_models.projects import (
     ProjectFactory, ProjectPhaseFactory, ProjectThemeFactory, ProjectDocumentFactory
 )
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory, TaskMemberFactory
-from bluebottle.test.factory_models.votes import VoteFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.utils.models import Language

@@ -132,9 +132,8 @@ class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
         query = self.search.query(
             Q('match', title='three') |
             Q(
-                'nested',
-                path='task_set',
-                query=Q('match', **{'task_set.skill.id': {'query': skill.id, 'boost': 4}})
+                'match',
+                skills={'query': skill.id, 'boost': 4}
             )
         )
         result = query.to_queryset()

@@ -2773,17 +2773,18 @@ class ProjectSupportersExportTest(BluebottleTestCase):
 
         reward = RewardFactory.create(project=self.project)
 
-        for order_type in ('one-off', 'recurring', 'one-off'):
+        for index, order_type in enumerate(('one-off', 'recurring', 'one-off')):
             order = OrderFactory.create(
                 status=StatusDefinition.SUCCESS,
-                order_type=order_type
+                order_type=order_type,
+                user=None if index == 0 else BlueBottleUserFactory.create()
             )
             self.donation = DonationFactory.create(
                 amount=Money(1000, 'EUR'),
                 order=order,
                 project=self.project,
                 fundraiser=None,
-                reward=reward
+                reward=reward,
             )
 
         self.supporters_export_url = reverse(
@@ -2828,6 +2829,12 @@ class ProjectSupportersExportTest(BluebottleTestCase):
         for row in results:
             for field in ('Reward', 'Donation Date', 'Email', 'Name', 'Currency', 'Amount'):
                 self.assertTrue(field in row)
+
+            print row
+            if not row['Email']:
+                self.assertEqual(row['Name'], 'Anonymous user')
+            else:
+                self.assertTrue(row['Name'].startswith('user'))
 
     def test_owner_no_permission(self):
         detail_response = self.client.get(

@@ -1,4 +1,4 @@
-{% extends "base.mail.html" %}
+{% extends "base.mail.txt" %}
 {% load i18n %}
 
 {% block content %}
@@ -13,5 +13,6 @@ Hello {{ first_name }},
 {% endblock %}
 
 {% block action %}
-<{% trans 'View full update' context 'email' %}: {{ link }}
+{% trans 'View full update' context 'email' %}: {{ site }}{{ link }}
+{% trans 'Unsubscribe' context 'email' %}: {{ site }}{{ unsubscribe_link }}
 {% endblock %}

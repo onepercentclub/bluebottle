@@ -28,7 +28,6 @@ from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory, Task
 from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.utils import BluebottleTestCase, BluebottleAdminTestCase
 from bluebottle.utils.utils import StatusDefinition
-from bluebottle.utils.models import Language
 
 
 class MockUser:
@@ -559,7 +558,7 @@ class TestProjectPlatformSettings(BluebottleTestCase):
 @override_settings(MAPS_API_KEY='somekey')
 class TestProjectLocation(BluebottleTestCase):
     def setUp(self):
-        self.project = ProjectFactory.create(language=Language.objects.get(code='en'))
+        self.project = ProjectFactory.create()
         self.project.projectlocation.latitude = 52.3721249
         self.project.projectlocation.longitude = 4.9070198
         self.project.projectlocation.save()
@@ -610,9 +609,6 @@ class TestProjectLocation(BluebottleTestCase):
     def geocode_mock_factory(self):
         @httmock.urlmatch(netloc='maps.googleapis.com')
         def geocode_mock(url, request):
-            self.assertEqual(
-                urlparse.parse_qs(url.query)['language'][0], self.project.language.code
-            )
             return json.dumps(self.mock_result)
 
         return geocode_mock
@@ -645,10 +641,13 @@ class TestProjectLocation(BluebottleTestCase):
         )
 
     def test_geocode_different_langauge(self):
-        self.project.language = Language.objects.get(code='nl')
+        self.project.language = 'nl'
         self.save_location()
         self.assertEqual(
             self.project.projectlocation.street, "'s-Gravenhekje"
+        )
+        self.assertEqual(
+            self.project.projectlocation.country, "Nederland"
         )
 
     @override_settings(MAPS_API_KEY=None)
@@ -669,7 +668,6 @@ class TestProjectLocation(BluebottleTestCase):
 class TestProjectDocument(BluebottleTestCase):
     def setUp(self):
         self.project = ProjectFactory.create(
-            language=Language.objects.get(code='en'),
             status=ProjectPhase.objects.get(slug='plan-submitted')
         )
         self.document = ProjectDocumentFactory.create(

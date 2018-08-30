@@ -2829,8 +2829,6 @@ class ProjectSupportersExportTest(BluebottleTestCase):
         for row in results:
             for field in ('Reward', 'Donation Date', 'Email', 'Name', 'Currency', 'Amount'):
                 self.assertTrue(field in row)
-
-            print row
             if not row['Email']:
                 self.assertEqual(row['Name'], 'Anonymous user')
             else:

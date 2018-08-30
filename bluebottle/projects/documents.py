@@ -51,11 +51,6 @@ class ProjectDocument(DocType):
         'deadline_to_apply': fields.DateField(),
         'location': fields.TextField(),
         'location_keyword': fields.KeywordField(attr='location'),
-        'skill': fields.ObjectField(
-            properties={
-                'id': fields.LongField(),
-            }
-        ),
     })
 
     task_members = fields.DateField()
@@ -89,6 +84,8 @@ class ProjectDocument(DocType):
     categories = fields.NestedField(properties={
         'id': fields.LongField(),
     })
+
+    skills = fields.LongField()
 
     amount_asked = fields.FloatField()
     amount_needed = fields.FloatField()
@@ -143,6 +140,9 @@ class ProjectDocument(DocType):
             return instance.projectlocation.position
         except ProjectLocation.DoesNotExist:
             return None
+
+    def prepare_skills(self, instance):
+        return [task.skill.id for task in instance.task_set.all() if task.skill]
 
     def prepare_task_members(self, instance):
         result = []

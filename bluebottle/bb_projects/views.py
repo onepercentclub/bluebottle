@@ -57,7 +57,7 @@ class ProjectListSearchMixin(object):
 
     def _text_query(self, value):
         return (
-            ESQ('match_phrase_prefix', title={'query': value, 'boost': 2}) |
+            ESQ('match_phrase_prefix', title={'query': value, 'boost': 10}) |
             ESQ('match_phrase_prefix', pitch=value) |
             ESQ('match_phrase_prefix', story=value) |
             ESQ(
@@ -100,9 +100,7 @@ class ProjectListSearchMixin(object):
         )
 
     def _filter_skill(self, query, value):
-        return query & ESQ(
-            'nested', path='task_set', query=ESQ('term', **{'task_set.skill.id': value})
-        )
+        return query & ESQ('term', **{'skills': value})
 
     def _filter_project_type(self, query, value):
         if value == 'volunteering':
@@ -165,7 +163,7 @@ class ProjectListSearchMixin(object):
         return filter & ESQ('term', owner_id=user.pk)
 
     def _scoring(self):
-        return ESQ(
+        scoring = ESQ(
             'function_score',
             query=ESQ('exists', field='donations'),
             boost=0.02,
@@ -181,7 +179,7 @@ class ProjectListSearchMixin(object):
             ]
         ) | ESQ(
             'function_score',
-            boost=0.02,
+            boost=0.01,
             query=ESQ('exists', field='task_members'),
             functions=[
                 SF({
@@ -195,7 +193,7 @@ class ProjectListSearchMixin(object):
             ]
         ) | ESQ(
             'function_score',
-            boost=0.01,
+            boost=0.0005,
             query=ESQ('exists', field='votes'),
             functions=[
                 SF({
@@ -223,15 +221,45 @@ class ProjectListSearchMixin(object):
                     'weight': 10
                 }),
                 SF({
-                    'filter': ESQ('range', people_needed={'gt': 1}),
-                    'weight': 5
+                    'filter': ESQ('range', people_needed={'gt': 0}),
+                    'weight': 2
                 }),
                 SF({
-                    'filter': ESQ('range', amount_needed={'gt': 1}),
-                    'weight': 5
+                    'filter': ESQ('range', amount_needed={'gt': 0}),
+                    'weight': 2
                 }),
             ]
         )
+
+        if self.request.user.is_authenticated:
+            if self.request.user.location:
+                scoring = scoring | ESQ(
+                    'function_score',
+                    boost=2,
+                    functions=[
+                        SF({
+                            'gauss': {
+                                'position': {
+                                    'origin': self.request.user.location.position_tuple,
+                                    'scale': "10km"
+                                },
+                            },
+                        }),
+                    ]
+                )
+            if len(self.request.user.skills.all()):
+                scoring = scoring | ESQ(
+                    'function_score',
+                    score_mode='first',
+                    functions=[
+                        SF({
+                            'filter': ESQ('term', **{'skills': skill.id}),
+                            'weight': 2
+                        }) for skill in self.request.user.skills.all()
+                    ]
+                )
+
+        return scoring
 
     def search(self, viewable=True):
         search = documents.ProjectDocument.search()

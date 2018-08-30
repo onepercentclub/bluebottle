@@ -56,8 +56,6 @@ urlpatterns = [
         include('bluebottle.payments.urls.order_payments_api')),
     url(r'^api/payments/',
         include('bluebottle.payments.urls.api')),
-    url(r'^api/monthly_donations/',
-        include('bluebottle.recurring_donations.urls.api')),
     url(r'^api/rewards/',
         include('bluebottle.rewards.urls.api')),
 

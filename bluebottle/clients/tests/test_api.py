@@ -60,7 +60,6 @@ class ClientSettingsTestCase(BluebottleTestCase):
         'profile': 'ideal',
         'name': 'iDEAL',
         'restricted_countries': ('NL', ),
-        'supports_recurring': False,
         'currencies': {
             'EUR': {'max_amount': 100}
         }
@@ -70,7 +69,6 @@ class ClientSettingsTestCase(BluebottleTestCase):
         'profile': 'directdebit',
         'name': 'Direct Debit',
         'restricted_countries': ('NL', 'BE', ),
-        'supports_recurring': True,
         'currencies': {
             'EUR': {'min_amount': 10, 'max_amount': 100}
         }
@@ -80,7 +78,6 @@ class ClientSettingsTestCase(BluebottleTestCase):
         'id': 'docdata-creditcard',
         'profile': 'creditcard',
         'name': 'CreditCard',
-        'supports_recurring': False,
         'currencies': {
             'USD': {'min_amount': 5, 'max_amount': 100},
             'NGN': {'min_amount': 3000, 'max_amount': 100},

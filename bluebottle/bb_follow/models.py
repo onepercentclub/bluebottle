@@ -82,10 +82,6 @@ def create_follow(sender, instance, created, **kwargs):
         if instance.status not in ['success', 'pending']:
             return
 
-        # Don't setup following for monthly donation.
-        if instance.order_type == 'recurring':
-            return
-
         user = instance.user
 
         if not instance.donations.first():

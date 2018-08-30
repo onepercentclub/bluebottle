@@ -588,8 +588,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         fields = [
             'created', 'updated',
             'vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
-            'popularity', 'payout_status',
-            'geocoding', 'donations_link'
+            'payout_status', 'geocoding', 'donations_link'
         ]
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status', )
@@ -686,7 +685,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         amount = (_('Amount'), {'fields': [
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
-            'currencies', 'donations_link', 'popularity', 'vote_count'
+            'currencies', 'donations_link', 'vote_count'
         ]})
 
         if request.user.has_perm('projects.approve_payout'):

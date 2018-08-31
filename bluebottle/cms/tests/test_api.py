@@ -268,7 +268,7 @@ class ResultPageTestCase(BluebottleTestCase):
 
 class HomePageTestCase(BluebottleTestCase):
     """
-    Integration tests for the Results Page API.
+    Integration tests for the Home Page API.
     """
 
     def setUp(self):
@@ -295,7 +295,7 @@ class HomePageTestCase(BluebottleTestCase):
         self.assertEqual(response.data['blocks'][0]['type'], 'activities')
         self.assertEqual(len(response.data['blocks'][0]['activities']), 4)
 
-    def test_slides(self):
+    def test_slides_png(self):
         SlidesContent.objects.create_for_placeholder(self.placeholder)
         image = File(open('./bluebottle/cms/tests/test_images/upload.png', 'rb'))
 

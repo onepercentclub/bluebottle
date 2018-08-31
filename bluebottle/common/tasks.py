@@ -4,8 +4,6 @@ import json
 import logging
 import requests
 
-from django.core.management import call_command
-
 from urlparse import urljoin
 from celery import shared_task
 from sorl.thumbnail.shortcuts import get_thumbnail
@@ -60,29 +58,6 @@ def _send_celery_mail(msg, tenant=None, send=False):
                         .format(msg.to, msg.from_email,
                                 subject,
                                 body))
-
-
-@shared_task
-def update_salesforce(tenant=None,
-                      synchronize=False,
-                      updated=False,
-                      csv_export=False,
-                      verbosity='2',
-                      log_to_salesforce=False):
-    logger.info("Updating Salesforce")
-
-    try:
-        call_command('sync_salesforce',
-                     tenant=tenant,
-                     synchronize=synchronize,
-                     updated=updated,
-                     verbosity=verbosity,
-                     csv_export=csv_export,
-                     log_to_salesforce=log_to_salesforce)
-    except Exception as e:
-        logger.error("Error running salesforce celery task: {0}".format(e))
-
-    logger.info("Finished updating Salesforce")
 
 
 @shared_task

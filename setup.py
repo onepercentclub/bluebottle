@@ -84,6 +84,7 @@ install_requires = [
     'lxml==3.7.3',
     'micawber==0.3.4',
     'mixpanel==4.3.2',
+    'django-multiselect==0.1.8',
     'ndg-httpsclient==0.4.3',
     'openpyxl==2.4.8',
     'pendulum==1.2.4',

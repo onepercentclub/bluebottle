@@ -136,6 +136,8 @@ TEMPLATES = [
     },
 ]
 
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
+
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',
     'bluebottle.bluebottle_drf2.middleware.MethodOverrideMiddleware',
@@ -274,14 +276,15 @@ SHARED_APPS = (
     'adminsortable',
     'django_summernote',
     'django_singleton_admin',
-    'django_filters'
+    'django_filters',
+    'multiselectfield',
 )
 
 TENANT_APPS = (
     'polymorphic',
     'modeltranslation',
 
-    'social.apps.django_app.default',
+    'social_django',
     'django.contrib.contenttypes',
     # Allow the Bluebottle common app to override the admin branding
     'bluebottle.common',
@@ -394,7 +397,8 @@ TENANT_APPS = (
     'djmoney',
     'django_singleton_admin',
     'nested_inline',
-    'permissions_widget'
+    'permissions_widget',
+    'django.forms',
 )
 
 

@@ -94,6 +94,7 @@ install_requires = [
     'python-dateutil==2.6.1',
     'python-memcached==1.58',
     'python-social-auth==0.3.6',
+    'social-auth-app-django==2.1.0',
     'surlex==0.2.0',
     'raven==6.1.0',
     'regex==2017.05.26',

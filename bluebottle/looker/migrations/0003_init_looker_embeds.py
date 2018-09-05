@@ -32,6 +32,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('looker', '0002_auto_20180328_1054'),
         ('projects', '0054_auto_20171122_1415'),
+        ('social_django', '0002_add_related_name'),  # No idea why, but this fixes a nasty error about pending trigger events during the migrations
     ]
 
     operations = [

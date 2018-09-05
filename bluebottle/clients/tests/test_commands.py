@@ -199,18 +199,7 @@ class ManagementCommandExportTenantsTests(TestCase):
         fp = open(file_name, "r")
         text = json.load(fp)
         # Only onepercent tenant should get 1procentclub_nw merchant account
-        expected = [
-            {
-                u'domain': u'',
-                u'api_key': u'0e0150e4a30214a302df71584f8d8941c2cea011',
-                u'accounts': [],
-                u'name': u'test2'
-            },
-            {
-                u'domain': u'http://onepercentclub.com',
-                u'api_key': u'77062748758941b5c3cee13231a0e50d6088a263',
-                u'accounts': [{u'service_type': u'docdata', u'username': u'1procentclub_nw'}],
-                u'name': u'onepercent'
-            }
-        ]
-        self.assertEqual(text, expected)
+        self.assertEqual(text[0]['name'], 'test2')
+        self.assertEqual(text[0]['accounts'], [])
+        self.assertEqual(text[1]['name'], 'onepercent')
+        self.assertEqual(text[1]['accounts'], [{u'service_type': u'docdata', u'username': u'1procentclub_nw'}])

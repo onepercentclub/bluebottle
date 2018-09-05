@@ -757,7 +757,6 @@ class TestDonationWallpost(BluebottleTestCase):
     Test that a wallpost is created after making a donation and that
     the system wallposts is removed if we post a comment.
     """
-
     def setUp(self):
         super(TestDonationWallpost, self).setUp()
 
@@ -769,14 +768,23 @@ class TestDonationWallpost(BluebottleTestCase):
         self.wallpost_url = reverse('wallpost_list')
         self.text_wallpost_url = reverse('text_wallpost_list')
 
-    def test_donation_wallposts(self):
-        # Create a donation and set it to settled to trigger wallpost
         order = OrderFactory.create(user=self.user)
         donation = DonationFactory.create(project=self.some_project, order=order, fundraiser=None)
         order.locked()
         order.success()
         order.save()
 
+        self.data = {
+            "title": "",
+            "text": "What a nice project!",
+            "parent_id": self.some_project.slug,
+            "parent_type": "project",
+            "donation": donation.id,
+            "email_followers": False
+        }
+
+    def test_donation_wallposts(self):
+        # Create a donation and set it to settled to trigger wallpost
         # There should be one system wallpost now
         response = self.client.get(self.wallpost_url,
                                    {'parent_id': self.some_project.slug, 'parent_type': 'project'},
@@ -786,14 +794,7 @@ class TestDonationWallpost(BluebottleTestCase):
         self.assertEqual(response.data['results'][0]['type'], 'system')
 
         # Now create a text wallpost for this donation (user enters text in thank you modal)
-        data = {
-            "title": "",
-            "text": "What a nice project!",
-            "parent_id": self.some_project.slug,
-            "parent_type": "project",
-            "donation": donation.id
-        }
-        response = self.client.post(self.text_wallpost_url, data, token=self.user_token)
+        response = self.client.post(self.text_wallpost_url, self.data, token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         # The project should still have one wallpost, only the message last added
@@ -805,3 +806,19 @@ class TestDonationWallpost(BluebottleTestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['type'], 'text')
         self.assertEqual(response.data['results'][0]['text'], '<p>What a nice project!</p>')
+
+    def test_donation_wallposts_other_user(self):
+        other_user = BlueBottleUserFactory.create()
+        other_user_token = "JWT {0}".format(other_user.get_jwt_token())
+        response = self.client.post(self.text_wallpost_url, self.data, token=other_user_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_donation_wallposts_anonymous(self):
+        response = self.client.post(self.text_wallpost_url, self.data)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_donation_wallposts_twice(self):
+        self.client.post(self.text_wallpost_url, self.data, token=self.user_token)
+        response = self.client.post(self.text_wallpost_url, self.data, token=self.user_token)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

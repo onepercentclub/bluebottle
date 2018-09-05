@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import bluebottle.utils.fields
 from django.db import migrations, models
 import django.db.models.deletion
-import select_multiple_field.models
+import multiselectfield.db.fields
 
 
 class Migration(migrations.Migration):
@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='projectplatformsettings',
             name='contact_types',
-            field=select_multiple_field.models.SelectMultipleField(choices=[(b'organization', 'Organization'), (b'personal', 'Personal')], default=['organization'], max_length=100),
+            field=multiselctfield.db.fields.SelectMultipleField(choices=[(b'organization', 'Organization'), (b'personal', 'Personal')], default=['organization'], max_length=100),
             preserve_default=False,
         ),
     ]

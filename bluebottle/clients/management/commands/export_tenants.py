@@ -24,12 +24,15 @@ class Command(BaseCommand):
                 accounts = []
                 for merchant in properties.MERCHANT_ACCOUNTS:
                     if merchant['merchant'] == 'docdata':
-                        accounts.append(
-                            {
-                                'service_type': 'docdata',
-                                'username': merchant['merchant_name']
-                            }
-                        )
+                        if merchant['merchant_name'] == '1procentclub_nw' and client.client_name != 'onepercent':
+                            pass
+                        else:
+                            accounts.append(
+                                {
+                                    'service_type': 'docdata',
+                                    'username': merchant['merchant_name']
+                                }
+                            )
 
                 api_key = Token.objects.get(user__username='accounting').key
                 results.append({

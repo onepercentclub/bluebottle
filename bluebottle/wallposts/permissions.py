@@ -1,5 +1,3 @@
-from rest_framework import permissions
-
 from bluebottle.projects.permissions import RelatedResourceOwnerPermission, BasePermission
 from bluebottle.tasks.models import Task
 

@@ -31,7 +31,7 @@ install_requires = [
     'Pillow==4.1.1',
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
-    'bleach==2.1.1',
+    'bleach==2.1.4',
     'bunch==1.0.1',
     'celery==3.1.24',
     'django-admin-sortable==2.1',

@@ -174,6 +174,15 @@ class BaseProject(models.Model):
     favorite = models.BooleanField(default=True)
 
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
+    campaign_duration = models.PositiveIntegerField(
+        _('Campaign Duration'),
+        help_text=_(
+            'How many days should the project run after it is started. '
+            'Ignored if a deadline is already set.'
+        ),
+        null=True,
+        blank=True
+    )
 
     location = models.ForeignKey('geo.Location', null=True, blank=True, on_delete=models.SET_NULL)
     place = models.CharField(help_text=_('Geographical location'),

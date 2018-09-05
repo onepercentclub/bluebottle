@@ -33,7 +33,7 @@ class Command(BaseCommand):
 
                 api_key = Token.objects.get(user__username='accounting').key
                 results.append({
-                    "name": client.schema_name,
+                    "name": client.client_name,
                     "domain": properties.TENANT_MAIL_PROPERTIES['website'],
                     "api_key": api_key,
                     "accounts": accounts

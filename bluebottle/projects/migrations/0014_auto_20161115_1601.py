@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations
-import multiselectfield.db.fields
+import multiselectfield
 
 
 class Migration(migrations.Migration):
@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='project',
             name='currencies',
-            field=multiselctfield.db.fields.SelectMultipleField(choices=[(b'EUR', 'Euro')], default=[], max_length=100, null=True),
+            field=multiselectfield.MultiSelectField(choices=[(b'EUR', 'Euro')], default=[], max_length=100, null=True),
         ),
     ]

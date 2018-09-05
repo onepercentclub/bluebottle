@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 import bluebottle.utils.fields
 from django.db import migrations, models
-import multiselectfield.db.fields
+import multiselectfield
 
 
 class Migration(migrations.Migration):
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='projectplatformsettings',
             name='share_options',
-            field=multiselctfield.db.fields.SelectMultipleField(choices=[(b'twitter', 'Twitter'), (b'facebook', 'Facebook'), (b'facebookAtWork', 'Facebook at Work'), (b'linkedin', 'LinkedIn'), (b'whatsapp', 'Whatsapp'), (b'email', 'Email')], default=[], max_length=100),
+            field=multiselectfield.MultiSelectField(choices=[(b'twitter', 'Twitter'), (b'facebook', 'Facebook'), (b'facebookAtWork', 'Facebook at Work'), (b'linkedin', 'LinkedIn'), (b'whatsapp', 'Whatsapp'), (b'email', 'Email')], default=[], max_length=100),
             preserve_default=False,
         ),
     ]

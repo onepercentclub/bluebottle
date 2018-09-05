@@ -1,3 +1,4 @@
+import json
 import mock
 from shutil import copyfile
 
@@ -177,3 +178,39 @@ class BulkImportTests(TestCase):
         self.assertEqual(order.user, user)
         self.assertEqual(order.donations.count(), 1)
         self.assertEqual(order.donations.first().project, project)
+
+
+@override_settings(MERCHANT_ACCOUNTS=[{
+    'merchant': 'docdata',
+    'currency': 'EUR',
+    'merchant_password': 'welcome123',
+    'merchant_name': '1procentclub_nw',
+}])
+class ManagementCommandExportTenantsTests(TestCase):
+
+    def test_export_tenants(self):
+        test = Client.objects.get(client_name='test')
+        test.client_name = 'onepercent'
+        test.save()
+
+        cmd = 'export_tenants'
+        file_name = 'tenants.json'
+        call_command(cmd, file='tenants.json')
+        fp = open(file_name, "r")
+        text = json.load(fp)
+        # Only onepercent tenant should get 1procentclub_nw merchant account
+        expected = [
+            {
+                u'domain': u'',
+                u'api_key': u'0e0150e4a30214a302df71584f8d8941c2cea011',
+                u'accounts': [],
+                u'name': u'test2'
+            },
+            {
+                u'domain': u'http://onepercentclub.com',
+                u'api_key': u'77062748758941b5c3cee13231a0e50d6088a263',
+                u'accounts': [{u'service_type': u'docdata', u'username': u'1procentclub_nw'}],
+                u'name': u'onepercent'
+            }
+        ]
+        self.assertEqual(text, expected)

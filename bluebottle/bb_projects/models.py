@@ -202,7 +202,7 @@ class BaseProject(models.Model):
 
     # Account holder Info
     account_holder_name = models.CharField(
-        _("account holder name"), max_length=255, null=True, blank=True)
+        _("account holder name"), max_length=100, null=True, blank=True)
     account_holder_address = models.CharField(
         _("account holder address"), max_length=255, null=True, blank=True)
     account_holder_postal_code = models.CharField(

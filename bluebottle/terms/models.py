@@ -24,6 +24,9 @@ class Terms(models.Model):
         ordering = ('-date',)
         verbose_name_plural = _('Terms')
         verbose_name = _('Term')
+        permissions = (
+            ('api_read_terms', 'Can view terms through API'),
+        )
 
     @classmethod
     def get_current(cls):
@@ -51,3 +54,8 @@ class TermsAgreement(models.Model):
         ordering = ('-created',)
         verbose_name_plural = _('Terms agreement')
         verbose_name = _('Term agreements')
+        permissions = (
+            ('api_read_termsagreement', 'Can view terms agreements through API'),
+        )
+
+

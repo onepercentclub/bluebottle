@@ -1,15 +1,16 @@
-from rest_framework import generics
-
+from bluebottle.utils.views import (
+    ListAPIView, RetrieveAPIView
+)
 from .models import Category
 from .serializers import CategorySerializer
 
 
-class CategoryList(generics.ListAPIView):
+class CategoryList(ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
-class CategoryDetail(generics.RetrieveAPIView):
+class CategoryDetail(RetrieveAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 

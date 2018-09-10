@@ -57,5 +57,3 @@ class TermsAgreement(models.Model):
         permissions = (
             ('api_read_termsagreement', 'Can view terms agreements through API'),
         )
-
-

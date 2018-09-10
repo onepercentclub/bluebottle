@@ -224,6 +224,16 @@ AUTHENTICATION_BACKENDS = (
     'bluebottle.utils.backends.AnonymousAuthenticationBackend'
 )
 
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
+    },
+]
+
 SOCIAL_AUTH_PIPELINE = (
     'bluebottle.auth.utils.user_from_request',
     'social.pipeline.social_auth.social_details',

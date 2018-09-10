@@ -1,6 +1,7 @@
 from django import forms
 from django.conf import settings
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, password_validation
+from django.contrib.auth.hashers import make_password
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
@@ -249,6 +250,18 @@ class UserDataExportSerializer(UserProfileSerializer):
         )
 
 
+class PasswordValidator(object):
+    def set_context(self, field):
+        if field.parent.instance:
+            self.user = field.parent.instance
+        else:
+            self.user = None
+
+    def __call__(self, value):
+        password_validation.validate_password(value, self.user)
+        return value
+
+
 # Thanks to Neamar Tucote for this code:
 # https://groups.google.com/d/msg/django-rest-framework/abMsDCYbBRg/d2orqUUdTqsJ
 class PasswordField(serializers.CharField):
@@ -256,14 +269,10 @@ class PasswordField(serializers.CharField):
     widget = forms.widgets.PasswordInput
     hidden_password_string = '********'
 
-    def to_internal_value(self, value):
-        """ Hash if new value sent, else retrieve current password. """
-        from django.contrib.auth.hashers import make_password
-
-        if value == self.hidden_password_string or value == '':
-            return self.parent.object.password
-        else:
-            return make_password(value)
+    def __init__(self, **kwargs):
+        super(PasswordField, self).__init__(**kwargs)
+        validator = PasswordValidator()
+        self.validators.append(validator)
 
     def to_representation(self, value):
         """ Hide hashed-password in API display. """
@@ -313,6 +322,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(_('Email confirmation mismatch'))
 
         return data
+
+    def create(self, validated_data):
+        validated_data['password'] = make_password(validated_data['password'])
+        return super(UserCreateSerializer, self).create(validated_data)
 
     class Meta:
         model = BB_USER_MODEL

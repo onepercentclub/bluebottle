@@ -293,7 +293,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEqual(response.data['email'][0], 'This field is required.')
 
-
     def test_user_create_invalid_password(self):
         """
         Test creating a user with the api and activating the new user.

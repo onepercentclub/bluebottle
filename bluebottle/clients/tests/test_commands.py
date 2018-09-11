@@ -7,6 +7,7 @@ from django.test.utils import override_settings
 from django.core.management import call_command
 from django.conf import settings
 
+from bluebottle.clients.models import Client
 from bluebottle.members.models import Member
 from bluebottle.categories.models import Category
 from bluebottle.projects.models import Project
@@ -15,7 +16,6 @@ from bluebottle.rewards.models import Reward
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.wallposts.models import Wallpost
 from bluebottle.orders.models import Order
-from bluebottle.clients.management.commands.new_tenant import Command as NewTenantCommand
 
 
 @override_settings(TENANT_APPS=('django_nose',),

@@ -1,6 +1,9 @@
 import json
 import re
 import urlparse
+import time
+
+import mock
 
 import httmock
 from django.contrib.auth import get_user_model
@@ -9,6 +12,8 @@ from django.core import mail
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 from rest_framework import status
+
+from bluebottle.members.tokens import login_token_generator
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (OrganizationFactory, OrganizationContactFactory,
@@ -504,3 +509,78 @@ class UserVerificationTest(BluebottleTestCase):
             )
 
             self.assertEqual(response.status_code, 403)
+
+
+class TokenLoginApiTest(BluebottleTestCase):
+    def setUp(self):
+        super(TokenLoginApiTest, self).setUp()
+
+        self.user = BlueBottleUserFactory.create()
+        self.other_user = BlueBottleUserFactory.create()
+
+        self.token_login_url = reverse('token-login')
+
+    def test_token_login(self):
+        token = login_token_generator.make_token(self.user)
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': self.user.pk, 'token': token}
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data.keys(), ['token'])
+
+    def test_token_login_twice(self):
+        token = login_token_generator.make_token(self.user)
+        self.client.post(
+            self.token_login_url,
+            data={'user_id': self.user.pk, 'token': token}
+        )
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': self.user.pk, 'token': token}
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_token_missing_argument(self):
+        token = login_token_generator.make_token(self.user)
+        response = self.client.post(
+            self.token_login_url,
+            data={'token': token}
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_token_missing_user(self):
+        token = login_token_generator.make_token(self.user)
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': '1234567890', 'token': token}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_token_wrong_token(self):
+        token = login_token_generator.make_token(self.user)
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': self.user.pk, 'token': token + '123'}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_token_wrong_user(self):
+        token = login_token_generator.make_token(self.user)
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': self.other_user.pk, 'token': token}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_token_expired(self):
+        past_time = time.time() - 35
+        with mock.patch('django.core.signing.time.time', return_value=past_time):
+            token = login_token_generator.make_token(self.user)
+
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': self.user.pk, 'token': token}
+        )
+        self.assertEqual(response.status_code, 404)

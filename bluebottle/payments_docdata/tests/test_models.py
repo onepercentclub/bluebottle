@@ -1,6 +1,7 @@
 from django.test import Client
 from django.core.urlresolvers import reverse
 
+import logging
 from mock import patch
 
 from bluebottle.payments.models import OrderPayment, Transaction
@@ -34,6 +35,7 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
     @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
     def setUp(self, mock_client):
         super(PaymentsDocdataTestCase, self).setUp()
+        logging.disable(logging.DEBUG)
 
         # Mock response to creating the payment at docdata
         instance = mock_client.return_value
@@ -42,11 +44,16 @@ class PaymentsDocdataTestCase(BluebottleTestCase, FsmTestMixin):
         # Mock create payment
         patch.object(DocdataPaymentAdapter, 'create_payment', fake_create_payment)
         self.order = OrderFactory.create()
-        self.order_payment = OrderPaymentFactory.create(order=self.order,
-                                                        payment_method='docdataIdeal',
-                                                        integration_data={
-                                                            'default_pm': 'ideal'})
+        self.order_payment = OrderPaymentFactory.create(
+            order=self.order,
+            payment_method='docdataIdeal',
+            integration_data={'default_pm': 'ideal'}
+        )
         self.service = PaymentService(order_payment=self.order_payment)
+
+    def tearDown(self):
+        super(PaymentsDocdataTestCase, self).tearDown()
+        logging.disable(logging.CRITICAL)
 
     @patch.object(DocdataPaymentAdapter, '_store_payment_transaction')
     @patch.object(DocdataPaymentAdapter, '_fetch_status')

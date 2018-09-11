@@ -65,4 +65,8 @@ def refund_project(tenant, project):
     with LocalTenant(tenant, clear_tenant=True):
         for donation in project.donations:
             service = PaymentService(donation.order.order_payment)
-            service.refund_payment()
+            try:
+                service.refund_payment()
+            except Exception:
+                # Don't trip if one refund throws an error
+                pass

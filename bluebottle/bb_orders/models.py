@@ -86,7 +86,8 @@ class BaseOrder(models.Model, FSMTransition):
 
     @transition(field=status,
                 source=[StatusDefinition.PENDING, StatusDefinition.LOCKED,
-                        StatusDefinition.FAILED],
+                        StatusDefinition.FAILED, StatusDefinition.REFUND_REQUESTED,
+                        StatusDefinition.REFUNDED],
                 target=StatusDefinition.SUCCESS)
     def success(self):
         if not self.confirmed:
@@ -171,6 +172,8 @@ class BaseOrder(models.Model, FSMTransition):
         return "{0} : {1}".format(self.id, self.created)
 
     def get_latest_order_payment(self):
+        if self.order_payments.filter(status__in=['settled', 'authorized']).count():
+            return self.order_payments.filter(status__in=['settled', 'authorized']).order_by('-created').all()[0]
         if self.order_payments.count():
             return self.order_payments.order_by('-created').all()[0]
         return None

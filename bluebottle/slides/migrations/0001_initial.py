@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
                 ('sequence', models.IntegerField()),
                 ('creation_date', django_extensions.db.fields.CreationDateTimeField(auto_now_add=True, verbose_name='creation date')),
                 ('modification_date', django_extensions.db.fields.ModificationDateTimeField(auto_now=True, verbose_name='last modification')),
-                ('author', models.ForeignKey(editable=False, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='author')),
+                ('author', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='author')),
             ],
             options={
                 'ordering': ('language', 'sequence'),

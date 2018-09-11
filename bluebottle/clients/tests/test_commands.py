@@ -1,3 +1,4 @@
+import json
 import mock
 from shutil import copyfile
 
@@ -14,6 +15,7 @@ from bluebottle.rewards.models import Reward
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.wallposts.models import Wallpost
 from bluebottle.orders.models import Order
+from bluebottle.clients.management.commands.new_tenant import Command as NewTenantCommand
 
 
 @override_settings(TENANT_APPS=('django_nose',),
@@ -131,3 +133,28 @@ class BulkImportTests(TestCase):
         self.assertEqual(order.user, user)
         self.assertEqual(order.donations.count(), 1)
         self.assertEqual(order.donations.first().project, project)
+
+
+@override_settings(MERCHANT_ACCOUNTS=[{
+    'merchant': 'docdata',
+    'currency': 'EUR',
+    'merchant_password': 'welcome123',
+    'merchant_name': '1procentclub_nw',
+}])
+class ManagementCommandExportTenantsTests(TestCase):
+
+    def test_export_tenants(self):
+        test = Client.objects.get(client_name='test')
+        test.client_name = 'onepercent'
+        test.save()
+
+        cmd = 'export_tenants'
+        file_name = 'tenants.json'
+        call_command(cmd, file='tenants.json')
+        fp = open(file_name, "r")
+        text = json.load(fp)
+        # Only onepercent tenant should get 1procentclub_nw merchant account
+        self.assertEqual(text[0]['name'], 'test2')
+        self.assertEqual(text[0]['accounts'], [])
+        self.assertEqual(text[1]['name'], 'onepercent')
+        self.assertEqual(text[1]['accounts'], [{u'service_type': u'docdata', u'username': u'1procentclub_nw'}])

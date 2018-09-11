@@ -108,6 +108,7 @@ class TaskFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TaskFile
+        fields = '__all__'
 
 
 class TaskPermissionsSerializer(serializers.Serializer):

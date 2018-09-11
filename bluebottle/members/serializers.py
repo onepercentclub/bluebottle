@@ -337,10 +337,8 @@ class PasswordSetSerializer(serializers.Serializer):
     a salt which means we can't compare the
     two passwords to see if they are the same.
     """
-    new_password1 = serializers.CharField(
-        required=True, max_length=128)
-    new_password2 = serializers.CharField(
-        required=True, max_length=128)
+    new_password1 = PasswordField(required=True, max_length=128)
+    new_password2 = serializers.CharField(required=True, max_length=128)
 
     def validate(self, data):
         if data['new_password1'] != data['new_password2']:
@@ -363,3 +361,8 @@ class MemberPlatformSettingsSerializer(serializers.ModelSerializer):
             'require_consent',
             'consent_link',
         )
+
+
+class TokenLoginSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField(required=True)
+    token = serializers.CharField(required=True)

@@ -26,7 +26,6 @@ from bluebottle.clients.utils import tenant_url
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Location
 from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings
-from bluebottle.members.tokens import login_token_generator
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
@@ -436,7 +435,7 @@ class MemberAdmin(UserAdmin):
 
     def login_as_redirect(self, *args, **kwargs):
         user = Member.objects.get(id=kwargs.get('user_id', None))
-        token = login_token_generator.make_token(user)
+        token = user.get_login_token()
         url = "/login-with/{}/{}".format(user.pk, token)
 
         return HttpResponseRedirect(url)

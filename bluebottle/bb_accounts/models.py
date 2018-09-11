@@ -22,6 +22,7 @@ from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
+from bluebottle.members.tokens import login_token_generator
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import Address
@@ -294,6 +295,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         payload = jwt_payload_handler(self)
         token = jwt_encode_handler(payload)
         return token
+
+    def get_login_token(self):
+        return login_token_generator.make_token(self)
 
     @property
     def short_name(self):

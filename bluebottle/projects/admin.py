@@ -695,7 +695,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             amount[1]['fields'].insert(0, 'payout_status')
 
         dates = (_('Dates'), {'fields': [
-            'created', 'updated',
+            'created', 'updated', 'campaign_duration',
             'deadline', 'date_submitted', 'campaign_started',
             'campaign_ended', 'campaign_funded',
             'campaign_paid_out', 'voting_deadline'

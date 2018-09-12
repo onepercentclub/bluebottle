@@ -2067,7 +2067,8 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         project_wallpost_detail_url = "{0}{1}".format(
             self.wallposts_url, mediawallpost['id'])
         response = self.client.delete(
-            project_wallpost_detail_url, token=self.owner_token)
+            project_wallpost_detail_url, token=self.owner_token
+        )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         response = self.client.get(project_wallpost_detail_url,

@@ -12,7 +12,7 @@ urlpatterns = [
     url(r'^textwallposts/$', TextWallpostList.as_view(),
         name='text_wallpost_list'),
     url(r'^textwallposts/(?P<pk>\d+)$', TextWallpostDetail.as_view(),
-        name='media_wallpost_detail'),
+        name='text_wallpost_detail'),
 
     url(r'^mediawallposts/$', MediaWallpostList.as_view(),
         name='media_wallpost_list'),

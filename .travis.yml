@@ -9,9 +9,9 @@ addons:
     - swig
 cache: pip
   - "$HOME/.cache/pip/"
-  - "$HOME/virtualenv/python2.7.3/lib/python2.7/site-packages"
+  - "$HOME/virtualenv/pypy2.7-5.8.0/"
 python:
-- 2.7.3
+- "pypy"
 env:
   global:
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
@@ -20,15 +20,15 @@ env:
   # $APIKEY for the hipchat api auth
   - secure: PUYWLPG0f1QTf1Q77/0ft636ZKQaIIjy0eHZCVpzVyRMW0XX9N5UXhbTPE1fPFt5aRNdNjGIWxOF/4SuIEhYEaZamGG3PBNqvXI530SkTNUbNVoeAcTleYbwcaVWeYdyK2P2k1YdNUt+BbRuYN2o9I8+2QmQvQsZEwugCG4+UH4=
 install:
-- pip install --upgrade setuptools 
-- pip install --upgrade -I flake8==2.6.2
-- pip install -e .[test] --process-dependency-links --trusted-host github.com
+- pip_pypy install --upgrade setuptools pip
+- pip_pypy install --upgrade -I flake8==2.6.2
+- pip_pypy install -e .[test] --process-dependency-links --trusted-host github.com
 - echo `psql --version`
 before_script:
 - curl https://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz | gunzip - > GeoIP.dat
 - flake8 .
 script:
-- python -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8
+- pypy -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8
 notifications:
   hipchat:
     rooms:
@@ -39,4 +39,4 @@ notifications:
     secure: TOveMBh9HePYKWuGTrWF+hTXzxGZvbVsa3KU0sB1yv6qkcixb5/ggvmkTeRddYEd/zyWyMenicFsrXVBgsP0SmbNgke6kq5+EN0U5oJWse998lvCVCpwmJQMdwDHvYsOtbFEOppQrbRK4vmH8qibx3x2YVg+u+61ePHvWYF9z6U=
 after_success:
 - bash post_travis.sh
-- python -m coverage combine; python -m coverage report --omit **/migrations/**; coveralls
+- pypy -m coverage combine; python -m coverage report --omit **/migrations/**; coveralls

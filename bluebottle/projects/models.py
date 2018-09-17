@@ -544,7 +544,6 @@ class Project(BaseProject, PreviousStatusMixin):
         return self.get_money_total([
             StatusDefinition.CANCELLED,
             StatusDefinition.REFUND_REQUESTED,
-            StatusDefinition.REFUNDED,
         ])
 
     @property

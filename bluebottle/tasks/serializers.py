@@ -6,6 +6,8 @@ from django.utils.translation import ugettext_lazy as _
 from bluebottle.bluebottle_drf2.serializers import (
     PrimaryKeyGenericRelatedField, FileSerializer, PrivateFileSerializer
 )
+from bluebottle.geo.serializers import PlaceSerializer
+from bluebottle.geo.models import Place
 from bluebottle.members.serializers import UserPreviewSerializer, UserProfileSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.tasks.permissions import TaskMemberPermission, TaskManagerPermission
@@ -127,6 +129,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug',
                                            queryset=Project.objects)
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
+    place = PlaceSerializer(required=False)
     author = UserProfileSerializer(read_only=True)
     permissions = ResourcePermissionField('task_detail', view_args=('id',))
     related_permissions = TaskPermissionsSerializer(read_only=True)
@@ -176,6 +179,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             'files',
             'id',
             'location',
+            'place',
             'members',
             'needs_motivation',
             'people_needed',
@@ -196,12 +200,32 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             project.save()
 
     def create(self, validated_data):
+        place = None
+        if 'place' in validated_data:
+            place = validated_data.pop('place')
         instance = super(BaseTaskSerializer, self).create(validated_data)
+
+        if place:
+            Place.objects.create(content_object=instance, **place)
+
         self._check_project_deadline(instance, validated_data)
+
         return instance
 
     def update(self, instance, validated_data):
+        if 'place' in validated_data:
+            if instance.place:
+                place = instance.place
+                for key, value in validated_data.pop('place').items():
+                    setattr(place, key, value)
+                place.save()
+            else:
+                Place.objects.create(content_object=instance, **validated_data.pop('place'))
+        else:
+            instance.place = None
+
         result = super(BaseTaskSerializer, self).update(instance, validated_data)
+
         self._check_project_deadline(instance, validated_data)
         return result
 

@@ -11,9 +11,11 @@ from django.core.urlresolvers import reverse
 from rest_framework import status
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.geo.models import Country
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 
@@ -454,6 +456,146 @@ class TaskApiTestcase(BluebottleTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEquals(response.data['resume'], None)
+
+    def create_task_with_place(self):
+        country = CountryFactory.create()
+
+        task_data = {
+            'people_needed': 1,
+            'deadline': '2016-08-09T12:45:14.134756',
+            'deadline_to_apply': '2016-08-04T12:45:14.134756',
+            'project': self.some_project.slug,
+            'title': 'Help me',
+            'description': 'I need help',
+            'location': '',
+            'skill': 1,
+            'time_needed': '4.00',
+            'type': 'event',
+            'place': {
+                'country': country.pk,
+                'locality': 'Amsterdam',
+                'position': (52.0, 43.4)
+            }
+        }
+
+        # Task deadline time should changed be just before midnight after setting.
+        response = self.client.post(self.tasks_url, task_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertEqual(
+            response.data['place']['locality'], 'Amsterdam'
+        )
+        self.assertEqual(
+            response.data['place']['country'], country.pk
+        )
+
+    def update_task_with_place(self):
+        task = TaskFactory.create(
+            author=self.some_user,
+            project=self.some_project
+        )
+        PlaceFactory.create(
+            content_object=task
+        )
+
+        task_detail_url = reverse('task_detail', kwargs={'pk': task.pk})
+        response = self.client.put(
+            task_detail_url,
+            {
+                'id': task.pk,
+                'people_needed': task.people_needed,
+                'deadline': task.deadline,
+                'deadline_to_apply': task.deadline_to_apply,
+                'title': task.title,
+                'description': task.description,
+                'project': self.some_project.slug,
+                'location': task.location,
+                'skill': task.skill.pk,
+                'time_needed': task.time_needed,
+                'type': task.type,
+                'place': {
+                    'country': task.place.country.pk,
+                    'locality': 'Amsterdam',
+                    'street': 'Roggeveenstraat',
+                    'position': (52.0, 43.4)
+                }
+            },
+            token=self.some_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        task.place.refresh_from_db()
+        self.assertEqual(
+            task.place.locality, 'Amsterdam'
+        )
+
+    def update_task_without_place(self):
+        task = TaskFactory.create(
+            author=self.some_user,
+            project=self.some_project
+        )
+
+        task_detail_url = reverse('task_detail', kwargs={'pk': task.pk})
+        response = self.client.put(
+            task_detail_url,
+            {
+                'id': task.pk,
+                'people_needed': task.people_needed,
+                'deadline': task.deadline,
+                'deadline_to_apply': task.deadline_to_apply,
+                'title': task.title,
+                'description': task.description,
+                'project': self.some_project.slug,
+                'location': task.location,
+                'skill': task.skill.pk,
+                'time_needed': task.time_needed,
+                'type': task.type,
+                'place': {
+                    'country': Country.objects.first().pk,
+                    'locality': 'Amsterdam',
+                    'street': 'Roggeveenstraat',
+                    'position': (52.0, 43.4)
+                }
+            },
+            token=self.some_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        task.place.refresh_from_db()
+        self.assertEqual(
+            task.place.locality, 'Amsterdam'
+        )
+
+    def update_task_remove_place(self):
+        place = PlaceFactory.create()
+        task = TaskFactory.create(
+            place=place,
+            author=self.some_user,
+            project=self.some_project
+        )
+
+        task_detail_url = reverse('task_detail', kwargs={'pk': task.pk})
+        response = self.client.put(
+            task_detail_url,
+            {
+                'id': task.pk,
+                'people_needed': task.people_needed,
+                'deadline': task.deadline,
+                'deadline_to_apply': task.deadline_to_apply,
+                'title': task.title,
+                'description': task.description,
+                'project': self.some_project.slug,
+                'location': task.location,
+                'skill': task.skill.pk,
+                'time_needed': task.time_needed,
+                'type': task.type,
+            },
+            token=self.some_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        task.refresh_from_db()
+        self.assertIsNone(
+            task.place
+        )
 
     def test_deadline_dates(self):
         """

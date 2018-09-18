@@ -111,8 +111,6 @@ class Task(models.Model, PreviousStatusMixin):
             return self.places.get()
         except Place.DoesNotExist:
             return None
-        import ipdb; ipdb.set_trace()
-        return
 
     @property
     def expertise_based(self):

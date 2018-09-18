@@ -49,3 +49,40 @@ class OrganizationContactTest(BluebottleTestCase):
         contacts = self.organization.contacts
         self.assertEqual(contacts.count(), 1)
         self.assertEqual(contacts.all()[0].id, self.contact.id)
+
+
+class OrganizationMemberTest(BluebottleTestCase):
+    def setUp(self):
+        super(OrganizationMemberTest, self).setUp()
+
+        self.user = BlueBottleUserFactory.create()
+        self.organization = OrganizationFactory.create()
+        self.member = OrganizationMemberFactory.create(
+            organization=self.organization,
+            user=self.user
+        )
+
+    def test_organization_contact(self):
+        self.assertTrue(
+            len(self.user.organizationcontact_set.all()), 1
+        )
+        contact = self.user.organizationcontact_set.get()
+        self.assertEqual(
+            contact.email, self.user.email
+        )
+        self.assertEqual(
+            contact.phone, self.user.phone_number
+        )
+
+    def test_organization_save_twice(self):
+        self.member.save()
+        self.assertTrue(
+            len(self.user.organizationcontact_set.all()), 1
+        )
+        contact = self.user.organizationcontact_set.get()
+        self.assertEqual(
+            contact.email, self.user.email
+        )
+        self.assertEqual(
+            contact.phone, self.user.phone_number
+        )

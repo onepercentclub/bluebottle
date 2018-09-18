@@ -126,3 +126,16 @@ class OrganizationMember(models.Model):
     class Meta:
         verbose_name = _('organization member')
         verbose_name_plural = _('organization members')
+
+    def save(self, *args, **kwargs):
+        OrganizationContact.objects.get_or_create(
+            organization=self.organization,
+            owner=self.user,
+            email=self.user.email,
+            defaults={
+                'name': self.user.full_name,
+                'phone': self.user.phone_number,
+            }
+        )
+
+        super(OrganizationMember, self).save(*args, **kwargs)

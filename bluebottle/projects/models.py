@@ -888,6 +888,12 @@ class ProjectPlatformSettings(BasePlatformSettings):
         ('phone', _('Phone')),
     )
 
+    PROJECT_MATCH_OPTIONS = (
+        ('theme', _('Theme')),
+        ('skill', _('Skill')),
+        ('location', _('Location')),
+    )
+
     PROJECT_SHARE_OPTIONS = (
         ('twitter', _('Twitter')),
         ('facebook', _('Facebook')),
@@ -908,6 +914,10 @@ class ProjectPlatformSettings(BasePlatformSettings):
     )
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)
+    match_options = SelectMultipleField(
+        max_length=100, choices=PROJECT_MATCH_OPTIONS,
+        blank=True, include_blank=False
+    )
 
     class Meta:
         verbose_name_plural = _('project platform settings')

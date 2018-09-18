@@ -803,6 +803,7 @@ class ProjectPlatformSettingsAdminForm(forms.ModelForm):
             'create_types': CheckboxSelectMultipleWidget,
             'contact_types': CheckboxSelectMultipleWidget,
             'share_options': CheckboxSelectMultipleWidget,
+            'match_options': CheckboxSelectMultipleWidget,
         }
     extra = 0
 
@@ -821,6 +822,12 @@ class ProjectPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentA
         CustomProjectFieldSettingsInline,
         ProjectCreateTemplateInline
     ]
+
+    fields = (
+        'create_types', 'contact_types', 'share_options',
+        'match_options', 'facebook_at_work_url', 'allow_anonymous_rewards',
+        'create_flow', 'contact_method',
+    )
 
 
 admin.site.register(ProjectPlatformSettings, ProjectPlatformSettingsAdmin)

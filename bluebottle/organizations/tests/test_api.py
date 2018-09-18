@@ -277,7 +277,7 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
 
         data = json.loads(response.content)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(data['contacts']), 0)
+        self.assertEqual(len(data['contacts']), 1)
 
     def test_organization_contacts_ordering(self):
         for name in ['one', 'two', 'three']:
@@ -290,7 +290,7 @@ class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):
 
         data = json.loads(response.content)
         contacts = data['contacts']
-        self.assertEqual(len(contacts), 3)
+        self.assertEqual(len(contacts), 4)
         self.assertEqual(contacts[0]['name'], 'three')
 
 

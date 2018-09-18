@@ -566,12 +566,11 @@ class TaskApiTestcase(BluebottleTestCase):
         )
 
     def test_update_task_remove_place(self):
-        place = PlaceFactory.create()
         task = TaskFactory.create(
-            place=place,
             author=self.some_user,
             project=self.some_project
         )
+        PlaceFactory.create(content_object=task)
 
         task_detail_url = reverse('task_detail', kwargs={'pk': task.pk})
         response = self.client.put(

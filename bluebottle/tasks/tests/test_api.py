@@ -457,7 +457,7 @@ class TaskApiTestcase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEquals(response.data['resume'], None)
 
-    def create_task_with_place(self):
+    def test_create_task_with_place(self):
         country = CountryFactory.create()
 
         task_data = {
@@ -490,7 +490,7 @@ class TaskApiTestcase(BluebottleTestCase):
             response.data['place']['country'], country.pk
         )
 
-    def update_task_with_place(self):
+    def test_update_task_with_place(self):
         task = TaskFactory.create(
             author=self.some_user,
             project=self.some_project
@@ -529,7 +529,7 @@ class TaskApiTestcase(BluebottleTestCase):
             task.place.locality, 'Amsterdam'
         )
 
-    def update_task_without_place(self):
+    def test_update_task_without_place(self):
         task = TaskFactory.create(
             author=self.some_user,
             project=self.some_project
@@ -565,7 +565,7 @@ class TaskApiTestcase(BluebottleTestCase):
             task.place.locality, 'Amsterdam'
         )
 
-    def update_task_remove_place(self):
+    def test_update_task_remove_place(self):
         place = PlaceFactory.create()
         task = TaskFactory.create(
             place=place,

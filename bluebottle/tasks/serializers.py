@@ -222,7 +222,8 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             else:
                 Place.objects.create(content_object=instance, **validated_data.pop('place'))
         else:
-            instance.place = None
+            if instance.place:
+                instance.place.delete()
 
         result = super(BaseTaskSerializer, self).update(instance, validated_data)
 

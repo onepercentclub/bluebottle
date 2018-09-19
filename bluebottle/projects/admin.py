@@ -45,7 +45,7 @@ from bluebottle.projects.models import (
 from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin, \
-    TranslatedUnionFieldListFilter
+    TranslatedUnionFieldListFilter, log_action
 from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
 from bluebottle.votes.models import Vote
 from .forms import ProjectDocumentForm
@@ -67,6 +67,7 @@ def mark_as(model_admin, request, queryset):
     # REF: https://docs.djangoproject.com/en/1.10/ref/models/querysets/#update
     projects = Project.objects.filter(pk__in=queryset.values_list('pk', flat=True))
     for project in projects:
+        log_action(project, request.user, 'Changed project status to {}'.format(status.name))
         project.status = status
         project.save()
 
@@ -487,6 +488,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             adapter = DoradoPayoutAdapter(project)
             try:
                 adapter.trigger_payout()
+                log_action(project, request.user, 'Approved payout')
             except PayoutValidationError as e:
                 errors = e.message['errors']
                 if type(errors) == unicode:
@@ -528,6 +530,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         project.save()
 
         refund_project.delay(connection.tenant, project)
+        log_action(project, request.user, 'Refunded project')
 
         project_url = reverse('admin:projects_project_change', args=(project.id,))
         return HttpResponseRedirect(project_url)
@@ -676,7 +679,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         story = (_('Story'), {'fields': [
             'pitch', 'story',
             'image', 'video_url',
-            'theme', 'categories', 'language',
+            'theme', 'categories',
             'country', 'place',
         ]})
 
@@ -692,7 +695,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             amount[1]['fields'].insert(0, 'payout_status')
 
         dates = (_('Dates'), {'fields': [
-            'created', 'updated',
+            'created', 'updated', 'campaign_duration',
             'deadline', 'date_submitted', 'campaign_started',
             'campaign_ended', 'campaign_funded',
             'campaign_paid_out', 'voting_deadline'

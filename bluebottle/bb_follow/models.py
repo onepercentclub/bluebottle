@@ -189,7 +189,7 @@ def email_followers(sender, instance, created, **kwargs):
                     user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
                 follow_object = _('project')
-                link = '/go/projects/{0}'.format(instance.content_object.slug)
+                link = '/projects/{0}'.format(instance.content_object.slug)
 
             if isinstance(instance.content_object, Task):
                 # Send update to all task members and to people who posted to
@@ -200,7 +200,7 @@ def email_followers(sender, instance, created, **kwargs):
                     user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
                 follow_object = _('task')
-                link = '/go/tasks/{0}'.format(instance.content_object.id)
+                link = '/tasks/{0}'.format(instance.content_object.id)
 
             if isinstance(instance.content_object, BaseFundraiser):
                 # Send update to all people who donated or posted to the wall
@@ -211,13 +211,9 @@ def email_followers(sender, instance, created, **kwargs):
                     user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
                 follow_object = _('fundraiser')
-                link = '/go/fundraisers/{0}'.format(instance.content_object.id)
+                link = '/fundraisers/{0}'.format(instance.content_object.id)
 
             wallpost_text = instance.text
-
-            site = tenant_url()
-
-            full_link = site + link
 
             for mailee in mailers:
                 if mailee.campaign_notifications:
@@ -238,9 +234,12 @@ def email_followers(sender, instance, created, **kwargs):
                     send_mail(
                         template_name='bb_follow/mails/wallpost_mail.mail',
                         subject=subject,
+                        site=tenant_url(),
                         wallpost_text=wallpost_text[:250],
                         to=mailee,
-                        link=full_link,
+                        title=instance.content_object.title,
+                        link=link,
+                        unsubscribe_link='/member/profile',
                         follow_object=follow_object,
                         first_name=mailee.first_name,
                         author=instance.author.first_name

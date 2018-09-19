@@ -19,7 +19,6 @@ def create_terms(apps, schema_editor):
     properties.set_tenant(tenant)
 
     if properties.CLOSED_SITE:
-        import ipdb; ipdb.set_trace()
         try:
             page = Page.objects.filter(slug='terms-and-conditions').first()
         except Page.DoesNotExist:

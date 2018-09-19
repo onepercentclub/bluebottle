@@ -143,7 +143,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
 
         project_deadline = data['project'].deadline
         project_is_funding = data['project'].project_type in ['funding', 'both']
-        if data.get('deadline') > project_deadline and project_is_funding:
+        if project_deadline and data.get('deadline') > project_deadline and project_is_funding:
             raise serializers.ValidationError({
                 'deadline': [
                     _("The deadline can not be more than the project deadline")

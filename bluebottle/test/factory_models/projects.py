@@ -77,3 +77,6 @@ class ProjectDocumentFactory(factory.DjangoModelFactory):
 
     author = factory.SubFactory(BlueBottleUserFactory)
     project = factory.SubFactory(ProjectFactory)
+    file = factory.django.FileField(
+        from_path='./bluebottle/projects/test_images/upload.png'
+    )

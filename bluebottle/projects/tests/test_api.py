@@ -1274,7 +1274,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         document = ProjectDocumentFactory.create(
             author=self.some_user,
             project=project,
-            file='private/projects/documents/test.jpg'
         )
         file_url = reverse('project-document-file', args=[document.pk])
         signature = self.signer.sign(file_url)
@@ -1284,8 +1283,11 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            response['X-Accel-Redirect'].startswith('/media/private/projects/documents/upload_')
+        )
         self.assertEqual(
-            response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
+            response['COntent-Type'], 'image/png'
         )
 
     def test_project_document_download_no_signature(self):

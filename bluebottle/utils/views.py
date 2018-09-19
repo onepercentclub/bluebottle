@@ -1,5 +1,7 @@
 from collections import namedtuple
 
+import magic
+
 from django.conf import settings
 from django.core.signing import TimestampSigner, BadSignature
 from django.http.response import HttpResponseNotFound, HttpResponse
@@ -24,6 +26,9 @@ from bluebottle.utils.permissions import ResourcePermission
 
 from .models import Language
 from .serializers import ShareSerializer, LanguageSerializer
+
+
+mime = magic.Magic(mime=True)
 
 
 class TagList(views.APIView):
@@ -249,6 +254,7 @@ class PrivateFileView(DetailView):
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
             field.name
         )
+        response['Content-Type'] = mime.from_file(field.path)
 
         return response
 

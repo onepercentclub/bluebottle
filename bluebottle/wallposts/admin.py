@@ -19,6 +19,17 @@ from .models import (Wallpost, MediaWallpost, TextWallpost,
                      MediaWallpostPhoto, Reaction)
 
 
+class ReactionInline(admin.TabularInline):
+    model = Reaction
+    readonly_fields = ('reaction_link', 'author', 'ip_address', 'text', 'created', 'deleted')
+    fields = readonly_fields
+    extra = 0
+
+    def reaction_link(self, obj):
+        url = reverse('admin:wallposts_reaction_change', args=(obj.id, ))
+        return format_html("<a href='{}'>Reaction #{}</a>", url, obj.id)
+
+
 class MediaWallpostPhotoInline(admin.TabularInline):
     model = MediaWallpostPhoto
     extra = 0
@@ -44,7 +55,7 @@ class MediaWallpostPhotoInline(admin.TabularInline):
 
 class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = Wallpost
-    readonly_fields = ('ip_address', 'deleted', 'view_online', 'gallery', 'donation',
+    readonly_fields = ('ip_address', 'created', 'deleted', 'view_online', 'gallery', 'donation',
                        'share_with_facebook', 'share_with_twitter',
                        'share_with_linkedin', 'email_followers')
     fields = readonly_fields + ('text', 'author', 'editor')
@@ -56,7 +67,7 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     extra_fields = ('gallery',)
 
     ordering = ('-created',)
-    inlines = (MediaWallpostPhotoInline,)
+    inlines = (MediaWallpostPhotoInline, ReactionInline)
 
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
@@ -98,19 +109,19 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 
         if obj.content_type.name == 'project':
             return format_html(
-                u'<a href="/go/projects/{}">{}</a>',
+                u'<a href="/projects/{}">{}</a>',
                 obj.content_object.slug, obj.content_object.title
             )
         if obj.content_type.name == 'task':
             if obj.content_object:
                 return format_html(
-                    u'<a href="/go/tasks/{}">{}</a>',
+                    u'<a href="/tasks/{}">{}</a>',
                     obj.content_object.id,
-                    obj.content_object.project.title
+                    obj.content_object.title
                 )
         if obj.content_type.name == 'fundraiser':
             return format_html(
-                u'<a href="/go/fundraisers/{}">{}</a>',
+                u'<a href="/fundraisers/{}">{}</a>',
                 obj.content_object.id, obj.content_object.title
             )
         return '---'
@@ -133,7 +144,7 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
 
 class TextWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = Wallpost
-    readonly_fields = ('ip_address', 'deleted', 'posted_on', 'donation_link')
+    readonly_fields = ('ip_address', 'created', 'deleted', 'posted_on', 'donation_link')
     search_fields = ('text', 'author__first_name', 'author__last_name')
     list_display = ('created', 'author', 'content_type', 'text', 'deleted')
     raw_id_fields = ('author', 'editor', 'donation')
@@ -142,21 +153,28 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
 
     ordering = ('-created',)
 
+    inlines = (ReactionInline, )
+
     def posted_on(self, obj):
-        type = str(obj.content_type).title()
-        title = obj.content_object.title
-        if type == 'Task':
+        type = obj.content_type.name
+        type_name = unicode(obj.content_type).title()
+
+        if type == 'task':
             url = reverse('admin:tasks_task_change',
                           args=(obj.content_object.id,))
-        if type == 'Project':
+        elif type == 'project':
             url = reverse('admin:projects_project_change',
                           args=(obj.content_object.id,))
-        if type == 'Fundraiser':
+        elif type == 'fundraiser':
             url = reverse('admin:fundraisers_fundraiser_change',
                           args=(obj.content_object.id,))
+        else:
+            return ''
+
+        title = obj.content_object.title
         return format_html(
             u'{}: <a href="{}">{}</a>',
-            type, url, title
+            type_name, url, title
         )
 
     def donation_link(self, obj):
@@ -174,7 +192,7 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
 
 class SystemWallpostAdmin(PolymorphicChildModelAdmin):
     base_model = SystemWallpost
-    readonly_fields = ('ip_address', 'content_type', 'related_type',
+    readonly_fields = ('ip_address', 'created', 'content_type', 'related_type',
                        'donation_link', 'project_link',
                        'related_id', 'object_id')
     fields = readonly_fields + ('author', 'donation', 'text')
@@ -182,6 +200,8 @@ class SystemWallpostAdmin(PolymorphicChildModelAdmin):
     raw_id_fields = ('author', 'editor', 'donation')
     ordering = ('-created',)
     exclude = ('object_id', 'content_type')
+
+    inlines = (ReactionInline, )
 
     def project_link(self, obj):
         if obj.donation:

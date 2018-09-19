@@ -7,6 +7,7 @@ from bluebottle.projects.admin import mark_as
 from django.db.models import Count
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
+from django.urls.base import reverse
 from django.utils import timezone
 from moneyed.classes import Money
 
@@ -25,9 +26,17 @@ from bluebottle.test.factory_models.projects import (
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory, TaskMemberFactory
 from bluebottle.test.factory_models.votes import VoteFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, BluebottleAdminTestCase
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.utils.models import Language
+
+
+class MockUser:
+    is_active = True
+
+    def __init__(self, perms=None, is_staff=True):
+        self.is_staff = is_staff
+        self.id = 1
 
 
 class TestProjectStatusUpdate(BluebottleTestCase):
@@ -54,6 +63,12 @@ class TestProjectStatusUpdate(BluebottleTestCase):
             status=self.campaign)
 
         self.expired_project.deadline = timezone.now() - timedelta(days=1)
+
+        self.running_project = ProjectFactory.create(
+            amount_asked=5000, campaign_started=some_days_ago,
+            status=self.campaign)
+
+        self.running_project.deadline = timezone.now() + timedelta(days=1)
 
     def test_deadline_end_of_day(self):
         self.expired_project.save()
@@ -148,6 +163,28 @@ class TestProjectStatusUpdate(BluebottleTestCase):
         self.expired_project.save()
         self.failUnless(self.expired_project.status == self.campaign)
         self.assertEqual(self.expired_project.payout_status, None)
+
+    def test_admin_closed_more_than_enough(self):
+        order = OrderFactory.create()
+
+        donation = DonationFactory.create(
+            project=self.running_project,
+            order=order,
+            amount=5001
+        )
+        donation.save()
+
+        order.locked()
+        order.save()
+        order.success()
+        order.save()
+        self.running_project.save()
+        self.assertEqual(self.running_project.payout_status, None)
+        #  Now manually close it (e.g. through admin). Payout status should be set to needs_approval
+        self.running_project.status = self.complete
+        self.running_project.campaign_ended = timezone.now()
+        self.running_project.save()
+        self.assertEqual(self.running_project.payout_status, 'needs_approval')
 
     def test_expired_enough_by_matching(self):
         """ Less donated than requested  but with matching- status done complete """
@@ -344,19 +381,24 @@ class TestProjectPopularity(BluebottleTestCase):
         self.assertEqual(Project.objects.get(id=self.project.id).popularity, 11)
 
 
-class TestProjectBulkActions(BluebottleTestCase):
+class TestProjectBulkActions(BluebottleAdminTestCase):
     def setUp(self):
         super(TestProjectBulkActions, self).setUp()
         self.init_projects()
 
         self.projects = [ProjectFactory.create(title='test {}'.format(i)) for i in range(10)]
         self.request = RequestFactory().post('/admin/some', data={'action': 'plan-new'})
+        self.request.user = MockUser()
 
     def test_mark_as_plan_new(self):
         mark_as(None, self.request, Project.objects)
 
         for project in Project.objects.all():
             self.assertEqual(project.status.slug, 'plan-new')
+        self.client.force_login(self.superuser)
+        url = reverse('admin:projects_project_history', args=(project.id, ))
+        response = self.client.get(url)
+        self.assertContains(response, 'Changed project status to Plan - Draft')
 
     def test_project_phase_log_creation(self):
         mark_as(None, self.request, Project.objects)
@@ -450,6 +492,28 @@ class TestModel(BluebottleTestCase):
         self.project.amount_asked = Money(20, 'EUR')
         self.project.amount_donated = Money(10, 'EUR')
         self.assertEqual(self.project.donated_percentage, 50)
+
+    def test_campaign_duration(self):
+        self.project.deadline = None
+        self.project.campaign_duration = 10
+        self.project.save()
+
+        self.assertEqual(self.project.deadline, None)
+
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        self.assertEqual((self.project.deadline - timezone.now()).days, 10)
+
+    def test_campaign_ended_and_deadline(self):
+        self.project.deadline = timezone.now() + timedelta(days=20)
+        self.project.campaign_duration = 10
+        self.project.save()
+
+        self.project.status = ProjectPhase.objects.get(slug='campaign')
+        self.project.save()
+
+        self.assertEqual((self.project.deadline - timezone.now()).days, 20)
 
 
 class TestProjectTheme(BluebottleTestCase):

@@ -1,0 +1,9 @@
+{% extends "admin:admin/change_list.html" %}
+{% load i18n admin_static admin_list %}
+{% load admin_urls %}
+{% load humanize %}
+{% load admin_extra %}
+
+{% block date_hierarchy %}
+    {% labeled_date_hierarchy cl %}
+{% endblock %}

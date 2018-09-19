@@ -868,7 +868,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         self.manage_projects_url = reverse('project_manage_list')
         self.manage_budget_lines_url = reverse('project-budgetline-list')
-        self.manage_project_document_url = reverse('manage-project-document-list')
+        self.manage_project_document_url = reverse('manage_project_document_list')
 
         self.some_photo = './bluebottle/projects/test_images/upload.png'
 
@@ -1255,6 +1255,9 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertTrue(
             data['file']['url'].startswith('/downloads/project/document')
         )
+        self.assertTrue(
+            project.documents.all()[0].file
+        )
 
     def test_project_document_download(self):
         document = ProjectDocumentFactory.create(
@@ -1323,7 +1326,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             project=project,
             file='private/projects/documents/test.jpg'
         )
-        file_url = reverse('manage-project-document-detail', args=[document.pk])
+        file_url = reverse('manage_project_document_detail', args=[document.pk])
         response = self.client.delete(file_url, token=self.some_user_token)
 
         self.assertEqual(response.status_code, 204)
@@ -1333,7 +1336,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
             author=self.some_user,
             file='private/projects/documents/test.jpg'
         )
-        file_url = reverse('manage-project-document-detail', args=[document.pk])
+        file_url = reverse('manage_project_document_detail', args=[document.pk])
         response = self.client.delete(file_url, token=self.another_user_token)
 
         self.assertEqual(response.status_code, 403)

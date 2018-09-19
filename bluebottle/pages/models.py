@@ -1,13 +1,10 @@
 from django.db import models
 from django.template.defaultfilters import truncatechars
+from django.utils.functional import lazy
 from django.utils.html import strip_tags
+from django.utils.safestring import mark_safe
 from django.utils.text import Truncator
 from django.utils.translation import ugettext_lazy as _
-from django.utils.safestring import mark_safe
-from django.utils.functional import lazy
-
-from django_extensions.db.fields import (
-    CreationDateTimeField, ModificationDateTimeField)
 from djchoices import DjangoChoices, ChoiceItem
 from fluent_contents.extensions.model_fields import PluginHtmlField, PluginImageField
 from fluent_contents.models import PlaceholderField
@@ -15,10 +12,11 @@ from fluent_contents.models.db import ContentItem
 from fluent_contents.models.fields import ContentItemRelation
 from fluent_contents.models.managers import ContentItemManager
 from fluent_contents.rendering import render_placeholder
-
-from bluebottle.utils.serializers import MLStripper
-from bluebottle.clients import properties
 from fluent_contents.utils.filters import apply_filters
+
+from bluebottle.clients import properties
+from bluebottle.utils.models import PublishableModel
+from bluebottle.utils.serializers import MLStripper
 
 
 def get_languages():
@@ -87,7 +85,7 @@ class ImageTextItem(ContentItem):
             self.text_final = None
 
 
-class Page(models.Model):
+class Page(PublishableModel):
     """
     Slides for homepage.
     """
@@ -112,6 +110,7 @@ class Page(models.Model):
     body = PlaceholderField('blog_contents', plugins=[
         'TextPlugin',
         'ImageTextPlugin',
+        'OEmbedPlugin',
         'RawHtmlPlugin',
         'PicturePlugin',
         'DocumentPlugin'
@@ -120,25 +119,16 @@ class Page(models.Model):
     # See https://github.com/edoburu/django-fluent-contents/issues/19
     contentitem_set = ContentItemRelation()
 
-    # Publication
-    status = models.CharField(
-        _('status'), max_length=20, choices=PageStatus.choices,
-        default=PageStatus.draft, db_index=True)
-    publication_date = models.DateTimeField(
-        _('publication date'), null=True, db_index=True,
-        help_text=_("When the entry goes live, status must be 'Published'"))
-    publication_end_date = models.DateTimeField(
-        _('publication end date'), null=True, blank=True, db_index=True)
-
-    # Metadata
-    author = models.ForeignKey('members.Member', verbose_name=_('author'),
-                               blank=True, null=True)
-    creation_date = CreationDateTimeField(_('creation date'))
-    modification_date = ModificationDateTimeField(_('last modification'))
-
     class Meta:
         ordering = ('language', 'slug')
         unique_together = ('language', 'slug')
+
+        permissions = (
+            ('api_read_page', 'Can view pages through the API'),
+            ('api_add_page', 'Can add pages through the API'),
+            ('api_change_page', 'Can change pages through the API'),
+            ('api_delete_page', 'Can delete pages through the API'),
+        )
 
     def __unicode__(self):
         return self.title

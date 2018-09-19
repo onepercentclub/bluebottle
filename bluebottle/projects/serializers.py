@@ -88,8 +88,7 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
 
 class ProjectDocumentSerializer(serializers.ModelSerializer):
     file = PrivateFileSerializer(
-        'project-document-file', url_args=('pk', ), permission=ResourceOwnerPermission,
-        read_only=True
+        'project-document-file', url_args=('pk', ), permission=ResourceOwnerPermission
     )
 
     project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
@@ -194,12 +193,12 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'created',
                   'currencies',
                   'deadline',
+                  'campaign_duration',
                   'description',
                   'full_task_count',
                   'has_voted',
                   'image',
                   'is_funding',
-                  'language',
                   'latitude',
                   'location',
                   'longitude',
@@ -237,6 +236,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
     image = ImageSerializer(required=False)
     owner = UserProfileSerializer()
     skills = serializers.SerializerMethodField()
+    project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
     theme = ProjectThemeSerializer()
     project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
 
@@ -256,6 +256,7 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'celebrate_results',
                   'country',
                   'deadline',
+                  'campaign_duration',
                   'full_task_count',
                   'image',
                   'is_campaign',
@@ -483,12 +484,12 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'created',
                   'currencies',
                   'deadline',
+                  'campaign_duration',
                   'description',
                   'documents',
                   'editable',
                   'image',
                   'is_funding',
-                  'language',
                   'latitude',
                   'location',
                   'longitude',

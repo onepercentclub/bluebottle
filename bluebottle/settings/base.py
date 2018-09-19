@@ -273,7 +273,8 @@ SHARED_APPS = (
     'daterange_filter',
     'adminsortable',
     'django_summernote',
-    'django_singleton_admin'
+    'django_singleton_admin',
+    'django_filters'
 )
 
 TENANT_APPS = (
@@ -393,8 +394,7 @@ TENANT_APPS = (
     'djmoney',
     'django_singleton_admin',
     'nested_inline',
-    'permissions_widget',
-
+    'permissions_widget'
 )
 
 
@@ -641,6 +641,8 @@ EXPORTDB_EXPORT_CONF = {
                 ('id', 'User ID'),
                 ('remote_id', 'Remote ID'),
                 ('get_full_name', 'Name'),
+                ('first_name', 'First Name'),
+                ('last_name', 'Last Name'),
                 ('email', 'Email'),
                 ('location__name', 'Location'),
                 ('project_count', 'Projects initiated'),
@@ -649,6 +651,12 @@ EXPORTDB_EXPORT_CONF = {
                 ('sourcing', 'Sourcing'),
                 ('date_joined', 'Date joined'),
                 ('updated', 'Last update'),
+                ('address__line1', 'Address Line 1'),
+                ('address__line2', 'Address Line 2'),
+                ('address__city', 'City'),
+                ('state', 'State'),
+                ('address__country', 'Country'),
+                ('address__postal_code', 'Postal Code'),
             ),
             'resource_class': 'bluebottle.exports.resources.UserResource',
             'title': 'Members',
@@ -685,7 +693,15 @@ EXPORTDB_EXPORT_CONF = {
                 ('campaign_started', 'Campaign Started'),
                 ('campaign_ended', 'Campaign Ended'),
                 ('campaign_funded', 'Campaign Funded'),
-                ('organization__name', 'organization'),
+                ('organization__name', 'Organization'),
+                ('account_holder_name', 'Account Holder Name'),
+                ('account_holder_address', 'Account Holder Address'),
+                ('account_holder_postal_code', 'Account Holder Postal Code'),
+                ('account_holder_city', 'Account Holder City'),
+                ('account_holder_country', 'Account Holder Country'),
+                ('account_number', 'Account Number'),
+                ('account_details', 'Account Details'),
+                ('account_bank_country', 'Account Bank Country'),
             ),
             'resource_class': 'bluebottle.exports.resources.ProjectResource',
             'title': 'Projects',
@@ -721,6 +737,7 @@ EXPORTDB_EXPORT_CONF = {
                 ('order__user__remote_id', 'Remote ID'),
                 ('project__id', 'Project ID'),
                 ('fundraiser__id', 'Fundraiser ID'),
+                ('order_id', 'Order ID'),
                 ('user__get_full_name', 'Name'),
                 ('order__user__email', 'Email'),
                 ('order__user__location', 'Location'),
@@ -870,3 +887,5 @@ LOGOUT_REDIRECT_URL = 'admin:index'
 LOGIN_REDIRECT_URL = 'admin:index'
 
 TINYMCE_INCLUDE_JQUERY = False
+
+LOOKER_SESSION_LENGTH = 60 * 60

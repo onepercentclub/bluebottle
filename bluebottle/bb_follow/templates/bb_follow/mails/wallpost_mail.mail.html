@@ -9,10 +9,21 @@
         {{ author }} added a new post on a {{ follow_object }} you follow:
         <br><br>
         <i>{{ wallpost_text }}...</i>
+
+        <p>
+            You received this email because you support {{ title }}.
+            Don't want to receive project updates anymore?
+        </p>
+        <p>
+            <a href="{{ site }}{{ unsubscribe_link }}">
+                Unsubscribe
+            </a> via your account page
+        </p>
     {% endblocktrans %}
+
 {% endblock %}
 
 {% block action %}
-    <a href="{{ link }}"
+    <a href="{{ site }}{{ link }}"
        class="action-email">{% trans 'View full update' context 'email' %}</a>
 {% endblock %}

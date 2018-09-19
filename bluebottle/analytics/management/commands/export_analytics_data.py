@@ -3,11 +3,13 @@ from datetime import datetime
 import logging
 
 import django.apps
+from django.utils import translation
 from django.core.management.base import BaseCommand
 from django.test.utils import override_settings
 from django.utils import dateparse
 
 from bluebottle.analytics.utils import process
+from bluebottle.clients import properties
 from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 
@@ -49,6 +51,7 @@ class Command(BaseCommand):
         for client in Client.objects.all():
             if tenants is None or client.client_name in tenants:
                 with LocalTenant(client, clear_tenant=True):
+                    translation.activate(properties.LANGUAGE_CODE)
                     logger.info('export tenant:{}'.format(client.schema_name))
                     models = django.apps.apps.get_models()
 

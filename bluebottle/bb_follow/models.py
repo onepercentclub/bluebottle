@@ -9,10 +9,10 @@ from django.utils import translation
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_projects.models import BaseProject
-from bluebottle.donations.models import Donation
 from bluebottle.bb_fundraisers.models import BaseFundraiser
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
+from bluebottle.orders.models import Order
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.votes.models import Vote
@@ -47,6 +47,12 @@ class Follow(models.Model):
             super(Follow, self).save(*args, **kwargs)
 
 
+def _create_follow_object(followed_object, user):
+    content_type = ContentType.objects.get_for_model(followed_object)
+    if not Follow.objects.filter(user=user, object_id=followed_object.id, content_type=content_type).count():
+        Follow.objects.create(user=user, object_id=followed_object.id, content_type=content_type)
+
+
 @receiver(post_save)
 def create_follow(sender, instance, created, **kwargs):
     """
@@ -68,64 +74,53 @@ def create_follow(sender, instance, created, **kwargs):
             Users do not follow their own project or task.
 
     """
-    if not created:
-        return
 
     # A user does a donation
-    if isinstance(instance, Donation):
+    if isinstance(instance, Order):
         # Create a Follow to the specific Project or Task if a donation was
         # made
+        if instance.status not in ['success', 'pending']:
+            return
 
         # Don't setup following for monthly donation.
-        if instance.order.order_type == 'recurring':
+        if instance.order_type == 'recurring':
             return
 
         user = instance.user
-        followed_object = instance.fundraiser or instance.project
 
-        if user and followed_object:
+        if not instance.donations.first():
+            return
 
-            content_type = ContentType.objects.get_for_model(followed_object)
+        followed_object = instance.donations.first().fundraiser or instance.donations.first().project
 
-            # A Follow object should link the project to the user, not the
-            # donation and the user
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=followed_object.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != followed_object.owner:
-                    follow = Follow(user=user, followed_object=followed_object)
-                    follow.save()
+        if not user or not followed_object:
+            return
+
+        # A Follow object should link the project to the user, not the
+        # donation and the user
+        if user != followed_object.owner:
+            _create_follow_object(followed_object, user)
 
     # A user applies for a task
     elif isinstance(instance, TaskMember):
         # Create a Follow to the specific Task if a user applies for the task
+        if instance.status not in ['accepted', 'realized']:
+            return
+
         user = instance.member
         followed_object = instance.task
 
-        if user and followed_object:
+        if not user or not followed_object:
+            return
 
-            content_type = ContentType.objects.get_for_model(followed_object)
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=followed_object.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != followed_object.author and user != followed_object.project.owner:
-                    follow = Follow(user=user, followed_object=followed_object)
-                    follow.save()
+        if user != followed_object.author:
+            _create_follow_object(followed_object, user)
 
-            # Also follow the project
-            content_type = ContentType.objects.get_for_model(followed_object.project)
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=followed_object.project.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != followed_object.author and user != followed_object.project.owner:
-                    follow = Follow(user=user, followed_object=followed_object.project)
-                    follow.save()
+        # Also follow the project
+        followed_object = followed_object.project
+
+        if user != followed_object.owner:
+            _create_follow_object(followed_object, user)
 
     # A user creates a task for a project
     elif isinstance(instance, Task):
@@ -134,18 +129,11 @@ def create_follow(sender, instance, created, **kwargs):
         user = instance.author
         followed_object = instance.project
 
-        if user and followed_object:
+        if not user or not followed_object:
+            return
 
-            content_type = ContentType.objects.get_for_model(followed_object)
-
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=followed_object.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != followed_object.owner:
-                    follow = Follow(user=user, followed_object=followed_object)
-                    follow.save()
+        if user not in [followed_object.owner, followed_object.task_manager]:
+            _create_follow_object(followed_object, user)
 
     # A user creates a fundraiser for a project
     elif isinstance(instance, BaseFundraiser):
@@ -153,34 +141,21 @@ def create_follow(sender, instance, created, **kwargs):
         user = instance.owner
         followed_object = instance.project
 
-        if user and followed_object:
+        if not user or not followed_object:
+            return
 
-            content_type = ContentType.objects.get_for_model(followed_object)
-
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=followed_object.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != followed_object.owner:
-                    follow = Follow(user=user, followed_object=followed_object)
-                    follow.save()
+        if user != followed_object.owner:
+            _create_follow_object(followed_object, user)
 
     elif isinstance(instance, Vote):
         user = instance.voter
-        project = instance.project
+        followed_object = instance.project
 
-        if user and project:
-            content_type = ContentType.objects.get_for_model(project)
+        if not user or not followed_object:
+            return
 
-            try:
-                follow = Follow.objects.get(user=user,
-                                            object_id=project.id,
-                                            content_type=content_type)
-            except Follow.DoesNotExist:
-                if user != project.owner:
-                    follow = Follow(user=user, followed_object=project)
-                    follow.save()
+        if user != followed_object.owner:
+            _create_follow_object(followed_object, user)
 
 
 @receiver(post_save)
@@ -218,7 +193,7 @@ def email_followers(sender, instance, created, **kwargs):
                     user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
                 follow_object = _('project')
-                link = '/go/projects/{0}'.format(instance.content_object.slug)
+                link = '/projects/{0}'.format(instance.content_object.slug)
 
             if isinstance(instance.content_object, Task):
                 # Send update to all task members and to people who posted to
@@ -229,7 +204,7 @@ def email_followers(sender, instance, created, **kwargs):
                     user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
                 follow_object = _('task')
-                link = '/go/tasks/{0}'.format(instance.content_object.id)
+                link = '/tasks/{0}'.format(instance.content_object.id)
 
             if isinstance(instance.content_object, BaseFundraiser):
                 # Send update to all people who donated or posted to the wall
@@ -240,13 +215,9 @@ def email_followers(sender, instance, created, **kwargs):
                     user=instance.author)
                 [mailers.add(follower.user) for follower in followers]
                 follow_object = _('fundraiser')
-                link = '/go/fundraisers/{0}'.format(instance.content_object.id)
+                link = '/fundraisers/{0}'.format(instance.content_object.id)
 
             wallpost_text = instance.text
-
-            site = tenant_url()
-
-            full_link = site + link
 
             for mailee in mailers:
                 if mailee.campaign_notifications:
@@ -267,9 +238,12 @@ def email_followers(sender, instance, created, **kwargs):
                     send_mail(
                         template_name='bb_follow/mails/wallpost_mail.mail',
                         subject=subject,
+                        site=tenant_url(),
                         wallpost_text=wallpost_text[:250],
                         to=mailee,
-                        link=full_link,
+                        title=instance.content_object.title,
+                        link=link,
+                        unsubscribe_link='/member/profile',
                         follow_object=follow_object,
                         first_name=mailee.first_name,
                         author=instance.author.first_name

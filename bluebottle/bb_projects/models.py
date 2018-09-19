@@ -13,11 +13,12 @@ from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
+from bluebottle.utils.models import SortableTranslatableModel
 from bluebottle.utils.fields import MoneyField, PrivateFileField
 from bluebottle.utils.utils import StatusDefinition
 
 
-class ProjectTheme(TranslatableModel):
+class ProjectTheme(SortableTranslatableModel):
 
     """ Themes for Projects. """
 
@@ -41,7 +42,7 @@ class ProjectTheme(TranslatableModel):
         super(ProjectTheme, self).save(**kwargs)
 
     class Meta:
-        ordering = ['slug']
+        ordering = ['translations__name']
         verbose_name = _('project theme')
         verbose_name_plural = _('project themes')
         permissions = (
@@ -173,8 +174,17 @@ class BaseProject(models.Model):
     favorite = models.BooleanField(default=True)
 
     deadline = models.DateTimeField(_('deadline'), null=True, blank=True)
+    campaign_duration = models.PositiveIntegerField(
+        _('Campaign Duration'),
+        help_text=_(
+            'How many days should the project run after it is started. '
+            'Ignored if a deadline is already set.'
+        ),
+        null=True,
+        blank=True
+    )
 
-    location = models.ForeignKey('geo.Location', null=True, blank=True)
+    location = models.ForeignKey('geo.Location', null=True, blank=True, on_delete=models.SET_NULL)
     place = models.CharField(help_text=_('Geographical location'),
                              max_length=200, null=True, blank=True)
 

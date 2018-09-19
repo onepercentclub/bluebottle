@@ -82,7 +82,6 @@ class MemberAdminTest(BluebottleAdminTestCase):
                         'Tenant contact email should be present.')
 
     def test_password_mail(self):
-        # Assert password links are shown
         user = BlueBottleUserFactory.create()
         member_url = reverse('admin:members_member_change', args=(user.id,))
         response = self.client.get(member_url)
@@ -96,7 +95,39 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEquals(response.status_code, 302)
         reset_mail = mail.outbox[0]
         self.assertEqual(reset_mail.to, [user.email])
-        self.assertTrue('Please go to the following page and choose a new password' in reset_mail.body)
+        self.assertTrue('Seems you\'ve requested a password reset for' in reset_mail.body)
+
+    def test_password_mail_anonymous(self):
+        user = BlueBottleUserFactory.create()
+        self.client.logout()
+        reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'user_id': user.id})
+        response = self.client.get(reset_url)
+        self.assertEquals(response.status_code, 403)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_resend_welcome(self):
+        user = BlueBottleUserFactory.create()
+        member_url = reverse('admin:members_member_change', args=(user.id,))
+        response = self.client.get(member_url)
+        self.assertEquals(response.status_code, 200)
+        self.assertContains(response, 'Resend welcome email')
+
+        welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'user_id': user.id})
+        response = self.client.get(welkcome_email_url)
+        self.assertEquals(response.status_code, 302)
+        welkcome_email_mail = mail.outbox[0]
+        self.assertEqual(welkcome_email_mail.to, [user.email])
+        self.assertTrue(
+            'Welcome {}'.format(user.first_name) in welkcome_email_mail.body
+        )
+
+    def test_resend_welcome_anonymous(self):
+        user = BlueBottleUserFactory.create()
+        self.client.logout()
+
+        welkcome_email_url = reverse('admin:auth_user_resend_welcome_mail', kwargs={'user_id': user.id})
+        response = self.client.get(welkcome_email_url)
+        self.assertEquals(response.status_code, 403)
 
 
 class MemberCustomFieldAdminTest(BluebottleAdminTestCase):

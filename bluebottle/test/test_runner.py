@@ -1,5 +1,5 @@
-from django.test.runner import DiscoverRunner
 from django.db import connection, IntegrityError
+from django_slowtests.testrunner import DiscoverSlowestTestsRunner
 
 from tenant_schemas.utils import get_tenant_model
 
@@ -7,7 +7,7 @@ from bluebottle.test.factory_models.rates import RateSourceFactory, RateFactory
 from bluebottle.test.utils import InitProjectDataMixin
 
 
-class MultiTenantRunner(DiscoverRunner, InitProjectDataMixin):
+class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
     def setup_databases(self, *args, **kwargs):
         parallel = self.parallel
         self.parallel = 0

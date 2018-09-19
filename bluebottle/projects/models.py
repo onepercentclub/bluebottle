@@ -61,6 +61,11 @@ class ProjectLocation(models.Model):
         _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True
     )
 
+    @property
+    def position(self):
+        if self.latitude and self.longitude:
+            return (self.longitude, self.latitude)
+
     class Meta:
         verbose_name = _('Map')
         verbose_name_plural = _('Map')

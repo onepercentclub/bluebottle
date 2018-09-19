@@ -313,6 +313,7 @@ TENANT_APPS = (
     'bluebottle.widget',
 
     'rest_framework.authtoken',
+    'django_elasticsearch_dsl',
 
     'bluebottle.looker',
 
@@ -882,6 +883,11 @@ SUMMERNOTE_CONFIG = {
 }
 
 HOMEPAGE = {}
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'localhost:9200'
+    },
+}
 
 LOGOUT_REDIRECT_URL = 'admin:index'
 LOGIN_REDIRECT_URL = 'admin:index'

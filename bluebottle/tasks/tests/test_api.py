@@ -7,6 +7,10 @@ from django.contrib.auth.models import Group, Permission
 from django.core import mail
 from django.core.signing import TimestampSigner
 from django.core.urlresolvers import reverse
+from django.test import tag
+from django.test.utils import override_settings
+
+from django_elasticsearch_dsl.test import ESTestCase
 
 from rest_framework import status
 
@@ -18,7 +22,12 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
 
 
-class TaskApiTestcase(BluebottleTestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+@tag('elasticsearch')
+class TaskApiTestcase(ESTestCase, BluebottleTestCase):
     """ Tests tasks api """
 
     def setUp(self):

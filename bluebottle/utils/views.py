@@ -254,7 +254,10 @@ class PrivateFileView(DetailView):
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
             field.name
         )
-        response['Content-Type'] = mime.from_file(field.path)
+        try:
+            response['Content-Type'] = mime.from_file(field.path)
+        except IOError:
+            pass
 
         return response
 

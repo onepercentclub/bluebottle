@@ -46,6 +46,7 @@ class MockUser:
     def __init__(self, perms=None, is_staff=True):
         self.perms = perms or []
         self.is_staff = is_staff
+        self.id = 1
 
     def has_perm(self, perm):
         return perm in self.perms
@@ -55,7 +56,7 @@ class MockUser:
     'service': 'dorado',
     'url': PAYOUT_URL
 })
-class TestProjectAdmin(BluebottleTestCase):
+class TestProjectAdmin(BluebottleAdminTestCase):
     def setUp(self):
         super(TestProjectAdmin, self).setUp()
         self.site = AdminSite()
@@ -186,6 +187,12 @@ class TestProjectAdmin(BluebottleTestCase):
         # Check that IBAN has spaces removed
         project = Project.objects.get(pk=project.id)
         self.assertEqual(project.account_number, 'NL86INGB0002445588')
+
+        # Check it shows up in object history
+        self.client.force_login(self.superuser)
+        url = reverse('admin:projects_project_history', args=(project.id, ))
+        response = self.client.get(url)
+        self.assertContains(response, 'Approved payout')
 
     def test_mark_payout_as_approved_remote_validation_error(self):
         request = self.request_factory.post('/', data={'confirm': True})
@@ -433,7 +440,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
 
 @override_settings(ENABLE_REFUNDS=True)
-class TestProjectRefundAdmin(BluebottleTestCase):
+class TestProjectRefundAdmin(BluebottleAdminTestCase):
     def setUp(self):
         super(TestProjectRefundAdmin, self).setUp()
 
@@ -469,6 +476,12 @@ class TestProjectRefundAdmin(BluebottleTestCase):
         self.assertEqual(response.status_code, 302)
         refund_mock.assert_called_with(connection.tenant, self.project)
         self.assertEqual(self.project.status.slug, 'refunded')
+
+        # Check it shows up in object history
+        self.client.force_login(self.superuser)
+        url = reverse('admin:projects_project_history', args=(self.project.id, ))
+        response = self.client.get(url)
+        self.assertContains(response, 'Refunded project')
 
     @override_settings(ENABLE_REFUNDS=True)
     def test_refunds_not_closed(self):

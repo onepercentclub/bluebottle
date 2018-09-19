@@ -6,7 +6,7 @@ from .base import *
 from bluebottle.payments_docdata.settings import *
 
 import warnings
-
+import logging
 
 # Raise exception on naive datetime...
 warnings.filterwarnings(
@@ -121,6 +121,19 @@ PAYOUT_SERVICE = {
 
 
 TEST_RUNNER = 'bluebottle.test.test_runner.MultiTenantRunner'
+NUM_SLOW_TESTS = 50
+
+DEBUG = False
+TEMPLATE_DEBUG = False
+logging.disable(logging.CRITICAL)
+
+CELERY_ALWAYS_EAGER = True
+CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
+BROKER_BACKEND = 'memory'
+
+PASSWORD_HASHERS = (
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+)
 
 # Optional local override for test settings
 try:

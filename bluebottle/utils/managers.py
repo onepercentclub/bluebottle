@@ -104,9 +104,13 @@ class PublishedQuerySet(QuerySet):
         qs = self
         qs = qs.filter(status='published')
         qs = qs.filter(
-            Q(publication_date__isnull=True) | Q(publication_date__lte=now()))
-        qs = qs.filter(Q(publication_end_date__isnull=True) | Q(
-            publication_end_date__gte=now()))
+            Q(publication_date__isnull=True) |
+            Q(publication_date__lte=now())
+        )
+        qs = qs.filter(
+            Q(publication_end_date__isnull=True) |
+            Q(publication_end_date__gte=now())
+        )
         return qs
 
 

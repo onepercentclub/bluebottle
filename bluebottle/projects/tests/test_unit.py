@@ -25,7 +25,7 @@ from bluebottle.test.factory_models.projects import (
 )
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory
-from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.test.utils import BluebottleTestCase, BluebottleAdminTestCase
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.utils.models import Language
 
@@ -359,7 +359,7 @@ class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
         self.assertEquals(suggestion.status, 'in_progress')
 
 
-class TestProjectBulkActions(BluebottleTestCase):
+class TestProjectBulkActions(BluebottleAdminTestCase):
     def setUp(self):
         super(TestProjectBulkActions, self).setUp()
         self.init_projects()

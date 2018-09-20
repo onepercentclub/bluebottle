@@ -484,7 +484,9 @@ class TaskApiTestcase(BluebottleTestCase):
         A task for a project without a deadline should not validate the deadline.
         """
         self.some_project.deadline = None
+        self.some_project.status = ProjectPhase.objects.get(slug='plan-new')
         self.some_project.campaign_duration = 10
+        self.some_project.save()
         task_data = {
             'people_needed': 1,
             'deadline': timezone.now() + timedelta(weeks=2),

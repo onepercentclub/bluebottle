@@ -191,7 +191,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
 
     def _check_project_deadline(self, instance, validated_data):
         project = validated_data['project']
-        if instance.deadline > project.deadline:
+        if project.deadline and instance.deadline > project.deadline:
             project.deadline = instance.deadline
             project.save()
 

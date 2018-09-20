@@ -331,6 +331,21 @@ class PasswordResetSerializer(serializers.Serializer):
         fields = ('email',)
 
 
+class EmailSetSerializer(serializers.ModelSerializer):
+    """
+    We can't use the PasswordField here because it hashes the passwords with
+    a salt which means we can't compare the
+    two passwords to see if they are the same.
+    """
+    password = serializers.CharField(
+        write_only=True, required=True, max_length=128
+    )
+
+    class Meta:
+        model = BB_USER_MODEL
+        fields = ('email', 'password')
+
+
 class PasswordSetSerializer(serializers.Serializer):
     """
     We can't use the PasswordField here because it hashes the passwords with

@@ -10,10 +10,10 @@ from django.utils.http import base36_to_int, int_to_base36
 
 from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 
 from bluebottle.bb_accounts.permissions import CurrentUserPermission
-from bluebottle.utils.views import RetrieveAPIView
+from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.utils.email_backend import send_mail
@@ -22,7 +22,7 @@ from bluebottle.clients import properties
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
-    UserVerificationSerializer, UserDataExportSerializer
+    UserVerificationSerializer, UserDataExportSerializer, EmailSetSerializer
 )
 
 USER_MODEL = get_user_model()
@@ -161,6 +161,26 @@ class PasswordReset(views.APIView):
             pass
 
         return response.Response(status=status.HTTP_200_OK)
+
+
+class EmailSetView(UpdateAPIView):
+    queryset = USER_MODEL.objects.all()
+    serializer_class = EmailSetSerializer
+
+    permission_classes = (CurrentUserPermission, )
+
+    def get_object(self):
+        if isinstance(self.request.user, AnonymousUser):
+            raise NotAuthenticated()
+        return self.request.user
+
+    def perform_update(self, serializer):
+        password = serializer.validated_data.pop('password')
+
+        if not self.request.user.check_password(password):
+            raise PermissionDenied()
+
+        return super(EmailSetView, self).perform_update(serializer)
 
 
 class PasswordSet(views.APIView):

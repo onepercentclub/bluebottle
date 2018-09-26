@@ -340,10 +340,11 @@ class EmailSetSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, required=True, max_length=128
     )
+    jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
 
     class Meta:
         model = BB_USER_MODEL
-        fields = ('email', 'password')
+        fields = ('email', 'password', 'jwt_token')
 
 
 class PasswordSetSerializer(serializers.Serializer):

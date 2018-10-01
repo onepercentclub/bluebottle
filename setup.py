@@ -22,13 +22,13 @@ dependency_links = [
     'git+https://github.com/st4lk/django-select-multiple-field.git@1dc7733008150a111cd141ff7c3f42bf4953dc7d#egg=django-select-multiple-field-0.5.0a-draft',
     'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1',
     'git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github',
-    'git+https://github.com/beyonic/beyonic-python.git#egg=beyonic'
+    'git+https://github.com/beyonic/beyonic-python.git#egg=beyonic',
+    'git+https://github.com/onepercentclub/flutterwave-python.git@9b6adba8e7eff4204d36ea3a627ebccebe285cf4#egg=Flutterwave-1.1.0'
 ]
 
 install_requires = [
     'Babel==2.4.0',
     'Django==1.10.8',
-    'Flutterwave==1.0.7',
     'Pillow==4.1.1',
     'South==1.0.2',
     'beautifulsoup4==4.6.0',
@@ -117,7 +117,8 @@ install_requires = [
     'django-bb-salesforce==1.2.2',
     'django-taggit-autocomplete-modified==0.1.1b1',
     'django-token-auth==0.3.9',
-    'django-money-rates==0.3.1-github'
+    'django-money-rates==0.3.1-github',
+    'Flutterwave==1.1.0'
 ]
 
 tests_requires = [

@@ -13,7 +13,7 @@ class FollowAdmin(admin.ModelAdmin):
 
     def title(self, obj):
         if obj.followed_object:
-            return obj.followed_object.title
+            return getattr(obj.followed_object, 'title', '-')
         else:
             return '-'
 

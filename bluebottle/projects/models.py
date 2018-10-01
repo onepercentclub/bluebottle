@@ -320,18 +320,18 @@ class Project(BaseProject, PreviousStatusMixin):
         if not self.currencies and self.amount_asked:
             self.currencies = [str(self.amount_asked.currency)]
 
-        # Set a default deadline of 30 days
-        if not self.deadline:
-            self.deadline = timezone.now() + datetime.timedelta(days=30)
+        if self.status.slug == 'campaign' and not self.deadline:
+            self.deadline = timezone.now() + datetime.timedelta(days=self.campaign_duration or 30)
 
         # make sure the deadline is set to the end of the day, amsterdam time
-        tz = pytz.timezone('Europe/Amsterdam')
-        local_time = self.deadline.astimezone(tz)
-        if local_time.time() != datetime.time(23, 59, 59):
-            self.deadline = tz.localize(
-                datetime.datetime.combine(local_time.date(),
-                                          datetime.time(23, 59, 59))
-            )
+        if self.deadline:
+            tz = pytz.timezone('Europe/Amsterdam')
+            local_time = self.deadline.astimezone(tz)
+            if local_time.time() != datetime.time(23, 59, 59):
+                self.deadline = tz.localize(
+                    datetime.datetime.combine(local_time.date(),
+                                              datetime.time(23, 59, 59))
+                )
 
         if not self.amount_asked:
             self.amount_asked = Money(0, get_default_currency())
@@ -345,7 +345,7 @@ class Project(BaseProject, PreviousStatusMixin):
             )
 
         # Project is not ended, complete, funded or stopped and its deadline has expired.
-        if not self.campaign_ended and self.deadline < timezone.now() \
+        if self.deadline and not self.campaign_ended and self.deadline < timezone.now() \
                 and self.status.slug not in ["done-complete",
                                              "done-incomplete",
                                              "closed",
@@ -375,7 +375,6 @@ class Project(BaseProject, PreviousStatusMixin):
 
         super(Project, self).save(*args, **kwargs)
 
-        # Set a default deadline of 30 days
         try:
             self.projectlocation
         except ProjectLocation.DoesNotExist:
@@ -428,7 +427,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def donations(self):
-        success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS]
+        success = [StatusDefinition.PENDING, StatusDefinition.SUCCESS, StatusDefinition.PLEDGED]
         return self.donation_set.filter(order__status__in=success)
 
     @property
@@ -468,6 +467,7 @@ class Project(BaseProject, PreviousStatusMixin):
                 StatusDefinition.PENDING,
                 StatusDefinition.SUCCESS,
                 StatusDefinition.CANCELLED,
+                StatusDefinition.REFUND_REQUESTED,
             ]
         )
 
@@ -541,7 +541,10 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def amount_cancelled(self):
-        return self.get_money_total([StatusDefinition.CANCELLED])
+        return self.get_money_total([
+            StatusDefinition.CANCELLED,
+            StatusDefinition.REFUND_REQUESTED,
+        ])
 
     @property
     def donated_percentage(self):

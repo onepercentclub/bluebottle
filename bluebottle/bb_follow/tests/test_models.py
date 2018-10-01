@@ -320,6 +320,7 @@ class FollowTests(BluebottleTestCase):
             if "New wallpost on" in email.subject:
                 mail_count += 1
                 self.assertTrue(email.to[0] in receivers)
+                self.assertTrue("Unsubscribe" in email.body)
                 receivers.remove(email.to[0])
         self.assertEqual(mail_count, 4)
         self.assertEqual(receivers, [])

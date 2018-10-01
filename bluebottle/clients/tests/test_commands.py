@@ -1,3 +1,4 @@
+import json
 import mock
 from shutil import copyfile
 
@@ -16,6 +17,7 @@ from bluebottle.rewards.models import Reward
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.wallposts.models import Wallpost
 from bluebottle.orders.models import Order
+from bluebottle.clients.management.commands.new_tenant import Command as NewTenantCommand
 
 
 @override_settings(TENANT_APPS=('django_nose',),
@@ -57,20 +59,44 @@ class ManagementCommandTests(TestCase):
 class ManagementCommandNewTenantTests(TestCase):
 
     def test_create_new_tenant(self):
-        from ..management.commands.new_tenant import Command as NewTenantCommand
         connection.set_schema_to_public()
         cmd = NewTenantCommand()
-        call_command(
-            cmd,
-            full_name='New Tenant',
-            schema_name='new',
-            domain_url='http://new.localhost:8000',
-            client_name='new'
-        )
+        store_func = 'bluebottle.clients.management.commands.new_tenant.Command.store_client'
+        super_func = 'bluebottle.clients.management.commands.new_tenant.Command.create_client_superuser'
+        with mock.patch(store_func) as store_mock, mock.patch(super_func) as super_mock:
+            call_command(
+                cmd,
+                full_name='New Tenant',
+                schema_name='new',
+                domain_url='http://new.localhost:8000',
+                client_name='new'
+            )
+            store_args, store_kwargs = store_mock.call_args_list[0]
 
-        new_client = Client.objects.get(schema_name='new')
-        self.assertEqual(new_client.name, 'New Tenant')
-        self.assertEqual(new_client.client_name, 'new')
+            super_args, super_kwargs = super_mock.call_args_list[0]
+
+        self.assertEqual(store_kwargs['name'], 'New Tenant')
+        self.assertEqual(store_kwargs['client_name'], 'new')
+        self.assertEqual(super_args, ('new',))
+
+    def test_create_superuser(self):
+        cmd = NewTenantCommand()
+        tenant = 'test'
+        cmd.create_client_superuser(tenant)
+        connection.set_tenant(Client.objects.get(schema_name='test'))
+        user = Member.objects.get(email='admin@example.com')
+        self.assertEqual(user.last_name, 'example')
+
+    def test_load_fixtures(self):
+        cmd = NewTenantCommand()
+        tenant = 'test'
+        with mock.patch('bluebottle.clients.management.commands.new_tenant.call_command') as command_mock:
+            cmd.load_fixtures(tenant)
+            calls = [mock.call('loaddata', 'skills'),
+                     mock.call('loaddata', 'redirects'),
+                     mock.call('loaddata', 'project_data'),
+                     mock.call('loaddata', 'geo_data')]
+            command_mock.assert_has_calls(calls)
 
 
 @override_settings(TENANT_APPS=('django_nose',),
@@ -152,3 +178,28 @@ class BulkImportTests(TestCase):
         self.assertEqual(order.user, user)
         self.assertEqual(order.donations.count(), 1)
         self.assertEqual(order.donations.first().project, project)
+
+
+@override_settings(MERCHANT_ACCOUNTS=[{
+    'merchant': 'docdata',
+    'currency': 'EUR',
+    'merchant_password': 'welcome123',
+    'merchant_name': '1procentclub_nw',
+}])
+class ManagementCommandExportTenantsTests(TestCase):
+
+    def test_export_tenants(self):
+        test = Client.objects.get(client_name='test')
+        test.client_name = 'onepercent'
+        test.save()
+
+        cmd = 'export_tenants'
+        file_name = 'tenants.json'
+        call_command(cmd, file='tenants.json')
+        fp = open(file_name, "r")
+        text = json.load(fp)
+        # Only onepercent tenant should get 1procentclub_nw merchant account
+        self.assertEqual(text[0]['name'], 'test2')
+        self.assertEqual(text[0]['accounts'], [])
+        self.assertEqual(text[1]['name'], 'onepercent')
+        self.assertEqual(text[1]['accounts'], [{u'service_type': u'docdata', u'username': u'1procentclub_nw'}])

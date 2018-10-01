@@ -41,9 +41,12 @@ class MockRequest:
 
 
 class MockUser:
+    is_active = True
+
     def __init__(self, perms=None, is_staff=True):
         self.perms = perms or []
         self.is_staff = is_staff
+        self.id = 1
 
     def has_perm(self, perm):
         return perm in self.perms
@@ -53,7 +56,7 @@ class MockUser:
     'service': 'dorado',
     'url': PAYOUT_URL
 })
-class TestProjectAdmin(BluebottleTestCase):
+class TestProjectAdmin(BluebottleAdminTestCase):
     def setUp(self):
         super(TestProjectAdmin, self).setUp()
         self.site = AdminSite()
@@ -166,7 +169,7 @@ class TestProjectAdmin(BluebottleTestCase):
         )
 
     def test_mark_payout_as_approved(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -185,8 +188,14 @@ class TestProjectAdmin(BluebottleTestCase):
         project = Project.objects.get(pk=project.id)
         self.assertEqual(project.account_number, 'NL86INGB0002445588')
 
+        # Check it shows up in object history
+        self.client.force_login(self.superuser)
+        url = reverse('admin:projects_project_history', args=(project.id, ))
+        response = self.client.get(url)
+        self.assertContains(response, 'Approved payout')
+
     def test_mark_payout_as_approved_remote_validation_error(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -208,7 +217,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
     def test_mark_payout_as_approved_local_iban_validation_error(self):
         # Test with invalid IBAN, but starting with letter
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -224,7 +233,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
     def test_mark_payout_as_approved_local_validation_error(self):
         # Test with valid IBAN and invalid BIC
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -239,7 +248,7 @@ class TestProjectAdmin(BluebottleTestCase):
         )
 
     def test_mark_payout_as_approved_internal_server_error(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -262,7 +271,7 @@ class TestProjectAdmin(BluebottleTestCase):
         )
 
     def test_mark_payout_as_approved_connection_error(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -284,7 +293,7 @@ class TestProjectAdmin(BluebottleTestCase):
         )
 
     def test_mark_payout_as_approved_no_permissions(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser()
 
         project = ProjectFactory.create(payout_status='needs_approval')
@@ -302,7 +311,7 @@ class TestProjectAdmin(BluebottleTestCase):
         )
 
     def test_mark_payout_as_approved_wrong_status(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -321,7 +330,7 @@ class TestProjectAdmin(BluebottleTestCase):
         message_mock.assert_called()
 
     def test_read_only_status_after_payout_approved(self):
-        request = self.request_factory.post('/')
+        request = self.request_factory.post('/', data={'confirm': True})
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
@@ -431,7 +440,7 @@ class TestProjectAdmin(BluebottleTestCase):
 
 
 @override_settings(ENABLE_REFUNDS=True)
-class TestProjectRefundAdmin(BluebottleTestCase):
+class TestProjectRefundAdmin(BluebottleAdminTestCase):
     def setUp(self):
         super(TestProjectRefundAdmin, self).setUp()
 
@@ -455,7 +464,7 @@ class TestProjectRefundAdmin(BluebottleTestCase):
             amount=Money(100, 'EUR'),
         )
 
-        self.request = self.request_factory.post('/')
+        self.request = self.request_factory.post('/', data={'confirm': True})
         self.request.user = MockUser(['payments.refund_orderpayment'])
 
     def test_refunds(self):
@@ -467,6 +476,12 @@ class TestProjectRefundAdmin(BluebottleTestCase):
         self.assertEqual(response.status_code, 302)
         refund_mock.assert_called_with(connection.tenant, self.project)
         self.assertEqual(self.project.status.slug, 'refunded')
+
+        # Check it shows up in object history
+        self.client.force_login(self.superuser)
+        url = reverse('admin:projects_project_history', args=(self.project.id, ))
+        response = self.client.get(url)
+        self.assertContains(response, 'Refunded project')
 
     @override_settings(ENABLE_REFUNDS=True)
     def test_refunds_not_closed(self):
@@ -507,6 +522,15 @@ class TestProjectRefundAdmin(BluebottleTestCase):
             response = self.project_admin.refund(self.request, self.project.pk)
 
             self.assertEqual(response.status_code, 403)
+            refund_mock.assert_not_called()
+
+    @override_settings(ENABLE_REFUNDS=False)
+    def test_refunds_not_confirmed(self):
+        with mock.patch.object(refund_project, 'delay') as refund_mock:
+            del self.request.POST['confirm']
+            response = self.project_admin.refund(self.request, self.project.pk)
+
+            self.assertEqual(response.status_code, 200)
             refund_mock.assert_not_called()
 
 

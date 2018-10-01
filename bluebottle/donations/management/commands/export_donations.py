@@ -35,14 +35,15 @@ class Command(BaseCommand):
                     orders = orders.filter(created__lte=options['end'])
 
                 for order in orders:
+
                     try:
                         transaction_reference = order.order_payment.payment.transaction_reference
                     except Exception:
-                        transaction_reference = ''
+                        transaction_reference = order.order_payment.id
 
                     results.append({
                         'id': order.id,
-                        'transaction_reference': transaction_reference,
+                        'transaction_reference': transaction_reference or order.order_payment.id,
                         'tenant': client.client_name,
                         'status': order.status,
                         'created': order.created.strftime('%Y-%m-%d'),

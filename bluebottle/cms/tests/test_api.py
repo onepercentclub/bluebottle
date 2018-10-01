@@ -7,6 +7,7 @@ from django.contrib.auth.models import Permission, Group
 from django.core.cache import cache
 from django.core.files.base import File
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 from django.utils.timezone import now
 from fluent_contents.models import Placeholder
 from fluent_contents.plugins.rawhtml.models import RawHtmlItem
@@ -564,6 +565,12 @@ class PageTestCase(BluebottleTestCase):
         response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='nl')
         self.assertEqual(response.data['title'], 'Over ons')
         self.assertEqual(response.data['language'], 'nl')
+
+    @override_settings(TIME_ZONE='Asia/Krasnoyarsk')
+    def test_time_zone(self):
+        response = self.client.get(self.url, HTTP_X_APPLICATION_LANGUAGE='en')
+        self.assertEqual(response.data['title'], 'About us')
+        self.assertEqual(response.data['language'], 'en')
 
 
 class SitePlatformSettingsTestCase(BluebottleTestCase):

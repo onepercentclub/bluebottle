@@ -16,7 +16,7 @@ class BaseFundraiserSerializer(serializers.ModelSerializer):
     owner = UserProfileSerializer(read_only=True)
     project = serializers.SlugRelatedField(slug_field='slug',
                                            queryset=Project.objects)
-    image = ImageSerializer()
+    image = ImageSerializer(required=False)
     video_html = OEmbedField(source='video_url', maxwidth='560',
                              maxheight='315')
 

@@ -3,12 +3,12 @@
 
 {% block content %}
     {% if pledged %}
-        {% blocktrans with donor_name=donation.user.first_name first_name=donation.project.owner.full_name slug=donation.project.slug %}
+        {% blocktrans with first_name=donation.project.owner.full_name slug=donation.project.slug %}
 
         Hello {{ first_name }}, you've just received an invoiced donation by {{ donor_name }}. The amount will be transfered directly to your bank account by {{donor_name}}. If not, please contact the user via {{ admin_email }}.
         {% endblocktrans %}
     {% else %}
-        {% blocktrans with donor_name=donation.user.first_name first_name=donation.project.owner.full_name slug=donation.project.slug%}
+        {% blocktrans with first_name=donation.project.owner.full_name slug=donation.project.slug%}
 
         Hello {{ first_name }}, you received a donation from {{ donor_name }}. Quickly thank your supporter by posting a personal message on your project page.
         {% endblocktrans %}

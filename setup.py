@@ -93,6 +93,7 @@ install_requires = [
     'pyjwt==1.5.3',
     'pyOpenSSL==17.5.0',
     'python-dateutil==2.6.1',
+    'python-magic==0.4.15',
     'python-memcached==1.58',
     'python-social-auth==0.2.21',
     'surlex==0.2.0',

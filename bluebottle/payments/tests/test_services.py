@@ -17,7 +17,6 @@ def method_access_handler(member, *args, **kwargs):
         'id': 'docdata-creditcard',
         'profile': 'creditcard',
         'name': 'CreditCard',
-        'supports_recurring': False,
     },
     {
         'provider': 'pledge',

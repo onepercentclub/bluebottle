@@ -84,8 +84,6 @@ DOCDATA_FEES = {
     }
 }
 
-RECURRING_DONATIONS_ENABLED = True
-
 SEND_WELCOME_MAIL = False
 SEND_MAIL = True
 
@@ -141,3 +139,4 @@ try:
 except ImportError:
     pass
 
+ELASTICSEARCH_DSL_AUTOSYNC = False

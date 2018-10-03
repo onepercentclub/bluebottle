@@ -31,13 +31,11 @@ interswitch_settings = {
         'profile': 'webpay',
         'name': 'WebPay',
         'currencies': {'NGN': {}},
-        'supports_recurring': False,
     }, {
         'provider': 'mock',
         'id': 'mock-creditcard',
         'profile': 'creditcard',
         'name': 'MockCard',
-        'supports_recurring': False,
         'currencies': {
             'USD': {'min_amount': 5},
         }

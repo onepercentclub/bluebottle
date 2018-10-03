@@ -313,6 +313,7 @@ TENANT_APPS = (
     'bluebottle.widget',
 
     'rest_framework.authtoken',
+    'django_elasticsearch_dsl',
 
     'bluebottle.looker',
 
@@ -322,7 +323,6 @@ TENANT_APPS = (
 
     'bluebottle.tasks',
     'bluebottle.homepage',
-    'bluebottle.recurring_donations',
     'bluebottle.payouts',
     'bluebottle.payouts_dorado',
     'bluebottle.surveys',
@@ -520,7 +520,6 @@ SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', 'user_friends', 'public_profile', 'user_b
 SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [('birthday', 'birthday')]
 
 # Default Client properties
-RECURRING_DONATIONS_ENABLED = False
 DONATIONS_ENABLED = True
 
 # Analytics Service
@@ -882,6 +881,11 @@ SUMMERNOTE_CONFIG = {
 }
 
 HOMEPAGE = {}
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'localhost:9200'
+    },
+}
 
 LOGOUT_REDIRECT_URL = 'admin:index'
 LOGIN_REDIRECT_URL = 'admin:index'

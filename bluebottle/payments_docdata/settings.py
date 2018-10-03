@@ -9,28 +9,24 @@ DOCDATA_PAYMENT_METHODS = (
         'profile': 'ideal',
         'name': _('iDEAL'),
         'restricted_countries': ('NL', 'Netherlands'),
-        'supports_recurring': False,
     },
     {
         'provider': 'docdata',
         'id': 'docdata-creditcard',
         'profile': 'creditcard',
         'name': _('CreditCard'),
-        'supports_recurring': False,
     },
     {
         'provider': 'docdata',
         'id': 'docdata-paypal',
         'profile': 'paypal',
         'name': _('Paypal'),
-        'supports_recurring': False,
     },
     {
         'provider': 'docdata',
         'id': 'docdata-directdebit',
         'profile': 'directdebit',
         'name': _('Direct Debit'),
-        'supports_recurring': True,
     }
 )
 

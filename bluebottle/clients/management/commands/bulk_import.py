@@ -63,7 +63,7 @@ class Command(BaseCommand):
         parser.add_argument('--upload', '-u', action='store', dest='upload',
                             required=False, help="Path to uploaded media.")
         parser.add_argument('--tenant', '-t', action='store', dest='tenant',
-                            help="The tenant to run the recurring donations for.")
+                            help="The tenant to run the import for.")
         parser.add_argument('--models', '-m', action='store', dest='models',
                             required=False, nargs='*', choices=self.models,
                             help="Models you want to import, can be multiple e.g. -m users wallposts")

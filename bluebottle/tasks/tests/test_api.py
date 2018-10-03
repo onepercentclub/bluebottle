@@ -11,6 +11,7 @@ from django.test import tag
 from django.test.utils import override_settings
 
 from django_elasticsearch_dsl.test import ESTestCase
+from django.utils import timezone
 
 from rest_framework import status
 
@@ -486,6 +487,32 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['deadline'], '2016-08-09T23:59:59.999999+02:00')
+
+    def test_deadline_no_project_deadline(self):
+        """
+        A task for a project without a deadline should not validate the deadline.
+        """
+        self.some_project.deadline = None
+        self.some_project.status = ProjectPhase.objects.get(slug='plan-new')
+        self.some_project.campaign_duration = 10
+        self.some_project.save()
+        task_data = {
+            'people_needed': 1,
+            'deadline': timezone.now() + timedelta(weeks=2),
+            'deadline_to_apply': timezone.now() + timedelta(weeks=1),
+            'project': self.some_project.slug,
+            'title': 'Help me',
+            'description': 'I need help',
+            'location': '',
+            'skill': 1,
+            'time_needed': '4.00',
+            'type': 'event'
+        }
+
+        # Task deadline time should changed be just before midnight after setting.
+        response = self.client.post(self.tasks_url, task_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_deadline_before_project_deadline(self):
         """

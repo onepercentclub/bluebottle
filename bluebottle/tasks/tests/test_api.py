@@ -531,7 +531,6 @@ class TaskApiTestcase(BluebottleTestCase):
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-
     def test_deadline_before_project_deadline(self):
         """
         A task should have a deadline before the project deadline

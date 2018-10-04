@@ -2,6 +2,7 @@ from datetime import timedelta
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 
 from bluebottle.bluebottle_drf2.serializers import (
     PrimaryKeyGenericRelatedField, FileSerializer, PrivateFileSerializer
@@ -147,6 +148,16 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'deadline': [
                     _("The deadline can not be more than the project deadline")
+                ]
+            })
+
+        if (
+            data['project'].campaign_duration and
+            data.get('deadline') > timezone.now() + timedelta(days=data['project'].campaign_duration)
+        ):
+            raise serializers.ValidationError({
+                'deadline': [
+                    _("The deadline can not be after than the project deadline")
                 ]
             })
 

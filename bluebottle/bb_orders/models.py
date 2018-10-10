@@ -182,6 +182,10 @@ class BaseOrder(models.Model, FSMTransition):
     def order_payment(self):
         return self.get_latest_order_payment()
 
+    @property
+    def full_name(self):
+        return self.user.full_name if self.user else _('Anonymous user')
+
     class Meta:
         abstract = True
         permissions = (

@@ -34,11 +34,14 @@ class LockdownTestCase(BluebottleTestCase):
         response = mw.process_request(request)
         self.assertIsNone(response)
 
-    @override_settings(FORCE_LOCKDOWN=True)
+    @override_settings(
+        FORCE_LOCKDOWN=True,
+        LOCKDOWN_PASSWORD='pssssst'
+    )
     def test_force_lockdown(self):
         common_settings = CommonPlatformSettings.load()
         common_settings.lockdown = False
-        common_settings.lockdown_password = 'pssssst'
+        common_settings.lockdown_password = 'overridden'
         common_settings.save()
         mw = LockdownMiddleware()
         rf = RequestFactory()

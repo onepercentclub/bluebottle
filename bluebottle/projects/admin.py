@@ -95,7 +95,7 @@ class ProjectReviewerFilter(admin.SimpleListFilter):
             distinct('reviewer__id', 'reviewer__first_name', 'reviewer__last_name').\
             values_list('reviewer__id', 'reviewer__first_name', 'reviewer__last_name').\
             order_by('reviewer__first_name', 'reviewer__last_name', 'reviewer__id')
-        return [('me', _('My projects'))] + [(r[0], "{} {}".format(r[1], r[2])) for r in reviewers]
+        return [('me', _('My projects'))] + [(r[0], u"{} {}".format(r[1], r[2])) for r in reviewers]
 
     def queryset(self, request, queryset):
         if self.value() == 'me':

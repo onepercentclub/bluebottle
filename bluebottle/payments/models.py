@@ -223,8 +223,11 @@ class OrderPayment(models.Model, FSMTransition):
     @transition(
         field=status,
         source=[
-            StatusDefinition.AUTHORIZED, StatusDefinition.SETTLED,
-            StatusDefinition.REFUND_REQUESTED, StatusDefinition.PLEDGED
+            StatusDefinition.AUTHORIZED,
+            StatusDefinition.SETTLED,
+            StatusDefinition.UNKNOWN,
+            StatusDefinition.REFUND_REQUESTED,
+            StatusDefinition.PLEDGED
         ],
         target=StatusDefinition.REFUNDED
     )

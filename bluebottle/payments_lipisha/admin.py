@@ -10,7 +10,8 @@ from .models import LipishaPayment
 class LipishaPaymentAdmin(PolymorphicChildModelAdmin):
     base_model = Payment
     model = LipishaPayment
-    search_fields = ['transaction_mobile', 'transaction_reference']
+    search_fields = ['transaction_reference', ]
+    list_display = ['id', 'transaction_reference', 'reference']
     raw_id_fields = ('order_payment', )
 
 

@@ -18,7 +18,6 @@ from .models import TextWallpost, MediaWallpost, MediaWallpostPhoto, Wallpost, R
 from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
                           MediaWallpostPhotoSerializer, ReactionSerializer,
                           WallpostSerializer)
-from .permissions import WallpostOwnerPermission
 
 
 class WallpostFilter(django_filters.FilterSet):
@@ -179,8 +178,7 @@ class WallpostDetail(RetrieveUpdateDestroyAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (
-        OneOf(ResourcePermission, RelatedResourceOwnerPermission),
-        WallpostOwnerPermission
+        OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
 

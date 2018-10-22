@@ -33,18 +33,3 @@ class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
 
     def has_action_permission(self, action, user, model):
         return True
-
-
-class WallpostOwnerPermission(permissions.BasePermission):
-    """
-    Custom permission to only adding a photo to mediawallpost author.
-    Model instances are expected to include an `mediawallpost` attribute.
-    Also check if the user is the photo (or other object) author.
-    """
-    def has_parent_permission(self, action, user, parent, model=None):
-        return parent.owner == user
-
-    def has_object_action_permission(self, action, user, obj):
-        return (
-            not obj.parent or self.has_parent_permission(self, action, user, obj.parent)
-        )

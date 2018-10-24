@@ -435,7 +435,8 @@ class MemberAdmin(UserAdmin):
 
     def login_as_redirect(self, *args, **kwargs):
         user = Member.objects.get(id=kwargs.get('user_id', None))
-        url = "/login-with/{0}".format(user.get_jwt_token())
+        token = user.get_login_token()
+        url = "/login-with/{}/{}".format(user.pk, token)
 
         return HttpResponseRedirect(url)
 

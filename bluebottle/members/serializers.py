@@ -337,7 +337,7 @@ class PasswordSetSerializer(serializers.Serializer):
     a salt which means we can't compare the
     two passwords to see if they are the same.
     """
-    new_password1 = PasswordField(required=True, max_length=128)
+    new_password1 = serializers.CharField(required=True, max_length=128)
     new_password2 = serializers.CharField(required=True, max_length=128)
 
     def validate(self, data):

@@ -204,5 +204,4 @@ class BaseOrder(models.Model, FSMTransition):
         verbose_name_plural = _('orders')
 
 
-
 import signals  # noqa

@@ -164,4 +164,4 @@ class Member(BlueBottleBaseUser):
         return u"{} | {}".format(self.full_name, self.email)
 
 
-import signals # noqa
+import signals  # noqa

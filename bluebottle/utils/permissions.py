@@ -1,8 +1,9 @@
 import logging
 
+from django.db import connection
 from rest_framework import permissions
 
-from tenant_extras.utils import get_tenant_properties
+from bluebottle.clients import properties
 
 logger = logging.getLogger(__name__)
 
@@ -149,16 +150,18 @@ class TenantConditionalOpenClose(BasePermission):
     """ Allows access only to authenticated users. """
 
     def has_object_action_permission(self, action, user, obj):
+        properties.set_tenant(connection.tenant)
         try:
-            if get_tenant_properties('CLOSED_SITE'):
+            if properties.CLOSED_SITE:
                 return user and user.is_authenticated()
         except AttributeError:
             pass
         return True
 
     def has_action_permission(self, action, user, model_cls):
+        properties.set_tenant(connection.tenant)
         try:
-            if get_tenant_properties('CLOSED_SITE'):
+            if properties.CLOSED_SITE:
                 return user and user.is_authenticated()
         except AttributeError:
             pass

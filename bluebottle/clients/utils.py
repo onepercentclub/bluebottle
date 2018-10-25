@@ -14,7 +14,6 @@ from django.utils.translation import get_language
 from djmoney_rates.utils import get_rate
 from djmoney_rates.exceptions import CurrencyConversionException
 from bluebottle.clients import properties
-from tenant_extras.utils import get_tenant_properties
 
 
 import logging
@@ -78,7 +77,8 @@ def get_min_amounts(methods):
 
 
 def get_currencies():
-    properties = get_tenant_properties()
+
+    properties.set_tenant(connection.tenant)
 
     currencies = set(itertools.chain(*[
         method['currencies'].keys() for method in properties.PAYMENT_METHODS
@@ -193,9 +193,8 @@ def get_public_properties(request):
 
     config = {}
 
-    properties = get_tenant_properties()
-
     props = None
+    properties.set_tenant(connection.tenant)
 
     try:
         props = getattr(properties, 'EXPOSED_TENANT_PROPERTIES')
@@ -212,7 +211,7 @@ def get_public_properties(request):
     if connection.tenant:
 
         current_tenant = connection.tenant
-        properties = get_tenant_properties()
+        properties.set_tenant(connection.tenant)
 
         config = {
             'mediaUrl': getattr(properties, 'MEDIA_URL'),

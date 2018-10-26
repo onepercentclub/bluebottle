@@ -1,3 +1,5 @@
+import logging
+
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.timezone import now
 
@@ -6,6 +8,8 @@ from bluebottle.clients.models import Client
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -71,7 +75,10 @@ class Command(BaseCommand):
             self.stdout.write("Checking Project deadlines...")
             for project in Project.objects.filter(status=campaign_phase,
                                                   deadline__lte=now()):
-                project.deadline_reached()
+                try:
+                    project.deadline_reached()
+                except Exception, e:
+                    logger.error(e)
 
             """
             Iterate over tasks and save them one by one so the receivers get a
@@ -83,13 +90,20 @@ class Command(BaseCommand):
                     status__in=['in progress', 'open', 'full'],
                     project__status__slug__in=['campaign', 'done-complete', 'done-incomplete'],
                     deadline_to_apply__lt=now()).all():
-                task.deadline_to_apply_reached()
+                try:
+                    task.deadline_to_apply_reached()
+                except Exception, e:
+                    logger.error(e)
 
             for task in Task.objects.filter(
                     status__in=['in progress', 'open', 'full'],
                     project__status__slug__in=['campaign', 'done-complete', 'done-incomplete'],
                     deadline__lt=now()).all():
-                task.deadline_reached()
+                try:
+                    task.deadline_reached()
+                except Exception, e:
+                    logger.error(e)
+
 
             self.stdout.write(
                 "Successfully updated the status of expired projects and Tasks")
@@ -101,7 +115,11 @@ class Command(BaseCommand):
 
             for project in Project.objects.filter(status=vote_phase,
                                                   voting_deadline__lt=now()):
-                project.status = vote_done
-                project.save()
+                try:
+                    project.status = vote_done
+                    project.save()
+                except Exception, e:
+                    logger.error(e)
+
 
             self.stdout.write("Done checking projects with voting deadlines")

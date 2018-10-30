@@ -271,6 +271,27 @@ class TestTaskStatusMail(TaskMailTestBase):
             now() + timedelta(minutes=120) - kwargs2['eta'] < timedelta(minutes=1)
         )
 
+    @override_settings(REMINDER_MAIL_DELAY=60)
+    def test_task_member_status_change_triggers_mail_once(self):
+        """
+        Setting status to realized should trigger email
+        """
+        self.task.status = "closed"
+        self.task.save()
+        self.assertEquals(len(mail.outbox), 0)
+
+        with patch('bluebottle.tasks.taskmail.send_task_realized_mail.apply_async') as mock_task:
+            TaskMemberFactory.create(
+                task=self.task,
+                status='realized'
+            )
+            TaskMemberFactory.create(
+                task=self.task,
+                status='realized'
+            )
+
+        self.assertEqual(mock_task.call_count, 2)
+
     def test_status_realized_mail_already_confirmed(self):
         """
         Setting status to realized should trigger no email if there is already somebody realized

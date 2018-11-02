@@ -218,7 +218,6 @@ def send_task_realized_mail(task, template, subject, tenant):
     """ Send an email to the task owner with the request to confirm
     the task participants.
     """
-    return
     with LocalTenant(tenant, clear_tenant=True):
         if len(task.members.filter(status=TaskMember.TaskMemberStatuses.realized)):
             # There is already a confirmed task member: Do not bother the owner

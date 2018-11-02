@@ -104,7 +104,6 @@ class Command(BaseCommand):
                 except Exception, e:
                     logger.error(e)
 
-
             self.stdout.write(
                 "Successfully updated the status of expired projects and Tasks")
 
@@ -120,6 +119,5 @@ class Command(BaseCommand):
                     project.save()
                 except Exception, e:
                     logger.error(e)
-
 
             self.stdout.write("Done checking projects with voting deadlines")

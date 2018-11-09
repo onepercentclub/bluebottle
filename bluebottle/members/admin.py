@@ -179,6 +179,7 @@ class MemberAdmin(UserAdmin):
                 'deleted',
                 'is_co_financer',
                 'can_pledge',
+                'verified',
                 'partner_organization',
                 'campaign_notifications',
                 'newsletter',

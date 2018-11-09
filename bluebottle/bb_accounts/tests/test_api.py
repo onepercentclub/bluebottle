@@ -354,7 +354,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         # Setup: get the password reset token and url.
         c = re.compile(
-            '\/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})\/',
+            '/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/',
             re.DOTALL)
         m = c.search(mail.outbox[0].body)
         password_set_url = reverse('password-set', kwargs={'uidb36': m.group(1), 'token': m.group(2)})
@@ -469,7 +469,7 @@ class UserVerificationTest(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
 
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.verify_user_url = '/api/users/verification/'
+        self.verify_user_url = reverse('user-verification')
 
     def test_verify(self):
         with httmock.HTTMock(captcha_mock):
@@ -481,6 +481,7 @@ class UserVerificationTest(BluebottleTestCase):
             self.assertEqual(response.status_code, 201)
             self.user.refresh_from_db()
             self.assertTrue(self.user.verified)
+            self.assertEqual(response.data, {'token': u'test-token', 'id': self.user.id})
 
     def test_verify_unauthenticated(self):
         with httmock.HTTMock(captcha_mock):

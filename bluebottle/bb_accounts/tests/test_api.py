@@ -398,11 +398,10 @@ class UserApiIntegrationTest(BluebottleTestCase):
         uidb36 = int_to_base36(self.user_1.pk)
         password_set_url = reverse('password-set', kwargs={'uidb36': uidb36, 'token': token})
 
-        # Test: check that non-matching passwords produce a validation error.
+        # Test: check that short passwords produce a validation error.
         passwords = {'new_password1': 'short', 'new_password2': 'short'}
         response = self.client.put(password_set_url, passwords)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
-                         response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue('This password is too short' in response.content)
 
     def test_deactivate(self):

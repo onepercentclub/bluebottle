@@ -1,3 +1,4 @@
+import mimetypes
 from babel.numbers import get_currency_name
 
 from rest_framework import serializers
@@ -104,6 +105,9 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
         If the item cannot be converted to an image, check if the file is and svg
         """
         if data and data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
+            raise forms.ValidationError(self.error_messages['invalid_image'])
+
+        if mimetypes.guess_type(data.name)[0] not in settings.IMAGE_ALLOWED_MIME_TYPES:
             raise forms.ValidationError(self.error_messages['invalid_image'])
 
         try:

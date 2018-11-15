@@ -107,7 +107,10 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
         if data and data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
             raise forms.ValidationError(self.error_messages['invalid_image'])
 
-        if mimetypes.guess_type(data.name)[0] not in settings.IMAGE_ALLOWED_MIME_TYPES:
+        if (
+            hasattr(data.name) and
+            mimetypes.guess_type(data.name)[0] not in settings.IMAGE_ALLOWED_MIME_TYPES
+        ):
             raise forms.ValidationError(self.error_messages['invalid_image'])
 
         try:

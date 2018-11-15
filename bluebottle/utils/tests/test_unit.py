@@ -622,7 +622,6 @@ class RestrictedImageFormFieldTestCase(TestCase):
 
         self.assertEqual(result, image_file)
 
-
     def test_non_image(self):
         with open('./bluebottle/utils/tests/test_images/non-image.svg') as image:
             image_file = SimpleUploadedFile('upload.png', image.read(), content_type='image/png')

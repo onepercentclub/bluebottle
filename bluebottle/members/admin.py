@@ -268,9 +268,11 @@ class MemberAdmin(UserAdmin):
         ]
 
         user_groups = request.user.groups.all()
-        for group in obj.groups.all():
-            if group not in user_groups:
-                readonly_fields.append('email')
+
+        if obj and hasattr(obj.groups):
+            for group in obj.groups.all():
+                if group not in user_groups:
+                    readonly_fields.append('email')
 
         if not request.user.is_superuser:
             readonly_fields.append('is_superuser')

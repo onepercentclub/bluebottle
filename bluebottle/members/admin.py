@@ -275,6 +275,9 @@ class MemberAdmin(UserAdmin):
                     readonly_fields.append('email')
 
         if not request.user.is_superuser:
+            if obj.is_superuser:
+                readonly_fields.append('email')
+
             readonly_fields.append('is_superuser')
 
         return readonly_fields

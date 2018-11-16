@@ -262,6 +262,17 @@ class MemberAdminFieldsTest(BluebottleTestCase):
         fields = self.member_admin.get_readonly_fields(self.request, self.member)
         self.assertTrue('email' not in fields)
 
+    def test_email_superuser(self):
+        self.member.is_superuser = True
+        fields = self.member_admin.get_readonly_fields(self.request, self.member)
+        self.assertTrue('email' in fields)
+
+    def test_email_superuser_as_superuser(self):
+        self.request.user.is_superuser = True
+        self.member.is_superuser = True
+        fields = self.member_admin.get_readonly_fields(self.request, self.member)
+        self.assertTrue('email' not in fields)
+
     def test_email_readonly_more_groups(self):
         group = Group.objects.create(name='test')
         self.request.user.groups = Group.objects.none()

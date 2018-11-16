@@ -1,5 +1,4 @@
 import django.contrib.auth.password_validation
-from django.utils import lru_cache
 
 from bluebottle.clients import properties
 

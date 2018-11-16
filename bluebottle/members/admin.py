@@ -266,8 +266,11 @@ class MemberAdmin(UserAdmin):
             'reset_password', 'resend_welcome_link',
             'projects_managed', 'tasks', 'donations', 'following'
         ]
-        if obj and obj.is_staff and not request.user.is_superuser:
-            readonly_fields.append('email')
+
+        user_groups = request.user.groups.all()
+        for group in obj.groups.all():
+            if group not in user_groups:
+                readonly_fields.append('email')
 
         if not request.user.is_superuser:
             readonly_fields.append('is_superuser')

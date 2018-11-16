@@ -269,7 +269,7 @@ class MemberAdmin(UserAdmin):
 
         user_groups = request.user.groups.all()
 
-        if obj and hasattr(obj.groups):
+        if obj and hasattr(obj, 'groups'):
             for group in obj.groups.all():
                 if group not in user_groups:
                     readonly_fields.append('email')

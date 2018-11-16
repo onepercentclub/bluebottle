@@ -25,10 +25,14 @@ class MockRequest:
 
 
 class MockUser:
-    def __init__(self, perms=None, is_staff=True, is_superuser=False):
+    def __init__(self, perms=None, is_staff=True, is_superuser=False, groups=None):
         self.perms = perms or []
         self.is_superuser = is_superuser
         self.is_staff = is_staff
+        if groups:
+            self.groups = groups
+        else:
+            self.groups = Group.objects.all()
 
 
 class GroupAdminTest(BluebottleAdminTestCase):
@@ -215,7 +219,7 @@ class MemberFormAdminTest(BluebottleAdminTestCase):
         self.assertTrue(member.first_name, 'bla')
         self.assertTrue(len(member.groups.all()), 0)
 
-    def test_user_not_part_of_gruop(self):
+    def test_user_not_part_of_group(self):
         group, _ = Group.objects.get_or_create(name='New group')
         data = {
             'email': 'bla@example.com',
@@ -252,16 +256,29 @@ class MemberAdminFieldsTest(BluebottleTestCase):
 
         self.assertEqual(expected_fields, set(fields))
 
-    def test_staff_email(self):
-        self.member.is_staff = True
+    def test_email_equal_more_groups(self):
+        group = Group.objects.create(name='test')
+        self.member.groups.add(group)
+        fields = self.member_admin.get_readonly_fields(self.request, self.member)
+        self.assertTrue('email' not in fields)
+
+    def test_email_superuser(self):
+        self.member.is_superuser = True
         fields = self.member_admin.get_readonly_fields(self.request, self.member)
         self.assertTrue('email' in fields)
 
-    def test_staff_email_superuser(self):
+    def test_email_superuser_as_superuser(self):
         self.request.user.is_superuser = True
-        self.member.is_staff = True
+        self.member.is_superuser = True
         fields = self.member_admin.get_readonly_fields(self.request, self.member)
         self.assertTrue('email' not in fields)
+
+    def test_email_readonly_more_groups(self):
+        group = Group.objects.create(name='test')
+        self.request.user.groups = Group.objects.none()
+        self.member.groups.add(group)
+        fields = self.member_admin.get_readonly_fields(self.request, self.member)
+        self.assertTrue('email' in fields)
 
     def test_super_user(self):
         self.request.user.is_superuser = True

@@ -266,10 +266,18 @@ class MemberAdmin(UserAdmin):
             'reset_password', 'resend_welcome_link',
             'projects_managed', 'tasks', 'donations', 'following'
         ]
-        if obj and obj.is_staff and not request.user.is_superuser:
-            readonly_fields.append('email')
+
+        user_groups = request.user.groups.all()
+
+        if obj and hasattr(obj, 'groups') and not request.user.is_superuser:
+            for group in obj.groups.all():
+                if group not in user_groups:
+                    readonly_fields.append('email')
 
         if not request.user.is_superuser:
+            if obj.is_superuser:
+                readonly_fields.append('email')
+
             readonly_fields.append('is_superuser')
 
         return readonly_fields
@@ -301,7 +309,7 @@ class MemberAdmin(UserAdmin):
         ('groups', UnionFieldListFilter)
     )
     list_display = ('email', 'first_name', 'last_name', 'is_staff',
-                    'date_joined', 'is_active', 'login_as_user')
+                    'date_joined', 'is_active', 'login_as_link')
     ordering = ('-date_joined', 'email',)
 
     inlines = (UserAddressInline, )

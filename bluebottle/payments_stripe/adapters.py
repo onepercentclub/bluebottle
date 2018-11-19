@@ -17,6 +17,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
         'succeeded': StatusDefinition.SETTLED,
 
     }
+    source = None
 
     def __init__(self, order_payment):
         self.live_mode = getattr(properties, 'LIVE_PAYMENTS_ENABLED', False)
@@ -31,16 +32,19 @@ class StripePaymentAdapter(BasePaymentAdapter):
         payment = StripePayment(order_payment=self.order_payment, **self.order_payment.card_data)
         payment.save()
 
-        charge = stripe.Charge.create(
-            amount=payment.amount,
-            currency=payment.currency,
-            description=payment.description,
-            source=payment.source_token
-        )
-
-        payment.status = self._get_mapped_status(charge['status'])
-        payment.charge = charge.id
-        payment.data = charge
+        if not self.source:
+            self.source = stripe.Source.retrieve(self.payment.source_token)
+        # Check if we should redirect the user
+        if self.source['flow'] != 'redirect':
+            charge = stripe.Charge.create(
+                amount=payment.amount,
+                currency=payment.currency,
+                description=payment.description,
+                source=payment.source_token
+            )
+            payment.charge = charge.id
+            payment.data = charge
+            payment.status = self._get_mapped_status(charge['status'])
         payment.save()
 
         return payment
@@ -52,12 +56,13 @@ class StripePaymentAdapter(BasePaymentAdapter):
         pass
 
     def get_authorization_action(self):
-        source = stripe.Source.retrieve(self.payment.source_token)
         if self.payment.status == StatusDefinition.SETTLED:
             return {
                 'type': 'success'
             }
 
+        if not self.source:
+            self.source = stripe.Source.retrieve(self.payment.source_token)
         # Check if we should redirect the user
-        if source['flow'] == 'redirect':
-            return {'type': 'redirect', 'method': 'get', 'url': source['redirect']['url']}
+        if self.source['flow'] == 'redirect':
+            return {'type': 'redirect', 'method': 'get', 'url': self.source['redirect']['url']}

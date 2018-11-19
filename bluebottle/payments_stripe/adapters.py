@@ -33,7 +33,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
         payment.save()
 
         if not self.source:
-            self.source = stripe.Source.retrieve(self.payment.source_token)
+            self.source = stripe.Source.retrieve(payment.source_token)
         # Check if we should redirect the user
         if self.source['flow'] != 'redirect':
             charge = stripe.Charge.create(

@@ -54,7 +54,6 @@ class StripePaymentAdapter(BasePaymentAdapter):
         self.payment.status = self._get_mapped_status(charge['status'])
         # TODO add refunding
         self.payment.data = charge
-        import ipdb; ipdb.set_trace()
         self.payment.status = self._get_mapped_status(charge.status)
 
         if charge.refunded:
@@ -63,11 +62,12 @@ class StripePaymentAdapter(BasePaymentAdapter):
         self.payment.save()
 
     def check_payment_status(self):
-        charge = stripe.Charge.retrieve(
-            self.payment.charge_token,
-            api_key=self.credentials['secret_key']
-        )
-        self.update_from_charge(charge)
+        if self.payment.charge_token:
+            charge = stripe.Charge.retrieve(
+                self.payment.charge_token,
+                api_key=self.credentials['secret_key']
+            )
+            self.update_from_charge(charge)
 
     def refund_payment(self):
         stripe.Refund.create(

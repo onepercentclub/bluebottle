@@ -85,6 +85,8 @@ urlpatterns = [
         include('bluebottle.payments_lipisha.urls.core')),
     url(r'^payments_beyonic/',
         include('bluebottle.payments_beyonic.urls.core')),
+    url(r'^payments_stripe/',
+        include('bluebottle.payments_stripe.urls.core')),
 
     url(r'^surveys/',
         include('bluebottle.surveys.urls.core')),

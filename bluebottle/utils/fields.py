@@ -107,10 +107,7 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
         if data and data.content_type not in settings.IMAGE_ALLOWED_MIME_TYPES:
             raise forms.ValidationError(self.error_messages['invalid_image'])
 
-        if (
-            hasattr(data, 'name') and
-            mimetypes.guess_type(data.name)[0] not in settings.IMAGE_ALLOWED_MIME_TYPES
-        ):
+        if hasattr(data, 'name') and mimetypes.guess_type(data.name)[0] not in settings.IMAGE_ALLOWED_MIME_TYPES:
             raise forms.ValidationError(self.error_messages['invalid_image'])
 
         try:
@@ -136,15 +133,6 @@ class RestrictedImageFormField(sorl.thumbnail.fields.ImageFormField):
         except et.ParseError:
             pass
         return tag == '{http://www.w3.org/2000/svg}svg'
-
-
-# If south is installed, ensure that DutchBankAccountField will be introspected just like a normal CharField
-try:
-    from south.modelsinspector import add_introspection_rules
-
-    add_introspection_rules([], ["^apps.fund\.fields\.DutchBankAccountField"])
-except ImportError:
-    pass
 
 
 class SafeField(serializers.CharField):

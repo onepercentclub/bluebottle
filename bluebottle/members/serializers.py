@@ -365,6 +365,10 @@ class PasswordSetSerializer(serializers.Serializer):
 
 class UserVerificationSerializer(serializers.Serializer):
     token = serializers.CharField()
+    id = serializers.SerializerMethodField()
+
+    def get_id(self, obj):
+        return self.context['request'].user.id
 
 
 class MemberPlatformSettingsSerializer(serializers.ModelSerializer):

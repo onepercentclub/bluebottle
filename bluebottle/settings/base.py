@@ -883,6 +883,7 @@ ENABLE_REFUNDS = False
 def static_url(url):
     return os.path.join(STATIC_URL, url)
 
+
 SUMMERNOTE_CONFIG = {
     # Using SummernoteWidget - iframe mode
     'toolbar': [

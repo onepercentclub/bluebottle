@@ -1,13 +1,9 @@
-import json
-
 from mock import patch
 import stripe
 
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
-from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.payments_stripe import StripePaymentFactory
 from bluebottle.test.utils import BluebottleTestCase

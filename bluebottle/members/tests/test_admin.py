@@ -2,14 +2,16 @@
 import os
 
 from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.models import Group
 from django.core import mail
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
 from django.conf import settings
+from django.utils import timezone
 
 from tenant_schemas.urlresolvers import reverse
 
-from bluebottle.members.admin import MemberAdmin, MemberChangeForm
+from bluebottle.members.admin import MemberAdmin, MemberChangeForm, MemberCreationForm
 from bluebottle.members.models import CustomMemberFieldSettings, Member, CustomMemberField
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleAdminTestCase, BluebottleTestCase
@@ -23,9 +25,14 @@ class MockRequest:
 
 
 class MockUser:
-    def __init__(self, perms=None, is_staff=True):
+    def __init__(self, perms=None, is_staff=True, is_superuser=False, groups=None):
         self.perms = perms or []
+        self.is_superuser = is_superuser
         self.is_staff = is_staff
+        if groups:
+            self.groups = groups
+        else:
+            self.groups = Group.objects.all()
 
 
 class GroupAdminTest(BluebottleAdminTestCase):
@@ -87,7 +94,6 @@ class MemberAdminTest(BluebottleAdminTestCase):
         response = self.client.get(member_url)
         self.assertEquals(response.status_code, 200)
         self.assertContains(response, 'Send reset password mail')
-        self.assertContains(response, 'Reset password form')
 
         # Assert password reset link sends the right email
         reset_url = reverse('admin:auth_user_password_reset_mail', kwargs={'user_id': user.id})
@@ -154,13 +160,130 @@ class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
 
     def test_save_custom_fields(self):
         member = BlueBottleUserFactory.create()
+        staff = BlueBottleUserFactory.create(is_staff=True)
         CustomMemberFieldSettings.objects.create(name='Department')
         data = member.__dict__
         data['department'] = 'Engineering'
-        form = MemberChangeForm(instance=member, data=data)
+        form = MemberChangeForm(current_user=staff, instance=member, data=data)
         form.save()
         member.refresh_from_db()
         self.assertEqual(member.extra.get().value, 'Engineering')
+
+
+class MemberFormAdminTest(BluebottleAdminTestCase):
+    """
+    Test extra fields in Member Admin
+    """
+
+    def setUp(self):
+        super(MemberFormAdminTest, self).setUp()
+        self.client.force_login(self.superuser)
+        self.staff = BlueBottleUserFactory.create(is_staff=True)
+
+    def test_save(self):
+        data = {
+            'email': 'bla@example.com',
+            'first_name': 'bla',
+            'last_name': 'Example',
+            'is_active': True,
+            'username': 'bla@example.com',
+            'password': 'bla',
+            'primary_language': 'en',
+            'user_type': 'person',
+            'date_joined': timezone.now(),
+            'groups': [self.staff.groups.get().pk]
+        }
+        form = MemberCreationForm(current_user=self.staff, data=data)
+        form.save()
+
+        member = Member.objects.get(email='bla@example.com')
+        self.assertTrue(member.first_name, 'bla')
+        self.assertTrue(member.groups.get().pk, self.staff.groups.get().pk)
+
+    def test_groups_not_required(self):
+        data = {
+            'email': 'bla@example.com',
+            'first_name': 'bla',
+            'last_name': 'Example',
+            'is_active': True,
+            'username': 'bla@example.com',
+            'password': 'bla',
+            'primary_language': 'en',
+            'user_type': 'person',
+            'date_joined': timezone.now(),
+        }
+        form = MemberCreationForm(current_user=self.staff, data=data)
+        form.save()
+
+        member = Member.objects.get(email='bla@example.com')
+        self.assertTrue(member.first_name, 'bla')
+        self.assertTrue(len(member.groups.all()), 0)
+
+    def test_user_not_part_of_group(self):
+        group, _ = Group.objects.get_or_create(name='New group')
+        data = {
+            'email': 'bla@example.com',
+            'first_name': 'bla',
+            'last_name': 'Example',
+            'is_active': True,
+            'username': 'bla@example.com',
+            'password': 'bla',
+            'primary_language': 'en',
+            'user_type': 'person',
+            'date_joined': timezone.now(),
+            'groups': [group.pk]
+        }
+        form = MemberCreationForm(current_user=self.staff, data=data)
+        self.assertTrue('groups' in form.errors)
+
+
+class MemberAdminFieldsTest(BluebottleTestCase):
+    def setUp(self):
+        super(MemberAdminFieldsTest, self).setUp()
+        self.request = RequestFactory().get('/')
+        self.request.user = MockUser()
+
+        self.member = BlueBottleUserFactory.create()
+        self.member_admin = MemberAdmin(Member, AdminSite())
+
+    def test_readonlyfiels(self):
+        fields = self.member_admin.get_readonly_fields(self.request, self.member)
+        expected_fields = set((
+            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_user',
+            'reset_password', 'resend_welcome_link', 'projects_managed', 'tasks',
+            'donations', 'following', 'is_superuser'
+        ))
+
+        self.assertEqual(expected_fields, set(fields))
+
+    def test_email_equal_more_groups(self):
+        group = Group.objects.create(name='test')
+        self.member.groups.add(group)
+        fields = self.member_admin.get_readonly_fields(self.request, self.member)
+        self.assertTrue('email' not in fields)
+
+    def test_email_superuser(self):
+        self.member.is_superuser = True
+        fields = self.member_admin.get_readonly_fields(self.request, self.member)
+        self.assertTrue('email' in fields)
+
+    def test_email_superuser_as_superuser(self):
+        self.request.user.is_superuser = True
+        self.member.is_superuser = True
+        fields = self.member_admin.get_readonly_fields(self.request, self.member)
+        self.assertTrue('email' not in fields)
+
+    def test_email_readonly_more_groups(self):
+        group = Group.objects.create(name='test')
+        self.request.user.groups = Group.objects.none()
+        self.member.groups.add(group)
+        fields = self.member_admin.get_readonly_fields(self.request, self.member)
+        self.assertTrue('email' in fields)
+
+    def test_super_user(self):
+        self.request.user.is_superuser = True
+        fields = self.member_admin.get_readonly_fields(self.request, self.member)
+        self.assertTrue('is_superuser' not in fields)
 
 
 class MemberAdminExportTest(BluebottleTestCase):

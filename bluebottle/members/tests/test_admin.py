@@ -256,6 +256,16 @@ class MemberAdminFieldsTest(BluebottleTestCase):
 
         self.assertEqual(expected_fields, set(fields))
 
+    def test_readonlyfiels_create(self):
+        fields = self.member_admin.get_readonly_fields(self.request)
+        expected_fields = set((
+            'date_joined', 'last_login', 'updated', 'deleted', 'login_as_user',
+            'reset_password', 'resend_welcome_link', 'projects_managed', 'tasks',
+            'donations', 'following', 'is_superuser'
+        ))
+
+        self.assertEqual(expected_fields, set(fields))
+
     def test_email_equal_more_groups(self):
         group = Group.objects.create(name='test')
         self.member.groups.add(group)

@@ -5,7 +5,6 @@ import stripe
 
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments_stripe.utils import get_webhook_secret
-from bluebottle.payments.models import OrderPayment
 
 from .models import StripePayment
 
@@ -36,13 +35,11 @@ class WebHookView(View):
                 payment = StripePayment.objects.get(charge_token=event.data.object.id)
                 service = PaymentService(payment.order_payment)
                 service.adapter.update_from_charge(event.data.object)
-        except ValueError:
-            # Invalid payload
-            return HttpResponse(status=400)
         except stripe.error.SignatureVerificationError:
             # Invalid signature
             return HttpResponse(status=400)
-
-        # Do something with event
+        except StripePayment.DoesNotExist:
+            # Invalid signature
+            return HttpResponse(status=400)
 
         return HttpResponse(status=200)

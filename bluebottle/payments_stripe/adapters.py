@@ -1,3 +1,4 @@
+import json
 import logging
 
 import stripe
@@ -29,7 +30,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
         return self.status_mapping[status]
 
     def create_payment(self):
-        chargeable = self.order_payment.card_data.pop('chargeable')
+        chargeable = self.order_payment.card_data.pop('chargeable', False)
         self.payment = StripePayment(order_payment=self.order_payment, **self.order_payment.card_data)
         self.payment.save()
 
@@ -51,13 +52,11 @@ class StripePaymentAdapter(BasePaymentAdapter):
             self.update_from_charge(charge)
 
     def update_from_charge(self, charge):
-        self.payment.status = self._get_mapped_status(charge['status'])
-        # TODO add refunding
-        self.payment.data = charge
+        self.payment.data = json.loads(unicode(charge))
         self.payment.status = self._get_mapped_status(charge.status)
 
         if charge.refunded:
-            self.payment_status = StatusDefinition.REFUNDED
+            self.payment.status = StatusDefinition.REFUNDED
 
         self.payment.save()
 

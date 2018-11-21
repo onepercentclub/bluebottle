@@ -5,5 +5,5 @@ from ..views import WebHookView
 urlpatterns = [
     url(r'^webhook/$',
         WebHookView.as_view(),
-        name='webhook'),
+        name='stripe-webhook'),
 ]

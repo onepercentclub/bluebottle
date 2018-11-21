@@ -410,7 +410,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         for phase in ProjectPhase.objects.order_by('-sequence').all():
             action_name = 'mark_{}'.format(phase.slug)
             actions[action_name] = (
-                mark_as, action_name, _('Mark selected as "{}"'.format(_(phase.name)))
+                mark_as, action_name, _(u'Mark selected as "{}"'.format(_(phase.name)))
             )
         return OrderedDict(reversed(actions.items()))
 

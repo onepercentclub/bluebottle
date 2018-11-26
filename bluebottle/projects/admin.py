@@ -74,12 +74,13 @@ def mark_as(model_admin, request, queryset):
 
 class ProjectThemeAdmin(TranslatableAdmin):
     list_display = admin.ModelAdmin.list_display + ('slug', 'disabled', 'project_link')
-    readonly_fields = ('project_link', )
+    readonly_fields = ('project_link',)
     fields = ('name', 'slug', 'description', 'disabled') + readonly_fields
 
     def project_link(self, obj):
         url = "{}?theme_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)
         return format_html("<a href='{}'>{} projects</a>".format(url, obj.project_set.count()))
+
     project_link.short_description = _('Project link')
 
 
@@ -91,9 +92,9 @@ class ProjectReviewerFilter(admin.SimpleListFilter):
     parameter_name = 'reviewer'
 
     def lookups(self, request, model_admin):
-        reviewers = Project.objects.filter(reviewer__isnull=False).\
-            distinct('reviewer__id', 'reviewer__first_name', 'reviewer__last_name').\
-            values_list('reviewer__id', 'reviewer__first_name', 'reviewer__last_name').\
+        reviewers = Project.objects.filter(reviewer__isnull=False). \
+            distinct('reviewer__id', 'reviewer__first_name', 'reviewer__last_name'). \
+            values_list('reviewer__id', 'reviewer__first_name', 'reviewer__last_name'). \
             order_by('reviewer__first_name', 'reviewer__last_name', 'reviewer__id')
         return [('me', _('My projects'))] + [(r[0], u"{} {}".format(r[1], r[2])) for r in reviewers]
 
@@ -214,7 +215,6 @@ class CustomAdminFormMetaClass(ModelFormMetaclass):
 
 
 class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelForm)):
-
     class Meta:
         model = Project
         fields = '__all__'
@@ -249,13 +249,11 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
                     self.initial[field.slug] = value
 
     def clean(self):
-        if (
-            'status' in self.cleaned_data and
-            self.cleaned_data['status'].slug == 'campaign' and
-            'amount_asked' in self.cleaned_data and
-            self.cleaned_data['amount_asked'].amount > 0 and
-            not self.cleaned_data['bank_details_reviewed']
-        ):
+        if 'status' in self.cleaned_data and \
+                self.cleaned_data['status'].slug == 'campaign' and \
+                'amount_asked' in self.cleaned_data and \
+                self.cleaned_data['amount_asked'].amount > 0 and \
+                not self.cleaned_data['bank_details_reviewed']:
             raise forms.ValidationError(
                 _('The bank details need to be reviewed before approving a project')
             )
@@ -264,17 +262,13 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
     def save(self, commit=True):
         project = super(ProjectAdminForm, self).save(commit=commit)
         for field in CustomProjectFieldSettings.objects.all():
-            extra, created = CustomProjectField.objects.get_or_create(
-                project=project,
-                field=field
-            )
+            extra, created = CustomProjectField.objects.get_or_create(project=project, field=field)
             extra.value = self.cleaned_data.get(field.slug, None)
             extra.save()
         return project
 
 
 class ProjectAddOnInline(StackedPolymorphicInline):
-
     model = ProjectAddOn
 
     class LipishaProjectInline(StackedPolymorphicInline.Child):
@@ -326,7 +320,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         'title', 'owner__first_name', 'owner__last_name', 'owner__email',
         'organization__name', 'organization__contacts__email'
     )
-    raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization',)
+    raw_id_fields = ('owner', 'reviewer', 'task_manager', 'promoter', 'organization', 'payout_account')
     prepopulated_fields = {'slug': ('title',)}
 
     formfield_overrides = {
@@ -370,7 +364,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ProjectPhaseLogInline
     )
 
-    list_filter = ('country__subregion__region', )
+    list_filter = ('country__subregion__region',)
 
     export_fields = [
         ('title', 'title'),
@@ -429,6 +423,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
                 obj.title, obj.title[:45]
             )
         return obj.title
+
     get_title_display.admin_order_field = 'title'
     get_title_display.short_description = _('title')
 
@@ -453,6 +448,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         else:
             percentage = 0
         return "{0:.2f} %".format(percentage)
+
     donated_percentage.short_description = _('Donated')
     donated_percentage.admin_order_field = 'admin_donated_percentage'
 
@@ -603,7 +599,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'geocoding', 'donations_link'
         ]
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
-            fields += ('status', )
+            fields += ('status',)
         return fields
 
     def get_urls(self):
@@ -668,6 +664,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
     def created_date(self, obj):
         return obj.created.date()
+
     created_date.admin_order_field = 'created'
     created_date.short_description = _('Created')
 
@@ -675,6 +672,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if obj.deadline:
             return obj.deadline.date()
         return None
+
     deadline_date.admin_order_field = 'deadline'
     deadline_date.short_description = _('Deadline')
 
@@ -697,7 +695,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         amount = (_('Amount'), {'fields': [
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
-            'currencies', 'donations_link', 'popularity', 'vote_count'
+            'currencies', 'donations_link', 'popularity', 'vote_count', 'payout_account'
         ]})
 
         if request.user.has_perm('projects.approve_payout'):
@@ -734,7 +732,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
                 fieldsets += (amount, bank)
 
         if CustomProjectFieldSettings.objects.count():
-            fieldsets += (extra, )
+            fieldsets += (extra,)
 
         return fieldsets
 
@@ -759,6 +757,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         url = reverse('admin:donations_donation_changelist')
         total = obj.donations.count()
         return format_html('<a href="{}?project_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
+
     donations_link.short_description = _("Donations")
 
 
@@ -767,7 +766,7 @@ admin.site.register(Project, ProjectAdmin)
 
 class ProjectPhaseAdmin(TranslatableAdmin):
     list_display = ['__unicode__', 'name', 'slug', 'project_link']
-    readonly_fields = ('slug', )
+    readonly_fields = ('slug',)
 
     def project_link(self, obj):
         url = "{}?status_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)
@@ -812,6 +811,7 @@ class ProjectPlatformSettingsAdminForm(forms.ModelForm):
             'contact_types': CheckboxSelectMultipleWidget,
             'share_options': CheckboxSelectMultipleWidget,
         }
+
     extra = 0
 
 
@@ -822,7 +822,6 @@ class CustomProjectFieldSettingsInline(SortableTabularInline):
 
 
 class ProjectPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentAdmin):
-
     form = ProjectPlatformSettingsAdminForm
     inlines = [
         ProjectSearchFilterInline,

@@ -108,7 +108,7 @@ class ProjectDocument(BaseProjectDocument):
         # pk may be unset if not saved yet, in which case no url can be
         # generated.
         if self.pk is not None and self.file:
-            return reverse_signed('project-document-file', args=(self.pk, ))
+            return reverse_signed('project-document-file', args=(self.pk,))
         return None
 
     @property
@@ -121,10 +121,6 @@ class ProjectDocument(BaseProjectDocument):
 
 
 class Project(BaseProject, PreviousStatusMixin):
-    reach = models.PositiveIntegerField(
-        _('Reach'), help_text=_('How many people do you expect to reach?'),
-        blank=True, null=True)
-
     video_url = models.URLField(
         _('video'), max_length=100, blank=True, null=True, default='',
         help_text=_("Do you have a video pitch or a short movie that "
@@ -145,7 +141,13 @@ class Project(BaseProject, PreviousStatusMixin):
         _("story"), help_text=_("Describe the project in detail"),
         blank=True, null=True)
 
+    payout_account = models.ForeignKey('payouts.PayoutAccount', null=True, blank=True, on_delete=models.SET_NULL)
+
     # TODO: Remove these fields?
+    reach = models.PositiveIntegerField(
+        _('Reach'), help_text=_('How many people do you expect to reach?'),
+        blank=True, null=True)
+
     effects = models.TextField(
         _("effects"), blank=True, null=True,
         help_text=_("What will be the Impact? How will your "
@@ -262,11 +264,9 @@ class Project(BaseProject, PreviousStatusMixin):
 
         for query in queries:
             for project in self.objects.filter(query).distinct():
-                popularity = (
-                    weight * len(donations.filter(project=project)) +
-                    weight * len(task_members.filter(task__project=project)) +
+                popularity = weight * len(donations.filter(project=project)) + \
+                    weight * len(task_members.filter(task__project=project)) + \
                     len(votes.filter(project=project))
-                )
                 # Save the new value to the db, but skip .save
                 # this way we will not trigger signals and hit the save method
                 self.objects.filter(pk=project.pk).update(popularity=popularity)
@@ -365,7 +365,7 @@ class Project(BaseProject, PreviousStatusMixin):
             self.task_manager = self.owner
 
         if self.status.slug not in (
-            'plan-new', 'plan-submitted', 'plan-needs-work',
+                'plan-new', 'plan-submitted', 'plan-needs-work',
         ):
             for document in self.documents.all():
                 document.delete()
@@ -570,7 +570,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def donors(self, limit=20):
-        return self.donation_set. \
+        return self.donation_set.\
             filter(order__status__in=[StatusDefinition.PLEDGED,
                                       StatusDefinition.PENDING,
                                       StatusDefinition.SUCCESS]). \
@@ -593,12 +593,10 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def can_refund(self):
-        return (
-            properties.ENABLE_REFUNDS and
-            self.amount_donated.amount > 0 and
-            (not self.payout_status or self.payout_status == StatusDefinition.NEEDS_APPROVAL) and
+        return properties.ENABLE_REFUNDS and \
+            self.amount_donated.amount > 0 and \
+            (not self.payout_status or self.payout_status == StatusDefinition.NEEDS_APPROVAL) and \
             self.status.slug in ('done-incomplete', 'closed')
-        )
 
     @property
     def days_left(self):
@@ -676,8 +674,7 @@ class Project(BaseProject, PreviousStatusMixin):
             bb_track("Project Completed", data)
 
     def check_task_status(self):
-        if (not self.is_funding and
-                all([task.status == Task.TaskStatuses.realized for task in self.task_set.all()])):
+        if (not self.is_funding and all([task.status == Task.TaskStatuses.realized for task in self.task_set.all()])):
             self.status = ProjectPhase.objects.get(slug='done-complete')
             self.save()
 
@@ -755,7 +752,6 @@ class ProjectBudgetLine(models.Model):
 
 
 class ProjectAddOn(PolymorphicModel):
-
     type = 'base'
 
     project = models.ForeignKey('projects.Project', related_name='addons')
@@ -798,7 +794,6 @@ class ProjectImage(AbstractAttachment):
 
 
 class ProjectSearchFilter(SortableMixin):
-
     FILTER_OPTIONS = (
         ('location', _('Location')),
         ('theme', _('Theme')),
@@ -823,7 +818,6 @@ class ProjectSearchFilter(SortableMixin):
 
 
 class ProjectCreateTemplate(models.Model):
-
     project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
                                          null=True,
                                          related_name='templates')
@@ -844,7 +838,6 @@ class ProjectCreateTemplate(models.Model):
 
 
 class CustomProjectFieldSettings(SortableMixin):
-
     project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
                                          null=True,
                                          related_name='extra_fields')

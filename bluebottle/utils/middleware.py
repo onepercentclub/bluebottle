@@ -1,7 +1,10 @@
 from django.contrib.sessions import middleware
 from django.conf import settings
+from django.db import connection
 from django.utils import translation
 from importlib import import_module
+
+from tenant_extras.middleware import tenant_translation
 
 from bluebottle.clients import properties
 
@@ -28,3 +31,8 @@ class APILanguageMiddleware(middleware.SessionMiddleware):
                 language = properties.LANGUAGE_CODE
 
             translation.activate(language)
+
+            translation._trans._active.value = tenant_translation(
+                language, connection.tenant.client_name
+            )
+            request.LANGUAGE_CODE = translation.get_language()

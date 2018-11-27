@@ -199,6 +199,61 @@ class WallpostPermissionsTest(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(response.data['count'], 3)
 
 
+class WallpostDeletePermissionTest(BluebottleTestCase):
+    def setUp(self):
+        super(WallpostDeletePermissionTest, self).setUp()
+
+        self.init_projects()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+
+        self.other_user = BlueBottleUserFactory.create()
+        self.other_token = "JWT {0}".format(
+            self.other_user.get_jwt_token())
+
+        self.project = ProjectFactory.create(owner=self.owner)
+
+        self.wallpost = MediaWallpostFactory.create(
+            content_object=self.project,
+            author=self.other_user
+        )
+
+        self.wallpost_detail_url = reverse('wallpost_detail', args=(self.wallpost.id, ))
+
+    def test_delete_own_wallpost(self):
+        """
+        Tests that project initiator can post and view task wallposts
+        """
+        response = self.client.delete(
+            self.wallpost_detail_url,
+            token=self.other_token
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_other_wallpost(self):
+        """
+        Tests that project initiator can post and view task wallposts
+        """
+        response = self.client.delete(
+            self.wallpost_detail_url,
+            token=self.owner_token
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_wallpost_no_authorization(self):
+        """
+        Tests that project initiator can post and view task wallposts
+        """
+        response = self.client.delete(
+            self.wallpost_detail_url
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
 class WallpostReactionApiIntegrationTest(BluebottleTestCase):
     """
     Integration tests for the Project Media Wallpost API.

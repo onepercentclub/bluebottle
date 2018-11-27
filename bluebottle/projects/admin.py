@@ -91,12 +91,20 @@ class ProjectReviewerFilter(admin.SimpleListFilter):
     parameter_name = 'reviewer'
 
     def lookups(self, request, model_admin):
-        return ((True, _('My projects')), )
+        reviewers = Project.objects.filter(reviewer__isnull=False).\
+            distinct('reviewer__id', 'reviewer__first_name', 'reviewer__last_name').\
+            values_list('reviewer__id', 'reviewer__first_name', 'reviewer__last_name').\
+            order_by('reviewer__first_name', 'reviewer__last_name', 'reviewer__id')
+        return [('me', _('My projects'))] + [(r[0], u"{} {}".format(r[1], r[2])) for r in reviewers]
 
     def queryset(self, request, queryset):
-        if self.value():
+        if self.value() == 'me':
             return queryset.filter(
                 reviewer=request.user
+            )
+        elif self.value():
+            return queryset.filter(
+                reviewer__id=self.value()
             )
         else:
             return queryset
@@ -402,7 +410,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         for phase in ProjectPhase.objects.order_by('-sequence').all():
             action_name = 'mark_{}'.format(phase.slug)
             actions[action_name] = (
-                mark_as, action_name, _('Mark selected as "{}"'.format(_(phase.name)))
+                mark_as, action_name, _(u'Mark selected as "{}"'.format(_(phase.name)))
             )
         return OrderedDict(reversed(actions.items()))
 

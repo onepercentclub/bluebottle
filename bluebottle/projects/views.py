@@ -57,7 +57,7 @@ class ProjectDocumentFileView(PrivateFileView):
 class ProjectSupportersExportView(PrivateFileView):
     fields = (
         ('order__user__email', 'Email'),
-        ('order__user__full_name', 'Name'),
+        ('order__full_name', 'Name'),
         ('created', 'Donation Date'),
         ('amount_currency', 'Currency'),
         ('amount', 'Amount'),

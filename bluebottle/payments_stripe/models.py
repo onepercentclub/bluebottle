@@ -1,5 +1,6 @@
-from django.contrib.postgres.fields.jsonb import JSONField
+from django.contrib.postgres.forms import JSONField
 from django.db import models
+
 from bluebottle.payments.models import Payment
 from django.utils.translation import ugettext_lazy as _
 
@@ -9,10 +10,13 @@ class StripePayment(Payment):
     Stripe payment class.
     """
 
-    source_token = models.CharField(max_length=100, null=True, help_text=_("Source token obtained in front-end."))
-    charge_token = models.CharField(max_length=100, null=True, help_text=_("Charge token at Stripe."))
-    amount = models.IntegerField(null=True, help_text=_("Payment amount in smallest units (e.g. cents)."))
-    description = models.CharField(max_length=300, null=True)
+    source_token = models.CharField(max_length=100, null=True, blank=True,
+                                    help_text=_("Source token obtained in front-end."))
+    charge_token = models.CharField(max_length=100, null=True, blank=True,
+                                    help_text=_("Charge token at Stripe."))
+    amount = models.IntegerField(null=True, blank=True,
+                                 help_text=_("Payment amount in smallest units (e.g. cents)."))
+    description = models.CharField(max_length=300, null=True, blank=True)
 
     data = JSONField()
 

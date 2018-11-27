@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.contrib.postgres.forms import JSONField
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.timezone import now
@@ -146,7 +146,7 @@ class OrderPayment(models.Model, FSMTransition):
 
     # Payment method used
     payment_method = models.CharField(max_length=60, default='', blank=True)
-    integration_data = JSONField(label=_("Integration data"))
+    integration_data = JSONField(verbose_name=_("Integration data"))
     authorization_action = models.OneToOneField(
         OrderPaymentAction, verbose_name=_("Authorization action"), null=True)
 

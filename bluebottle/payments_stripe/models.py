@@ -1,4 +1,4 @@
-from django.contrib.postgres.forms import JSONField
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 
 from bluebottle.payments.models import Payment

@@ -14,7 +14,7 @@ class StripePayment(Payment):
     amount = models.IntegerField(null=True, help_text=_("Payment amount in smallest units (e.g. cents)."))
     description = models.CharField(max_length=300, null=True)
 
-    data = JSONField(null=True)
+    data = JSONField()
 
     def get_fee(self):
         """

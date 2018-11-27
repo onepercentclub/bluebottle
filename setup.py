@@ -101,7 +101,7 @@ install_requires = [
     'surlex==0.2.0',
     'raven==6.1.0',
     'regex==2017.05.26',
-    'requests==2.19.1',
+    'requests==2.20.1',
     'schwifty==2.1.0',
     'sorl-thumbnail==12.3-github',
     'sorl-watermark==1.0.0',

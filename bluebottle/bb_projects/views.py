@@ -174,7 +174,7 @@ class ProjectListSearchMixin(object):
                 SF({
                     'script_score': {
                         'script': {
-                            'source': 'doc["donations"].length * 1000000 / (now - doc["donations"].avg())',
+                            'source': 'doc["donations"].length * 3600000 / (now - doc["donations"].avg())',
                             'lang': 'expression',
                             'params': {
                                 'now': time.time() * 1000,

@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.timezone import now
@@ -7,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
+from django_extensions.db.fields.json import JSONField as OldJSONField
 
 from djchoices import DjangoChoices, ChoiceItem
 from polymorphic.models import PolymorphicModel
@@ -146,7 +146,7 @@ class OrderPayment(models.Model, FSMTransition):
 
     # Payment method used
     payment_method = models.CharField(max_length=60, default='', blank=True)
-    integration_data = JSONField(verbose_name=_("Integration data"))
+    integration_data = OldJSONField(_("Integration data"))
     authorization_action = models.OneToOneField(
         OrderPaymentAction, verbose_name=_("Authorization action"), null=True)
 

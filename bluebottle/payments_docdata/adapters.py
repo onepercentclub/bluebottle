@@ -69,13 +69,13 @@ class DocdataPaymentAdapter(BasePaymentAdapter):
             if street[-1] and any(char.isdigit() for char in street[-1]):
                 user_data['house_number'] = street.pop(-1)
                 if len(street):
-                    user_data['street'] = u' '.join(street)
+                    user_data['street'] = ' '.join(street)[:30]
                 else:
                     user_data['street'] = 'Unknown'
             else:
                 user_data['house_number'] = 'Unknown'
                 if user.address.line1:
-                    user_data['street'] = user.address.line1
+                    user_data['street'] = user.address.line1[:30]
                 else:
                     user_data['street'] = 'Unknown'
 

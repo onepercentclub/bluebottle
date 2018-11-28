@@ -1,3 +1,4 @@
+import time
 import datetime
 
 from django.db.models.query_utils import Q
@@ -35,6 +36,9 @@ from django.core.paginator import Paginator
 class ESPaginator(Paginator):
     def page(self, *args, **kwargs):
         page = super(ESPaginator, self).page(*args, **kwargs)
+        for r in page.object_list.extra(explain=True).execute():
+            print r.meta.score, len(r.donations), r._id
+
         page.object_list = page.object_list.to_queryset()
         return page
 
@@ -166,47 +170,38 @@ class ProjectListSearchMixin(object):
         scoring = ESQ(
             'function_score',
             query=ESQ('exists', field='donations'),
-            boost=0.02,
             functions=[
                 SF({
-                    'gauss': {
-                        'donations': {
-                            'scale': "10d",
+                    'script_score': {
+                        'script': {
+                            'source': 'doc["donations"].length * 1000000 / (now - doc["donations"].avg())',
+                            'lang': 'expression',
+                            'params': {
+                                'now': time.time() * 1000,
+                            }
                         },
-                        'multi_value_mode': 'sum'
                     },
                 }),
             ]
         ) | ESQ(
             'function_score',
-            boost=0.01,
             query=ESQ('exists', field='task_members'),
             functions=[
                 SF({
-                    'gauss': {
-                        'task_members': {
-                            'scale': "10d"
+                    'script_score': {
+                        'script': {
+                            'source': 'doc["task_members"].length * 10000 / (now - doc["task_members"].avg())',
+                            'lang': 'expression',
+                            'params': {
+                                'now': time.time() * 1000,
+                            }
                         },
-                        'multi_value_mode': 'sum'
                     },
                 }),
             ]
         ) | ESQ(
             'function_score',
-            boost=0.0005,
-            query=ESQ('exists', field='votes'),
-            functions=[
-                SF({
-                    'gauss': {
-                        'votes': {
-                            'scale': "10d"
-                        },
-                        'multi_value_mode': 'sum'
-                    },
-                }),
-            ]
-        ) | ESQ(
-            'function_score',
+            score_mode='sum',
             functions=[
                 SF({
                     'filter': ESQ('terms', **{'status.slug': ['campaign', 'voting']}),
@@ -220,17 +215,22 @@ class ProjectListSearchMixin(object):
                     'filter': ESQ('terms', **{'status.slug': ['done-incomplete', 'voting-done', 'refunded']}),
                     'weight': 10
                 }),
+            ]
+        ) | ESQ(
+            'function_score',
+            query=ESQ('exists', field='donations'),
+            boost=0.02,
+            functions=[
                 SF({
-                    'filter': ESQ('range', people_needed={'gt': 0}),
-                    'weight': 2
-                }),
-                SF({
-                    'filter': ESQ('range', amount_needed={'gt': 0}),
-                    'weight': 2
+                    'script_score': {
+                        'script': {
+                            'source': '(doc["amount_asked"] == 0 || doc["people_needed"] > 0) ? 1 : 0',
+                            'lang': 'expression',
+                        },
+                    },
                 }),
             ]
         )
-
         if self.request.user.is_authenticated:
             if self.request.user.location:
                 scoring = scoring | ESQ(

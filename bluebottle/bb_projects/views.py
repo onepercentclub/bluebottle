@@ -36,9 +36,6 @@ from django.core.paginator import Paginator
 class ESPaginator(Paginator):
     def page(self, *args, **kwargs):
         page = super(ESPaginator, self).page(*args, **kwargs)
-        for r in page.object_list.extra(explain=True).execute():
-            print r.meta.score, len(r.donations), r._id
-
         page.object_list = page.object_list.to_queryset()
         return page
 

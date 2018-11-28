@@ -1,4 +1,3 @@
-from django.contrib.postgres.fields.jsonb import JSONField
 from django.db import models
 from bluebottle.payments.models import Payment
 from django.utils.translation import ugettext_lazy as _
@@ -14,7 +13,7 @@ class StripePayment(Payment):
     amount = models.IntegerField(null=True, help_text=_("Payment amount in smallest units (e.g. cents)."))
     description = models.CharField(max_length=300, null=True)
 
-    data = JSONField()
+    data = models.TextField(null=True)
 
     def get_fee(self):
         """

@@ -1,8 +1,8 @@
 from decimal import Decimal
 
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields.json import JSONField
 
 from bluebottle.payments.models import Payment
 
@@ -28,8 +28,7 @@ class BeyonicPayment(Payment):
         max_length=200)
     metadata = JSONField(
         help_text="Metadata",
-        null=True, blank=True,
-        max_length=100)
+        null=True, blank=True)
     transaction_reference = models.CharField(
         help_text="Transaction ID",
         null=True, blank=True,

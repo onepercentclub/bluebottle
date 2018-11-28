@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='orderpayment',
             name='new_integration_data',
-            field=django.contrib.postgres.fields.JSONField(null=True, blank=True, verbose_name='Integration data'),
+            field=django.contrib.postgres.fields.JSONField(null=True, blank=True, default="{}", verbose_name='Integration data'),
         ),
         migrations.AlterField(
             model_name='orderpayment',

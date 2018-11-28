@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='beyonicpayment',
             name='new_metadata',
-            field=django.contrib.postgres.fields.jsonb.JSONField(help_text=b'Metadata', blank=True, null=True),
+            field=django.contrib.postgres.fields.jsonb.JSONField(help_text=b'Meta data', blank=True, null=True),
         ),
     ]

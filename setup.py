@@ -87,7 +87,7 @@ install_requires = [
     'ndg-httpsclient==0.4.3',
     'openpyxl==2.4.8',
     'pendulum==1.2.4',
-    'psycopg2==2.7.1',
+    'psycopg2==2.7.6',
     'pyasn1==0.4.2',
     'pygeoip==0.3.2',
     'pyjwt==1.5.3',

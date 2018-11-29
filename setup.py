@@ -76,6 +76,7 @@ install_requires = [
     'djangorestframework-jwt==1.11.0',
     'djangorestframework==3.8.2',
     'dkimpy==0.6.1',
+    'dm.xmlsec.binding==1.3.7',
     'geocoder==1.37.0',
     'gunicorn==19.7.1',
     'html5lib==1.0b10',

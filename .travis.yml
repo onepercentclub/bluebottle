@@ -14,8 +14,6 @@ python:
 - "pypy"
 env:
   global:
-  - CFLAGS='-Qunused-arguments'
-  - CPPFLAGS='-Qunused-arguments'
   - DJANGO_SETTINGS_MODULE='bluebottle.settings.testing'
   # $GROUPNAME for the hipchat room name
   - secure: B05yVl8sJf8UUJuda+8VB5CV+cyuqKLTEAK0t1n/1czX+FvkyXsNdE+5b81CTjPNOQwZMzw7kbDkhq65aJpn4Ni07TWP6bpdkuX1nY6Bf+S/brLgf4wlQ+Oibj1hWhyH2iiQ9gM0ONe28/d0y/C74/ISvIDn9MYFRkuCF0Vujzo=

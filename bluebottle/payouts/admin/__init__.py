@@ -8,31 +8,17 @@ from django.contrib.admin.sites import NotRegistered
 from django.utils.translation import ugettext_lazy as _
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
 
-from bluebottle.bb_payouts.models import (ProjectPayoutLog,
-                                          OrganizationPayoutLog)
+from bluebottle.bb_payouts.models import ProjectPayoutLog, OrganizationPayoutLog
 from bluebottle.clients import properties
 from bluebottle.payouts.admin.plain import PlainPayoutAccountAdmin
 from bluebottle.payouts.admin.stripe import StripePayoutAccountAdmin
-from bluebottle.payouts.models import (
-    ProjectPayout, OrganizationPayout, PayoutAccount, PayoutMethod, PayoutPlatformSettings
-)
-from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
+from bluebottle.payouts.models import ProjectPayout, OrganizationPayout, PayoutAccount
+from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.utils import StatusDefinition
 
 from ..admin_utils import link_to
 
 logger = logging.getLogger(__name__)
-
-
-class PayoutMethodAdmin(admin.StackedInline):
-    model = PayoutMethod
-    list_display = ('method', )
-    extra = 0
-
-
-@admin.register(PayoutPlatformSettings)
-class PayoutPlatformSettingsAdmin(BasePlatformSettingsAdmin):
-    inlines = [PayoutMethodAdmin, ]
 
 
 class PayoutAccountAdmin(PolymorphicParentModelAdmin):

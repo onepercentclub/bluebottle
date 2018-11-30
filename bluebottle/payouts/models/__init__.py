@@ -6,10 +6,8 @@ from django.utils.translation import ugettext_lazy as _
 from djchoices.choices import DjangoChoices, ChoiceItem
 from polymorphic.models import PolymorphicModel
 
-from bluebottle.bb_payouts.models import (BaseProjectPayout,
-                                          BaseOrganizationPayout)
+from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
 from bluebottle.clients import properties
-from bluebottle.utils.models import BasePlatformSettings
 
 
 class PayoutAccount(PolymorphicModel):
@@ -18,20 +16,6 @@ class PayoutAccount(PolymorphicModel):
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
     user = models.ForeignKey('members.Member')
-
-
-class PayoutMethod(models.Model):
-    TYPES = [
-        ('plain-payout', 'Plain'),
-        ('stripe-base', 'Stripe')
-    ]
-    payout_settings = models.ForeignKey('payouts.PayoutPlatformSettings')
-    method = models.CharField(max_length=100, choices=TYPES)
-    countries = models.ManyToManyField('geo.Country', null=True, blank=True)
-
-
-class PayoutPlatformSettings(BasePlatformSettings):
-    pass
 
 
 # Legacy Payouts models

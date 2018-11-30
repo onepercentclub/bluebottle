@@ -65,6 +65,7 @@ class ProjectDocument(DocType):
     })
 
     position = fields.GeoPointField()
+    task_positions = fields.GeoPointField()
 
     location = fields.NestedField(properties={
         'id': fields.LongField(),
@@ -143,6 +144,12 @@ class ProjectDocument(DocType):
             return instance.projectlocation.position
         except ProjectLocation.DoesNotExist:
             return None
+
+    def prepare_task_positions(self, instance):
+        return [
+            task.place.position_tuple for task
+            in instance.task_set.all() if task.place and task.place.position
+        ]
 
     def prepare_skills(self, instance):
         return [task.skill.id for task in instance.task_set.all() if task.skill]

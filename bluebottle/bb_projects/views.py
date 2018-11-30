@@ -215,13 +215,11 @@ class ProjectListSearchMixin(object):
             ]
         ) | ESQ(
             'function_score',
-            query=ESQ('exists', field='donations'),
-            boost=0.02,
             functions=[
                 SF({
                     'script_score': {
                         'script': {
-                            'source': '(doc["amount_asked"] == 0 || doc["people_needed"] > 0) ? 1 : 0',
+                            'source': '(!doc["amount_needed"] && doc["people_needed"]) > 0 ? 4 : 0',
                             'lang': 'expression',
                         },
                     },
@@ -238,12 +236,34 @@ class ProjectListSearchMixin(object):
                             'gauss': {
                                 'position': {
                                     'origin': self.request.user.location.position_tuple,
-                                    'scale': "10km"
+                                    'scale': "100km"
                                 },
                             },
                         }),
                     ]
+                ) | ESQ(
+                    'function_score',
+                    score_mode='first',
+                    boost=2,
+                    functions=[
+                        SF({
+                            'filter': {'exists': {'field': 'task_positions'}},
+                            'gauss': {
+                                'task_positions': {
+                                    'origin': self.request.user.location.position_tuple,
+                                    'scale': "100km"
+                                },
+                                'multi_value_mode': 'min',
+                            },
+                        }),
+                        SF({
+                            "script_score": {
+                                "script": "0"
+                            }
+                        })
+                    ]
                 )
+
             if len(self.request.user.skills.all()):
                 scoring = scoring | ESQ(
                     'function_score',
@@ -253,6 +273,18 @@ class ProjectListSearchMixin(object):
                             'filter': ESQ('term', **{'skills': skill.id}),
                             'weight': 2
                         }) for skill in self.request.user.skills.all()
+                    ]
+                )
+
+            if len(self.request.user.favourite_themes.all()):
+                scoring = scoring | ESQ(
+                    'function_score',
+                    score_mode='first',
+                    functions=[
+                        SF({
+                            'filter': ESQ('term', **{'themes': theme.id}),
+                            'weight': 2
+                        }) for theme in self.request.user.favourite_themes.all()
                     ]
                 )
 

@@ -133,7 +133,10 @@ class ProjectDocument(DocType):
         return [vote.created for vote in instance.vote_set.all()]
 
     def prepare_donations(self, instance):
-        return [donation.created for donation in instance.donation_set.all()]
+        return [
+            donation.created for donation
+            in instance.donation_set.filter(order__status__in=('pending', 'success'))
+        ]
 
     def prepare_position(self, instance):
         try:

@@ -2709,6 +2709,7 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
             create_flow='choice',
             create_types=["funding", "sourcing"],
             share_options=["twitter", "facebook"],
+            match_options=["skill", "theme"],
             allow_anonymous_rewards=False
         )
 
@@ -2733,6 +2734,7 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['projects']['create_flow'], 'choice')
         self.assertEqual(response.data['platform']['projects']['create_types'], ["funding", "sourcing"])
         self.assertEqual(response.data['platform']['projects']['share_options'], ["facebook", "twitter"])
+        self.assertEqual(response.data['platform']['projects']['match_options'], ['skill', 'theme'])
 
         self.assertEqual(response.data['platform']['projects']['filters'][0]['name'], 'location')
         self.assertEqual(response.data['platform']['projects']['filters'][0]['values'], None)
@@ -2794,17 +2796,18 @@ class ProjectSupportersExportTest(BluebottleTestCase):
 
         reward = RewardFactory.create(project=self.project)
 
-        for order_type in ('one-off', 'recurring', 'one-off'):
+        for index, order_type in enumerate(('one-off', 'recurring', 'one-off')):
             order = OrderFactory.create(
                 status=StatusDefinition.SUCCESS,
-                order_type=order_type
+                order_type=order_type,
+                user=None if index == 0 else BlueBottleUserFactory.create()
             )
             self.donation = DonationFactory.create(
                 amount=Money(1000, 'EUR'),
                 order=order,
                 project=self.project,
                 fundraiser=None,
-                reward=reward
+                reward=reward,
             )
 
         self.supporters_export_url = reverse(
@@ -2849,6 +2852,10 @@ class ProjectSupportersExportTest(BluebottleTestCase):
         for row in results:
             for field in ('Reward', 'Donation Date', 'Email', 'Name', 'Currency', 'Amount'):
                 self.assertTrue(field in row)
+            if not row['Email']:
+                self.assertEqual(row['Name'], 'Anonymous user')
+            else:
+                self.assertTrue(row['Name'].startswith('user'))
 
     def test_owner_no_permission(self):
         detail_response = self.client.get(

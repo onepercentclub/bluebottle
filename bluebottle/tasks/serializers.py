@@ -2,6 +2,7 @@ from datetime import timedelta
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 
 from bluebottle.bluebottle_drf2.serializers import (
     PrimaryKeyGenericRelatedField, FileSerializer, PrivateFileSerializer
@@ -146,10 +147,20 @@ class BaseTaskSerializer(serializers.ModelSerializer):
 
         project_deadline = data['project'].deadline
         project_is_funding = data['project'].project_type in ['funding', 'both']
-        if data.get('deadline') > project_deadline and project_is_funding:
+        if project_deadline and data.get('deadline') > project_deadline and project_is_funding:
             raise serializers.ValidationError({
                 'deadline': [
                     _("The deadline can not be more than the project deadline")
+                ]
+            })
+
+        if (
+            data['project'].campaign_duration and
+            data.get('deadline') > timezone.now() + timedelta(days=data['project'].campaign_duration)
+        ):
+            raise serializers.ValidationError({
+                'deadline': [
+                    _("The deadline can not be after than the project deadline")
                 ]
             })
 
@@ -195,7 +206,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
 
     def _check_project_deadline(self, instance, validated_data):
         project = validated_data['project']
-        if instance.deadline > project.deadline:
+        if project.deadline and instance.deadline > project.deadline:
             project.deadline = instance.deadline
             project.save()
 

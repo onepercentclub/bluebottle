@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.db.models import Q
 from django.contrib import admin
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
@@ -156,10 +157,10 @@ class OnlineOnLocationFilter(admin.SimpleListFilter):
         value = self.value()
 
         if value == 'online':
-            queryset = queryset.filter(location__isnull=True)
+            queryset = queryset.filter(Q(location__isnull=True) | Q(location=''))
 
         if value == 'on_location':
-            queryset = queryset.filter(location__isnull=False)
+            queryset = queryset.exclude(Q(location__isnull=True) | Q(location=''))
 
         return queryset
 

@@ -54,7 +54,7 @@ class MemberPlatformSettings(BasePlatformSettings):
 
 
 class Member(BlueBottleBaseUser):
-    verified = models.BooleanField(default=False, blank=True)
+    verified = models.BooleanField(default=False, blank=True, help_text=_('Was verified for voting by recaptcha.'))
     remote_id = models.CharField(_('remote_id'),
                                  max_length=75,
                                  blank=True,
@@ -164,4 +164,4 @@ class Member(BlueBottleBaseUser):
         return u"{} | {}".format(self.full_name, self.email)
 
 
-import signals # noqa
+import signals  # noqa

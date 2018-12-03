@@ -3,6 +3,9 @@ from django.db import models
 from bluebottle.payouts.models import PayoutAccount
 from django.utils.translation import ugettext_lazy as _
 
+from bluebottle.utils.fields import PrivateFileField
+from bluebottle.utils.utils import reverse_signed
+
 
 class PlainPayoutAccount(PayoutAccount):
 
@@ -26,3 +29,39 @@ class PlainPayoutAccount(PayoutAccount):
     account_bank_country = models.ForeignKey(
         'geo.Country', blank=True, null=True,
         related_name="payout_account_bank_country")
+
+    document = models.ForeignKey('payouts.PayoutDocument', null=True, blank=True)
+
+
+class PayoutDocument(models.Model):
+
+    """ Document for an Payout """
+
+    file = PrivateFileField(
+        max_length=110,
+        upload_to='projects/documents'
+    )
+    author = models.ForeignKey('members.Member', verbose_name=_('author'), blank=True, null=True)
+    created = models.DateField(_('created'), auto_now_add=True)
+    updated = models.DateField(_('updated'), auto_now=True)
+
+    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
+
+    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
+                                              default=None)
+
+    class Meta:
+        verbose_name = _('payout document')
+        verbose_name_plural = _('payout documents')
+
+    @property
+    def document_url(self):
+        # pk may be unset if not saved yet, in which case no url can be
+        # generated.
+        if self.pk is not None and self.file:
+            return reverse_signed('payout-document-file', args=(self.pk,))
+        return None
+
+    @property
+    def owner(self):
+        return self.author

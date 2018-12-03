@@ -1,9 +1,24 @@
 from rest_framework import serializers
 
-from bluebottle.payouts.models.plain import PlainPayoutAccount
+from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
+from bluebottle.payouts.models.plain import PlainPayoutAccount, PayoutDocument
+from bluebottle.utils.permissions import ResourceOwnerPermission
+
+
+class PayoutDocumentSerializer(serializers.ModelSerializer):
+
+    file = PrivateFileSerializer(
+        'payout-document-file', url_args=('pk', ), permission=ResourceOwnerPermission
+    )
+
+    class Meta:
+        model = PayoutDocument
+        fields = ('id', 'file')
 
 
 class PlainPayoutAccountSerializer(serializers.ModelSerializer):
+
+    document = PayoutDocumentSerializer()
 
     class Meta:
         model = PlainPayoutAccount
@@ -16,5 +31,6 @@ class PlainPayoutAccountSerializer(serializers.ModelSerializer):
             'account_holder_country',
             'account_number',
             'account_details',
-            'account_bank_country'
+            'account_bank_country',
+            'document'
         )

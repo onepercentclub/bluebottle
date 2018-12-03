@@ -39,7 +39,7 @@ class PayoutDocument(models.Model):
 
     file = PrivateFileField(
         max_length=110,
-        upload_to='projects/documents'
+        upload_to='payouts/documents'
     )
     author = models.ForeignKey('members.Member', verbose_name=_('author'), blank=True, null=True)
     created = models.DateField(_('created'), auto_now_add=True)

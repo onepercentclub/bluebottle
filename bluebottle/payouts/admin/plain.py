@@ -26,9 +26,9 @@ class PayoutDocumentForm(forms.ModelForm):
 class ProjectDocumentAdmin(admin.ModelAdmin):
     model = PayoutDocument
     form = PayoutDocumentForm
-    extra = 0
+
     raw_id_fields = ('author',)
-    readonly_fields = ('download_url',)
+    readonly_fields = ('download_url', 'created', 'updated', 'deleted', 'ip_address')
     fields = readonly_fields + ('file', 'author')
 
     def download_url(self, obj):

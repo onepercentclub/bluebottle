@@ -45,7 +45,7 @@ install_requires = [
     'django-dynamic-fixture==1.9.5',
     'django-extensions==1.7.9',
     'django-exportdb==0.4.7',
-    'django-filetransfers==0.1.0',
+    'django-filetransfers==0.1.1',
     'django-filter==1.1.0',
     'django-geoposition==0.3.0',
     'django-fluent-dashboard==1.0a1',

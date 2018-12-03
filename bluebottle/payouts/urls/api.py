@@ -4,8 +4,8 @@ from bluebottle.payouts.views import ManagePayoutDocumentList, ManagePayoutDocum
 
 
 urlpatterns = [
-    url(r'^documents/manage/$', ManagePayoutDocumentList.as_view(), name='manage_project_document_list'),
+    url(r'^documents/manage/$', ManagePayoutDocumentList.as_view(), name='manage_payout_document_list'),
     url(r'^documents/manage/(?P<pk>\d+)$', ManagePayoutDocumentDetail.as_view(),
-        name='manage_project_document_detail'),
+        name='manage_payout_document_detail'),
 
 ]

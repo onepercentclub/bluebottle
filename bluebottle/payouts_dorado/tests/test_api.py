@@ -9,6 +9,9 @@ from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.payouts import (
+    StripePayoutAccountFactory, PlainPayoutAccountFactory
+)
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -127,16 +130,51 @@ class TestPayoutProjectApi(BluebottleTestCase):
         financial = Group.objects.get(name='Financial')
         financial.user_set.add(self.user)
 
-        self.project1 = ProjectFactory.create(campaign_ended=now(), status=complete)
-        self.project2 = ProjectFactory.create(campaign_ended=now(), status=incomplete)
+        self.project1 = ProjectFactory.create(
+            campaign_ended=now(),
+            status=complete,
+            payout_account=PlainPayoutAccountFactory(
+                account_holder_name='Test Tester',
+                account_number='123456'
+            )
+        )
+        self.project2 = ProjectFactory.create(
+            campaign_ended=now(),
+            status=incomplete,
+            payout_account=StripePayoutAccountFactory(
+                account_token='123456'
+            )
 
-    def test_payouts_api_complete_project_details(self):
+        )
+
+    def test_payouts_api_complete_project_details_plain(self):
         """
         """
         payout_url = reverse('project-payout-detail', kwargs={'pk': self.project1.id})
         response = self.client.get(payout_url, token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['target_reached'], True)
+        self.assertEqual(
+            response.data['account']['account_holder_name'],
+            'Test Tester'
+        )
+        self.assertEqual(
+            response.data['account']['account_number'],
+            '123456'
+        )
+
+    def test_payouts_api_complete_project_details_stripe(self):
+        """
+        """
+        payout_url = reverse('project-payout-detail', kwargs={'pk': self.project2.id})
+        response = self.client.get(payout_url, token=self.user_token)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['target_reached'], False)
+
+        self.assertEqual(
+            response.data['account']['account_token'],
+            '123456'
+        )
 
     def test_payouts_api_incomplete_project_details(self):
         """

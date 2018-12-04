@@ -1,4 +1,3 @@
-from bluebottle.payouts.models.plain import PlainPayoutAccount
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.utils.utils import StatusDefinition
@@ -6,6 +5,8 @@ from django.utils.timezone import now
 import factory
 
 from bluebottle.payouts.models import ProjectPayout, PayoutAccount
+from bluebottle.payouts.models.plain import PlainPayoutAccount
+from bluebottle.payouts.models.stripe import StripePayoutAccount
 
 
 class PayoutAccountFactory(factory.DjangoModelFactory):
@@ -20,6 +21,13 @@ class PlainPayoutAccountFactory(factory.DjangoModelFactory):
 
     class Meta(object):
         model = PlainPayoutAccount
+
+
+class StripePayoutAccountFactory(factory.DjangoModelFactory):
+    user = factory.SubFactory(BlueBottleUserFactory)
+
+    class Meta(object):
+        model = StripePayoutAccount
 
 
 class ProjectPayoutFactory(factory.DjangoModelFactory):

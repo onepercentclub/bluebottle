@@ -330,7 +330,7 @@ class PhotoSerializer(RestrictedImageField):
 
 class PrivateFileSerializer(FileSerializer):
     def __init__(
-        self, url_name, file_attr='file', filename=None, url_args=None,
+        self, url_name, file_attr=None, filename=None, url_args=None,
         permission=None, *args, **kwargs
     ):
         self.url_name = url_name
@@ -354,7 +354,13 @@ class PrivateFileSerializer(FileSerializer):
         """
         permission = self.permission()
 
-        if not permission.has_object_action_permission('GET', self.context['request'].user, value):
+        if not (
+            permission.has_object_action_permission(
+                'GET', self.context['request'].user, value
+            ) and permission.has_action_permission(
+                'GET', self.context['request'].user, value.__class__
+            )
+        ):
             return None
 
         url_args = [getattr(value, arg) for arg in self.url_args]

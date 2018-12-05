@@ -8,7 +8,10 @@ from bluebottle.utils.permissions import ResourceOwnerPermission
 class PayoutDocumentSerializer(serializers.ModelSerializer):
 
     file = PrivateFileSerializer(
-        'payout-document-file', url_args=('pk', ), permission=ResourceOwnerPermission
+        'payout-document-file',
+        file_attr='file',
+        url_args=('pk', ),
+        permission=ResourceOwnerPermission
     )
 
     class Meta:

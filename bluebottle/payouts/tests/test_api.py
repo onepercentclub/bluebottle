@@ -31,7 +31,7 @@ class PayoutAccountApiTestCase(BluebottleTestCase):
         project_details = {
             'title': self.project.title,
             'payout_account': {
-                'type': 'payout-plain',
+                'type': 'plain',
                 'id': payout.id,
                 'account_holder_address': "",
                 'account_holder_postal_code': "1011TG",
@@ -52,7 +52,7 @@ class PayoutAccountApiTestCase(BluebottleTestCase):
         project_details = {
             'title': self.project.title,
             'payout_account': {
-                'type': 'payout-plain',
+                'type': 'plain',
                 'account_holder_address': "",
                 'account_holder_postal_code': "1011TG",
                 'account_holder_city': "Amsterdam",
@@ -102,7 +102,7 @@ class PayoutAccountApiTestCase(BluebottleTestCase):
         project_details = {
             'title': self.project.title,
             'payout_account': {
-                'type': 'payout-plain',
+                'type': 'plain',
                 'document': {'id': file_id},
                 'account_holder_address': "",
                 'account_holder_postal_code': "1011TG",

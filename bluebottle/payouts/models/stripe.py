@@ -5,11 +5,13 @@ from bluebottle.payouts.models import PayoutAccount
 
 
 class StripePayoutAccount(PayoutAccount):
-
-    type = 'stripe-base'
+    type = 'stripe'
 
     account_token = models.CharField(max_length=100, null=True, blank=True)
     verified = models.DateField(null=True, blank=True)
+    providers = [
+        'stripe', 'pledge',
+    ]
 
     """
     scan_corrupt, the supplied ID image is corrupt

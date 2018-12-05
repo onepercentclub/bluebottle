@@ -47,8 +47,7 @@ class PayoutDocument(models.Model):
 
     deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
 
-    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
-                                              default=None)
+    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
 
     class Meta:
         verbose_name = _('payout document')

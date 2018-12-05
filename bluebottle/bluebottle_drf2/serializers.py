@@ -353,13 +353,8 @@ class PrivateFileSerializer(FileSerializer):
         Return a signed url
         """
         permission = self.permission()
-        if not (
-            permission.has_object_action_permission(
-                'GET', self.context['request'].user, value
-            ) and permission.has_action_permission(
-                'GET', self.context['request'].user, value.__class__
-            )
-        ):
+
+        if not permission.has_object_action_permission('GET', self.context['request'].user, value):
             return None
 
         url_args = [getattr(value, arg) for arg in self.url_args]
@@ -368,11 +363,11 @@ class PrivateFileSerializer(FileSerializer):
         if self.filename:
             filename = self.filename
         elif self.file_attr:
-            file = getattr(value, self.file_attr)
+            file = getattr(value, self.file_attr, None)
             if not file:
-                return
-
-            filename = os.path.basename(file.name)
+                return None
+            else:
+                filename = os.path.basename(file.name)
         else:
             filename = '---'
 

@@ -4,8 +4,7 @@ from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateDestroyAPIView, OwnerListViewMixin, PrivateFileView
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, RelatedResourceOwnerPermission,
-    AuthenticatedOrReadOnlyPermission)
+    OneOf, ResourcePermission, RelatedResourceOwnerPermission, IsAuthenticated)
 
 
 class ManagePayoutDocumentPagination(BluebottlePagination):
@@ -16,9 +15,7 @@ class ManagePayoutDocumentList(OwnerListViewMixin, ListCreateAPIView):
     queryset = PayoutDocument.objects
     serializer_class = PayoutDocumentSerializer
     pagination_class = ManagePayoutDocumentPagination
-    filter = ('payout_account', )
-    permission_classes = (AuthenticatedOrReadOnlyPermission, )
-
+    permission_classes = (IsAuthenticated, )
     owner_filter_field = 'author'
 
     def perform_create(self, serializer):
@@ -31,7 +28,6 @@ class ManagePayoutDocumentDetail(RetrieveUpdateDestroyAPIView):
     queryset = PayoutDocument.objects
     serializer_class = PayoutDocumentSerializer
     pagination_class = ManagePayoutDocumentPagination
-    filter = ('payout_account', )
 
     permission_classes = (ResourcePermission, )
 

@@ -18,7 +18,7 @@ class PayoutDocumentSerializer(serializers.ModelSerializer):
 
 class PlainPayoutAccountSerializer(serializers.ModelSerializer):
 
-    document = PayoutDocumentSerializer(required=False, allow_null=True)
+    document = serializers.PrimaryKeyRelatedField(queryset=PayoutDocument.objects, required=False, allow_null=True)
 
     class Meta:
         model = PlainPayoutAccount

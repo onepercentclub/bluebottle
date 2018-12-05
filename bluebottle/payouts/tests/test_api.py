@@ -89,25 +89,25 @@ class PayoutAccountApiTestCase(BluebottleTestCase):
         self.assertEqual(str(response.data['payout_account']['type']), 'Invalid type')
 
     def test_create_payout_account_with_document(self):
-        self.some_photo = './bluebottle/projects/test_images/upload.png'
+        self.some_photo = './bluebottle/projects/test_images/loading.gif'
         photo_file = open(self.some_photo, mode='rb')
         self.manage_payout_document_url = reverse('manage_payout_document_list')
         response = self.client.post(self.manage_payout_document_url,
                                     {'file': photo_file},
-                                    token=self.owner_token, format='multipart')
+                                    token=self.owner_token,
+                                    format='multipart')
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data, 201)
-        file_id = response.data['id']
+        self.assertIsNotNone(response.data['file'])
         project_details = {
             'title': self.project.title,
             'payout_account': {
                 'type': 'payout-plain',
-                'document': {'id': file_id},
+                'document': response.data['id'],
                 'account_holder_address': "",
                 'account_holder_postal_code': "1011TG",
                 'account_holder_city': "Amsterdam",
-                'account_holder_country': int(self.country.id),
+                'account_holder_country': self.country.id,
                 'account_holder_name': "Frankie Frank",
                 'account_number': "123456789",
                 'account_details': "Big Duck Bank",
@@ -116,6 +116,5 @@ class PayoutAccountApiTestCase(BluebottleTestCase):
         }
 
         response = self.client.put(self.project_manage_url, project_details, token=self.owner_token)
-        self.assertEqual(response.data, 201)
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data['payout_account']['document'], "Frankie Frank")
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.data['payout_account']['document'])

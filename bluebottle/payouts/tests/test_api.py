@@ -47,6 +47,10 @@ class PayoutAccountApiTestCase(BluebottleTestCase):
         response = self.client.put(self.project_manage_url, project_details, token=self.owner_token)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['payout_account']['account_holder_name'], "Henkie Henk")
+        # Check that the changes are really persisted
+        response = self.client.get(self.project_manage_url, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['payout_account']['account_holder_name'], "Henkie Henk")
 
     def test_create_payout_account(self):
         project_details = {

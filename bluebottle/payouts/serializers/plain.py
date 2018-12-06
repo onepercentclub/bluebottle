@@ -24,6 +24,7 @@ class PlainPayoutAccountSerializer(serializers.ModelSerializer):
         model = PlainPayoutAccount
         fields = (
             'id',
+            'type',
             'account_holder_name',
             'account_holder_address',
             'account_holder_postal_code',

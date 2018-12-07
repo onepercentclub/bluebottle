@@ -29,7 +29,7 @@ class PayoutDocumentAdmin(admin.ModelAdmin):
     form = PayoutDocumentForm
 
     raw_id_fields = ('author',)
-    readonly_fields = ('download_url', 'created', 'updated', 'deleted', 'ip_address')
+    readonly_fields = ('download_url', 'created', 'updated', 'ip_address')
     fields = readonly_fields + ('file', 'author')
 
     def download_url(self, obj):

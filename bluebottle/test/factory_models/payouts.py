@@ -1,4 +1,4 @@
-from bluebottle.payouts.models.plain import PlainPayoutAccount
+from bluebottle.payouts.models.plain import PlainPayoutAccount, PayoutDocument
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.utils.utils import StatusDefinition
@@ -20,6 +20,11 @@ class PlainPayoutAccountFactory(factory.DjangoModelFactory):
 
     class Meta(object):
         model = PlainPayoutAccount
+
+
+class PayoutDocumentFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = PayoutDocument
 
 
 class ProjectPayoutFactory(factory.DjangoModelFactory):

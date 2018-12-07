@@ -27,7 +27,7 @@ from select_multiple_field.models import SelectMultipleField
 from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.bb_projects.models import (
-    BaseProject, ProjectPhase, BaseProjectDocument
+    BaseProject, ProjectPhase
 )
 from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
@@ -100,24 +100,6 @@ class ProjectPhaseLog(models.Model):
         @staticmethod
         def timestamp(obj, created):
             return obj.start
-
-
-class ProjectDocument(BaseProjectDocument):
-    @property
-    def document_url(self):
-        # pk may be unset if not saved yet, in which case no url can be
-        # generated.
-        if self.pk is not None and self.file:
-            return reverse_signed('project-document-file', args=(self.pk,))
-        return None
-
-    @property
-    def owner(self):
-        return self.project.owner
-
-    @property
-    def parent(self):
-        return self.project
 
 
 class Project(BaseProject, PreviousStatusMixin):

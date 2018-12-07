@@ -16,7 +16,7 @@ from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSer
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.payouts.serializers import PayoutAccountSerializer
 from bluebottle.projects.models import (
-    ProjectBudgetLine, ProjectDocument, Project, ProjectImage,
+    ProjectBudgetLine, Project, ProjectImage,
     ProjectPlatformSettings, ProjectSearchFilter, ProjectLocation,
     ProjectAddOn, ProjectCreateTemplate)
 from bluebottle.tasks.models import Task, TaskMember, Skill
@@ -83,18 +83,6 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectBudgetLine
         fields = ('id', 'description', 'amount')
-
-
-class ProjectDocumentSerializer(serializers.ModelSerializer):
-    file = PrivateFileSerializer(
-        'project-document-file', url_args=('pk', ), permission=ResourceOwnerPermission
-    )
-
-    project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
-
-    class Meta:
-        model = ProjectDocument
-        fields = ('id', 'project', 'file')
 
 
 class ProjectPermissionsSerializer(serializers.Serializer):
@@ -321,7 +309,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     budget_lines = ProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
     currencies = serializers.JSONField(read_only=True)
     categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
-    documents = ProjectDocumentSerializer(many=True, read_only=True)
     editable = serializers.BooleanField(read_only=True)
     image = ImageSerializer(required=False, allow_null=True)
     is_funding = serializers.ReadOnlyField()

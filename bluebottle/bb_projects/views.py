@@ -7,12 +7,13 @@ from django.db.models.aggregates import Count
 from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 
-from bluebottle.projects.models import Project, ProjectPhaseLog, ProjectDocument
+from bluebottle.projects.models import Project, ProjectPhaseLog
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.projects.serializers import (
     ProjectThemeSerializer, ProjectPhaseSerializer,
-    ProjectPhaseLogSerializer, ProjectDocumentSerializer,
-    ProjectTinyPreviewSerializer, ProjectSerializer, ProjectPreviewSerializer, ManageProjectSerializer)
+    ProjectPhaseLogSerializer, ProjectTinyPreviewSerializer,
+    ProjectSerializer, ProjectPreviewSerializer, ManageProjectSerializer
+)
 from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
@@ -329,43 +330,3 @@ class ProjectUsedThemeList(ProjectThemeList):
 class ProjectThemeDetail(RetrieveAPIView):
     queryset = ProjectTheme.objects.all()
     serializer_class = ProjectThemeSerializer
-
-
-class ManageProjectDocumentPagination(BluebottlePagination):
-    page_size = 20
-
-
-class ManageProjectDocumentList(OwnerListViewMixin, ListCreateAPIView):
-    queryset = Project.objects.all()
-    serializer_class = ProjectDocumentSerializer
-    pagination_class = ManageProjectDocumentPagination
-    filter = ('project', )
-    permission_classes = (RelatedResourceOwnerPermission, )
-
-    owner_filter_field = 'project__owner'
-
-    def perform_create(self, serializer):
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
-
-        serializer.save(
-            author=self.request.user, ip_address=get_client_ip(self.request)
-        )
-
-
-class ManageProjectDocumentDetail(RetrieveUpdateDestroyAPIView):
-    queryset = ProjectDocument.objects.all()
-    serializer_class = ProjectDocumentSerializer
-    pagination_class = ManageProjectDocumentPagination
-    filter = ('project', )
-
-    permission_classes = (
-        OneOf(ResourcePermission, RelatedResourceOwnerPermission),
-    )
-
-    def perform_update(self, serializer):
-        serializer.save(
-            author=self.request.user, ip_address=get_client_ip(self.request)
-        )

@@ -30,7 +30,7 @@ class PlainPayoutAccount(PayoutAccount):
         'geo.Country', blank=True, null=True,
         related_name="payout_account_bank_country")
 
-    document = models.ForeignKey('payouts.PayoutDocument', null=True, blank=True)
+    document = models.ForeignKey('payouts.PayoutDocument', models.SET_NULL, null=True, blank=True)
     reviewed = models.BooleanField(
         _('Reviewed'),
         help_text=_(
@@ -60,8 +60,6 @@ class PayoutDocument(models.Model):
     author = models.ForeignKey('members.Member', verbose_name=_('author'), blank=True, null=True)
     created = models.DateField(_('created'), auto_now_add=True)
     updated = models.DateField(_('updated'), auto_now=True)
-
-    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
 
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
 

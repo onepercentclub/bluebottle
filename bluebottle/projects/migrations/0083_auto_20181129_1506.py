@@ -28,6 +28,17 @@ def migrate_payout_details(apps, schema_editor):
         )
         project.save()
 
+        if len(project.documents):
+            document = project.documents.all()[0]
+            project.payout_account.document = PayoutDocument(
+                author=document.document,
+                file=document.file,
+                created=document.created,
+                updated=document.updated,
+                ip_address=document.ip_address
+            )
+            project_payout.save()
+
 
 def remove_payout_accounts(apps, schema_editor):
     PlainPayoutAccount = apps.get_model('payouts', 'PlainPayoutAccount')

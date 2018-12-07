@@ -47,10 +47,8 @@ from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin, \
     TranslatedUnionFieldListFilter, log_action
 from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
-from bluebottle.votes.models import Vote
-from .forms import ProjectDocumentForm
 from .models import (ProjectBudgetLine, Project,
-                     ProjectDocument, ProjectPhaseLog)
+                     ProjectPhaseLog)
 from .tasks import refund_project
 
 logger = logging.getLogger(__name__)
@@ -109,25 +107,6 @@ class ProjectReviewerFilter(admin.SimpleListFilter):
             )
         else:
             return queryset
-
-
-class ProjectDocumentInline(admin.StackedInline):
-    model = ProjectDocument
-    form = ProjectDocumentForm
-    extra = 0
-    raw_id_fields = ('author',)
-    readonly_fields = ('download_url',)
-    fields = readonly_fields + ('file', 'author')
-
-    def download_url(self, obj):
-        url = obj.document_url
-
-        if url is not None:
-            return format_html(
-                u"<a href='{}'>{}</a>",
-                str(url), 'Download'
-            )
-        return '(None)'
 
 
 class RewardInlineFormset(forms.models.BaseInlineFormSet):
@@ -355,12 +334,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ProjectBudgetLineInline,
         RewardInlineAdmin,
         TaskAdminInline,
-        ProjectDocumentInline,
         ProjectPhaseLogInline
     )
     sourcing_inlines = (
         ProjectLocationInline,
-        ProjectDocumentInline,
         TaskAdminInline,
         ProjectPhaseLogInline
     )

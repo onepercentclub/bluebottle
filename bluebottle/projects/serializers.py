@@ -431,6 +431,7 @@ class ManageProjectSerializer(serializers.ModelSerializer):
             if instance.payout_account and instance.payout_account.type == payout_account['type']:
                 for field, value in payout_account.items():
                     setattr(instance.payout_account, field, value)
+                    instance.payout_account.save()
             else:
                 serializer = PayoutAccountSerializer(data=self.initial_data['payout_account'])
                 if serializer.is_valid():

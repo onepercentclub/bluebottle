@@ -2772,8 +2772,7 @@ class ProjectSupportersExportTest(BluebottleTestCase):
         self.supporters_export_url = reverse(
             'project-supporters-export', kwargs={'slug': self.project.slug}
         )
-        self.project_url = reverse(
-            'project_detail', kwargs={'slug': self.project.slug})
+        self.project_url = reverse('project_detail', kwargs={'slug': self.project.slug})
 
     def test_owner(self):
         # view allowed

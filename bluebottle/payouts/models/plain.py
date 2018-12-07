@@ -9,7 +9,10 @@ from bluebottle.utils.utils import reverse_signed
 
 class PlainPayoutAccount(PayoutAccount):
 
-    type = 'payout-plain'
+    type = 'plain'
+    providers = [
+        'docdata', 'pledge', 'flutterwave', 'lipisha', 'vitepay', 'pledge', 'telesom',
+    ]
 
     account_holder_name = models.CharField(
         _("account holder name"), max_length=100, null=True, blank=True)

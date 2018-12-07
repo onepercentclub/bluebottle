@@ -31,7 +31,7 @@ class PayoutAccountApiTestCase(BluebottleTestCase):
         project_details = {
             'title': self.project.title,
             'payout_account': {
-                'type': 'payout-plain',
+                'type': 'plain',
                 'id': payout.id,
                 'account_holder_address': "",
                 'account_holder_postal_code': "1011TG",
@@ -47,6 +47,7 @@ class PayoutAccountApiTestCase(BluebottleTestCase):
         response = self.client.put(self.project_manage_url, project_details, token=self.owner_token)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['payout_account']['account_holder_name'], "Henkie Henk")
+        self.assertEqual(response.data['payout_account']['type'], 'plain')
         # Check that the changes are really persisted
         response = self.client.get(self.project_manage_url, token=self.owner_token)
         self.assertEqual(response.status_code, 200)
@@ -56,7 +57,7 @@ class PayoutAccountApiTestCase(BluebottleTestCase):
         project_details = {
             'title': self.project.title,
             'payout_account': {
-                'type': 'payout-plain',
+                'type': 'plain',
                 'account_holder_address': "",
                 'account_holder_postal_code': "1011TG",
                 'account_holder_city': "Amsterdam",
@@ -106,7 +107,7 @@ class PayoutAccountApiTestCase(BluebottleTestCase):
         project_details = {
             'title': self.project.title,
             'payout_account': {
-                'type': 'payout-plain',
+                'type': 'plain',
                 'document': response.data['id'],
                 'account_holder_address': "",
                 'account_holder_postal_code': "1011TG",

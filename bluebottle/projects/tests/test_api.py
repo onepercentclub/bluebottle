@@ -1509,24 +1509,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         for field in bank_detail_fields:
             self.assertEqual(response.data[field], project_data[field])
 
-    def test_set_invalid_iban(self):
-        """ Set invalid iban bank detail """
-
-        project_data = {
-            'title': 'Project with bank details',
-            'account_number': 'NL18ABNA0484fesewf869868',
-        }
-
-        response = self.client.post(self.manage_projects_url, project_data,
-                                    token=self.some_user_token)
-
-        # This will just pass now because we removed Iban check
-        # because the field can hold a non-Iban account too.
-        self.assertEquals(response.status_code,
-                          status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(json.loads(response.content)['account_number'][0],
-                          'NL IBANs must contain 18 characters.')
-
     def test_skip_iban_validation(self):
         """ The iban validation should be skipped for other account formats """
 
@@ -2790,8 +2772,7 @@ class ProjectSupportersExportTest(BluebottleTestCase):
         self.supporters_export_url = reverse(
             'project-supporters-export', kwargs={'slug': self.project.slug}
         )
-        self.project_url = reverse(
-            'project_detail', kwargs={'slug': self.project.slug})
+        self.project_url = reverse('project_detail', kwargs={'slug': self.project.slug})
 
     def test_owner(self):
         # view allowed

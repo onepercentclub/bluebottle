@@ -20,6 +20,8 @@ def task_post_save(sender, instance, **kwargs):
     except AttributeError:
         pass
 
+    instance._init_status = instance.status
+
 
 @receiver(pre_save, weak=False, sender=TaskMember,
           dispatch_uid='set-hours-spent-taskmember')

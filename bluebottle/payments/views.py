@@ -28,6 +28,31 @@ class PaymentMethodList(APIView):
         # Payment methods are loaded from the settings so they
         # aren't translated at run time. We need to do it manually
         methods = get_payment_methods(
+            country=country,
+            user=request.user,
+            currency=request.GET.get('currency'),
+            project_id=request.GET.get('project_id')
+        )
+
+        for method in methods:
+            method['name'] = _(method['name'])
+
+        result = {'country': country, 'results': methods}
+        response = Response(result, status=status.HTTP_200_OK)
+        return response
+
+
+class PayoutAccountPaymentMethodList(APIView):
+    def get(self, pk, request, *args, **kwargs):
+        country = request.GET.get('country')
+
+        if not country and not getattr(settings, 'SKIP_IP_LOOKUP', False):
+            ip = get_ip(request)
+            country = get_country_code_by_ip(ip)
+
+        # Payment methods are loaded from the settings so they
+        # aren't translated at run time. We need to do it manually
+        methods = get_payment_methods(
             country=country, user=request.user, currency=request.GET.get('currency')
         )
 

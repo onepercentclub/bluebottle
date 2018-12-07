@@ -2,6 +2,7 @@ import re
 from rest_framework import serializers
 
 from bluebottle.donations.models import Donation
+from bluebottle.payouts.serializers import PayoutAccountSerializer
 from bluebottle.projects.models import Project
 from bluebottle.utils.serializers import MoneySerializer, MoneyTotalSerializer
 
@@ -36,12 +37,7 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
     amount_donated = MoneyTotalSerializer(source='totals_donated', read_only=True)
 
     title = serializers.CharField(required=False)
-    receiver_account_name = serializers.CharField(source='account_holder_name', read_only=True)
-    receiver_account_number = serializers.CharField(source='account_number', read_only=True)
-    receiver_account_details = serializers.CharField(source='account_details', read_only=True)
-    receiver_account_city = serializers.CharField(source='account_holder_city', read_only=True)
-    receiver_account_address = serializers.CharField(source='account_holder_address', read_only=True)
-    receiver_account_country = serializers.CharField(source='account_holder_country.name', read_only=True)
+    account = PayoutAccountSerializer(source='payout_account', read_only=True)
 
     donations = PayoutDonationSerializer(many=True, read_only=True)
     status = serializers.CharField(source='payout_status')
@@ -61,11 +57,6 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
                   'campaign_started',
                   'campaign_ended',
                   'target_reached',
-                  'receiver_account_number',
-                  'receiver_account_details',
-                  'receiver_account_name',
-                  'receiver_account_city',
-                  'receiver_account_address',
-                  'receiver_account_country',
+                  'account',
                   'donations'
                   )

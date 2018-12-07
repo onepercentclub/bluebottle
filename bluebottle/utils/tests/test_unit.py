@@ -615,6 +615,13 @@ class RestrictedImageFormFieldTestCase(TestCase):
 
         self.assertEqual(result, image_file)
 
+    def test_image_suffix_capitals(self):
+        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+            image_file = SimpleUploadedFile('upload.PNG', image.read(), content_type='image/png')
+            result = self.field.to_python(image_file)
+
+        self.assertEqual(result, image_file)
+
     def test_non_image(self):
         with open('./bluebottle/utils/tests/test_images/non-image.svg') as image:
             image_file = SimpleUploadedFile('upload.png', image.read(), content_type='image/png')
@@ -632,6 +639,20 @@ class RestrictedImageFormFieldTestCase(TestCase):
     def test_non_image_svg_mime(self):
         with open('./bluebottle/utils/tests/test_images/non-image.svg') as image:
             image_file = SimpleUploadedFile('upload.svg', image.read(), content_type='image/svg+xml')
+
+            with self.assertRaises(ValidationError):
+                self.field.to_python(image_file)
+
+    def test_image_incorrect_suffix(self):
+        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+            image_file = SimpleUploadedFile('upload.html', image.read(), content_type='image/png')
+
+            with self.assertRaises(ValidationError):
+                self.field.to_python(image_file)
+
+    def test_image_incorrect_suffix_capitals(self):
+        with open('./bluebottle/utils/tests/test_images/upload.png') as image:
+            image_file = SimpleUploadedFile('upload.HTML', image.read(), content_type='image/png')
 
             with self.assertRaises(ValidationError):
                 self.field.to_python(image_file)

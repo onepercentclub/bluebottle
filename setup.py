@@ -62,6 +62,7 @@ install_requires = [
     'django-parler==1.7',
     'django-permissions-widget==1.5.1',
     'django_polymorphic==1.2',
+    'django-rest-polymorphic==0.1.8',
     'django-rest-swagger==2.1.2',
     'django-select-multiple-field==0.5.0a-draft',
     'django-singleton-admin==0.0.4',

@@ -17,6 +17,11 @@ class PicturePlugin(ContentPlugin):
     model = PictureItem
     category = _("Multimedia")
     render_template = 'contentplugins/picture.html'
+
+    fieldsets = (
+        (None, {'fields': ('image', )}),
+    )
+
     radio_fields = {
         'align': admin.HORIZONTAL
     }

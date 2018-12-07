@@ -1,3 +1,4 @@
+import functools
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
@@ -35,7 +36,33 @@ from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member
 
 
-class MemberCreationForm(forms.ModelForm):
+class MemberForm(forms.ModelForm):
+    def __init__(self, data=None, files=None, current_user=None, *args, **kwargs):
+        self.current_user = current_user
+        super(MemberForm, self).__init__(data, files, *args, **kwargs)
+
+        if self.current_user.is_superuser:
+            # Super users can assign every group to a user
+            group_queryset = Group.objects.all()
+        else:
+            # Normal staff users can only choose groups that they belong to.
+            group_queryset = Group.objects.filter(
+                pk__in=self.current_user.groups.all().only('pk')
+            )
+
+        self.fields['groups'] = forms.ModelMultipleChoiceField(
+            queryset=group_queryset,
+            required=False,
+            initial=Group.objects.filter(name='Authenticated')
+        )
+
+    class Meta:
+        model = Member
+        # Mind you these fields are also set in MemberAdmin.add_fieldsets
+        fields = '__all__'
+
+
+class MemberCreationForm(MemberForm):
     """
     A form that creates a member.
     """
@@ -46,17 +73,6 @@ class MemberCreationForm(forms.ModelForm):
                              help_text=_("A valid, unique email address."))
 
     is_active = forms.BooleanField(label=_("Is active"), initial=True)
-
-    def __init__(self, *args, **kwargs):
-        super(MemberCreationForm, self).__init__(*args, **kwargs)
-        authenticated = Group.objects.get(name='Authenticated')
-        self.initial['groups'] = [authenticated]
-
-    class Meta:
-        model = Member
-        # Mind you these fields are also set in MemberAdmin.add_fieldsets
-        fields = ('first_name', 'last_name', 'email',
-                  'is_active', 'is_staff', 'is_superuser', 'groups')
 
     def clean_email(self):
         # Since BlueBottleUser.email is unique, this check is redundant
@@ -102,7 +118,7 @@ class CustomAdminFormMetaClass(ModelFormMetaclass):
         return super(CustomAdminFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
-class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelForm)):
+class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm)):
     """
     Change Member form
     """
@@ -161,79 +177,112 @@ class MemberAdmin(UserAdmin):
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
 
-    @property
-    def standard_fieldsets(self):
+    def get_form(self, request, *args, **kwargs):
+        Form = super(MemberAdmin, self).get_form(request, *args, **kwargs)
+        return functools.partial(Form, current_user=request.user)
 
-        standard_fieldsets = [
-            [_("Main"), {'fields': [
-                'remote_id',
-                'email',
-                'first_name',
-                'last_name',
-                'username',
-                'phone_number',
-                'reset_password',
-                'resend_welcome_link',
-                'last_login',
-                'date_joined',
-                'deleted',
-                'is_co_financer',
-                'can_pledge',
-                'partner_organization',
-                'campaign_notifications',
-                'newsletter',
-                'primary_language',
-            ]}],
-            [_("Profile"),
-             {'fields': [
-                 'picture',
-                 'about_me',
-                 'favourite_themes',
-                 'skills'
-             ]}],
-            [_('Engagement'),
-             {'fields': [
-                 'projects_managed',
-                 'tasks',
-                 'donations',
-                 'following'
-             ]}],
+    def get_fieldsets(self, request, obj=None):
+        if not obj:
+            fieldsets = ((
+                None, {
+                    'classes': ('wide', ),
+                    'fields': [
+                        'first_name', 'last_name', 'email', 'is_active',
+                        'is_staff', 'groups'
+                    ]
+                }
+            ), )
+        else:
+            fieldsets = [
+                [
+                    _("Main"),
+                    {
+                        'fields': [
+                            'email',
+                            'remote_id',
+                            'first_name',
+                            'last_name',
+                            'username',
+                            'phone_number',
+                            'reset_password',
+                            'resend_welcome_link',
+                            'last_login',
+                            'date_joined',
+                            'deleted',
+                            'is_co_financer',
+                            'can_pledge',
+                            'verified',
+                            'partner_organization',
+                            'campaign_notifications',
+                            'newsletter',
+                            'primary_language',
+                        ]
+                    }
+                ],
+                [
+                    _("Profile"),
+                    {
+                        'fields':
+                        ['picture', 'about_me', 'favourite_themes', 'skills']
+                    }
+                ],
+                [
+                    _('Permissions'),
+                    {'fields': ['is_active', 'is_staff', 'is_superuser', 'groups']}
+                ],
+                [
+                    _('Engagement'),
+                    {
+                        'fields':
+                        ['projects_managed', 'tasks', 'donations', 'following']
+                    }
+                ],
+            ]
+
+            if Location.objects.count():
+                fieldsets[1][1]['fields'].append('location')
+
+            if 'Pledge' not in (
+                item['name'] for item in properties.PAYMENT_METHODS
+            ):
+                fieldsets[0][1]['fields'].remove('can_pledge')
+
+            if CustomMemberFieldSettings.objects.count():
+                extra = (
+                    _('Extra fields'), {
+                        'fields': [
+                            field.slug
+                            for field in CustomMemberFieldSettings.objects.all()
+                        ]
+                    }
+                )
+
+                fieldsets.append(extra)
+
+        return fieldsets
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = [
+            'date_joined', 'last_login',
+            'updated', 'deleted', 'login_as_user',
+            'reset_password', 'resend_welcome_link',
+            'projects_managed', 'tasks', 'donations', 'following'
         ]
 
-        if Location.objects.count():
-            standard_fieldsets[1][1]['fields'].append('location')
+        user_groups = request.user.groups.all()
 
-        if 'Pledge' not in (item['name'] for item in properties.PAYMENT_METHODS):
-            standard_fieldsets[0][1]['fields'].remove('can_pledge')
+        if obj and hasattr(obj, 'groups') and not request.user.is_superuser:
+            for group in obj.groups.all():
+                if group not in user_groups:
+                    readonly_fields.append('email')
 
-        if CustomMemberFieldSettings.objects.count():
-            extra = (_('Extra fields'), {
-                'fields': [field.slug for field in CustomMemberFieldSettings.objects.all()]
-            })
+        if not request.user.is_superuser:
+            if obj and obj.is_superuser:
+                readonly_fields.append('email')
 
-            standard_fieldsets.append(extra)
+            readonly_fields.append('is_superuser')
 
-        return tuple(standard_fieldsets)
-
-    staff_fieldsets = (
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'can_pledge', 'groups')}),
-    )
-
-    superuser_fieldsets = (
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'can_pledge', 'groups')}),
-    )
-
-    add_fieldsets = (
-        (None, {'classes': ('wide',),
-                'fields': ('first_name', 'last_name', 'email',
-                           'is_active', 'is_staff', 'is_superuser', 'groups')}
-         ),
-    )
-
-    readonly_fields = ('date_joined', 'last_login',
-                       'updated', 'deleted', 'login_as_user',
-                       'reset_password', 'resend_welcome_link',
-                       'projects_managed', 'tasks', 'donations', 'following')
+        return readonly_fields
 
     export_fields = (
         ('username', 'username'),
@@ -262,7 +311,7 @@ class MemberAdmin(UserAdmin):
         ('groups', UnionFieldListFilter)
     )
     list_display = ('email', 'first_name', 'last_name', 'is_staff',
-                    'date_joined', 'is_active', 'login_as_user')
+                    'date_joined', 'is_active', 'login_as_link')
     ordering = ('-date_joined', 'email',)
 
     inlines = (UserAddressInline, )
@@ -328,13 +377,11 @@ class MemberAdmin(UserAdmin):
     following.short_description = _('Following')
 
     def reset_password(self, obj):
-        reset_form_url = reverse('admin:auth_user_password_change', args=(obj.id, ))
         reset_mail_url = reverse('admin:auth_user_password_reset_mail', kwargs={'user_id': obj.id})
         properties.set_tenant(connection.tenant)
 
         return format_html(
-            "<a href='{}'>{}</a>  | <a href='{}'>{}</a>",
-            reset_form_url, _("Reset password form"),
+            "<a href='{}'>{}</a>",
             reset_mail_url, _("Send reset password mail")
         )
 
@@ -351,28 +398,6 @@ class MemberAdmin(UserAdmin):
             obj.id,
             _('Login as user')
         )
-
-    def change_view(self, request, *args, **kwargs):
-        # for superuser
-        try:
-            if request.user.is_superuser:
-                self.fieldsets = self.standard_fieldsets + self.superuser_fieldsets
-            else:
-                self.fieldsets = self.standard_fieldsets + self.staff_fieldsets
-
-            response = UserAdmin.change_view(self, request, *args, **kwargs)
-        finally:
-            # Reset fieldsets to its original value
-            self.fieldsets = self.standard_fieldsets
-
-        return response
-
-    def __init__(self, *args, **kwargs):
-        super(MemberAdmin, self).__init__(*args, **kwargs)
-
-        self.list_display = (
-            'email', 'first_name', 'last_name', 'is_staff', 'date_joined',
-            'is_active', 'login_as_link')
 
     def get_inline_instances(self, request, obj=None):
         """ Override get_inline_instances so that the add form does not show inlines """

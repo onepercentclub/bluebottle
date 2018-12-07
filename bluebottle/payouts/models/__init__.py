@@ -4,11 +4,34 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from djchoices.choices import DjangoChoices, ChoiceItem
+from polymorphic.models import PolymorphicModel
 
-from bluebottle.bb_payouts.models import (BaseProjectPayout,
-                                          BaseOrganizationPayout)
+from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
 from bluebottle.clients import properties
 
+
+class PayoutAccount(PolymorphicModel):
+
+    type = 'base'
+    created = models.DateField(auto_now_add=True)
+    updated = models.DateField(auto_now=True)
+    user = models.ForeignKey('members.Member')
+
+    class Meta:
+        permissions = (
+            ('api_read_payoutdocument', 'Can view payout documents through the API'),
+            ('api_add_payoutdocument', 'Can add payout documents through the API'),
+            ('api_change_payoutdocument', 'Can change payout documents through the API'),
+            ('api_delete_payoutdocument', 'Can delete payout documents through the API'),
+
+            ('api_read_own_payoutdocument', 'Can view payout own documents through the API'),
+            ('api_add_own_payoutdocument', 'Can add own payout documents through the API'),
+            ('api_change_own_payoutdocument', 'Can change own payout documents through the API'),
+            ('api_delete_own_payoutdocument', 'Can delete own payout documents through the API'),
+        )
+
+
+# Legacy Payouts models
 
 class ProjectPayout(BaseProjectPayout):
     class PayoutRules(DjangoChoices):

@@ -9,6 +9,7 @@ def migrate_payout_details(apps, schema_editor):
 
     Project = apps.get_model('projects', 'Project')
     PlainPayoutAccount = apps.get_model('payouts', 'PlainPayoutAccount')
+    PayoutDocument = apps.get_model('payouts', 'PayoutDocument')
     ContentType = apps.get_model('contenttypes', 'ContentType')
 
     new_ct = ContentType.objects.get_for_model(PlainPayoutAccount)
@@ -28,16 +29,16 @@ def migrate_payout_details(apps, schema_editor):
         )
         project.save()
 
-        if len(project.documents):
+        if len(project.documents.all()):
             document = project.documents.all()[0]
-            project.payout_account.document = PayoutDocument(
-                author=document.document,
+            project.payout_account.document = PayoutDocument.objects.create(
+                author=document.author,
                 file=document.file,
                 created=document.created,
                 updated=document.updated,
                 ip_address=document.ip_address
             )
-            project_payout.save()
+            project.payout_account.save()
 
 
 def remove_payout_accounts(apps, schema_editor):

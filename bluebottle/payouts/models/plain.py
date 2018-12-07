@@ -31,6 +31,15 @@ class PlainPayoutAccount(PayoutAccount):
         related_name="payout_account_bank_country")
 
     document = models.ForeignKey('payouts.PayoutDocument', null=True, blank=True)
+    reviewed = models.BooleanField(
+        _('Reviewed'),
+        help_text=_(
+            'Review the project documents before marking the account as reviewed.'
+            'After setting the project to running, the account documents will be deleted.'
+            'Also, make sure to remove the documents from your device after downloading them.'
+        ),
+        default=False
+    )
 
     def __unicode__(self):
         return "{}: {}".format(_("Bank details"), self.account_holder_name)

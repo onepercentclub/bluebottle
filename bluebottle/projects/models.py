@@ -202,16 +202,6 @@ class Project(BaseProject, PreviousStatusMixin):
     wallposts = GenericRelation(Wallpost, related_query_name='project_wallposts')
     objects = UpdateSignalsQuerySet.as_manager()
 
-    bank_details_reviewed = models.BooleanField(
-        _('Bank details reviewed'),
-        help_text=_(
-            'Review the project documents before marking the bank details as reviewed.'
-            'After setting this project to running, the project documents will be deleted.'
-            'Also, make sure to remove the documents from your device after downloading them.'
-        ),
-        default=False
-    )
-
     def __unicode__(self):
         if self.title:
             return u'{}'.format(self.title)
@@ -367,8 +357,8 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.status.slug not in (
                 'plan-new', 'plan-submitted', 'plan-needs-work',
         ):
-            for document in self.documents.all():
-                document.delete()
+            if hasattr(self.payout_account, 'document') and self.payout_account.document:
+                self.payout_account.document.delete()
 
         # Set all task.author to project.task_manager
         self.task_set.exclude(author=self.task_manager).update(author=self.task_manager)

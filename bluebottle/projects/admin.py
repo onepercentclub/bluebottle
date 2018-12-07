@@ -249,15 +249,16 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
                     self.initial[field.slug] = value
 
     def clean(self):
+        super(ProjectAdminForm, self).clean()
         if 'status' in self.cleaned_data and \
                 self.cleaned_data['status'].slug == 'campaign' and \
                 'amount_asked' in self.cleaned_data and \
                 self.cleaned_data['amount_asked'].amount > 0 and \
-                not self.cleaned_data['bank_details_reviewed']:
+                hasattr(self.cleaned_data['payout_account'], 'reviewed') and \
+                not self.cleaned_data['payout_account'].reviewed:
             raise forms.ValidationError(
                 _('The bank details need to be reviewed before approving a project')
             )
-        super(ProjectAdminForm, self).clean()
 
     def save(self, commit=True):
         project = super(ProjectAdminForm, self).save(commit=commit)

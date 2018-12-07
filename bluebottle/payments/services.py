@@ -50,7 +50,7 @@ def get_payment_methods(country=None, amount=None, user=None, currency=None, pro
 
     if project_id:
         try:
-            project = Project.objects.get(pk=project_id)
+            project = Project.objects.get(slug=project_id)
             methods = [
                 method for method in methods
                 if method.get('provider') in project.payout_account.providers

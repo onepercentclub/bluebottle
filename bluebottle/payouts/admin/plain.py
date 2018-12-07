@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 
 from polymorphic.admin import PolymorphicChildModelAdmin
 
@@ -23,7 +24,7 @@ class PayoutDocumentForm(forms.ModelForm):
 
 
 @admin.register(PayoutDocument)
-class ProjectDocumentAdmin(admin.ModelAdmin):
+class PayoutDocumentAdmin(admin.ModelAdmin):
     model = PayoutDocument
     form = PayoutDocumentForm
 
@@ -37,15 +38,13 @@ class ProjectDocumentAdmin(admin.ModelAdmin):
         if url is not None:
             return format_html(
                 u"<a href='{}'>{}</a>",
-                str(url), 'Download'
+                str(url), _('Download')
             )
         return '(None)'
 
 
+@admin.register(PlainPayoutAccount)
 class PlainPayoutAccountAdmin(PolymorphicChildModelAdmin):
     base_model = PayoutAccount
     model = PlainPayoutAccount
     raw_id_fields = ('user', 'document')
-
-
-admin.site.register(PlainPayoutAccount, PlainPayoutAccountAdmin)

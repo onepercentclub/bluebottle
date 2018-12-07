@@ -32,6 +32,13 @@ class PlainPayoutAccount(PayoutAccount):
 
     document = models.ForeignKey('payouts.PayoutDocument', null=True, blank=True)
 
+    def __unicode__(self):
+        return "{}: {}".format(_("Bank details"), self.account_holder_name)
+
+    class Meta:
+        verbose_name = _('Bank details')
+        verbose_name_plural = _('Bank details')
+
 
 class PayoutDocument(models.Model):
 
@@ -47,8 +54,7 @@ class PayoutDocument(models.Model):
 
     deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
 
-    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
-                                              default=None)
+    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
 
     class Meta:
         verbose_name = _('payout document')

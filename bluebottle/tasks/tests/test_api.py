@@ -450,7 +450,8 @@ class TaskApiTestcase(BluebottleTestCase):
             self.task_member_url,
             task_member_data,
             token=self.another_token,
-            format='multipart'
+            format='multipart',
+            resume=None
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

@@ -6,15 +6,13 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
 
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.models import SortableTranslatableModel
-from bluebottle.utils.fields import MoneyField, PrivateFileField
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
 
 

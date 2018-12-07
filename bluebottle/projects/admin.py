@@ -47,6 +47,7 @@ from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin, \
     TranslatedUnionFieldListFilter, log_action
 from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
+from bluebottle.votes.models import Vote
 from .models import (ProjectBudgetLine, Project,
                      ProjectPhaseLog)
 from .tasks import refund_project

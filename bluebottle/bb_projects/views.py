@@ -14,13 +14,12 @@ from bluebottle.projects.serializers import (
     ProjectPhaseLogSerializer, ProjectTinyPreviewSerializer,
     ProjectSerializer, ProjectPreviewSerializer, ManageProjectSerializer
 )
-from bluebottle.utils.utils import get_client_ip
 from bluebottle.utils.views import (
     ListAPIView, RetrieveAPIView, ListCreateAPIView, RetrieveUpdateAPIView,
-    RetrieveUpdateDestroyAPIView, OwnerListViewMixin,
-    TranslatedApiViewMixin)
+    OwnerListViewMixin, TranslatedApiViewMixin
+)
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission, RelatedResourceOwnerPermission,
+    OneOf, ResourcePermission, ResourceOwnerPermission
 )
 from bluebottle.projects.permissions import IsEditableOrReadOnly, CanEditOwnRunningProjects
 from .models import ProjectTheme, ProjectPhase

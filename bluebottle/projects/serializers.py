@@ -25,7 +25,6 @@ from bluebottle.utils.serializers import (
     RelatedResourcePermissionField,
 )
 from bluebottle.utils.fields import SafeField
-from bluebottle.utils.permissions import ResourceOwnerPermission
 from bluebottle.projects.permissions import (
     CanExportSupportersPermission
 )

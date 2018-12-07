@@ -11,6 +11,7 @@ class StripePayment(Payment):
     source_token = models.CharField(max_length=100, null=True, help_text=_("Source token obtained in front-end."))
     charge_token = models.CharField(max_length=100, null=True, help_text=_("Charge token at Stripe."))
     amount = models.IntegerField(null=True, help_text=_("Payment amount in smallest units (e.g. cents)."))
+    currency = models.CharField(max_length=3, default='EUR')
     description = models.CharField(max_length=300, null=True)
 
     data = models.TextField(null=True)

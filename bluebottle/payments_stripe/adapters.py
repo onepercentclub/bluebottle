@@ -1,3 +1,4 @@
+import json
 import logging
 
 import stripe
@@ -15,54 +16,75 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
     status_mapping = {
         'succeeded': StatusDefinition.SETTLED,
+        'pending': StatusDefinition.PENDING,
+        'failed': StatusDefinition.FAILED,
 
     }
-    source = None
 
     def __init__(self, order_payment):
         self.live_mode = getattr(properties, 'LIVE_PAYMENTS_ENABLED', False)
         self.order_payment = order_payment
-        stripe.api_key = self.credentials['secret_key']
         super(StripePaymentAdapter, self).__init__(order_payment)
 
     def _get_mapped_status(self, status):
         return self.status_mapping[status]
 
     def create_payment(self):
-        payment = StripePayment(order_payment=self.order_payment, **self.order_payment.card_data)
-        payment.save()
+        chargeable = self.order_payment.card_data.pop('chargeable', False)
+        self.payment = StripePayment(order_payment=self.order_payment, **self.order_payment.card_data)
+        self.payment.save()
 
-        if not self.source:
-            self.source = stripe.Source.retrieve(payment.source_token)
-        # Check if we should redirect the user
-        if self.source['flow'] != 'redirect':
+        if chargeable:
+            self.charge()
+
+        return self.payment
+
+    def charge(self):
+        if not self.payment.charge_token:
             charge = stripe.Charge.create(
-                amount=payment.amount,
-                currency=payment.currency,
-                description=payment.description,
-                source=payment.source_token
+                amount=self.payment.amount,
+                currency=self.payment.currency,
+                description=self.payment.description,
+                source=self.payment.source_token,
+                api_key=self.credentials['secret_key']
             )
-            payment.charge = charge.id
-            payment.data = charge
-            payment.status = self._get_mapped_status(charge['status'])
-        payment.save()
+            self.payment.charge_token = charge.id
+            self.update_from_charge(charge)
 
-        return payment
+    def update_from_charge(self, charge):
+        self.payment.data = json.loads(unicode(charge))
+        self.payment.status = self._get_mapped_status(charge.status)
+
+        if charge.refunded:
+            self.payment.status = StatusDefinition.REFUNDED
+
+        self.payment.save()
 
     def check_payment_status(self):
-        pass
+        if self.payment.charge_token:
+            charge = stripe.Charge.retrieve(
+                self.payment.charge_token,
+                api_key=self.credentials['secret_key']
+            )
+            self.update_from_charge(charge)
 
     def refund_payment(self):
-        pass
+        stripe.Refund.create(
+            charge=self.payment.charge_token,
+            api_key=self.credentials['secret_key']
+        )
+        self.payment.status = StatusDefinition.REFUND_REQUESTED
+        self.payment.save()
 
     def get_authorization_action(self):
-        if self.payment.status == StatusDefinition.SETTLED:
-            return {
-                'type': 'success'
-            }
-
-        if not self.source:
-            self.source = stripe.Source.retrieve(self.payment.source_token)
-        # Check if we should redirect the user
-        if self.source['flow'] == 'redirect':
-            return {'type': 'redirect', 'method': 'get', 'url': self.source['redirect']['url']}
+        if not self.payment.charge_token:
+            source = stripe.Source.retrieve(
+                self.payment.source_token,
+                api_key=self.credentials['secret_key']
+            )
+            # Check if we should redirect the user
+            if source['flow'] == 'redirect':
+                return {'type': 'redirect', 'method': 'get', 'url': source['redirect']['url']}
+        return {
+            'type': 'success'
+        }

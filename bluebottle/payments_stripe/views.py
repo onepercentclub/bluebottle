@@ -1,8 +1,10 @@
 from django.http import HttpResponse
 from django.views.generic import View
 
+import stripe
+
 from bluebottle.payments.services import PaymentService
-from bluebottle.payments.models import OrderPayment
+from bluebottle.payments_stripe.utils import get_webhook_secret
 
 from .models import StripePayment
 
@@ -11,25 +13,33 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class PaymentStatusUpdateView(View):
-    def get(self, request, **kwargs):
-        merchant_order_id = kwargs['merchant_order_id']
+class WebHookView(View):
+    def post(self, request, **kwargs):
+        payload = request.body
+        signature_header = request.META['HTTP_STRIPE_SIGNATURE']
+
         try:
-            # Try to load new style OrderPayment
-            order_payment_id = merchant_order_id.split('-')[0]
-            order_payment = OrderPayment.objects.get(pk=order_payment_id)
-        except OrderPayment.DoesNotExist:
-            # Try to load old style DocdataPayment.
-            try:
-                payment = StripePayment.objects.get(
-                    merchant_order_id=merchant_order_id)
-                order_payment = payment.order_payment
-            except StripePayment.DoesNotExist:
-                raise Exception(
-                    "Couldn't find Payment for merchant_order_id: {0}".format(
-                        merchant_order_id))
+            event = stripe.Webhook.construct_event(
+                payload, signature_header, get_webhook_secret()
+            )
 
-        service = PaymentService(order_payment)
-        service.check_payment_status()
+            if event.type == 'source.chargeable':
+                payment = StripePayment.objects.get(source_token=event.data.object.id)
 
-        return HttpResponse('success')
+                service = PaymentService(payment.order_payment)
+
+                service.adapter.charge()
+            elif event.type in (
+                'charge.succeeded', 'charge.pending', 'charge.failed', 'charge.refunded',
+            ):
+                payment = StripePayment.objects.get(charge_token=event.data.object.id)
+                service = PaymentService(payment.order_payment)
+                service.adapter.update_from_charge(event.data.object)
+        except stripe.error.SignatureVerificationError:
+            # Invalid signature
+            return HttpResponse(status=400)
+        except StripePayment.DoesNotExist:
+            # Invalid signature
+            return HttpResponse(status=400)
+
+        return HttpResponse(status=200)

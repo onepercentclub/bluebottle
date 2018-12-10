@@ -27,7 +27,7 @@ from select_multiple_field.models import SelectMultipleField
 from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.bb_projects.models import (
-    BaseProject, ProjectPhase, BaseProjectDocument
+    BaseProject, ProjectPhase
 )
 from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
@@ -36,7 +36,7 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.models import BasePlatformSettings
-from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin, reverse_signed
+from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     Wallpost, MediaWallpostPhoto, MediaWallpost, TextWallpost
 )
@@ -100,24 +100,6 @@ class ProjectPhaseLog(models.Model):
         @staticmethod
         def timestamp(obj, created):
             return obj.start
-
-
-class ProjectDocument(BaseProjectDocument):
-    @property
-    def document_url(self):
-        # pk may be unset if not saved yet, in which case no url can be
-        # generated.
-        if self.pk is not None and self.file:
-            return reverse_signed('project-document-file', args=(self.pk,))
-        return None
-
-    @property
-    def owner(self):
-        return self.project.owner
-
-    @property
-    def parent(self):
-        return self.project
 
 
 class Project(BaseProject, PreviousStatusMixin):
@@ -201,16 +183,6 @@ class Project(BaseProject, PreviousStatusMixin):
                                      choices=PAYOUT_STATUS_CHOICES)
     wallposts = GenericRelation(Wallpost, related_query_name='project_wallposts')
     objects = UpdateSignalsQuerySet.as_manager()
-
-    bank_details_reviewed = models.BooleanField(
-        _('Bank details reviewed'),
-        help_text=_(
-            'Review the project documents before marking the bank details as reviewed.'
-            'After setting this project to running, the project documents will be deleted.'
-            'Also, make sure to remove the documents from your device after downloading them.'
-        ),
-        default=False
-    )
 
     def __unicode__(self):
         if self.title:
@@ -367,8 +339,8 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.status.slug not in (
                 'plan-new', 'plan-submitted', 'plan-needs-work',
         ):
-            for document in self.documents.all():
-                document.delete()
+            if hasattr(self.payout_account, 'document') and self.payout_account.document:
+                self.payout_account.document.delete()
 
         # Set all task.author to project.task_manager
         self.task_set.exclude(author=self.task_manager).update(author=self.task_manager)
@@ -623,16 +595,6 @@ class Project(BaseProject, PreviousStatusMixin):
             ('api_change_own_project', 'Can change own projects through the API'),
             ('api_change_own_running_project', 'Can change own running projects through the API'),
             ('api_delete_own_project', 'Can delete own projects through the API'),
-
-            ('api_read_projectdocument', 'Can view project documents through the API'),
-            ('api_add_projectdocument', 'Can add project documents through the API'),
-            ('api_change_projectdocument', 'Can change project documents through the API'),
-            ('api_delete_projectdocument', 'Can delete project documents through the API'),
-
-            ('api_read_own_projectdocument', 'Can view project own documents through the API'),
-            ('api_add_own_projectdocument', 'Can add own project documents through the API'),
-            ('api_change_own_projectdocument', 'Can change own project documents through the API'),
-            ('api_delete_own_projectdocument', 'Can delete own project documents through the API'),
 
             ('api_read_projectbudgetline', 'Can view project budget lines through the API'),
             ('api_add_projectbudgetline', 'Can add project budget lines through the API'),

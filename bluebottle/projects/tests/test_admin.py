@@ -27,6 +27,7 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
+from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory
 from bluebottle.test.utils import BluebottleTestCase, override_settings, BluebottleAdminTestCase
 
 
@@ -654,10 +655,12 @@ class ProjectAdminFormTest(BluebottleTestCase):
         parameters = widget.url_parameters()
         self.assertTrue(parameters['is_staff'], True)
 
-    def test_bank_details_reviewed(self):
+    def test_payout_account_reviewed(self):
         self.form.cleaned_data = {
             'status': ProjectPhase.objects.get(slug='campaign'),
-            'bank_details_reviewed': False,
+            'payout_account': PlainPayoutAccountFactory.create(
+                reviewed=False
+            ),
             'amount_asked': Money(100, 'EUR')
         }
         with self.assertRaises(ValidationError) as error:
@@ -668,10 +671,12 @@ class ProjectAdminFormTest(BluebottleTestCase):
             'The bank details need to be reviewed before approving a project'
         )
 
-    def test_bank_details_reviewed_no_amount(self):
+    def test_payout_account_reviewed_no_amount(self):
         self.form.cleaned_data = {
             'status': ProjectPhase.objects.get(slug='campaign'),
-            'bank_details_reviewed': False,
+            'payout_account': PlainPayoutAccountFactory.create(
+                reviewed=False
+            ),
         }
         self.form.clean()
 

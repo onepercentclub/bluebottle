@@ -30,7 +30,7 @@ from bluebottle.test.factory_models.geo import CountryFactory, LocationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectDocumentFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import (
     TaskFactory, TaskMemberFactory, SkillFactory
 )
@@ -868,7 +868,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         self.manage_projects_url = reverse('project_manage_list')
         self.manage_budget_lines_url = reverse('project-budgetline-list')
-        self.manage_project_document_url = reverse('manage_project_document_list')
 
         self.some_photo = './bluebottle/projects/test_images/upload.png'
 
@@ -1236,110 +1235,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED, response)
         self.assertEquals(response.data['project_type'], 'funding',
                           'Project should use project_type if defined')
-
-    def test_project_document_upload(self):
-        project = ProjectFactory.create(title="testproject",
-                                        slug="testproject",
-                                        owner=self.some_user,
-                                        status=ProjectPhase.objects.get(
-                                            slug='plan-new'))
-
-        photo_file = open(self.some_photo, mode='rb')
-        response = self.client.post(self.manage_project_document_url,
-                                    {'file': photo_file, 'project': project.slug},
-                                    token=self.some_user_token, format='multipart')
-
-        self.assertEqual(response.status_code, 201)
-        data = json.loads(response.content)
-
-        self.assertTrue(
-            data['file']['url'].startswith('/downloads/project/document')
-        )
-        self.assertTrue(
-            project.documents.all()[0].file
-        )
-
-    def test_project_document_download(self):
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        response = self.client.get(file_url)
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_project_document_download_signed(self):
-        project = ProjectFactory(owner=self.some_user)
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            project=project,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        signature = self.signer.sign(file_url)
-        response = self.client.get(
-            '{}?{}'.format(file_url, urlencode({'signature': signature})),
-            token=self.some_user_token
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
-        )
-
-    def test_project_document_download_no_signature(self):
-        project = ProjectFactory(owner=self.some_user)
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            project=project,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        response = self.client.get(
-            file_url,
-            token=self.some_user_token
-        )
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_project_document_download_invalid_signature(self):
-        project = ProjectFactory(owner=self.some_user)
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            project=project,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        signature = 'bla:bli'
-        response = self.client.get(
-            '{}?{}'.format(file_url, urlencode({'signature': signature})),
-            token=self.some_user_token
-        )
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_project_document_delete_author(self):
-        project = ProjectFactory(owner=self.some_user)
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            project=project,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('manage_project_document_detail', args=[document.pk])
-        response = self.client.delete(file_url, token=self.some_user_token)
-
-        self.assertEqual(response.status_code, 204)
-
-    def test_project_document_delete_non_author(self):
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('manage_project_document_detail', args=[document.pk])
-        response = self.client.delete(file_url, token=self.another_user_token)
-
-        self.assertEqual(response.status_code, 403)
 
     def test_create_project_contains_empty_bank_details(self):
         """ Create project with bank details. Ensure they are returned """

@@ -148,7 +148,7 @@ class TestOrderPaymentPermissions(BluebottleTestCase):
 
         response = self.client.get(
             reverse('payment-method-list'),
-            {'project_id': project.pk}
+            {'project_id': project.slug}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 2)
@@ -188,7 +188,7 @@ class TestOrderPaymentPermissions(BluebottleTestCase):
 
         response = self.client.get(
             reverse('payment-method-list'),
-            {'project_id': project.pk}
+            {'project_id': project.slug}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 2)

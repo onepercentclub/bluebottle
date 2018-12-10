@@ -54,5 +54,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_payout_details, remove_payout_accounts)
+        migrations.RunSQL(
+            'SET CONSTRAINTS ALL IMMEDIATE',
+            reverse_sql=migrations.RunSQL.noop
+        ),
+        migrations.RunPython(migrate_payout_details, remove_payout_accounts),
+        migrations.RunSQL(
+            migrations.RunSQL.noop,
+            reverse_sql='SET CONSTRAINTS ALL IMMEDIATE'
+        ),
+
     ]

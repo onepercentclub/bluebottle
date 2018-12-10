@@ -464,7 +464,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'deadline',
                   'campaign_duration',
                   'description',
-                  'documents',
                   'editable',
                   'image',
                   'is_funding',

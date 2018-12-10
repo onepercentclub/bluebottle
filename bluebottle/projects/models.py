@@ -596,16 +596,6 @@ class Project(BaseProject, PreviousStatusMixin):
             ('api_change_own_running_project', 'Can change own running projects through the API'),
             ('api_delete_own_project', 'Can delete own projects through the API'),
 
-            ('api_read_projectdocument', 'Can view project documents through the API'),
-            ('api_add_projectdocument', 'Can add project documents through the API'),
-            ('api_change_projectdocument', 'Can change project documents through the API'),
-            ('api_delete_projectdocument', 'Can delete project documents through the API'),
-
-            ('api_read_own_projectdocument', 'Can view project own documents through the API'),
-            ('api_add_own_projectdocument', 'Can add own project documents through the API'),
-            ('api_change_own_projectdocument', 'Can change own project documents through the API'),
-            ('api_delete_own_projectdocument', 'Can delete own project documents through the API'),
-
             ('api_read_projectbudgetline', 'Can view project budget lines through the API'),
             ('api_add_projectbudgetline', 'Can add project budget lines through the API'),
             ('api_change_projectbudgetline', 'Can change project budget lines through the API'),

@@ -17,9 +17,4 @@ class Migration(migrations.Migration):
             model_name='project',
             name='bank_details_reviewed',
         ),
-        migrations.AlterField(
-            model_name='projectcreatetemplate',
-            name='default_amount_asked',
-            field=bluebottle.utils.fields.MoneyField(blank=True, currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=None, max_digits=12, null=True),
-        ),
     ]

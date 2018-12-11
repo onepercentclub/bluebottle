@@ -15,6 +15,7 @@ def add_group_permissions(apps, schema_editor):
                 'delete_stripepayoutaccount',
                 'add_plainpayoutaccount', 'change_plainpayoutaccount',
                 'delete_plainpayoutaccount',
+                'add_payoutdocument', 'change_payoutdocument', 'delete_payoutdocument',
             )
         },
     }

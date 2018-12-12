@@ -9,7 +9,10 @@ from bluebottle.utils.utils import reverse_signed
 
 class PlainPayoutAccount(PayoutAccount):
 
-    type = 'payout-plain'
+    type = 'plain'
+    providers = [
+        'docdata', 'pledge', 'flutterwave', 'lipisha', 'vitepay', 'pledge', 'telesom',
+    ]
 
     account_holder_name = models.CharField(
         _("account holder name"), max_length=100, null=True, blank=True)
@@ -30,7 +33,16 @@ class PlainPayoutAccount(PayoutAccount):
         'geo.Country', blank=True, null=True,
         related_name="payout_account_bank_country")
 
-    document = models.ForeignKey('payouts.PayoutDocument', null=True, blank=True)
+    document = models.ForeignKey('payouts.PayoutDocument', models.SET_NULL, null=True, blank=True)
+    reviewed = models.BooleanField(
+        _('Reviewed'),
+        help_text=_(
+            'Review the project documents before marking the account as reviewed.'
+            'After setting the project to running, the account documents will be deleted.'
+            'Also, make sure to remove the documents from your device after downloading them.'
+        ),
+        default=False
+    )
 
     def __unicode__(self):
         return "{}: {}".format(_("Bank details"), self.account_holder_name)
@@ -51,8 +63,6 @@ class PayoutDocument(models.Model):
     author = models.ForeignKey('members.Member', verbose_name=_('author'), blank=True, null=True)
     created = models.DateField(_('created'), auto_now_add=True)
     updated = models.DateField(_('updated'), auto_now=True)
-
-    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
 
     ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True, default=None)
 

@@ -48,9 +48,8 @@ from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapP
     TranslatedUnionFieldListFilter, log_action
 from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
 from bluebottle.votes.models import Vote
-from .forms import ProjectDocumentForm
 from .models import (ProjectBudgetLine, Project,
-                     ProjectDocument, ProjectPhaseLog)
+                     ProjectPhaseLog)
 from .tasks import refund_project
 
 logger = logging.getLogger(__name__)
@@ -109,25 +108,6 @@ class ProjectReviewerFilter(admin.SimpleListFilter):
             )
         else:
             return queryset
-
-
-class ProjectDocumentInline(admin.StackedInline):
-    model = ProjectDocument
-    form = ProjectDocumentForm
-    extra = 0
-    raw_id_fields = ('author',)
-    readonly_fields = ('download_url',)
-    fields = readonly_fields + ('file', 'author')
-
-    def download_url(self, obj):
-        url = obj.document_url
-
-        if url is not None:
-            return format_html(
-                u"<a href='{}'>{}</a>",
-                str(url), 'Download'
-            )
-        return '(None)'
 
 
 class RewardInlineFormset(forms.models.BaseInlineFormSet):
@@ -249,15 +229,16 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
                     self.initial[field.slug] = value
 
     def clean(self):
+        super(ProjectAdminForm, self).clean()
         if 'status' in self.cleaned_data and \
                 self.cleaned_data['status'].slug == 'campaign' and \
                 'amount_asked' in self.cleaned_data and \
                 self.cleaned_data['amount_asked'].amount > 0 and \
-                not self.cleaned_data['bank_details_reviewed']:
+                hasattr(self.cleaned_data['payout_account'], 'reviewed') and \
+                not self.cleaned_data['payout_account'].reviewed:
             raise forms.ValidationError(
                 _('The bank details need to be reviewed before approving a project')
             )
-        super(ProjectAdminForm, self).clean()
 
     def save(self, commit=True):
         project = super(ProjectAdminForm, self).save(commit=commit)
@@ -354,12 +335,10 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ProjectBudgetLineInline,
         RewardInlineAdmin,
         TaskAdminInline,
-        ProjectDocumentInline,
         ProjectPhaseLogInline
     )
     sourcing_inlines = (
         ProjectLocationInline,
-        ProjectDocumentInline,
         TaskAdminInline,
         ProjectPhaseLogInline
     )

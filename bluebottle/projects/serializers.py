@@ -413,16 +413,14 @@ class ManageProjectSerializer(serializers.ModelSerializer):
             instance.projectlocation.save()
 
         if 'payout_account' in validated_data:
-            payout_account = validated_data.pop('payout_account')
-            if instance.payout_account and instance.payout_account.type == payout_account['type']:
-                for field, value in payout_account.items():
-                    setattr(instance.payout_account, field, value)
-                    instance.payout_account.save()
-            else:
-                serializer = PayoutAccountSerializer(data=self.initial_data['payout_account'])
-                if serializer.is_valid():
-                    serializer.validated_data['user'] = self.context['request'].user
-                    instance.payout_account = serializer.save()
+            validated_data.pop('payout_account')
+            serializer = PayoutAccountSerializer(
+                data=self.initial_data['payout_account'],
+                instance=instance.payout_account
+            )
+            if serializer.is_valid():
+                serializer.validated_data['user'] = self.context['request'].user
+                instance.payout_account = serializer.save()
 
         return super(ManageProjectSerializer, self).update(instance, validated_data)
 

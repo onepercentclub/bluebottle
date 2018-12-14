@@ -57,45 +57,70 @@ class PlainPayoutAccountSerializer(serializers.ModelSerializer):
 
 class StripePayoutAccountSerializer(serializers.ModelSerializer):
     account_token = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    bank_account_token = serializers.CharField(write_only=True, required=False, allow_blank=True)
     account_id = serializers.CharField(read_only=True)
 
-    external_data = serializers.SerializerMethodField()
+    legal_entity = serializers.SerializerMethodField()
+    bank_account = serializers.SerializerMethodField()
 
-    def get_external_data(self, obj):
-        return stripe.Account.retrieve(
-            obj.account_id, api_key=get_secret_key()
-        ).to_dict()
+    def get_legal_entity(self, obj):
+        try:
+            return stripe.Account.retrieve(
+                obj.account_id, api_key=get_secret_key()
+            ).legal_entity.to_dict()
+        except AttributeError:
+            return {}
 
-    def create(self, data):
+    def get_bank_account(self, obj):
+        try:
+            return stripe.Account.retrieve(
+                obj.account_id, api_key=get_secret_key()
+            ).external_accounts.data[0].to_dict()
+        except AttributeError:
+            return {}
+
+    def create_stripe_account(self, data):
         account_token = data.pop('account_token', None)
         if account_token:
+            secret_key = get_secret_key()
             account = stripe.Account.create(
                 account_token=account_token,
                 country=data['country'],
                 type='custom',
-                api_key=get_secret_key()
+                payout_schedule={'interval': 'manual'},
+                api_key=secret_key
             )
-            data['account_id'] = account.id
 
+            data['account_id'] = account.id
+            return account
+
+    def update_stripe_account(self, instance, account, data):
+        account_token = data.pop('account_token', None)
+        if account_token:
+            account.account_token = account_token
+            account.save()
+
+    def set_stripe_bank_account(self, account, data):
+        bank_account_token = data.pop('bank_account_token', None)
+        if bank_account_token:
+            account.external_account = bank_account_token
+            account.save()
+
+    def create(self, data):
+        account = self.create_stripe_account(data)
+        self.set_stripe_bank_account(account, data)
         return super(StripePayoutAccountSerializer, self).create(data)
 
     def update(self, instance, data):
-        account_token = data.pop('account_token', None)
-        if account_token:
-            secret_key = get_secret_key()
-            if instance.account_id:
-                account = stripe.Account.retrieve(instance.account_id, api_key=secret_key)
-                account.account_token = account_token
-                response = account.save()
-            else:
-                response = stripe.Account.create(
-                    account_token=account_token,
-                    country=data['country'],
-                    type='custom',
-                    api_key=secret_key
-                )
-                data['account_id'] = response.id
+        secret_key = get_secret_key()
+        if instance.account_id:
+            account = stripe.Account.retrieve(instance.account_id, api_key=secret_key)
+            self.update_stripe_account(instance, account, data)
+        else:
+            account = self.create_stripe_account(data)
+            import ipdb; ipdb.set_trace()
 
+        self.set_stripe_bank_account(account, data)
         return super(StripePayoutAccountSerializer, self).update(instance, data)
 
     class Meta:
@@ -103,10 +128,12 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'account_token',
+            'bank_account_token',
             'country',
             'account_id',
             'verified',
-            'external_data',
+            'bank_account',
+            'legal_entity',
         )
 
 

@@ -6,7 +6,7 @@ from django.utils import timezone
 import factory
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
-from bluebottle.projects.models import Project, ProjectDocument, ProjectLocation
+from bluebottle.projects.models import Project, ProjectLocation
 
 from .accounts import BlueBottleUserFactory
 from .geo import CountryFactory
@@ -69,11 +69,3 @@ class ProjectFactory(factory.DjangoModelFactory):
     account_holder_postal_code = '1234ab'
     account_holder_city = 'test'
     account_holder_country = factory.SubFactory(CountryFactory)
-
-
-class ProjectDocumentFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = ProjectDocument
-
-    author = factory.SubFactory(BlueBottleUserFactory)
-    project = factory.SubFactory(ProjectFactory)

@@ -118,7 +118,6 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
             self.update_stripe_account(instance, account, data)
         else:
             account = self.create_stripe_account(data)
-            import ipdb; ipdb.set_trace()
 
         self.set_stripe_bank_account(account, data)
         return super(StripePayoutAccountSerializer, self).update(instance, data)

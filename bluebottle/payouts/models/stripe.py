@@ -1,13 +1,16 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+import stripe
+
 from bluebottle.payouts.models import PayoutAccount
 
 
 class StripePayoutAccount(PayoutAccount):
     type = 'stripe'
 
-    account_token = models.CharField(max_length=100, null=True, blank=True)
+    account_id = models.CharField(max_length=100, null=True, blank=True)
+    country = models.CharField(max_length=2, null=True, blank=True)
     verified = models.DateField(null=True, blank=True)
     providers = [
         'stripe', 'pledge',
@@ -25,5 +28,7 @@ class StripePayoutAccount(PayoutAccount):
     failed_keyed_identity, the supplied identity information could not be verified
     failed_other, verification failed for another reason
     """
-    verification_error = models.CharField(max_length=100, null=True, blank=True,
-                                          help_text=_("Reason why verification has failed"))
+    verification_error = models.CharField(
+        max_length=100, null=True, blank=True,
+        help_text=_("Reason why verification has failed")
+    )

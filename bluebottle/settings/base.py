@@ -202,6 +202,7 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_mock', '/payments_interswitch',
                           '/payments_vitepay', '/payments_flutterwave',
                           '/payments_lipisha', '/payments_beyonic',
+                          '/payments_stripe',
                           '/media', '/downloads',
                           '/surveys', '/token', '/jet')
 
@@ -360,6 +361,7 @@ TENANT_APPS = (
     'bluebottle.payments_lipisha',
     'bluebottle.payments_logger',
     'bluebottle.payments_pledge',
+    'bluebottle.payments_stripe',
     'bluebottle.payments_telesom',
     'bluebottle.payments_vitepay',
     'bluebottle.payments_voucher',

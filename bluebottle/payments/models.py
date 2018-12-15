@@ -280,7 +280,8 @@ class OrderPayment(models.Model, FSMTransition):
 
     @property
     def info_text(self):
-        """ The description on the payment receipt.
+        """
+        The description on the payment receipt.
         """
         tenant_url = clients.utils.tenant_site().domain
 

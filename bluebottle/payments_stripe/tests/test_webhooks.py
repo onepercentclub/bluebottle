@@ -23,6 +23,7 @@ MERCHANT_ACCOUNTS = [
     }
 ]
 
+
 PAYMENT_METHODS = (
     {
         'provider': 'stripe',
@@ -32,6 +33,7 @@ PAYMENT_METHODS = (
         'currencies': {'EUR': {'min_amount': 5, 'max_amount': 1000}}
     },
 )
+
 
 @override_settings(
     MERCHANT_ACCOUNTS=MERCHANT_ACCOUNTS,

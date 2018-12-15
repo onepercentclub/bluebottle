@@ -1,9 +1,7 @@
 from mock import patch
-import json
 import os
 from decimal import Decimal
 from moneyed import Money
-from collections import namedtuple
 
 from django.test.utils import override_settings
 from django.conf import settings

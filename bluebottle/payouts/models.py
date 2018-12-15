@@ -10,6 +10,7 @@ from polymorphic.models import PolymorphicModel
 
 from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
 from bluebottle.clients import properties
+from bluebottle.projects.models import Project
 
 from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.utils import reverse_signed
@@ -67,6 +68,10 @@ class PayoutAccount(PolymorphicModel):
         ),
         default=False
     )
+
+    @property
+    def projects(self):
+        return Project.objects.filter(payout_account=self).all()
 
     class Meta:
         permissions = (

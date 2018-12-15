@@ -1,6 +1,9 @@
+from mock import patch
+import json
 import os
 from decimal import Decimal
 from moneyed import Money
+from collections import namedtuple
 
 from django.test.utils import override_settings
 from django.conf import settings
@@ -11,11 +14,49 @@ from bluebottle.donations.models import Donation
 from bluebottle.payouts.models import ProjectPayout
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.test.factory_models.payouts import ProjectPayoutFactory
+from bluebottle.test.factory_models.payouts import ProjectPayoutFactory, StripePayoutAccountFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
-from bluebottle.utils.utils import StatusDefinition
+from bluebottle.utils.utils import StatusDefinition, json2obj
 from bluebottle.test.factory_models.projects import ProjectFactory
+
+MERCHANT_ACCOUNTS = [
+    {
+        'merchant': 'stripe',
+        'currency': 'EUR',
+        'secret_key': 'sk_test_secret_key',
+        'webhook_secret': 'whsec_test_webhook_secret'
+    }
+]
+
+
+@override_settings(MERCHANT_ACCOUNTS=MERCHANT_ACCOUNTS)
+class StripePayoutAccountTestCase(BluebottleTestCase):
+
+    def setUp(self):
+        super(StripePayoutAccountTestCase, self).setUp()
+        self.init_projects()
+        self.payout_account = StripePayoutAccountFactory.create(account_id='acct_0000000123')
+
+    @patch('bluebottle.payouts.models.stripe.Account.retrieve')
+    def test_check_status(self, stripe_retrieve):
+        stripe_retrieve.return_value = json2obj(
+            open(os.path.dirname(__file__) + '/data/stripe_account_verified.json').read()
+        )
+        self.assertIsNone(self.payout_account.verified)
+        self.payout_account.check_status()
+        self.payout_account.refresh_from_db()
+        self.assertIsNotNone(self.payout_account.verified)
+
+    @patch('bluebottle.payouts.models.stripe.Account.retrieve')
+    def test_check_status_unverified(self, stripe_retrieve):
+        stripe_retrieve.return_value = json2obj(
+            open(os.path.dirname(__file__) + '/data/stripe_account_unverified.json').read()
+        )
+        self.assertIsNone(self.payout_account.verified)
+        self.payout_account.check_status()
+        self.payout_account.refresh_from_db()
+        self.assertIsNone(self.payout_account.verified)
 
 
 class PayoutBaseTestCase(BluebottleTestCase):
@@ -57,8 +98,9 @@ class PayoutBaseTestCase(BluebottleTestCase):
 
 
 @override_settings(
-    MULTI_TENANT_DIR=os.path.join(settings.PROJECT_ROOT, 'bluebottle', 'test',
-                                  'properties'))
+    MULTI_TENANT_DIR=os.path.join(
+        settings.PROJECT_ROOT, 'bluebottle', 'test', 'properties')
+)
 class PayoutTestCase(PayoutBaseTestCase):
     """ Test case for Payouts. """
 

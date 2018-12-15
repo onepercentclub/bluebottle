@@ -99,7 +99,7 @@ class StripePayoutAccount(PayoutAccount):
     )
 
     def check_status(self):
-        if self.account_details.status == 'verified':
+        if self.account_details.verification.status == 'verified':
             if not self.verified:
                 self.verified = now()
         else:

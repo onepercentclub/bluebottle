@@ -101,6 +101,15 @@ class StripePayoutAccount(PayoutAccount):
     def account(self):
         return stripe.Account.retrieve(self.account_id, api_key=get_secret_key())
 
+    def bank_details(self):
+        return self.account.external_accounts.data[0]
+
+    def account_details(self):
+        return self.account.legal_entity
+
+    def verification(self):
+        return self.account.verification
+
 
 class PlainPayoutAccount(PayoutAccount):
 

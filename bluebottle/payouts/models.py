@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django.db import models
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -12,7 +13,6 @@ from bluebottle.clients import properties
 from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.utils import reverse_signed
 
-from django.utils.translation import ugettext_lazy as _
 from bluebottle.payments_stripe.utils import get_secret_key
 
 import stripe
@@ -97,7 +97,7 @@ class StripePayoutAccount(PayoutAccount):
         help_text=_("Reason why verification has failed")
     )
 
-    @property
+    @cached_property
     def account(self):
         return stripe.Account.retrieve(self.account_id, api_key=get_secret_key())
 

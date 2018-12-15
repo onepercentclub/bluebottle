@@ -123,7 +123,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
             'bank_account_token',
             'country',
             'account_id',
-            'verified',
+            'reviewed',
             'bank_account',
             'legal_entity',
         )

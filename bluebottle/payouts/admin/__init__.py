@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 class PayoutAccountAdmin(PolymorphicParentModelAdmin):
     base_model = PayoutAccount
-    list_display = ('created', 'polymorphic_ctype', )
+    list_display = ('created', 'polymorphic_ctype', 'reviewed')
     raw_id_fields = ('user', )
 
     ordering = ('-created',)

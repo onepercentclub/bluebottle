@@ -57,6 +57,17 @@ class PayoutAccount(PolymorphicModel):
     updated = models.DateField(auto_now=True)
     user = models.ForeignKey('members.Member')
 
+    reviewed = models.BooleanField(
+        _('Reviewed'),
+        help_text=_(
+            'Review the project documents before marking the account as reviewed.'
+            'After setting the project to running, the account documents will be deleted.'
+            'Also, make sure to remove the documents from your device after downloading them.'
+            'In case of Euro and USD projects the documents will be reviewed by Stripe.'
+        ),
+        default=False
+    )
+
     class Meta:
         permissions = (
             ('api_read_payoutdocument', 'Can view payout documents through the API'),
@@ -76,7 +87,7 @@ class StripePayoutAccount(PayoutAccount):
 
     account_id = models.CharField(max_length=100, null=True, blank=True)
     country = models.CharField(max_length=2, null=True, blank=True)
-    verified = models.DateField(null=True, blank=True)
+
     providers = [
         'stripe', 'pledge',
     ]
@@ -100,10 +111,9 @@ class StripePayoutAccount(PayoutAccount):
 
     def check_status(self):
         if self.account_details.verification.status == 'verified':
-            if not self.verified:
-                self.verified = now()
+            self.reviewed = True
         else:
-            self.verified = None
+            self.reviewed = False
         self.save()
 
     @cached_property
@@ -155,15 +165,6 @@ class PlainPayoutAccount(PayoutAccount):
         related_name="payout_account_bank_country")
 
     document = models.ForeignKey('payouts.PayoutDocument', models.SET_NULL, null=True, blank=True)
-    reviewed = models.BooleanField(
-        _('Reviewed'),
-        help_text=_(
-            'Review the project documents before marking the account as reviewed.'
-            'After setting the project to running, the account documents will be deleted.'
-            'Also, make sure to remove the documents from your device after downloading them.'
-        ),
-        default=False
-    )
 
     def __unicode__(self):
         return "{}: {}".format(_("Bank details"), self.account_holder_name)

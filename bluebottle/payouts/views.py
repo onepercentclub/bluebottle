@@ -1,4 +1,4 @@
-from bluebottle.payouts.models.plain import PayoutDocument
+from bluebottle.payouts.models import PayoutDocument
 from bluebottle.payouts.serializers import PayoutDocumentSerializer
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
 from bluebottle.utils.utils import get_client_ip

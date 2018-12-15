@@ -5,8 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from polymorphic.admin import PolymorphicChildModelAdmin
 
-from bluebottle.payouts.models import PayoutAccount
-from bluebottle.payouts.models.plain import PlainPayoutAccount, PayoutDocument
+from bluebottle.payouts.models import PayoutAccount, PlainPayoutAccount, PayoutDocument
 from bluebottle.projects.forms import UploadWidget
 
 

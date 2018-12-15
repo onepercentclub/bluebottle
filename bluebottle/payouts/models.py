@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.db import models
 from django.utils.functional import cached_property
+from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from djchoices.choices import DjangoChoices, ChoiceItem
@@ -97,18 +98,33 @@ class StripePayoutAccount(PayoutAccount):
         help_text=_("Reason why verification has failed")
     )
 
+    def check_status(self):
+        if self.account_details.status == 'verified':
+            if not self.verified:
+                self.verified = now()
+        else:
+            self.verified = None
+        self.save()
+
     @cached_property
     def account(self):
         return stripe.Account.retrieve(self.account_id, api_key=get_secret_key())
 
+    @property
     def bank_details(self):
         return self.account.external_accounts.data[0]
 
+    @property
     def account_details(self):
         return self.account.legal_entity
 
+    @property
     def verification(self):
         return self.account.verification
+
+    @property
+    def fields_needed(self):
+        return self.account.verification.fields_needed
 
 
 class PlainPayoutAccount(PayoutAccount):

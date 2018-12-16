@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from djchoices.choices import DjangoChoices, ChoiceItem
 from polymorphic.models import PolymorphicModel
+from stripe.error import PermissionError
 
 from bluebottle.bb_payouts.models import BaseProjectPayout, BaseOrganizationPayout
 from bluebottle.clients import properties
@@ -123,7 +124,10 @@ class StripePayoutAccount(PayoutAccount):
 
     @cached_property
     def account(self):
-        return stripe.Account.retrieve(self.account_id, api_key=get_secret_key())
+        try:
+            return stripe.Account.retrieve(self.account_id, api_key=get_secret_key())
+        except PermissionError:
+            return {}
 
     @property
     def bank_details(self):

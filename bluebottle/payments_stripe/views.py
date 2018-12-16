@@ -1,15 +1,14 @@
+import logging
+import stripe
+
 from django.http import HttpResponse
 from django.views.generic import View
 
-import stripe
-
 from bluebottle.payments.services import PaymentService
 from bluebottle.payments_stripe.utils import get_webhook_secret
-from bluebottle.payouts.models import StripePayoutAccount
 
 from .models import StripePayment
 
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +23,7 @@ class WebHookView(View):
                 payload, signature_header, get_webhook_secret()
             )
 
-            if event.type == 'account.updated':
-                payout_account = StripePayoutAccount.objects.get(account_id=event.data.object.id)
-                payout_account.check_status()
-
-            elif event.type == 'source.chargeable':
+            if event.type == 'source.chargeable':
                 payment = StripePayment.objects.get(source_token=event.data.object.id)
                 service = PaymentService(payment.order_payment)
                 service.adapter.charge()
@@ -39,11 +34,10 @@ class WebHookView(View):
                 payment = StripePayment.objects.get(charge_token=event.data.object.id)
                 service = PaymentService(payment.order_payment)
                 service.adapter.update_from_charge(event.data.object)
-        except stripe.error.SignatureVerificationError:
+        except stripe.error.SignatureVerificationError as e:
             # Invalid signature
             return HttpResponse(status=400)
         except StripePayment.DoesNotExist:
-            # Invalid signature
+            # StripePayment not found
             return HttpResponse(status=400)
-
         return HttpResponse(status=200)

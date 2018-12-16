@@ -236,8 +236,11 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
                 self.cleaned_data['amount_asked'].amount > 0 and \
                 hasattr(self.cleaned_data['payout_account'], 'reviewed') and \
                 not self.cleaned_data['payout_account'].reviewed:
+            link_url = reverse('admin:payouts_payoutaccount_change',
+                               args=(self.cleaned_data['payout_account'].id,))
+            link = "<br/><a href='{}'>{}</a>".format(link_url, _("Review payout account"))
             raise forms.ValidationError(
-                _('The bank details need to be reviewed before approving a project')
+                format_html(_('The bank details need to be reviewed before approving a project') + link)
             )
 
     def save(self, commit=True):

@@ -29,7 +29,7 @@ class StripePayoutAccountAdmin(PolymorphicChildModelAdmin):
     def project_links(self, obj):
         return format_html(", ".join([
             "<a href='{}'>{}</a>".format(
-                reverse('admin:projects_project_change', args=(p.id, )), p.id
+                reverse('admin:projects_project_change', args=(p.id, )), p.title
             ) for p in obj.projects
         ]))
     project_links.short_description = _('Projects')

@@ -666,9 +666,9 @@ class ProjectAdminFormTest(BluebottleTestCase):
         with self.assertRaises(ValidationError) as error:
             self.form.clean()
 
-        self.assertEqual(
-            error.exception.message,
-            'The bank details need to be reviewed before approving a project'
+        self.assertTrue(
+            'The bank details need to be reviewed before approving a project' in
+            error.exception.message
         )
 
     def test_payout_account_reviewed_no_amount(self):

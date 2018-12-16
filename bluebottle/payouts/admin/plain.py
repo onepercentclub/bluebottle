@@ -56,4 +56,4 @@ class PlainPayoutAccountAdmin(PolymorphicChildModelAdmin):
                 reverse('admin:projects_project_change', args=(p.id, )), p.id
             ) for p in obj.projects
         ]))
-    project_links.short_dxescription = _('Projects')
+    project_links.short_description = _('Projects')

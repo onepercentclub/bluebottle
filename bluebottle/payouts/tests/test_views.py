@@ -12,7 +12,8 @@ MERCHANT_ACCOUNTS = [
         'merchant': 'stripe',
         'currency': 'EUR',
         'secret_key': 'sk_test_secret_key',
-        'webhook_secret': 'whsec_test_webhook_secret'
+        'webhook_secret': 'whsec_test_webhook_secret',
+        'webhook_secret_connect': 'whsec_test_webhook_secret_connect',
     }
 ]
 
@@ -51,7 +52,7 @@ class StripePayoutAccountUpdateTestCase(BluebottleTestCase):
                 'bluebottle.payouts.models.StripePayoutAccount.check_status'
             ) as check_status:
                 response = self.client.post(
-                    reverse('stripe-webhook'),
+                    reverse('stripe-webhook-connect'),
                     HTTP_STRIPE_SIGNATURE='some signature'
                 )
                 self.assertEqual(response.status_code, 200)

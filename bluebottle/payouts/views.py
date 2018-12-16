@@ -14,7 +14,7 @@ from bluebottle.utils.permissions import (
     OneOf, ResourcePermission, RelatedResourceOwnerPermission, IsAuthenticated
 )
 from bluebottle.utils.views import (
-ListCreateAPIView, RetrieveUpdateDestroyAPIView, OwnerListViewMixin, PrivateFileView
+    ListCreateAPIView, RetrieveUpdateDestroyAPIView, OwnerListViewMixin, PrivateFileView
 )
 
 
@@ -33,12 +33,10 @@ class WebHookView(View):
             if event.type == 'account.updated':
                 payout_account = StripePayoutAccount.objects.get(account_id=event.data.object.id)
                 payout_account.check_status()
-        except stripe.error.SignatureVerificationError as e:
+        except stripe.error.SignatureVerificationError:
             # Invalid signature
-            print 'sig error'
             return HttpResponse(status=400)
         except StripePayoutAccount.DoesNotExist:
-            print event
             # StripePayoutAccount not found
             return HttpResponse(status=400)
         return HttpResponse(status=200)

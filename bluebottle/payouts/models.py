@@ -130,6 +130,18 @@ class StripePayoutAccount(PayoutAccount):
             return {}
 
     @property
+    def short_details(self):
+        return {
+            "first name": self.account_details.first_name,
+            "last name": self.account_details.last_name,
+            "country": self.account_details.address.country,
+            "account holder name": self.bank_details.account_holder_name,
+            "account number": "*************{}".format(self.bank_details.last4) if self.bank_details.last4 else '',
+            "bank country": self.bank_details.country,
+            "currency": self.bank_details.currency,
+        }
+
+    @property
     def bank_details(self):
         return self.account.external_accounts.data[0]
 
@@ -143,7 +155,7 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def fields_needed(self):
-        return self.account.verification.fields_needed
+        return self.verification.fields_needed
 
 
 class PlainPayoutAccount(PayoutAccount):

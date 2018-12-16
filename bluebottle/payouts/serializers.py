@@ -1,12 +1,10 @@
 from rest_framework import serializers
+
 import stripe
 
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
-from bluebottle.clients import properties
-from bluebottle.payouts.models import PayoutAccount
-from bluebottle.payouts.models.plain import PlainPayoutAccount, PayoutDocument
-from bluebottle.payouts.models.stripe import StripePayoutAccount
 from bluebottle.payments_stripe.utils import get_secret_key
+from bluebottle.payouts.models import PayoutAccount, PlainPayoutAccount, PayoutDocument, StripePayoutAccount
 from bluebottle.utils.permissions import ResourceOwnerPermission
 
 
@@ -66,27 +64,20 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
 
     def get_legal_entity(self, obj):
         try:
-            legal_entity = stripe.Account.retrieve(
-                obj.account_id, api_key=get_secret_key()
-            ).legal_entity.to_dict()
-
+            legal_entity = obj.account.legal_entity.to_dict()
             return dict((key, value) for key, value in legal_entity.items() if key != 'verification')
         except AttributeError:
             return {}
 
     def get_verification(self, obj):
         try:
-            return stripe.Account.retrieve(
-                obj.account_id, api_key=get_secret_key()
-            ).legal_entity.verification.to_dict()
+            return obj.account.legal_entity.verification.to_dict()
         except AttributeError:
             return {}
 
     def get_bank_account(self, obj):
         try:
-            return stripe.Account.retrieve(
-                obj.account_id, api_key=get_secret_key()
-            ).external_accounts.data[0].to_dict()
+            return obj.account.external_accounts.data[0].to_dict()
         except (AttributeError, IndexError):
             return {}
 
@@ -123,9 +114,8 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
         return super(StripePayoutAccountSerializer, self).create(data)
 
     def update(self, instance, data):
-        secret_key = get_secret_key()
         if instance.account_id:
-            account = stripe.Account.retrieve(instance.account_id, api_key=secret_key)
+            account = instance.account
             self.update_stripe_account(instance, account, data)
         else:
             account = self.create_stripe_account(data)
@@ -141,7 +131,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
             'bank_account_token',
             'country',
             'account_id',
-            'verified',
+            'reviewed',
             'bank_account',
             'verification',
             'legal_entity',

@@ -62,12 +62,23 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
 
     legal_entity = serializers.SerializerMethodField()
     bank_account = serializers.SerializerMethodField()
+    verification = serializers.SerializerMethodField()
 
     def get_legal_entity(self, obj):
         try:
-            return stripe.Account.retrieve(
+            legal_entity = stripe.Account.retrieve(
                 obj.account_id, api_key=get_secret_key()
             ).legal_entity.to_dict()
+
+            return dict((key, value) for key, value in legal_entity.items() if key != 'verification')
+        except AttributeError:
+            return {}
+
+    def get_verification(self, obj):
+        try:
+            return stripe.Account.retrieve(
+                obj.account_id, api_key=get_secret_key()
+            ).legal_entity.verification.to_dict()
         except AttributeError:
             return {}
 
@@ -76,7 +87,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
             return stripe.Account.retrieve(
                 obj.account_id, api_key=get_secret_key()
             ).external_accounts.data[0].to_dict()
-        except AttributeError:
+        except (AttributeError, IndexError):
             return {}
 
     def create_stripe_account(self, data):
@@ -132,6 +143,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
             'account_id',
             'verified',
             'bank_account',
+            'verification',
             'legal_entity',
         )
 

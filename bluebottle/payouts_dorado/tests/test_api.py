@@ -138,6 +138,7 @@ class TestPayoutProjectApi(BluebottleTestCase):
     """
 
     def setUp(self):
+        super(TestPayoutProjectApi, self).setUp()
         self.init_projects()
         complete = ProjectPhase.objects.get(slug='done-complete')
         incomplete = ProjectPhase.objects.get(slug='done-incomplete')
@@ -164,7 +165,6 @@ class TestPayoutProjectApi(BluebottleTestCase):
             payout_account=StripePayoutAccountFactory(
                 account_id='123456'
             )
-
         )
 
     def test_payouts_api_no_token(self):
@@ -179,14 +179,13 @@ class TestPayoutProjectApi(BluebottleTestCase):
         """
         payout_url = reverse('project-payout-detail', kwargs={'pk': self.project1.id})
         response = self.client.get(payout_url, token=self.another_user_token)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_payouts_api_complete_project_details_plain(self):
         """
         """
         payout_url = reverse('project-payout-detail', kwargs={'pk': self.project1.id})
         response = self.client.get(payout_url, token=self.user_token)
-        self.assertEqual(response.data, status.HTTP_200_OK)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['target_reached'], True)
         self.assertEqual(

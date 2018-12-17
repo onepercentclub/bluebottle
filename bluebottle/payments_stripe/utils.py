@@ -2,9 +2,7 @@ from django.core.exceptions import ImproperlyConfigured
 from bluebottle.clients import properties
 
 
-def get_webhook_secret(key):
-    if not key:
-        key = 'webhook_secret'
+def get_webhook_secret(key='webhook_secret'):
     for account in properties.MERCHANT_ACCOUNTS:
         if account['merchant'] == 'stripe':
             return account[key]

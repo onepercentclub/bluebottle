@@ -41,20 +41,20 @@ class StripePayoutAccountTestCase(BluebottleTestCase):
         stripe_retrieve.return_value = json2obj(
             open(os.path.dirname(__file__) + '/data/stripe_account_verified.json').read()
         )
-        self.assertIsNone(self.payout_account.verified)
+        self.assertEquals(self.payout_account.reviewed, False)
         self.payout_account.check_status()
         self.payout_account.refresh_from_db()
-        self.assertIsNotNone(self.payout_account.verified)
+        self.assertEquals(self.payout_account.reviewed, True)
 
     @patch('bluebottle.payouts.models.stripe.Account.retrieve')
     def test_check_status_unverified(self, stripe_retrieve):
         stripe_retrieve.return_value = json2obj(
             open(os.path.dirname(__file__) + '/data/stripe_account_unverified.json').read()
         )
-        self.assertIsNone(self.payout_account.verified)
+        self.assertEquals(self.payout_account.reviewed, False)
         self.payout_account.check_status()
         self.payout_account.refresh_from_db()
-        self.assertIsNone(self.payout_account.verified)
+        self.assertEquals(self.payout_account.reviewed, False)
 
 
 class PayoutBaseTestCase(BluebottleTestCase):

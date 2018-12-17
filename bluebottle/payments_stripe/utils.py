@@ -8,3 +8,9 @@ def get_webhook_secret():
             return account['webhook_secret']
 
     raise ImproperlyConfigured('No merchant account for stripe')
+
+
+def get_stripe_settings():
+    for account in properties.MERCHANT_ACCOUNTS:
+        if account['merchant'] == 'stripe':
+            return {'publishable_key': account['publishable_key']}

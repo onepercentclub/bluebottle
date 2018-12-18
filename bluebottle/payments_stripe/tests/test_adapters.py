@@ -47,7 +47,7 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
         payout_account = StripePayoutAccountFactory.create()
         project = ProjectFactory.create(payout_account=payout_account)
         order = OrderFactory.create()
-        donation = DonationFactory.create(project=project, order=order)
+        DonationFactory.create(project=project, order=order)
         self.order_payment = OrderPaymentFactory.create(
             payment_method='stripe',
             integration_data={'chargeable': False, 'source_token': 'some token'},

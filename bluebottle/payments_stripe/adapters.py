@@ -41,6 +41,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
     def charge(self):
         if not self.payment.charge_token:
+
             account_id = self.order_payment.project.payout_account.account_id
 
             charge = stripe.Charge.create(

@@ -202,7 +202,7 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_mock', '/payments_interswitch',
                           '/payments_vitepay', '/payments_flutterwave',
                           '/payments_lipisha', '/payments_beyonic',
-                          '/payments_stripe',
+                          '/payments_stripe', '/payouts_stripe',
                           '/media', '/downloads',
                           '/surveys', '/token', '/jet')
 

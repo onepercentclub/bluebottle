@@ -154,6 +154,10 @@ class OrderPayment(models.Model, FSMTransition):
     previous_status = None
     card_data = None
 
+    @property
+    def project(self):
+        return self.order.donations.first().project
+
     class Meta:
         permissions = (
             ('refund_orderpayment', 'Can refund order payments'),

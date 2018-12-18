@@ -3,7 +3,11 @@ import stripe
 
 from django.test.utils import override_settings
 
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
+from bluebottle.test.factory_models.payouts import StripePayoutAccountFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 from bluebottle.payments_stripe.adapters import StripePaymentAdapter
@@ -38,11 +42,16 @@ PAYMENT_METHODS = (
     MERCHANT_ACCOUNTS=MERCHANT_ACCOUNTS,
     PAYMENT_METHODS=PAYMENT_METHODS
 )
-class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
+class StripePaymentAdapterTestCase(BluebottleTestCase):
     def setUp(self):
+        payout_account = StripePayoutAccountFactory.create()
+        project = ProjectFactory.create(payout_account=payout_account)
+        order = OrderFactory.create()
+        DonationFactory.create(project=project, order=order)
         self.order_payment = OrderPaymentFactory.create(
             payment_method='stripe',
             integration_data={'chargeable': False, 'source_token': 'some token'},
+            order=order,
             amount=100
         )
 

@@ -1,3 +1,7 @@
+from django.test import override_settings
+from mock import patch
+import os
+
 from bluebottle.projects.models import Project
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
@@ -13,6 +17,7 @@ from bluebottle.test.factory_models.payouts import (
     StripePayoutAccountFactory, PlainPayoutAccountFactory
 )
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import json2obj
 
 
 class TestPayoutApi(BluebottleTestCase):
@@ -115,6 +120,18 @@ class TestPayoutApi(BluebottleTestCase):
         self.assertIsNone(project.campaign_paid_out)
 
 
+MERCHANT_ACCOUNTS = [
+    {
+        'merchant': 'stripe',
+        'currency': 'EUR',
+        'secret_key': 'sk_test_secret_key',
+        'webhook_secret': 'whsec_test_webhook_secret',
+        'webhook_secret_connect': 'whsec_test_webhook_secret_connect',
+    }
+]
+
+
+@override_settings(MERCHANT_ACCOUNTS=MERCHANT_ACCOUNTS)
 class TestPayoutProjectApi(BluebottleTestCase):
     """
     Test Project Details in Payouts API
@@ -127,6 +144,10 @@ class TestPayoutProjectApi(BluebottleTestCase):
         incomplete = ProjectPhase.objects.get(slug='done-incomplete')
         self.user = BlueBottleUserFactory.create()
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.another_user = BlueBottleUserFactory.create()
+        self.another_user_token = "JWT {0}".format(self.another_user.get_jwt_token())
+
         financial = Group.objects.get(name='Financial')
         financial.user_set.add(self.user)
 
@@ -142,10 +163,23 @@ class TestPayoutProjectApi(BluebottleTestCase):
             campaign_ended=now(),
             status=incomplete,
             payout_account=StripePayoutAccountFactory(
-                account_token='123456'
+                account_id='123456'
             )
-
         )
+
+    def test_payouts_api_no_token(self):
+        """
+        """
+        payout_url = reverse('project-payout-detail', kwargs={'pk': self.project1.id})
+        response = self.client.get(payout_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_payouts_api_not_authorized(self):
+        """
+        """
+        payout_url = reverse('project-payout-detail', kwargs={'pk': self.project1.id})
+        response = self.client.get(payout_url, token=self.another_user_token)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_payouts_api_complete_project_details_plain(self):
         """
@@ -163,26 +197,22 @@ class TestPayoutProjectApi(BluebottleTestCase):
             '123456'
         )
 
-    def test_payouts_api_complete_project_details_stripe(self):
+    @patch('bluebottle.payouts.models.stripe.Account.retrieve')
+    def test_payouts_api_complete_project_details_stripe(self, stripe_retrieve):
         """
         """
+        stripe_retrieve.return_value = json2obj(
+            open(os.path.dirname(__file__) + '/data/stripe_account_verified.json').read()
+        )
         payout_url = reverse('project-payout-detail', kwargs={'pk': self.project2.id})
         response = self.client.get(payout_url, token=self.user_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['target_reached'], False)
 
         self.assertEqual(
-            response.data['account']['account_token'],
+            response.data['account']['account_id'],
             '123456'
         )
-
-    def test_payouts_api_incomplete_project_details(self):
-        """
-        """
-        payout_url = reverse('project-payout-detail', kwargs={'pk': self.project2.id})
-        response = self.client.get(payout_url, token=self.user_token)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['target_reached'], False)
 
 
 class TestPayoutMethodApi(BluebottleTestCase):

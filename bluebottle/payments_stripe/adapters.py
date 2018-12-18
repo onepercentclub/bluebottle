@@ -16,7 +16,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
     status_mapping = {
         'succeeded': StatusDefinition.SETTLED,
-        'pending': StatusDefinition.PENDING,
+        'pending': StatusDefinition.AUTHORIZED,  # TODO: Make sure this is correct!
         'failed': StatusDefinition.FAILED,
 
     }
@@ -41,11 +41,17 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
     def charge(self):
         if not self.payment.charge_token:
+
+            account_id = self.order_payment.project.payout_account.account_id
+
             charge = stripe.Charge.create(
                 amount=self.payment.amount,
                 currency=self.payment.currency,
                 description=self.payment.description,
                 source=self.payment.source_token,
+                destination={
+                    "account": account_id,
+                },
                 api_key=self.credentials['secret_key']
             )
             self.payment.charge_token = charge.id

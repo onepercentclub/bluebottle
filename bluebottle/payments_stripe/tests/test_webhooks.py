@@ -23,6 +23,7 @@ MERCHANT_ACCOUNTS = [
     }
 ]
 
+
 PAYMENT_METHODS = (
     {
         'provider': 'stripe',
@@ -38,7 +39,7 @@ PAYMENT_METHODS = (
     MERCHANT_ACCOUNTS=MERCHANT_ACCOUNTS,
     PAYMENT_METHODS=PAYMENT_METHODS
 )
-class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
+class StripePaymentAdapterTestCase(BluebottleTestCase):
     def setUp(self):
         charge_token = 'charge_token'
         source_token = 'source_token'
@@ -68,7 +69,7 @@ class FlutterwavePaymentAdapterTestCase(BluebottleTestCase):
 
     def test_charge_success(self):
         """
-        Test Flutterwave payment that turns to success without otp (one time pin)
+        Test Stripe payment webhook
         """
         with patch(
             'stripe.Webhook.construct_event',

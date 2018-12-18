@@ -16,7 +16,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
     status_mapping = {
         'succeeded': StatusDefinition.SETTLED,
-        'pending': StatusDefinition.AUTHORIZED, # TODO: Make sure this is correct!
+        'pending': StatusDefinition.AUTHORIZED,  # TODO: Make sure this is correct!
         'failed': StatusDefinition.FAILED,
 
     }

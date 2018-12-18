@@ -34,7 +34,7 @@ class WebHookView(View):
                 payment = StripePayment.objects.get(charge_token=event.data.object.id)
                 service = PaymentService(payment.order_payment)
                 service.adapter.update_from_charge(event.data.object)
-        except stripe.error.SignatureVerificationError as e:
+        except stripe.error.SignatureVerificationError:
             # Invalid signature
             return HttpResponse(status=400)
         except StripePayment.DoesNotExist:

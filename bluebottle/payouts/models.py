@@ -2,7 +2,6 @@ from decimal import Decimal
 
 from django.db import models
 from django.utils.functional import cached_property
-from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
 from djchoices.choices import DjangoChoices, ChoiceItem

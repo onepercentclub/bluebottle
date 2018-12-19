@@ -16,3 +16,9 @@ def get_secret_key():
             return account['secret_key']
 
     raise ImproperlyConfigured('No merchant account for stripe')
+
+
+def get_stripe_settings():
+    for account in properties.MERCHANT_ACCOUNTS:
+        if account['merchant'] == 'stripe':
+            return {'publishable_key': account['publishable_key']}

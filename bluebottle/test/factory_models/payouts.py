@@ -31,6 +31,7 @@ class PayoutDocumentFactory(factory.DjangoModelFactory):
 
 class StripePayoutAccountFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
+    account_id = factory.Sequence(lambda n: 'acct_0000000{0}'.format(n))
 
     class Meta(object):
         model = StripePayoutAccount

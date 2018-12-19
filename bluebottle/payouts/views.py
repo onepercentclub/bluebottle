@@ -35,10 +35,8 @@ class WebHookView(View):
                 payout_account.check_status()
         except stripe.error.SignatureVerificationError:
             # Invalid signature
-            print 'sig error'
             return HttpResponse(status=400)
         except StripePayoutAccount.DoesNotExist:
-            print event
             # StripePayoutAccount not found
             return HttpResponse(status=400)
         return HttpResponse(status=200)

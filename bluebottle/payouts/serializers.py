@@ -1,3 +1,4 @@
+from django.db import connection
 from rest_framework import serializers
 
 import stripe
@@ -84,13 +85,18 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
     def create_stripe_account(self, data):
         account_token = data.pop('account_token', None)
         if account_token:
+            tenant = connection.tenant
             secret_key = get_secret_key()
             account = stripe.Account.create(
                 account_token=account_token,
                 country=data['country'],
                 type='custom',
                 payout_schedule={'interval': 'manual'},
-                api_key=secret_key
+                api_key=secret_key,
+                metadata={
+                    "tenant_name": tenant.client_name,
+                    "tenant_domain": tenant.domain_url
+                },
             )
 
             data['account_id'] = account.id

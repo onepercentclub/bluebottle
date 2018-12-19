@@ -2,6 +2,7 @@ import json
 import logging
 
 import stripe
+from django.db import connection
 
 from bluebottle.clients import properties
 from bluebottle.payments.adapters import BasePaymentAdapter
@@ -43,6 +44,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
         if not self.payment.charge_token:
 
             account_id = self.order_payment.project.payout_account.account_id
+            tenant = connection.tenant
 
             charge = stripe.Charge.create(
                 amount=self.payment.amount,
@@ -51,6 +53,10 @@ class StripePaymentAdapter(BasePaymentAdapter):
                 source=self.payment.source_token,
                 destination={
                     "account": account_id,
+                },
+                metadata={
+                    "tenant_name": tenant.client_name,
+                    "tenant_domain": tenant.domain_url
                 },
                 api_key=self.credentials['secret_key']
             )

@@ -6,19 +6,22 @@ from django.db import migrations
 
 
 def remove_accounts(apps, schema_editor):
-    PayoutAccount = apps.get_model('payouts', 'PayoutAccount')
-    ProjectPhase = apps.get_model('bb_projects', 'ProjectPhase')
+    PlainPayoutAccount = apps.get_model('payouts', 'PlainPayoutAccount')
+    Project = apps.get_model('projects', 'Project')
 
-    phases = ProjectPhase.objects.filter(
-        slug__in=('plan-needs-work', 'plan-submitted', 'plan-new')
+    projects = Project.objects.filter(
+        status__slug__in=('plan-needs-work', 'plan-submitted', 'plan-new'),
+        amount_asked_currency__in=('EUR', 'USD')
     )
-    PayoutAccount.objects.filter(project__status__in=phases).delete()
+    for project in projects:
+        project.payout_account.delete()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
         ('payouts', '0016_auto_20181215_2016'),
+        ('projects', '0083_auto_20181129_1506'),
     ]
 
     operations = [

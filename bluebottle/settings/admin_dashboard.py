@@ -87,7 +87,7 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['orders.change_order']
             },
             {
-                'name': 'payouts_payoutaccount',
+                'name': 'payouts.payoutaccount',
                 'permissions': ['payouts_payoutaccount']
             },
             {

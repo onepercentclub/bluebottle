@@ -1,3 +1,4 @@
+from django.db import connection
 from rest_framework import serializers
 
 import stripe
@@ -84,13 +85,18 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
     def create_stripe_account(self, data):
         account_token = data.pop('account_token', None)
         if account_token and data['country']:
+            tenant = connection.tenant
             secret_key = get_secret_key()
             account = stripe.Account.create(
                 account_token=account_token,
                 country=data['country'],
                 type='custom',
                 payout_schedule={'interval': 'manual'},
-                api_key=secret_key
+                api_key=secret_key,
+                metadata={
+                    "tenant_name": tenant.client_name,
+                    "tenant_domain": tenant.domain_url
+                },
             )
 
             data['account_id'] = account.id
@@ -115,8 +121,20 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
 
     def update(self, instance, data):
         if instance.account_id:
-            account = instance.account
-            self.update_stripe_account(instance, account, data)
+            if instance.country != data['country']:
+                if not instance.reviewed:
+                    # It is not possible to change the country of an account
+                    # So as long as it was not reviewed, we delete it and
+                    # create a new one
+                    instance.account_id = None
+                    account = self.create_stripe_account(data)
+                else:
+                    raise serializers.ValidationError(
+                        'Cannot update information after it has been reviewed'
+                    )
+            else:
+                account = instance.account
+                self.update_stripe_account(instance, account, data)
         else:
             account = self.create_stripe_account(data)
 

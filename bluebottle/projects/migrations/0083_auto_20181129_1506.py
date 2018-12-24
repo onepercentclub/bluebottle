@@ -14,7 +14,8 @@ def migrate_payout_details(apps, schema_editor):
 
     new_ct = ContentType.objects.get_for_model(PlainPayoutAccount)
 
-    for project in Project.objects.all():
+    for project in Project.objects.filter(owner__isnull=False,
+                                          account_number__isnull=False).all():
         project.payout_account = PlainPayoutAccount.objects.create(
             user=project.owner,
             account_holder_name=project.account_holder_name,

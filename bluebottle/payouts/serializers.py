@@ -121,8 +121,20 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
 
     def update(self, instance, data):
         if instance.account_id:
-            account = instance.account
-            self.update_stripe_account(instance, account, data)
+            if instance.country != data['country']:
+                if not instance.reviewed:
+                    # It is not possible to change the country of an account
+                    # So as long as it was not reviewed, we delete it and
+                    # create a new one
+                    instance.account_id = None
+                    account = self.create_stripe_account(data)
+                else:
+                    raise serializers.ValidationError(
+                        'Cannot update information after it has been reviewed'
+                    )
+            else:
+                account = instance.account
+                self.update_stripe_account(instance, account, data)
         else:
             account = self.create_stripe_account(data)
 

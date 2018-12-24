@@ -11,10 +11,7 @@ class StripePaymentAdmin(PolymorphicChildModelAdmin):
     model = StripePayment
     search_fields = ['token', 'transaction_reference']
     raw_id_fields = ('order_payment', )
-    # readonly_fields = ('amount', 'currency',
-    #                    'description',
-    #                    'transaction_reference',
-    #                    'response', 'update_response')
+    readonly_fields = ('charge_token', )
 
 
 admin.site.register(StripePayment, StripePaymentAdmin)

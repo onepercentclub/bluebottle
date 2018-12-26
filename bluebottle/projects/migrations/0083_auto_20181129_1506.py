@@ -6,7 +6,6 @@ from django.db import migrations
 
 
 def migrate_payout_details(apps, schema_editor):
-
     Project = apps.get_model('projects', 'Project')
     PlainPayoutAccount = apps.get_model('payouts', 'PlainPayoutAccount')
     PayoutDocument = apps.get_model('payouts', 'PayoutDocument')
@@ -16,6 +15,7 @@ def migrate_payout_details(apps, schema_editor):
 
     for project in Project.objects.filter(owner__isnull=False,
                                           account_number__isnull=False).all():
+
         project.payout_account = PlainPayoutAccount.objects.create(
             user=project.owner,
             account_holder_name=project.account_holder_name,
@@ -30,7 +30,7 @@ def migrate_payout_details(apps, schema_editor):
         )
         project.save()
 
-        if len(project.documents.all()):
+        if project.payout_account and len(project.documents.all()):
             document = project.documents.all()[0]
             project.payout_account.document = PayoutDocument.objects.create(
                 author=document.author,
@@ -51,18 +51,9 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('projects', '0082_auto_20181129_1506'),
-        ('payouts', '0008_auto_20181129_1451')
+        ('payouts', '0009_payoutdocument')
     ]
-
     operations = [
-        migrations.RunSQL(
-            'SET CONSTRAINTS ALL IMMEDIATE',
-            reverse_sql=migrations.RunSQL.noop
-        ),
-        migrations.RunPython(migrate_payout_details, remove_payout_accounts),
-        migrations.RunSQL(
-            migrations.RunSQL.noop,
-            reverse_sql='SET CONSTRAINTS ALL IMMEDIATE'
-        ),
-
+        migrations.RunPython(migrate_payout_details,
+                             remove_payout_accounts),
     ]

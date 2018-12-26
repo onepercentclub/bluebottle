@@ -59,7 +59,7 @@ class PayoutAccount(PolymorphicModel):
     user = models.ForeignKey('members.Member')
 
     reviewed = models.BooleanField(
-        _('Reviewed'),
+        _('Bank reviewed'),
         help_text=_(
             'Review the project documents before marking the account as reviewed.'
             'After setting the project to running, the account documents will be deleted.'
@@ -115,7 +115,8 @@ class StripePayoutAccount(PayoutAccount):
     )
 
     def check_status(self):
-        if self.account_details.verification.status == 'verified':
+        if self.account_details and \
+                self.account_details.verification.status == 'verified':
             self.reviewed = True
         else:
             self.reviewed = False
@@ -150,7 +151,7 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def account_details(self):
-        return self.account.legal_entity
+        return getattr(self.account, 'legal_entity', None)
 
     @property
     def verification(self):

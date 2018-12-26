@@ -179,7 +179,7 @@ class Project(BaseProject, PreviousStatusMixin):
         (StatusDefinition.FAILED, _('Failed'))
     )
 
-    payout_status = models.CharField(_('payout_status'), max_length=50, null=True, blank=True,
+    payout_status = models.CharField(_('Payout status'), max_length=50, null=True, blank=True,
                                      choices=PAYOUT_STATUS_CHOICES)
     wallposts = GenericRelation(Wallpost, related_query_name='project_wallposts')
     objects = UpdateSignalsQuerySet.as_manager()

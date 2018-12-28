@@ -84,7 +84,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
 
     def create_stripe_account(self, data):
         account_token = data.pop('account_token', None)
-        if account_token:
+        if account_token and data['country']:
             tenant = connection.tenant
             secret_key = get_secret_key()
             account = stripe.Account.create(

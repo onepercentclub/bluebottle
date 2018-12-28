@@ -1,5 +1,5 @@
 from django.db import connection
-from rest_framework import serializers
+from rest_framework import serializers, exceptions
 
 import stripe
 
@@ -98,7 +98,6 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
                     "tenant_domain": tenant.domain_url
                 },
             )
-
             data['account_id'] = account.id
             return account
 
@@ -115,28 +114,45 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
             account.save()
 
     def create(self, data):
-        account = self.create_stripe_account(data)
+        try:
+            account = self.create_stripe_account(data)
+        except stripe.error.InvalidRequestError, e:
+            param = 'payout_account.legal_entity.{}'.format(
+                '.'.join(e.param.replace(']', '').split('[')[1:])
+            )
+            raise exceptions.ValidationError({
+                param: e.message
+            })
+
         self.set_stripe_bank_account(account, data)
         return super(StripePayoutAccountSerializer, self).create(data)
 
     def update(self, instance, data):
-        if instance.account_id:
-            if instance.country != data['country']:
-                if not instance.reviewed:
-                    # It is not possible to change the country of an account
-                    # So as long as it was not reviewed, we delete it and
-                    # create a new one
-                    instance.account_id = None
-                    account = self.create_stripe_account(data)
+        try:
+            if instance.account_id:
+                if instance.country != data['country']:
+                    if not instance.reviewed:
+                        # It is not possible to change the country of an account
+                        # So as long as it was not reviewed, we delete it and
+                        # create a new one
+                        instance.account_id = None
+                        account = self.create_stripe_account(data)
+                    else:
+                        raise serializers.ValidationError(
+                            'Cannot update information after it has been reviewed'
+                        )
                 else:
-                    raise serializers.ValidationError(
-                        'Cannot update information after it has been reviewed'
-                    )
+                    account = instance.account
+                    self.update_stripe_account(instance, account, data)
             else:
-                account = instance.account
-                self.update_stripe_account(instance, account, data)
-        else:
-            account = self.create_stripe_account(data)
+                account = self.create_stripe_account(data)
+        except stripe.error.InvalidRequestError, e:
+            param = 'payout_account.legal_entity.{}'.format(
+                '.'.join(e.param.replace(']', '').split('[')[1:])
+            )
+            raise exceptions.ValidationError({
+                param: e.message
+            })
 
         self.set_stripe_bank_account(account, data)
         return super(StripePayoutAccountSerializer, self).update(instance, data)

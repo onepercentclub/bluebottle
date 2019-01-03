@@ -33,6 +33,7 @@ def migrate_payout_details(apps, schema_editor):
         if project.payout_account and len(project.documents.all()):
             document = project.documents.all()[0]
             project.payout_account.document = PayoutDocument.objects.create(
+                payout_account=project.payout_account,
                 author=document.author,
                 file=document.file,
                 created=document.created,

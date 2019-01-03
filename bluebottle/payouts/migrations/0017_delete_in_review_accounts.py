@@ -14,7 +14,8 @@ def remove_accounts(apps, schema_editor):
         amount_asked_currency__in=('EUR', 'USD')
     )
     for project in projects:
-        project.payout_account.delete()
+        if project.payout_account:
+            project.payout_account.delete()
 
 
 class Migration(migrations.Migration):

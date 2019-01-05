@@ -29,6 +29,7 @@ from schwifty import IBAN, BIC
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
+from bluebottle.clients import properties
 from bluebottle.common.admin_utils import ImprovedModelForm
 from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
 from bluebottle.geo.models import Location
@@ -236,8 +237,11 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
                 self.cleaned_data['amount_asked'].amount > 0 and \
                 hasattr(self.cleaned_data['payout_account'], 'reviewed') and \
                 not self.cleaned_data['payout_account'].reviewed:
+            link_url = reverse('admin:payouts_payoutaccount_change',
+                               args=(self.cleaned_data['payout_account'].id,))
+            link = "<br/><a href='{}'>{}</a>".format(link_url, _("Review payout account"))
             raise forms.ValidationError(
-                _('The bank details need to be reviewed before approving a project')
+                format_html(_('The bank details need to be reviewed before approving a project') + link)
             )
 
     def save(self, commit=True):
@@ -610,6 +614,9 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if request.user.has_perm('projects.approve_payout'):
             filters.insert(1, 'payout_status')
 
+        if 'funding' in properties.PROJECT_CREATE_TYPES:
+            filters.append('payout_account__reviewed')
+
         # Only show Location column if there are any
         if Location.objects.count():
             filters += [LocationGroupFilter, LocationFilter]
@@ -636,7 +643,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         return fields
 
     def lookup_allowed(self, key, value):
-        if key == 'task__skill__expertise__exact':
+        if key in ('task__skill__expertise__exact',
+                   'payout_account__reviewed__exact'):
             return True
         else:
             return super(ProjectAdmin, self).lookup_allowed(key, value)

@@ -13,19 +13,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='projectdocument',
-            name='author',
-        ),
-        migrations.RemoveField(
-            model_name='projectdocument',
-            name='project',
-        ),
-        migrations.AlterField(
-            model_name='projectcreatetemplate',
-            name='default_amount_asked',
-            field=bluebottle.utils.fields.MoneyField(blank=True, currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=None, max_digits=12, null=True),
-        ),
         migrations.DeleteModel(
             name='ProjectDocument',
         ),

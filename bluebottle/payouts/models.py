@@ -192,7 +192,7 @@ class PlainPayoutAccount(PayoutAccount):
     document = models.ForeignKey('payouts.PayoutDocument', models.SET_NULL, null=True, blank=True)
 
     def __unicode__(self):
-        return "{}: {}".format(_("Bank details"), self.account_holder_name)
+        return u"{}: {}".format(_("Bank details"), self.account_holder_name)
 
     class Meta:
         verbose_name = _('Bank details')

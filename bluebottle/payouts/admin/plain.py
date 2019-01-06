@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from polymorphic.admin import PolymorphicChildModelAdmin
 
+from bluebottle.payouts.admin.utils import PayoutAccountProjectLinkMixin
 from bluebottle.payouts.models import PayoutAccount, PlainPayoutAccount, PayoutDocument
 from bluebottle.projects.forms import UploadWidget
 
@@ -46,7 +47,7 @@ class PayoutDocumentAdmin(admin.ModelAdmin):
 
 
 @admin.register(PlainPayoutAccount)
-class PlainPayoutAccountAdmin(PolymorphicChildModelAdmin):
+class PlainPayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicChildModelAdmin):
     base_model = PayoutAccount
     model = PlainPayoutAccount
     raw_id_fields = ('user', 'document')
@@ -54,6 +55,8 @@ class PlainPayoutAccountAdmin(PolymorphicChildModelAdmin):
 
     fields = (
         'user',
+        'project_links',
+        'document',
         'account_holder_name',
         'account_holder_address',
         'account_holder_postal_code',
@@ -84,11 +87,3 @@ class PlainPayoutAccountAdmin(PolymorphicChildModelAdmin):
         return HttpResponseRedirect(payout_url)
 
     check_status.short_description = _('Set to reviewed')
-
-    def project_links(self, obj):
-        return format_html(", ".join([
-            "<a href='{}'>{}</a>".format(
-                reverse('admin:projects_project_change', args=(p.id, )), p.id
-            ) for p in obj.projects
-        ]))
-    project_links.short_description = _('Projects')

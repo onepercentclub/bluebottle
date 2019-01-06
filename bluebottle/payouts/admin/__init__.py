@@ -5,8 +5,6 @@ import decimal
 from django import forms
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
-from django.urls import reverse
-from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from polymorphic.admin import PolymorphicChildModelFilter
 from polymorphic.admin.parentadmin import PolymorphicParentModelAdmin
@@ -15,6 +13,7 @@ from bluebottle.bb_payouts.models import ProjectPayoutLog, OrganizationPayoutLog
 from bluebottle.clients import properties
 from bluebottle.payouts.admin.plain import PlainPayoutAccountAdmin
 from bluebottle.payouts.admin.stripe import StripePayoutAccountAdmin
+from bluebottle.payouts.admin.utils import PayoutAccountProjectLinkMixin
 from bluebottle.payouts.models import ProjectPayout, OrganizationPayout, PayoutAccount
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.utils import StatusDefinition
@@ -24,7 +23,7 @@ from ..admin_utils import link_to
 logger = logging.getLogger(__name__)
 
 
-class PayoutAccountAdmin(PolymorphicParentModelAdmin):
+class PayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicParentModelAdmin):
     base_model = PayoutAccount
     list_display = ('created', 'polymorphic_ctype', 'reviewed', 'project_links')
     list_filter = ('reviewed', PolymorphicChildModelFilter)
@@ -39,14 +38,6 @@ class PayoutAccountAdmin(PolymorphicParentModelAdmin):
                 PlainPayoutAccountAdmin
             )
         )
-
-    def project_links(self, obj):
-        return format_html(", ".join([
-            "<a href='{}'>{}</a>".format(
-                reverse('admin:projects_project_change', args=(p.id, )), p.id
-            ) for p in obj.projects
-        ]))
-    project_links.short_dxescription = _('Projects')
 
 
 admin.site.register(PayoutAccount, PayoutAccountAdmin)

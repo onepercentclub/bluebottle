@@ -7,10 +7,11 @@ from django.utils.translation import ugettext_lazy as _
 
 from polymorphic.admin import PolymorphicChildModelAdmin
 
+from bluebottle.payouts.admin.utils import PayoutAccountProjectLinkMixin
 from bluebottle.payouts.models import PayoutAccount, StripePayoutAccount
 
 
-class StripePayoutAccountAdmin(PolymorphicChildModelAdmin):
+class StripePayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicChildModelAdmin):
     base_model = PayoutAccount
     model = StripePayoutAccount
     raw_id_fields = ('user', )
@@ -46,14 +47,6 @@ class StripePayoutAccountAdmin(PolymorphicChildModelAdmin):
     def reviewed_stripe(self, obj):
         return obj.reviewed
     reviewed_stripe.short_description = _('Verified by Stripe')
-
-    def project_links(self, obj):
-        return format_html(", ".join([
-            "<a href='{}'>{}</a>".format(
-                reverse('admin:projects_project_change', args=(p.id, )), p.title
-            ) for p in obj.projects
-        ]))
-    project_links.short_description = _('Projects')
 
     def missing(self, obj):
         return format_html("<br/>".join(obj.fields_needed))

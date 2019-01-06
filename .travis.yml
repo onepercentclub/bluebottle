@@ -25,7 +25,7 @@ install:
 - pip install -e .[test] --process-dependency-links --trusted-host github.com
 - echo `psql --version`
 before_script:
-- curl stream.onepercentclub.com/files/GeoIP.dat.gz | gunzip - > GeoIP.dat
+- curl https://stream.onepercentclub.com/files/GeoIP.dat.gz | gunzip - > GeoIP.dat
 - flake8 .
 script:
 - python -m coverage run --parallel-mode --source=bluebottle manage.py test --parallel=8

@@ -109,20 +109,12 @@ class StripePayoutAccount(PayoutAccount):
     failed_keyed_identity, the supplied identity information could not be verified
     failed_other, verification failed for another reason
     """
-    verification_error = models.CharField(
-        max_length=100, null=True, blank=True,
-        help_text=_("Reason why verification has failed")
-    )
-
     def check_status(self):
-        self.verification_error = ''
         if self.account_details and \
                 self.account_details.verification.status == 'verified':
             self.reviewed = True
         else:
             self.reviewed = False
-            if self.account_details.verification and self.account_details.verification.details:
-                self.verification_error =  self.account_details.verification.details
         self.save()
 
     @cached_property
@@ -163,6 +155,12 @@ class StripePayoutAccount(PayoutAccount):
     @property
     def fields_needed(self):
         return self.verification.fields_needed
+
+    @property
+    def verification_error(self):
+        if self.account_details.verification and self.account_details.verification.details:
+            return self.account_details.verification.details
+        return ''
 
 
 class PlainPayoutAccount(PayoutAccount):

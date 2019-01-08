@@ -194,3 +194,22 @@ class PayoutMethodSerializer(serializers.Serializer):
             'countries',
             'data'
         )
+
+
+class ExportPlainPayoutAccountSerializer(PlainPayoutAccountSerializer):
+    account_holder_country = serializers.CharField(source='account_holder_country.name')
+    account_bank_country = serializers.CharField(source='account_bank_country.name')
+
+
+class ExportPayoutAccountSerializer(PolymorphicSerializer):
+
+    resource_type_field_name = 'type'
+
+    def to_resource_type(self, model_or_instance):
+        return model_or_instance.type
+
+    model_serializer_mapping = {
+        PayoutAccount: BasePayoutAccountSerializer,
+        StripePayoutAccount: StripePayoutAccountSerializer,
+        PlainPayoutAccount: ExportPlainPayoutAccountSerializer
+    }

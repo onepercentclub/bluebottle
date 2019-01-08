@@ -223,6 +223,7 @@ class TestPayoutProjectApi(BluebottleTestCase):
             '123456'
         )
 
+
 class TestPayoutMethodApi(BluebottleTestCase):
     """
     Test Payout Methods API

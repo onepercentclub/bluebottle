@@ -25,7 +25,6 @@ from moneyed.classes import Money
 from parler.admin import TranslatableAdmin
 from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
 from polymorphic.admin.inlines import StackedPolymorphicInline
-from schwifty import IBAN, BIC
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase

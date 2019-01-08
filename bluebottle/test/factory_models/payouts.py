@@ -1,4 +1,5 @@
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.utils.utils import StatusDefinition
 from django.utils.timezone import now
@@ -19,6 +20,9 @@ class PayoutAccountFactory(factory.DjangoModelFactory):
 
 class PlainPayoutAccountFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
+
+    account_holder_country = factory.SubFactory(CountryFactory)
+    account_bank_country = factory.SubFactory(CountryFactory)
 
     class Meta(object):
         model = PlainPayoutAccount

@@ -115,11 +115,14 @@ class StripePayoutAccount(PayoutAccount):
     )
 
     def check_status(self):
+        self.verification_error = ''
         if self.account_details and \
                 self.account_details.verification.status == 'verified':
             self.reviewed = True
         else:
             self.reviewed = False
+            if self.account_details.verification and self.account_details.verification.details:
+                self.verification_error =  self.account_details.verification.details
         self.save()
 
     @cached_property

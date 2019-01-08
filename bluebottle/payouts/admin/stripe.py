@@ -15,7 +15,8 @@ class StripePayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicChildMo
     base_model = PayoutAccount
     model = StripePayoutAccount
     raw_id_fields = ('user', )
-    readonly_fields = ('reviewed_stripe', 'missing', 'project_links', 'details')
+    readonly_fields = ('reviewed_stripe', 'missing', 'project_links',
+                       'details', 'verification_error')
 
     fields = ('user', 'account_id') + readonly_fields
 

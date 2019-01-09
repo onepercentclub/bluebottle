@@ -5,7 +5,6 @@ from dateutil.relativedelta import relativedelta
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models
-from django.db.models.signals import post_save
 from django.utils import timezone
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
@@ -19,7 +18,6 @@ from moneyed.classes import Money
 from bluebottle.bb_payouts.exceptions import PayoutException
 from bluebottle.clients.utils import LocalTenant
 from bluebottle.payments.models import OrderPayment
-from bluebottle.projects.models import Project
 from bluebottle.utils.fields import MoneyField, get_default_currency, get_currency_choices
 from bluebottle.utils.utils import StatusDefinition
 

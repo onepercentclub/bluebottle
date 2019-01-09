@@ -1,7 +1,7 @@
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
-from django.http import HttpResponseRedirect
+from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -80,10 +80,13 @@ class PlainPayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicChildMod
         return custom_urls + urls
 
     def check_status(self, request, account_id):
-        account = PlainPayoutAccount.objects.get(id=account_id)
-        account.reviewed = True
-        account.save()
-        payout_url = reverse('admin:payouts_payoutaccount_change', args=(account_id,))
-        return HttpResponseRedirect(payout_url)
+        if request.user.has_perm('payouts.change_plainpayoutaccount'):
+            account = PlainPayoutAccount.objects.get(id=account_id)
+            account.reviewed = True
+            account.save()
+            payout_url = reverse('admin:payouts_payoutaccount_change', args=(account_id,))
+            return HttpResponseRedirect(payout_url)
+        else:
+            return HttpResponseForbidden('Missing permission: payouts.change_plainpayoutaccount')
 
     check_status.short_description = _('Set to reviewed')

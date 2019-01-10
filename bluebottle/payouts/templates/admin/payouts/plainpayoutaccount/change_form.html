@@ -3,7 +3,7 @@
 
 {% block object-tools-items %}
     <li>
-        {% if perms.payouts.payoutaccount and not original.reviewed %}
+        {% if perms.payouts.change_plainpayoutaccount and not original.reviewed %}
             <a href="{% url 'admin:plain-payout-account-reviewed' object_id %}" class="button default">
                 {% trans  "Set to reviewed" %}
             </a>

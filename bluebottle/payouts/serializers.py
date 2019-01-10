@@ -1,15 +1,16 @@
-from django.db import connection
-from rest_framework import serializers, exceptions
-
 import stripe
+
+from django.db import connection
+
+from rest_framework import serializers, exceptions
+from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.payments_stripe.utils import get_secret_key
-from bluebottle.payouts.models import PayoutAccount, PlainPayoutAccount, PayoutDocument, StripePayoutAccount
+from bluebottle.payouts.models import (
+    PayoutAccount, PlainPayoutAccount, PayoutDocument, StripePayoutAccount
+)
 from bluebottle.utils.permissions import ResourceOwnerPermission
-
-
-from rest_polymorphic.serializers import PolymorphicSerializer
 
 
 class BasePayoutAccountSerializer(serializers.ModelSerializer):

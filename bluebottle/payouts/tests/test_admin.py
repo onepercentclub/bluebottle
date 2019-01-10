@@ -1,6 +1,5 @@
 from django.contrib.auth.models import Permission, Group
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseForbidden
 from django.test.utils import override_settings
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory

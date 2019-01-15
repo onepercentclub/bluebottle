@@ -3,22 +3,18 @@ from django.core.urlresolvers import reverse
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
-
-
-PROJECT_PAYOUT_FEES = {
-    'beneath_threshold': 1,
-    'fully_funded': 0.05,
-    'not_fully_funded': 0.0725
-}
 
 
 class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
 
     def setUp(self):
         self.user = BlueBottleUserFactory.create(is_staff=True)
-        account = PlainPayoutAccountFactory.create()
-        self.payout_url = reverse('admin:payouts_payoutaccount_change', args=(account.id,))
+        self.account = PlainPayoutAccountFactory.create()
+        self.project = ProjectFactory.create(payout_account=self.account)
+        self.payout_url = reverse('admin:payouts_payoutaccount_change', args=(self.account.id,))
+        self.payout_reviewed_url = reverse('admin:plain-payout-account-reviewed', args=(self.account.id,))
 
     def test_permissions_denied(self):
         self.client.force_login(self.user)
@@ -40,3 +36,12 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.payout_url)
         self.assertEqual(response.status_code, 200)
+
+    def test_permission_set_reviewed(self):
+        self.assertEqual(self.account.reviewed, False)
+        self.user.groups.add(Group.objects.get(name='Staff'))
+        self.client.force_login(self.user)
+        response = self.client.get(self.payout_reviewed_url)
+        self.assertRedirects(response, self.payout_url)
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.reviewed, True)

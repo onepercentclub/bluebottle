@@ -860,3 +860,53 @@ class TestDonationWallpost(BluebottleTestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['type'], 'text')
         self.assertEqual(response.data['results'][0]['text'], '<p>What a nice project!</p>')
+
+
+class TestPinnedWallpost(BluebottleTestCase):
+    """
+    Test that initiator wallposts get pinned and unpinned correctly.
+    """
+
+    def setUp(self):
+        super(TestPinnedWallpost, self).setUp()
+
+        self.init_projects()
+        self.initiator = BlueBottleUserFactory.create()
+        self.initiator_token = "JWT {0}".format(self.initiator.get_jwt_token())
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.project = ProjectFactory.create(owner=self.initiator)
+
+        self.wallpost_url = reverse('wallpost_list')
+        self.text_wallpost_url = reverse('text_wallpost_list')
+
+    def test_pinned_wallposts(self):
+
+        wallpost = MediaWallpostFactory.create(author=self.initiator, content_object=self.project)
+        wallpost.refresh_from_db()
+        self.assertEqual(wallpost.pinned, True)
+        MediaWallpostFactory.create(author=self.user, content_object=self.project)
+        MediaWallpostFactory.create(author=self.initiator, content_object=self.project)
+        MediaWallpostFactory.create_batch(3, author=self.user, content_object=self.project)
+
+        response = self.client.get(self.wallpost_url,
+                                   {'parent_id': self.project.slug, 'parent_type': 'project'},
+                                   token=self.user_token)
+
+        # There should be 6 wallposts
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 6)
+
+        # First post should by latest by the initiator
+        self.assertEqual(response.data['results'][0]['author']['id'], self.initiator.id)
+        self.assertEqual(response.data['results'][0]['pinned'], True)
+
+        # Second item shoudl be by user and unpinned
+        self.assertEqual(response.data['results'][1]['author']['id'], self.user.id)
+        self.assertEqual(response.data['results'][1]['pinned'], False)
+
+        # The sixth wallposts should be by initiator but unpinned
+        self.assertEqual(response.data['results'][5]['author']['id'], self.initiator.id)
+        self.assertEqual(response.data['results'][5]['pinned'], False)

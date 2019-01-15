@@ -3,7 +3,7 @@ from collections import namedtuple
 
 from django.conf import settings
 from django.core.signing import TimestampSigner, BadSignature
-from django.http.response import HttpResponseNotFound, HttpResponse
+from django.http.response import HttpResponseNotFound
 from django.http import Http404
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _

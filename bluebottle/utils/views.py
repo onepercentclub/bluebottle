@@ -1,3 +1,4 @@
+import os
 from collections import namedtuple
 
 from django.conf import settings
@@ -9,6 +10,7 @@ from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
+from filetransfers.api import serve_file
 from parler.utils.i18n import get_language
 
 from rest_framework import generics
@@ -244,13 +246,9 @@ class PrivateFileView(DetailView):
 
     def get(self, request, *args, **kwargs):
         field = getattr(self.get_object(), self.field)
-        response = HttpResponse()
-        response['X-Accel-Redirect'] = field.url
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
-            field.name
-        )
-
-        return response
+        f = field.file
+        file_name = os.path.basename(f.name)
+        return serve_file(request, f, save_as=file_name)
 
 
 class OwnerListViewMixin(object):

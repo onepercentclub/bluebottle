@@ -248,7 +248,10 @@ class PrivateFileView(DetailView):
         field = getattr(self.get_object(), self.field)
         f = field.file
         file_name = os.path.basename(f.name)
-        return serve_file(request, f, save_as=file_name)
+        response = serve_file(request, f, save_as=file_name)
+        response['X-Accel-Redirect'] = field.url
+        return response
+
 
 
 class OwnerListViewMixin(object):

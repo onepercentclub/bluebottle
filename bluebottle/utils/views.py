@@ -253,7 +253,6 @@ class PrivateFileView(DetailView):
         return response
 
 
-
 class OwnerListViewMixin(object):
     def get_queryset(self):
         qs = super(OwnerListViewMixin, self).get_queryset()

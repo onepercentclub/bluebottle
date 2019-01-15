@@ -579,7 +579,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'created', 'updated',
             'vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
             'popularity', 'payout_status',
-            'geocoding', 'donations_link'
+            'geocoding', 'donations_link', 'payout_account_status',
         ]
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status',)
@@ -682,7 +682,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         amount = (_('Amount'), {'fields': [
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
-            'currencies', 'donations_link', 'popularity', 'vote_count', 'payout_account'
+            'currencies', 'donations_link', 'popularity', 'vote_count', 'payout_account',
+            'payout_account_status',
         ]})
 
         if request.user.has_perm('projects.approve_payout'):
@@ -734,6 +735,26 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         return format_html('<a href="{}?project_id={}">{} {}</a>'.format(url, obj.id, total, _('donations')))
 
     donations_link.short_description = _("Donations")
+
+    def payout_account_status(self, obj):
+        if obj.payout_account:
+            payout_account = obj.payout_account
+            if payout_account.reviewed:
+                return _('reviewed')
+            elif (
+                    hasattr(payout_account, 'verification_error') and
+                    payout_account.verification_error
+                ):
+                return object.payout_account.error
+            elif (
+                    hasattr(payout_account, 'fields_needed') and
+                    payout_account.fields_needed
+                ):
+                return _('The account is incomplete and needs more info from the user')
+            else:
+                return _('The account is awaiting review.')
+
+    payout_account_status.short_description = _("Payout account status")
 
 
 admin.site.register(Project, ProjectAdmin)

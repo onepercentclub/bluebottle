@@ -741,15 +741,11 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             payout_account = obj.payout_account
             if payout_account.reviewed:
                 return _('reviewed')
-            elif (
-                    hasattr(payout_account, 'verification_error') and
-                    payout_account.verification_error
-                ):
+            elif (hasattr(payout_account, 'verification_error') and
+                    payout_account.verification_error):
                 return object.payout_account.error
-            elif (
-                    hasattr(payout_account, 'fields_needed') and
-                    payout_account.fields_needed
-                ):
+            elif (hasattr(payout_account, 'fields_needed') and
+                    payout_account.fields_needed):
                 return _('The account is incomplete and needs more info from the user')
             else:
                 return _('The account is awaiting review.')

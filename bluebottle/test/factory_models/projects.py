@@ -59,13 +59,3 @@ class ProjectFactory(factory.DjangoModelFactory):
     amount_needed = 100
     amount_asked = 100
     allow_overfunding = True
-
-    account_details = 'ABNANL2AABNANL2AABNANL2A'
-    account_number = 'NL18ABNA0484869868'
-    account_bank_country = factory.SubFactory(CountryFactory)
-
-    account_holder_name = 'test name'
-    account_holder_address = 'test'
-    account_holder_postal_code = '1234ab'
-    account_holder_city = 'test'
-    account_holder_country = factory.SubFactory(CountryFactory)

@@ -16,8 +16,8 @@ Give some extra support and share this project with your network.
 {% endif %}
 {% include 'donations/mails/donation.txt' %}
 {% include 'donations/mails/payment_details.txt' %}
-{% if pledged %}
-{% blocktrans with amount=donation.amount|format_money account_holder_name=donation.project.account_holder_name account_number=donation.project.account_number %}
+{% if pledged and donation.project.account.account_holder_name %}
+{% blocktrans with amount=donation.amount|format_money account_holder_name=donation.project.account.account_holder_name account_number=donation.project.account.account_number %}
     Please transfer the amount of {{ amount }} to the following bank account:
     {{account_holder_name}}
     {{account_number}}

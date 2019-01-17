@@ -174,8 +174,7 @@ class TestProjectAdmin(BluebottleAdminTestCase):
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
-        project.account_number = '1234567890'
-        project.account_details = 'INGBNL2A'
+        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
         project.save()
 
         with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
@@ -186,7 +185,7 @@ class TestProjectAdmin(BluebottleAdminTestCase):
         )
 
         project = Project.objects.get(pk=project.id)
-        self.assertEqual(project.account_number, '1234567890')
+        self.assertEqual(project.payout_account.account_number, '1234567890')
 
         # Check it shows up in object history
         self.client.force_login(self.superuser)
@@ -199,7 +198,7 @@ class TestProjectAdmin(BluebottleAdminTestCase):
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
-        project.account_number = '123456123456'
+        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
         project.save()
 
         self.mock_response.status_code = 400
@@ -220,7 +219,7 @@ class TestProjectAdmin(BluebottleAdminTestCase):
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
-        project.account_number = '123456123456'
+        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
         project.save()
 
         self.mock_response.status_code = 500
@@ -243,7 +242,7 @@ class TestProjectAdmin(BluebottleAdminTestCase):
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
-        project.account_number = '123456123456'
+        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
         project.save()
 
         exception = requests.ConnectionError('Host not found')
@@ -265,7 +264,7 @@ class TestProjectAdmin(BluebottleAdminTestCase):
         request.user = MockUser()
 
         project = ProjectFactory.create(payout_status='needs_approval')
-        project.account_number = '123456123456'
+        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
         project.save()
 
         with mock.patch('requests.post', return_value=self.mock_response) as request_mock:
@@ -283,7 +282,7 @@ class TestProjectAdmin(BluebottleAdminTestCase):
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
-        project.account_number = '123456123456'
+        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
         project.payout_status = 'done'
         project.save()
 
@@ -302,7 +301,7 @@ class TestProjectAdmin(BluebottleAdminTestCase):
         request.user = MockUser(['projects.approve_payout'])
 
         project = self._generate_completed_project()
-        project.account_number = '123456123456'
+        project.payout_account = PlainPayoutAccountFactory(account_number='1234567890')
         project.save()
 
         # Project status should be editable

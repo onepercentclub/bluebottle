@@ -1,3 +1,5 @@
+import locale
+
 from django.db import connection, IntegrityError
 from django_slowtests.testrunner import DiscoverSlowestTestsRunner
 
@@ -13,6 +15,8 @@ class MultiTenantRunner(DiscoverSlowestTestsRunner, InitProjectDataMixin):
         self.parallel = 0
         result = super(MultiTenantRunner, self).setup_databases(**kwargs)
         self.parallel = parallel
+        # Set local explicitely so test also run on OSX
+        locale.setlocale(locale.LC_ALL, 'en_GB.UTF-8')
 
         connection.set_schema_to_public()
 

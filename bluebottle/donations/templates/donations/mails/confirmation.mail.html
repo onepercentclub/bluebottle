@@ -24,13 +24,21 @@
     </table>
 
     {% if pledged %}
-    <p class="twelve columns">
-        {% blocktrans with amount=donation.amount|format_money account_holder_name=donation.project.account_holder_name account_number=donation.project.account_number %}
-            <strong>Please transfer the amount of {{ amount }} to the following bank account:</strong><br />
-            {{account_holder_name}}<br />
-            {{account_number}}
-        {% endblocktrans %}
-    </p>
+        {% if donation.project.payout_account.account_number %}
+            <p class="twelve columns">
+                {% blocktrans with amount=donation.amount|format_money account_holder_name=donation.project.payout_account.account_holder_name account_number=donation.project.payout_account.account_number %}
+                    <strong>Please transfer the amount of {{ amount }} to the following bank account:</strong><br />
+                    {{account_holder_name}}<br />
+                    {{account_number}}
+                {% endblocktrans %}
+            </p>
+        {% else %}
+            <p class="twelve columns">
+                {% blocktrans with amount=donation.amount|format_money project_title=donation.project.title %}
+                    <strong>Please transfer the amount of {{ amount }} to "{{ project_title }}".</strong><br />
+                {% endblocktrans %}
+            </p>
+        {% endif %}
     {% endif %}
     {% if SHARE_OPTIONS.facebook or SHARE_OPTIONS.twitter %}
         <table class="donation-table-share twelve columns">

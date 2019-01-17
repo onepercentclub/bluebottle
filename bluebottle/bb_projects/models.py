@@ -179,29 +179,6 @@ class BaseProject(models.Model):
     amount_needed = MoneyField()
     amount_extra = MoneyField(help_text=_("Amount pledged by organisation (matching fund)."))
 
-    # Bank detail data
-
-    # Account holder Info
-    account_holder_name = models.CharField(
-        _("account holder name"), max_length=100, null=True, blank=True)
-    account_holder_address = models.CharField(
-        _("account holder address"), max_length=255, null=True, blank=True)
-    account_holder_postal_code = models.CharField(
-        _("account holder postal code"), max_length=20, null=True, blank=True)
-    account_holder_city = models.CharField(
-        _("account holder city"), max_length=255, null=True, blank=True)
-    account_holder_country = models.ForeignKey(
-        'geo.Country', blank=True, null=True,
-        related_name="project_account_holder_country")
-
-    # Bank details
-    account_number = models.CharField(_("Account number"), max_length=255,
-                                      null=True, blank=True)
-    account_details = models.CharField(_("account details"), max_length=500, null=True, blank=True)
-    account_bank_country = models.ForeignKey(
-        'geo.Country', blank=True, null=True,
-        related_name="project_account_bank_country")
-
     @property
     def is_realised(self):
         return self.status == ProjectPhase.objects.get(slug='done-complete')
@@ -243,14 +220,6 @@ class BaseProject(models.Model):
         ).aggregate(total=Count('members'), externals=Sum('members__externals'))
 
         return requested - counts['total'] + (counts['externals'] or 0)
-
-    @property
-    def account_bic(self):
-        return self.account_details
-
-    @account_bic.setter
-    def account_bic(self, value):
-        self.account_details = value
 
     _initial_status = None
 

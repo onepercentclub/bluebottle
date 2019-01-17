@@ -1,16 +1,16 @@
+import mimetypes
 import os
 from collections import namedtuple
 
 from django.conf import settings
 from django.core.signing import TimestampSigner, BadSignature
 from django.http.response import HttpResponseNotFound
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.utils import translation
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
-from filetransfers.api import serve_file
 from parler.utils.i18n import get_language
 
 from rest_framework import generics
@@ -246,10 +246,14 @@ class PrivateFileView(DetailView):
 
     def get(self, request, *args, **kwargs):
         field = getattr(self.get_object(), self.field)
-        f = field.file
-        file_name = os.path.basename(f.name)
-        response = serve_file(request, f, save_as=file_name)
+        filename = os.path.basename(field.name)
+        content_type = mimetypes.guess_type(filename)[0]
+        response = HttpResponse()
         response['X-Accel-Redirect'] = field.url
+        response['Content-Type'] = content_type
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
+            field.name
+        )
         return response
 
 

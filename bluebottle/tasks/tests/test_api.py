@@ -5,6 +5,7 @@ import urllib
 
 from django.contrib.auth.models import Group, Permission
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.signing import TimestampSigner
 from django.core.urlresolvers import reverse
 from django.utils import timezone
@@ -747,9 +748,13 @@ class TaskMemberResumeTest(BluebottleTestCase):
 
         self.member = TaskMemberFactory.create(
             task=self.task,
-            member=self.another_user,
-            resume='private/tasks/resume/test.jpg'
+            member=self.another_user
         )
+        image_file = './bluebottle/projects/test_images/upload.png'
+        self.member.resume = SimpleUploadedFile(name='test_image.png',
+                                                content=open(image_file, 'rb').read(),
+                                                content_type='image/png')
+        self.member.save()
         self.signer = TimestampSigner()
 
         self.resume_url = reverse('task-member-resume', args=(self.member.id, ))
@@ -762,10 +767,7 @@ class TaskMemberResumeTest(BluebottleTestCase):
         self.assertTrue(
             response.data['resume']['url'].startswith('/downloads/taskmember/resume/')
         )
-        self.assertEqual(
-            response.data['resume']['name'],
-            'test.jpg'
-        )
+        self.assertTrue('test_image_' in response.data['resume']['name'])
 
     def test_task_member_detail_includes_download_url_task_member(self):
         response = self.client.get(
@@ -774,10 +776,7 @@ class TaskMemberResumeTest(BluebottleTestCase):
         self.assertTrue(
             response.data['resume']['url'].startswith('/downloads/taskmember/resume/')
         )
-        self.assertEqual(
-            response.data['resume']['name'],
-            'test.jpg'
-        )
+        self.assertTrue('test_image_' in response.data['resume']['name'])
 
     def test_task_member_detail_includes_download_url_other_user(self):
         response = self.client.get(
@@ -804,9 +803,13 @@ class TaskMemberResumeTest(BluebottleTestCase):
             '{}?{}'.format(self.resume_url, urllib.urlencode({'signature': signature}))
         )
         self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            '/media/private/task-members/resume/test_image_' in
+            response['x-accel-redirect']
+        )
         self.assertEqual(
-            response['x-accel-redirect'],
-            '/media/private/tasks/resume/test.jpg'
+            response['Content-Type'],
+            'image/png'
         )
 
     def test_task_member_resume_no_signature(self):

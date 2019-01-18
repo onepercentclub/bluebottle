@@ -3,9 +3,11 @@ import logging
 
 import stripe
 from django.db import connection
+from stripe.error import StripeError
 
 from bluebottle.clients import properties
 from bluebottle.payments.adapters import BasePaymentAdapter
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments_stripe.models import StripePayment
 
 from bluebottle.utils.utils import StatusDefinition
@@ -36,7 +38,10 @@ class StripePaymentAdapter(BasePaymentAdapter):
         self.payment.save()
 
         if chargeable:
-            self.charge()
+            try:
+                self.charge()
+            except StripeError as e:
+                raise PaymentException(e.message)
 
         return self.payment
 

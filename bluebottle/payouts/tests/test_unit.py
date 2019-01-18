@@ -3,14 +3,9 @@ import os
 
 from django.test.utils import override_settings
 
-from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.test.factory_models.orders import OrderFactory
-from bluebottle.test.factory_models.organizations import OrganizationFactory
 from bluebottle.test.factory_models.payouts import StripePayoutAccountFactory
-from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import json2obj
-from bluebottle.test.factory_models.projects import ProjectFactory
 
 MERCHANT_ACCOUNTS = [
     {
@@ -49,41 +44,3 @@ class StripePayoutAccountTestCase(BluebottleTestCase):
         self.payout_account.check_status()
         self.payout_account.refresh_from_db()
         self.assertEquals(self.payout_account.reviewed, False)
-
-
-class PayoutBaseTestCase(BluebottleTestCase):
-    """ Base test case for Payouts. """
-
-    def setUp(self):
-        super(PayoutBaseTestCase, self).setUp()
-
-        self.init_projects()
-
-        # Set up a project ready for payout
-        self.organization = OrganizationFactory.create()
-        self.organization.save()
-        self.project = ProjectFactory.create(organization=self.organization, amount_asked=50)
-        self.project_incomplete = ProjectFactory.create(organization=self.organization, amount_asked=100)
-
-        # Update phase to campaign.
-        self.project.status = ProjectPhase.objects.get(slug='campaign')
-        self.project.save()
-
-        self.project_incomplete.status = ProjectPhase.objects.get(slug='campaign')
-        self.project_incomplete.save()
-
-        self.order = OrderFactory.create()
-
-        self.donation = DonationFactory.create(
-            project=self.project,
-            order=self.order,
-            amount=60
-        )
-        self.donation.save()
-
-        self.donation2 = DonationFactory.create(
-            project=self.project_incomplete,
-            order=self.order,
-            amount=60
-        )
-        self.donation2.save()

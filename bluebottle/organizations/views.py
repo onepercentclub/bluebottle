@@ -75,7 +75,6 @@ class RegistrationDocumentDownloadView(DetailView):
         if request.user.is_staff:
             f = obj.registration.file
             file_name = os.path.basename(f.name)
-
             return serve_file(request, f, save_as=file_name)
 
         return HttpResponseForbidden()

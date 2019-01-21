@@ -15,25 +15,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RemoveField(
-            model_name='projectbankaccount',
-            name='bank_country',
-        ),
-        migrations.RemoveField(
-            model_name='projectbankaccount',
-            name='country',
-        ),
-        migrations.RemoveField(
-            model_name='projectbankaccount',
-            name='project',
-        ),
-        migrations.RemoveField(
             model_name='project',
             name='popularity',
-        ),
-        migrations.AlterField(
-            model_name='project',
-            name='bank_details_reviewed',
-            field=models.BooleanField(default=False, help_text='Review the project documents before marking the bank details as reviewed.After setting this project to running, the project documents will be deleted.Also, make sure to remove the documents from your device after downloading them.', verbose_name='Bank details reviewed'),
         ),
         migrations.AlterField(
             model_name='project',
@@ -49,8 +32,5 @@ class Migration(migrations.Migration):
             model_name='projectplatformsettings',
             name='allow_anonymous_rewards',
             field=models.BooleanField(default=True, verbose_name='Allow guests to donate rewards'),
-        ),
-        migrations.DeleteModel(
-            name='ProjectBankAccount',
         ),
     ]

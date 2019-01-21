@@ -1,9 +1,7 @@
-import re
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
-from localflavor.generic.validators import IBANValidator
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
 from bluebottle.bluebottle_drf2.serializers import (
@@ -16,8 +14,9 @@ from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
+from bluebottle.payouts.serializers import PayoutAccountSerializer
 from bluebottle.projects.models import (
-    ProjectBudgetLine, ProjectDocument, Project, ProjectImage,
+    ProjectBudgetLine, Project, ProjectImage,
     ProjectPlatformSettings, ProjectSearchFilter, ProjectLocation,
     ProjectAddOn, ProjectCreateTemplate)
 from bluebottle.tasks.models import Task, TaskMember, Skill
@@ -26,7 +25,6 @@ from bluebottle.utils.serializers import (
     RelatedResourcePermissionField,
 )
 from bluebottle.utils.fields import SafeField
-from bluebottle.utils.permissions import ResourceOwnerPermission
 from bluebottle.projects.permissions import (
     CanExportSupportersPermission
 )
@@ -84,18 +82,6 @@ class BasicProjectBudgetLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectBudgetLine
         fields = ('id', 'description', 'amount')
-
-
-class ProjectDocumentSerializer(serializers.ModelSerializer):
-    file = PrivateFileSerializer(
-        'project-document-file', url_args=('pk', ), permission=ResourceOwnerPermission
-    )
-
-    project = serializers.SlugRelatedField(slug_field='slug', queryset=Project.objects)
-
-    class Meta:
-        model = ProjectDocument
-        fields = ('id', 'project', 'file')
 
 
 class ProjectPermissionsSerializer(serializers.Serializer):
@@ -238,7 +224,6 @@ class ProjectPreviewSerializer(ProjectSerializer):
     skills = serializers.SerializerMethodField()
     project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
     theme = ProjectThemeSerializer()
-    project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
 
     def get_skills(self, obj):
         return set(task.skill.id for task in obj.task_set.all() if task.skill)
@@ -323,11 +308,11 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     budget_lines = ProjectBudgetLineSerializer(many=True, source='projectbudgetline_set', read_only=True)
     currencies = serializers.JSONField(read_only=True)
     categories = serializers.SlugRelatedField(many=True, read_only=True, slug_field='slug')
-    documents = ProjectDocumentSerializer(many=True, read_only=True)
     editable = serializers.BooleanField(read_only=True)
     image = ImageSerializer(required=False, allow_null=True)
     is_funding = serializers.ReadOnlyField()
     location = serializers.PrimaryKeyRelatedField(required=False, allow_null=True, queryset=Location.objects)
+    payout_account = PayoutAccountSerializer(required=False, allow_null=True)
     people_needed = serializers.IntegerField(read_only=True)
     people_registered = serializers.IntegerField(read_only=True)
     pitch = serializers.CharField(required=False, allow_null=True)
@@ -349,24 +334,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     project_location = ProjectLocationSerializer(read_only=True, source='projectlocation')
 
     editable_fields = ('pitch', 'story', 'image', 'video_url', 'projectlocation')
-
-    @staticmethod
-    def validate_account_number(value):
-
-        if value:
-            country_code = value[:2]
-            digits_regex = re.compile('\d{2}')
-            check_digits = value[2:4]
-
-            # Only try iban validaton when the field matches start of
-            # iban format as the field can also contain non-iban
-            # account numbers.
-            # Expecting something like: NL18xxxxxxxxxx
-            iban_validator = IBANValidator()
-            if country_code in iban_validator.validation_countries.keys() and \
-                    digits_regex.match(check_digits):
-                iban_validator(value)
-        return value
 
     def validate_status(self, value):
         if not value:
@@ -443,8 +410,17 @@ class ManageProjectSerializer(serializers.ModelSerializer):
 
             for field, value in location.items():
                 setattr(instance.projectlocation, field, value)
-
             instance.projectlocation.save()
+
+        if 'payout_account' in validated_data:
+            validated_data.pop('payout_account')
+            serializer = PayoutAccountSerializer(
+                data=self.initial_data['payout_account'],
+                instance=instance.payout_account
+            )
+            if serializer.is_valid():
+                serializer.validated_data['user'] = self.context['request'].user
+                instance.payout_account = serializer.save()
 
         return super(ManageProjectSerializer, self).update(instance, validated_data)
 
@@ -486,19 +462,19 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'deadline',
                   'campaign_duration',
                   'description',
-                  'documents',
                   'editable',
                   'image',
                   'is_funding',
                   'latitude',
                   'location',
                   'longitude',
-                  'project_location',
                   'organization',
+                  'payout_account',
                   'people_needed',
                   'people_registered',
                   'pitch',
                   'place',
+                  'project_location',
                   'project_type',
                   'promoter',
                   'slug',

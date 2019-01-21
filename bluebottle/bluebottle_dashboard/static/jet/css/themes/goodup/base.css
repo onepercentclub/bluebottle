@@ -3663,7 +3663,7 @@ ul.messagelist {
 
 ul.errorlist {
   margin: 0 0 4px;
-  padding: 0;
+  padding: 8px;
   color: #ba2121;
   background: #fff; }
   ul.errorlist li {

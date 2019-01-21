@@ -154,6 +154,7 @@ class SafeField(serializers.CharField):
 
 
 class PrivateFileField(models.FileField):
+
     def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **kwargs):
         # Check if upload_to already has private path
         # This fixes loops and randomly added migrations

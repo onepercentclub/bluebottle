@@ -83,6 +83,10 @@ urlpatterns = [
         include('bluebottle.payments_lipisha.urls.core')),
     url(r'^payments_beyonic/',
         include('bluebottle.payments_beyonic.urls.core')),
+    url(r'^payments_stripe/',
+        include('bluebottle.payments_stripe.urls.core')),
+    url(r'^payouts_stripe/',
+        include('bluebottle.payouts.urls.stripe')),
 
     url(r'^surveys/',
         include('bluebottle.surveys.urls.core')),
@@ -120,7 +124,10 @@ urlpatterns = [
         include('bluebottle.projects.urls.api')),
     url(r'^api/payouts/',
         include('bluebottle.payouts_dorado.urls')),
+    url(r'^api/payouts/',
+        include('bluebottle.payouts.urls.api')),
 
+    url(r'^downloads/', include('bluebottle.payouts.urls.media')),
     url(r'^downloads/', include('bluebottle.projects.urls.media')),
 
 ]

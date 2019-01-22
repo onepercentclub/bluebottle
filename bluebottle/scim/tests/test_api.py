@@ -176,7 +176,7 @@ class SCIMSchemaDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
         self.assertEqual(data['status'], 404)
         self.assertEqual(
             data['details'],
-            'Resource not found: urn:ietf:params:scim:schemas:core:2.0:User:something'
+            'Resource not found: urn:ietf:params:scim:schemas:core:2.0:Schema:something'
         )
         self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 

@@ -51,7 +51,7 @@ class SCIMViewMixin(object):
     def handle_exception(self, exc):
         try:
             data = {
-                'schemas':  ["urn:ietf:params:scim:api:messages:2.0:Error"],
+                'schemas': ["urn:ietf:params:scim:api:messages:2.0:Error"],
                 'status': exc.status_code
             }
         except AttributeError:

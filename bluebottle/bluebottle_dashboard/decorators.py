@@ -3,8 +3,6 @@ import functools
 from django.contrib.admin import helpers
 from django.template.response import TemplateResponse
 
-from bluebottle.projects.models import Project
-
 
 def confirmation_form(form_class, model, template):
     def decorator(func):

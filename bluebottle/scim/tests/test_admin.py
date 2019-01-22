@@ -2,7 +2,7 @@ from django.contrib.admin.sites import AdminSite
 from django.test.client import RequestFactory
 from django.urls import reverse
 
-from bluebottle.test.utils import override_settings, BluebottleAdminTestCase
+from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.scim.admin import SCIMPlatformSettingsAdmin
 from bluebottle.scim.models import SCIMPlatformSettings
 

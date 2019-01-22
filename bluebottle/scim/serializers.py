@@ -12,7 +12,6 @@ class NonNestedSerializer(serializers.Serializer):
         super(NonNestedSerializer, self).__init__(*args, **kwargs)
 
 
-
 class NameSerializer(NonNestedSerializer):
 
     givenName = serializers.CharField(source='first_name')

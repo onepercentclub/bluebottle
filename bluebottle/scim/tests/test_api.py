@@ -1,6 +1,5 @@
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
-from django.utils import timezone
 
 from bluebottle.members.models import Member
 from bluebottle.scim.models import SCIMPlatformSettings
@@ -64,7 +63,6 @@ class SCIMServiceProviderConfigViewTest(SCIMEndpointTestCaseMixin, BluebottleTes
     @property
     def url(self):
         return reverse('scim-service-provider-config')
-
 
     def test_get(self):
         """
@@ -167,7 +165,7 @@ class SCIMSchemaDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
         """
         Test authenticated request
         """
-        url =  reverse('scim-schema-detail', args=(self.schema_id + ':something',))
+        url = reverse('scim-schema-detail', args=(self.schema_id + ':something',))
         response = self.client.get(
             url,
             token=self.token
@@ -237,7 +235,7 @@ class SCIMResourceTypeDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
         """
         Test authenticated request
         """
-        url =  reverse('scim-resource-type-detail', args=('SomethingElse',))
+        url = reverse('scim-resource-type-detail', args=('SomethingElse',))
         response = self.client.get(
             url,
             token=self.token
@@ -292,7 +290,7 @@ class SCIMUserListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
                 'givenName': 'Tester',
                 'familyName': 'Example'
             }
-       }
+        }
 
         response = self.client.post(
             self.url,
@@ -334,7 +332,7 @@ class SCIMUserListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
                 'givenName': 'Tester',
                 'familyName': 'Example'
             }
-       }
+        }
 
         response = self.client.post(
             self.url,
@@ -366,7 +364,7 @@ class SCIMUserListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
                 'givenName': 'Tester',
                 'familyName': 'Example'
             }
-       }
+        }
 
         self.client.post(
             self.url,
@@ -511,6 +509,7 @@ class SCIMGroupListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
         )
         self.assertEqual(response.status_code, 405)
 
+
 class SCIMGroupDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
@@ -567,7 +566,6 @@ class SCIMGroupDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
         )
 
     def test_missing_members_are_removed(self):
-        new_user = BlueBottleUserFactory.create()
         request_data = {
             'id': self.group.pk,
             'displayName': self.group.name,

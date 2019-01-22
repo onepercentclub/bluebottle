@@ -8,31 +8,49 @@ from bluebottle.scim.views import (
 
 
 urlpatterns = [
-    url(r'^ServerProviderConfig$',
+    url(
+        r'^ServerProviderConfig$',
         ServiceProviderConfigView.as_view(),
-        name='scim-service-provider-config'),
-    url(r'^Schemas$',
+        name='scim-service-provider-config'
+    ),
+    url(
+        r'^Schemas$',
         SchemaListView.as_view(),
-        name='scim-schema-list'),
-    url(r'^Schemas/(?P<id>[\:\.\w-]+)$',
+        name='scim-schema-list'
+    ),
+    url(
+        r'^Schemas/(?P<id>[\:\.\w-]+)$',
         SchemaRetrieveView.as_view(),
-        name='scim-schema-detail'),
-   url(r'^ResourceTypes$',
+        name='scim-schema-detail'
+    ),
+    url(
+        r'^ResourceTypes$',
         ResourceTypeListView.as_view(),
-        name='scim-resource-type-list'),
-   url(r'^ResourceTypes/(?P<id>[\w]+)$',
+        name='scim-resource-type-list'
+    ),
+    url(
+        r'^ResourceTypes/(?P<id>[\w]+)$',
         ResourceTypeRetrieveView.as_view(),
-        name='scim-resource-type-detail'),
-   url(r'^Users/$',
+        name='scim-resource-type-detail'
+    ),
+    url(
+        r'^Users/$',
         UserListView.as_view(),
-        name='scim-user-list'),
-   url(r'^Users/(?P<pk>[\w]+)$',
+        name='scim-user-list'
+    ),
+    url(
+        r'^Users/(?P<pk>[\w]+)$',
         UserDetailView.as_view(),
-        name='scim-user-detail'),
-    url(r'^Groups/$',
+        name='scim-user-detail'
+    ),
+    url(
+        r'^Groups/$',
         GroupListView.as_view(),
-        name='scim-group-list'),
-   url(r'^Groups/(?P<pk>[\w]+)$',
+        name='scim-group-list'
+    ),
+    url(
+        r'^Groups/(?P<pk>[\w]+)$',
         GroupDetailView.as_view(),
-        name='scim-group-detail'),
+        name='scim-group-detail'
+    ),
 ]

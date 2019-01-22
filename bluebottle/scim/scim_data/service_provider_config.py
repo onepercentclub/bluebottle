@@ -8,6 +8,8 @@ SERVICE_PROVIDER_CONFIG = {
         },
     "bulk": {
         "supported": False,
+        "maxOperations": 0,
+        "maxPayloadSize": 0,
         },
     "filter": {
         "supported": False,

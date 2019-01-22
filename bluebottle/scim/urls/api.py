@@ -9,7 +9,7 @@ from bluebottle.scim.views import (
 
 urlpatterns = [
     url(
-        r'^ServerProviderConfig$',
+        r'^ServiceProviderConfig$',
         ServiceProviderConfigView.as_view(),
         name='scim-service-provider-config'
     ),
@@ -34,7 +34,7 @@ urlpatterns = [
         name='scim-resource-type-detail'
     ),
     url(
-        r'^Users/$',
+        r'^Users$',
         UserListView.as_view(),
         name='scim-user-list'
     ),
@@ -44,7 +44,7 @@ urlpatterns = [
         name='scim-user-detail'
     ),
     url(
-        r'^Groups/$',
+        r'^Groups$',
         GroupListView.as_view(),
         name='scim-group-list'
     ),

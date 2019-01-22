@@ -1,7 +1,8 @@
 from django.contrib.auth.models import Group
 
 from rest_framework import (
-    generics, response, permissions, authentication, exceptions
+    generics, response, permissions, authentication, exceptions,
+    renderers
 )
 
 from bluebottle.members.models import Member
@@ -43,10 +44,15 @@ class SCIMAuthentication(authentication.BaseAuthentication):
         return 'Bearer'
 
 
+class SCIMRenderer(renderers.JSONRenderer):
+    media_type = 'application/scim+json'
+
+
 class SCIMViewMixin(object):
     authentication_classes = (SCIMAuthentication, )
     permission_classes = (permissions.IsAuthenticated, )
     pagination_class = SCIMPaginator
+    renderer_classes = (SCIMRenderer, )
 
     def handle_exception(self, exc):
         try:
@@ -84,6 +90,7 @@ class StaticListAPIView(SCIMViewMixin, generics.ListAPIView):
 
 
 class ServiceProviderConfigView(StaticRetrieveAPIView):
+    permission_classes = []
     data = scim_data.SERVICE_PROVIDER_CONFIG
 
     def get(self, request):

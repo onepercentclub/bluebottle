@@ -6,16 +6,16 @@ from django.template.response import TemplateResponse
 from bluebottle.projects.models import Project
 
 
-def confirmation_form(form_class, template):
+def confirmation_form(form_class, model, template):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(self, request, pk):
             form = form_class()
-            obj = Project.objects.get(pk=pk)
+            obj = model.objects.get(pk=pk)
             if 'confirm' in request.POST and request.POST['confirm']:
                 form = form_class(request.POST)
                 if form.is_valid():
-                    return func(self, request, pk)
+                    return func(self, request, obj)
 
             context = dict(
                 self.admin_site.each_context(request),

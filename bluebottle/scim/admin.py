@@ -3,8 +3,10 @@ from django.contrib import admin
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.urls import reverse
 
+from bluebottle.bluebottle_dashboard.decorators import confirmation_form
+from bluebottle.scim.forms import ResetTokenConfirmationForm
 from bluebottle.scim.models import SCIMPlatformSettings
-from bluebottle.utils.admin import BasePlatformSettingsAdmin
+from bluebottle.utils.admin import BasePlatformSettingsAdmin, log_action
 
 
 class SCIMPlatformSettingsAdmin(BasePlatformSettingsAdmin):
@@ -21,20 +23,20 @@ class SCIMPlatformSettingsAdmin(BasePlatformSettingsAdmin):
         ]
         return custom_urls + urls
 
-    def reset_token(self, request, pk):
-        if request.method == 'POST':
-            if (
-                request.user.is_active
-                and request.user.has_permission('scim.change_scimplatformsettings')
-            ):
-                scim_settings = SCIMPlatformSettings.objects.get(pk=pk)
+    @confirmation_form(
+        ResetTokenConfirmationForm,
+        SCIMPlatformSettings,
+        'admin/reset_token_confirmation.html'
+    )
+    def reset_token(self, request, scim_settings):
+        if not request.user.has_perm('scim.change_scimplatformsettings'):
+            return HttpResponseForbidden('Missing permission: scim.change_scimplatformsettings')
 
-                scim_settings.bearer_token = None
-                scim_settings.save()
-            else:
-                return HttpResponseForbidden()
+        scim_settings.bearer_token = None
+        scim_settings.save()
 
-        url = reverse('admin:scim_scimplatformsettings_change', args=(pk,))
+        log_action(scim_settings, request.user, 'Reset Token')
+        url = reverse('admin:scim_scimplatformsettings_change', args=(scim_settings.pk,))
         return HttpResponseRedirect(url)
 
 

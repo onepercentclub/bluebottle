@@ -19,8 +19,8 @@ class UploadWidget(forms.FileInput):
 
 
 class RefundConfirmationForm(forms.Form):
-    title = 'Refund project?!'
+    title = _('Refund project?!')
 
 
 class PayoutApprovalConfirmationForm(forms.Form):
-    title = 'Approve Payout?!'
+    title = _('Approve Payout?!')

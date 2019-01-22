@@ -1,0 +1,13 @@
+{% extends "admin/confirmation.html" %}
+{% load i18n l10n admin_urls %}
+
+{% block confirmation_message %}
+    <p>{% trans "Are you sure you want to reset the scim token?" %}</p>
+{% endblock %} 
+
+{% block confirmation_content %}
+  <h2>Current Bearer token</h2>
+  <ul>
+    <li>{{ obj.bearer_token }}</li>
+  </ul>
+{% endblock %}

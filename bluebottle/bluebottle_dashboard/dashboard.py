@@ -2,6 +2,7 @@ import importlib
 
 from bluebottle.members.dashboard import RecentMembersDashboard
 from bluebottle.projects.dashboard import RecentProjects, MyReviewingProjects, ClosingFundingProjects
+from bluebottle.payouts.dashboard import PayoutAccountsNeedingAction
 from django.urls.base import reverse, reverse_lazy
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
@@ -39,6 +40,7 @@ class CustomIndexDashboard(Dashboard):
         self.children.append(MyReviewingProjects())
         self.children.append(ClosingFundingProjects())
         self.children.append(ClosingTasks())
+        self.children.append(PayoutAccountsNeedingAction())
         self.children.append(modules.RecentActions(
             _('Recent Actions'),
             10,

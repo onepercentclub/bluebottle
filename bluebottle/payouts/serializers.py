@@ -164,6 +164,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
             'account_token',
             'bank_account_token',
             'country',
+            'document_type',
             'account_id',
             'reviewed',
             'bank_account',

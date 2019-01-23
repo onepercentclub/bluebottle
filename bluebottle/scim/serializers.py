@@ -91,7 +91,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
 
 
 class GroupMemberSerializer(serializers.ModelSerializer):
-    value = serializers.IntegerField(source='pk')
+    value = serializers.CharField(source='pk')
     operation = serializers.CharField(write_only=True, required=False)
     ref = serializers.SerializerMethodField(method_name='get_ref')
 

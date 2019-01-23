@@ -23,14 +23,19 @@ class SCIMPaginator(pagination.LimitOffsetPagination):
     def get_paginated_response(self, data):
         return response.Response({
             'totalResults': self.count,
-            'startIndex': self.offset,
+            'startIndex': self.offset + 1,
             'Resources': data,
             'itemsPerPage': self.limit,
             'schemas': ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
         })
 
     def get_offset(self, request):
-        return super(SCIMPaginator, self).get_offset(request) + 1
+        try:
+            return pagination._positive_int(
+                request.query_params[self.offset_query_param],
+            ) - 1
+        except (KeyError, ValueError):
+            return 0
 
 
 class SCIMUser(object):
@@ -128,10 +133,10 @@ class UserDetailView(SCIMViewMixin, generics.RetrieveUpdateDestroyAPIView):
 
 
 class GroupListView(SCIMViewMixin, generics.ListAPIView):
-    queryset = Group.objects.exclude(name='Authenticated')
+    queryset = Group.objects.exclude(name__in=('Anonymous', 'Authenticated', ))
     serializer_class = SCIMGroupSerializer
 
 
 class GroupDetailView(SCIMViewMixin, generics.RetrieveUpdateAPIView):
-    queryset = Group.objects.exclude(name='Authenticated')
+    queryset = Group.objects.exclude(name__in=('Anonymous', 'Authenticated', ))
     serializer_class = SCIMGroupSerializer

@@ -15,19 +15,22 @@ from bluebottle.scim import scim_data
 from rest_framework import pagination
 
 
-class SCIMPaginator(pagination.PageNumberPagination):
-    page_size = 1000
-    page_size_query_param = 'count'
-    page_query_param = 'startIndex'
+class SCIMPaginator(pagination.LimitOffsetPagination):
+    default_limit = 1000
+    limit_query_param = 'count'
+    offset_query_param = 'startIndex'
 
     def get_paginated_response(self, data):
         return response.Response({
-            'totalResults': self.page.paginator.count,
-            'startIndex': self.page.number,
+            'totalResults': self.count,
+            'startIndex': self.offset,
             'Resources': data,
-            'itemsPerPage': self.page_size,
+            'itemsPerPage': self.limit,
             'schemas': ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
         })
+
+    def get_offset(self, request):
+        return super(SCIMPaginator, self).get_offset(request) + 1
 
 
 class SCIMUser(object):

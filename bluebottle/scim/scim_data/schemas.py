@@ -1424,7 +1424,7 @@ SCHEMAS = [
                 u"multiValued": False,
                 u"mutability": u"readWrite",
                 u"name": u"displayName",
-                u"required": False,
+                u"required": True,
                 u"returned": u"default",
                 u"type": u"string",
                 u"uniqueness": u"none",

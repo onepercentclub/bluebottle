@@ -14,6 +14,14 @@ class SCIMEndpointTestCaseMixin(object):
         )
         super(SCIMEndpointTestCaseMixin, self).setUp()
 
+
+class AuthenticatedSCIMEndpointTestCaseMixin(object):
+    def setUp(self):
+        self.token = 'Bearer {}'.format(
+            SCIMPlatformSettings.objects.get().bearer_token
+        )
+        super(AuthenticatedSCIMEndpointTestCaseMixin, self).setUp()
+
     def test_get_no_authentication(self):
         """
         Test unauthenticated request
@@ -105,8 +113,19 @@ class SCIMServiceProviderConfigViewTest(SCIMEndpointTestCaseMixin, BluebottleTes
             'oauthbearertoken'
         )
 
+    def test_get_unauthenticated(self):
+        """
+        Test authenticated request
+        """
+        response = self.client.get(
+            self.url,
+            token=self.token
+        )
 
-class SCIMSchemaListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
+        self.assertEqual(response.status_code, 200)
+
+
+class SCIMSchemaListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
         return reverse('scim-schema-list')
@@ -122,7 +141,7 @@ class SCIMSchemaListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
 
         data = response.data
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(data['totalResults'], 5)
+        self.assertEqual(data['totalResults'], 6)
         self.assertEqual(data['startIndex'], 1)
         self.assertEqual(data['itemsPerPage'], 1000)
         self.assertEqual(
@@ -136,12 +155,13 @@ class SCIMSchemaListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
                 'urn:ietf:params:scim:schemas:core:2.0:ResourceType',
                 'urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig',
                 'urn:ietf:params:scim:schemas:core:2.0:Group',
-                'urn:ietf:params:scim:schemas:core:2.0:User'
+                'urn:ietf:params:scim:schemas:core:2.0:User',
+                'urn:ietf:params:scim:schemas:extension:enterprise:2.0:User',
             }
         )
 
 
-class SCIMSchemaDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
+class SCIMSchemaDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     schema_id = 'urn:ietf:params:scim:schemas:core:2.0:Schema'
 
     @property
@@ -181,7 +201,7 @@ class SCIMSchemaDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
         self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 
 
-class SCIMResourceTypeListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
+class SCIMResourceTypeListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
         return reverse('scim-resource-type-list')
@@ -210,7 +230,7 @@ class SCIMResourceTypeListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
         )
 
 
-class SCIMResourceTypeDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
+class SCIMResourceTypeDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
         return reverse('scim-resource-type-detail', args=('User',))
@@ -243,7 +263,7 @@ class SCIMResourceTypeDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class SCIMUserListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
+class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
         return reverse('scim-user-list')
@@ -381,7 +401,7 @@ class SCIMUserListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
         self.assertEqual(response.data['status'], 400)
 
 
-class SCIMUserDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
+class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
         return reverse('scim-user-detail', args=(self.user.id, ))
@@ -475,7 +495,7 @@ class SCIMUserDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
         )
 
 
-class SCIMGroupListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
+class SCIMGroupListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
         return reverse('scim-group-list')
@@ -510,7 +530,7 @@ class SCIMGroupListTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
         self.assertEqual(response.status_code, 405)
 
 
-class SCIMGroupDetailTest(SCIMEndpointTestCaseMixin, BluebottleTestCase):
+class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
         return reverse('scim-group-detail', args=(self.group.id, ))

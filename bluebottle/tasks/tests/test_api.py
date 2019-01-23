@@ -501,6 +501,28 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
             response.data['place']['country'], country.pk
         )
 
+    def test_create_task_without_place(self):
+        country = CountryFactory.create()
+
+        task_data = {
+            'people_needed': 1,
+            'deadline': '2016-08-09T12:45:14.134756',
+            'deadline_to_apply': '2016-08-04T12:45:14.134756',
+            'project': self.some_project.slug,
+            'title': 'Help me',
+            'description': 'I need help',
+            'location': '',
+            'skill': 1,
+            'time_needed': '4.00',
+            'type': 'event',
+        }
+
+        # Task deadline time should changed be just before midnight after setting.
+        response = self.client.post(self.tasks_url, task_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
     def test_update_task_with_place(self):
         task = TaskFactory.create(
             author=self.some_user,

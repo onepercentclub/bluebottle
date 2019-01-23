@@ -1,3 +1,5 @@
+import urllib
+
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
@@ -293,6 +295,51 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
         )
 
+    def test_get_paged(self):
+        params = urllib.urlencode({
+            'count': 8,
+            'startIndex': 1
+        })
+
+        response = self.client.get(
+            '{}?{}'.format(self.url, params),
+            token=self.token
+        )
+        data = response.data
+        self.assertEqual(data['totalResults'], 10)
+        self.assertEqual(data['startIndex'], 1)
+        self.assertEqual(len(data['Resources']), 8)
+
+    def test_get_next_page(self):
+        params = urllib.urlencode({
+            'count': 8,
+            'startIndex': 9
+        })
+
+        response = self.client.get(
+            '{}?{}'.format(self.url, params),
+            token=self.token
+        )
+        data = response.data
+        self.assertEqual(data['totalResults'], 10)
+        self.assertEqual(data['startIndex'], 9)
+        self.assertEqual(len(data['Resources']), 2)
+
+    def test_get_page_to_far(self):
+        params = urllib.urlencode({
+            'count': 8,
+            'startIndex': 12
+        })
+
+        response = self.client.get(
+            '{}?{}'.format(self.url, params),
+            token=self.token
+        )
+        data = response.data
+        self.assertEqual(data['totalResults'], 10)
+        self.assertEqual(data['startIndex'], 12)
+        self.assertEqual(len(data['Resources']), 0)
+
     def test_post(self):
         """
         Test authenticated request
@@ -511,7 +558,7 @@ class SCIMGroupListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCa
 
         data = response.data
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(data['totalResults'], 3)
+        self.assertEqual(data['totalResults'], 2)
         self.assertEqual(data['startIndex'], 1)
         self.assertEqual(data['itemsPerPage'], 1000)
         self.assertEqual(
@@ -556,7 +603,7 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
         self.assertEqual(data['id'], self.group.id)
         self.assertEqual(data['displayName'], self.group.name)
         self.assertEqual(len(data['members']), 1)
-        self.assertEqual(data['members'][0]['value'], self.user.pk)
+        self.assertEqual(data['members'][0]['value'], unicode(self.user.pk))
         self.assertEqual(
             data['members'][0]['$ref'],
             reverse('scim-user-detail', args=(self.user.pk, ))

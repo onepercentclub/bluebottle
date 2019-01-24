@@ -84,6 +84,7 @@ class StripePayoutAccount(PayoutAccount):
     type = 'stripe'
 
     account_id = models.CharField(max_length=100, null=True, blank=True)
+    document_type = models.CharField(max_length=100, null=True, blank=True)
     country = models.CharField(max_length=2, null=True, blank=True)
 
     providers = [

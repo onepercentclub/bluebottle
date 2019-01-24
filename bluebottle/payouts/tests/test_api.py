@@ -1,10 +1,69 @@
+from mock import patch
+import os
+
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
+from bluebottle.utils.utils import json2obj
+
+
+MERCHANT_ACCOUNTS = [
+    {
+        'merchant': 'stripe',
+        'currency': 'EUR',
+        'secret_key': 'sk_test_secret_key',
+        'webhook_secret': 'whsec_test_webhook_secret',
+        'webhook_secret_connect': 'whsec_test_webhook_secret_connect',
+    }
+]
+
+PROJECT_PAYOUT_FEES = {
+    'beneath_threshold': 1,
+    'fully_funded': 0.05,
+    'not_fully_funded': 0.0725
+}
+
+
+@override_settings(MERCHANT_ACCOUNTS=MERCHANT_ACCOUNTS)
+class StripePayoutTestApi(BluebottleTestCase):
+    def setUp(self):
+        super(StripePayoutTestApi, self).setUp()
+        self.country = CountryFactory.create()
+        self.init_projects()
+
+        self.owner = BlueBottleUserFactory.create()
+        self.owner_token = "JWT {0}".format(self.owner.get_jwt_token())
+        self.project = ProjectFactory.create(owner=self.owner)
+        self.project_manage_url = reverse('project_manage_detail', kwargs={'slug': self.project.slug})
+
+    @patch('bluebottle.payouts.models.stripe.Account.retrieve')
+    @patch('bluebottle.payouts.models.stripe.Account.create')
+    def test_stripe_details(self, stripe_create, stripe_retrieve):
+        stripe_create.return_value = json2obj(
+            open(os.path.dirname(__file__) + '/data/stripe_account_verified.json').read()
+        )
+        stripe_retrieve.return_value = json2obj(
+            open(os.path.dirname(__file__) + '/data/stripe_account_verified.json').read()
+        )
+        project_details = {
+            'title': self.project.title,
+            'payout_account': {
+                'type': 'stripe',
+                'account_token': "ct_1234567890",
+                'document_type': "passport",
+                'country': 'NL'
+            }
+        }
+        response = self.client.put(self.project_manage_url, project_details, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['payout_account']['account_id'], "acct_1DhHdvsdvsdBY")
+        self.assertEqual(response.data['payout_account']['document_type'], 'passport')
+        self.assertEqual(response.data['payout_account']['type'], "stripe")
 
 
 class PayoutAccountApiTestCase(BluebottleTestCase):

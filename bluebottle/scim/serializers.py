@@ -92,7 +92,6 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
 
 class GroupMemberSerializer(serializers.ModelSerializer):
     value = serializers.CharField(source='pk')
-    operation = serializers.CharField(write_only=True, required=False)
     ref = serializers.SerializerMethodField(method_name='get_ref')
 
     def get_ref(self, obj):
@@ -106,7 +105,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ('value', 'ref', 'operation')
+        fields = ('value', 'ref', )
 
 
 class SCIMGroupSerializer(serializers.ModelSerializer):

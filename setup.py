@@ -90,11 +90,13 @@ install_requires = [
     'pendulum==1.2.4',
     'psycopg2==2.7.1',
     'pyasn1==0.4.2',
+    'pycrypto>=2.6.1',
     'pygeoip==0.3.2',
     'pyjwt==1.5.3',
     'pyOpenSSL==17.5.0',
     'python-dateutil==2.6.1',
     'python-memcached==1.58',
+    'python-saml==2.1.7'
     'python-social-auth==0.2.21',
     'surlex==0.2.0',
     'raven==6.1.0',

@@ -96,7 +96,7 @@ install_requires = [
     'pyOpenSSL==17.5.0',
     'python-dateutil==2.6.1',
     'python-memcached==1.58',
-    'python-saml==2.1.7'
+    'python-saml==2.1.7',
     'python-social-auth==0.2.21',
     'surlex==0.2.0',
     'raven==6.1.0',

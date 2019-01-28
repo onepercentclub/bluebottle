@@ -1,9 +1,11 @@
+import re
 import urllib
 
 from django.http.response import HttpResponseRedirect, HttpResponse
 from django.views.generic.base import View, TemplateView
 from django.utils.module_loading import import_string
 from django.core.exceptions import ImproperlyConfigured
+from django.contrib.auth import login
 
 from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
@@ -45,6 +47,7 @@ class TokenLoginView(View):
     """
     Parse GET/POST request and login through set Authentication backend
     """
+
     def get(self, request, link=None, token=None):
         auth = get_auth(request, token=token, link=link)
 
@@ -56,11 +59,15 @@ class TokenLoginView(View):
             return HttpResponseRedirect(url)
 
         url = "/login-with/{}/{}".format(user.pk, user.get_login_token())
-
-        if link:
-            url += '?{}'.format(urllib.urlencode({'next': link}))
-        elif auth.target_url:
-            url += '?{}'.format(urllib.urlencode({'next': auth.target_url}))
+        target_url = auth.target_url
+        if auth.target_url:
+            if re.match('^\/\w\w\/admin', target_url):
+                # Admin login:
+                # Log user in using cookies and redirect directly
+                login(request, user)
+                url = target_url
+            else:
+                url += '?{}'.format(urllib.urlencode({'next': target_url}))
 
         return HttpResponseRedirect(url)
 

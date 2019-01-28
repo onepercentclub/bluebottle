@@ -174,6 +174,10 @@ class TokenAuthentication(BaseTokenAuthentication):
 
         return url
 
+    @property
+    def target_url(self):
+        return self.args['link']
+
     def authenticate_request(self):
         self.check_token_used()
         data = self.decrypt_message()

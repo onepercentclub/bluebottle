@@ -88,8 +88,9 @@ class SAMLAuthentication(BaseTokenAuthentication):
             return self.parse_user(user_data)
         else:
             logger.error(
-                'Saml login error: {}, reason: {}'.format(
-                    self.auth.get_errors(), self.auth.get_last_error_reason()
+                'Saml login error: {}, reason: {}, assertions: {}'.format(
+                    self.auth.get_errors(), self.auth.get_last_error_reason(),
+                    self.auth.get_attributes()
                 )
             )
 

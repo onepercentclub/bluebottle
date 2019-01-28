@@ -129,6 +129,9 @@ class SCIMGroupSerializer(serializers.ModelSerializer):
             try:
                 user = Member.objects.get(pk=member['pk'])
                 obj.user_set.add(user)
+                if obj.name == 'Staff':
+                    user.is_staff = True
+                    user.save()
             except Member.DoesNotExist:
                 pass
 

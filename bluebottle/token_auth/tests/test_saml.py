@@ -77,9 +77,11 @@ class TestSAMLTokenAuthentication(TestCase):
     def test_with_existing_without_email(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             # Create user with empty email
-            BlueBottleUserFactory.create(remote_id='blahblah',
-                               email='',
-                               username='blah')
+            BlueBottleUserFactory.create(
+                remote_id='blahblah',
+                email='',
+                username='blah'
+            )
 
             filename = os.path.join(
                 os.path.dirname(__file__), 'data/valid_response.xml.base64'
@@ -101,9 +103,11 @@ class TestSAMLTokenAuthentication(TestCase):
     def test_auth_existing_succes(self):
         with self.settings(TOKEN_AUTH=TOKEN_AUTH_SETTINGS):
             # Create user with remote_id with caps
-            BlueBottleUserFactory.create(remote_id='492882615ACF31C8096B627245D76AE53036C090',
-                               email='smartin@yaco.es',
-                               username='smartin')
+            BlueBottleUserFactory.create(
+                remote_id='492882615ACF31C8096B627245D76AE53036C090',
+                email='smartin@yaco.es',
+                username='smartin'
+            )
 
             filename = os.path.join(
                 os.path.dirname(__file__), 'data/valid_response.xml.base64'

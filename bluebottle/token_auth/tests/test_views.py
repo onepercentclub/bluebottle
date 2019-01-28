@@ -125,7 +125,6 @@ class LoginViewTestCase(TestCase):
         request.session.save()
 
         response = self.view.get(request, link=admin_link)
-        user = DummyUser()
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(

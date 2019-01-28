@@ -59,8 +59,10 @@
   {% endif %}
   <div class="submit-row">
     <label>&nbsp;</label><input type="submit" value="{% trans 'Log in with password' %}" />
-    <p>or</p>
-    <a href="/token/redirect/?url={{next}}" class="button default">Login using SSO</a>
+    {% if properties.TOKEN_AUTH.admin_login %}
+        <p>or</p>
+        <a href="/token/redirect/?url={{next}}" class="button default">Login using SSO</a>
+    {% endif %}
   </div>
 </form>
 

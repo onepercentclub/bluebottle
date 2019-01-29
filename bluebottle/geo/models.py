@@ -154,5 +154,3 @@ class Place(models.Model):
     @property
     def position_tuple(self):
         return (self.position.longitude, self.position.latitude)
-
-

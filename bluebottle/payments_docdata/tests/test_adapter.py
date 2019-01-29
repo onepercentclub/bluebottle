@@ -65,7 +65,11 @@ class PaymentsDocdataAdapterTestCase(BluebottleTestCase, FsmTestMixin):
         instance.create.return_value = {'order_key': 123, 'order_id': 123}
         user = BlueBottleUserFactory()
         user.address.country = CountryFactory(name='Netherlands', alpha2_code='NL')
-        user.address.line1 = u'Tomalar Mah. Karaman Cad. Gizli Bah\xe7e Evleri 2. Etap Bina No:30 F Blok D:2 D\xf6\u015femealt\u0131'
+        user.address.line1 = (
+            u'Tomalar Mah. Karaman Cad. Gizli Bah\xe7e Evleri 2.'
+            u' Etap Bina No:30 F Blok D:2 D\xf6\u015femealt\u0131'
+        )
+
         order_payment = OrderPaymentFactory(user=user,
                                             payment_method='docdataCreditcard',
                                             integration_data={'default_pm': 'mastercard'})

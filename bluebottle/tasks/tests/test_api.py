@@ -502,8 +502,6 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
         )
 
     def test_create_task_without_place(self):
-        country = CountryFactory.create()
-
         task_data = {
             'people_needed': 1,
             'deadline': '2016-08-09T12:45:14.134756',
@@ -521,7 +519,6 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
         response = self.client.post(self.tasks_url, task_data,
                                     HTTP_AUTHORIZATION=self.some_token)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
 
     def test_update_task_with_place(self):
         task = TaskFactory.create(

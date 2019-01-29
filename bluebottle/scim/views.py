@@ -65,16 +65,16 @@ class SCIMViewMixin(object):
     permission_classes = (permissions.IsAuthenticated, )
     pagination_class = SCIMPaginator
     renderer_classes = (SCIMRenderer, )
-    parser_classes = (SCIMParser, )
+    parser_classes = (SCIMParser, parsers.JSONParser,)
 
-    def handile_exception(self, exc):
+    def handle_exception(self, exc):
         try:
             data = {
                 'schemas': ["urn:ietf:params:scim:api:messages:2.0:Error"],
                 'status': exc.status_code
             }
         except AttributeError:
-            return super(SCIMViewMixin, self).handle_exception(exc)
+            raise exc
 
         if isinstance(exc.detail, dict):
             data['details'] = '\n'.join(

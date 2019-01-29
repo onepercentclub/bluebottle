@@ -52,7 +52,7 @@ class LocationField(serializers.CharField):
 
 
 class MetaSerializer(NonNestedSerializer):
-    location = LocationField(source='', read_only=True)
+    location = LocationField(source='id', read_only=True)
 
     def to_representation(self, obj):
         representation = super(MetaSerializer, self).to_representation(obj)

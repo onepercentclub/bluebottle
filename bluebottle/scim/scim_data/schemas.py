@@ -566,7 +566,7 @@ SCHEMAS = [
                 u"multiValued": False,
                 u"mutability": u"readWrite",
                 u"name": u"userName",
-                u"required": True,
+                u"required": False,
                 u"returned": u"default",
                 u"type": u"string",
                 u"uniqueness": u"server",

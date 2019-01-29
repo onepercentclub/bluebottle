@@ -535,11 +535,19 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
             token=self.token
         )
 
+        self.user.refresh_from_db()
+
         self.assertEqual(response.status_code, 204)
-        self.assertRaises(
-            Member.DoesNotExist,
-            self.user.refresh_from_db
+        self.assertEqual(self.user.is_active, False)
+        self.assertEqual(self.user.is_anonymized, True)
+        self.assertEqual(self.user.first_name, 'Deactivated')
+
+        response = self.client.get(
+            self.url,
+            token=self.token
         )
+
+        self.assertEqual(response.status_code, 404)
 
 
 class SCIMGroupListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):

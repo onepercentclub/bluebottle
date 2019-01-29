@@ -277,6 +277,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertTrue(self.user.email.endswith('anonymous@example.com'))
         self.assertEqual(self.user.first_name, 'Deactivated')
         self.assertEqual(self.user.last_name, 'Member')
+        self.assertEqual(self.user.anonymized, True)
         self.assertFalse(self.user.has_usable_password())
 
     def test_anonymize_twice(self):

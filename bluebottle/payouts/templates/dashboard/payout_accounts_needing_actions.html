@@ -1,0 +1,16 @@
+{% load i18n %}
+{% block module_content %}
+<ul class="dashboard-item-list">
+    {% spaceless %}
+    {% for payout_account in module.children %}
+    <li class="{% cycle 'odd' 'even' %}">
+        <span class="float-right" title="Date submitted">
+            {{ payout_account.created|date }}<br>
+        </span>
+        <a href="{% url 'admin:payouts_payoutaccount_change' payout_account.id %}" >{{ payout_account.user }}</a>
+        <p>{{payout_account.verification_error}}</p>
+    </li>
+    {% endfor %}
+    {% endspaceless %}
+</ul>
+{% endblock %}

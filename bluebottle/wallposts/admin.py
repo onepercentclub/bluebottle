@@ -58,7 +58,7 @@ class MediaWallpostAdmin(PolymorphicChildModelAdmin):
     readonly_fields = ('ip_address', 'created', 'deleted', 'view_online', 'gallery', 'donation',
                        'share_with_facebook', 'share_with_twitter',
                        'share_with_linkedin', 'email_followers')
-    fields = readonly_fields + ('text', 'author', 'editor')
+    fields = readonly_fields + ('text', 'author', 'editor', 'pinned')
     raw_id_fields = ('author', 'editor')
     list_display = ('created', 'view_online', 'get_text', 'thumbnail', 'author', 'deleted')
     search_fields = ('text', 'author__first_name', 'author__last_name')
@@ -148,7 +148,7 @@ class TextWallpostAdmin(PolymorphicChildModelAdmin):
     search_fields = ('text', 'author__first_name', 'author__last_name')
     list_display = ('created', 'author', 'content_type', 'text', 'deleted')
     raw_id_fields = ('author', 'editor', 'donation')
-    fields = readonly_fields + ('text', 'author', 'editor')
+    fields = readonly_fields + ('text', 'author', 'editor', 'pinned')
     exclude = ('object_id', 'content_type')
 
     ordering = ('-created',)
@@ -195,7 +195,7 @@ class SystemWallpostAdmin(PolymorphicChildModelAdmin):
     readonly_fields = ('ip_address', 'created', 'content_type', 'related_type',
                        'donation_link', 'project_link',
                        'related_id', 'object_id')
-    fields = readonly_fields + ('author', 'donation', 'text')
+    fields = readonly_fields + ('author', 'donation', 'text', 'pinned')
     list_display = ('created', 'author', 'content_type', 'related_type', 'text', 'deleted')
     raw_id_fields = ('author', 'editor', 'donation')
     ordering = ('-created',)
@@ -229,7 +229,7 @@ class WallpostParentAdmin(PolymorphicParentModelAdmin):
     """ The parent model admin """
     base_model = Wallpost
     list_display = ('created', 'author', 'content_type', 'text', 'type', 'deleted')
-    fields = ('title', 'text', 'author', 'ip_address')
+    fields = ('title', 'text', 'author', 'ip_address', 'pinned')
     list_filter = ('created', ('content_type', admin.RelatedOnlyFieldListFilter),)
     ordering = ('-created',)
     search_fields = (

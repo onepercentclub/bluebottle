@@ -2,7 +2,7 @@ from django.contrib.auth.models import Group
 
 from rest_framework import (
     generics, response, permissions, authentication, exceptions,
-    renderers
+    renderers, parsers
 )
 
 from bluebottle.members.models import Member
@@ -56,20 +56,25 @@ class SCIMRenderer(renderers.JSONRenderer):
     media_type = 'application/scim+json'
 
 
+class SCIMParser(parsers.JSONParser):
+    media_type = 'application/scim+json'
+
+
 class SCIMViewMixin(object):
     authentication_classes = (SCIMAuthentication, )
     permission_classes = (permissions.IsAuthenticated, )
     pagination_class = SCIMPaginator
     renderer_classes = (SCIMRenderer, )
+    parser_classes = (SCIMParser, )
 
-    def handle_exception(self, exc):
+    def handile_exception(self, exc):
         try:
             data = {
                 'schemas': ["urn:ietf:params:scim:api:messages:2.0:Error"],
                 'status': exc.status_code
             }
         except AttributeError:
-            raise exc
+            return super(SCIMViewMixin, self).handle_exception(exc)
 
         if isinstance(exc.detail, dict):
             data['details'] = '\n'.join(

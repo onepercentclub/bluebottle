@@ -32,6 +32,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('payments_stripe', '0003_auto_20190130_1231'),
+        ('donations', '0010_auto_20190130_1141')
     ]
 
     operations = [

@@ -57,10 +57,16 @@ class BaseTokenAuthentication(object):
                 user.remote_id = data['remote_id']
                 user.save()
             except user_model.DoesNotExist:
-                user = user_model.objects.create(**user_data)
-                created = True
-        user_model.objects.filter(remote_id=data['remote_id']).update(**user_data)
-        user.refresh_from_db()
+                try:
+                    user = user_model.objects.get(email=user_data['email'])
+                except (KeyError, user_model.DoesNotExist):
+                    user = user_model.objects.create(**user_data)
+                    created = True
+
+        if not created:
+            user_model.objects.filter(pk=user.pk).update(**user_data)
+            user.refresh_from_db()
+
         return user, created
 
     def finalize(self, user, data):

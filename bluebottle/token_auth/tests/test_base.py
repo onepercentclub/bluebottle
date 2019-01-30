@@ -45,6 +45,55 @@ class TestBaseTokenAuthentication(TestCase):
     @patch.object(
         BaseTokenAuthentication,
         'authenticate_request',
+        return_value={'remote_id': 'test@example.com'}
+    )
+    def test_user_already_exists_only_remote_id(self, authenticate_request):
+        with self.settings(TOKEN_AUTH={}):
+            get_user_model()(remote_id='test@example.com', email='test@example.com').save()
+
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertFalse(created)
+            self.assertEqual(user.email, 'test@example.com')
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com',
+            'email': 'test@example.com'
+        }
+    )
+    def test_user_already_exists_without_remote_id(self, authenticate_request):
+        with self.settings(TOKEN_AUTH={}):
+            get_user_model()(email='test@example.com').save()
+
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertFalse(created)
+            self.assertEqual(user.email, 'test@example.com')
+            self.assertEqual(user.remote_id, 'test@example.com')
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
+        return_value={
+            'remote_id': 'test@example.com'
+        }
+    )
+    def test_user_new_only_remote_id(self, authenticate_request):
+        with self.settings(TOKEN_AUTH={}):
+            user, created = self.auth.authenticate()
+
+            self.assertEqual(authenticate_request.call_count, 1)
+            self.assertTrue(created)
+            self.assertEqual(user.remote_id, 'test@example.com')
+
+    @patch.object(
+        BaseTokenAuthentication,
+        'authenticate_request',
         return_value={'remote_id': 'test@example.com', 'email': 'test@example.com', 'first_name': 'updated'}
     )
     def test_user_already_exists_attributes_updated(self, authenticate_request):

@@ -176,7 +176,7 @@ class ProjectIndexTestCase(ESTestCase, BluebottleTestCase):
         )
 
     def test_search_recent_donation(self):
-        order = OrderFactory.create()
+        order = OrderFactory.create(status='success')
         for days in [1]:
             donation = Donation.objects.create(
                 project=self.project1, order=order

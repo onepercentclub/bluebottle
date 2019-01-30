@@ -272,8 +272,8 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], project.title)
 
     def test_score_donations(self):
-        order = OrderFactory.create(status='settled')
-        project = ProjectFactory.create(status=self.status)
+        order = OrderFactory.create(status='success')
+        project = ProjectFactory.create(status=self.status, title='project')
         DonationFactory(
             order=order,
             project=project,
@@ -293,7 +293,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
             created=now() - timedelta(days=10)
         )
 
-        other_project = ProjectFactory.create(status=self.status)
+        other_project = ProjectFactory.create(status=self.status, title='other_project')
         DonationFactory(
             order=order,
             project=other_project,
@@ -423,7 +423,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         )
 
         donation_project = ProjectFactory.create(status=self.status)
-        order = OrderFactory.create(status='settled')
+        order = OrderFactory.create(status='success')
         DonationFactory.create(
             order=order,
             project=donation_project,

@@ -182,6 +182,22 @@ class ProjectListSearchMixin(object):
             ]
         ) | ESQ(
             'function_score',
+            query=ESQ('exists', field='votes'),
+            functions=[
+                SF({
+                    'script_score': {
+                        'script': {
+                            'source': 'doc["votes"].length * 10000 / (now - doc["votes"].avg())',
+                            'lang': 'expression',
+                            'params': {
+                                'now': time.time() * 1000,
+                            }
+                        },
+                    },
+                }),
+            ]
+        ) | ESQ(
+            'function_score',
             query=ESQ('exists', field='task_members'),
             functions=[
                 SF({

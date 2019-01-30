@@ -9,7 +9,7 @@ from bluebottle.utils.serializers import MoneySerializer, MoneyTotalSerializer
 
 class PayoutDonationSerializer(serializers.ModelSerializer):
 
-    amount = MoneySerializer()
+    amount = MoneySerializer(source='payout_amount')
     status = serializers.CharField(source='order.status')
     confirmed = serializers.CharField(source='order.confirmed')
     completed = serializers.CharField(source='order.completed')

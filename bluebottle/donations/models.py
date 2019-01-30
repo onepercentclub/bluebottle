@@ -76,3 +76,8 @@ class Donation(models.Model):
         if not hasattr(order_payment, 'payment'):
             return '?'
         return order_payment.payment.method_name
+
+    def save(self, *args, **kwargs):
+        if not self.payout_amount:
+            self.payout_amount = self.amount
+        super(Donation, self).save(*args, **kwargs)

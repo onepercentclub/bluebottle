@@ -2,7 +2,7 @@ import re
 from rest_framework import serializers
 
 from bluebottle.donations.models import Donation
-from bluebottle.payouts.serializers import PayoutAccountSerializer
+from bluebottle.payouts.serializers import ExportPayoutAccountSerializer
 from bluebottle.projects.models import Project
 from bluebottle.utils.serializers import MoneySerializer, MoneyTotalSerializer
 
@@ -37,7 +37,7 @@ class ProjectPayoutSerializer(serializers.ModelSerializer):
     amount_donated = MoneyTotalSerializer(source='totals_donated', read_only=True)
 
     title = serializers.CharField(required=False)
-    account = PayoutAccountSerializer(source='payout_account', read_only=True)
+    account = ExportPayoutAccountSerializer(source='payout_account', read_only=True)
 
     donations = PayoutDonationSerializer(many=True, read_only=True)
     status = serializers.CharField(source='payout_status')

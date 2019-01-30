@@ -3,6 +3,7 @@ import logging
 from decimal import Decimal
 
 import stripe
+from django.conf import settings
 from django.db import connection
 from moneyed import Money
 from stripe.error import StripeError
@@ -37,6 +38,8 @@ class StripePaymentAdapter(BasePaymentAdapter):
         return self.status_mapping[status]
 
     def create_payment(self):
+        if not self.order_payment.card_data:
+            return
         chargeable = self.order_payment.card_data.pop('chargeable', False)
         self.payment = StripePayment(order_payment=self.order_payment, **self.order_payment.card_data)
         self.payment.save()
@@ -50,6 +53,8 @@ class StripePaymentAdapter(BasePaymentAdapter):
         return self.payment
 
     def charge(self):
+        if not self.payment:
+            return
         if not self.payment.charge_token:
 
             account_id = self.order_payment.project.payout_account.account_id
@@ -76,6 +81,15 @@ class StripePaymentAdapter(BasePaymentAdapter):
         self.payment.data = json.loads(unicode(charge))
         self.payment.status = self._get_mapped_status(charge.status)
 
+        amount = Money(charge['amount'], charge['currency'])
+        if charge['currency'].upper() not in settings.ZERO_DECIMAL_CURRENCIES:
+            amount = amount / 100
+        donation = self.payment.order_payment.order.donations.first()
+        donation.amount = amount
+        donation.save()
+        self.order_payment.amount = amount
+        self.order_payment.save()
+
         if charge.refunded:
             self.payment.status = StatusDefinition.REFUNDED
 
@@ -87,7 +101,10 @@ class StripePaymentAdapter(BasePaymentAdapter):
         self.payment.save()
 
         # Set payout_amount on donation
-        amount = Money(Decimal(transfer['amount']) / 100, transfer['currency'])
+        amount = transfer['amount']
+        if transfer['currency'].upper() not in settings.ZERO_DECIMAL_CURRENCIES:
+            amount = Decimal(transfer['amount']) / 100
+        amount = Money(amount, transfer['currency'])
         donation = self.payment.order_payment.order.donations.first()
         donation.payout_amount = amount
         donation.save()
@@ -95,7 +112,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
         self.payment.save()
 
     def check_payment_status(self):
-        if self.payment.charge_token:
+        if self.payment and self.payment.charge_token:
             charge = stripe.Charge.retrieve(
                 self.payment.charge_token,
                 api_key=self.credentials['secret_key']

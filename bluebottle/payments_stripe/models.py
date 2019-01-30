@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from bluebottle.payments.models import Payment
 from django.utils.translation import ugettext_lazy as _
@@ -27,8 +28,11 @@ class StripePayment(Payment):
 
     def save(self, *args, **kwargs):
         if not self.amount:
-            self.amount = int(self.order_payment.amount.amount * 100)
             self.currency = self.order_payment.amount.currency
+            if str(self.currency).upper() in settings.ZERO_DECIMAL_CURRENCIES:
+                self.amount = int(self.order_payment.amount.amount)
+            else:
+                self.amount = int(self.order_payment.amount.amount * 100)
         if not self.description:
             self.description = "{} - {}".format(self.order_payment.id, self.order_payment.info_text)
         super(StripePayment, self).save(*args, **kwargs)

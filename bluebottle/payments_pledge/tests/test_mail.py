@@ -70,7 +70,7 @@ class TestPledgeMails(BluebottleTestCase):
         self.assertEquals(len(mail.outbox), 3)
         self.assertEqual(self.project.payout_account.account_number, '1234567890')
         self.assertTrue("Please transfer the amount of" in body)
-        self.assertTrue("1234567890" in body)
+        self.assertTrue(self.project.title in body)
         self.assertTrue("Invoiced" in body)
 
 

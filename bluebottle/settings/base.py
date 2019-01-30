@@ -299,7 +299,7 @@ TENANT_APPS = (
     'django.contrib.contenttypes',
     # Allow the Bluebottle common app to override the admin branding
     'bluebottle.common',
-    'token_auth',
+    'bluebottle.token_auth',
 
     'bluebottle.bluebottle_dashboard',
     'jet',

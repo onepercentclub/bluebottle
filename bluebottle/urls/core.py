@@ -127,6 +127,8 @@ urlpatterns = [
     url(r'^api/payouts/',
         include('bluebottle.payouts.urls.api')),
 
+    url(r'^api/scim/v2/', include('bluebottle.scim.urls.api')),
+
     url(r'^downloads/', include('bluebottle.payouts.urls.media')),
     url(r'^downloads/', include('bluebottle.projects.urls.media')),
 

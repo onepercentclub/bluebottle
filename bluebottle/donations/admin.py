@@ -7,10 +7,10 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order
-from bluebottle.payouts.admin_utils import link_to
 from bluebottle.rewards.models import Reward
 from bluebottle.utils.admin import (
-    export_as_csv_action, TotalAmountAdminChangeList)
+    link_to, export_as_csv_action, TotalAmountAdminChangeList
+)
 from bluebottle.utils.utils import StatusDefinition
 
 

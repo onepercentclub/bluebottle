@@ -1,8 +1,10 @@
 import json
 import logging
+from decimal import Decimal
 
 import stripe
 from django.db import connection
+from moneyed import Money
 from stripe.error import StripeError
 
 from bluebottle.clients import properties
@@ -16,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 
 class StripePaymentAdapter(BasePaymentAdapter):
+
+    MODEL_CLASSES = [StripePayment]
 
     status_mapping = {
         'succeeded': StatusDefinition.SETTLED,
@@ -77,6 +81,19 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
         self.payment.save()
 
+    def update_from_transfer(self, transfer):
+        self.payment.payout_amount = transfer['amount']
+        self.payment.payout_amount_currency = transfer['currency']
+        self.payment.save()
+
+        # Set payout_amount on donation
+        amount = Money(Decimal(transfer['amount']) / 100, transfer['currency'])
+        donation = self.payment.order_payment.order.donations.all()[0]
+        donation.payout_amount = amount
+        donation.save()
+
+        self.payment.save()
+
     def check_payment_status(self):
         if self.payment.charge_token:
             charge = stripe.Charge.retrieve(
@@ -84,6 +101,11 @@ class StripePaymentAdapter(BasePaymentAdapter):
                 api_key=self.credentials['secret_key']
             )
             self.update_from_charge(charge)
+            transfer = stripe.Transfer.retrieve(
+                charge['transfer'],
+                api_key=self.credentials['secret_key']
+            )
+            self.update_from_transfer(transfer)
 
     def refund_payment(self):
         stripe.Refund.create(

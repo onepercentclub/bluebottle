@@ -15,6 +15,7 @@ class Donation(models.Model):
     Donation of an amount from a user to a project.
     """
     amount = MoneyField(_("Amount"))
+    payout_amount = MoneyField(_("Payout amount"))
 
     project = models.ForeignKey('projects.Project',
                                 verbose_name=_("Project"))

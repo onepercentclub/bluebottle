@@ -616,6 +616,9 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
             data['members'][0]['$ref'],
             reverse('scim-user-detail', args=(self.user.pk, ))
         )
+        self.assertEqual(
+            data['members'][0]['type'], 'User'
+        )
 
     def test_put_add_to_group(self):
         new_user = BlueBottleUserFactory.create()

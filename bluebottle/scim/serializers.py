@@ -93,9 +93,13 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
 class GroupMemberSerializer(serializers.ModelSerializer):
     value = serializers.CharField(source='pk')
     ref = serializers.SerializerMethodField(method_name='get_ref')
+    type = serializers.SerializerMethodField()
 
     def get_ref(self, obj):
         return reverse('scim-user-detail', args=(obj.pk, ))
+
+    def get_type(self, obj):
+        return 'User'
 
     def get_fields(self):
         result = super(GroupMemberSerializer, self).get_fields()
@@ -105,7 +109,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ('value', 'ref', )
+        fields = ('value', 'ref', 'type')
 
 
 class SCIMGroupSerializer(serializers.ModelSerializer):

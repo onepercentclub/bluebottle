@@ -88,7 +88,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
         # Set payout_amount on donation
         amount = Money(Decimal(transfer['amount']) / 100, transfer['currency'])
-        donation = self.payment.order_payment.order.donations.all()[0]
+        donation = self.payment.order_payment.order.donations.first()
         donation.payout_amount = amount
         donation.save()
 

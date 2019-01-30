@@ -88,12 +88,19 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
         if account_token and data['country']:
             tenant = connection.tenant
             secret_key = get_secret_key()
+
+            # Set descriptor that appears on bank statement
+            payout_statement_descriptor = tenant.name[:21]
+            statement_descriptor = tenant.name[:21]
+
             account = stripe.Account.create(
                 account_token=account_token,
                 country=data['country'],
                 type='custom',
                 payout_schedule={'interval': 'manual'},
                 api_key=secret_key,
+                payout_statement_descriptor=payout_statement_descriptor,
+                statement_descriptor=statement_descriptor,
                 metadata={
                     "tenant_name": tenant.client_name,
                     "tenant_domain": tenant.domain_url

@@ -1,9 +1,11 @@
 dist: xenial
 services: 
 - elasticsearch
+- postgresql
 sudo: false
 language: python
 addons:
+  postgresql: "9.6"
   apt:
     packages:
     - libxmlsec1
@@ -11,7 +13,7 @@ addons:
     - swig
 cache: pip
   - "$HOME/.cache/pip/"
-  - "$HOME/virtualenv/python2.7.11/lib/python2.7/site-packages"
+  - "$HOME/virtualenv/python2.7.15/lib/python2.7/site-packages"
 python:
 - 2.7
 env:

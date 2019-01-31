@@ -83,7 +83,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
         amount = Money(charge['amount'], charge['currency'])
         if charge['currency'].upper() not in settings.ZERO_DECIMAL_CURRENCIES:
-            amount = amount / 100
+            amount = Money(amount.amount / 100, amount.currency)
         donation = self.payment.order_payment.order.donations.first()
         donation.amount = amount
         donation.save()

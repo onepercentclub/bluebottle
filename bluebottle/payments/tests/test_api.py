@@ -10,6 +10,11 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.utils import BluebottleTestCase
 
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.payouts import (
+    StripePayoutAccountFactory, PlainPayoutAccountFactory
+)
+
 
 class TestOrderPaymentPermissions(BluebottleTestCase):
     """ Test the permissions for order ownership in bb_orders """
@@ -111,3 +116,83 @@ class TestOrderPaymentPermissions(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # self.assertEqual(response.data['country'], 'NL')
         self.assertEqual(len(response.data['results']), 3)
+
+    @override_settings(
+        PAYMENT_METHODS=[
+            {
+                'provider': 'stripe',
+                'id': 'stripe-creditcard',
+                'profile': 'creditcard',
+                'name': 'CreditCard',
+                'currencies': {'EUR': {'min_amount': 5, 'max_amount': 1000}}
+            }, {
+                'provider': 'docdata',
+                'id': 'docdata-directdebit',
+                'profile': 'directdebit',
+                'name': 'DirectDebit',
+                'currencies': {'EUR': {'min_amount': 5, 'max_amount': 1000}}
+            }, {
+                'provider': 'pledge',
+                'id': 'pledge',
+                'profile': 'pledge',
+                'name': 'Pledge',
+                'currencies': {'EUR': {'min_amount': 5, }}
+            },
+        ]
+    )
+    def test_get_payment_methods_stripe_project(self):
+        """ Test that passing a IP will restrict the payment methods """
+        project = ProjectFactory.create(
+            payout_account=StripePayoutAccountFactory.create()
+        )
+
+        response = self.client.get(
+            reverse('payment-method-list'),
+            {'project_id': project.slug}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+
+        providers = [method['provider'] for method in response.data['results']]
+        self.assertTrue('stripe' in providers)
+        self.assertTrue('pledge' in providers)
+
+    @override_settings(
+        PAYMENT_METHODS=[
+            {
+                'provider': 'stripe',
+                'id': 'stripe-creditcard',
+                'profile': 'creditcard',
+                'name': 'CreditCard',
+                'currencies': {'EUR': {'min_amount': 5, 'max_amount': 1000}}
+            }, {
+                'provider': 'docdata',
+                'id': 'docdata-directdebit',
+                'profile': 'directdebit',
+                'name': 'DirectDebit',
+                'currencies': {'EUR': {'min_amount': 5, 'max_amount': 1000}}
+            }, {
+                'provider': 'pledge',
+                'id': 'pledge',
+                'profile': 'pledge',
+                'name': 'Pledge',
+                'currencies': {'EUR': {'min_amount': 5, }}
+            },
+        ]
+    )
+    def test_get_payment_methods_plain_project(self):
+        """ Test that passing a IP will restrict the payment methods """
+        project = ProjectFactory.create(
+            payout_account=PlainPayoutAccountFactory.create()
+        )
+
+        response = self.client.get(
+            reverse('payment-method-list'),
+            {'project_id': project.slug}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+
+        providers = [method['provider'] for method in response.data['results']]
+        self.assertTrue('docdata' in providers)
+        self.assertTrue('pledge' in providers)

@@ -1,6 +1,6 @@
 [flake8]
 # Ignore lambda function assignment and inline imports (not at top of file)
-ignore = E731,E402
+ignore = E731,E402,W504,W605
 
 # Lengthen max line length
 max-line-length = 120

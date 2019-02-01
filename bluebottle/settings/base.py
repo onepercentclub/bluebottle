@@ -169,6 +169,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication'
     ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
     'DEFAULT_PERMISSION_CLASSES': (
         'bluebottle.utils.permissions.TenantConditionalOpenClose',
     ),
@@ -201,6 +204,7 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/payments_mock', '/payments_interswitch',
                           '/payments_vitepay', '/payments_flutterwave',
                           '/payments_lipisha', '/payments_beyonic',
+                          '/payments_stripe', '/payouts_stripe',
                           '/media', '/downloads',
                           '/surveys', '/token', '/jet')
 
@@ -225,6 +229,16 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'bluebottle.utils.backends.AnonymousAuthenticationBackend'
 )
+
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
+    },
+]
 
 SOCIAL_AUTH_PIPELINE = (
     'bluebottle.auth.utils.user_from_request',
@@ -350,6 +364,7 @@ TENANT_APPS = (
     'bluebottle.payments_lipisha',
     'bluebottle.payments_logger',
     'bluebottle.payments_pledge',
+    'bluebottle.payments_stripe',
     'bluebottle.payments_telesom',
     'bluebottle.payments_vitepay',
     'bluebottle.payments_voucher',
@@ -415,8 +430,10 @@ SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85
 THUMBNAIL_DUMMY = True
+THUMBNAIL_PRESERVE_FORMAT = True
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -868,6 +885,11 @@ TASKS = {
 
 ENABLE_REFUNDS = False
 
+
+def static_url(url):
+    return os.path.join(STATIC_URL, url)
+
+
 SUMMERNOTE_CONFIG = {
     # Using SummernoteWidget - iframe mode
     'toolbar': [
@@ -882,7 +904,22 @@ SUMMERNOTE_CONFIG = {
     'attachment_upload_to': 'project_images/',
     'summernote': {
         'disableResizeImage': True
-    }
+    },
+    'default_css': (
+        static_url('rest_framework/css/bootstrap.min.css'),
+        static_url('django_summernote/summernote.css'),
+        static_url('django_summernote/django_summernote.css'),
+    ),
+    'default_js': (
+        static_url('admin/js/vendor/jquery/jquery.min.js'),
+        static_url('rest_framework/js/bootstrap.min.js'),
+        static_url('django_summernote/jquery.ui.widget.js'),
+        static_url('django_summernote/jquery.iframe-transport.js'),
+        static_url('django_summernote/jquery.fileupload.js'),
+        static_url('django_summernote/summernote.min.js'),
+        static_url('django_summernote/ResizeSensor.js'),
+    ),
+
 }
 
 HOMEPAGE = {}
@@ -893,3 +930,4 @@ LOGIN_REDIRECT_URL = 'admin:index'
 TINYMCE_INCLUDE_JQUERY = False
 
 LOOKER_SESSION_LENGTH = 60 * 60
+TOKEN_LOGIN_TIMEOUT = 30

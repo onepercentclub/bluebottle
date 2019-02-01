@@ -3,7 +3,7 @@
 
 {% block content %}
     <p class="donation-intro">
-        {% blocktrans with donor_name=donation.user.first_name first_name=receiver.first_name slug=donation.project.slug%}
+        {% blocktrans with first_name=receiver.first_name slug=donation.project.slug%}
 
         Hello {{ first_name }}, you received a donation from {{ donor_name }}. Quickly thank your supporter by posting a personal message on your fundraiser page: {{ site }}{{ link }}.
         {% endblocktrans %}

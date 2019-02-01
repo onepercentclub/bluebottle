@@ -834,6 +834,11 @@ var cp_plugins = {};
     if( dominfo.delete_checkbox.length )
     {
       var id_field = dominfo.id_field.remove().insertAfter(dominfo.total_forms);
+
+      // Mark nested inlines as deleted
+      dominfo.root.find('.delete input').attr('checked', true);
+      dominfo.root.find('.inline-group').remove().insertAfter(dominfo.total_forms);
+
       dominfo.delete_checkbox.attr('checked', true).remove().insertAfter(dominfo.total_forms);
     }
     else

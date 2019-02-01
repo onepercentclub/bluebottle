@@ -1,3 +1,4 @@
+from django.utils.timezone import now
 import json
 import requests
 
@@ -22,8 +23,10 @@ from bluebottle.clients import properties
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
-    UserVerificationSerializer, UserDataExportSerializer, EmailSetSerializer
+    UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
+    EmailSetSerializer
 )
+from bluebottle.members.tokens import login_token_generator
 
 USER_MODEL = get_user_model()
 
@@ -226,6 +229,33 @@ class PasswordSet(views.APIView):
             return response.Response(status=status.HTTP_200_OK)
         return response.Response({'message': 'Token expired'},
                                  status=status.HTTP_400_BAD_REQUEST)
+
+
+class TokenLogin(generics.CreateAPIView):
+    serializer_class = TokenLoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        user_id = serializer.validated_data['user_id']
+        token = serializer.validated_data['token']
+
+        try:
+            user = USER_MODEL.objects.get(pk=user_id)
+        except USER_MODEL.DoesNotExist:
+            return response.Response(status=status.HTTP_404_NOT_FOUND)
+
+        if login_token_generator.check_token(user, token):
+            user.last_login = now()
+            user.save()
+
+            return response.Response(
+                {'token': user.get_jwt_token()},
+                status=status.HTTP_201_CREATED
+            )
+
+        return response.Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class UserVerification(generics.CreateAPIView):

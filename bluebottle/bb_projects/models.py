@@ -6,15 +6,13 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
 
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.models import SortableTranslatableModel
-from bluebottle.utils.fields import MoneyField, PrivateFileField
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
 
 
@@ -94,32 +92,6 @@ class ProjectPhase(TranslatableModel):
         if not self.slug:
             self.slug = slugify(self.name)
         super(ProjectPhase, self).save(*args, **kwargs)
-
-
-class BaseProjectDocument(models.Model):
-
-    """ Document for an Project """
-
-    file = PrivateFileField(
-        max_length=110,
-        upload_to='projects/documents'
-    )
-    author = models.ForeignKey('members.Member',
-                               verbose_name=_('author'), blank=True, null=True)
-    project = models.ForeignKey('projects.Project',
-                                related_name="documents")
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
-
-    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
-
-    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
-                                              default=None)
-
-    class Meta:
-        verbose_name = _('project document')
-        verbose_name_plural = _('project documents')
-        abstract = True
 
 
 class BaseProject(models.Model):
@@ -211,7 +183,7 @@ class BaseProject(models.Model):
 
     # Account holder Info
     account_holder_name = models.CharField(
-        _("account holder name"), max_length=255, null=True, blank=True)
+        _("account holder name"), max_length=100, null=True, blank=True)
     account_holder_address = models.CharField(
         _("account holder address"), max_length=255, null=True, blank=True)
     account_holder_postal_code = models.CharField(

@@ -1,0 +1,17 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_static admin_list admin_urls %}
+
+{% block object-tools-items %}
+    <li>
+        {% if perms.payouts.change_plainpayoutaccount and not original.reviewed %}
+            <a href="{% url 'admin:plain-payout-account-reviewed' object_id %}" class="button default">
+                {% trans  "Set to reviewed" %}
+            </a>
+        {% else %}
+            <a href="#" style="background-color: #eee; color: #999">
+                {% trans  "Reviewed" %}
+            </a>
+        {% endif %}
+    </li>
+    {{ block.super }}
+{% endblock %}

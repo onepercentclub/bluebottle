@@ -18,10 +18,11 @@ dependency_links = [
     'git+https://github.com/onepercentclub/django-tenant-extras.git@2.0.14#egg=django-tenant-extras-2.0.14',
     'git+https://github.com/onepercentclub/django-fluent-contents.git@741ffae615a4afed01388a202709ed9a5b60e80f#egg=django-fluent-contents-1.2.1-741ffae6',
     'git+https://github.com/mariocesar/sorl-thumbnail.git@v12.3#egg=sorl-thumbnail-12.3-github',
-    'git+https://github.com/onepercentclub/django-token-auth.git@0.3.6#egg=django-token-auth-0.3.6',
+    'git+https://github.com/st4lk/django-select-multiple-field.git@1dc7733008150a111cd141ff7c3f42bf4953dc7d#egg=django-select-multiple-field-0.5.0a-draft',
     'hg+https://bitbucket.org/jdiascarvalho/django-filetransfers@89c8381764da217d72f1fa396ce3929f0762b8f9#egg=django-filetransfers-0.1.1',
     'git+https://github.com/skada/django-money-rates@aeb2edf240471fac64f9cdf71e34f91d632f1b86#egg=django-money-rates-0.3.1-github',
-    'git+https://github.com/beyonic/beyonic-python.git#egg=beyonic'
+    'git+https://github.com/beyonic/beyonic-python.git#egg=beyonic',
+    'git+https://github.com/onepercentclub/flutterwave-python.git@9b6adba8e7eff4204d36ea3a627ebccebe285cf4#egg=Flutterwave-1.1.0'
 ]
 
 install_requires = [
@@ -61,6 +62,7 @@ install_requires = [
     'django-parler==1.9.2',
     'django-permissions-widget==1.5.1',
     'django_polymorphic==1.2',
+    'django-rest-polymorphic==0.1.8',
     'django-rest-swagger==2.1.2',
     'django-singleton-admin==0.0.4',
     'django-subquery==1.0.4',
@@ -104,6 +106,7 @@ install_requires = [
     'sorl-watermark==1.0.0',
     'South==1.0.2',
     'Sphinx==1.6.3',
+    'stripe==2.11.0',
     'suds-jurko==0.6',
     'SurveyGizmo==1.2.2',
     'transifex-client==0.12.4',
@@ -116,8 +119,9 @@ install_requires = [
     'django-fluent-contents==1.2.1-741ffae6',
     'django-bb-salesforce==1.2.2',
     'django-taggit-autocomplete-modified==0.1.1b1',
-    'django-token-auth==0.3.6',
-    'django-money-rates==0.3.1-github'
+    'django-token-auth==0.3.10',
+    'django-money-rates==0.3.1-github',
+    'Flutterwave==1.1.0'
 ]
 
 tests_requires = [

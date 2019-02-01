@@ -27,6 +27,7 @@ from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import LocationFactory
+from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory
 from bluebottle.test.utils import BluebottleTestCase, override_settings, BluebottleAdminTestCase
 
 
@@ -592,7 +593,7 @@ class LocationFilterTest(BluebottleTestCase):
         self.assertEqual(queryset.get(), self.amsterdam_project)
 
 
-class ProjectReviewerFilterTest(BluebottleTestCase):
+class ProjectReviewerFilterTest(BluebottleAdminTestCase):
     """
     Test project reviewer filter
     """
@@ -602,10 +603,12 @@ class ProjectReviewerFilterTest(BluebottleTestCase):
         self.init_projects()
 
         self.user = BlueBottleUserFactory.create()
-        self.project_with_reviewer = ProjectFactory.create(
+        self.my_project = ProjectFactory.create(
             reviewer=self.user
         )
-        self.project = ProjectFactory.create(
+        self.other_reviewer = BlueBottleUserFactory.create(first_name='Frans', last_name='Bauer')
+        self.other_project = ProjectFactory.create(
+            reviewer=self.other_reviewer
         )
 
         self.request = factory.get('/')
@@ -613,14 +616,31 @@ class ProjectReviewerFilterTest(BluebottleTestCase):
         self.admin = ProjectAdmin(Project, AdminSite())
 
     def test_filter(self):
-        filter = ProjectReviewerFilter(None, {'reviewer': True}, Project, self.admin)
-        queryset = filter.queryset(self.request, Project.objects.all())
-        self.assertEqual(queryset.get(), self.project_with_reviewer)
+        project_filter = ProjectReviewerFilter(None, {'reviewer': 'me'}, Project, self.admin)
+        queryset = project_filter.queryset(self.request, Project.objects.all())
+        self.assertEqual(queryset.get(), self.my_project)
+
+    def test_no_filter(self):
+        project_filter = ProjectReviewerFilter(None, {'reviewer': None}, Project, self.admin)
+        queryset = project_filter.queryset(self.request, Project.objects.all())
+        self.assertEqual(len(queryset), len(Project.objects.all()))
 
     def test_filter_false(self):
-        filter = ProjectReviewerFilter(None, {'reviewer': False}, Project, self.admin)
-        queryset = filter.queryset(self.request, Project.objects.all())
-        self.assertEqual(len(queryset), len(Project.objects.all()))
+        project_filter = ProjectReviewerFilter(None, {'reviewer': self.other_reviewer.id}, Project, self.admin)
+        queryset = project_filter.queryset(self.request, Project.objects.all())
+        self.assertEqual(queryset.get(), self.other_project)
+
+    def test_filter_options(self):
+        project_filter = ProjectReviewerFilter(None, {}, Project, self.admin)
+
+        reviewers = [
+            ('me', 'My projects'),
+            (self.other_reviewer.id, 'Frans Bauer'),
+            (self.user.id, self.user.full_name)
+        ]
+
+        # Test the reviewer filters shows right options
+        self.assertEqual(project_filter.lookups([], self.admin), reviewers)
 
 
 class ProjectAdminFormTest(BluebottleTestCase):
@@ -637,24 +657,28 @@ class ProjectAdminFormTest(BluebottleTestCase):
         parameters = widget.url_parameters()
         self.assertTrue(parameters['is_staff'], True)
 
-    def test_bank_details_reviewed(self):
+    def test_payout_account_reviewed(self):
         self.form.cleaned_data = {
             'status': ProjectPhase.objects.get(slug='campaign'),
-            'bank_details_reviewed': False,
+            'payout_account': PlainPayoutAccountFactory.create(
+                reviewed=False
+            ),
             'amount_asked': Money(100, 'EUR')
         }
         with self.assertRaises(ValidationError) as error:
             self.form.clean()
 
-        self.assertEqual(
-            error.exception.message,
-            'The bank details need to be reviewed before approving a project'
+        self.assertTrue(
+            'The bank details need to be reviewed before approving a project' in
+            error.exception.message
         )
 
-    def test_bank_details_reviewed_no_amount(self):
+    def test_payout_account_reviewed_no_amount(self):
         self.form.cleaned_data = {
             'status': ProjectPhase.objects.get(slug='campaign'),
-            'bank_details_reviewed': False,
+            'payout_account': PlainPayoutAccountFactory.create(
+                reviewed=False
+            ),
         }
         self.form.clean()
 

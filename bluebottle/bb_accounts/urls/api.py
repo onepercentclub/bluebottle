@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from ..views import (
     ManageProfileDetail, UserProfileDetail, CurrentUser, UserCreate,
-    PasswordReset, PasswordSet, UserVerification, UserDataExport, EmailSetView
+    PasswordReset, PasswordSet, UserVerification, UserDataExport, EmailSetView,
     TokenLogin
 )
 

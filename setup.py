@@ -119,7 +119,6 @@ install_requires = [
     'django-fluent-contents==1.2.1-741ffae6',
     'django-bb-salesforce==1.2.2',
     'django-taggit-autocomplete-modified==0.1.1b1',
-    'django-token-auth==0.3.10',
     'django-money-rates==0.3.1-github',
     'Flutterwave==1.1.0'
 ]

@@ -24,7 +24,7 @@ from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
     UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
-    EmailSetSerializer
+    EmailSetSerializer, PasswordUpdateSerializer,
 )
 from bluebottle.members.tokens import login_token_generator
 
@@ -166,9 +166,8 @@ class PasswordReset(views.APIView):
         return response.Response(status=status.HTTP_200_OK)
 
 
-class EmailSetView(UpdateAPIView):
+class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
     queryset = USER_MODEL.objects.all()
-    serializer_class = EmailSetSerializer
 
     permission_classes = (CurrentUserPermission, )
 
@@ -183,7 +182,16 @@ class EmailSetView(UpdateAPIView):
         if not self.request.user.check_password(password):
             raise PermissionDenied()
 
-        return super(EmailSetView, self).perform_update(serializer)
+        return super(PasswordProtectedMemberUpdateApiView, self).perform_update(serializer)
+
+
+
+class EmailSetView(PasswordProtectedMemberUpdateApiView):
+    serializer_class = EmailSetSerializer
+
+
+class PasswordSetView(PasswordProtectedMemberUpdateApiView):
+    serializer_class = PasswordUpdateSerializer
 
 
 class PasswordSet(views.APIView):

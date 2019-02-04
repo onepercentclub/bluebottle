@@ -180,3 +180,73 @@ class EmailSetTest(BluebottleTestCase):
 
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'user@example.com')
+
+
+class PasswordSetTest(BluebottleTestCase):
+    """
+    Integration tests for the User API.
+    """
+
+    def setUp(self):
+        super(PasswordSetTest, self).setUp()
+
+        self.user = BlueBottleUserFactory.create(
+            password='some-password',
+            email='user@example.com'
+        )
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.set_password_url = reverse('user-set-password')
+
+    def test_update_paswword(self):
+        response = self.client.put(
+            self.set_password_url,
+            {'password': 'some-password', 'new_password': 'new-password'},
+            token=self.user_token
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('password' not in response.data)
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('new-password'))
+
+    def test_update_password_unauthenticated(self):
+        response = self.client.put(
+            self.set_password_url,
+            {'password': 'some-password', 'new_password': 'new-password'},
+        )
+
+        self.assertEqual(response.status_code, 401)
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('some-password'))
+
+    def test_update_password_wrong_password(self):
+        response = self.client.put(
+            self.set_password_url,
+            {'password': 'other-password', 'new_password': 'new@example.com'},
+            token=self.user_token
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('some-password'))
+
+    def test_update_password_wrong_token(self):
+        other_user = BlueBottleUserFactory.create(
+            password='other-password'
+        )
+
+        response = self.client.put(
+            self.set_password_url,
+            {'password': 'some-password', 'new_password': 'new-password'},
+            token="JWT {0}".format(other_user.get_jwt_token())
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('some-password'))
+        self.assertTrue(other_user.check_password('other-password'))

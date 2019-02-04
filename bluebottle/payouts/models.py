@@ -61,9 +61,9 @@ class PayoutAccount(PolymorphicModel):
     reviewed = models.BooleanField(
         _('Bank reviewed'),
         help_text=_(
-            'Review the project documents before marking the account as reviewed.'
-            'After setting the project to running, the account documents will be deleted.'
-            'Also, make sure to remove the documents from your device after downloading them.'
+            'Review the project documents before marking the account as reviewed. '
+            'After setting the project to running, the account documents will be deleted. '
+            'Also, make sure to remove the documents from your device after downloading them. '
             'In case of Euro and USD projects the documents will be reviewed by Stripe.'
         ),
         default=False

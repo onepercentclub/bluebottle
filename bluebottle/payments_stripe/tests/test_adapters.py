@@ -49,7 +49,7 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
         order = OrderFactory.create()
         DonationFactory.create(project=project, order=order)
         self.order_payment = OrderPaymentFactory.create(
-            payment_method='stripe',
+            payment_method='stripeCreditcard',
             integration_data={'chargeable': False, 'source_token': 'some token'},
             order=order,
             amount=100
@@ -58,8 +58,9 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
     def test_payment_is_created(self):
         adapter = StripePaymentAdapter(self.order_payment)
         self.assertTrue(adapter.payment.pk)
-        self.assertTrue(adapter.payment.source_token, 'some token')
-        self.assertTrue(adapter.payment.status, 'started')
+        self.assertEqual(adapter.payment.source_token, 'some token')
+        self.assertEqual(adapter.payment.status, 'started')
+        self.assertEqual(adapter.payment.method_name, 'Creditcard')
 
     def test_payment_is_created_and_charged(self):
         self.order_payment.card_data['chargeable'] = True

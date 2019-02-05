@@ -111,7 +111,7 @@ class DonationAdmin(admin.ModelAdmin):
     readonly_fields = ('order_link', 'order_payment_links', 'created', 'updated', 'completed',
                        'status', 'user_link', 'project_link',
                        'fundraiser_link')
-    fields = readonly_fields + ('amount', 'project', 'fundraiser', 'reward', 'anonymous', 'name')
+    fields = readonly_fields + ('amount', 'payout_amount', 'project', 'fundraiser', 'reward', 'anonymous', 'name')
     search_fields = (
         'order__user__first_name', 'order__user__last_name',
         'order__user__email', 'project__title', 'name',
@@ -132,6 +132,7 @@ class DonationAdmin(admin.ModelAdmin):
         ('name', 'name on donation'),
         ('fundraiser', 'fundraiser'),
         ('amount', 'amount'),
+        ('payout_amount', 'payout_amount'),
         ('created', 'created'),
         ('updated', 'updated'),
         ('completed', 'completed'),

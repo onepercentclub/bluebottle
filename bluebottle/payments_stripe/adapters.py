@@ -61,7 +61,9 @@ class StripePaymentAdapter(BasePaymentAdapter):
                 },
                 metadata={
                     "tenant_name": tenant.client_name,
-                    "tenant_domain": tenant.domain_url
+                    "tenant_domain": tenant.domain_url,
+                    "project_slug": self.order_payment.project.slug,
+                    "project_title": self.order_payment.project.title,
                 },
                 api_key=self.credentials['secret_key']
             )

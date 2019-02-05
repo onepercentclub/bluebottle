@@ -45,9 +45,9 @@ PAYMENT_METHODS = (
 class StripePaymentAdapterTestCase(BluebottleTestCase):
     def setUp(self):
         payout_account = StripePayoutAccountFactory.create()
-        project = ProjectFactory.create(payout_account=payout_account)
+        self.project = ProjectFactory.create(payout_account=payout_account)
         order = OrderFactory.create()
-        DonationFactory.create(project=project, order=order)
+        DonationFactory.create(project=self.project, order=order)
         self.order_payment = OrderPaymentFactory.create(
             payment_method='stripe',
             integration_data={'chargeable': False, 'source_token': 'some token'},
@@ -76,11 +76,19 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
         charge.update({'status': 'succeeded', 'refunded': False})
 
         adapter = StripePaymentAdapter(self.order_payment)
-        with patch('stripe.Charge.create', return_value=charge):
+        with patch('stripe.Charge.create', return_value=charge) as create:
             adapter.charge()
+
             self.assertTrue(adapter.payment.pk)
             self.assertEqual(adapter.payment.charge_token, 'some charge token')
             self.assertEqual(adapter.payment.status, 'settled')
+
+            call_args = create.call_args[1]
+            self.assertEqual(call_args['source'], self.order_payment.payment.source_token)
+            self.assertEqual(call_args['metadata']['tenant_name'], 'test')
+            self.assertEqual(call_args['metadata']['tenant_domain'], 'testserver')
+            self.assertEqual(call_args['metadata']['project_slug'], self.project.slug)
+            self.assertEqual(call_args['metadata']['project_title'], self.project.title)
 
     def test_check_payment_status(self):
         adapter = StripePaymentAdapter(self.order_payment)

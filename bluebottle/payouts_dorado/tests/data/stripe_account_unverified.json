@@ -1,0 +1,107 @@
+{
+  "business_logo": null,
+  "business_name": null,
+  "business_primary_color": null,
+  "business_url": null,
+  "charges_enabled": true,
+  "country": "NL",
+  "created": 1544796477,
+  "debit_negative_balances": false,
+  "decline_charge_on": {
+    "avs_failure": false,
+    "cvc_failure": false
+  },
+  "default_currency": "eur",
+  "details_submitted": true,
+  "display_name": null,
+  "email": null,
+  "external_accounts": {
+    "data": [
+      {
+        "account": "acct_1DhHdvsdvsdBY",
+        "account_holder_name": "Malle Eppie",
+        "account_holder_type": "individual",
+        "bank_name": "STRIPE TEST BANK",
+        "country": "DE",
+        "currency": "eur",
+        "default_for_currency": true,
+        "fingerprint": "ESN7SAbdvsdvsdv",
+        "id": "ba_1DhHKrdfgvdsfbvdsfbTRU",
+        "last4": "1234",
+        "metadata": {},
+        "object": "bank_account",
+        "routing_number": "110000000",
+        "status": "new"
+      }
+    ],
+    "has_more": false,
+    "object": "list",
+    "total_count": 1,
+    "url": "/v1/accounts/acct_1DhHdvsdvsdBY/external_accounts"
+  },
+  "id": "acct_1DhHdvsdvsdBY",
+  "legal_entity": {
+    "additional_owners": [],
+    "address": {
+      "city": null,
+      "country": "NL",
+      "line1": null,
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "business_name": null,
+    "business_tax_id_provided": false,
+    "dob": {
+      "day": 14,
+      "month": 1,
+      "year": 1980
+    },
+    "first_name": "Malle",
+    "last_name": "Eppie",
+    "personal_address": {
+      "city": null,
+      "country": "NL",
+      "line1": null,
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "type": "individual",
+    "verification": {
+      "details": null,
+      "details_code": null,
+      "document": null,
+      "document_back": null,
+      "status": "unverified"
+    }
+  },
+  "metadata": {},
+  "object": "account",
+  "payout_schedule": {
+    "delay_days": 7,
+    "interval": "manual"
+  },
+  "payout_statement_descriptor": null,
+  "payouts_enabled": true,
+  "product_description": null,
+  "statement_descriptor": null,
+  "support_address": null,
+  "support_email": null,
+  "support_phone": null,
+  "support_url": null,
+  "timezone": "Etc/UTC",
+  "tos_acceptance": {
+    "date": 1544796474,
+    "ip": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/70.0.3538.77 Chrome/70.0.3538.77 Safari/537.36"
+  },
+  "type": "custom",
+  "verification": {
+    "disabled_reason": null,
+    "due_by": null,
+    "fields_needed": [
+      "legal_entity.verification.document"
+    ]
+  }
+}

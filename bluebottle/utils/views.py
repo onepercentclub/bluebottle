@@ -1,11 +1,13 @@
+import mimetypes
+import os
 from collections import namedtuple
 
 import magic
 
 from django.conf import settings
 from django.core.signing import TimestampSigner, BadSignature
-from django.http.response import HttpResponseNotFound, HttpResponse
-from django.http import Http404
+from django.http.response import HttpResponseNotFound
+from django.http import Http404, HttpResponse
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext as _
 from django.utils import translation
@@ -249,8 +251,11 @@ class PrivateFileView(DetailView):
 
     def get(self, request, *args, **kwargs):
         field = getattr(self.get_object(), self.field)
+        filename = os.path.basename(field.name)
+        content_type = mimetypes.guess_type(filename)[0]
         response = HttpResponse()
         response['X-Accel-Redirect'] = field.url
+        response['Content-Type'] = content_type
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
             field.name
         )

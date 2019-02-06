@@ -22,6 +22,7 @@ from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country
+from bluebottle.members.tokens import login_token_generator
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.fields import ImageField
 from bluebottle.utils.models import Address
@@ -179,6 +180,8 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                              related_name='partner_organization_members',
                                              verbose_name=_('Partner Organization'))
 
+    is_anonymized = models.BooleanField(_('Is anonymized'), default=False)
+
     USERNAME_FIELD = 'email'
 
     slug_field = 'username'
@@ -243,6 +246,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
     def anonymize(self):
         self.is_active = False
+        self.is_anonymized = True
         self.email = '{}-anonymous@example.com'.format(self.pk)  # disabled emails need to be unique too
         self.username = '{}-anonymous@example.com'.format(self.pk)  # disabled emails need to be unique too
         self.remote_id = '{}-anonymous@example.com'.format(self.pk)  # disabled emails need to be unique too
@@ -294,6 +298,9 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         payload = jwt_payload_handler(self)
         token = jwt_encode_handler(payload)
         return token
+
+    def get_login_token(self):
+        return login_token_generator.make_token(self)
 
     @property
     def short_name(self):

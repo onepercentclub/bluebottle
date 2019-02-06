@@ -6,15 +6,13 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
 
-from django_extensions.db.fields import (ModificationDateTimeField,
-                                         CreationDateTimeField)
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel, TranslatedFields
 from sorl.thumbnail import ImageField
 
 from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.models import SortableTranslatableModel
-from bluebottle.utils.fields import MoneyField, PrivateFileField
+from bluebottle.utils.fields import MoneyField
 from bluebottle.utils.utils import StatusDefinition
 
 
@@ -94,32 +92,6 @@ class ProjectPhase(TranslatableModel):
         if not self.slug:
             self.slug = slugify(self.name)
         super(ProjectPhase, self).save(*args, **kwargs)
-
-
-class BaseProjectDocument(models.Model):
-
-    """ Document for an Project """
-
-    file = PrivateFileField(
-        max_length=110,
-        upload_to='projects/documents'
-    )
-    author = models.ForeignKey('members.Member',
-                               verbose_name=_('author'), blank=True, null=True)
-    project = models.ForeignKey('projects.Project',
-                                related_name="documents")
-    created = CreationDateTimeField(_('created'))
-    updated = ModificationDateTimeField(_('updated'))
-
-    deleted = models.DateTimeField(_('deleted'), null=True, blank=True)
-
-    ip_address = models.GenericIPAddressField(_('IP address'), blank=True, null=True,
-                                              default=None)
-
-    class Meta:
-        verbose_name = _('project document')
-        verbose_name_plural = _('project documents')
-        abstract = True
 
 
 class BaseProject(models.Model):
@@ -207,29 +179,6 @@ class BaseProject(models.Model):
     amount_needed = MoneyField()
     amount_extra = MoneyField(help_text=_("Amount pledged by organisation (matching fund)."))
 
-    # Bank detail data
-
-    # Account holder Info
-    account_holder_name = models.CharField(
-        _("account holder name"), max_length=255, null=True, blank=True)
-    account_holder_address = models.CharField(
-        _("account holder address"), max_length=255, null=True, blank=True)
-    account_holder_postal_code = models.CharField(
-        _("account holder postal code"), max_length=20, null=True, blank=True)
-    account_holder_city = models.CharField(
-        _("account holder city"), max_length=255, null=True, blank=True)
-    account_holder_country = models.ForeignKey(
-        'geo.Country', blank=True, null=True,
-        related_name="project_account_holder_country")
-
-    # Bank details
-    account_number = models.CharField(_("Account number"), max_length=255,
-                                      null=True, blank=True)
-    account_details = models.CharField(_("account details"), max_length=500, null=True, blank=True)
-    account_bank_country = models.ForeignKey(
-        'geo.Country', blank=True, null=True,
-        related_name="project_account_bank_country")
-
     @property
     def is_realised(self):
         return self.status == ProjectPhase.objects.get(slug='done-complete')
@@ -271,14 +220,6 @@ class BaseProject(models.Model):
         ).aggregate(total=Count('members'), externals=Sum('members__externals'))
 
         return requested - counts['total'] + (counts['externals'] or 0)
-
-    @property
-    def account_bic(self):
-        return self.account_details
-
-    @account_bic.setter
-    def account_bic(self, value):
-        self.account_details = value
 
     _initial_status = None
 

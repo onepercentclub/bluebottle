@@ -46,7 +46,7 @@ from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin, \
     TranslatedUnionFieldListFilter, log_action
-from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from bluebottle.votes.models import Vote
 from .models import (ProjectBudgetLine, Project,
                      ProjectPhaseLog)
@@ -199,7 +199,6 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
         model = Project
         fields = '__all__'
         widgets = {
-            'currencies': CheckboxSelectMultipleWidget,
             'story': SummernoteWidget()
         }
 
@@ -779,13 +778,6 @@ class ProjectCreateTemplateInline(admin.StackedInline, SummernoteInlineModelAdmi
 
 
 class ProjectPlatformSettingsAdminForm(forms.ModelForm):
-    class Meta:
-        widgets = {
-            'create_types': CheckboxSelectMultipleWidget,
-            'contact_types': CheckboxSelectMultipleWidget,
-            'share_options': CheckboxSelectMultipleWidget,
-        }
-
     extra = 0
 
 

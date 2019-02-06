@@ -18,17 +18,17 @@ def remove_closed_site_permissions(apps, schema_editor):
             anonymous.permissions.clear()
 
 
-
 class Migration(migrations.Migration):
 
     dependencies = [
         ('members', '0016_auto_20170822_1104'),
-        ('tasks', '0031_set_owner_permissions'),
-        ('projects', '0035_set_owner_permissions'),
+        ('tasks', '0034_more_owner_permissions'),
+        ('projects', '0039_add_project_image_group_permissions'),
         ('wallposts', '0014_set_owner_permissions'),
         ('rewards', '0006_set_owner_permissions'),
         ('bb_projects', '0006_add_group_permissions'),
-        ('cms', '0018_add_group_permissions'),
+        ('cms', '0066_auto_20180709_1657'),
+        ('orders', '0004_add_group_permissions'),
     ]
 
     operations = [

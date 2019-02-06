@@ -16,6 +16,7 @@ from djmoney_rates.exceptions import CurrencyConversionException
 from bluebottle.clients import properties
 from tenant_extras.utils import get_tenant_properties
 from bluebottle.payments_stripe.utils import get_stripe_settings
+from bluebottle.payouts.utils import get_payout_settings
 
 
 import logging
@@ -231,6 +232,7 @@ def get_public_properties(request):
             'siteLinks': get_user_site_links(request.user),
             'platform': {
                 'stripe': get_stripe_settings(),
+                'payouts': get_payout_settings(),
                 'content': get_platform_settings('cms.SitePlatformSettings'),
                 'projects': get_platform_settings('projects.ProjectPlatformSettings'),
                 'analytics': get_platform_settings('analytics.AnalyticsPlatformSettings'),

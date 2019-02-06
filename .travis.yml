@@ -27,9 +27,10 @@ env:
 before_install:
   - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.0.deb && sudo dpkg -i --force-confnew elasticsearch-6.6.0.deb && sudo service elasticsearch restart
 install:
+- pip install --upgrade pip
 - pip install --upgrade setuptools mercurial
 - pip install --upgrade -I flake8==2.6.2
-- pip install -e .[test] --process-dependency-links --trusted-host github.com
+- pip install -e .[test] --trusted-host github.com
 - echo `psql --version`
 before_script:
 - curl https://stream.onepercentclub.com/files/GeoIP.dat.gz | gunzip - > GeoIP.dat

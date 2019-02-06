@@ -642,6 +642,33 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
         self.assertTrue(
             self.group in new_user.groups.all()
         )
+        self.assertFalse(new_user.is_staff)
+
+    def test_put_add_to_staff(self):
+        new_user = BlueBottleUserFactory.create()
+        group = Group.objects.get(name='Staff')
+        url = reverse('scim-group-detail', args=(group.id, ))
+        request_data = {
+            'id': group.pk,
+            'displayName': group.name,
+            'members': [
+                {'value': new_user.pk},
+            ]
+        }
+        response = self.client.put(
+            url,
+            data=request_data,
+            token=self.token
+        )
+
+        data = response.data
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(data['members']), 1)
+        self.assertTrue(
+            group in new_user.groups.all()
+        )
+        new_user.refresh_from_db()
+        self.assertTrue(new_user.is_staff)
 
     def test_missing_members_are_removed(self):
         request_data = {

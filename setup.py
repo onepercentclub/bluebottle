@@ -87,7 +87,6 @@ install_requires = [
     'python-magic==0.4.15',
     'python-memcached==1.58',
     'python-saml==2.1.7',
-    'python-social-auth==0.2.21',
     'python-social-auth==0.3.6',
     'social-auth-app-django==2.1.0',
     'surlex==0.2.0',

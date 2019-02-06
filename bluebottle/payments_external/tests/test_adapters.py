@@ -21,7 +21,6 @@ external_settings = {
             'id': 'external-money',
             'profile': 'cash',
             'name': 'Externa;',
-            'supports_recurring': False,
             'currencies': {
                 'EUR': {
                     'min_amount': 1

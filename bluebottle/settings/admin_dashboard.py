@@ -91,22 +91,6 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['payouts_payoutaccount']
             },
             {
-                'name': 'recurring_donations.monthlybatch',
-                'permissions': ['recurring_donations.change_monthlybatch']
-            },
-            {
-                'name': 'recurring_donations.monthlydonation',
-                'permissions': ['recurring_donations.change_monthlydonation']
-            },
-            {
-                'name': 'recurring_donations.monthlydonor',
-                'permissions': ['recurring_donations.change_monthlydonor']
-            },
-            {
-                'name': 'recurring_donations.monthlyorder',
-                'permissions': ['recurring_donations.change_monthlyorder']
-            },
-            {
                 'name': 'payments.orderpayment',
                 'permissions': ['payments.change_orderpayment']
             },

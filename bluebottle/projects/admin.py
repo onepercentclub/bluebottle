@@ -559,8 +559,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         fields = [
             'created', 'updated',
             'vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
-            'popularity', 'payout_status',
-            'geocoding', 'donations_link', 'payout_account_status',
+            'payout_status', 'geocoding', 'donations_link',
+            'payout_account_status',
         ]
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status',)
@@ -663,7 +663,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         amount = (_('Amount'), {'fields': [
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
-            'currencies', 'donations_link', 'popularity', 'vote_count', 'payout_account',
+            'currencies', 'donations_link', 'vote_count', 'payout_account',
             'payout_account_status',
         ]})
 
@@ -794,6 +794,12 @@ class ProjectPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentA
         CustomProjectFieldSettingsInline,
         ProjectCreateTemplateInline
     ]
+
+    fields = (
+        'create_types', 'contact_types', 'share_options',
+        'match_options', 'facebook_at_work_url', 'allow_anonymous_rewards',
+        'create_flow', 'contact_method',
+    )
 
 
 admin.site.register(ProjectPlatformSettings, ProjectPlatformSettingsAdmin)

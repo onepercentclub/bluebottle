@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from parler.admin import TranslatableAdmin
 
+from bluebottle.geo.admin import PlaceInline
 from bluebottle.tasks.models import TaskMember, TaskFile, Task, Skill, TaskStatusLog
 from bluebottle.utils.admin import export_as_csv_action, TranslatedUnionFieldListFilter
 from bluebottle.utils.utils import reverse_signed
@@ -202,7 +203,7 @@ class TaskStatusLogInline(admin.TabularInline):
 class TaskAdmin(admin.ModelAdmin):
     date_hierarchy = 'deadline'
 
-    inlines = (TaskMemberAdminInline, TaskFileAdminInline, TaskStatusLogInline)
+    inlines = (TaskMemberAdminInline, TaskFileAdminInline, TaskStatusLogInline, PlaceInline)
     save_as = True
 
     raw_id_fields = ('author', 'project')

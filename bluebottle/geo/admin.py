@@ -1,10 +1,13 @@
 from django.contrib import admin
+from django.contrib.contenttypes.admin import GenericStackedInline
 from django.core.urlresolvers import reverse
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from parler.admin import TranslatableAdmin
 
-from bluebottle.geo.models import Location, LocationGroup, Region, SubRegion, Country
+from bluebottle.geo.models import (
+    Location, LocationGroup, Region, SubRegion, Country, Place
+)
 from bluebottle.projects.models import Project
 
 
@@ -109,6 +112,11 @@ class LocationAdmin(admin.ModelAdmin):
         (_('Info'), {'fields': ('name', 'description', 'group', 'city', 'country', 'image')}),
         (_('Map'), {'fields': ('position', )})
     )
+
+
+class PlaceInline(GenericStackedInline):
+    model = Place
+    max_num = 1
 
 
 admin.site.register(Location, LocationAdmin)

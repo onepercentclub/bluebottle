@@ -157,7 +157,10 @@ class BaseTaskList(ListCreateAPIView):
 
         self.check_object_permissions(
             self.request,
-            serializer.Meta.model(**serializer.validated_data)
+            serializer.Meta.model(
+                project=serializer.validated_data['project'],
+                author=self.request.user
+            )
         )
 
         serializer.validated_data['deadline'] = get_midnight_datetime(serializer.validated_data['deadline'])

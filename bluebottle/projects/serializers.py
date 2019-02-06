@@ -631,6 +631,7 @@ class ProjectPlatformSettingsSerializer(serializers.ModelSerializer):
             'create_flow',
             'contact_method',
             'contact_types',
+            'match_options',
             'share_options',
             'facebook_at_work_url',
             'filters',

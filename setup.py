@@ -21,7 +21,7 @@ install_requires = [
     'beautifulsoup4==4.6.0',
     'bleach==2.1.1',
     'bunch==1.0.1',
-    'beyonic @ git+https://github.com/beyonic/beyonic-python.git#egg=beyonic',
+    'beyonic-python @ git+https://github.com/beyonic/beyonic-python.git@be8a0eebfaa53cf1b483b9bd1bf95e1a430032de#egg=beyonic-python-0.1.12',
     'celery==3.1.24',
     'django-admin-sortable==2.1',
     'django-admin-tools==0.8.1',

@@ -185,7 +185,6 @@ class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
         return super(PasswordProtectedMemberUpdateApiView, self).perform_update(serializer)
 
 
-
 class EmailSetView(PasswordProtectedMemberUpdateApiView):
     serializer_class = EmailSetSerializer
 

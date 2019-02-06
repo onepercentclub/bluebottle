@@ -373,7 +373,6 @@ class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
         fields = ('new_password', ) + PasswordProtectedMemberSerializer.Meta.fields
 
 
-
 class PasswordSetSerializer(serializers.Serializer):
     """
     We can't use the PasswordField here because it hashes the passwords with

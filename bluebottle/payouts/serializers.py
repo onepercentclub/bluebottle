@@ -1,15 +1,16 @@
-from django.db import connection
-from rest_framework import serializers, exceptions
-
 import stripe
+
+from django.db import connection
+
+from rest_framework import serializers, exceptions
+from rest_polymorphic.serializers import PolymorphicSerializer
 
 from bluebottle.bluebottle_drf2.serializers import PrivateFileSerializer
 from bluebottle.payments_stripe.utils import get_secret_key
-from bluebottle.payouts.models import PayoutAccount, PlainPayoutAccount, PayoutDocument, StripePayoutAccount
+from bluebottle.payouts.models import (
+    PayoutAccount, PlainPayoutAccount, PayoutDocument, StripePayoutAccount
+)
 from bluebottle.utils.permissions import ResourceOwnerPermission
-
-
-from rest_polymorphic.serializers import PolymorphicSerializer
 
 
 class BasePayoutAccountSerializer(serializers.ModelSerializer):
@@ -87,12 +88,19 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
         if account_token and data['country']:
             tenant = connection.tenant
             secret_key = get_secret_key()
+
+            # Set descriptor that appears on bank statement
+            payout_statement_descriptor = tenant.name[:21]
+            statement_descriptor = tenant.name[:21]
+
             account = stripe.Account.create(
                 account_token=account_token,
                 country=data['country'],
                 type='custom',
                 payout_schedule={'interval': 'manual'},
                 api_key=secret_key,
+                payout_statement_descriptor=payout_statement_descriptor,
+                statement_descriptor=statement_descriptor,
                 metadata={
                     "tenant_name": tenant.client_name,
                     "tenant_domain": tenant.domain_url
@@ -195,3 +203,22 @@ class PayoutMethodSerializer(serializers.Serializer):
             'countries',
             'data'
         )
+
+
+class ExportPlainPayoutAccountSerializer(PlainPayoutAccountSerializer):
+    account_holder_country = serializers.CharField(source='account_holder_country.name')
+    account_bank_country = serializers.CharField(source='account_bank_country.name')
+
+
+class ExportPayoutAccountSerializer(PolymorphicSerializer):
+
+    resource_type_field_name = 'type'
+
+    def to_resource_type(self, model_or_instance):
+        return model_or_instance.type
+
+    model_serializer_mapping = {
+        PayoutAccount: BasePayoutAccountSerializer,
+        StripePayoutAccount: StripePayoutAccountSerializer,
+        PlainPayoutAccount: ExportPlainPayoutAccountSerializer
+    }

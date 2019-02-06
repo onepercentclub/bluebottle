@@ -1,11 +1,9 @@
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.projects import ProjectFactory
-from bluebottle.utils.utils import StatusDefinition
-from django.utils.timezone import now
+from bluebottle.test.factory_models.geo import CountryFactory
 import factory
 
 from bluebottle.payouts.models import (
-    ProjectPayout, PayoutAccount, PlainPayoutAccount,
+    PayoutAccount, PlainPayoutAccount,
     PayoutDocument, StripePayoutAccount
 )
 
@@ -19,6 +17,9 @@ class PayoutAccountFactory(factory.DjangoModelFactory):
 
 class PlainPayoutAccountFactory(factory.DjangoModelFactory):
     user = factory.SubFactory(BlueBottleUserFactory)
+
+    account_holder_country = factory.SubFactory(CountryFactory)
+    account_bank_country = factory.SubFactory(CountryFactory)
 
     class Meta(object):
         model = PlainPayoutAccount
@@ -35,16 +36,3 @@ class StripePayoutAccountFactory(factory.DjangoModelFactory):
 
     class Meta(object):
         model = StripePayoutAccount
-
-
-class ProjectPayoutFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = ProjectPayout
-
-    completed = None
-    status = StatusDefinition.NEW
-    planned = now()
-    project = factory.SubFactory(ProjectFactory)
-    amount_raised = 1000
-    organization_fee = 50
-    amount_payable = 950

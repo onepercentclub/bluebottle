@@ -5,10 +5,12 @@ from __future__ import unicode_literals
 from django.db import migrations
 
 
-def add_financial_group(a, b):
+def add_financial_group(apps, schema_editor):
+    ProjectPayout = apps.get_model('payouts', 'ProjectPayout')
+
     from django.contrib.auth.models import Group, Permission
     from django.contrib.contenttypes.models import ContentType
-    from bluebottle.payouts.models import ProjectPayout
+
     new_group, created = Group.objects.get_or_create(name='Financial')
 
     ct = ContentType.objects.get_for_model(ProjectPayout)

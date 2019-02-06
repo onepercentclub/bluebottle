@@ -9,6 +9,7 @@ exclude =
     **/*local.py,
     **/secrets.py,
     **/migrations/*,
+    **/scim_data/*,
     docs,
     build,
     tenants

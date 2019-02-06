@@ -1,6 +1,7 @@
 from django.http import Http404
-from rest_framework.generics import (ListAPIView, RetrieveAPIView,
-                                     ListCreateAPIView)
+from bluebottle.utils.views import (
+    ListAPIView, RetrieveAPIView, ListCreateAPIView
+)
 from rest_framework.permissions import IsAuthenticated
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination

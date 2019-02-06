@@ -203,7 +203,7 @@ class TextWallpost(Wallpost):
 
     @property
     def parent(self):
-        return self.textwallpost
+        return self.content_object
 
     text = models.TextField(max_length=WALLPOST_REACTION_MAX_LENGTH)
 

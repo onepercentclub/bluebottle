@@ -18,7 +18,7 @@ from .models import TextWallpost, MediaWallpost, MediaWallpostPhoto, Wallpost, R
 from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
                           MediaWallpostPhotoSerializer, ReactionSerializer,
                           WallpostSerializer)
-from .permissions import WallpostOwnerPermission
+from .permissions import DonationOwnerPermission
 
 
 class WallpostFilter(django_filters.FilterSet):
@@ -32,6 +32,11 @@ class WallpostFilter(django_filters.FilterSet):
 
 class SetAuthorMixin(object):
     def perform_create(self, serializer):
+        self.check_object_permissions(
+            self.request,
+            serializer.Meta.model(author=self.request.user, **serializer.validated_data)
+        )
+
         serializer.save(author=self.request.user, ip_address=get_client_ip(self.request))
 
     def perform_update(self, serializer):
@@ -85,6 +90,7 @@ class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
     pagination_class = BluebottlePagination
     permission_classes = (
         OneOf(ResourcePermission, RelatedResourceOwnerPermission),
+        DonationOwnerPermission,
         RelatedManagementOrReadOnlyPermission
     )
 
@@ -127,7 +133,8 @@ class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIVi
 
     permission_classes = (
         OneOf(ResourcePermission, RelatedResourceOwnerPermission),
-        RelatedManagementOrReadOnlyPermission
+        RelatedManagementOrReadOnlyPermission,
+        DonationOwnerPermission,
     )
 
     def get_queryset(self, queryset=None):
@@ -148,7 +155,7 @@ class TextWallpostList(WallpostOwnerFilterMixin, SetAuthorMixin, ListCreateAPIVi
 class TextWallpostDetail(RetrieveUpdateDestroyAPIView, SetAuthorMixin):
     queryset = TextWallpost.objects.all()
     serializer_class = TextWallpostSerializer
-    permission_classes = (OneOf(ResourcePermission, RelatedResourceOwnerPermission), )
+    permission_classes = (OneOf(ResourcePermission, ResourceOwnerPermission), )
 
 
 class MediaWallpostList(TextWallpostList, SetAuthorMixin):
@@ -158,7 +165,7 @@ class MediaWallpostList(TextWallpostList, SetAuthorMixin):
     pagination_class = WallpostPagination
 
     permission_classes = (
-        OneOf(ResourcePermission, RelatedResourceOwnerPermission),
+        OneOf(ResourcePermission, ResourceOwnerPermission),
         RelatedManagementOrReadOnlyPermission
     )
 
@@ -179,8 +186,7 @@ class WallpostDetail(RetrieveUpdateDestroyAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (
-        OneOf(ResourcePermission, RelatedResourceOwnerPermission),
-        WallpostOwnerPermission
+        OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
 

@@ -198,6 +198,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['analytics.change_analyticsplatformsettings']
             },
             {
+                'name': 'scim.scimplatformsettings',
+                'permissions': ['scim.change_scimplatformsettings']
+            },
+
+            {
                 'name': 'mails.mailplatformsettings',
                 'permissions': ['mails.change_mailplatformsettings']
             },

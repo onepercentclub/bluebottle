@@ -51,11 +51,12 @@ class PlainPayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicChildMod
     base_model = PayoutAccount
     model = PlainPayoutAccount
     raw_id_fields = ('user', 'document')
-    readonly_fields = ('project_links', )
+    readonly_fields = ('project_links', 'reviewed')
 
     fields = (
         'user',
         'project_links',
+        'reviewed',
         'document',
         'account_holder_name',
         'account_holder_address',

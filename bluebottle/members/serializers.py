@@ -156,6 +156,7 @@ class UserProfileSerializer(PrivateProfileMixin, serializers.ModelSerializer):
             'fundraiser_count', 'task_count', 'time_spent', 'is_active',
             'tasks_performed', 'website', 'twitter', 'facebook',
             'skypename', 'skill_ids', 'favourite_theme_ids', 'partner_organization',
+            'subscribed',
         )
 
 

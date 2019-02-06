@@ -150,12 +150,13 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
             'amount': 1210,
             'currency': 'usd'
         })
-
-        adapter = StripePaymentAdapter(self.order_payment)
-        self.order_payment.payment.charge_token = 'some charge token'
-        with patch('stripe.Charge.retrieve', return_value=charge):
+        self.order_payment.card_data = {
+            u'source_token': u'src_001',
+            u'chargeable': True
+        }
+        with patch('stripe.Charge.create', return_value=charge):
             with patch('stripe.Transfer.retrieve', return_value=transfer):
-                adapter.create_payment()
+                adapter = StripePaymentAdapter(self.order_payment)
                 self.assertTrue(adapter.payment.pk)
                 self.assertEqual(adapter.payment.status, 'settled')
                 # Make sure payment/donation have an updated payout_amount

@@ -127,14 +127,16 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-                'social.apps.django_app.context_processors.backends',
-                'social.apps.django_app.context_processors.login_redirect',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
                 'tenant_extras.context_processors.conf_settings',
                 'tenant_extras.context_processors.tenant_properties'
             ],
         },
     },
 ]
+
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',
@@ -203,7 +205,7 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/surveys', '/token', '/jet')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
-SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
+SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
 
 
 PASSWORD_HASHERS = (
@@ -274,14 +276,15 @@ SHARED_APPS = (
     'adminsortable',
     'django_summernote',
     'django_singleton_admin',
-    'django_filters'
+    'django_filters',
+    'multiselectfield',
 )
 
 TENANT_APPS = (
     'polymorphic',
     'modeltranslation',
 
-    'social.apps.django_app.default',
+    'social_django',
     'django.contrib.contenttypes',
     # Allow the Bluebottle common app to override the admin branding
     'bluebottle.common',
@@ -394,13 +397,14 @@ TENANT_APPS = (
     'djmoney',
     'django_singleton_admin',
     'nested_inline',
-    'permissions_widget'
+    'permissions_widget',
+    'django.forms',
 )
 
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
-CSRF_COOKIE_SECURE = True
+CSRF_USE_SESSIONS = True
 SESSION_COOKIE_SECURE = True
 
 TENANT_MODEL = "clients.Client"

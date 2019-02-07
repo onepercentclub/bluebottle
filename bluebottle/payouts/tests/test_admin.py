@@ -1,4 +1,6 @@
 import os
+
+from django.test import override_settings
 from mock import patch
 
 from bluebottle.utils.utils import json2obj
@@ -7,14 +9,12 @@ from django.contrib.admin import AdminSite
 from bluebottle.payouts.models import StripePayoutAccount
 from django.contrib.auth.models import Permission, Group
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory, StripePayoutAccountFactory
 from bluebottle.test.utils import BluebottleAdminTestCase
 from bluebottle.payouts.admin.stripe import StripePayoutAccountAdmin
-
-from ..admin import ProjectPayoutAdmin
 
 
 MERCHANT_ACCOUNTS = [
@@ -59,28 +59,14 @@ class StripePayoutTestAdmin(BluebottleAdminTestCase):
                          '<b>first name</b>: Malle')
 
 
-class PayoutTestAdmin(BluebottleAdminTestCase):
-    """ verify expected fields/behaviour is present """
-
-    def test_extra_listfields(self):
-        self.failUnless('amount_pending' in ProjectPayoutAdmin.list_display)
-        self.failUnless('amount_raised' in ProjectPayoutAdmin.list_display)
-
-    @override_settings(PROJECT_PAYOUT_FEES=PROJECT_PAYOUT_FEES)
-    def test_decimal_payout_rules(self):
-        # Check payout rules show decimal (if there are any)
-        payout_url = reverse('admin:payouts_projectpayout_changelist')
-        response = self.app.get(payout_url, user=self.superuser)
-        self.failUnless('5%' in response.body)
-        self.failUnless('7.25%' in response.body)
-
-
 class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
 
     def setUp(self):
         self.user = BlueBottleUserFactory.create(is_staff=True)
-        account = PlainPayoutAccountFactory.create()
-        self.payout_url = reverse('admin:payouts_payoutaccount_change', args=(account.id,))
+        self.account = PlainPayoutAccountFactory.create()
+        self.project = ProjectFactory.create(payout_account=self.account)
+        self.payout_url = reverse('admin:payouts_payoutaccount_change', args=(self.account.id,))
+        self.payout_reviewed_url = reverse('admin:plain-payout-account-reviewed', args=(self.account.id,))
 
     def test_permissions_denied(self):
         self.client.force_login(self.user)
@@ -102,3 +88,12 @@ class PayoutAccountAdminTestCase(BluebottleAdminTestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.payout_url)
         self.assertEqual(response.status_code, 200)
+
+    def test_permission_set_reviewed(self):
+        self.assertEqual(self.account.reviewed, False)
+        self.user.groups.add(Group.objects.get(name='Staff'))
+        self.client.force_login(self.user)
+        response = self.client.get(self.payout_reviewed_url)
+        self.assertRedirects(response, self.payout_url)
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.reviewed, True)

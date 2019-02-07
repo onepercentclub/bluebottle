@@ -25,7 +25,6 @@ from moneyed.classes import Money
 from parler.admin import TranslatableAdmin
 from polymorphic.admin.helpers import PolymorphicInlineSupportMixin
 from polymorphic.admin.inlines import StackedPolymorphicInline
-from schwifty import IBAN, BIC
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
@@ -38,7 +37,7 @@ from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.payouts_dorado.adapters import (
     DoradoPayoutAdapter, PayoutValidationError, PayoutCreationError
 )
-from bluebottle.projects.decorators import confirmation_form
+from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.projects.forms import RefundConfirmationForm, PayoutApprovalConfirmationForm
 from bluebottle.projects.models import (
     ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn, ProjectLocation,
@@ -440,32 +439,13 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
     expertise_based.boolean = True
 
-    @confirmation_form(PayoutApprovalConfirmationForm, 'admin/payout_approval_confirmation.html')
-    def approve_payout(self, request, pk=None):
-        project = Project.objects.get(pk=pk)
+    @confirmation_form(
+        PayoutApprovalConfirmationForm,
+        Project,
+        'admin/payout_approval_confirmation.html'
+    )
+    def approve_payout(self, request, project):
         project_url = reverse('admin:projects_project_change', args=(project.id,))
-
-        # Check IBAN & BIC
-        account = project.account_number
-        if len(account) < 3:
-            self.message_user(request, 'Invalid Bank Account: {}'.format(account), level='ERROR')
-            return HttpResponseRedirect(project_url)
-
-        if len(account) and account[0].isalpha():
-            # Looks like an IBAN (starts with letter), let's check
-            try:
-                iban = IBAN(account)
-            except ValueError as e:
-                self.message_user(request, 'Invalid IBAN: {}'.format(e), level='ERROR')
-                return HttpResponseRedirect(project_url)
-            project.account_number = iban.compact
-            try:
-                bic = BIC(project.account_details)
-            except ValueError as e:
-                self.message_user(request, 'Invalid BIC: {}'.format(e), level='ERROR')
-                return HttpResponseRedirect(project_url)
-            project.account_details = bic.compact
-            project.save()
 
         if not request.user.has_perm('projects.approve_payout'):
             self.message_user(request, 'Missing permission: projects.approve_payout', level='ERROR')
@@ -506,10 +486,12 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         return HttpResponseRedirect(project_url)
 
-    @confirmation_form(RefundConfirmationForm, 'admin/refund_confirmation.html')
-    def refund(self, request, pk=None, form=None):
-        project = Project.objects.get(pk=pk)
-
+    @confirmation_form(
+        RefundConfirmationForm,
+        Project,
+        'admin/refund_confirmation.html'
+    )
+    def refund(self, request, project):
         if not request.user.has_perm('payments.refund_orderpayment') or not project.can_refund:
             return HttpResponseForbidden('Missing permission: payments.refund_orderpayment')
 

@@ -12,6 +12,7 @@ from rest_framework import status
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.payouts import (
     StripePayoutAccountFactory, PlainPayoutAccountFactory
@@ -148,6 +149,8 @@ class TestPayoutProjectApi(BluebottleTestCase):
         self.another_user = BlueBottleUserFactory.create()
         self.another_user_token = "JWT {0}".format(self.another_user.get_jwt_token())
 
+        nl = CountryFactory.create(name='Netherlands')
+
         financial = Group.objects.get(name='Financial')
         financial.user_set.add(self.user)
 
@@ -156,7 +159,9 @@ class TestPayoutProjectApi(BluebottleTestCase):
             status=complete,
             payout_account=PlainPayoutAccountFactory(
                 account_holder_name='Test Tester',
-                account_number='123456'
+                account_number='123456',
+                account_bank_country=nl,
+                account_holder_country=nl
             )
         )
         self.project2 = ProjectFactory.create(
@@ -195,6 +200,10 @@ class TestPayoutProjectApi(BluebottleTestCase):
         self.assertEqual(
             response.data['account']['account_number'],
             '123456'
+        )
+        self.assertEqual(
+            response.data['account']['account_bank_country'],
+            'Netherlands'
         )
 
     @patch('bluebottle.payouts.models.stripe.Account.retrieve')

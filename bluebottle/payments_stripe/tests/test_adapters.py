@@ -2,6 +2,7 @@ from mock import patch
 import stripe
 
 from django.test.utils import override_settings
+from moneyed import Money
 
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -97,18 +98,42 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
 
     def test_check_payment_status_charged(self):
         charge = stripe.Charge('some charge token')
-        charge.update({'status': 'succeeded', 'refunded': False})
+        charge.update({
+            'status': 'succeeded',
+            'transfer': 'tr_01',
+            'refunded': False
+        })
+        transfer = stripe.Transfer('some charge token')
+        transfer.update({
+            'id': 'tr_01',
+            'amount': 1210,
+            'currency': 'usd'
+        })
 
         adapter = StripePaymentAdapter(self.order_payment)
         self.order_payment.payment.charge_token = 'some charge token'
         with patch('stripe.Charge.retrieve', return_value=charge):
-            adapter.check_payment_status()
-            self.assertTrue(adapter.payment.pk)
-            self.assertEqual(adapter.payment.status, 'settled')
+            with patch('stripe.Transfer.retrieve', return_value=transfer):
+                adapter.check_payment_status()
+                self.assertTrue(adapter.payment.pk)
+                self.assertEqual(adapter.payment.status, 'settled')
+                # Make sure payment/donation have an updated payout_amount
+                self.assertEqual(adapter.payment.payout_amount, 1210)
+                donation = self.order_payment.order.donations.first()
+                self.assertEqual(donation.payout_amount, Money(12.10, 'USD'))
 
     def test_check_payment_status_refunded(self):
         charge = stripe.Charge('some charge token')
-        charge.update({'status': 'succeeded', 'refunded': True})
+        charge.update({
+            'status': 'succeeded',
+            'refunded': True,
+            'transfer': 'tr00001'
+        })
+        transfer = stripe.Transfer('some charge token')
+        transfer.update({
+            'amount': 10000,
+            'currency': 'eur'
+        })
 
         adapter = StripePaymentAdapter(self.order_payment)
         adapter.payment.status = 'settled'
@@ -116,9 +141,10 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
 
         self.order_payment.payment.charge_token = 'some charge token'
         with patch('stripe.Charge.retrieve', return_value=charge):
-            adapter.check_payment_status()
-            self.assertTrue(adapter.payment.pk)
-            self.assertEqual(adapter.payment.status, 'refunded')
+            with patch('stripe.Transfer.retrieve', return_value=transfer):
+                adapter.check_payment_status()
+                self.assertTrue(adapter.payment.pk)
+                self.assertEqual(adapter.payment.status, 'refunded')
 
     def test_refund(self):
         adapter = StripePaymentAdapter(self.order_payment)

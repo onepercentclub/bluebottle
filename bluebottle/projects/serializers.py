@@ -299,8 +299,6 @@ class ManageTaskSerializer(serializers.ModelSerializer):
 class ManageProjectSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='slug', read_only=True)
 
-    account_bic = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    account_details = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     amount_asked = MoneySerializer(required=False, allow_null=True)
     amount_donated = MoneySerializer(read_only=True)
     amount_needed = MoneySerializer(read_only=True)
@@ -441,15 +439,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id',
-                  'account_bank_country',
-                  'account_details',
-                  'account_bic',
-                  'account_holder_address',
-                  'account_holder_city',
-                  'account_holder_country',
-                  'account_holder_name',
-                  'account_holder_postal_code',
-                  'account_number',
                   'amount_asked',
                   'amount_donated',
                   'amount_needed',

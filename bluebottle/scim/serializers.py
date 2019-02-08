@@ -76,6 +76,12 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
     schemas = SchemaSerializer(read_only=False)
     meta = MetaSerializer(required=False)
 
+    def create(self, validated_data):
+        validated_data['welcome_email_is_sent'] = True
+        instance = super(SCIMMemberSerializer, self).create(validated_data)
+
+        return instance
+
     def get_groups(self, obj):
         return GroupSerializer(
             obj.groups.exclude(

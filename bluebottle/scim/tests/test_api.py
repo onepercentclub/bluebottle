@@ -1,7 +1,9 @@
 import urllib
 
 from django.contrib.auth.models import Group
+from django.core import mail
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 
 from bluebottle.members.models import Member
 from bluebottle.scim.models import SCIMPlatformSettings
@@ -340,6 +342,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         self.assertEqual(data['startIndex'], 12)
         self.assertEqual(len(data['Resources']), 0)
 
+    @override_settings(SEND_WELCOME_MAIL=True)
     def test_post(self):
         """
         Test authenticated request
@@ -382,6 +385,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             data['meta']['location'],
             reverse('scim-user-detail', args=(user.id, ))
         )
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_post_missing_remote_id(self):
         """
@@ -415,6 +419,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         )
         self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 
+    @override_settings(SEND_WELCOME_MAIL=True)
     def test_post_existing(self):
         """
         Test creating a user twice request
@@ -446,6 +451,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['status'], 400)
+        self.assertEqual(len(mail.outbox), 0)
 
 
 class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
@@ -528,6 +534,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(self.user.first_name, request_data['name']['givenName'])
         self.assertEqual(self.user.last_name, request_data['name']['familyName'])
         self.assertEqual(self.user.email, request_data['emails'][0]['value'])
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_delete(self):
         response = self.client.delete(

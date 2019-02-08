@@ -112,7 +112,7 @@ class MemberAdminTest(BluebottleAdminTestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_resend_welcome(self):
-        user = BlueBottleUserFactory.create()
+        user = BlueBottleUserFactory.create(welcome_email_is_sent=True)
         member_url = reverse('admin:members_member_change', args=(user.id,))
         response = self.client.get(member_url)
         self.assertEquals(response.status_code, 200)

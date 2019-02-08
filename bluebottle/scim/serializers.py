@@ -59,6 +59,7 @@ class SCIMIdField(serializers.CharField):
 
         return 'goodup-{}-{}'.format(self.type, result)
 
+
 class MetaSerializer(NonNestedSerializer):
     location = LocationField(source='id', read_only=True)
 
@@ -70,6 +71,7 @@ class MetaSerializer(NonNestedSerializer):
 
 class UserGroupSerializer(serializers.ModelSerializer):
     id = SCIMIdField('group')
+
     class Meta:
         model = Group
         fields = ('id', 'name',)
@@ -163,7 +165,5 @@ class SCIMGroupSerializer(serializers.ModelSerializer):
                 pass
             except ValueError:
                 pass
-
-
 
         return super(SCIMGroupSerializer, self).update(obj, data)

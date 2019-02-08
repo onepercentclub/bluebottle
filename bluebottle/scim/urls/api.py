@@ -39,7 +39,7 @@ urlpatterns = [
         name='scim-user-list'
     ),
     url(
-        r'^Users/(?P<pk>[\w]+)$',
+        r'^Users/goodup-user-(?P<pk>[\w]+)$',
         UserDetailView.as_view(),
         name='scim-user-detail'
     ),
@@ -49,7 +49,7 @@ urlpatterns = [
         name='scim-group-list'
     ),
     url(
-        r'^Groups/(?P<pk>[\w]+)$',
+        r'^Groups/goodup-group-(?P<pk>[\w]+)$',
         GroupDetailView.as_view(),
         name='scim-group-detail'
     ),

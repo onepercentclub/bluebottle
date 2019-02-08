@@ -820,7 +820,7 @@ class ProjectPlatformSettings(BasePlatformSettings):
     )
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)
-    match_options = SelectMultipleField(
+    match_options = MultiSelectField(
         max_length=100, choices=PROJECT_MATCH_OPTIONS,
         blank=True, include_blank=False
     )

@@ -161,5 +161,9 @@ class SCIMGroupSerializer(serializers.ModelSerializer):
                     user.save()
             except Member.DoesNotExist:
                 pass
+            except ValueError:
+                pass
+
+
 
         return super(SCIMGroupSerializer, self).update(obj, data)

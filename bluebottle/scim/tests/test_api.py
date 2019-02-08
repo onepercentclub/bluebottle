@@ -712,3 +712,21 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
         self.assertEqual(response.status_code, 200)
         data = response.data
         self.assertEqual(len(data['members']), 0)
+
+    def test_add_incorrect_id(self):
+        request_data = {
+            'id': 'goodup-group-{}'.format(self.group.pk),
+            'displayName': self.group.name,
+            'members': [
+                {'value': 'goodup-user-bla-bla-bla'},
+            ],
+        }
+        response = self.client.put(
+            self.url,
+            data=request_data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.data
+        self.assertEqual(len(data['members']), 0)

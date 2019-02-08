@@ -18,6 +18,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='projectplatformsettings',
             name='match_options',
-            field=MultiSelectField(blank=True, choices=[(b'theme', 'Theme'), (b'skill', 'Skill'), (b'location', 'Location')], include_blank=False, max_length=100),
+            field=MultiSelectField(blank=True, choices=[(b'theme', 'Theme'), (b'skill', 'Skill'), (b'location', 'Location')], max_length=100),
         ),
     ]

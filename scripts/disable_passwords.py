@@ -9,6 +9,12 @@ from bluebottle.members.models import Member
 def run():
     tenant = Client.objects.get(client_name='achmea-voor-elkaar')
     with LocalTenant(tenant):
-        for member in Member.objects.filter(is_staff=True).exclude(email__endswith='goodup.com').exclude(email='admin@example.com'):
+        for member in Member.objects.filter(
+            is_staff=True
+        ).exclude(
+            email__endswith='goodup.com'
+        ).exclude(
+            email='admin@example.com'
+        ):
             member.set_unusable_password()
             member.save()

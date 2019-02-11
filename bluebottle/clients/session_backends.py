@@ -53,5 +53,3 @@ class SessionStore(DBSessionStore):
         if not expiry:   # Checks both None and 0 cases
             expiry = properties.SESSION_COOKIE_AGE
         return modification + timedelta(seconds=expiry)
-
-

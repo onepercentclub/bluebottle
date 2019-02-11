@@ -1,7 +1,9 @@
 import urllib
 
 from django.contrib.auth.models import Group
+from django.core import mail
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 
 from bluebottle.members.models import Member
 from bluebottle.scim.models import SCIMPlatformSettings
@@ -340,6 +342,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         self.assertEqual(data['startIndex'], 12)
         self.assertEqual(len(data['Resources']), 0)
 
+    @override_settings(SEND_WELCOME_MAIL=True)
     def test_post(self):
         """
         Test authenticated request
@@ -367,7 +370,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
 
         data = response.data
         self.assertEqual(response.status_code, 201)
-        user = Member.objects.get(pk=data['id'])
+        user = Member.objects.get(pk=data['id'].replace('goodup-user-', ''))
 
         self.assertEqual(user.email, data['emails'][0]['value'])
         self.assertEqual(user.remote_id, data['externalId'])
@@ -380,8 +383,9 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         self.assertEqual(data['meta']['resourceType'], 'User')
         self.assertEqual(
             data['meta']['location'],
-            reverse('scim-user-detail', args=(user.id, ))
+            reverse('scim-user-detail', args=(user.pk, ))
         )
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_post_missing_remote_id(self):
         """
@@ -415,6 +419,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         )
         self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 
+    @override_settings(SEND_WELCOME_MAIL=True)
     def test_post_existing(self):
         """
         Test creating a user twice request
@@ -446,12 +451,13 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['status'], 400)
+        self.assertEqual(len(mail.outbox), 0)
 
 
 class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
-        return reverse('scim-user-detail', args=(self.user.id, ))
+        return reverse('scim-user-detail', args=(self.user.pk, ))
 
     def setUp(self):
         self.user = BlueBottleUserFactory.create(is_superuser=False)
@@ -468,9 +474,9 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
             token=self.token
         )
 
-        data = response.data
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(data['id'], self.user.id)
+        data = response.data
+        self.assertEqual(data['id'], 'goodup-user-{}'.format(self.user.pk))
         self.assertEqual(data['name']['givenName'], self.user.first_name)
         self.assertEqual(data['name']['familyName'], self.user.last_name)
         self.assertEqual(data['active'], True)
@@ -484,11 +490,13 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(data['meta']['resourceType'], 'User')
         self.assertEqual(
             data['meta']['location'],
-            reverse('scim-user-detail', args=(self.user.id, ))
+            reverse('scim-user-detail', args=(self.user.pk, ))
         )
         self.assertEqual(
             len(data['groups']), 1
         )
+        group = data['groups'][0]
+        self.assertEqual(group['id'], 'goodup-group-{}'.format(Group.objects.get(name='Staff').pk))
 
     def test_put(self):
         """
@@ -496,7 +504,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         """
         request_data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
-            'id': self.user.id,
+            'id': 'goodup-user-{}'.format(self.user.pk),
             'externalId': '123',
             'active': False,
             'emails': [{
@@ -528,6 +536,7 @@ class SCIMUserDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestC
         self.assertEqual(self.user.first_name, request_data['name']['givenName'])
         self.assertEqual(self.user.last_name, request_data['name']['familyName'])
         self.assertEqual(self.user.email, request_data['emails'][0]['value'])
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_delete(self):
         response = self.client.delete(
@@ -588,7 +597,7 @@ class SCIMGroupListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCa
 class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCase):
     @property
     def url(self):
-        return reverse('scim-group-detail', args=(self.group.id, ))
+        return reverse('scim-group-detail', args=(self.group.pk, ))
 
     def setUp(self):
         self.group = Group.objects.create(name='test')
@@ -606,12 +615,12 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
             token=self.token
         )
 
-        data = response.data
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(data['id'], self.group.id)
+        data = response.data
+        self.assertEqual(data['id'], 'goodup-group-{}'.format(self.group.id))
         self.assertEqual(data['displayName'], self.group.name)
         self.assertEqual(len(data['members']), 1)
-        self.assertEqual(data['members'][0]['value'], unicode(self.user.pk))
+        self.assertEqual(data['members'][0]['value'], 'goodup-user-{}'.format(self.user.pk))
         self.assertEqual(
             data['members'][0]['$ref'],
             reverse('scim-user-detail', args=(self.user.pk, ))
@@ -623,11 +632,11 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
     def test_put_add_to_group(self):
         new_user = BlueBottleUserFactory.create()
         request_data = {
-            'id': self.group.pk,
+            'id': 'goodup-group-{}'.format(self.group.pk),
             'displayName': self.group.name,
             'members': [
-                {'value': self.user.pk},
-                {'value': new_user.pk},
+                {'value': 'goodup-user-{}'.format(self.user.pk)},
+                {'value': 'goodup-user-{}'.format(new_user.pk)},
             ]
         }
         response = self.client.put(
@@ -636,8 +645,8 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
             token=self.token
         )
 
-        data = response.data
         self.assertEqual(response.status_code, 200)
+        data = response.data
         self.assertEqual(len(data['members']), 2)
         self.assertTrue(
             self.group in new_user.groups.all()
@@ -647,12 +656,12 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
     def test_put_add_to_staff(self):
         new_user = BlueBottleUserFactory.create()
         group = Group.objects.get(name='Staff')
-        url = reverse('scim-group-detail', args=(group.id, ))
+        url = reverse('scim-group-detail', args=(group.pk, ))
         request_data = {
-            'id': group.pk,
+            'id': 'goodup-group-{}'.format(group.pk),
             'displayName': group.name,
             'members': [
-                {'value': new_user.pk},
+                {'value': 'goodup-user-{}'.format(new_user.pk)},
             ]
         }
         response = self.client.put(
@@ -661,8 +670,8 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
             token=self.token
         )
 
-        data = response.data
         self.assertEqual(response.status_code, 200)
+        data = response.data
         self.assertEqual(len(data['members']), 1)
         self.assertTrue(
             group in new_user.groups.all()
@@ -672,7 +681,7 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
 
     def test_missing_members_are_removed(self):
         request_data = {
-            'id': self.group.pk,
+            'id': 'goodup-group-{}'.format(self.group.pk),
             'displayName': self.group.name,
             'members': [],
         }
@@ -682,13 +691,13 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
             token=self.token
         )
 
-        data = response.data
         self.assertEqual(response.status_code, 200)
+        data = response.data
         self.assertEqual(len(data['members']), 0)
 
     def test_add_non_existant_user(self):
         request_data = {
-            'id': self.group.pk,
+            'id': 'goodup-group-{}'.format(self.group.pk),
             'displayName': self.group.name,
             'members': [
                 {'value': 1234},
@@ -700,6 +709,24 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
             token=self.token
         )
 
-        data = response.data
         self.assertEqual(response.status_code, 200)
+        data = response.data
+        self.assertEqual(len(data['members']), 0)
+
+    def test_add_incorrect_id(self):
+        request_data = {
+            'id': 'goodup-group-{}'.format(self.group.pk),
+            'displayName': self.group.name,
+            'members': [
+                {'value': 'goodup-user-bla-bla-bla'},
+            ],
+        }
+        response = self.client.put(
+            self.url,
+            data=request_data,
+            token=self.token
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.data
         self.assertEqual(len(data['members']), 0)

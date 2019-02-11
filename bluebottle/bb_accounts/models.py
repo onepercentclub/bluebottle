@@ -181,6 +181,7 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
                                              verbose_name=_('Partner Organization'))
 
     is_anonymized = models.BooleanField(_('Is anonymized'), default=False)
+    welcome_email_is_sent = models.BooleanField(_('Welcome email is sent'), default=False)
 
     USERNAME_FIELD = 'email'
 
@@ -407,6 +408,8 @@ def send_welcome_mail_callback(sender, instance, created, **kwargs):
 
     USER_MODEL = get_user_model()
     if getattr(settings, "SEND_WELCOME_MAIL") and \
-            isinstance(instance, USER_MODEL) and created:
+            isinstance(instance, USER_MODEL) and \
+            created and \
+            not instance.welcome_email_is_sent:
         if valid_email(instance.email):
             send_welcome_mail(user=instance)

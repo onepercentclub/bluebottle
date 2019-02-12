@@ -114,6 +114,15 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
         fields = ('id', 'externalId', 'name', 'emails', 'active', 'groups', 'schemas', 'meta')
 
 
+class GroupMemberListSerializer(serializers.ListSerializer):
+    def to_representation(self, data):
+        return super(GroupMemberListSerializer, self).to_representation(
+            data.filter(
+                is_superuser=False, is_anonymized=False
+            ).exclude(email='devteam+accounting@onepercentclub.com')
+        )
+
+
 class GroupMemberSerializer(serializers.ModelSerializer):
     value = SCIMIdField('user', source='pk')
     ref = serializers.SerializerMethodField(method_name='get_ref')
@@ -133,6 +142,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
+        list_serializer_class = GroupMemberListSerializer
         fields = ('value', 'ref', 'type')
 
 

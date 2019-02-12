@@ -38,6 +38,7 @@ class LocalTenant(object):
     def __enter__(self):
         if self.tenant:
             connection.set_tenant(self.tenant)
+            properties.set_tenant(self.tenant)
             ContentType.objects.clear_cache()
 
     def __exit__(self, type, value, traceback):
@@ -48,7 +49,9 @@ class LocalTenant(object):
             except AttributeError:
                 logger.info("Attempted to clear missing tenant properties.")
         elif self.previous_tenant:
-            connection.set_tenant(self.tenant)
+            connection.set_tenant(self.previous_tenant)
+            properties.set_tenant(self.previous_tenant)
+            ContentType.objects.clear_cache()
 
 
 def tenant_url():
@@ -223,7 +226,6 @@ def get_public_properties(request):
             'logoUrl': "/images/logo.svg",
             'mapsApiKey': getattr(properties, 'MAPS_API_KEY', ''),
             'donationsEnabled': getattr(properties, 'DONATIONS_ENABLED', True),
-            'recurringDonationsEnabled': getattr(properties, 'RECURRING_DONATIONS_ENABLED', False),
             'siteName': current_tenant.name,
             'languages': [{'code': lang[0], 'name': lang[1]} for lang in getattr(properties, 'LANGUAGES')],
             'languageCode': get_language(),

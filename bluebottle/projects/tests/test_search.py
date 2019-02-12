@@ -9,9 +9,8 @@ from django.utils.timezone import get_current_timezone, now
 from django_elasticsearch_dsl.test import ESTestCase
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.addresses import BlueBottleAddressFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory, ProjectLocationFactory
+from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
 from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory, PlaceFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory, SkillFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -458,7 +457,6 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['count'], 3)
         self.assertEqual(result.data['results'][0]['title'], project.title)
         self.assertEqual(result.data['results'][1]['title'], other_project.title)
-
 
     def test_combined_scores(self):
         task_project = ProjectFactory.create(status=self.status)

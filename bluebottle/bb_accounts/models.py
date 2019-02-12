@@ -15,6 +15,7 @@ from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
+from geoposition.fields import GeopositionField
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_accounts.utils import valid_email
@@ -382,6 +383,8 @@ class UserAddress(Address):
                                     default=AddressType.primary)
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 verbose_name=_("user"), related_name="address")
+
+    position = GeopositionField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.country:

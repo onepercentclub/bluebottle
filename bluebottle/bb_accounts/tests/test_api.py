@@ -212,8 +212,9 @@ class UserApiIntegrationTest(BluebottleTestCase):
             'first_name': 'Nijntje',
             'last_name': 'het Konijntje',
             'address': {
-                'line1': 'test line 1'
-            }
+                'line1': 'test line 1',
+                'position': [10.0, 20.0]
+            },
         }
 
         # Profile should not be able to be updated by anonymous users.
@@ -231,6 +232,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.data['first_name'], data['first_name'])
         self.assertEqual(response.data['last_name'], data['last_name'])
         self.assertEqual(response.data['address']['line1'], data['address']['line1'])
+        self.assertEqual(response.data['address']['position'], '10.0,20.0')
 
         self.client.logout()
 

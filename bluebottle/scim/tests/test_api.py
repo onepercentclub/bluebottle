@@ -273,7 +273,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         return reverse('scim-user-list')
 
     def setUp(self):
-        for i in range(9):
+        for i in range(10):
             BlueBottleUserFactory.create(is_superuser=False)
 
         super(SCIMUserListTest, self).setUp()
@@ -730,3 +730,12 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
         self.assertEqual(response.status_code, 200)
         data = response.data
         self.assertEqual(len(data['members']), 0)
+
+    def test_get_superuser(self):
+        super_user = BlueBottleUserFactory.create(is_superuser=True)
+        super_user.groups.add(self.group)
+        response = self.client.get(
+            self.url,
+            token=self.token
+        )
+        self.assertEqual(len(response.data['members']), 1)

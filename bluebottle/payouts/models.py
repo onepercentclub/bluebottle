@@ -54,9 +54,9 @@ class PayoutAccount(PolymorphicModel):
     reviewed = models.BooleanField(
         _('Bank reviewed'),
         help_text=_(
-            'Review the project documents before marking the account as reviewed.'
-            'After setting the project to running, the account documents will be deleted.'
-            'Also, make sure to remove the documents from your device after downloading them.'
+            'Review the project documents before marking the account as reviewed. '
+            'After setting the project to running, the account documents will be deleted. '
+            'Also, make sure to remove the documents from your device after downloading them. '
             'In case of Euro and USD projects the documents will be reviewed by Stripe.'
         ),
         default=False
@@ -85,7 +85,6 @@ class StripePayoutAccount(PayoutAccount):
 
     account_id = models.CharField(max_length=100, null=True, blank=True)
     document_type = models.CharField(max_length=100, null=True, blank=True)
-    country = models.CharField(max_length=2, null=True, blank=True)
 
     providers = [
         'stripe', 'pledge',
@@ -117,6 +116,10 @@ class StripePayoutAccount(PayoutAccount):
             return stripe.Account.retrieve(self.account_id, api_key=get_secret_key())
         except PermissionError:
             return {}
+
+    @property
+    def country(self):
+        return self.account.country
 
     @property
     def short_details(self):
@@ -152,7 +155,7 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def verification_error(self):
-        if self.account_details.verification and self.account_details.verification.details:
+        if self.account_details and self.account_details.verification and self.account_details.verification.details:
             return self.account_details.verification.details
         return ''
 

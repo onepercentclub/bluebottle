@@ -20,9 +20,10 @@ env:
   # $APIKEY for the hipchat api auth
   - secure: PUYWLPG0f1QTf1Q77/0ft636ZKQaIIjy0eHZCVpzVyRMW0XX9N5UXhbTPE1fPFt5aRNdNjGIWxOF/4SuIEhYEaZamGG3PBNqvXI530SkTNUbNVoeAcTleYbwcaVWeYdyK2P2k1YdNUt+BbRuYN2o9I8+2QmQvQsZEwugCG4+UH4=
 install:
+- pip install --upgrade pip
 - pip install --upgrade setuptools mercurial
 - pip install --upgrade -I flake8==2.6.2
-- pip install -e .[test] --process-dependency-links --trusted-host github.com
+- pip install -e .[test] --trusted-host github.com
 - echo `psql --version`
 before_script:
 - curl https://stream.onepercentclub.com/files/GeoIP.dat.gz | gunzip - > GeoIP.dat

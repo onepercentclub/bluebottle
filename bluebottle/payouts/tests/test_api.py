@@ -1,8 +1,11 @@
+import json
 from mock import patch
 import os
 
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
+
+import stripe
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
@@ -64,6 +67,38 @@ class StripePayoutTestApi(BluebottleTestCase):
         self.assertEqual(response.data['payout_account']['account_id'], "acct_1DhHdvsdvsdBY")
         self.assertEqual(response.data['payout_account']['document_type'], 'passport')
         self.assertEqual(response.data['payout_account']['type'], "stripe")
+        self.assertEqual(response.data['payout_account']['country'], "NL")
+
+        self.assertEqual(stripe_create.call_count, 1)
+        self.assertEqual(stripe_create.call_args[1]['country'], 'NL')
+
+    @patch('bluebottle.payouts.models.stripe.Account.retrieve')
+    @patch('bluebottle.payouts.models.stripe.Account.create')
+    def test_stripe_details_update_country(self, stripe_create, stripe_retrieve):
+        account = stripe.Account(123)
+        account.update(json.load(
+            open(os.path.dirname(__file__) + '/data/stripe_account_verified.json')
+        ))
+        stripe_create.return_value = account
+        stripe_retrieve.return_value = account
+        project_details = {
+            'title': self.project.title,
+            'payout_account': {
+                'type': 'stripe',
+                'account_token': "ct_1234567890",
+                'document_type': "passport",
+                'country': 'NL'
+            }
+        }
+        self.client.put(self.project_manage_url, project_details, token=self.owner_token)
+
+        project_details['payout_account']['country'] = 'DE'
+        response = self.client.put(self.project_manage_url, project_details, token=self.owner_token)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(stripe_create.call_count, 2)
+        self.assertEqual(stripe_create.call_args[1]['country'], 'DE')
 
 
 class PayoutAccountApiTestCase(BluebottleTestCase):

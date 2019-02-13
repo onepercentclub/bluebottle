@@ -100,7 +100,6 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
 
         adapter = StripePaymentAdapter(self.order_payment)
         with patch('stripe.Charge.create', return_value=charge) as create:
-            adapter.charge()
             with patch('stripe.Transfer.retrieve', return_value=transfer):
                 adapter.charge()
                 self.assertTrue(adapter.payment.pk)

@@ -335,6 +335,8 @@ TENANT_APPS = (
     'bluebottle.projects',
     'bluebottle.organizations',
 
+    'bluebottle.initiatives',
+
     'bluebottle.tasks',
     'bluebottle.homepage',
     'bluebottle.payouts',
@@ -932,3 +934,5 @@ TINYMCE_INCLUDE_JQUERY = False
 
 LOOKER_SESSION_LENGTH = 60 * 60
 TOKEN_LOGIN_TIMEOUT = 30
+
+JSON_API_FORMAT_FIELD_NAMES = 'dasherize'

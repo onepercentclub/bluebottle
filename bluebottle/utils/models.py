@@ -1,9 +1,11 @@
+
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
+from django_fsm import FSMField, transition
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel
 
@@ -118,3 +120,101 @@ class PublishableModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class ReviewModel(models.Model):
+    class ReviewStatus(DjangoChoices):
+        created = ChoiceItem('created', _('created'))
+        submitted = ChoiceItem('submitted', _('submitted'))
+        needs_work = ChoiceItem('needs_work', _('needs work'))
+        accepted = ChoiceItem('accepted', _('accepted'))
+        cancelled = ChoiceItem('cancelled', _('cancelled'))
+        rejected = ChoiceItem('rejected', _('rejected'))
+
+    review_status = FSMField(
+        default=ReviewStatus.created,
+        choices=ReviewStatus.choices,
+        protected=True
+    )
+    owner = models.ForeignKey(
+        'members.Member',
+        verbose_name=_('owner'),
+        related_name='own_%(class)s',
+    )
+    reviewer = models.ForeignKey(
+        'members.Member',
+        null=True,
+        blank=True,
+        verbose_name=_('reviewer'),
+        related_name='review_%(class)s',
+    )
+
+    class Meta:
+        abstract = True
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.created,
+        target=ReviewStatus.submitted,
+        custom={'button_name': _('submit')}
+    )
+    def submit(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.needs_work,
+        target=ReviewStatus.submitted,
+        custom={'button_name': _('resubmit')}
+    )
+    def resubmit(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.needs_work,
+        custom={'button_name': _('needs work')}
+    )
+    def needs_work(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.accepted,
+        custom={'button_name': _('accept')}
+    )
+    def accept(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.rejected,
+        custom={'button_name': _('reject')}
+    )
+    def reject(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=[ReviewStatus.accepted, ReviewStatus.submitted, ReviewStatus.needs_work],
+        target=ReviewStatus.cancelled,
+        custom={'button_name': _('cancel')}
+    )
+    def cancel(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=[ReviewStatus.cancelled, ReviewStatus.accepted, ReviewStatus.rejected],
+        target=ReviewStatus.submitted,
+        custom={'button_name': _('repoen')}
+    )
+    def reopen(self):
+        pass
+
+    @classmethod
+    def is_accepted(cls, instance):
+        return instance.review_status == ReviewModel.ReviewStatus.accepted

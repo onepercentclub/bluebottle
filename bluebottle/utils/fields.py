@@ -163,3 +163,35 @@ class PrivateFileField(models.FileField):
         super(PrivateFileField, self).__init__(
             verbose_name=verbose_name, name=name, upload_to=upload_to, storage=storage, **kwargs
         )
+
+
+class FSMStatusValidator(object):
+    def set_context(self, serializers_field):
+        self.instance = serializers_field.parent.instance
+        self.source = serializers_field.source
+
+    def __call__(self, value):
+        available_transitions = getattr(
+            self.instance,
+            'get_available_{}_transitions'.format(self.source)
+        )()
+
+        transitions = [
+            transition for transition in available_transitions if
+            transition.target == value
+        ]
+
+        if len(transitions) != 1:
+            raise ValidationError(
+                'Cannot transition from {} to {}'.format(
+                    getattr(self.instance, self.source),
+                    value
+                )
+            )
+
+
+class FSMField(serializers.CharField):
+    def __init__(self, **kwargs):
+        super(FSMField, self).__init__(**kwargs)
+        validator = FSMStatusValidator()
+        self.validators.append(validator)

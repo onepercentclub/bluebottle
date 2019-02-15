@@ -8,9 +8,11 @@ from django.core.validators import BaseValidator
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework_json_api.serializers import ModelSerializer as JSONAPIModelSerializer
 
 from .validators import validate_postal_code
 from .models import Address, Language
+from bluebottle.utils.fields import FSMField
 
 
 class MaxAmountValidator(BaseValidator):
@@ -237,3 +239,23 @@ class RelatedResourcePermissionField(BasePermissionField):
             (perm.has_parent_permission(method, user, value, view.model) and
              perm.has_action_permission(method, user, view.model))
             for perm in view.get_permissions())
+
+
+class FSMModelSerializer(JSONAPIModelSerializer):
+    def update(self, instance, validated_data):
+        fsm_fields = dict(
+            (key, validated_data.pop(key)) for key, field in self.fields.items()
+            if isinstance(field, FSMField) and key in validated_data
+        )
+        for key, value in fsm_fields.items():
+            transitions = getattr(
+                instance,
+                'get_available_{}_transitions'.format(key)
+            )()
+            transition = [
+                transition for transition in transitions if
+                transition.target == value
+            ][0]
+            getattr(instance, transition.name)()
+
+        return super(FSMModelSerializer, self).update(instance, validated_data)

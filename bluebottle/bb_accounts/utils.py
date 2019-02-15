@@ -46,6 +46,9 @@ def send_welcome_mail(user=None):
             **data
         )
 
+    user.welcome_email_is_sent = True
+    user.save()
+
 
 def valid_email(email=None):
     """Returns True if argument is a string with valid email adddress"""

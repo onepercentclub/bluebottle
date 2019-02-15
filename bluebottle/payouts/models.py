@@ -152,7 +152,7 @@ class StripePayoutAccount(PayoutAccount):
 
     @property
     def verification_error(self):
-        if self.account_details.verification and self.account_details.verification.details:
+        if self.account_details and self.account_details.verification and self.account_details.verification.details:
             return self.account_details.verification.details
         return ''
 

@@ -1,14 +1,22 @@
 import json
 import re
 import urlparse
+import time
+
+import mock
 
 import httmock
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
+from django.utils.http import int_to_base36
 from rest_framework import status
+
+from bluebottle.members.tokens import login_token_generator
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (OrganizationFactory, OrganizationContactFactory,
@@ -275,27 +283,38 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
         # Create a user.
         new_user_email = 'nijntje27@hetkonijntje.nl'
-        new_user_password = 'testing'
+        new_user_password = 'test-password'
         response = self.client.post(self.user_create_api_url,
                                     {'email': new_user_email, 'password': new_user_password})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         "JWT {0}".format(response.data['jwt_token'])
 
-        # Test that the email field is required on user create.
-        response = self.client.post(self.user_create_api_url, {'password': new_user_password})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-        self.assertEqual(response.data['email'][0], 'This field is required.')
-
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [new_user_email])
         self.assertTrue('Take me there' in welcome_email.body)
+
+    def test_user_create_required_email(self):
+        response = self.client.post(self.user_create_api_url, {'password': 'test-password'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertEqual(response.data['email'][0], 'This field is required.')
+
+    def test_user_create_invalid_password(self):
+        """
+        Test creating a user with the api and activating the new user.
+        """
+        # Create a user.
+        new_user_email = 'nijntje27@hetkonijntje.nl'
+        new_user_password = 'short'
+        response = self.client.post(self.user_create_api_url,
+                                    {'email': new_user_email, 'password': new_user_password})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_duplicate_user_create(self):
         """
         Test creating a user when a user already exists with the same email.
         """
         new_user_email = 'nijntje27@hetkonijntje.nl'
-        new_user_password = 'testing'
+        new_user_password = 'test-password'
 
         user_1 = BlueBottleUserFactory.create(email=new_user_email)
         user_1.save()
@@ -349,13 +368,13 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         # Setup: get the password reset token and url.
         c = re.compile(
-            '\/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})\/',
+            '/(?P<uidb36>[0-9A-Za-z]{1,13})-(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/',
             re.DOTALL)
         m = c.search(mail.outbox[0].body)
         password_set_url = reverse('password-set', kwargs={'uidb36': m.group(1), 'token': m.group(2)})
 
         # Test: check that non-matching passwords produce a validation error.
-        passwords = {'new_password1': 'rabbit', 'new_password2': 'rabbitt'}
+        passwords = {'new_password1': 'test-password', 'new_password2': 'test-passwordd'}
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
                          response.data)
@@ -364,7 +383,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                          "The two password fields didn't match.")
 
         # Test: check that updating the password works when the passwords match.
-        passwords['new_password2'] = 'rabbit'
+        passwords['new_password2'] = 'test-password'
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_200_OK,
                          response.data)
@@ -373,6 +392,17 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.put(password_set_url, passwords)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND,
                          response.data)
+
+    def test_password_reset_validation(self):
+        token = default_token_generator.make_token(self.user_1)       # Setup: create a user.
+        uidb36 = int_to_base36(self.user_1.pk)
+        password_set_url = reverse('password-set', kwargs={'uidb36': uidb36, 'token': token})
+
+        # Test: check that short passwords produce a validation error.
+        passwords = {'new_password1': 'short', 'new_password2': 'short'}
+        response = self.client.put(password_set_url, passwords)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('This password is too short' in response.content)
 
     def test_deactivate(self):
         response = self.client.delete(
@@ -464,7 +494,7 @@ class UserVerificationTest(BluebottleTestCase):
         self.user = BlueBottleUserFactory.create()
 
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
-        self.verify_user_url = '/api/users/verification/'
+        self.verify_user_url = reverse('user-verification')
 
     def test_verify(self):
         with httmock.HTTMock(captcha_mock):
@@ -476,6 +506,7 @@ class UserVerificationTest(BluebottleTestCase):
             self.assertEqual(response.status_code, 201)
             self.user.refresh_from_db()
             self.assertTrue(self.user.verified)
+            self.assertEqual(response.data, {'token': u'test-token', 'id': self.user.id})
 
     def test_verify_unauthenticated(self):
         with httmock.HTTMock(captcha_mock):
@@ -504,3 +535,78 @@ class UserVerificationTest(BluebottleTestCase):
             )
 
             self.assertEqual(response.status_code, 403)
+
+
+class TokenLoginApiTest(BluebottleTestCase):
+    def setUp(self):
+        super(TokenLoginApiTest, self).setUp()
+
+        self.user = BlueBottleUserFactory.create()
+        self.other_user = BlueBottleUserFactory.create()
+
+        self.token_login_url = reverse('token-login')
+
+    def test_token_login(self):
+        token = login_token_generator.make_token(self.user)
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': self.user.pk, 'token': token}
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data.keys(), ['token'])
+
+    def test_token_login_twice(self):
+        token = login_token_generator.make_token(self.user)
+        self.client.post(
+            self.token_login_url,
+            data={'user_id': self.user.pk, 'token': token}
+        )
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': self.user.pk, 'token': token}
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_token_missing_argument(self):
+        token = login_token_generator.make_token(self.user)
+        response = self.client.post(
+            self.token_login_url,
+            data={'token': token}
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_token_missing_user(self):
+        token = login_token_generator.make_token(self.user)
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': '1234567890', 'token': token}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_token_wrong_token(self):
+        token = login_token_generator.make_token(self.user)
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': self.user.pk, 'token': token + '123'}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_token_wrong_user(self):
+        token = login_token_generator.make_token(self.user)
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': self.other_user.pk, 'token': token}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_token_expired(self):
+        past_time = time.time() - 35
+        with mock.patch('django.core.signing.time.time', return_value=past_time):
+            token = login_token_generator.make_token(self.user)
+
+        response = self.client.post(
+            self.token_login_url,
+            data={'user_id': self.user.pk, 'token': token}
+        )
+        self.assertEqual(response.status_code, 404)

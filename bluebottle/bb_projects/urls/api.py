@@ -6,7 +6,7 @@ from ..views import (
     ProjectPreviewDetail, ProjectPreviewList, ProjectTinyPreviewList,
     ProjectPhaseDetail, ProjectPhaseList, ProjectUsedThemeList,
     ProjectPhaseLogList, ProjectPhaseLogDetail,
-    ManageProjectDocumentList, ManageProjectDocumentDetail)
+)
 
 
 urlpatterns = [
@@ -40,9 +40,4 @@ urlpatterns = [
     # Manage stuff
     url(r'^manage/$', ManageProjectList.as_view(), name='project_manage_list'),
     url(r'^manage/(?P<slug>[\w-]+)$', ManageProjectDetail.as_view(), name='project_manage_detail'),
-
-    url(r'^documents/manage/$', ManageProjectDocumentList.as_view(), name='manage_project_document_list'),
-    url(r'^documents/manage/(?P<pk>\d+)$', ManageProjectDocumentDetail.as_view(),
-        name='manage_project_document_detail'),
-
 ]

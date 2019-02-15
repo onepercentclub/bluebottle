@@ -6,6 +6,5 @@ VOUCHER_PAYMENT_METHODS = (
         'id': 'voucher',
         'profile': 'voucher',
         'name': 'Voucher',
-        'supports_recurring': False
     },
 )

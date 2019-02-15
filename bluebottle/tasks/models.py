@@ -17,6 +17,7 @@ from tenant_extras.utils import TenantLanguage
 
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
+from bluebottle.geo.models import Place
 from bluebottle.utils.fields import PrivateFileField
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.models import SortableTranslatableModel
@@ -48,6 +49,7 @@ class Task(models.Model, PreviousStatusMixin):
                                 max_length=200,
                                 null=True,
                                 blank=True)
+
     people_needed = models.PositiveIntegerField(_('people needed'), default=1)
     project = models.ForeignKey('projects.Project')
     # See Django docs on issues with related name and an (abstract) base class:
@@ -75,6 +77,8 @@ class Task(models.Model, PreviousStatusMixin):
     deadline = models.DateTimeField(_('deadline'), help_text=_('Deadline or event date'))
     deadline_to_apply = models.DateTimeField(_('deadline to apply'), help_text=_('Deadline to apply'))
 
+    places = GenericRelation(Place)
+
     objects = UpdateSignalsQuerySet.as_manager()
 
     # required resources
@@ -100,6 +104,13 @@ class Task(models.Model, PreviousStatusMixin):
     @property
     def parent(self):
         return self.project
+
+    @property
+    def place(self):
+        try:
+            return self.places.get()
+        except Place.DoesNotExist:
+            return None
 
     @property
     def expertise_based(self):

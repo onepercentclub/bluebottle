@@ -20,12 +20,12 @@ from bluebottle.suggestions.models import Suggestion
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory, PayoutDocumentFactory
 from bluebottle.test.factory_models.projects import (
-    ProjectFactory, ProjectPhaseFactory, ProjectThemeFactory, ProjectDocumentFactory
+    ProjectFactory, ProjectPhaseFactory, ProjectThemeFactory
 )
 from bluebottle.test.factory_models.suggestions import SuggestionFactory
-from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory, TaskMemberFactory
-from bluebottle.test.factory_models.votes import VoteFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory
 from bluebottle.test.utils import BluebottleTestCase, BluebottleAdminTestCase
 from bluebottle.utils.utils import StatusDefinition
 from bluebottle.utils.models import Language
@@ -360,27 +360,6 @@ class TestProjectStatusChangeSuggestionUpdate(BluebottleTestCase):
         self.assertEquals(suggestion.status, 'in_progress')
 
 
-class TestProjectPopularity(BluebottleTestCase):
-    def setUp(self):
-        super(TestProjectPopularity, self).setUp()
-        self.init_projects()
-
-        self.project = ProjectFactory.create()
-
-        VoteFactory.create(project=self.project)
-        task = TaskFactory.create(project=self.project)
-        TaskMemberFactory.create(task=task)
-
-        order = OrderFactory.create(status=StatusDefinition.SUCCESS)
-
-        DonationFactory(order=order, project=self.project)
-
-    def test_update_popularity(self):
-        Project.update_popularity()
-
-        self.assertEqual(Project.objects.get(id=self.project.id).popularity, 11)
-
-
 class TestProjectBulkActions(BluebottleAdminTestCase):
     def setUp(self):
         super(TestProjectBulkActions, self).setUp()
@@ -692,40 +671,36 @@ class TestProjectDocument(BluebottleTestCase):
     def setUp(self):
         self.project = ProjectFactory.create(
             language=Language.objects.get(code='en'),
-            status=ProjectPhase.objects.get(slug='plan-submitted')
+            status=ProjectPhase.objects.get(slug='plan-submitted'),
+            payout_account=PlainPayoutAccountFactory.create(
+                document=PayoutDocumentFactory.create()
+            )
         )
-        self.document = ProjectDocumentFactory.create(
-            project=self.project,
-            file='private/projects/documents/test.jpg'
-        )
-
-    def test_document_url(self):
-        self.assertTrue(self.document.document_url, '/downloads/project/documents')
-        response = self.client.get(self.document.document_url)
-
-        self.assertEquals(response.status_code, 200)
-        self.assertEqual(response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg')
 
     def test_delete_camppaign(self):
         self.project.status = ProjectPhase.objects.get(slug='campaign')
         self.project.save()
+        self.project.payout_account.refresh_from_db()
 
-        self.assertEqual(len(self.project.documents.all()), 0)
+        self.assertIsNone(self.project.payout_account.document)
 
     def test_delete_submitted(self):
         self.project.status = ProjectPhase.objects.get(slug='plan-submitted')
         self.project.save()
+        self.project.payout_account.refresh_from_db()
 
-        self.assertEqual(len(self.project.documents.all()), 1)
+        self.assertTrue(self.project.payout_account.document)
 
     def test_delete_needs_work(self):
         self.project.status = ProjectPhase.objects.get(slug='plan-needs-work')
         self.project.save()
+        self.project.payout_account.refresh_from_db()
 
-        self.assertEqual(len(self.project.documents.all()), 1)
+        self.assertTrue(self.project.payout_account.document)
 
     def test_delete_closed(self):
         self.project.status = ProjectPhase.objects.get(slug='closed')
         self.project.save()
+        self.project.payout_account.refresh_from_db()
 
-        self.assertEqual(len(self.project.documents.all()), 0)
+        self.assertIsNone(self.project.payout_account.document)

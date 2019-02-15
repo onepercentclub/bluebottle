@@ -87,20 +87,8 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'permissions': ['orders.change_order']
             },
             {
-                'name': 'recurring_donations.monthlybatch',
-                'permissions': ['recurring_donations.change_monthlybatch']
-            },
-            {
-                'name': 'recurring_donations.monthlydonation',
-                'permissions': ['recurring_donations.change_monthlydonation']
-            },
-            {
-                'name': 'recurring_donations.monthlydonor',
-                'permissions': ['recurring_donations.change_monthlydonor']
-            },
-            {
-                'name': 'recurring_donations.monthlyorder',
-                'permissions': ['recurring_donations.change_monthlyorder']
+                'name': 'payouts.payoutaccount',
+                'permissions': ['payouts_payoutaccount']
             },
             {
                 'name': 'payments.orderpayment',
@@ -193,6 +181,11 @@ JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
                 'name': 'analytics.analyticsplatformsettings',
                 'permissions': ['analytics.change_analyticsplatformsettings']
             },
+            {
+                'name': 'scim.scimplatformsettings',
+                'permissions': ['scim.change_scimplatformsettings']
+            },
+
             {
                 'name': 'mails.mailplatformsettings',
                 'permissions': ['mails.change_mailplatformsettings']

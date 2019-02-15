@@ -60,7 +60,6 @@ class ClientSettingsTestCase(BluebottleTestCase):
         'profile': 'ideal',
         'name': 'iDEAL',
         'restricted_countries': ('NL', ),
-        'supports_recurring': False,
         'currencies': {
             'EUR': {'max_amount': 100}
         }
@@ -70,7 +69,6 @@ class ClientSettingsTestCase(BluebottleTestCase):
         'profile': 'directdebit',
         'name': 'Direct Debit',
         'restricted_countries': ('NL', 'BE', ),
-        'supports_recurring': True,
         'currencies': {
             'EUR': {'min_amount': 10, 'max_amount': 100}
         }
@@ -80,7 +78,6 @@ class ClientSettingsTestCase(BluebottleTestCase):
         'id': 'docdata-creditcard',
         'profile': 'creditcard',
         'name': 'CreditCard',
-        'supports_recurring': False,
         'currencies': {
             'USD': {'min_amount': 5, 'max_amount': 100},
             'NGN': {'min_amount': 3000, 'max_amount': 100},
@@ -244,3 +241,25 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         }
         response = self.client.get(self.settings_url)
         self.assertEqual(response.data['platform']['analytics']['adapters'][0], data)
+
+    @override_settings(
+        PAYOUT_METHODS=[{
+            'currencies': [u'EUR'],
+            'method': u'rabobank',
+            'payment_methods': [u'docdata-creditcard', u'docdata-ideal', u'docdata-directdebit']
+        }, {
+            'currencies': [u'EUR', 'USD'],
+            'method': u'stripe',
+            'payment_methods': [u'stripe-creditcard', u'stripe-ideal', u'stripe-directdebit']
+        }, {
+            'currencies': [u'EUR'],
+            'method': u'excel',
+            'payment_methods': [u'pledge-standard']
+        }]
+    )
+    def test_payout_settings(self):
+        response = self.client.get(self.settings_url)
+        data = response.data['platform']['payouts']
+
+        self.assertEqual(set(data['EUR']), set(['rabobank', 'excel', 'stripe']))
+        self.assertEqual(set(data['USD']), set(['stripe']))

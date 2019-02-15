@@ -7,7 +7,6 @@ PAYMENT_METHODS = (
         'profile': 'ideal',
         'name': 'iDEAL',
         'restricted_countries': ('NL', 'Netherlands'),
-        'supports_recurring': False,
         'currencies': {'EUR': {}}
     },
     {
@@ -15,7 +14,6 @@ PAYMENT_METHODS = (
         'id': 'docdata-directdebit',
         'profile': 'directdebit',
         'name': 'Direct Debit',
-        'supports_recurring': True,
         'currencies': {'EUR': {}}
     },
     {
@@ -23,7 +21,6 @@ PAYMENT_METHODS = (
         'id': 'docdata-creditcard',
         'profile': 'creditcard',
         'name': 'CreditCard',
-        'supports_recurring': False,
         'currencies': {'EUR': {}}
     }
 )

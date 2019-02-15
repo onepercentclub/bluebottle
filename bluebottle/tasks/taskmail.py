@@ -219,6 +219,7 @@ def send_task_realized_mail(task, template, subject, tenant):
     the task participants.
     """
     with LocalTenant(tenant, clear_tenant=True):
+        task.refresh_from_db()
         if len(task.members.filter(status=TaskMember.TaskMemberStatuses.realized)):
             # There is already a confirmed task member: Do not bother the owner
             return

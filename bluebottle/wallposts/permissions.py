@@ -1,4 +1,5 @@
 from bluebottle.projects.permissions import RelatedResourceOwnerPermission, BasePermission
+from bluebottle.projects.permissions import RelatedResourceOwnerPermission
 from bluebottle.tasks.models import Task
 
 

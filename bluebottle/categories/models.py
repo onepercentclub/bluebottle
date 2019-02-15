@@ -40,7 +40,7 @@ class Category(models.Model):
     @property
     def projects(self):
         return self.project_set\
-            .order_by('-favorite', '-popularity')\
+            .order_by('-favorite')\
             .filter(status__slug__in=['campaign', 'done-complete', 'done-incomplete', 'voting', 'voting-done'])
 
 

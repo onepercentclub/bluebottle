@@ -56,8 +56,6 @@ urlpatterns = [
         include('bluebottle.payments.urls.order_payments_api')),
     url(r'^api/payments/',
         include('bluebottle.payments.urls.api')),
-    url(r'^api/monthly_donations/',
-        include('bluebottle.recurring_donations.urls.api')),
     url(r'^api/rewards/',
         include('bluebottle.rewards.urls.api')),
 
@@ -85,6 +83,10 @@ urlpatterns = [
         include('bluebottle.payments_lipisha.urls.core')),
     url(r'^payments_beyonic/',
         include('bluebottle.payments_beyonic.urls.core')),
+    url(r'^payments_stripe/',
+        include('bluebottle.payments_stripe.urls.core')),
+    url(r'^payouts_stripe/',
+        include('bluebottle.payouts.urls.stripe')),
 
     url(r'^surveys/',
         include('bluebottle.surveys.urls.core')),
@@ -115,14 +117,19 @@ urlpatterns = [
     url(r'^api/social/',
         include('bluebottle.social.urls.api')),
 
-    url(r'token/', include('token_auth.urls')),
+    url(r'token/', include('bluebottle.token_auth.urls')),
 
     # urls for payout service
     url(r'^api/projects/',
         include('bluebottle.projects.urls.api')),
     url(r'^api/payouts/',
         include('bluebottle.payouts_dorado.urls')),
+    url(r'^api/payouts/',
+        include('bluebottle.payouts.urls.api')),
 
+    url(r'^api/scim/v2/', include('bluebottle.scim.urls.api')),
+
+    url(r'^downloads/', include('bluebottle.payouts.urls.media')),
     url(r'^downloads/', include('bluebottle.projects.urls.media')),
 
 ]

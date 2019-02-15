@@ -80,7 +80,6 @@ class WallpostOwnerFilterMixin(object):
                 Q(task_wallposts__project__promoter=user) |
                 Q(fundraiser_wallposts__owner=user)
             )
-
         return qs
 
 
@@ -116,8 +115,7 @@ class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
             queryset = queryset.filter(object_id=project.id)
         else:
             queryset = queryset.filter(object_id=parent_id)
-
-        queryset = queryset.order_by('-created')
+        queryset = queryset.order_by('-pinned', '-created')
         return queryset
 
 

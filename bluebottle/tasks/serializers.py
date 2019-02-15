@@ -2,10 +2,13 @@ from datetime import timedelta
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
 
 from bluebottle.bluebottle_drf2.serializers import (
     PrimaryKeyGenericRelatedField, FileSerializer, PrivateFileSerializer
 )
+from bluebottle.geo.serializers import PlaceSerializer
+from bluebottle.geo.models import Place
 from bluebottle.members.serializers import UserPreviewSerializer, UserProfileSerializer
 from bluebottle.tasks.models import Task, TaskMember, TaskFile, Skill
 from bluebottle.tasks.permissions import TaskMemberPermission, TaskManagerPermission
@@ -127,6 +130,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug',
                                            queryset=Project.objects)
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
+    place = PlaceSerializer(required=False)
     author = UserProfileSerializer(read_only=True)
     permissions = ResourcePermissionField('task_detail', view_args=('id',))
     related_permissions = TaskPermissionsSerializer(read_only=True)
@@ -143,10 +147,20 @@ class BaseTaskSerializer(serializers.ModelSerializer):
 
         project_deadline = data['project'].deadline
         project_is_funding = data['project'].project_type in ['funding', 'both']
-        if data.get('deadline') > project_deadline and project_is_funding:
+        if project_deadline and data.get('deadline') > project_deadline and project_is_funding:
             raise serializers.ValidationError({
                 'deadline': [
                     _("The deadline can not be more than the project deadline")
+                ]
+            })
+
+        if (
+            data['project'].campaign_duration and
+            data.get('deadline') > timezone.now() + timedelta(days=data['project'].campaign_duration)
+        ):
+            raise serializers.ValidationError({
+                'deadline': [
+                    _("The deadline can not be after than the project deadline")
                 ]
             })
 
@@ -176,6 +190,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
             'files',
             'id',
             'location',
+            'place',
             'members',
             'needs_motivation',
             'people_needed',
@@ -191,17 +206,38 @@ class BaseTaskSerializer(serializers.ModelSerializer):
 
     def _check_project_deadline(self, instance, validated_data):
         project = validated_data['project']
-        if instance.deadline > project.deadline:
+        if project.deadline and instance.deadline > project.deadline:
             project.deadline = instance.deadline
             project.save()
 
     def create(self, validated_data):
+        place = None
+        if 'place' in validated_data:
+            place = validated_data.pop('place')
         instance = super(BaseTaskSerializer, self).create(validated_data)
+
+        if place:
+            Place.objects.create(content_object=instance, **place)
+
         self._check_project_deadline(instance, validated_data)
+
         return instance
 
     def update(self, instance, validated_data):
+        if 'place' in validated_data:
+            if instance.place:
+                place = instance.place
+                for key, value in validated_data.pop('place').items():
+                    setattr(place, key, value)
+                place.save()
+            else:
+                Place.objects.create(content_object=instance, **validated_data.pop('place'))
+        else:
+            if instance.place:
+                instance.place.delete()
+
         result = super(BaseTaskSerializer, self).update(instance, validated_data)
+
         self._check_project_deadline(instance, validated_data)
         return result
 

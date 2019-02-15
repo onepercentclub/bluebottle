@@ -19,7 +19,7 @@ class TestDonationEmails(BluebottleTestCase):
         super(TestDonationEmails, self).setUp()
         self.init_projects()
 
-        self.user = BlueBottleUserFactory.create(first_name='user', last_name='userson')
+        self.user = BlueBottleUserFactory.create(first_name='Michael', last_name='Jackson')
         self.user.address.line1 = "'s Gravenhekje 1A"
         self.user.address.city = "Mokum A"
         self.user.save()
@@ -32,19 +32,8 @@ class TestDonationEmails(BluebottleTestCase):
             user=self.user,
         )
 
-        self.recurring_order = OrderFactory.create(
-            user=self.user,
-            order_type="recurring"
-        )
-
         self.donation = DonationFactory.create(
             order=self.order,
-            project=self.some_project,
-            fundraiser=None
-        )
-
-        self.recurring_donation = DonationFactory.create(
-            order=self.recurring_order,
             project=self.some_project,
             fundraiser=None
         )
@@ -92,6 +81,36 @@ class TestDonationEmails(BluebottleTestCase):
         # self.assertTrue(self.user.address.line1 in mail.outbox[0].body)
         # self.assertTrue(self.user.address.city in mail.outbox[0].body)
         self.assertTrue("{0}".format(self.donation.amount.amount) in mail.outbox[0].body)
+
+    def test_mail_owner_successful_anonymous_donation(self):
+        """
+        Test that an email is sent to an external project owner after a successful donation,
+        make sure that only first name is shared.
+        """
+        # Clear the email folder
+        mail.outbox = []
+
+        self.donation.anonymous = True
+        self.donation.save()
+
+        # Prepare the order
+        self.order.locked()
+        self.order.save()
+        self.order.success()
+        self.order.save()
+
+        # No fundraiser so 2 mails should be sent: one to the owner, and one to the donor
+        self.assertEqual(len(mail.outbox), 2)
+
+        # Test email to owner
+        self.assertEqual(mail.outbox[0].to[0], self.project_owner.email)
+        self.assertEqual(mail.outbox[0].subject, _('You received a new donation'))
+
+        # Test that last name is *not* found in the email
+        self.assertFalse(self.user.first_name in mail.outbox[0].body)
+        self.assertFalse(self.user.last_name in mail.outbox[0].body)
+        self.assertFalse(self.user.address.line1 in mail.outbox[0].body)
+        self.assertTrue('an anonymous person' in mail.outbox[0].body)
 
     def test_mail_external_project_owner_successful_donation(self):
         """
@@ -156,20 +175,6 @@ class TestDonationEmails(BluebottleTestCase):
         self.assertTrue(
             self.donation.project.organization.name in body
         )
-
-    def test_mail_no_mail_not_one_off(self):
-        """ Test that no email is sent when its not a one-off donation"""
-        # Clear the email folder
-        mail.outbox = []
-
-        # Prepare the order
-        self.recurring_order.locked()
-        self.recurring_order.save()
-        self.recurring_order.success()
-        self.recurring_order.save()
-
-        # No mail because its not a one-off donation
-        self.assertEqual(len(mail.outbox), 0)
 
     def test_mail_fundraiser_successful_donation(self):
         "Test that an email is sent to the fundraiser after a succesful donation"

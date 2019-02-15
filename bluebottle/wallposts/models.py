@@ -62,6 +62,11 @@ class Wallpost(PolymorphicModel):
                                  related_name='donation',
                                  null=True, blank=True)
 
+    pinned = models.BooleanField(
+        default=False,
+        help_text=_('Pinned posts are shown first. New posts by the initiator will unpin older posts.')
+    )
+
     # Manager
     objects = WallpostManager()
     objects_with_deleted = models.Manager()

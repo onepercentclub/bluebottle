@@ -3,7 +3,10 @@ from django.test.client import RequestFactory
 from django.urls.base import reverse
 
 from bluebottle.tasks.models import Task, Skill
-from bluebottle.tasks.admin import TaskAdmin, DeadlineToApplyFilter, DeadlineFilter, SkillAdmin
+from bluebottle.tasks.admin import (
+    TaskAdmin, DeadlineToApplyFilter, DeadlineFilter, SkillAdmin,
+    OnlineOnLocationFilter
+)
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, SkillFactory
 from bluebottle.test.utils import BluebottleTestCase, BluebottleAdminTestCase
@@ -46,6 +49,50 @@ class TestTaskAdmin(BluebottleTestCase):
                       'date_status_change', 'people_needed', 'project', 'author',
                       'type', 'accepting', 'location', 'deadline', 'deadline_to_apply']:
             self.assertIn(field, self.task_admin.get_fields(request))
+
+
+class TestOnlineOnLocationFilter(BluebottleTestCase):
+    """
+    Test task online/on location filter
+    """
+
+    def setUp(self):
+        super(TestOnlineOnLocationFilter, self).setUp()
+        self.init_projects()
+
+        self.user = BlueBottleUserFactory.create()
+        self.task_location_blank = TaskFactory.create(
+            location=''
+        )
+        self.task_location_none = TaskFactory.create(
+            location=None
+        )
+        self.task_location = TaskFactory.create(
+            location='amsterdam'
+        )
+
+        self.request = factory.get('/')
+        self.request.user = self.user
+        self.admin = TaskAdmin(Task, AdminSite())
+
+    def test_filter_online(self):
+        filter = OnlineOnLocationFilter(None, {'online': 'online'}, Task, self.admin)
+        queryset = filter.queryset(self.request, Task.objects.all())
+        self.assertEqual(len(queryset), 2)
+        self.assertTrue(
+            self.task_location_blank in queryset
+        )
+        self.assertTrue(
+            self.task_location_none in queryset
+        )
+
+    def test_filter_on_location(self):
+        filter = OnlineOnLocationFilter(None, {'online': 'on_location'}, Task, self.admin)
+        queryset = filter.queryset(self.request, Task.objects.all())
+        self.assertEqual(len(queryset), 1)
+        self.assertTrue(
+            self.task_location in queryset
+        )
 
 
 class TestSkillAdmin(BluebottleAdminTestCase):

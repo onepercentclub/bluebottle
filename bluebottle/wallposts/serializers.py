@@ -74,7 +74,7 @@ class WallpostSerializerBase(serializers.ModelSerializer):
 
     class Meta:
         fields = ('id', 'type', 'author', 'created', 'reactions',
-                  'parent_type', 'parent_id', 'donation',
+                  'parent_type', 'parent_id', 'pinned', 'donation',
                   'email_followers', 'share_with_facebook',
                   'share_with_twitter', 'share_with_linkedin')
 

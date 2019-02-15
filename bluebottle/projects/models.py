@@ -7,7 +7,6 @@ from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save, pre_save
 from django.dispatch import receiver
@@ -27,7 +26,7 @@ from multiselectfield import MultiSelectField
 from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.bb_projects.models import (
-    BaseProject, ProjectPhase, BaseProjectDocument
+    BaseProject, ProjectPhase
 )
 from bluebottle.clients import properties
 from bluebottle.clients.utils import LocalTenant
@@ -36,7 +35,7 @@ from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.managers import UpdateSignalsQuerySet
 from bluebottle.utils.models import BasePlatformSettings
-from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin, reverse_signed
+from bluebottle.utils.utils import StatusDefinition, PreviousStatusMixin
 from bluebottle.wallposts.models import (
     Wallpost, MediaWallpostPhoto, MediaWallpost, TextWallpost
 )
@@ -60,6 +59,11 @@ class ProjectLocation(models.Model):
     longitude = models.DecimalField(
         _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True
     )
+
+    @property
+    def position(self):
+        if self.latitude and self.longitude:
+            return (self.longitude, self.latitude)
 
     class Meta:
         verbose_name = _('Map')
@@ -102,36 +106,13 @@ class ProjectPhaseLog(models.Model):
             return obj.start
 
 
-class ProjectDocument(BaseProjectDocument):
-    @property
-    def document_url(self):
-        # pk may be unset if not saved yet, in which case no url can be
-        # generated.
-        if self.pk is not None and self.file:
-            return reverse_signed('project-document-file', args=(self.pk, ))
-        return None
-
-    @property
-    def owner(self):
-        return self.project.owner
-
-    @property
-    def parent(self):
-        return self.project
-
-
 class Project(BaseProject, PreviousStatusMixin):
-    reach = models.PositiveIntegerField(
-        _('Reach'), help_text=_('How many people do you expect to reach?'),
-        blank=True, null=True)
-
     video_url = models.URLField(
         _('video'), max_length=100, blank=True, null=True, default='',
         help_text=_("Do you have a video pitch or a short movie that "
                     "explains your project? Cool! We can't wait to see it! "
                     "You can paste the link to YouTube or Vimeo video here"))
 
-    popularity = models.FloatField(null=False, default=0)
     is_campaign = models.BooleanField(verbose_name='On homepage', default=False, help_text=_(
         "Project is part of a campaign and gets special promotion."))
 
@@ -145,7 +126,13 @@ class Project(BaseProject, PreviousStatusMixin):
         _("story"), help_text=_("Describe the project in detail"),
         blank=True, null=True)
 
+    payout_account = models.ForeignKey('payouts.PayoutAccount', null=True, blank=True, on_delete=models.SET_NULL)
+
     # TODO: Remove these fields?
+    reach = models.PositiveIntegerField(
+        _('Reach'), help_text=_('How many people do you expect to reach?'),
+        blank=True, null=True)
+
     effects = models.TextField(
         _("effects"), blank=True, null=True,
         help_text=_("What will be the Impact? How will your "
@@ -197,81 +184,15 @@ class Project(BaseProject, PreviousStatusMixin):
         (StatusDefinition.FAILED, _('Failed'))
     )
 
-    payout_status = models.CharField(_('payout_status'), max_length=50, null=True, blank=True,
+    payout_status = models.CharField(_('Payout status'), max_length=50, null=True, blank=True,
                                      choices=PAYOUT_STATUS_CHOICES)
     wallposts = GenericRelation(Wallpost, related_query_name='project_wallposts')
     objects = UpdateSignalsQuerySet.as_manager()
-
-    bank_details_reviewed = models.BooleanField(
-        _('Bank details reviewed'),
-        help_text=_(
-            'Review the project documents before marking the bank details as reviewed.'
-            'After setting this project to running, the project documents will be deleted.'
-            'Also, make sure to remove the documents from your device after downloading them.'
-        ),
-        default=False
-    )
 
     def __unicode__(self):
         if self.title:
             return u'{}'.format(self.title)
         return self.slug
-
-    @classmethod
-    def update_popularity(self):
-        """
-        Update popularity score for all projects
-
-        Popularity is calculated by the number of new donations, task members and votes
-        in the last 30 days.
-
-        Donations and task members have a weight 5 times that fo a vote.
-        """
-        from bluebottle.donations.models import Donation
-        from bluebottle.tasks.models import TaskMember
-        from bluebottle.votes.models import Vote
-
-        weight = 5
-
-        last_month = timezone.now() - timezone.timedelta(days=30)
-        donations = Donation.objects.filter(
-            order__status__in=[
-                StatusDefinition.PLEDGED,
-                StatusDefinition.PENDING,
-                StatusDefinition.SUCCESS
-            ],
-            created__gte=last_month
-        ).exclude(order__order_type='recurring')
-
-        task_members = TaskMember.objects.filter(
-            created__gte=last_month
-        )
-
-        votes = Vote.objects.filter(
-            created__gte=last_month
-        )
-
-        # Loop over all projects that have popularity set, where a donation was recently done,
-        # where a taskmember was created or that recieved a vote
-        # These queries CAN be combined into one query, but that is very inefficient.
-        queries = [
-            Q(popularity__gt=0),
-            Q(donation__created__gte=last_month,
-              donation__order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING]),
-            Q(task__members__created__gte=last_month),
-            Q(vote__created__gte=last_month)
-        ]
-
-        for query in queries:
-            for project in self.objects.filter(query).distinct():
-                popularity = (
-                    weight * len(donations.filter(project=project)) +
-                    weight * len(task_members.filter(task__project=project)) +
-                    len(votes.filter(project=project))
-                )
-                # Save the new value to the db, but skip .save
-                # this way we will not trigger signals and hit the save method
-                self.objects.filter(pk=project.pk).update(popularity=popularity)
 
     @classmethod
     def update_status_stats(cls, tenant):
@@ -367,10 +288,10 @@ class Project(BaseProject, PreviousStatusMixin):
             self.task_manager = self.owner
 
         if self.status.slug not in (
-            'plan-new', 'plan-submitted', 'plan-needs-work',
+                'plan-new', 'plan-submitted', 'plan-needs-work',
         ):
-            for document in self.documents.all():
-                document.delete()
+            if hasattr(self.payout_account, 'document') and self.payout_account.document:
+                self.payout_account.document.delete()
 
         # Set all task.author to project.task_manager
         self.task_set.exclude(author=self.task_manager).update(author=self.task_manager)
@@ -546,7 +467,6 @@ class Project(BaseProject, PreviousStatusMixin):
         return self.get_money_total([
             StatusDefinition.CANCELLED,
             StatusDefinition.REFUND_REQUESTED,
-            StatusDefinition.REFUNDED,
         ])
 
     @property
@@ -573,7 +493,7 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def donors(self, limit=20):
-        return self.donation_set. \
+        return self.donation_set.\
             filter(order__status__in=[StatusDefinition.PLEDGED,
                                       StatusDefinition.PENDING,
                                       StatusDefinition.SUCCESS]). \
@@ -596,12 +516,10 @@ class Project(BaseProject, PreviousStatusMixin):
 
     @property
     def can_refund(self):
-        return (
-            properties.ENABLE_REFUNDS and
-            self.amount_donated.amount > 0 and
-            (not self.payout_status or self.payout_status == StatusDefinition.NEEDS_APPROVAL) and
+        return properties.ENABLE_REFUNDS and \
+            self.amount_donated.amount > 0 and \
+            (not self.payout_status or self.payout_status == StatusDefinition.NEEDS_APPROVAL) and \
             self.status.slug in ('done-incomplete', 'closed')
-        )
 
     @property
     def days_left(self):
@@ -628,16 +546,6 @@ class Project(BaseProject, PreviousStatusMixin):
             ('api_change_own_project', 'Can change own projects through the API'),
             ('api_change_own_running_project', 'Can change own running projects through the API'),
             ('api_delete_own_project', 'Can delete own projects through the API'),
-
-            ('api_read_projectdocument', 'Can view project documents through the API'),
-            ('api_add_projectdocument', 'Can add project documents through the API'),
-            ('api_change_projectdocument', 'Can change project documents through the API'),
-            ('api_delete_projectdocument', 'Can delete project documents through the API'),
-
-            ('api_read_own_projectdocument', 'Can view project own documents through the API'),
-            ('api_add_own_projectdocument', 'Can add own project documents through the API'),
-            ('api_change_own_projectdocument', 'Can change own project documents through the API'),
-            ('api_delete_own_projectdocument', 'Can delete own project documents through the API'),
 
             ('api_read_projectbudgetline', 'Can view project budget lines through the API'),
             ('api_add_projectbudgetline', 'Can add project budget lines through the API'),
@@ -679,8 +587,7 @@ class Project(BaseProject, PreviousStatusMixin):
             bb_track("Project Completed", data)
 
     def check_task_status(self):
-        if (not self.is_funding and
-                all([task.status == Task.TaskStatuses.realized for task in self.task_set.all()])):
+        if (not self.is_funding and all([task.status == Task.TaskStatuses.realized for task in self.task_set.all()])):
             self.status = ProjectPhase.objects.get(slug='done-complete')
             self.save()
 
@@ -758,7 +665,6 @@ class ProjectBudgetLine(models.Model):
 
 
 class ProjectAddOn(PolymorphicModel):
-
     type = 'base'
 
     project = models.ForeignKey('projects.Project', related_name='addons')
@@ -801,7 +707,6 @@ class ProjectImage(AbstractAttachment):
 
 
 class ProjectSearchFilter(SortableMixin):
-
     FILTER_OPTIONS = (
         ('location', _('Location')),
         ('theme', _('Theme')),
@@ -826,7 +731,6 @@ class ProjectSearchFilter(SortableMixin):
 
 
 class ProjectCreateTemplate(models.Model):
-
     project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
                                          null=True,
                                          related_name='templates')
@@ -847,7 +751,6 @@ class ProjectCreateTemplate(models.Model):
 
 
 class CustomProjectFieldSettings(SortableMixin):
-
     project_settings = models.ForeignKey('projects.ProjectPlatformSettings',
                                          null=True,
                                          related_name='extra_fields')
@@ -891,6 +794,12 @@ class ProjectPlatformSettings(BasePlatformSettings):
         ('phone', _('Phone')),
     )
 
+    PROJECT_MATCH_OPTIONS = (
+        ('theme', _('Theme')),
+        ('skill', _('Skill')),
+        ('location', _('Location')),
+    )
+
     PROJECT_SHARE_OPTIONS = (
         ('twitter', _('Twitter')),
         ('facebook', _('Facebook')),
@@ -911,6 +820,10 @@ class ProjectPlatformSettings(BasePlatformSettings):
     )
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)
+    match_options = MultiSelectField(
+        max_length=100, choices=PROJECT_MATCH_OPTIONS,
+        blank=True
+    )
 
     class Meta:
         verbose_name_plural = _('project platform settings')

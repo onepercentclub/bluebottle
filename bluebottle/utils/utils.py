@@ -1,5 +1,8 @@
+from collections import namedtuple
+
 import bleach
 from importlib import import_module
+import json
 import logging
 import pygeoip
 import socket
@@ -279,3 +282,11 @@ def reverse_signed(name, args):
 
 def get_language_from_request(request):
     return request.META.get('HTTP_X_APPLICATION_LANGUAGE', None)
+
+
+def _json_object_hook(d):
+    return namedtuple('X', d.keys())(*d.values())
+
+
+def json2obj(data):
+    return json.loads(data, object_hook=_json_object_hook)

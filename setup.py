@@ -12,10 +12,6 @@ def read_file(name):
 readme = read_file('README.rst')
 changes = ''
 
-<<<<<<< HEAD
-
-=======
->>>>>>> feature/security-fixes
 install_requires = [
     'Babel==2.4.0',
     'Django==1.11.15',

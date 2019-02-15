@@ -109,3 +109,39 @@ class UserDataExportTest(BluebottleTestCase):
     def test_unauthenticated(self):
         response = self.client.get(self.user_export_url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class UserLogoutTest(BluebottleTestCase):
+    """
+    Integration tests for the User API.
+    """
+
+    def setUp(self):
+        super(UserLogoutTest, self).setUp()
+
+        self.user = BlueBottleUserFactory.create()
+        self.user_token = "JWT {0}".format(self.user.get_jwt_token())
+
+        self.current_user_url = reverse('user-current')
+        self.logout_url = reverse('user-logout')
+
+    def test_get_profile(self):
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(response.data['email'], self.user.email)
+
+    def test_logout(self):
+        response = self.client.post(self.logout_url, token=self.user_token)
+        self.assertEqual(response.status_code, 204)
+
+        response = self.client.get(self.current_user_url, token=self.user_token)
+        self.assertEqual(response.status_code, 401)
+
+    def test_logout_no_token(self):
+        response = self.client.post(self.logout_url)
+        self.assertEqual(response.status_code, 204)
+
+    def test_logout_wrong_token(self):
+        response = self.client.post(self.logout_url, token=self.user_token + '1234')
+        self.assertEqual(response.status_code, 401)

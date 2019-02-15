@@ -2435,7 +2435,7 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['projects']['contact_types'], ['organization'])
         self.assertEqual(response.data['platform']['projects']['create_flow'], 'choice')
         self.assertEqual(response.data['platform']['projects']['create_types'], ["funding", "sourcing"])
-        self.assertEqual(response.data['platform']['projects']['share_options'], ["facebook", "twitter"])
+        self.assertEqual(set(response.data['platform']['projects']['share_options']), set(["facebook", "twitter"]))
         self.assertEqual(response.data['platform']['projects']['match_options'], ['skill', 'theme'])
 
         self.assertEqual(response.data['platform']['projects']['filters'][0]['name'], 'location')

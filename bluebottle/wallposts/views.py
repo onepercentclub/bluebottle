@@ -18,7 +18,6 @@ from .models import TextWallpost, MediaWallpost, MediaWallpostPhoto, Wallpost, R
 from .serializers import (TextWallpostSerializer, MediaWallpostSerializer,
                           MediaWallpostPhotoSerializer, ReactionSerializer,
                           WallpostSerializer)
-from .permissions import WallpostOwnerPermission
 
 
 class WallpostFilter(django_filters.FilterSet):
@@ -75,7 +74,6 @@ class WallpostOwnerFilterMixin(object):
                 Q(task_wallposts__project__promoter=user) |
                 Q(fundraiser_wallposts__owner=user)
             )
-
         return qs
 
 
@@ -110,8 +108,7 @@ class WallpostList(WallpostOwnerFilterMixin, ListAPIView):
             queryset = queryset.filter(object_id=project.id)
         else:
             queryset = queryset.filter(object_id=parent_id)
-
-        queryset = queryset.order_by('-created')
+        queryset = queryset.order_by('-pinned', '-created')
         return queryset
 
 
@@ -179,8 +176,7 @@ class WallpostDetail(RetrieveUpdateDestroyAPIView):
     queryset = Wallpost.objects.all()
     serializer_class = WallpostSerializer
     permission_classes = (
-        OneOf(ResourcePermission, RelatedResourceOwnerPermission),
-        WallpostOwnerPermission
+        OneOf(ResourcePermission, ResourceOwnerPermission),
     )
 
 

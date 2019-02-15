@@ -4,6 +4,7 @@ import importlib
 from bluebottle.clients import properties
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
+from bluebottle.projects.models import Project
 from bluebottle.utils.utils import get_class, GetClassError
 
 
@@ -26,7 +27,7 @@ def check_access_handler(handler, user):
         raise Exception(error_message)
 
 
-def get_payment_methods(country=None, amount=None, user=None, currency=None):
+def get_payment_methods(country=None, amount=None, user=None, currency=None, project_id=None):
     """
     Get payment methods from settings
     """
@@ -46,6 +47,16 @@ def get_payment_methods(country=None, amount=None, user=None, currency=None):
             method for method in methods
             if currency in method.get('currencies', {}).keys()
         ]
+
+    if project_id:
+        try:
+            project = Project.objects.get(slug=project_id)
+            methods = [
+                method for method in methods
+                if method.get('provider') in project.payout_account.providers
+            ]
+        except Project.DoesNotExist:
+            pass
 
     # Filter out methods that are resitrcted using an access handler function
     return [

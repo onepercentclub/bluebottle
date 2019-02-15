@@ -26,11 +26,11 @@ from bluebottle.projects.models import ProjectPlatformSettings, ProjectSearchFil
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.geo import CountryFactory, LocationFactory
+from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.rewards import RewardFactory
 from bluebottle.test.factory_models.organizations import OrganizationFactory
-from bluebottle.test.factory_models.projects import ProjectFactory, ProjectDocumentFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import (
     TaskFactory, TaskMemberFactory, SkillFactory
 )
@@ -567,41 +567,6 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertTrue(owner.get('email', None) is None)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-    def test_project_detail_view_bank_details(self):
-        """ Test that the correct bank details are returned for a project """
-
-        country = CountryFactory.create()
-
-        project = ProjectFactory.create(title='test project',
-                                        owner=self.user,
-                                        account_holder_name='test name',
-                                        account_holder_address='test address',
-                                        account_holder_postal_code='12345AC',
-                                        account_holder_city='Amsterdam',
-                                        account_holder_country=country,
-                                        account_number='NL18ABNA0484869868',
-                                        account_bank_country=country
-                                        )
-        project.save()
-
-        response = self.client.get(self.manage_projects_url + str(project.slug),
-                                   token=self.user_token)
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK, response)
-        self.assertEquals(response.data['title'], 'test project')
-        self.assertEquals(response.data['account_number'], 'NL18ABNA0484869868')
-        self.assertEquals(response.data['account_details'], 'ABNANL2AABNANL2AABNANL2A')
-        self.assertEquals(response.data['account_bic'], 'ABNANL2AABNANL2AABNANL2A')
-        self.assertEquals(response.data['account_bank_country'], country.id)
-
-        self.assertEquals(response.data['account_holder_name'], 'test name')
-        self.assertEquals(response.data['account_holder_address'],
-                          'test address')
-        self.assertEquals(response.data['account_holder_postal_code'],
-                          '12345AC')
-        self.assertEquals(response.data['account_holder_city'], 'Amsterdam')
-        self.assertEquals(response.data['account_holder_country'], country.id)
-
     def test_project_get_vote_count(self):
         """ Tests retrieving a project's vote count from the API. """
 
@@ -868,7 +833,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
 
         self.manage_projects_url = reverse('project_manage_list')
         self.manage_budget_lines_url = reverse('project-budgetline-list')
-        self.manage_project_document_url = reverse('manage_project_document_list')
 
         self.some_photo = './bluebottle/projects/test_images/upload.png'
 
@@ -1237,168 +1201,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.assertEquals(response.data['project_type'], 'funding',
                           'Project should use project_type if defined')
 
-    def test_project_document_upload(self):
-        project = ProjectFactory.create(title="testproject",
-                                        slug="testproject",
-                                        owner=self.some_user,
-                                        status=ProjectPhase.objects.get(
-                                            slug='plan-new'))
-
-        photo_file = open(self.some_photo, mode='rb')
-        response = self.client.post(self.manage_project_document_url,
-                                    {'file': photo_file, 'project': project.slug},
-                                    token=self.some_user_token, format='multipart')
-
-        self.assertEqual(response.status_code, 201)
-        data = json.loads(response.content)
-
-        self.assertTrue(
-            data['file']['url'].startswith('/downloads/project/document')
-        )
-        self.assertTrue(
-            project.documents.all()[0].file
-        )
-
-    def test_project_document_download(self):
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        response = self.client.get(file_url)
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_project_document_download_signed(self):
-        project = ProjectFactory(owner=self.some_user)
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            project=project,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        signature = self.signer.sign(file_url)
-        response = self.client.get(
-            '{}?{}'.format(file_url, urlencode({'signature': signature})),
-            token=self.some_user_token
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response['X-Accel-Redirect'], '/media/private/projects/documents/test.jpg'
-        )
-
-    def test_project_document_download_no_signature(self):
-        project = ProjectFactory(owner=self.some_user)
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            project=project,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        response = self.client.get(
-            file_url,
-            token=self.some_user_token
-        )
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_project_document_download_invalid_signature(self):
-        project = ProjectFactory(owner=self.some_user)
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            project=project,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('project-document-file', args=[document.pk])
-        signature = 'bla:bli'
-        response = self.client.get(
-            '{}?{}'.format(file_url, urlencode({'signature': signature})),
-            token=self.some_user_token
-        )
-
-        self.assertEqual(response.status_code, 404)
-
-    def test_project_document_delete_author(self):
-        project = ProjectFactory(owner=self.some_user)
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            project=project,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('manage_project_document_detail', args=[document.pk])
-        response = self.client.delete(file_url, token=self.some_user_token)
-
-        self.assertEqual(response.status_code, 204)
-
-    def test_project_document_delete_non_author(self):
-        document = ProjectDocumentFactory.create(
-            author=self.some_user,
-            file='private/projects/documents/test.jpg'
-        )
-        file_url = reverse('manage_project_document_detail', args=[document.pk])
-        response = self.client.delete(file_url, token=self.another_user_token)
-
-        self.assertEqual(response.status_code, 403)
-
-    def test_create_project_contains_empty_bank_details(self):
-        """ Create project with bank details. Ensure they are returned """
-        project_data = {
-            'title': 'Project with bank details'
-        }
-
-        response = self.client.post(self.manage_projects_url, project_data,
-                                    token=self.some_user_token)
-
-        self.assertEquals(response.status_code,
-                          status.HTTP_201_CREATED,
-                          response)
-
-        bank_detail_fields = ['account_number', 'account_details', 'account_bic', 'account_bank_country']
-
-        for field in bank_detail_fields:
-            self.assertIn(field, response.data)
-
-    def test_create_project_contains_empty_account_details(self):
-        """ Create project with bank details. Ensure they are returned """
-        project_data = {
-            'title': 'Project with bank details',
-            'account_details': '',
-            'account_bic': ''
-        }
-
-        response = self.client.post(self.manage_projects_url, project_data,
-                                    token=self.some_user_token)
-
-        self.assertEquals(response.status_code,
-                          status.HTTP_201_CREATED,
-                          response)
-
-        bank_detail_fields = ['account_number', 'account_details', 'account_bic', 'account_bank_country']
-
-        for field in bank_detail_fields:
-            self.assertIn(field, response.data)
-
-    def test_create_project_contains_null_account_details(self):
-        """ Create project with bank details. Ensure they are returned """
-        project_data = {
-            'title': 'Project with bank details',
-            'account_details': None,
-            'account_bic': None
-        }
-
-        response = self.client.post(self.manage_projects_url, project_data,
-                                    token=self.some_user_token)
-
-        self.assertEquals(response.status_code,
-                          status.HTTP_201_CREATED,
-                          response)
-
-        bank_detail_fields = ['account_number', 'account_details', 'account_bic', 'account_bank_country']
-
-        for field in bank_detail_fields:
-            self.assertIn(field, response.data)
-
     def test_project_create_invalid_image(self):
         """
         Tests for Project Create
@@ -1440,106 +1242,6 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
                                     )
         self.assertEqual(response.data['amount_asked'], amount_asked)
         self.assertEqual(response.data['currencies'], ['EUR'])
-
-    def test_set_bank_details(self):
-        """ Set bank details in new project """
-
-        country = CountryFactory.create()
-
-        project_data = {
-            'title': 'Project with bank details',
-            'account_number': 'NL18ABNA0484869868',
-            'account_details': 'ABNANL2A',
-            'account_bank_country': country.pk,
-            'account_holder_name': 'blabla',
-            'account_holder_address': 'howdy',
-            'account_holder_postal_code': '12334',
-            'account_holder_city': 'yada yada',
-            'account_holder_country': country.pk
-        }
-
-        response = self.client.post(self.manage_projects_url, project_data,
-                                    token=self.some_user_token)
-
-        self.assertEquals(response.status_code,
-                          status.HTTP_201_CREATED,
-                          response)
-
-        bank_detail_fields = ['account_number', 'account_details',
-                              'account_bank_country',
-                              'account_holder_name', 'account_holder_address',
-                              'account_holder_postal_code',
-                              'account_holder_city',
-                              'account_holder_country']
-
-        for field in bank_detail_fields:
-            self.assertEqual(response.data[field], project_data[field])
-
-    def test_set_legacy_bank_bic_details(self):
-        """ Set bank details in new project, use legacy account_bic instead of account_details"""
-
-        country = CountryFactory.create()
-
-        project_data = {
-            'title': 'Project with bank details',
-            'account_number': 'NL18ABNA0484869868',
-            'account_bic': 'ABNANL2A',
-            'account_bank_country': country.pk,
-            'account_holder_name': 'blabla',
-            'account_holder_address': 'howdy',
-            'account_holder_postal_code': '12334',
-            'account_holder_city': 'yada yada',
-            'account_holder_country': country.pk
-        }
-
-        response = self.client.post(self.manage_projects_url, project_data,
-                                    token=self.some_user_token)
-
-        self.assertEquals(response.status_code,
-                          status.HTTP_201_CREATED,
-                          response)
-
-        bank_detail_fields = ['account_number', 'account_bic',
-                              'account_bank_country',
-                              'account_holder_name', 'account_holder_address',
-                              'account_holder_postal_code',
-                              'account_holder_city',
-                              'account_holder_country']
-
-        for field in bank_detail_fields:
-            self.assertEqual(response.data[field], project_data[field])
-
-    def test_set_invalid_iban(self):
-        """ Set invalid iban bank detail """
-
-        project_data = {
-            'title': 'Project with bank details',
-            'account_number': 'NL18ABNA0484fesewf869868',
-        }
-
-        response = self.client.post(self.manage_projects_url, project_data,
-                                    token=self.some_user_token)
-
-        # This will just pass now because we removed Iban check
-        # because the field can hold a non-Iban account too.
-        self.assertEquals(response.status_code,
-                          status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(json.loads(response.content)['account_number'][0],
-                          'NL IBANs must contain 18 characters.')
-
-    def test_skip_iban_validation(self):
-        """ The iban validation should be skipped for other account formats """
-
-        project_data = {
-            'title': 'Project with bank details',
-            'account_number': '56105910810182',
-        }
-
-        response = self.client.post(self.manage_projects_url, project_data,
-                                    token=self.some_user_token)
-
-        self.assertEquals(response.status_code,
-                          status.HTTP_201_CREATED)
 
     def test_project_budgetlines_crud(self):
         project_data = {"title": "Some project with a goal & budget"}
@@ -2773,24 +2475,24 @@ class ProjectSupportersExportTest(BluebottleTestCase):
 
         reward = RewardFactory.create(project=self.project)
 
-        for order_type in ('one-off', 'recurring', 'one-off'):
+        for index, order_type in enumerate(('one-off', 'recurring', 'one-off')):
             order = OrderFactory.create(
                 status=StatusDefinition.SUCCESS,
-                order_type=order_type
+                order_type=order_type,
+                user=None if index == 0 else BlueBottleUserFactory.create()
             )
             self.donation = DonationFactory.create(
                 amount=Money(1000, 'EUR'),
                 order=order,
                 project=self.project,
                 fundraiser=None,
-                reward=reward
+                reward=reward,
             )
 
         self.supporters_export_url = reverse(
             'project-supporters-export', kwargs={'slug': self.project.slug}
         )
-        self.project_url = reverse(
-            'project_detail', kwargs={'slug': self.project.slug})
+        self.project_url = reverse('project_detail', kwargs={'slug': self.project.slug})
 
     def test_owner(self):
         # view allowed
@@ -2828,6 +2530,10 @@ class ProjectSupportersExportTest(BluebottleTestCase):
         for row in results:
             for field in ('Reward', 'Donation Date', 'Email', 'Name', 'Currency', 'Amount'):
                 self.assertTrue(field in row)
+            if not row['Email']:
+                self.assertEqual(row['Name'], 'Anonymous user')
+            else:
+                self.assertTrue(row['Name'].startswith('user'))
 
     def test_owner_no_permission(self):
         detail_response = self.client.get(

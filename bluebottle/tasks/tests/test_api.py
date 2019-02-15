@@ -5,6 +5,7 @@ import urllib
 
 from django.contrib.auth.models import Group, Permission
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.signing import TimestampSigner
 from django.core.urlresolvers import reverse
 from django.utils import timezone
@@ -450,7 +451,8 @@ class TaskApiTestcase(BluebottleTestCase):
             self.task_member_url,
             task_member_data,
             token=self.another_token,
-            format='multipart'
+            format='multipart',
+            resume=None
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -479,9 +481,9 @@ class TaskApiTestcase(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['deadline'], '2016-08-09T23:59:59.999999+02:00')
 
-    def test_deadline_no_project_deadline(self):
+    def test_deadline_after_duration(self):
         """
-        A task for a project without a deadline should not validate the deadline.
+        A task for a project with a duration validate the deadline is within the end of the duration.
         """
         self.some_project.deadline = None
         self.some_project.status = ProjectPhase.objects.get(slug='plan-new')
@@ -491,6 +493,32 @@ class TaskApiTestcase(BluebottleTestCase):
             'people_needed': 1,
             'deadline': timezone.now() + timedelta(weeks=2),
             'deadline_to_apply': timezone.now() + timedelta(weeks=1),
+            'project': self.some_project.slug,
+            'title': 'Help me',
+            'description': 'I need help',
+            'location': '',
+            'skill': 1,
+            'time_needed': '4.00',
+            'type': 'event'
+        }
+
+        # Task deadline time should changed be just before midnight after setting.
+        response = self.client.post(self.tasks_url, task_data,
+                                    HTTP_AUTHORIZATION=self.some_token)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_deadline_within_duration(self):
+        """
+        A task for a project with a duration validate the deadline is within the end of the duration.
+        """
+        self.some_project.deadline = None
+        self.some_project.status = ProjectPhase.objects.get(slug='plan-new')
+        self.some_project.campaign_duration = 10
+        self.some_project.save()
+        task_data = {
+            'people_needed': 1,
+            'deadline': timezone.now() + timedelta(weeks=1),
+            'deadline_to_apply': timezone.now() + timedelta(days=2),
             'project': self.some_project.slug,
             'title': 'Help me',
             'description': 'I need help',
@@ -720,9 +748,13 @@ class TaskMemberResumeTest(BluebottleTestCase):
 
         self.member = TaskMemberFactory.create(
             task=self.task,
-            member=self.another_user,
-            resume='private/tasks/resume/test.jpg'
+            member=self.another_user
         )
+        image_file = './bluebottle/projects/test_images/upload.png'
+        self.member.resume = SimpleUploadedFile(name='test_image.png',
+                                                content=open(image_file, 'rb').read(),
+                                                content_type='image/png')
+        self.member.save()
         self.signer = TimestampSigner()
 
         self.resume_url = reverse('task-member-resume', args=(self.member.id, ))
@@ -735,10 +767,7 @@ class TaskMemberResumeTest(BluebottleTestCase):
         self.assertTrue(
             response.data['resume']['url'].startswith('/downloads/taskmember/resume/')
         )
-        self.assertEqual(
-            response.data['resume']['name'],
-            'test.jpg'
-        )
+        self.assertTrue('test_image_' in response.data['resume']['name'])
 
     def test_task_member_detail_includes_download_url_task_member(self):
         response = self.client.get(
@@ -747,10 +776,7 @@ class TaskMemberResumeTest(BluebottleTestCase):
         self.assertTrue(
             response.data['resume']['url'].startswith('/downloads/taskmember/resume/')
         )
-        self.assertEqual(
-            response.data['resume']['name'],
-            'test.jpg'
-        )
+        self.assertTrue('test_image_' in response.data['resume']['name'])
 
     def test_task_member_detail_includes_download_url_other_user(self):
         response = self.client.get(
@@ -777,9 +803,13 @@ class TaskMemberResumeTest(BluebottleTestCase):
             '{}?{}'.format(self.resume_url, urllib.urlencode({'signature': signature}))
         )
         self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            '/media/private/task-members/resume/test_image_' in
+            response['x-accel-redirect']
+        )
         self.assertEqual(
-            response['x-accel-redirect'],
-            '/media/private/tasks/resume/test.jpg'
+            response['Content-Type'],
+            'image/png'
         )
 
     def test_task_member_resume_no_signature(self):

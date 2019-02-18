@@ -6,7 +6,50 @@ from django.test import TestCase
 from rest_framework import status
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory, ThemeFactory
+from bluebottle.initiatives.models import Initiative
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+
+
+class TransitionListAPITestCase(TestCase):
+    def setUp(self):
+        self.owner = BlueBottleUserFactory.create()
+        self.initiative = InitiativeFactory(
+            owner=self.owner
+        )
+        self.url = reverse('transition-list')
+
+        super(TransitionListAPITestCase, self).setUp()
+
+    def test_transition_to_submitted(self):
+        data = {
+            'data': {
+                'type': 'Transition',
+                'attributes': {
+                    'transition': 'submit',
+                    'field': 'review_status',
+                },
+                'relationships': {
+                    'resource': {
+                        'data': {
+                            'type': 'Iniative',
+                            'id': self.initiative.pk
+                        }
+                    }
+                }
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            content_type="application/vnd.api+json",
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 201)
+
+        initiaitive = Initiative.objects.get(pk=self.initiative.pk)
+        self.assertEqual(initiaitive.review_status, 'submitted')
+        import ipdb; ipdb.set_trace()
 
 
 class InitiativeAPITestCase(TestCase):
@@ -96,4 +139,4 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(data['data']['attributes']['title'], self.initiative.titl)
+        self.assertEqual(data['data']['attributes']['title'], self.initiative.title)

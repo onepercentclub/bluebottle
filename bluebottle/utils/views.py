@@ -210,10 +210,11 @@ class CreateAPIView(ViewPermissionsMixin, generics.CreateAPIView):
     permission_classes = (ResourcePermission,)
 
     def perform_create(self, serializer):
-        self.check_object_permissions(
-            self.request,
-            serializer.Meta.model(**serializer.validated_data)
-        )
+        if hasattr(serializer.Meta, 'model'):
+            self.check_object_permissions(
+                self.request,
+                serializer.Meta.model(**serializer.validated_data)
+            )
 
         serializer.save()
 

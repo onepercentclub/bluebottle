@@ -14,19 +14,25 @@ def add_group_permissions(apps, schema_editor):
         'Staff': {
             'perms': [
                 permission.codename.replace('_project', '_initiative') for permission
-                in Group.objects.get(name='Staff').permissions.all() if permission.codename.endswith('_project')
+                in Group.objects.get(name='Staff').permissions.all() if
+                permission.codename.endswith('_project') and
+                permission.codename != 'api_change_own_running_project'
             ]
         },
         'Anonymous': {
             'perms': [
                 permission.codename.replace('_project', '_initiative') for permission
-                in Group.objects.get(name='Anonymous').permissions.all() if permission.codename.endswith('_project')
+                in Group.objects.get(name='Anonymous').permissions.all()
+                if permission.codename.endswith('_project') and
+                permission.codename != 'api_change_own_running_project'
             ],
         },
         'Authenticated': {
             'perms': [
                 permission.codename.replace('_project', '_initiative') for permission
-                in Group.objects.get(name='Authenticated').permissions.all() if permission.codename.endswith('_project')
+                in Group.objects.get(name='Authenticated').permissions.all()
+                if permission.codename.endswith('_project') and
+                permission.codename != 'api_change_own_running_project'
             ],
         }
     }

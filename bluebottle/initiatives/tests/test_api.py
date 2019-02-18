@@ -90,6 +90,56 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         data = json.loads(response.content)
         self.assertEqual(data['data']['attributes']['title'], 'Some title')
 
+    def test_put_image(self):
+        file_path = './bluebottle/files/tests/files/test-image.png'
+        with open(file_path) as test_file:
+            response = self.client.post(
+                reverse('file-list'),
+                test_file.read(),
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="filename.jpg"',
+                HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+            )
+
+        file_data = json.loads(response.content)
+
+        data = {
+            'data': {
+                'id': self.initiative.id,
+                'type': 'Initiative',
+                'relationships': {
+                    'image': {
+                        'data': {
+                            'type': 'File',
+                            'id': file_data['data']['id']
+                          }
+                    }
+                }
+            }
+        }
+        response = self.client.patch(
+            '{}?{}'.format(self.url, 'include=owner,reviewer,theme,image'),
+            json.dumps(data),
+            content_type="application/vnd.api+json",
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertEqual(
+            data['data']['relationships']['image']['data']['id'],
+            file_data['data']['id']
+        )
+
+        response = self.client.get(
+            data['data']['relationships']['image']['links']['200x300'],
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+        self.assertTrue(
+            response['X-Accel-Redirect'].startswith(
+                '/media/cache/'
+            )
+        )
+
     def test_get(self):
         response = self.client.get('{}?{}'.format(self.url, 'include=owner,reviewer,theme'))
         data = json.loads(response.content)

@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
@@ -7,6 +8,7 @@ from parler.models import TranslatedFields
 
 from sorl.thumbnail import ImageField
 
+from bluebottle.files.models import File
 from bluebottle.utils.models import ReviewModel, SortableTranslatableModel
 
 
@@ -47,13 +49,8 @@ class Initiative(ReviewModel):
     theme = models.ForeignKey(Theme, null=True, blank=True, on_delete=SET_NULL)
     categories = models.ManyToManyField('categories.Category', blank=True)
 
-    image = ImageField(
-        _('image'),
-        max_length=255,
-        blank=True,
-        upload_to='project_images/',
-        help_text=_('Main project picture')
-    )
+    image = models.ForeignKey(File, null=True, blank=True, on_delete=SET_NULL)
+
     video_url = models.URLField(
         _('video'),
         max_length=100,

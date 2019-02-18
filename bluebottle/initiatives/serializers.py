@@ -3,8 +3,9 @@ from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import ResourceRelatedField
 
 from bluebottle.bluebottle_drf2.serializers import (
-    OEmbedField, ImageSerializer
+    OEmbedField
 )
+from bluebottle.files.serializers import UsedFileField
 from bluebottle.initiatives.models import Initiative, Theme
 from bluebottle.categories.serializers import CategorySerializer
 from bluebottle.members.serializers import UserPreviewSerializer
@@ -26,7 +27,13 @@ class InitiativeSerializer(FSMModelSerializer):
     slug = serializers.CharField(read_only=True)
 
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
-    image = ImageSerializer(required=False)
+
+    image = UsedFileField(
+        required=False,
+        content_view_name='initiative-image',
+        sizes=['200x300', '400x500']
+    )
+
     owner = ResourceRelatedField(read_only=True)
     reviewer = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
@@ -36,6 +43,7 @@ class InitiativeSerializer(FSMModelSerializer):
         'reviewer': 'bluebottle.members.serializers.UserPreviewSerializer',
         'categories': 'bluebottle.categories.serializers.CategorySerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
+        'image': 'bluebottle.files.serializers.ImageSerializer',
     }
 
     class Meta:

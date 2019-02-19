@@ -118,7 +118,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             }
         }
         response = self.client.patch(
-            '{}?{}'.format(self.url, 'include=owner,reviewer,theme,image'),
+            '{}?{}'.format(self.url, 'include=owner,reviewer,theme'),
             json.dumps(data),
             content_type="application/vnd.api+json",
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())

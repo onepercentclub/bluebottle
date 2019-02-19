@@ -60,6 +60,13 @@ class Member(BlueBottleBaseUser):
                                  blank=True,
                                  null=True)
 
+    scim_external_id = models.CharField(
+        _('external SCIM id'),
+        max_length=75,
+        blank=True,
+        null=True
+    )
+
     def __init__(self, *args, **kwargs):
         super(Member, self).__init__(*args, **kwargs)
 

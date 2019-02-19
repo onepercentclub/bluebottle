@@ -1,6 +1,8 @@
 from django.contrib.auth.models import Group
 from django.core.urlresolvers import reverse
 
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import serializers, validators
 
 from bluebottle.members.models import Member
@@ -19,6 +21,13 @@ class NameSerializer(NonNestedSerializer):
 
 
 class EmailsField(serializers.CharField):
+    default_error_messages = {
+        'invalid': _('Not a valid email value.'),
+        'blank': _('This field may not be blank.'),
+        'max_length': _('Ensure this field has no more than {max_length} characters.'),
+        'min_length': _('Ensure this field has at least {min_length} characters.')
+    }
+
     def to_representation(self, value):
         value = super(EmailsField, self).to_representation(value)
         return [{
@@ -30,6 +39,15 @@ class EmailsField(serializers.CharField):
 
     def to_internal_value(self, value):
         return super(EmailsField, self).to_internal_value(value[0]['value'])
+
+    def run_validation(self, data=None):
+        if not isinstance(data, list) or not isinstance(data[0], dict) or 'value' not in data[0]:
+            self.fail('invalid')
+
+        if not data[0].get('value'):
+            self.fail('blank')
+
+        return super(EmailsField, self).run_validation(data)
 
 
 class SchemaSerializer(NonNestedSerializer):
@@ -83,10 +101,13 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
     resource_type = 'User'
     detail_view_name = 'scim-user-detail'
 
-    externalId = serializers.CharField(source='remote_id')
+    userName = serializers.CharField(source='remote_id', required=False)
+    externalId = serializers.CharField(source='scim_external_id')
+
     name = NameSerializer()
     emails = EmailsField(
         source='email',
+        allow_blank=False,
         validators=[validators.UniqueValidator(queryset=Member.objects.all())]
     )
     active = serializers.BooleanField(source='is_active')
@@ -111,7 +132,7 @@ class SCIMMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ('id', 'externalId', 'name', 'emails', 'active', 'groups', 'schemas', 'meta')
+        fields = ('id', 'externalId', 'userName', 'name', 'emails', 'active', 'groups', 'schemas', 'meta')
 
 
 class GroupMemberListSerializer(serializers.ListSerializer):

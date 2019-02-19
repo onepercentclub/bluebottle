@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth import get_user_model
 
+from bluebottle.token_auth.exceptions import TokenAuthenticationError
 from bluebottle.token_auth.utils import get_settings
 
 logger = logging.getLogger(__name__)
@@ -60,8 +61,14 @@ class BaseTokenAuthentication(object):
                 try:
                     user = user_model.objects.get(email=user_data['email'])
                 except (KeyError, user_model.DoesNotExist):
-                    user = user_model.objects.create(**user_data)
-                    created = True
+                    if self.settings.get('provision', True):
+                        user = user_model.objects.create(**user_data)
+                        created = True
+                    else:
+                        logger.error('Login error: User not found, and provisioning is disabled')
+                        raise TokenAuthenticationError(
+                            "Account not found"
+                        )
 
         if not created:
             user_model.objects.filter(pk=user.pk).update(**user_data)

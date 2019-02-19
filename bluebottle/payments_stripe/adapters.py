@@ -71,6 +71,11 @@ class StripePaymentAdapter(BasePaymentAdapter):
                 },
                 api_key=self.credentials['secret_key']
             )
+            transfer = stripe.Transfer.retrieve(
+                charge['transfer'],
+                api_key=self.credentials['secret_key']
+            )
+            self.update_from_transfer(transfer)
             self.payment.charge_token = charge.id
             self.update_from_charge(charge)
 

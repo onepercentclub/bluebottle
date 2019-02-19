@@ -713,6 +713,9 @@ class ProjectAdminExportTest(BluebottleTestCase):
 
     def test_project_export(self):
         project = ProjectFactory(title='Just an example')
+        project.projectlocation.latitude = '43.068620000000000000'
+        project.projectlocation.longitude = '23.676374000000000000'
+        project.projectlocation.save()
         CustomProjectFieldSettings.objects.create(name='Extra Info')
         field = CustomProjectFieldSettings.objects.create(name='How is it')
         CustomProjectField.objects.create(project=project, value='This is nice!', field=field)
@@ -726,7 +729,9 @@ class ProjectAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'title')
-        self.assertEqual(headers[28], 'Extra Info')
+        self.assertEqual(headers[28], 'latitude')
+        self.assertEqual(headers[30], 'Extra Info')
         self.assertEqual(data[0], 'Just an example')
-        self.assertEqual(data[28], '')
-        self.assertEqual(data[29], 'This is nice!')
+        self.assertEqual(data[30], '')
+        self.assertEqual(data[28], '43.068620000000000000')
+        self.assertEqual(data[31], 'This is nice!')

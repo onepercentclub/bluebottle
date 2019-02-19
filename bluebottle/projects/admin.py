@@ -377,6 +377,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ('organization__name', 'organization'),
         ('amount_extra', 'amount matched'),
         ('expertise_based', 'expertise based'),
+        ('projectlocation__latitude', 'latitude'),
+        ('projectlocation__longitude', 'longitude'),
     ]
 
     actions = [export_as_csv_action(fields=export_fields), ]

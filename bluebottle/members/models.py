@@ -59,6 +59,7 @@ class Member(BlueBottleBaseUser):
                                  max_length=75,
                                  blank=True,
                                  null=True)
+    last_logout = models.DateTimeField(_('Last Logout'), blank=True, null=True)
 
     scim_external_id = models.CharField(
         _('external SCIM id'),

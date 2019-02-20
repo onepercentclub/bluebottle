@@ -380,7 +380,9 @@ class ManageProjectSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        if self.instance and self.instance.status.slug not in ('plan-new', 'plan-needs-work'):
+        if self.instance and \
+                self.instance.status.slug not in ('plan-new', 'plan-needs-work') and \
+                'payout_account' in data:
             # Don't write payout account if not in draft
             data.pop('payout_account')
         if self.instance and self.instance.status.slug in ('campaign', 'voting'):

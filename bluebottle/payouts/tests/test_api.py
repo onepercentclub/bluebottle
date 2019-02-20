@@ -7,6 +7,7 @@ from django.test.utils import override_settings
 
 import stripe
 
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.payouts import PlainPayoutAccountFactory
@@ -99,6 +100,39 @@ class StripePayoutTestApi(BluebottleTestCase):
 
         self.assertEqual(stripe_create.call_count, 2)
         self.assertEqual(stripe_create.call_args[1]['country'], 'DE')
+
+    @patch('bluebottle.payouts.models.stripe.Account.retrieve')
+    @patch('bluebottle.payouts.models.stripe.Account.create')
+    def test_project_details_update_when_campiagning(self, stripe_create, stripe_retrieve):
+        account = stripe.Account(123)
+        account.update(json.load(
+            open(os.path.dirname(__file__) + '/data/stripe_account_verified.json')
+        ))
+        stripe_create.return_value = account
+        stripe_retrieve.return_value = account
+        project_details = {
+            'title': self.project.title,
+            'payout_account': {
+                'type': 'stripe',
+                'account_token': "ct_1234567890",
+                'document_type': "passport",
+                'country': 'NL'
+            }
+        }
+        self.client.put(self.project_manage_url, project_details, token=self.owner_token)
+        self.project.refresh_from_db()
+        # Make campaign editable
+        campaign = ProjectPhase.objects.get(slug='campaign')
+        campaign.editable = True
+        campaign.save()
+        self.project.status = campaign
+        self.project.save()
+
+        project_details['pitch'] = 'Nice things'
+        response = self.client.put(self.project_manage_url, project_details, token=self.owner_token)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['pitch'], 'Nice things')
 
 
 class PayoutAccountApiTestCase(BluebottleTestCase):

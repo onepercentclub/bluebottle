@@ -97,7 +97,7 @@ class ProjectListSearchMixin(object):
 
     def _filter_category(self, query, value):
         return query & ESQ(
-            'nested', path='categories', query=ESQ('term', **{'categories.id': value})
+            'nested', path='categories', query=ESQ('term', **{'categories.slug': value})
         )
 
     def _filter_skill(self, query, value):

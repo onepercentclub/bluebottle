@@ -273,7 +273,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         return reverse('scim-user-list')
 
     def setUp(self):
-        for i in range(9):
+        for i in range(10):
             BlueBottleUserFactory.create(is_superuser=False)
 
         super(SCIMUserListTest, self).setUp()
@@ -350,6 +350,7 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         data = {
             'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
             'externalId': '123',
+            'username': 'some-id-for-smal',
             'active': True,
             'emails': [{
                 'type': 'work',
@@ -373,7 +374,8 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
         user = Member.objects.get(pk=data['id'].replace('goodup-user-', ''))
 
         self.assertEqual(user.email, data['emails'][0]['value'])
-        self.assertEqual(user.remote_id, data['externalId'])
+        self.assertEqual(user.scim_external_id, data['externalId'])
+        self.assertEqual(user.remote_id, data['userName'])
         self.assertEqual(user.is_active, data['active'])
         self.assertEqual(user.first_name, data['name']['givenName'])
         self.assertEqual(user.last_name, data['name']['familyName'])
@@ -386,6 +388,39 @@ class SCIMUserListTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTestCas
             reverse('scim-user-detail', args=(user.pk, ))
         )
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_post_empty_email(self):
+        """
+        Test authenticated request
+        """
+        data = {
+            'schemas': ['urn:ietf:params:scim:schemas:core:2.0:User'],
+            'externalId': '123',
+            'active': True,
+            'emails': [{
+                'type': 'work',
+                'primary': True,
+                'value': ''
+            }],
+            'name': {
+                'givenName': 'Tester',
+                'familyName': 'Example'
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            data,
+            token=self.token
+        )
+
+        data = response.data
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            data['details'],
+            'emails: This field may not be blank.'
+        )
+        self.assertEqual(data['schemas'], ['urn:ietf:params:scim:api:messages:2.0:Error'])
 
     def test_post_missing_remote_id(self):
         """
@@ -730,3 +765,12 @@ class SCIMGroupDetailTest(AuthenticatedSCIMEndpointTestCaseMixin, BluebottleTest
         self.assertEqual(response.status_code, 200)
         data = response.data
         self.assertEqual(len(data['members']), 0)
+
+    def test_get_superuser(self):
+        super_user = BlueBottleUserFactory.create(is_superuser=True)
+        super_user.groups.add(self.group)
+        response = self.client.get(
+            self.url,
+            token=self.token
+        )
+        self.assertEqual(len(response.data['members']), 1)

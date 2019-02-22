@@ -12,7 +12,7 @@
     {% include 'donations/mails/payment_details.html' %}
 
     {% blocktrans with donor_name=donation.user.full_name amount=donation.amount|format_money project_title=donation.project.title %}
-        The amount of {{ amount }} needs to be transfered by {{ donor_name }} to "{{ project_title }}".
+        The amount of {{ amount|format_money }} needs to be transfered by {{ donor_name }} to "{{ project_title }}".
     {% endblocktrans %}
 
 {% endblock content %} 

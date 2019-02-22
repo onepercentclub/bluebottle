@@ -44,8 +44,10 @@ class PrivateProfileMixin(object):
 class UserAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAddress
-        fields = ('id', 'line1', 'line2', 'address_type',
-                  'city', 'state', 'country', 'postal_code')
+        fields = (
+            'id', 'line1', 'line2', 'address_type', 'position',
+            'city', 'state', 'country', 'postal_code'
+        )
 
 
 class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):

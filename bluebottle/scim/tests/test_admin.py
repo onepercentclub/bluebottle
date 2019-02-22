@@ -64,7 +64,8 @@ class PlatformSettingsAdminTest(BluebottleAdminTestCase):
 
     def test_reset_token_not_confirmed(self):
         current_token = self.scim_settings.bearer_token
-        request = self.request_factory.post('/', data={})
+
+        request = self.request_factory.post('/')
         request.user = MockUser(['scim.change_scimplatformsettings'])
 
         response = self.admin.reset_token(request, self.scim_settings.pk)

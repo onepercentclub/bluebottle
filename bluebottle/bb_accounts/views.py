@@ -8,6 +8,7 @@ from django.template import loader
 from django.contrib.auth.tokens import default_token_generator
 from django.http import Http404
 from django.utils.http import base36_to_int, int_to_base36
+from django.utils import timezone
 
 from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
@@ -108,6 +109,19 @@ class CurrentUser(RetrieveAPIView):
         if isinstance(self.request.user, AnonymousUser):
             raise Http404()
         return self.request.user
+
+
+class Logout(generics.CreateAPIView):
+    """
+    Log the user out
+
+    """
+    def create(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            self.request.user.last_logout = timezone.now()
+            self.request.user.save()
+
+        return response.Response('', status=status.HTTP_204_NO_CONTENT)
 
 
 class UserCreate(generics.CreateAPIView):

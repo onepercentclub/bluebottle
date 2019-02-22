@@ -186,13 +186,8 @@ JWT_AUTH = {
     # After the renewal limit it isn't possible to request a token refresh
     # => time token first created + renewal limit.
     'JWT_TOKEN_RENEWAL_LIMIT': datetime.timedelta(days=90),
+    'JWT_GET_USER_SECRET_KEY': 'bluebottle.members.utils.get_jwt_secret',
 
-    # Override the JWT token handlers, use tenant aware ones.
-    'JWT_ENCODE_HANDLER':
-        'tenant_extras.jwt_utils.jwt_encode_handler',
-
-    'JWT_DECODE_HANDLER':
-        'tenant_extras.jwt_utils.jwt_decode_handler',
 }
 
 # Time between attempts to refresh the jwt token automatically on standard request
@@ -420,7 +415,7 @@ TENANT_APPS = (
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
-CSRF_COOKIE_SECURE = True
+CSRF_USE_SESSIONS = True
 SESSION_COOKIE_SECURE = True
 
 TENANT_MODEL = "clients.Client"

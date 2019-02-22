@@ -128,12 +128,18 @@ class ResourceTypeRetrieveView(StaticRetrieveAPIView):
 
 
 class UserListView(SCIMViewMixin, generics.ListCreateAPIView):
-    queryset = Member.objects.filter(is_superuser=False, is_anonymized=False)
+    queryset = Member.objects.filter(
+        is_superuser=False, is_anonymized=False
+    ).exclude(email='devteam+accounting@onepercentclub.com')
+
     serializer_class = SCIMMemberSerializer
 
 
 class UserDetailView(SCIMViewMixin, generics.RetrieveUpdateDestroyAPIView):
-    queryset = Member.objects.filter(is_superuser=False, is_anonymized=False)
+    queryset = Member.objects.filter(
+        is_superuser=False, is_anonymized=False
+    ).exclude(email='devteam+accounting@onepercentclub.com')
+
     serializer_class = SCIMMemberSerializer
 
     def perform_destroy(self, instance):

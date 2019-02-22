@@ -386,6 +386,10 @@ class UserAddress(Address):
 
     position = GeopositionField(null=True, blank=True)
 
+    @property
+    def position_tuple(self):
+        return (self.position.longitude, self.position.latitude)
+
     def save(self, *args, **kwargs):
         if not self.country:
             code = getattr(properties, 'DEFAULT_COUNTRY_CODE', None)

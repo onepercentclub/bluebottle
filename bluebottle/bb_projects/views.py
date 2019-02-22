@@ -244,7 +244,7 @@ class ProjectListSearchMixin(object):
         )
         if self.request.user.is_authenticated:
             position_tuple = None
-            if self.request.user.address and self.request.user.address.position:
+            if self.request.user.address and self.request.user.address.position_tuple:
                 position_tuple = self.request.user.address.position
             elif self.request.user.location and self.request.user.location.position_tuple:
                 position_tuple = self.request.user.location.position_tuple

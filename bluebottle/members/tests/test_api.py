@@ -251,6 +251,7 @@ class PasswordSetTest(BluebottleTestCase):
         self.assertTrue(self.user.check_password('some-password'))
         self.assertTrue(other_user.check_password('other-password'))
 
+
 class UserLogoutTest(BluebottleTestCase):
     def setUp(self):
         super(UserLogoutTest, self).setUp()

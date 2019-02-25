@@ -137,6 +137,77 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertTrue("Welcome" in mail.outbox[0].subject)
         self.assertEqual(mail.outbox[0].activated_language, 'en')
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
+        self.assertTrue('password: https://testserver/setpassword' in mail.outbox[0].body)
+
+    @override_settings(SEND_WELCOME_MAIL=True,
+                       CELERY_MAIL=False)
+    def test_welcome_mail_password(self):
+        """
+        Test that a welcome mail is sent when a user is created when the
+        setting are enabled
+        """
+
+        mail.outbox = []
+
+        self.assertEqual(len(mail.outbox), 0)
+        new_user = BlueBottleUserFactory.create(
+            email='new_user@onepercentclub.com',
+            password='test',
+            primary_language='en')
+        self.assertEqual(len(mail.outbox), 1)
+        # We need a better way to verify the right mail is loaded
+        self.assertTrue("Welcome" in mail.outbox[0].subject)
+        self.assertEqual(mail.outbox[0].activated_language, 'en')
+        self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
+        self.assertTrue('Take me there: https://testserver\n' in mail.outbox[0].body)
+
+    @override_settings(SEND_WELCOME_MAIL=True,
+                       CELERY_MAIL=False)
+    @patch('bluebottle.clients.properties.CLOSED_SITE', True)
+    def test_welcome_mail_closed(self):
+        """
+        Test that a welcome mail is sent when a user is created when the
+        setting are enabled
+        """
+
+        mail.outbox = []
+
+        self.assertEqual(len(mail.outbox), 0)
+        new_user = BlueBottleUserFactory.create(
+            email='new_user@onepercentclub.com',
+            password='test',
+            primary_language='en')
+        self.assertEqual(len(mail.outbox), 1)
+        # We need a better way to verify the right mail is loaded
+        self.assertTrue("Welcome" in mail.outbox[0].subject)
+        self.assertEqual(mail.outbox[0].activated_language, 'en')
+        self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
+        self.assertTrue('Take me there: https://testserver/partner\n' in mail.outbox[0].body)
+
+    @override_settings(SEND_WELCOME_MAIL=True,
+                       CELERY_MAIL=False)
+    @patch('bluebottle.clients.properties.CLOSED_SITE', True)
+    def test_welcome_mail_closed_remote_id(self):
+        """
+        Test that a welcome mail is sent when a user is created when the
+        setting are enabled
+        """
+
+        mail.outbox = []
+
+        self.assertEqual(len(mail.outbox), 0)
+        new_user = BlueBottleUserFactory.create(
+            email='new_user@onepercentclub.com',
+            password='test',
+            remote_id='123',
+            primary_language='en')
+        self.assertEqual(len(mail.outbox), 1)
+        # We need a better way to verify the right mail is loaded
+        self.assertTrue("Welcome" in mail.outbox[0].subject)
+        self.assertEqual(mail.outbox[0].activated_language, 'en')
+        self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
+        self.assertTrue('Take me there: https://testserver\n' in mail.outbox[0].body)
+
 
     @override_settings(SEND_WELCOME_MAIL=True,
                        CELERY_MAIL=False)
@@ -272,7 +343,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         ]:
             self.assertFalse(getattr(self.user, prop))
 
-        self.assertIsNone(self.user.address.pk)
         self.assertEqual(self.user.birthdate, '1000-01-01')
         self.assertTrue(self.user.email.endswith('anonymous@example.com'))
         self.assertEqual(self.user.first_name, 'Deactivated')

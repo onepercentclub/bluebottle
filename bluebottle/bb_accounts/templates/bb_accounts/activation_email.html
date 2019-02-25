@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block action %}
-    <a href="{{ site }}"
+<a href="{{ site }}{% if not user.remote_id %}/partner/{% endif %}"
        class="action-email">{% trans "Take me there" context 'email' %}</a>
 {% endblock %}
 

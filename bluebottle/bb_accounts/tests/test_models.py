@@ -208,7 +208,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         self.assertEqual(mail.outbox[0].recipients()[0], new_user.email)
         self.assertTrue('Take me there: https://testserver\n' in mail.outbox[0].body)
 
-
     @override_settings(SEND_WELCOME_MAIL=True,
                        CELERY_MAIL=False)
     def test_welcome_mail_nl(self):

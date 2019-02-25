@@ -5,12 +5,11 @@ from django.contrib.auth.hashers import make_password
 from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 
-from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import SorlImageField, ImageSerializer
 from bluebottle.clients import properties
-from bluebottle.geo.models import Location
-from bluebottle.geo.serializers import LocationSerializer, CountrySerializer
+from bluebottle.geo.models import Location, Place
+from bluebottle.geo.serializers import LocationSerializer, PlaceSerializer
 from bluebottle.members.models import MemberPlatformSettings
 from bluebottle.projects.models import Project
 from bluebottle.donations.models import Donation
@@ -39,15 +38,6 @@ class PrivateProfileMixin(object):
                     del data[field]
 
         return data
-
-
-class UserAddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserAddress
-        fields = (
-            'id', 'line1', 'line2', 'address_type', 'position',
-            'city', 'state', 'country', 'postal_code'
-        )
 
 
 class UserPreviewSerializer(PrivateProfileMixin, serializers.ModelSerializer):
@@ -99,7 +89,6 @@ class CurrentUserSerializer(UserPreviewSerializer):
     # 'current'.
     id_for_ember = serializers.IntegerField(source='id', read_only=True)
     full_name = serializers.CharField(source='get_full_name', read_only=True)
-    country = CountrySerializer(source='address.country')
     location = LocationSerializer()
     permissions = UserPermissionsSerializer(read_only=True)
     partner_organization = OrganizationPreviewSerializer(allow_null=True, read_only=True, required=False)
@@ -110,7 +99,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'country', 'verified', 'permissions', 'partner_organization',
+            'verified', 'permissions', 'partner_organization',
         )
 
 
@@ -166,8 +155,8 @@ class ManageProfileSerializer(UserProfileSerializer):
     Serializer for the a member's private profile.
     """
     partial = True
-    address = UserAddressSerializer(allow_null=True)
     from_facebook = serializers.SerializerMethodField()
+    place = PlaceSerializer(required=False)
 
     def get_from_facebook(self, instance):
         try:
@@ -179,17 +168,23 @@ class ManageProfileSerializer(UserProfileSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = UserProfileSerializer.Meta.fields + (
-            'email', 'address', 'newsletter', 'campaign_notifications', 'location',
+            'email', 'newsletter', 'campaign_notifications', 'location',
             'birthdate', 'gender', 'first_name', 'last_name', 'phone_number',
-            'from_facebook',
+            'from_facebook', 'place',
         )
 
     def update(self, instance, validated_data):
-        address = validated_data.pop('address', {})
-        for attr, value in address.items():
-            setattr(instance.address, attr, value)
-
-        instance.address.save()
+        if 'place' in validated_data:
+            if instance.place:
+                place = instance.place
+                for key, value in validated_data.pop('place').items():
+                    setattr(place, key, value)
+                place.save()
+            else:
+                Place.objects.create(content_object=instance, **validated_data.pop('place'))
+        else:
+            if instance.place:
+                instance.place.delete()
 
         return super(ManageProfileSerializer, self).update(instance, validated_data)
 
@@ -198,8 +193,6 @@ class UserDataExportSerializer(UserProfileSerializer):
     """
     Serializer for the a member's data dump.
     """
-    address = UserAddressSerializer(allow_null=True)
-
     tasks = serializers.SerializerMethodField()
     projects = serializers.SerializerMethodField()
     task_members = serializers.SerializerMethodField()
@@ -240,7 +233,7 @@ class UserDataExportSerializer(UserProfileSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = (
-            'id', 'email', 'address', 'location', 'birthdate',
+            'id', 'email', 'location', 'birthdate',
             'url', 'full_name', 'short_name', 'initials', 'picture',
             'gender', 'first_name', 'last_name', 'phone_number',
             'primary_language', 'about_me', 'location', 'avatar',

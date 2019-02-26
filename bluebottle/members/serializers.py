@@ -157,7 +157,7 @@ class ManageProfileSerializer(UserProfileSerializer):
     """
     partial = True
     from_facebook = serializers.SerializerMethodField()
-    place = PlaceSerializer(required=False)
+    place = PlaceSerializer(required=False, allow_null=True)
 
     def get_from_facebook(self, instance):
         try:
@@ -169,20 +169,21 @@ class ManageProfileSerializer(UserProfileSerializer):
     class Meta:
         model = BB_USER_MODEL
         fields = UserProfileSerializer.Meta.fields + (
-            'email', 'newsletter', 'campaign_notifications', 'location',
+            'email', 'newsletter', 'campaign_notifications', 'matching_options_set', 'location',
             'birthdate', 'gender', 'first_name', 'last_name', 'phone_number',
             'from_facebook', 'place',
         )
 
     def update(self, instance, validated_data):
-        if 'place' in validated_data:
+        place = validated_data.pop('place', None)
+        if place:
             if instance.place:
-                place = instance.place
-                for key, value in validated_data.pop('place').items():
-                    setattr(place, key, value)
-                place.save()
+                current_place = instance.place
+                for key, value in place.items():
+                    setattr(current_place, key, value)
+                current_place.save()
             else:
-                Place.objects.create(content_object=instance, **validated_data.pop('place'))
+                Place.objects.create(content_object=instance, **place)
         else:
             if instance.place:
                 instance.place.delete()

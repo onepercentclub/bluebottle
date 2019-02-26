@@ -123,7 +123,7 @@ class ProjectDocument(DocType):
             return related_instance.project
         elif isinstance(related_instance, Donation):
             return related_instance.project
-        elif isinstance(related_instance, Place):
+        elif isinstance(related_instance, Place) and isinstance(related_instance.content_object, Task):
             return related_instance.content_object.project
 
     def prepare_amount_asked(self, instance):

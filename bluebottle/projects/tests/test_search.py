@@ -187,7 +187,7 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
 
         ProjectFactory.create(status=self.status)
 
-        result = self.search({'category': category.id})
+        result = self.search({'category': category.slug})
         self.assertEqual(result.data['count'], 1)
         self.assertEqual(result.data['results'][0]['title'], project.title)
 

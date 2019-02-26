@@ -176,6 +176,7 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         new_user = BlueBottleUserFactory.create(
             email='new_user@onepercentclub.com',
             password='test',
+            remote_id=None,
             primary_language='en')
         self.assertEqual(len(mail.outbox), 1)
         # We need a better way to verify the right mail is loaded

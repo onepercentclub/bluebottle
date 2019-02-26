@@ -21,7 +21,7 @@ from bluebottle.members.tokens import login_token_generator
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (OrganizationFactory, OrganizationContactFactory,
                                                           OrganizationMemberFactory)
-from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory, PlaceFactory
+from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 ASSERTION_MAPPING = {
@@ -268,7 +268,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         """
         user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
         # Create a user.
-        place = PlaceFactory.create(
+        PlaceFactory.create(
             content_object=self.user_1
         )
 
@@ -304,9 +304,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         PlaceFactory.create(
             content_object=self.user_1
         )
-
-        # Create a user.
-        country = CountryFactory.create()
         data = {
             'email': 'nijntje27@hetkonijntje.nl',
             'password': 'test-password',
@@ -317,6 +314,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
             data,
             token=self.user_1_token
         )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.user_1.refresh_from_db()
         self.assertIsNone(
             self.user_1.place

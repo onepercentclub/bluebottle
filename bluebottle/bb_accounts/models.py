@@ -15,14 +15,12 @@ from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import ModificationDateTimeField
 from djchoices.choices import DjangoChoices, ChoiceItem
-from geoposition.fields import GeopositionField
 from rest_framework_jwt.settings import api_settings
 
 from bluebottle.bb_accounts.utils import valid_email
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
-from bluebottle.geo.models import Country
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.fields import ImageField
@@ -360,10 +358,10 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         super(BlueBottleBaseUser, self).save(force_insert, force_update, using,
                                              update_fields)
 
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .utils import send_welcome_mail
-from django.conf import settings
 
 
 @receiver(post_save)

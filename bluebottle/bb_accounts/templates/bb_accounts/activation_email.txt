@@ -11,7 +11,7 @@ You’re now officially part of the {{ site_name }} community. Connect, share an
 {% endblock %}
 
 {% block action %}
-{% trans "Take me there" context 'email' %}: {{ site }}
+{% trans "Take me there" context 'email' %}: {{ site }}{% if closed_site and not user.remote_id %}/partner{% endif %}
 {% endblock %}
 
 {% block post_action %}

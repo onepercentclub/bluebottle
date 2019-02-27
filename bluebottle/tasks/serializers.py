@@ -248,7 +248,7 @@ class MyTaskPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'type')
+        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'type', 'place',)
 
 
 class MyTaskMemberSerializer(BaseTaskMemberSerializer):
@@ -272,6 +272,7 @@ class MyTasksSerializer(BaseTaskSerializer):
             'people_needed',
             'permissions',
             'project',
+            'place',
             'related_permissions',
             'skill',
             'status',

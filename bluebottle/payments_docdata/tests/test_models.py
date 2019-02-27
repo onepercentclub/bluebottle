@@ -12,7 +12,6 @@ from bluebottle.payments_docdata.tests.factory_models import (
     DocdataTransactionFactory)
 from bluebottle.payments_logger.models import PaymentLogEntry
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.geo import CountryFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.utils import BluebottleTestCase, FsmTestMixin

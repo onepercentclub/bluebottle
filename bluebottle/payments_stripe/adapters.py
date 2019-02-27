@@ -59,6 +59,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
                 amount=self.payment.amount,
                 currency=self.payment.currency,
                 description=self.payment.description,
+                statement_descriptor='{}-{}'.format(tenant.name, self.order_payment.project.id)[:22],
                 source=self.payment.source_token,
                 destination={
                     "account": account_id,

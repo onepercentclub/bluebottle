@@ -243,19 +243,33 @@ class ProjectListSearchMixin(object):
             ]
         )
         if self.request.user.is_authenticated:
-            if self.request.user.location:
+            position_tuple = None
+            if self.request.user.address and self.request.user.address.position:
+                position_tuple = self.request.user.address.position_tuple
+            elif self.request.user.location and self.request.user.location.position_tuple:
+                position_tuple = self.request.user.location.position_tuple
+
+            if position_tuple:
                 scoring = scoring | ESQ(
                     'function_score',
                     boost=2,
+                    score_mode='first',
                     functions=[
                         SF({
+                            'filter': {'exists': {'field': 'position'}},
                             'gauss': {
                                 'position': {
-                                    'origin': self.request.user.location.position_tuple,
+                                    'origin': position_tuple,
                                     'scale': "100km"
                                 },
+                                'multi_value_mode': 'min',
                             },
                         }),
+                        SF({
+                            "script_score": {
+                                "script": "0"
+                            }
+                        })
                     ]
                 ) | ESQ(
                     'function_score',
@@ -266,7 +280,7 @@ class ProjectListSearchMixin(object):
                             'filter': {'exists': {'field': 'task_positions'}},
                             'gauss': {
                                 'task_positions': {
-                                    'origin': self.request.user.location.position_tuple,
+                                    'origin': position_tuple,
                                     'scale': "100km"
                                 },
                                 'multi_value_mode': 'min',
@@ -382,7 +396,7 @@ class ProjectPreviewList(ProjectListSearchMixin, ListAPIView):
     )
 
     def list(self, request):
-        result = self.search()
+        result = self.search()  # .extra(explain=True)
 
         page = self.paginate_queryset(result)
         if page is not None:

@@ -11,7 +11,7 @@ from django_elasticsearch_dsl.test import ESTestCase
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.categories import CategoryFactory
 from bluebottle.test.factory_models.projects import ProjectFactory, ProjectThemeFactory
-from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
+from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory, PlaceFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory, SkillFactory
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
@@ -406,6 +406,50 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
 
         project = ProjectFactory.create(status=self.status, location=location)
         other_project = ProjectFactory.create(status=self.status, location=location)
+        ProjectFactory.create(status=self.status)
+
+        result = self.search({}, user=user)
+
+        self.assertEqual(result.data['count'], 3)
+        self.assertEqual(result.data['results'][0]['title'], project.title)
+        self.assertEqual(result.data['results'][1]['title'], other_project.title)
+
+    def test_score_user_address_position(self):
+        user = BlueBottleUserFactory.create()
+        user.address.position = (10.0, 20.0)
+        user.save()
+
+        project = ProjectFactory.create(status=self.status)
+        project.projectlocation.latitude = 10.0
+        project.projectlocation.longitude = 20.0
+        project.save()
+
+        other_project = ProjectFactory.create(status=self.status)
+        other_project.projectlocation.latitude = 10.1
+        other_project.projectlocation.longitude = 20.1
+        other_project.save()
+
+        ProjectFactory.create(status=self.status)
+
+        result = self.search({}, user=user)
+
+        self.assertEqual(result.data['count'], 3)
+        self.assertEqual(result.data['results'][0]['title'], project.title)
+        self.assertEqual(result.data['results'][1]['title'], other_project.title)
+
+    def test_score_user_address_position_task_position(self):
+        user = BlueBottleUserFactory.create()
+        user.address.position = (10.0, 20.0)
+        user.save()
+
+        project = ProjectFactory.create(status=self.status)
+        task = TaskFactory.create(project=project)
+        PlaceFactory.create(content_object=task, position='11.2,21.2')
+
+        other_project = ProjectFactory.create(status=self.status)
+        other_task = TaskFactory.create(project=other_project)
+        PlaceFactory.create(content_object=other_task, position='10.1,20.1')
+
         ProjectFactory.create(status=self.status)
 
         result = self.search({}, user=user)

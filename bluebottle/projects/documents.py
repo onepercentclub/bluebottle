@@ -5,7 +5,7 @@ from django_elasticsearch_dsl import Index, DocType, fields
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
-from bluebottle.geo.models import Location, Country
+from bluebottle.geo.models import Location, Country, Place
 from bluebottle.projects.models import Project, ProjectLocation
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.votes.models import Vote
@@ -99,7 +99,7 @@ class ProjectDocument(DocType):
     class Meta:
         model = Project
         related_models = (
-            Task, TaskMember, ProjectPhase, Location, Country, Vote, Donation,
+            Task, TaskMember, ProjectPhase, Location, Country, Vote, Donation, Place
         )
 
     def get_queryset(self):
@@ -124,6 +124,8 @@ class ProjectDocument(DocType):
             return related_instance.project
         elif isinstance(related_instance, Donation):
             return related_instance.project
+        elif isinstance(related_instance, Place):
+            return related_instance.content_object.project
 
     def prepare_amount_asked(self, instance):
         return instance.amount_asked.amount

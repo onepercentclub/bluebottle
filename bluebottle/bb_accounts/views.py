@@ -12,10 +12,10 @@ from django.utils import timezone
 
 from rest_framework import status, views, response, generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 
 from bluebottle.bb_accounts.permissions import CurrentUserPermission
-from bluebottle.utils.views import RetrieveAPIView
+from bluebottle.utils.views import RetrieveAPIView, UpdateAPIView
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.utils.email_backend import send_mail
@@ -24,7 +24,8 @@ from bluebottle.clients import properties
 from bluebottle.members.serializers import (
     UserCreateSerializer, ManageProfileSerializer, UserProfileSerializer,
     PasswordResetSerializer, PasswordSetSerializer, CurrentUserSerializer,
-    UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer
+    UserVerificationSerializer, UserDataExportSerializer, TokenLoginSerializer,
+    EmailSetSerializer, PasswordUpdateSerializer,
 )
 from bluebottle.members.tokens import login_token_generator
 
@@ -177,6 +178,33 @@ class PasswordReset(views.APIView):
             pass
 
         return response.Response(status=status.HTTP_200_OK)
+
+
+class PasswordProtectedMemberUpdateApiView(UpdateAPIView):
+    queryset = USER_MODEL.objects.all()
+
+    permission_classes = (CurrentUserPermission, )
+
+    def get_object(self):
+        if isinstance(self.request.user, AnonymousUser):
+            raise NotAuthenticated()
+        return self.request.user
+
+    def perform_update(self, serializer):
+        password = serializer.validated_data.pop('password')
+
+        if not self.request.user.check_password(password):
+            raise PermissionDenied()
+
+        return super(PasswordProtectedMemberUpdateApiView, self).perform_update(serializer)
+
+
+class EmailSetView(PasswordProtectedMemberUpdateApiView):
+    serializer_class = EmailSetSerializer
+
+
+class PasswordSetView(PasswordProtectedMemberUpdateApiView):
+    serializer_class = PasswordUpdateSerializer
 
 
 class PasswordSet(views.APIView):

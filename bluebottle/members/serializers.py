@@ -341,6 +341,35 @@ class PasswordResetSerializer(serializers.Serializer):
         fields = ('email',)
 
 
+class PasswordProtectedMemberSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        write_only=True, required=True, max_length=128
+    )
+    jwt_token = serializers.CharField(source='get_jwt_token', read_only=True)
+
+    class Meta:
+        model = BB_USER_MODEL
+        fields = ('password', 'jwt_token')
+
+
+class EmailSetSerializer(PasswordProtectedMemberSerializer):
+    class Meta(PasswordProtectedMemberSerializer.Meta):
+        fields = ('email', ) + PasswordProtectedMemberSerializer.Meta.fields
+
+
+class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
+    new_password = serializers.CharField(
+        write_only=True, required=True, max_length=128
+    )
+
+    def save(self):
+        self.instance.set_password(self.validated_data['new_password'])
+        self.instance.save()
+
+    class Meta(PasswordProtectedMemberSerializer.Meta):
+        fields = ('new_password', ) + PasswordProtectedMemberSerializer.Meta.fields
+
+
 class PasswordSetSerializer(serializers.Serializer):
     """
     We can't use the PasswordField here because it hashes the passwords with

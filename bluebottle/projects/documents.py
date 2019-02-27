@@ -84,6 +84,7 @@ class ProjectDocument(DocType):
 
     categories = fields.NestedField(properties={
         'id': fields.LongField(),
+        'slug': fields.KeywordField(),
     })
 
     skills = fields.LongField()

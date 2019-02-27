@@ -497,8 +497,6 @@ class AdapterTestCase(BluebottleTestCase):
                      fake_create_payment)
 
         user = BlueBottleUserFactory()
-        holland = CountryFactory(name='Netherlands', alpha2_code='NL')
-
         self.order = OrderFactory.create(user=user)
         self.order_payment = OrderPaymentFactory.create(order=self.order,
                                                         payment_method='docdataIdeal',

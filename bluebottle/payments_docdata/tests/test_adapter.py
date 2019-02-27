@@ -1,5 +1,3 @@
-from bluebottle.test.factory_models.geo import CountryFactory
-
 from bunch import bunchify
 
 from django.test.utils import override_settings

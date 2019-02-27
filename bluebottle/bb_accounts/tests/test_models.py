@@ -272,7 +272,6 @@ class BlueBottleUserTestCase(BluebottleTestCase):
         ]:
             self.assertFalse(getattr(self.user, prop))
 
-        self.assertIsNone(self.user.address.pk)
         self.assertEqual(self.user.birthdate, '1000-01-01')
         self.assertTrue(self.user.email.endswith('anonymous@example.com'))
         self.assertEqual(self.user.first_name, 'Deactivated')

@@ -1,12 +1,14 @@
 from adminsortable.models import SortableMixin
 from django.db import models
 from django.db.models import Sum
+from django.contrib.contenttypes.fields import GenericRelation
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.utils.functional import cached_property
 from django.core.exceptions import ObjectDoesNotExist
 
 from bluebottle.bb_accounts.models import BlueBottleBaseUser
+from bluebottle.geo.models import Place
 from bluebottle.projects.models import Project
 from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.tasks.models import TaskMember
@@ -55,6 +57,10 @@ class MemberPlatformSettings(BasePlatformSettings):
 
 class Member(BlueBottleBaseUser):
     verified = models.BooleanField(default=False, blank=True, help_text=_('Was verified for voting by recaptcha.'))
+    subscribed = models.BooleanField(
+        default=False, help_text=_('Member is interrested in receiving updates on matching projects')
+    )
+
     remote_id = models.CharField(_('remote_id'),
                                  max_length=75,
                                  blank=True,
@@ -68,6 +74,12 @@ class Member(BlueBottleBaseUser):
         null=True
     )
 
+    places = GenericRelation(Place)
+
+    matching_options_set = models.DateTimeField(
+        null=True, blank=True, help_text=_('When the user updated their matching preferences.')
+    )
+
     def __init__(self, *args, **kwargs):
         super(Member, self).__init__(*args, **kwargs)
 
@@ -75,6 +87,13 @@ class Member(BlueBottleBaseUser):
             self._previous_last_seen = self.last_seen
         except ObjectDoesNotExist:
             self._previous_last_seen = None
+
+    @property
+    def place(self):
+        try:
+            return self.places.get()
+        except Place.DoesNotExist:
+            return None
 
     class Analytics:
         type = 'member'

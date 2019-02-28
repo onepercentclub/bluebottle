@@ -414,10 +414,9 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], project.title)
         self.assertEqual(result.data['results'][1]['title'], other_project.title)
 
-    def test_score_user_address_position(self):
+    def test_score_user_place_position(self):
         user = BlueBottleUserFactory.create()
-        user.address.position = (10.0, 20.0)
-        user.save()
+        PlaceFactory.create(content_object=user, position='10.0, 20.0')
 
         project = ProjectFactory.create(status=self.status)
         project.projectlocation.latitude = 10.0
@@ -437,10 +436,9 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], project.title)
         self.assertEqual(result.data['results'][1]['title'], other_project.title)
 
-    def test_score_user_address_position_task_position(self):
+    def test_score_user_place_position_task_position(self):
         user = BlueBottleUserFactory.create()
-        user.address.position = (10.0, 20.0)
-        user.save()
+        PlaceFactory.create(content_object=user, position='10.0, 20.0')
 
         project = ProjectFactory.create(status=self.status)
         task = TaskFactory.create(project=project)
@@ -455,8 +453,8 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         result = self.search({}, user=user)
 
         self.assertEqual(result.data['count'], 3)
-        self.assertEqual(result.data['results'][0]['title'], project.title)
-        self.assertEqual(result.data['results'][1]['title'], other_project.title)
+        self.assertEqual(result.data['results'][0]['title'], other_project.title)
+        self.assertEqual(result.data['results'][1]['title'], project.title)
 
     def test_combined_scores(self):
         task_project = ProjectFactory.create(status=self.status)

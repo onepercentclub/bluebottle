@@ -24,7 +24,6 @@ from polymorphic.models import PolymorphicModel
 from multiselectfield import MultiSelectField
 
 from bluebottle.analytics.tasks import queue_analytics_record
-from bluebottle.bb_metrics.utils import bb_track
 from bluebottle.bb_projects.models import (
     BaseProject, ProjectPhase
 )
@@ -569,23 +568,6 @@ class Project(BaseProject, PreviousStatusMixin):
         if new_status == status_incomplete:
             mail_project_incomplete(self)
 
-        data = {
-            "Project": self.title,
-            "Owner": self.owner.email,
-            "old_status": old_status.slug,
-            "new_status": new_status.slug
-        }
-
-        if old_status.slug in ('plan-new',
-                               'plan-submitted',
-                               'plan-needs-work',
-                               'voting',
-                               'voting-done',
-                               'campaign') and new_status.slug in ('done-complete',
-                                                                   'done-incomplete',
-                                                                   'closed'):
-            bb_track("Project Completed", data)
-
     def check_task_status(self):
         if (not self.is_funding and all([task.status == Task.TaskStatuses.realized for task in self.task_set.all()])):
             self.status = ProjectPhase.objects.get(slug='done-complete')
@@ -626,13 +608,6 @@ class Project(BaseProject, PreviousStatusMixin):
         self.update_status_after_deadline()
         self.campaign_ended = now()
         self.save()
-
-        data = {
-            "Project": self.title,
-            "Author": self.owner.username
-        }
-
-        bb_track("Project Deadline Reached", data)
 
 
 class ProjectBudgetLine(models.Model):

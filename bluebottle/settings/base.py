@@ -379,7 +379,6 @@ TENANT_APPS = (
     'bluebottle.bb_accounts',
     'bluebottle.bb_projects',
     'bluebottle.bb_tasks',
-    'bluebottle.bb_fundraisers',
     'bluebottle.bb_orders',
     'bluebottle.bb_payouts',
     'bluebottle.bb_follow',

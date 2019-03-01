@@ -1,4 +1,4 @@
-from bluebottle.bb_orders.views import ManageOrderList, ManageOrderDetail
+from bluebottle.orders.views import ManageOrderList, ManageOrderDetail
 from django.conf.urls import url
 
 urlpatterns = [

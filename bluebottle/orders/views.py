@@ -1,7 +1,7 @@
 import logging
 from django.http import Http404
-from bluebottle.bb_orders.permissions import IsOrderCreator, OrderIsNew
-from bluebottle.bb_orders.signals import order_requested
+from bluebottle.orders.permissions import IsOrderCreator, OrderIsNew
+from bluebottle.orders.signals import order_requested
 from bluebottle.utils import views
 
 

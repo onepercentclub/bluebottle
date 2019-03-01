@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from django.conf import settings
 from django.utils.translation import ugettext as _
-from bluebottle.bb_orders.permissions import IsOrderCreator
+from bluebottle.orders.permissions import IsOrderCreator
 from bluebottle.payments.exception import PaymentException
 from bluebottle.payments.models import OrderPayment
 from bluebottle.payments.permissions import CanAccessPaymentMethod

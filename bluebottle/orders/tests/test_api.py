@@ -86,7 +86,7 @@ class TestCreateUpdateOrder(OrderApiTestCase):
 
 
 class TestOrderPermissions(BluebottleTestCase):
-    """ Test the permissions for order ownership in bb_orders """
+    """ Test the permissions for order ownership in orders """
 
     def setUp(self):
         super(TestOrderPermissions, self).setUp()

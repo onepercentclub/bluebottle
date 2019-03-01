@@ -1,16 +1,13 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.utils.functional import lazy
-from django.utils.translation import ugettext as _
-from django.contrib.contenttypes.fields import GenericRelation
 from django.utils.translation import ugettext_lazy as _
-
 from django_extensions.db.fields import (ModificationDateTimeField,
                                          CreationDateTimeField)
 
-from bluebottle.utils.fields import MoneyField
-from bluebottle.utils.models import MailLog
 from bluebottle.utils.fields import MoneyField, get_currency_choices, get_default_currency
 from bluebottle.utils.models import BasePlatformSettings
+from bluebottle.utils.models import MailLog
 from bluebottle.utils.utils import StatusDefinition
 
 
@@ -99,12 +96,11 @@ class DonationDefaultAmounts(models.Model):
     value3 = models.DecimalField(default=10.0, decimal_places=2, max_digits=12)
     value4 = models.DecimalField(default=10.0, decimal_places=2, max_digits=12)
 
-class DonationPlatformSettings(BasePlatformSettings):
 
+class DonationPlatformSettings(BasePlatformSettings):
     show_donation_amount = models.BooleanField(default=True)
     recurring_donations = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = _('donation platform settings')
         verbose_name = _('donation platform settings')
-

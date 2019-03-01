@@ -28,16 +28,16 @@ from polymorphic.admin.inlines import StackedPolymorphicInline
 from sorl.thumbnail.admin import AdminImageMixin
 
 from bluebottle.bb_projects.models import ProjectTheme, ProjectPhase
+from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.clients import properties
 from bluebottle.common.admin_utils import ImprovedModelForm
-from bluebottle.geo.admin import LocationFilter, LocationGroupFilter
+from bluebottle.geo.admin import LocationFilter, LocationGroupFilter, CountryFilter
 from bluebottle.geo.models import Location
 from bluebottle.payments.adapters import has_payment_prodiver
 from bluebottle.payments_lipisha.models import LipishaProject
 from bluebottle.payouts_dorado.adapters import (
     DoradoPayoutAdapter, PayoutValidationError, PayoutCreationError
 )
-from bluebottle.bluebottle_dashboard.decorators import confirmation_form
 from bluebottle.projects.forms import RefundConfirmationForm, PayoutApprovalConfirmationForm
 from bluebottle.projects.models import (
     ProjectPlatformSettings, ProjectSearchFilter, ProjectAddOn, ProjectLocation,
@@ -310,6 +310,14 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
     formfield_overrides = {
         models.URLField: {'widget': SecureAdminURLFieldWidget()},
     }
+
+    def lookup_allowed(self, key, value):
+        if key in ('country__translations__name',
+                   'task__skill__expertise__exact',
+                   'payout_account__reviewed__exact'):
+            return True
+        else:
+            return super(ProjectAdmin, self).lookup_allowed(key, value)
 
     class Media:
         css = {
@@ -605,7 +613,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if Location.objects.count():
             filters += [LocationGroupFilter, LocationFilter]
         else:
-            filters += [('country', admin.RelatedOnlyFieldListFilter), ]
+
+            filters += [CountryFilter]
         return filters
 
     def get_list_display(self, request):
@@ -625,13 +634,6 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         if Vote.objects.count():
             fields += ('vote_count',)
         return fields
-
-    def lookup_allowed(self, key, value):
-        if key in ('task__skill__expertise__exact',
-                   'payout_account__reviewed__exact'):
-            return True
-        else:
-            return super(ProjectAdmin, self).lookup_allowed(key, value)
 
     def created_date(self, obj):
         return obj.created.date()

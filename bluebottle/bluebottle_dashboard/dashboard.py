@@ -61,12 +61,6 @@ class CustomIndexDashboard(Dashboard):
                     'url': reverse_lazy('report-export'),
                 })
 
-            if properties.PARTICIPATION_BACKOFFICE_ENABLED:
-                metrics_children.append({
-                    'title': _('Request complete participation metrics'),
-                    'url': reverse('participation-metrics')
-                })
-
             self.children.append(LinkList(
                 _('Export Metrics'),
                 children=metrics_children

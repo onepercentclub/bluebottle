@@ -51,15 +51,3 @@ def generate_engagement_metrics():
     logger.info("Generating Engagement Metrics: start date: {} end date: {}".format(today, tomorrow))
     call_command('export_engagement_metrics', '--start', today.strftime('%Y-%m-%d'),
                  '--end', tomorrow.strftime('%Y-%m-%d'), '--export-to', 'influxdb')
-
-
-@shared_task
-def generate_participation_metrics(tenant, email, start_year, end_year):
-    logger.info("Generating Participation Metrics: Tenant: {} Email: {} Start Year: {} End Year: {}".format(
-        tenant, email, start_year, end_year
-    ))
-    call_command('export_participation_metrics',
-                 '--start', start_year,
-                 '--end', end_year,
-                 '--tenant', tenant,
-                 '--email', email)

@@ -1,17 +1,14 @@
 import datetime
 
-import pendulum
 from django.test.utils import override_settings
 from django.utils import timezone
 from moneyed.classes import Money
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.statistics.participation import Statistics as ParticipationStatistics
 from bluebottle.statistics.views import Statistics
 from bluebottle.tasks.models import Task
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
-from bluebottle.test.factory_models.geo import LocationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
@@ -452,138 +449,3 @@ class StatisticsDateTest(BluebottleTestCase):
         self.assertEqual(stats.tasks_realized, 2)
         self.assertEqual(stats.votes_cast, 2)
         self.assertEqual(stats.amount_matched, Money(300, 'EUR'))
-
-
-@override_settings(
-    CACHES={
-        'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
-        }
-    }
-)
-class ParticipationStatisticsTest(BluebottleTestCase):
-    def setUp(self):
-        super(ParticipationStatisticsTest, self).setUp()
-
-        # Required by Project model save method
-        self.init_projects()
-
-        self.user_1 = BlueBottleUserFactory.create()
-        self.user_2 = BlueBottleUserFactory.create()
-        self.user_3 = BlueBottleUserFactory.create()
-
-        self.location = LocationFactory.create()
-
-        self.project_status_plan_new = ProjectPhase.objects.get(slug='plan-new')
-        self.project_status_plan_submitted = ProjectPhase.objects.get(slug='plan-submitted')
-        self.project_status_voting = ProjectPhase.objects.get(slug='voting')
-        self.project_status_voting_done = ProjectPhase.objects.get(slug='voting-done')
-        self.project_status_campaign = ProjectPhase.objects.get(slug='campaign')
-        self.project_status_done_complete = ProjectPhase.objects.get(slug='done-complete')
-        self.project_status_done_incomplete = ProjectPhase.objects.get(slug='done-incomplete')
-        self.project_status_closed = ProjectPhase.objects.get(slug='closed')
-
-        self.some_project = ProjectFactory.create(owner=self.user_1,
-                                                  status=self.project_status_done_complete,
-                                                  location=self.location)
-        self.another_project = ProjectFactory.create(owner=self.user_2)
-
-        self.some_task = TaskFactory.create(project=self.some_project,
-                                            author=self.user_1)
-        self.another_task = TaskFactory.create(project=self.another_project,
-                                               author=self.user_2)
-
-        self.some_task_member = TaskMemberFactory.create(member=self.user_1, task=self.some_task)
-        self.another_task_member = TaskMemberFactory.create(member=self.user_2, task=self.another_task)
-
-        start = pendulum.create().subtract(days=7)
-        end = pendulum.create().add(days=7)
-
-        # TODO: Create atleast one project, task and task member outside the time range
-
-        self.statistics = ParticipationStatistics(start=start,
-                                                  end=end)
-
-    def test_participant_details(self):
-        participant_count = self.statistics.participants_count
-
-        # NOTE: Participants : One project creator with project status done complete and one task creator
-        self.assertEqual(participant_count, 2)
-
-    def test_projects_total(self):
-        count = self.statistics.projects_total
-        self.assertEqual(count, 2)
-
-    def test_projects_count_by_theme(self):
-        count = self.statistics.get_projects_count_by_theme(theme='education')
-        self.assertEqual(count, 2)
-
-    def test_projects_count_by_last_status(self):
-        count = self.statistics.get_projects_count_by_last_status(statuses=['done-complete'])
-        self.assertEqual(count, 1)
-
-    def test_projects_status_count_by_location_group(self):
-        count = self.statistics.get_projects_status_count_by_location_group(location_group=self.location.group.name,
-                                                                            statuses=['done-complete'])
-        self.assertEqual(count, 1)
-
-    def test_projects_status_count_by_theme(self):
-        count = self.statistics.get_projects_status_count_by_theme(theme='education', statuses=['done-complete'])
-        self.assertEqual(count, 1)
-
-    def test_projects_by_location_group(self):
-        count = len(self.statistics.get_projects_by_location_group(location_group=self.location.group.name))
-        self.assertEqual(count, 1)
-
-    def test_project_successful(self):
-        count = self.statistics.projects_successful
-        self.assertEqual(count, 1)
-
-    def test_project_running(self):
-        count = self.statistics.projects_running
-        self.assertEqual(count, 0)
-
-    def test_project_complete(self):
-        count = self.statistics.projects_complete
-        self.assertEqual(count, 1)
-
-    def test_project_online(self):
-        count = self.statistics.projects_online
-        self.assertEqual(count, 0)
-
-    def test_tasks_total(self):
-        count = self.statistics.tasks_total
-        self.assertEqual(count, 2)
-
-    def test_tasks_count_by_last_status(self):
-        count = self.statistics.get_tasks_count_by_last_status(statuses=['in progress'])
-        self.assertEqual(count, 2)
-
-    def test_tasks_status_count_by_location_group(self):
-        count = self.statistics.get_tasks_status_count_by_location_group(location_group=self.location.group.name,
-                                                                         statuses=['in progress'])
-        self.assertEqual(count, 1)
-
-    def test_tasks_status_count_by_theme(self):
-        count = self.statistics.get_tasks_status_count_by_theme(theme='education', statuses=['in progress'])
-        self.assertEqual(count, 2)
-
-    def test_task_members_total(self):
-        count = self.statistics.task_members_total
-        self.assertEqual(count, 2)
-
-    def test_get_task_members_count_by_last_status(self):
-        count = self.statistics.get_task_members_count_by_last_status(['accepted'])
-        self.assertEqual(count, 2)
-
-    def test_task_members(self):
-        count = self.statistics.task_members
-        self.assertEqual(count, 0)
-
-    def test_unconfirmed_task_members(self):
-        count = self.statistics.unconfirmed_task_members
-        self.assertEqual(count, 0)
-
-    def test_unconfirmed_task_members_task_count(self):
-        count = self.statistics.unconfirmed_task_members_task_count
-        self.assertEqual(count, 0)

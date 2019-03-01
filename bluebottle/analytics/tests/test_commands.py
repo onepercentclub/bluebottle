@@ -13,9 +13,6 @@ from django.test import SimpleTestCase
 from bluebottle.analytics.management.commands.export_engagement_metrics import (
     Command as EngagementCommand
 )
-from bluebottle.analytics.management.commands.export_participation_metrics import (
-    Command as ParticipationCommand,
-)
 from bluebottle.analytics.management.commands.export_analytics_data import (
     Command as AnalyticsCommand,
 )
@@ -231,32 +228,6 @@ class TestEngagementMetricsXls(BluebottleTestCase):
 
     def tearDown(self):
         os.remove(self.xls_file_path)
-
-
-class TestParticipationXls(SetupDataMixin, BluebottleTestCase):
-
-    def setUp(self):
-        super(TestParticipationXls, self).setUp()
-        self.init_projects()
-        self.initTestData()
-        self.command = ParticipationCommand()
-
-    def test_export(self):
-        with patch.object(self.command, 'get_xls_file_name', return_value=self.xls_file_name):
-            call_command(self.command, '--start', self.year, '--end', self.year, '--tenant', 'test')
-            self.assertTrue(os.path.isfile(self.xls_file_path), True)
-            workbook = load_workbook(filename=self.xls_file_path, read_only=True)
-
-            # Check participants
-            self.assertEqual(workbook.worksheets[0]['A1'].value, 'Email Address')
-            self.assertEqual(workbook.worksheets[0]['A2'].value, self.users[0].email)
-            self.assertEqual(workbook.worksheets[0]['A3'].value, self.users[11].email)
-
-            # Check some sheet titles
-            self.assertEqual(workbook.worksheets[0].title, 'Participants - {}'.format(self.year))
-            self.assertEqual(workbook.worksheets[1].title, 'Totals - {}'.format(self.year))
-            self.assertEqual(workbook.worksheets[6].title, 'Location Segmentation - {}'.format(self.year))
-            self.assertEqual(workbook.worksheets[7].title, 'Theme Segmentation - {}'.format(self.year))
 
 
 class TestExportAnalytics(SetupDataMixin, BluebottleTestCase):

@@ -5,14 +5,14 @@ from django.test.utils import override_settings
 from django.utils import timezone
 from moneyed.classes import Money
 
-from bluebottle.members.models import Member
+from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.statistics.views import Statistics
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.funding.tests.factories import FundingFactory, DonationFactory, BankAccountFactory
-from bluebottle.funding_pledge.tests.factories import PledgePaymentFactory
-from bluebottle.events.tests.factories import EventFactory, ParticipantFactory
-from bluebottle.assignments.tests.factories import AssignmentFactory, ApplicantFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.test.factory_models.donations import DonationFactory
+from bluebottle.test.factory_models.orders import OrderFactory
+from bluebottle.test.factory_models.projects import ProjectFactory
+from bluebottle.test.factory_models.tasks import TaskFactory, TaskMemberFactory
+from bluebottle.test.factory_models.votes import VoteFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -807,9 +807,11 @@ class StatisticsDateTest(BluebottleTestCase):
         self.assertEqual(
             stats.activities_succeeded, 1
         )
-        self.assertEqual(
-            stats.events_succeeded, 1
-        )
-        self.assertEqual(
-            stats.people_involved, 2
-        )
+
+        self.assertEqual(stats.people_involved, 2)
+        self.assertEqual(stats.donated_total, Money(2000, 'EUR'))
+        self.assertEqual(stats.projects_online, 2)
+        self.assertEqual(stats.projects_realized, 2)
+        self.assertEqual(stats.tasks_realized, 2)
+        self.assertEqual(stats.votes_cast, 2)
+        self.assertEqual(stats.amount_matched, Money(300, 'EUR'))

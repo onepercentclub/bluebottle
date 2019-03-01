@@ -27,7 +27,6 @@ class TestModelQuerySet(list):
     model = TestModel
 
 
-
 class ExportAsCSVActionTest(BluebottleTestCase):
     """
     Integration tests for the User API.

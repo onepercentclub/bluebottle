@@ -15,6 +15,9 @@ class MockPayment(Payment):
     def transaction_reference(self):
         return self.id
 
+    def get_method_name(self):
+        return 'mock'
+
     def get_fee(self):
 
         if self.order_payment.payment_method == 'mockIdeal':

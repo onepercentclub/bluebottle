@@ -17,7 +17,7 @@ from bluebottle.test.factory_models.payouts import (
 
 
 class TestOrderPaymentPermissions(BluebottleTestCase):
-    """ Test the permissions for order ownership in bb_orders """
+    """ Test the permissions for order ownership in orders """
 
     def setUp(self):
         super(TestOrderPaymentPermissions, self).setUp()

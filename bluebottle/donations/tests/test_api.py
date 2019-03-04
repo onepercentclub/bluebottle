@@ -8,7 +8,7 @@ from rest_framework import status
 
 from moneyed import Money
 
-from bluebottle.bb_orders.views import ManageOrderDetail
+from bluebottle.orders.views import ManageOrderDetail
 from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
 from bluebottle.orders.models import Order

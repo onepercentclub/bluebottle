@@ -9,7 +9,7 @@ from django.utils import translation
 from tenant_extras.utils import TenantLanguage
 
 from bluebottle.bb_projects.models import BaseProject
-from bluebottle.bb_fundraisers.models import BaseFundraiser
+from bluebottle.fundraisers.models import Fundraiser
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
 from bluebottle.orders.models import Order
@@ -132,7 +132,7 @@ def create_follow(sender, instance, created, **kwargs):
             _create_follow_object(followed_object, user)
 
     # A user creates a fundraiser for a project
-    elif isinstance(instance, BaseFundraiser):
+    elif isinstance(instance, Fundraiser):
         # Create a Follow to the specific project
         user = instance.owner
         followed_object = instance.project
@@ -202,7 +202,7 @@ def email_followers(sender, instance, created, **kwargs):
                 follow_object = _('task')
                 link = '/tasks/{0}'.format(instance.content_object.id)
 
-            if isinstance(instance.content_object, BaseFundraiser):
+            if isinstance(instance.content_object, Fundraiser):
                 # Send update to all people who donated or posted to the wall
                 # --> Followers
                 followers = Follow.objects.filter(

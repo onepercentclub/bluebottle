@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from bluebottle.bb_orders.views import ManageOrderDetail
+from bluebottle.orders.views import ManageOrderDetail
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.projects import ProjectFactory

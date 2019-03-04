@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from ..views import FundraiserListView, FundraiserDetailView
+from bluebottle.fundraisers.views import FundraiserListView, FundraiserDetailView
 
 urlpatterns = [
     url(r'^$', FundraiserListView.as_view(),

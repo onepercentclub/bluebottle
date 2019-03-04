@@ -20,7 +20,7 @@ urlpatterns = [
     url(r'^api/bb_projects/',
         include('bluebottle.bb_projects.urls.api')),
     url(r'^api/fundraisers/',
-        include('bluebottle.bb_fundraisers.urls.api')),
+        include('bluebottle.fundraisers.urls.api')),
     url(r'^api/categories/',
         include('bluebottle.categories.urls.api')),
     url(r'^api/bb_tasks/',
@@ -49,7 +49,7 @@ urlpatterns = [
         include('bluebottle.utils.urls.api')),
 
     url(r'^api/orders/',
-        include('bluebottle.bb_orders.urls.api')),
+        include('bluebottle.orders.urls.api')),
     url(r'^api/donations/',
         include('bluebottle.donations.urls.api')),
     url(r'^api/order_payments/',

@@ -6,7 +6,7 @@ from django.http.response import Http404
 from rest_framework import permissions, generics
 
 from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.bb_orders.permissions import OrderIsNew, IsOrderCreator
+from bluebottle.orders.permissions import OrderIsNew, IsOrderCreator
 from bluebottle.clients import properties
 from bluebottle.donations.serializers import (
     LatestDonationSerializer, PreviewDonationSerializer,

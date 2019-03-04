@@ -69,7 +69,7 @@ class ProjectDocument(DocType):
 
     location = fields.NestedField(properties={
         'id': fields.LongField(),
-        'position': fields.GeoPointField(attr='position_tuple'),
+        'position': fields.GeoPointField(attr='position'),
         'city': fields.TextField(),
         'name': fields.TextField()
     })
@@ -78,9 +78,7 @@ class ProjectDocument(DocType):
         'id': fields.LongField(),
     })
 
-    theme = fields.ObjectField(properties={
-        'id': fields.LongField(),
-    })
+    theme = fields.LongField()
 
     categories = fields.NestedField(properties={
         'id': fields.LongField(),
@@ -150,12 +148,16 @@ class ProjectDocument(DocType):
 
     def prepare_task_positions(self, instance):
         return [
-            task.place.position_tuple for task
+            task.place.position for task
             in instance.task_set.all() if task.place and task.place.position
         ]
 
     def prepare_skills(self, instance):
         return [task.skill.id for task in instance.task_set.all() if task.skill]
+
+    def prepare_theme(self, instance):
+        if instance.theme:
+            return instance.theme.pk
 
     def prepare_task_members(self, instance):
         result = []

@@ -399,6 +399,22 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], project.title)
         self.assertEqual(result.data['results'][1]['title'], other_project.title)
 
+    def test_score_user_theme(self):
+        theme = ProjectThemeFactory.create(name='User theme')
+        user = BlueBottleUserFactory.create()
+        user.favourite_themes.add(theme)
+        user.save()
+
+        project = ProjectFactory.create(status=self.status, theme=ProjectThemeFactory.create())
+        other_project = ProjectFactory.create(status=self.status, theme=theme)
+        ProjectFactory.create(status=self.status)
+
+        result = self.search({}, user=user)
+
+        self.assertEqual(result.data['count'], 3)
+        self.assertEqual(result.data['results'][0]['title'], other_project.title)
+        self.assertEqual(result.data['results'][1]['title'], project.title)
+
     def test_score_user_location(self):
         location = LocationFactory.create(name='Amsterdam')
         user = BlueBottleUserFactory.create()

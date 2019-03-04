@@ -244,10 +244,10 @@ class ProjectListSearchMixin(object):
         )
         if self.request.user.is_authenticated:
             position_tuple = None
-            if self.request.user.location and self.request.user.location.position_tuple:
-                position_tuple = self.request.user.location.position_tuple
-            elif self.request.user.place and self.request.user.place.position_tuple:
-                position_tuple = self.request.user.place.position_tuple
+            if self.request.user.location and self.request.user.location.position:
+                position_tuple = (self.request.user.location.position.latitude, self.request.user.location.position.longitude)
+            elif self.request.user.place and self.request.user.place.position:
+                position_tuple = (self.request.user.place.position.latitude, self.request.user.place.position.longitude)
 
             if position_tuple:
                 scoring = scoring | ESQ(
@@ -280,7 +280,7 @@ class ProjectListSearchMixin(object):
                             'filter': {'exists': {'field': 'task_positions'}},
                             'gauss': {
                                 'task_positions': {
-                                    'origin': position_tuple,
+                                   'origin': position_tuple,
                                     'scale': "100km"
                                 },
                                 'multi_value_mode': 'min',
@@ -298,6 +298,7 @@ class ProjectListSearchMixin(object):
                 scoring = scoring | ESQ(
                     'function_score',
                     score_mode='first',
+
                     functions=[
                         SF({
                             'filter': ESQ('term', **{'skills': skill.id}),
@@ -312,8 +313,8 @@ class ProjectListSearchMixin(object):
                     score_mode='first',
                     functions=[
                         SF({
-                            'filter': ESQ('term', **{'themes': theme.id}),
-                            'weight': 2
+                            'filter': ESQ('term', **{'theme': theme.id}),
+                            'weight': 2,
                         }) for theme in self.request.user.favourite_themes.all()
                     ]
                 )
@@ -375,6 +376,7 @@ class ProjectTinyPreviewList(ProjectListSearchMixin, ListAPIView):
 
     def list(self, request):
         result = self.search().sort('created')
+
         page = self.paginate_queryset(result)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

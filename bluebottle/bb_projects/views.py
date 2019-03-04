@@ -245,9 +245,15 @@ class ProjectListSearchMixin(object):
         if self.request.user.is_authenticated:
             position_tuple = None
             if self.request.user.location and self.request.user.location.position:
-                position_tuple = (self.request.user.location.position.latitude, self.request.user.location.position.longitude)
+                position_tuple = (
+                    self.request.user.location.position.latitude,
+                    self.request.user.location.position.longitude
+                )
             elif self.request.user.place and self.request.user.place.position:
-                position_tuple = (self.request.user.place.position.latitude, self.request.user.place.position.longitude)
+                position_tuple = (
+                    self.request.user.place.position.latitude,
+                    self.request.user.place.position.longitude
+                )
 
             if position_tuple:
                 scoring = scoring | ESQ(
@@ -280,7 +286,7 @@ class ProjectListSearchMixin(object):
                             'filter': {'exists': {'field': 'task_positions'}},
                             'gauss': {
                                 'task_positions': {
-                                   'origin': position_tuple,
+                                    'origin': position_tuple,
                                     'scale': "100km"
                                 },
                                 'multi_value_mode': 'min',

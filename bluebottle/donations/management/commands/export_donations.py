@@ -16,26 +16,36 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--start', type=str, default=None, action='store')
         parser.add_argument('--end', type=str, default=None, action='store')
+        parser.add_argument('--order', type=str, default=None, action='store')
+        parser.add_argument('--tenant', type=str, default=None, action='store')
         parser.add_argument('--file', type=str, default=None, action='store')
 
     def handle(self, *args, **options):
         results = []
-        for client in Client.objects.all():
+        clients = Client.objects
+        if options['tenant']:
+            clients.filter(schema_name=options['tenant'])
+
+        for client in clients.all():
             connection.set_tenant(client)
             with LocalTenant(client, clear_tenant=True):
                 ContentType.objects.clear_cache()
 
-                orders = Order.objects.filter(
-                    status__in=('pending', 'success')
-                ).exclude(order_payments__payment_method='')
+                if options['order']:
+                    orders = Order.objects
+                else:
+                    orders = Order.objects.filter(
+                        status__in=('pending', 'success')
+                    ).exclude(order_payments__payment_method='')
 
                 if options['start']:
-                    orders = orders.filter(created__gte=options['start'])
+                    orders = orders.filter(created__date__gte=options['start'])
                 if options['end']:
-                    orders = orders.filter(created__lte=options['end'])
+                    orders = orders.filter(created__date__lte=options['end'])
+                if options['order']:
+                    orders = orders.filter(id=options['order'])
 
                 for order in orders:
-
                     try:
                         transaction_reference = order.order_payment.payment.transaction_reference
                     except Exception:

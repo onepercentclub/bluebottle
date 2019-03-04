@@ -2,6 +2,7 @@ import datetime
 import json
 
 from django.core.management import call_command
+from pytz import timezone
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -16,21 +17,23 @@ class TestDonationExport(BluebottleTestCase, SessionTestMixin):
         super(TestDonationExport, self).setUp()
         self.project = ProjectFactory.create(amount_asked=5000)
         self.user = BlueBottleUserFactory.create()
-        created = datetime.datetime(2019, 1, 13, 23, 25, 0)
-        orders = OrderFactory.create_batch(7, created=created)
+        orders = OrderFactory.create_batch(7)
         for order in orders:
+            order.created = datetime.datetime(2019, 1, 31, 20, 55, 0, 0, timezone('Europe/Amsterdam'))
+            order.save()
             DonationFactory.create(project=self.project, order=order)
             order_payment = OrderPaymentFactory(order=order)
             payment = PaymentFactory(order_payment=order_payment)
             payment.status = 'settled'
             payment.save()
-        created = datetime.datetime(2019, 1, 1, 3, 25, 0)
-        orders = OrderFactory.create_batch(3, created=created)
+        orders = OrderFactory.create_batch(3)
         for order in orders:
+            order.created = datetime.datetime(2019, 1, 1, 0, 5, 0, 0, timezone('Europe/Amsterdam'))
+            order.save()
             DonationFactory.create(project=self.project, order=order)
             order_payment = OrderPaymentFactory(order=order)
             payment = PaymentFactory(order_payment=order_payment)
-            payment.status = 'unknown'
+            payment.status = 'authorized'
             payment.save()
 
     def test_export(self):

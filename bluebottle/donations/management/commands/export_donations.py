@@ -46,7 +46,6 @@ class Command(BaseCommand):
                     orders = orders.filter(id=options['order'])
 
                 for order in orders:
-
                     try:
                         transaction_reference = order.order_payment.payment.transaction_reference
                     except Exception:

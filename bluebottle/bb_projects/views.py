@@ -93,7 +93,7 @@ class ProjectListSearchMixin(object):
         )
 
     def _filter_theme(self, query, value):
-        return query & ESQ('term', **{'theme.id': value})
+        return query & ESQ('term', **{'theme': value})
 
     def _filter_category(self, query, value):
         return query & ESQ(
@@ -243,13 +243,18 @@ class ProjectListSearchMixin(object):
             ]
         )
         if self.request.user.is_authenticated:
-            position_tuple = None
-            if self.request.user.location and self.request.user.location.position_tuple:
-                position_tuple = self.request.user.location.position_tuple
-            elif self.request.user.place and self.request.user.place.position_tuple:
-                position_tuple = self.request.user.place.position_tuple
-
-            if position_tuple:
+            position = None
+            if self.request.user.location and self.request.user.location.position:
+                position = {
+                    'lat': self.request.user.location.position.latitude,
+                    'lon': self.request.user.location.position.longitude
+                }
+            elif self.request.user.place and self.request.user.place.position:
+                position = {
+                    'lat': self.request.user.place.position.latitude,
+                    'lon': self.request.user.place.position.longitude
+                }
+            if position:
                 scoring = scoring | ESQ(
                     'function_score',
                     boost=2,
@@ -259,10 +264,10 @@ class ProjectListSearchMixin(object):
                             'filter': {'exists': {'field': 'position'}},
                             'gauss': {
                                 'position': {
-                                    'origin': position_tuple,
+                                    'origin': position,
                                     'scale': "100km"
                                 },
-                                'multi_value_mode': 'min',
+                                'multi_value_mode': 'max',
                             },
                         }),
                         SF({
@@ -280,7 +285,7 @@ class ProjectListSearchMixin(object):
                             'filter': {'exists': {'field': 'task_positions'}},
                             'gauss': {
                                 'task_positions': {
-                                    'origin': position_tuple,
+                                    'origin': position,
                                     'scale': "100km"
                                 },
                                 'multi_value_mode': 'min',
@@ -298,6 +303,7 @@ class ProjectListSearchMixin(object):
                 scoring = scoring | ESQ(
                     'function_score',
                     score_mode='first',
+
                     functions=[
                         SF({
                             'filter': ESQ('term', **{'skills': skill.id}),
@@ -312,8 +318,8 @@ class ProjectListSearchMixin(object):
                     score_mode='first',
                     functions=[
                         SF({
-                            'filter': ESQ('term', **{'themes': theme.id}),
-                            'weight': 2
+                            'filter': ESQ('term', **{'theme': theme.id}),
+                            'weight': 2,
                         }) for theme in self.request.user.favourite_themes.all()
                     ]
                 )
@@ -375,6 +381,7 @@ class ProjectTinyPreviewList(ProjectListSearchMixin, ListAPIView):
 
     def list(self, request):
         result = self.search().sort('created')
+
         page = self.paginate_queryset(result)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -397,8 +404,8 @@ class ProjectPreviewList(ProjectListSearchMixin, ListAPIView):
 
     def list(self, request):
         result = self.search()  # .extra(explain=True)
-
         page = self.paginate_queryset(result)
+
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)

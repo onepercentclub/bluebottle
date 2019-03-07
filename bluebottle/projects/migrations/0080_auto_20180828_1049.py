@@ -16,6 +16,11 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name='project',
+            name='popularity',
+            field=models.FloatField(null=True),
+        ),
+        migrations.AlterField(
+            model_name='project',
             name='location',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='geo.Location'),
         ),

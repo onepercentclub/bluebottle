@@ -111,11 +111,13 @@ class StripePaymentAdapter(BasePaymentAdapter):
                 api_key=self.credentials['secret_key']
             )
             self.update_from_charge(charge)
-            transfer = stripe.Transfer.retrieve(
-                charge['transfer'],
-                api_key=self.credentials['secret_key']
-            )
-            self.update_from_transfer(transfer)
+
+            if 'transfer' in charge:
+                transfer = stripe.Transfer.retrieve(
+                    charge['transfer'],
+                    api_key=self.credentials['secret_key']
+                )
+                self.update_from_transfer(transfer)
 
     def refund_payment(self):
         stripe.Refund.create(

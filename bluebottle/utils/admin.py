@@ -151,7 +151,7 @@ mark_as_plan_new.short_description = _("Mark selected projects as status Plan Ne
 
 
 def escape_csv_formulas(item):
-    if item[0] in ['=', '+', '-', '@']:
+    if item and item[0] in ['=', '+', '-', '@']:
         return "'" + item
     else:
         return item

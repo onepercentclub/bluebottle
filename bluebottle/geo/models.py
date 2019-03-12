@@ -130,10 +130,6 @@ class Location(models.Model):
     def __unicode__(self):
         return self.name
 
-    @property
-    def position_tuple(self):
-        return (self.position.longitude, self.position.latitude)
-
 
 class Place(models.Model):
     street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
@@ -150,7 +146,3 @@ class Place(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
-
-    @property
-    def position_tuple(self):
-        return (self.position.longitude, self.position.latitude)

@@ -25,6 +25,9 @@ class WebHookView(View):
 
             if event.type == 'source.chargeable':
                 payment = StripePayment.objects.get(source_token=event.data.object.id)
+                payment.status = 'authorized'
+                payment.save()
+
                 service = PaymentService(payment.order_payment)
                 service.adapter.charge()
 

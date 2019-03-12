@@ -14,7 +14,7 @@ class UserTokenTestCase(BluebottleTestCase):
     def setUp(self):
         super(UserTokenTestCase, self).setUp()
         self.init_projects()
-        self.user = BlueBottleUserFactory.create()
+        self.user = BlueBottleUserFactory.create(password='testing')
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
     def user_last_seen(self):

@@ -9,7 +9,7 @@ from rest_framework import status
 from requests import HTTPError
 from social.exceptions import (AuthAlreadyAssociated, AuthCanceled,
                                AuthMissingParameter, AuthException)
-from social.apps.django_app.utils import psa, get_strategy, STORAGE
+from social_django.utils import psa, get_strategy, STORAGE
 
 
 def load_drf_strategy(request=None):
@@ -51,12 +51,7 @@ class AccessTokenView(APIView):
             )
 
     def _check(self, social_auth, backend):
-        try:
-            extra_data = json.loads(social_auth.extra_data)
-        except TypeError:
-            extra_data = social_auth.extra_data
-
-        access_token = extra_data['access_token']
+        access_token = social_auth.access_token
 
         response = requests.get(
             'https://graph.facebook.com/me/permissions',

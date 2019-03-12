@@ -36,8 +36,9 @@ class Theme(SortableTranslatableModel):
 
 
 class Initiative(ReviewModel):
-    title = models.CharField(_('title'), max_length=255, unique=True, db_index=True)
-    slug = models.SlugField(_('slug'), max_length=100, unique=True)
+    title = models.CharField(_('title'), max_length=255)
+    slug = models.SlugField(_('slug'), max_length=100)
+
     pitch = models.TextField(
         _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
         blank=True

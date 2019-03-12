@@ -282,7 +282,7 @@ class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
 class ManageTaskSerializer(serializers.ModelSerializer):
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
     time_needed = serializers.DecimalField(min_value=0.0, max_digits=5, decimal_places=2)
-    place = PlaceSerializer(required=False)
+    place = PlaceSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Task

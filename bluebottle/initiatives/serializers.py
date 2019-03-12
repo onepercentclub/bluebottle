@@ -46,4 +46,4 @@ class InitiativeSerializer(FSMModelSerializer):
         )
 
     class JSONAPIMeta:
-        included_resources = ['owner']
+        included_resources = ['owner', 'reviewer', 'categories', 'theme',]

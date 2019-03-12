@@ -6,6 +6,7 @@ from bluebottle.utils.permissions import (
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.serializers import InitiativeSerializer
@@ -24,13 +25,19 @@ class InitiativeList(ListCreateAPIView):
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),
     )
+    authentication_classes = (
+       JSONWebTokenAuthentication,
+    )
+
     parser_classes = (JSONParser, )
 
     renderer_classes = (BluebottleJSONAPIRenderer, )
 
     prefetch_for_includes = {
         'owner': ['owner'],
-        'reviewer': ['reviewer']
+        'reviewer': ['reviewer'],
+        'theme': ['theme'],
+        'categories': ['categories'],
     }
 
     def perform_create(self, serializer):
@@ -50,7 +57,7 @@ class InitiativeDetail(AutoPrefetchMixin, RetrieveUpdateAPIView):
 
     prefetch_for_includes = {
         'owner': ['owner'],
-        'reviewer': ['reviewer']
+        'reviewer': ['reviewer'],
+        'theme': ['theme'],
+        'categories': ['categories'],
     }
-
-

@@ -360,7 +360,7 @@ class TestTenantAwareMailServer(unittest.TestCase):
                 'address': 'info@example.com',
                 'sender': 'Info Tester',
                 'return_path': return_path
-                }
+            }
             msg = EmailMultiAlternatives(
                 subject="test", body="test",
                 to=["test@example.com"]

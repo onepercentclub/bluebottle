@@ -85,6 +85,7 @@ class Initiative(ReviewModel):
             ('api_read_own_initiative', 'Can view own initiative through the API'),
             ('api_add_own_initiative', 'Can add own initiative through the API'),
             ('api_change_own_initiative', 'Can change own initiative through the API'),
+            ('api_change_own_running_initiative', 'Can change own initiative through the API'),
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
 

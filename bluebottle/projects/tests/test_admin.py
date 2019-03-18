@@ -637,6 +637,20 @@ class ProjectAdminFormTest(BluebottleTestCase):
             error.exception.message
         )
 
+    def test_payout_account_none(self):
+        self.form.cleaned_data = {
+            'status': ProjectPhase.objects.get(slug='campaign'),
+            'payout_account': None,
+            'amount_asked': Money(100, 'EUR')
+        }
+        with self.assertRaises(ValidationError) as error:
+            self.form.clean()
+
+        self.assertTrue(
+            'The bank details need to be reviewed before approving a project' in
+            error.exception.message
+        )
+
     def test_payout_account_reviewed_no_amount(self):
         self.form.cleaned_data = {
             'status': ProjectPhase.objects.get(slug='campaign'),

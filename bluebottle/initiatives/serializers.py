@@ -5,7 +5,8 @@ from rest_framework_json_api.relations import ResourceRelatedField
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ImageSerializer, SorlImageField
 )
-from bluebottle.initiatives.models import Initiative, Theme
+from bluebottle.initiatives.models import Initiative
+from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.categories.serializers import CategorySerializer
 from bluebottle.categories.models import Category
 from bluebottle.members.serializers import UserPreviewSerializer
@@ -18,7 +19,7 @@ from bluebottle.utils.serializers import (
 
 class ThemeSerializer(ModelSerializer):
     class Meta:
-        model = Theme
+        model = ProjectTheme
         fields = ('id', 'slug', 'name', 'description')
 
     class JSONAPIMeta:
@@ -74,7 +75,7 @@ class InitiativeSerializer(ModelSerializer):
     class Meta:
         model = Initiative
         fields = (
-            'id', 'title', 'review_status', 'categories', 'owner', 'reviewer', 'slug',
+            'id', 'title', 'pitch', 'review_status', 'categories', 'owner', 'reviewer', 'slug',
             'story', 'video_html', 'image', 'theme', 'permissions',
         )
 

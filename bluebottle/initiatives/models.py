@@ -10,31 +10,6 @@ from sorl.thumbnail import ImageField
 from bluebottle.utils.models import ReviewModel, SortableTranslatableModel
 
 
-class Theme(SortableTranslatableModel):
-    """ Themes for Initiatives"""
-    slug = models.SlugField(_('slug'), max_length=100, unique=True)
-    disabled = models.BooleanField(_('disabled'), default=False)
-
-    translations = TranslatedFields(
-        name=models.CharField(_('name'), max_length=100),
-        description=models.TextField(_('description'), blank=True)
-    )
-
-    def __unicode__(self):
-        return self.name
-
-    def save(self, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-
-        super(Theme, self).save(**kwargs)
-
-    class Meta:
-        ordering = ['translations__name']
-        verbose_name = _('Theme')
-        verbose_name_plural = _('Themes')
-
-
 class Initiative(ReviewModel):
     title = models.CharField(_('title'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100)
@@ -45,7 +20,7 @@ class Initiative(ReviewModel):
     )
     story = models.TextField(_('story'), blank=True)
 
-    theme = models.ForeignKey(Theme, null=True, blank=True, on_delete=SET_NULL)
+    theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True, on_delete=SET_NULL)
     categories = models.ManyToManyField('categories.Category', blank=True)
 
     image = ImageField(

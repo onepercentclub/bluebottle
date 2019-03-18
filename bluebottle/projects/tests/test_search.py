@@ -472,6 +472,31 @@ class ProjectSearchTest(ESTestCase, BluebottleTestCase):
         self.assertEqual(result.data['results'][0]['title'], other_project.title)
         self.assertEqual(result.data['results'][1]['title'], project.title)
 
+    def test_score_user_task_full(self):
+        user = BlueBottleUserFactory.create()
+
+        project = ProjectFactory.create(status=self.status, amount_asked=0)
+        task = TaskFactory.create(project=project, people_needed=1)
+        TaskMemberFactory(
+            task=task,
+            created=now() - timedelta(days=10)
+        )
+
+        other_project = ProjectFactory.create(status=self.status, amount_asked=0)
+        other_task = TaskFactory.create(project=other_project, people_needed=2)
+        TaskMemberFactory(
+            task=other_task,
+            created=now() - timedelta(days=10)
+        )
+
+        ProjectFactory.create(status=self.status)
+
+        result = self.search({}, user=user)
+
+        self.assertEqual(result.data['count'], 3)
+        self.assertEqual(result.data['results'][0]['title'], other_project.title)
+        self.assertEqual(result.data['results'][1]['title'], project.title)
+
     def test_combined_scores(self):
         task_project = ProjectFactory.create(status=self.status)
         task = TaskFactory.create(project=task_project)

@@ -57,7 +57,6 @@ class ManagementCommandTests(TestCase):
 
 
 class ManagementCommandNewTenantTests(TestCase):
-
     def test_create_new_tenant(self):
         connection.set_schema_to_public()
         cmd = NewTenantCommand()

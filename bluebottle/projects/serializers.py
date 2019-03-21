@@ -11,7 +11,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
-from bluebottle.geo.serializers import CountrySerializer
+from bluebottle.geo.serializers import CountrySerializer, PlaceSerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
 from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.payouts.serializers import PayoutAccountSerializer
@@ -282,6 +282,7 @@ class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
 class ManageTaskSerializer(serializers.ModelSerializer):
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
     time_needed = serializers.DecimalField(min_value=0.0, max_digits=5, decimal_places=2)
+    place = PlaceSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Task
@@ -293,6 +294,7 @@ class ManageTaskSerializer(serializers.ModelSerializer):
                   'skill',
                   'time_needed',
                   'title',
+                  'place',
                   'type',)
 
 
@@ -635,6 +637,7 @@ class ProjectPlatformSettingsSerializer(serializers.ModelSerializer):
             'create_flow',
             'contact_method',
             'contact_types',
+            'match_options',
             'share_options',
             'facebook_at_work_url',
             'filters',

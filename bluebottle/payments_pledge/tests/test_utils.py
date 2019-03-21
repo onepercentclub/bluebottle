@@ -11,7 +11,6 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
         'id': 'docdata-creditcard',
         'profile': 'creditcard',
         'name': 'CreditCard',
-        'supports_recurring': False,
     },
     {
         'provider': 'pledge',

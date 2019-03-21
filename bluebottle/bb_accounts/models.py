@@ -21,11 +21,9 @@ from bluebottle.bb_accounts.utils import valid_email
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.clients import properties
 from bluebottle.donations.models import Donation
-from bluebottle.geo.models import Country
 from bluebottle.members.tokens import login_token_generator
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.utils.fields import ImageField
-from bluebottle.utils.models import Address
 from bluebottle.utils.utils import StatusDefinition
 
 
@@ -255,7 +253,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         self.first_name = 'Deactivated'
         self.last_name = 'Member'
         self.user_name = ''
-        self.place = ''
         self.picture = ''
         self.avatar = ''
         self.about_me = ''
@@ -267,7 +264,6 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
         self.twitter = ''
         self.skypename = ''
         self.partner_organization = None
-        self.address.delete()
 
         self.save()
 
@@ -361,45 +357,11 @@ class BlueBottleBaseUser(AbstractBaseUser, PermissionsMixin):
 
         super(BlueBottleBaseUser, self).save(force_insert, force_update, using,
                                              update_fields)
-        try:
-            self.address
-        except UserAddress.DoesNotExist:
-            self.address = UserAddress.objects.create(user=self)
-            self.address.save()
-
-        if self.location:
-            self.address.country = self.location.country
-            self.address.save()
-
-
-class UserAddress(Address):
-    class AddressType(DjangoChoices):
-        primary = ChoiceItem('primary', label=_("Primary"))
-        secondary = ChoiceItem('secondary', label=_("Secondary"))
-
-    address_type = models.CharField(_("address type"), max_length=10,
-                                    blank=True, choices=AddressType.choices,
-                                    default=AddressType.primary)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL,
-                                verbose_name=_("user"), related_name="address")
-
-    def save(self, *args, **kwargs):
-        if not self.country:
-            code = getattr(properties, 'DEFAULT_COUNTRY_CODE', None)
-            if Country.objects.filter(alpha2_code=code).count():
-                self.country = Country.objects.get(alpha2_code=code)
-        super(UserAddress, self).save(*args, **kwargs)
-
-    class Meta:
-        db_table = 'members_useraddress'
-        verbose_name = _("user address")
-        verbose_name_plural = _("user addresses")
 
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .utils import send_welcome_mail
-from django.conf import settings
 
 
 @receiver(post_save)

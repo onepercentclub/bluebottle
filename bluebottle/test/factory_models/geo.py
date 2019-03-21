@@ -1,7 +1,11 @@
 import factory
-from bluebottle.geo.models import (Country, SubRegion, Region,
-                                   Location, LocationGroup)
+
+from django.contrib.contenttypes.models import ContentType
 from geoposition import Geoposition
+
+from bluebottle.geo.models import (
+    Country, SubRegion, Region, Location, LocationGroup, Place
+)
 
 
 class RegionFactory(factory.DjangoModelFactory):
@@ -42,3 +46,17 @@ class LocationFactory(factory.DjangoModelFactory):
     position = Geoposition(52.5, 13.4)
     country = factory.SubFactory(CountryFactory)
     group = factory.SubFactory(LocationGroupFactory)
+
+
+class PlaceFactory(factory.DjangoModelFactory):
+    class Meta(object):
+        model = Place
+        exclude = ['content_object']
+
+    position = Geoposition(52.5, 13.4)
+    country = factory.SubFactory(CountryFactory)
+
+    object_id = factory.SelfAttribute('content_object.id')
+    content_type = factory.LazyAttribute(
+        lambda o: ContentType.objects.get_for_model(o.content_object)
+    )

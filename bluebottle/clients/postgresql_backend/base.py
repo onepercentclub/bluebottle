@@ -12,7 +12,3 @@ class DatabaseWrapper(base.DatabaseWrapper):
         super(DatabaseWrapper, self).set_tenant(tenant, *args, **kwargs)
 
         properties.set_tenant(tenant)
-
-
-DatabaseError = base.DatabaseError
-IntegrityError = base.IntegrityError

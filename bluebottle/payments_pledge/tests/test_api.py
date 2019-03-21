@@ -14,7 +14,6 @@ from bluebottle.test.utils import BluebottleTestCase, SessionTestMixin
         'id': 'docdata-creditcard',
         'profile': 'creditcard',
         'name': 'CreditCard',
-        'supports_recurring': False,
     },
     {
         'provider': 'pledge',

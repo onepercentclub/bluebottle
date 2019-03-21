@@ -56,8 +56,6 @@ urlpatterns = [
         include('bluebottle.payments.urls.order_payments_api')),
     url(r'^api/payments/',
         include('bluebottle.payments.urls.api')),
-    url(r'^api/monthly_donations/',
-        include('bluebottle.recurring_donations.urls.api')),
     url(r'^api/rewards/',
         include('bluebottle.rewards.urls.api')),
 
@@ -155,7 +153,7 @@ urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += [
 
-    url('', include('social.apps.django_app.urls',
+    url('', include('social_django.urls',
                     namespace='social')),
     url(r'^api/social-login/(?P<backend>[^/]+)/$',
         GetAuthToken.as_view()),

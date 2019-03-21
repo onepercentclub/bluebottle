@@ -46,7 +46,7 @@ from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin, \
     TranslatedUnionFieldListFilter, log_action
-from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from bluebottle.votes.models import Vote
 from .models import (ProjectBudgetLine, Project,
                      ProjectPhaseLog)
@@ -199,7 +199,6 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
         model = Project
         fields = '__all__'
         widgets = {
-            'currencies': CheckboxSelectMultipleWidget,
             'story': SummernoteWidget()
         }
 
@@ -562,8 +561,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         fields = [
             'created', 'updated',
             'vote_count', 'amount_donated_i18n', 'amount_needed_i18n',
-            'popularity', 'payout_status',
-            'geocoding', 'donations_link', 'payout_account_status',
+            'payout_status', 'geocoding', 'donations_link',
+            'payout_account_status',
         ]
         if obj and obj.payout_status and obj.payout_status != 'needs_approval':
             fields += ('status',)
@@ -666,7 +665,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
 
         amount = (_('Amount'), {'fields': [
             'amount_asked', 'amount_extra', 'amount_donated_i18n', 'amount_needed_i18n',
-            'currencies', 'donations_link', 'popularity', 'vote_count', 'payout_account',
+            'currencies', 'donations_link', 'vote_count', 'payout_account',
             'payout_account_status',
         ]})
 
@@ -781,13 +780,6 @@ class ProjectCreateTemplateInline(admin.StackedInline, SummernoteInlineModelAdmi
 
 
 class ProjectPlatformSettingsAdminForm(forms.ModelForm):
-    class Meta:
-        widgets = {
-            'create_types': CheckboxSelectMultipleWidget,
-            'contact_types': CheckboxSelectMultipleWidget,
-            'share_options': CheckboxSelectMultipleWidget,
-        }
-
     extra = 0
 
 
@@ -804,6 +796,12 @@ class ProjectPlatformSettingsAdmin(BasePlatformSettingsAdmin, NonSortableParentA
         CustomProjectFieldSettingsInline,
         ProjectCreateTemplateInline
     ]
+
+    fields = (
+        'create_types', 'contact_types', 'share_options',
+        'match_options', 'facebook_at_work_url', 'allow_anonymous_rewards',
+        'create_flow', 'contact_method',
+    )
 
 
 admin.site.register(ProjectPlatformSettings, ProjectPlatformSettingsAdmin)

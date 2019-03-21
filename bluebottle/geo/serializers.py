@@ -1,8 +1,7 @@
 from rest_framework import serializers
-from bluebottle.geo.models import Location
-from bluebottle.bluebottle_drf2.serializers import ImageSerializer
 
-from .models import Country
+from bluebottle.bluebottle_drf2.serializers import ImageSerializer
+from bluebottle.geo.models import Country, Location, Place
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -22,3 +21,12 @@ class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = ('id', 'name', 'description', 'image', 'latitude', 'longitude')
+
+
+class PlaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Place
+        fields = (
+            'id', 'street', 'street_number', 'locality', 'province', 'country',
+            'position', 'formatted_address',
+        )

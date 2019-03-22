@@ -53,5 +53,4 @@ class StripePayoutAccountTestCase(BluebottleTestCase):
         self.assertEquals(self.payout_account.reviewed, False)
         self.payout_account.check_status()
         self.payout_account.refresh_from_db()
-        import ipdb; ipdb.set_trace()
         self.assertEquals(self.payout_account.reviewed, False)

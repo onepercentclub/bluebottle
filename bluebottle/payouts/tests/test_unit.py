@@ -44,3 +44,14 @@ class StripePayoutAccountTestCase(BluebottleTestCase):
         self.payout_account.check_status()
         self.payout_account.refresh_from_db()
         self.assertEquals(self.payout_account.reviewed, False)
+
+    @patch('bluebottle.payouts.models.stripe.Account.retrieve')
+    def test_check_status_verified_missing_fields(self, stripe_retrieve):
+        stripe_retrieve.return_value = json2obj(
+            open(os.path.dirname(__file__) + '/data/stripe_account_verified_missing.json').read()
+        )
+        self.assertEquals(self.payout_account.reviewed, False)
+        self.payout_account.check_status()
+        self.payout_account.refresh_from_db()
+        import ipdb; ipdb.set_trace()
+        self.assertEquals(self.payout_account.reviewed, False)

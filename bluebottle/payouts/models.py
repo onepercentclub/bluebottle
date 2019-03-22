@@ -106,8 +106,11 @@ class StripePayoutAccount(PayoutAccount):
         # Bust cache
         if self.account:
             del self.account
-        if self.account_details and \
-                self.account_details.verification.status == 'verified':
+        if (
+            self.account_details and
+            self.account_details.verification.status == 'verified' and
+            not self.fields_needed
+        ):
             self.reviewed = True
         else:
             self.reviewed = False

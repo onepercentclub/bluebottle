@@ -103,8 +103,11 @@ class StripePayoutAccount(PayoutAccount):
     failed_other, verification failed for another reason
     """
     def check_status(self):
-        if self.account_details and \
-                self.account_details.verification.status == 'verified':
+        if (
+            self.account_details and
+            self.account_details.verification.status == 'verified' and
+            not self.fields_needed
+        ):
             self.reviewed = True
         else:
             self.reviewed = False

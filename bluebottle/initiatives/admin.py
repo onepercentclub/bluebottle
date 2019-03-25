@@ -15,13 +15,15 @@ class InitiativeAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', 'reviewer',)
     form = FSMModelForm
 
+    list_display = ['title']
+    readonly_fields = ['review_status']
+
     def get_fieldsets(self, request, obj=None):
         return (
             (_('Basic'), {'fields': ('title', 'slug', 'owner', 'image', 'video_url')}),
+            (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories')}),
             (_('Review'), {'fields': ('reviewer', 'review_status', 'review_status_transition')}),
         )
-
-    readonly_fields = ['review_status']
 
 
 admin.site.register(Initiative, InitiativeAdmin)

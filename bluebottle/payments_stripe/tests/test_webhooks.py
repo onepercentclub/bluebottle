@@ -107,6 +107,40 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
                 charge.assert_called_once()
                 self.assertEqual(response.status_code, 200)
 
+    def test_source_dispute(self):
+        self.payment.charge_token = 'some charge token'
+        self.payment.status = 'settled'
+        self.payment.save()
+
+        charge = stripe.Charge(self.payment.charge_token)
+        dispute = stripe.Dispute('some dispute token')
+        dispute.update({'status': 'lost'})
+        charge.update({
+            'status': 'succeeded',
+            'refunded': False,
+            'dispute': dispute.id
+        })
+
+        with patch('stripe.Charge.retrieve', return_value=charge):
+            with patch('stripe.Dispute.retrieve', return_value=dispute):
+                with patch(
+                    'stripe.Webhook.construct_event',
+                    return_value=self.MockEvent(
+                        'charge.dispute.closed',
+                        {'id': self.payment.source_token, 'status': 'lost', 'charge': charge.id}
+                    )
+                ):
+                    with patch(
+                        'bluebottle.payments_stripe.adapters.StripePaymentAdapter.charge'
+                    ) as charge:
+                        response = self.client.post(
+                            reverse('stripe-webhook'),
+                            HTTP_STRIPE_SIGNATURE='some signature'
+                        )
+                        self.payment.refresh_from_db()
+                        self.assertEqual(self.payment.status, 'charged_back')
+                        self.assertEqual(response.status_code, 200)
+
     def test_payment_does_not_exist(self):
         """
         Test Flutterwave payment that turns to success without otp (one time pin)

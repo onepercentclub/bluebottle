@@ -30,7 +30,11 @@ class WebHookView(View):
 
                 service = PaymentService(payment.order_payment)
                 service.adapter.charge()
-
+            elif event.type == 'charge.dispute.closed' and event.data.object.status == 'lost':
+                payment = StripePayment.objects.get(charge_token=event.data.object.charge)
+                service = PaymentService(payment.order_payment)
+                charge = stripe.Charge.retrieve(event.data.object.charge)
+                service.adapter.update_from_charge(charge)
             elif event.type in (
                 'charge.succeeded', 'charge.pending', 'charge.failed', 'charge.refunded',
             ):

@@ -84,7 +84,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
         self.payment.data = json.loads(unicode(charge))
         self.payment.status = self._get_mapped_status(charge.status)
 
-        if 'dispute' in charge:
+        if 'dispute' in charge and charge.dispute:
             dispute = stripe.Dispute.retrieve(
                 charge.dispute,
                 api_key=self.credentials['secret_key']

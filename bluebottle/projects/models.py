@@ -144,6 +144,7 @@ class Project(BaseProject, PreviousStatusMixin):
         _("future"), blank=True, null=True,
         help_text=_("How will this project be self-sufficient and "
                     "sustainable in the long term?"))
+    # END: Remove these fields?
 
     date_submitted = models.DateTimeField(_('Campaign Submitted'), null=True,
                                           blank=True)

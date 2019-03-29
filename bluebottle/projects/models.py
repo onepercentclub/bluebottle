@@ -7,7 +7,6 @@ from adminsortable.models import SortableMixin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.db.models import Q
 from django.db.models.aggregates import Count, Sum
 from django.db.models.signals import post_init, post_save, pre_save
 from django.dispatch import receiver
@@ -22,7 +21,7 @@ from django_summernote.models import AbstractAttachment
 
 from moneyed.classes import Money
 from polymorphic.models import PolymorphicModel
-from select_multiple_field.models import SelectMultipleField
+from multiselectfield import MultiSelectField
 
 from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.bb_metrics.utils import bb_track
@@ -60,6 +59,11 @@ class ProjectLocation(models.Model):
     longitude = models.DecimalField(
         _('longitude'), max_digits=21, decimal_places=18, null=True, blank=True
     )
+
+    @property
+    def position(self):
+        if self.latitude and self.longitude:
+            return (self.longitude, self.latitude)
 
     class Meta:
         verbose_name = _('Map')
@@ -109,7 +113,6 @@ class Project(BaseProject, PreviousStatusMixin):
                     "explains your project? Cool! We can't wait to see it! "
                     "You can paste the link to YouTube or Vimeo video here"))
 
-    popularity = models.FloatField(null=False, default=0)
     is_campaign = models.BooleanField(verbose_name='On homepage', default=False, help_text=_(
         "Project is part of a campaign and gets special promotion."))
 
@@ -159,8 +162,10 @@ class Project(BaseProject, PreviousStatusMixin):
 
     categories = models.ManyToManyField('categories.Category', blank=True)
 
-    currencies = SelectMultipleField(max_length=100, default=[],
-                                     choices=lazy(get_currency_choices, tuple)())
+    currencies = MultiSelectField(
+        max_length=100, default=[],
+        choices=lazy(get_currency_choices, tuple)()
+    )
 
     celebrate_results = models.BooleanField(
         _('Celebrate Results'),
@@ -188,60 +193,6 @@ class Project(BaseProject, PreviousStatusMixin):
         if self.title:
             return u'{}'.format(self.title)
         return self.slug
-
-    @classmethod
-    def update_popularity(self):
-        """
-        Update popularity score for all projects
-
-        Popularity is calculated by the number of new donations, task members and votes
-        in the last 30 days.
-
-        Donations and task members have a weight 5 times that fo a vote.
-        """
-        from bluebottle.donations.models import Donation
-        from bluebottle.tasks.models import TaskMember
-        from bluebottle.votes.models import Vote
-
-        weight = 5
-
-        last_month = timezone.now() - timezone.timedelta(days=30)
-        donations = Donation.objects.filter(
-            order__status__in=[
-                StatusDefinition.PLEDGED,
-                StatusDefinition.PENDING,
-                StatusDefinition.SUCCESS
-            ],
-            created__gte=last_month
-        ).exclude(order__order_type='recurring')
-
-        task_members = TaskMember.objects.filter(
-            created__gte=last_month
-        )
-
-        votes = Vote.objects.filter(
-            created__gte=last_month
-        )
-
-        # Loop over all projects that have popularity set, where a donation was recently done,
-        # where a taskmember was created or that recieved a vote
-        # These queries CAN be combined into one query, but that is very inefficient.
-        queries = [
-            Q(popularity__gt=0),
-            Q(donation__created__gte=last_month,
-              donation__order__status__in=[StatusDefinition.SUCCESS, StatusDefinition.PENDING]),
-            Q(task__members__created__gte=last_month),
-            Q(vote__created__gte=last_month)
-        ]
-
-        for query in queries:
-            for project in self.objects.filter(query).distinct():
-                popularity = weight * len(donations.filter(project=project)) + \
-                    weight * len(task_members.filter(task__project=project)) + \
-                    len(votes.filter(project=project))
-                # Save the new value to the db, but skip .save
-                # this way we will not trigger signals and hit the save method
-                self.objects.filter(pk=project.pk).update(popularity=popularity)
 
     @classmethod
     def update_status_stats(cls, tenant):
@@ -843,6 +794,12 @@ class ProjectPlatformSettings(BasePlatformSettings):
         ('phone', _('Phone')),
     )
 
+    PROJECT_MATCH_OPTIONS = (
+        ('theme', _('Theme')),
+        ('skill', _('Skill')),
+        ('location', _('Location')),
+    )
+
     PROJECT_SHARE_OPTIONS = (
         ('twitter', _('Twitter')),
         ('facebook', _('Facebook')),
@@ -852,10 +809,10 @@ class ProjectPlatformSettings(BasePlatformSettings):
         ('email', _('Email')),
     )
 
-    create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
-    contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
-    share_options = SelectMultipleField(
-        max_length=100, choices=PROJECT_SHARE_OPTIONS, blank=True, include_blank=False
+    create_types = MultiSelectField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
+    contact_types = MultiSelectField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
+    share_options = MultiSelectField(
+        max_length=100, choices=PROJECT_SHARE_OPTIONS, blank=True
     )
     facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
     allow_anonymous_rewards = models.BooleanField(
@@ -863,6 +820,9 @@ class ProjectPlatformSettings(BasePlatformSettings):
     )
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)
+    match_options = MultiSelectField(
+        max_length=100, choices=PROJECT_MATCH_OPTIONS, blank=True
+    )
 
     class Meta:
         verbose_name_plural = _('project platform settings')

@@ -34,7 +34,6 @@ lipisha_settings = {
         'profile': 'mpesa',
         'name': 'M-PESA',
         'currencies': {'KES': {}},
-        'supports_recurring': False,
     }]
 }
 

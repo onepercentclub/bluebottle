@@ -494,8 +494,10 @@ class TestProjectRefundAdmin(BluebottleAdminTestCase):
     @override_settings(ENABLE_REFUNDS=False)
     def test_refunds_not_confirmed(self):
         with mock.patch.object(refund_project, 'delay') as refund_mock:
-            del self.request.POST['confirm']
-            response = self.project_admin.refund(self.request, self.project.pk)
+            request = self.request_factory.post('/')
+            request.user = MockUser(['payments.refund_orderpayment'])
+
+            response = self.project_admin.refund(request, self.project.pk)
 
             self.assertEqual(response.status_code, 200)
             refund_mock.assert_not_called()

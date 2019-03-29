@@ -7,11 +7,13 @@ from urllib import urlencode
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.signing import TimestampSigner
-from django.test import RequestFactory
+from django.test import RequestFactory, tag
 from django.contrib.auth.models import Group, Permission
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.test.utils import override_settings
+
+from django_elasticsearch_dsl.test import ESTestCase
 
 import httmock
 
@@ -228,7 +230,12 @@ class ProjectPermissionsTestCase(BluebottleTestCase):
         self.assertEqual(response.status_code, 401)
 
 
-class OwnProjectPermissionsTestCase(BluebottleTestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+@tag('elasticsearch')
+class OwnProjectPermissionsTestCase(ESTestCase, BluebottleTestCase):
     """
     Tests for the Project API permissions.
     """
@@ -414,7 +421,12 @@ class ProjectEndpointTestCase(BluebottleTestCase):
         self.manage_projects_url = reverse('project_manage_list')
 
 
-class ProjectApiIntegrationTest(ProjectEndpointTestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+@tag('elasticsearch')
+class ProjectApiIntegrationTest(ESTestCase, ProjectEndpointTestCase):
     def test_project_list_view(self):
         """
         Tests for Project List view. These basic tests are here because Project
@@ -438,8 +450,7 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         """
 
         # Tests that the phase filter works.
-        response = self.client.get(
-            '%s?status=%s' % (self.projects_preview_url, self.plan_phase.slug))
+        response = self.client.get('%s?status[]=%s' % (self.projects_preview_url, self.plan_phase.slug))
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data['count'], 13)
         self.assertEquals(len(response.data['results']), 8)
@@ -450,22 +461,25 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.data['count'], 13)
         self.assertEquals(len(response.data['results']), 8)
 
+        # Tests that category filter works
+        CategoryFactory.create(slug='hip')
+        response = self.client.get(self.projects_preview_url + '?category=hip')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
         # Test that ordering works
         response = self.client.get(self.projects_preview_url + '?ordering=newest')
-        self.assertEquals(response.status_code, 200)
-        response = self.client.get(self.projects_preview_url + '?ordering=title')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         response = self.client.get(self.projects_preview_url + '?ordering=deadline')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         response = self.client.get(self.projects_preview_url + '?ordering=amount_needed')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         response = self.client.get(self.projects_preview_url + '?ordering=popularity')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         # Test that combination of arguments works
         response = self.client.get(
             self.projects_url + '?ordering=deadline&phase=campaign&country=101')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_project_detail_no_expertise(self):
         for project in self.projects:
@@ -636,7 +650,12 @@ class ProjectApiIntegrationTest(ProjectEndpointTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
 
-class ProjectDateSearchTestCase(BluebottleTestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+@tag('elasticsearch')
+class ProjectDateSearchTestCase(ESTestCase, BluebottleTestCase):
     """
     Integration tests for the Project API.
     """
@@ -670,14 +689,21 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
                 deadline=datetime(2017, 1, 10, tzinfo=timezone.get_current_timezone())
             )
 
+        for project in self.projects[7:]:
+            TaskFactory.create(
+                project=project,
+                type='event',
+                deadline=datetime(2017, 1, 30, tzinfo=timezone.get_current_timezone())
+            )
+
     def test_project_list_filter_date(self):
         response = self.client.get(
-            self.projects_preview_url + '?start={}'.format('2017-01-10')
+            self.projects_preview_url + '?start={}'.format('2017-01-10 00:00:01')
         )
         self.assertEqual(response.status_code, 200)
 
         data = json.loads(response.content)
-        self.assertEqual(data['count'], 6)
+        self.assertEqual(data['count'], 9)
 
     def test_project_list_filter_date_end(self):
         response = self.client.get(
@@ -690,7 +716,7 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
 
     def test_project_list_filter_date_ongoing(self):
         response = self.client.get(
-            self.projects_preview_url + '?start={}'.format('2017-01-20')
+            self.projects_preview_url + '?start={}&end={}'.format('2017-01-18', '2017-01-19')
         )
         self.assertEqual(response.status_code, 200)
 
@@ -721,7 +747,7 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
     def test_project_list_filter_date_passed(self):
         self.projects[-1].task_set.all().update(location=None)
         response = self.client.get(
-            self.projects_preview_url + '?start={}'.format('2017-01-21')
+            self.projects_preview_url + '?start={}'.format('2017-01-31')
         )
         self.assertEqual(response.status_code, 200)
 
@@ -753,7 +779,7 @@ class ProjectDateSearchTestCase(BluebottleTestCase):
     def test_project_list_search_location(self):
         self.projects[1].location = LocationFactory(name='Lyutidol')
         self.projects[1].save()
-        self.projects[2].location = LocationFactory(name='Honolyulyu')
+        self.projects[2].location = LocationFactory(name='Lyukobanya')
         self.projects[2].save()
 
         response = self.client.get(
@@ -1141,11 +1167,11 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         @httmock.urlmatch(path=r'/image.jpg')
         def image_mock(url, request):
             with open(self.some_photo, mode='rb') as image:
-                    return httmock.response(
-                        200,
-                        content=image.read(),
-                        headers={'content-type': 'image/jpeg'}
-                    )
+                return httmock.response(
+                    200,
+                    content=image.read(),
+                    headers={'content-type': 'image/jpeg'}
+                )
 
         with httmock.HTTMock(image_mock):
             response = self.client.post(self.manage_projects_url,
@@ -1769,7 +1795,8 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         project_wallpost_detail_url = "{0}{1}".format(
             self.wallposts_url, mediawallpost['id'])
         response = self.client.delete(
-            project_wallpost_detail_url, token=self.owner_token)
+            project_wallpost_detail_url, token=self.owner_token
+        )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         response = self.client.get(project_wallpost_detail_url,
@@ -2301,7 +2328,6 @@ class ProjectVotesTest(BluebottleTestCase):
     'profile': 'ideal',
     'name': 'iDEAL',
     'restricted_countries': ('NL', ),
-    'supports_recurring': False,
     'currencies': {
         'EUR': {'min_amount': 5, 'max_amount': 100},
         'USD': {'min_amount': 5, 'max_amount': 100},
@@ -2390,6 +2416,7 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
             create_flow='choice',
             create_types=["funding", "sourcing"],
             share_options=["twitter", "facebook"],
+            match_options=["skill", "theme"],
             allow_anonymous_rewards=False
         )
 
@@ -2413,7 +2440,11 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['projects']['contact_types'], ['organization'])
         self.assertEqual(response.data['platform']['projects']['create_flow'], 'choice')
         self.assertEqual(response.data['platform']['projects']['create_types'], ["funding", "sourcing"])
-        self.assertEqual(response.data['platform']['projects']['share_options'], ["facebook", "twitter"])
+        self.assertEqual(
+            set(response.data['platform']['projects']['share_options']),
+            set(["facebook", "twitter"])
+        )
+        self.assertEqual(response.data['platform']['projects']['match_options'], ['skill', 'theme'])
 
         self.assertEqual(response.data['platform']['projects']['filters'][0]['name'], 'location')
         self.assertEqual(response.data['platform']['projects']['filters'][0]['values'], None)

@@ -1,5 +1,3 @@
-from bluebottle.test.factory_models.geo import CountryFactory
-
 from bunch import bunchify
 
 from django.test.utils import override_settings
@@ -44,21 +42,6 @@ class PaymentsDocdataAdapterTestCase(BluebottleTestCase, FsmTestMixin):
         self.assertEqual(payment.country, 'BG')
 
     @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
-    def test_payment_country_with_profile(self, mock_client):
-        # When a country is set in profile, that should be used.
-        instance = mock_client.return_value
-        instance.create.return_value = {'order_key': 123, 'order_id': 123}
-        user = BlueBottleUserFactory()
-        user.address.country = CountryFactory(name='Netherlands', alpha2_code='NL')
-        order_payment = OrderPaymentFactory(user=user,
-                                            payment_method='docdataCreditcard',
-                                            integration_data={'default_pm': 'mastercard'})
-        order_payment.order.user = user
-        self.adapter = DocdataPaymentAdapter(order_payment=order_payment)
-        payment = self.adapter.payment
-        self.assertEqual(payment.country, 'NL')
-
-    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
     def test_payment_country_with_profile_without_country(self, mock_client):
         # If no country specified in profile the default from settings should be used
         instance = mock_client.return_value
@@ -71,21 +54,6 @@ class PaymentsDocdataAdapterTestCase(BluebottleTestCase, FsmTestMixin):
         self.adapter = DocdataPaymentAdapter(order_payment=order_payment)
         payment = self.adapter.payment
         self.assertEqual(payment.country, 'BG')
-
-    @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
-    def test_ideal_payment_country_with_profile(self, mock_client):
-        # Even a yankees should get NL for country when selecting iDEAL.
-        instance = mock_client.return_value
-        instance.create.return_value = {'order_key': 123, 'order_id': 123}
-        user = BlueBottleUserFactory()
-        user.address.country = CountryFactory(name='Merica', alpha2_code='US')
-        order_payment = OrderPaymentFactory(user=user,
-                                            payment_method='docdataIdeal',
-                                            integration_data={'default_pm': 'ideal'})
-        order_payment.order.user = user
-        self.adapter = DocdataPaymentAdapter(order_payment=order_payment)
-        payment = self.adapter.payment
-        self.assertEqual(payment.country, 'NL')
 
     @patch('bluebottle.payments_docdata.adapters.gateway.DocdataClient')
     def test_payment_country_without_user(self, mock_client):

@@ -30,7 +30,6 @@ from bluebottle.utils.utils import StatusDefinition
             'profile': 'ideal',
             'name': 'iDEAL',
             'restricted_countries': ('NL', ),
-            'supports_recurring': False,
             'currencies': {
                 'EUR': {'min_amount': 5, 'max_amount': 100},
                 'USD': {'min_amount': 5, 'max_amount': 100},
@@ -365,8 +364,9 @@ class TestCreateDonation(DonationApiTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['total']['amount'], 20.00)
         self.assertEqual(response.data['total']['currency'], 'EUR')
-        self.assertEqual(response.data['donations'][1]['name'], 'Tante Sjaan')
-        self.assertEqual(response.data['donations'][0]['name'], 'Ome Piet')
+        names = [result['name'] for result in response.data['donations']]
+        self.assertTrue('Tante Sjaan' in names)
+        self.assertTrue('Ome Piet' in names)
 
     def test_create_fundraiser_donation(self, check_status_psp):
         """

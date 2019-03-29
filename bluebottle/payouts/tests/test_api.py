@@ -69,6 +69,36 @@ class StripePayoutTestApi(BluebottleTestCase):
         self.assertEqual(response.data['payout_account']['document_type'], 'passport')
         self.assertEqual(response.data['payout_account']['type'], "stripe")
         self.assertEqual(response.data['payout_account']['country'], "NL")
+        self.assertEqual(response.data['payout_account']['fields_needed'], [])
+
+        self.assertEqual(stripe_create.call_count, 1)
+        self.assertEqual(stripe_create.call_args[1]['country'], 'NL')
+
+    @patch('bluebottle.payouts.models.stripe.Account.retrieve')
+    @patch('bluebottle.payouts.models.stripe.Account.create')
+    def test_stripe_details_unverified(self, stripe_create, stripe_retrieve):
+        stripe_create.return_value = json2obj(
+            open(os.path.dirname(__file__) + '/data/stripe_account_unverified.json').read()
+        )
+        stripe_retrieve.return_value = json2obj(
+            open(os.path.dirname(__file__) + '/data/stripe_account_unverified.json').read()
+        )
+        project_details = {
+            'title': self.project.title,
+            'payout_account': {
+                'type': 'stripe',
+                'account_token': "ct_1234567890",
+                'document_type': "passport",
+                'country': 'NL'
+            }
+        }
+        response = self.client.put(self.project_manage_url, project_details, token=self.owner_token)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['payout_account']['account_id'], "acct_1DhHdvsdvsdBY")
+        self.assertEqual(response.data['payout_account']['document_type'], 'passport')
+        self.assertEqual(response.data['payout_account']['type'], "stripe")
+        self.assertEqual(response.data['payout_account']['country'], "NL")
+        self.assertEqual(response.data['payout_account']['fields_needed'], ['legal_entity.verification.document'])
 
         self.assertEqual(stripe_create.call_count, 1)
         self.assertEqual(stripe_create.call_args[1]['country'], 'NL')

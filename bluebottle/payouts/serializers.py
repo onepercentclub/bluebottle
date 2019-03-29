@@ -64,6 +64,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
     legal_entity = serializers.SerializerMethodField()
     bank_account = serializers.SerializerMethodField()
     verification = serializers.SerializerMethodField()
+    fields_needed = serializers.SerializerMethodField()
 
     def get_legal_entity(self, obj):
         try:
@@ -77,6 +78,12 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
             return obj.account.legal_entity.verification.to_dict()
         except AttributeError:
             return {}
+
+    def get_fields_needed(self, obj):
+        try:
+            return obj.account.verification.fields_needed
+        except (KeyError, AttributeError):
+            return []
 
     def get_bank_account(self, obj):
         try:
@@ -180,6 +187,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
             'reviewed',
             'bank_account',
             'verification',
+            'fields_needed',
             'legal_entity',
         )
 

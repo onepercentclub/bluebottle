@@ -2,7 +2,7 @@ from bunch import bunchify
 
 from django.db import connection
 from django.test.utils import override_settings
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.conf import settings
 
 from django_webtest import WebTestMixin
@@ -233,3 +233,21 @@ class FsmTestMixin(object):
                          '{0} should change to {1} not {2}'.format(
                              instance.__class__.__name__, new_status,
                              instance.status))
+
+
+class JSONAPITestClient(Client):
+    def patch(self, path, data='', content_type='application/vnd.api+json', follow=False, secure=False, **extra):
+        return super(JSONAPITestClient, self).put(path, data, content_type, follow, secure, **extra)
+
+    def post(self, path, data='', content_type='application/vnd.api+json', follow=False, secure=False, **extra):
+        return super(JSONAPITestClient, self).post(path, data, content_type, follow, secure, **extra)
+
+
+    def generic(self, method, path, data='', content_type='application/vnd.api+json', secure=False, user=None, **extra):
+        if user:
+            extra['HTTP_AUTHORIZATION'] ="JWT {0}".format(user.get_jwt_token())
+
+        return super(JSONAPITestClient, self).generic(method, path, data, content_type, secure, **extra)
+
+
+

@@ -1,3 +1,4 @@
+import os
 from django.core.urlresolvers import reverse
 from django.conf import settings
 
@@ -30,10 +31,20 @@ class FileField(ResourceRelatedField):
 class FileSerializer(ModelSerializer):
     file = serializers.FileField(write_only=True)
     created = serializers.DateTimeField(read_only=True)
+    filename = serializers.SerializerMethodField()
+    size = serializers.IntegerField(read_only=True, source='file.size')
+    owner = ResourceRelatedField(read_only=True)
+
+    included_serializers = {
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+    }
+
+    def get_filename(self, instance):
+        return  os.path.basename(instance.file.name)
 
     class Meta:
         model = File
-        fields = ('id', 'file', 'created', )
+        fields = ('id', 'file', 'created', 'filename', 'size', 'owner', )
 
-
-
+    class JSONAPIMeta:
+        included_resources = ['owner', ]

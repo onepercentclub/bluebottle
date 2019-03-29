@@ -333,8 +333,8 @@ TENANT_APPS = (
     'bluebottle.projects',
     'bluebottle.organizations',
 
-    'bluebottle.initiatives',
     'bluebottle.files',
+    'bluebottle.initiatives',
 
     'bluebottle.tasks',
     'bluebottle.homepage',

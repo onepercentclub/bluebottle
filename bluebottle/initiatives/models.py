@@ -12,41 +12,17 @@ from bluebottle.files.models import File
 from bluebottle.utils.models import ReviewModel, SortableTranslatableModel
 
 
-class Theme(SortableTranslatableModel):
-    """ Themes for Initiatives"""
-    slug = models.SlugField(_('slug'), max_length=100, unique=True)
-    disabled = models.BooleanField(_('disabled'), default=False)
-
-    translations = TranslatedFields(
-        name=models.CharField(_('name'), max_length=100),
-        description=models.TextField(_('description'), blank=True)
-    )
-
-    def __unicode__(self):
-        return self.name
-
-    def save(self, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-
-        super(Theme, self).save(**kwargs)
-
-    class Meta:
-        ordering = ['translations__name']
-        verbose_name = _('Theme')
-        verbose_name_plural = _('Themes')
-
-
 class Initiative(ReviewModel):
-    title = models.CharField(_('title'), max_length=255, unique=True, db_index=True)
-    slug = models.SlugField(_('slug'), max_length=100, unique=True)
+    title = models.CharField(_('title'), max_length=255)
+    slug = models.SlugField(_('slug'), max_length=100)
+
     pitch = models.TextField(
         _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
         blank=True
     )
     story = models.TextField(_('story'), blank=True)
 
-    theme = models.ForeignKey(Theme, null=True, blank=True, on_delete=SET_NULL)
+    theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True, on_delete=SET_NULL)
     categories = models.ManyToManyField('categories.Category', blank=True)
 
     image = models.ForeignKey(File, null=True, blank=True, on_delete=SET_NULL)
@@ -82,6 +58,7 @@ class Initiative(ReviewModel):
             ('api_read_own_initiative', 'Can view own initiative through the API'),
             ('api_add_own_initiative', 'Can add own initiative through the API'),
             ('api_change_own_initiative', 'Can change own initiative through the API'),
+            ('api_change_own_running_initiative', 'Can change own initiative through the API'),
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
 

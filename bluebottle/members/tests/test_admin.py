@@ -159,7 +159,7 @@ class MemberCustomFieldAdminTest(BluebottleAdminTestCase):
         self.assertContains(response, 'Engineering')
 
     def test_save_custom_fields(self):
-        member = BlueBottleUserFactory.create()
+        member = BlueBottleUserFactory.create(password='testing')
         staff = BlueBottleUserFactory.create(is_staff=True)
         CustomMemberFieldSettings.objects.create(name='Department')
         data = member.__dict__

@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework import parsers, renderers
 
-from social.apps.django_app.utils import psa, get_strategy, STORAGE
+from social_django.utils import psa, get_strategy, STORAGE
 from social.exceptions import AuthCanceled
 
 # from social_auth.decorators import

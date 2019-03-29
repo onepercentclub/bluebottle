@@ -12,7 +12,7 @@
 {% trans "Date" %}: {{donation.created}}
 {% trans "Method" %}: {{payment_method}}
 {% trans "Order" %}: {{donation.order.id}}
-{% trans "Recipient" %}: {{donation.project.owner.full_name}}
+{% trans "Initiator" %}: {{donation.project.owner.full_name}}
 {% if donation.project.organization %}{% trans "Organization" %}: {{donation.project.organization.name}}{% endif %}
 
 {% endblock content %}

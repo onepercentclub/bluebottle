@@ -1,4 +1,4 @@
-from bluebottle.projects.permissions import RelatedResourceOwnerPermission
+from bluebottle.projects.permissions import RelatedResourceOwnerPermission, BasePermission
 from bluebottle.tasks.models import Task
 
 
@@ -28,6 +28,21 @@ class RelatedManagementOrReadOnlyPermission(RelatedResourceOwnerPermission):
             return True
 
         return self.has_parent_permission(action, user, obj.parent)
+
+    def has_action_permission(self, action, user, model):
+        return True
+
+
+class DonationOwnerPermission(BasePermission):
+    """
+    Custom permission to only adding a photo to mediawallpost author.
+    Model instances are expected to include an `mediawallpost` attribute.
+    Also check if the user is the photo (or other object) author.
+    """
+    def has_object_action_permission(self, action, user, obj):
+        return (
+            obj.donation.user == user if obj.donation else True
+        )
 
     def has_action_permission(self, action, user, model):
         return True

@@ -130,7 +130,7 @@ class BaseTaskSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(slug_field='slug',
                                            queryset=Project.objects)
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
-    place = PlaceSerializer(required=False)
+    place = PlaceSerializer(required=False, allow_null=True)
     author = UserProfileSerializer(read_only=True)
     permissions = ResourcePermissionField('task_detail', view_args=('id',))
     related_permissions = TaskPermissionsSerializer(read_only=True)
@@ -248,7 +248,7 @@ class MyTaskPreviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'type')
+        fields = ('id', 'title', 'skill', 'project', 'time_needed', 'type', 'place',)
 
 
 class MyTaskMemberSerializer(BaseTaskMemberSerializer):
@@ -272,6 +272,7 @@ class MyTasksSerializer(BaseTaskSerializer):
             'people_needed',
             'permissions',
             'project',
+            'place',
             'related_permissions',
             'skill',
             'status',

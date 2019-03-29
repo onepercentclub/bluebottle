@@ -113,9 +113,9 @@ def create_message(template_name=None, to=None, subject=None, cc=None, bcc=None,
         c = ClientContext(kwargs)
         c['to'] = to  # Add the recipient to the context
         text_content = get_template(
-            '{0}.txt'.format(template_name)).render(c)
+            '{0}.txt'.format(template_name)).render(c.flatten())
         html_content = get_template(
-            '{0}.html'.format(template_name)).render(c)
+            '{0}.html'.format(template_name)).render(c.flatten())
 
         args = dict(subject=subject, body=text_content, to=[to.email])
         if cc:

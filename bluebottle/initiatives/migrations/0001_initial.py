@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
             options={
                 'verbose_name': 'Initiative',
                 'verbose_name_plural': 'Initiatives',
-                'permissions': (('api_read_initiative', 'Can view initiative through the API'), ('api_add_initiative', 'Can add initiative through the API'), ('api_change_initiative', 'Can change initiative through the API'), ('api_delete_initiative', 'Can delete initiative through the API'), ('api_read_own_initiative', 'Can view own initiative through the API'), ('api_add_own_initiative', 'Can add own initiative through the API'), ('api_change_own_initiative', 'Can change own initiative through the API'), ('api_delete_own_initiative', 'Can delete own initiative through the API')),
+                'permissions': (('api_read_initiative', 'Can view initiative through the API'), ('api_add_initiative', 'Can add initiative through the API'), ('api_change_initiative', 'Can change initiative through the API'), ('api_delete_initiative', 'Can delete initiative through the API'), ('api_read_own_initiative', 'Can view own initiative through the API'), ('api_add_own_initiative', 'Can add own initiative through the API'), ('api_change_own_running_initiative', 'Can change own running initiative through the API'), ('api_change_own_initiative', 'Can change own initiative through the API'), ('api_delete_own_initiative', 'Can delete own initiative through the API')),
             },
         ),
     ]

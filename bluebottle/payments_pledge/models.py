@@ -12,4 +12,5 @@ class PledgeStandardPayment(Payment):
     def get_method_name(self):
         return 'Pledge'
 
+
 import signals  # noqa

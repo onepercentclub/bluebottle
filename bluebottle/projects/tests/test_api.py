@@ -450,8 +450,7 @@ class ProjectApiIntegrationTest(ESTestCase, ProjectEndpointTestCase):
         """
 
         # Tests that the phase filter works.
-        response = self.client.get(
-            '%s?status[]=%s' % (self.projects_preview_url, self.plan_phase.slug))
+        response = self.client.get('%s?status[]=%s' % (self.projects_preview_url, self.plan_phase.slug))
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data['count'], 13)
         self.assertEquals(len(response.data['results']), 8)
@@ -462,20 +461,25 @@ class ProjectApiIntegrationTest(ESTestCase, ProjectEndpointTestCase):
         self.assertEquals(response.data['count'], 13)
         self.assertEquals(len(response.data['results']), 8)
 
+        # Tests that category filter works
+        CategoryFactory.create(slug='hip')
+        response = self.client.get(self.projects_preview_url + '?category=hip')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
         # Test that ordering works
         response = self.client.get(self.projects_preview_url + '?ordering=newest')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         response = self.client.get(self.projects_preview_url + '?ordering=deadline')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         response = self.client.get(self.projects_preview_url + '?ordering=amount_needed')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         response = self.client.get(self.projects_preview_url + '?ordering=popularity')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         # Test that combination of arguments works
         response = self.client.get(
             self.projects_url + '?ordering=deadline&phase=campaign&country=101')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_project_detail_no_expertise(self):
         for project in self.projects:
@@ -1163,11 +1167,11 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         @httmock.urlmatch(path=r'/image.jpg')
         def image_mock(url, request):
             with open(self.some_photo, mode='rb') as image:
-                    return httmock.response(
-                        200,
-                        content=image.read(),
-                        headers={'content-type': 'image/jpeg'}
-                    )
+                return httmock.response(
+                    200,
+                    content=image.read(),
+                    headers={'content-type': 'image/jpeg'}
+                )
 
         with httmock.HTTMock(image_mock):
             response = self.client.post(self.manage_projects_url,
@@ -1791,7 +1795,8 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         project_wallpost_detail_url = "{0}{1}".format(
             self.wallposts_url, mediawallpost['id'])
         response = self.client.delete(
-            project_wallpost_detail_url, token=self.owner_token)
+            project_wallpost_detail_url, token=self.owner_token
+        )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         response = self.client.get(project_wallpost_detail_url,
@@ -2435,7 +2440,10 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
         self.assertEqual(response.data['platform']['projects']['contact_types'], ['organization'])
         self.assertEqual(response.data['platform']['projects']['create_flow'], 'choice')
         self.assertEqual(response.data['platform']['projects']['create_types'], ["funding", "sourcing"])
-        self.assertEqual(response.data['platform']['projects']['share_options'], ["facebook", "twitter"])
+        self.assertEqual(
+            set(response.data['platform']['projects']['share_options']),
+            set(["facebook", "twitter"])
+        )
         self.assertEqual(response.data['platform']['projects']['match_options'], ['skill', 'theme'])
 
         self.assertEqual(response.data['platform']['projects']['filters'][0]['name'], 'location')

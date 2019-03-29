@@ -117,7 +117,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         data = json.loads(response.content)
         self.assertEqual(data['data']['attributes']['title'], 'Some title')
 
-<<<<<<< HEAD
     def test_put_image(self):
         file_path = './bluebottle/files/tests/files/test-image.png'
         with open(file_path) as test_file:
@@ -167,7 +166,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 '/media/cache/'
             )
         )
-=======
+
     def test_patch_anonymous(self):
         response = self.client.patch(
             '{}?{}'.format(self.url, 'include=owner,reviewer,theme'),
@@ -182,7 +181,6 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             user=BlueBottleUserFactory.create()
         )
         self.assertEqual(response.status_code, 403)
->>>>>>> feature/initiatives
 
     def test_get(self):
         response = self.client.get('{}?{}'.format(self.url, 'include=owner,reviewer,theme'))

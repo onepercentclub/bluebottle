@@ -10,30 +10,17 @@ from bluebottle.files.models import File
 
 
 class FileField(ResourceRelatedField):
-    def __init__(self, content_view_name, sizes, *args, **kwargs):
-        self.content_view_name = content_view_name
-        self.sizes = sizes
-
-        super(FileField, self).__init__(*args, **kwargs)
-
     def get_queryset(self):
         return File.objects.all()
-
-    def get_links(self, instance, pk_field):
-        return dict(
-            (
-                size,
-                reverse(self.content_view_name, args=(instance.pk, size))
-            ) for size in self.sizes
-        )
 
 
 class FileSerializer(ModelSerializer):
     file = serializers.FileField(write_only=True)
-    created = serializers.DateTimeField(read_only=True)
     filename = serializers.SerializerMethodField()
     size = serializers.IntegerField(read_only=True, source='file.size')
     owner = ResourceRelatedField(read_only=True)
+
+    links = serializers.SerializerMethodField()
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
@@ -42,9 +29,20 @@ class FileSerializer(ModelSerializer):
     def get_filename(self, instance):
         return  os.path.basename(instance.file.name)
 
+    def get_links(self, obj):
+        if hasattr(self, 'sizes'):
+            parent_id = self.context['view'].kwargs['pk']
+            return dict(
+                (
+                    key,
+                    reverse(self.content_view_name, args=(parent_id, size))
+                ) for key, size in self.sizes.items()
+            )
+
     class Meta:
         model = File
-        fields = ('id', 'file', 'created', 'filename', 'size', 'owner', )
+        fields = ('id', 'file', 'filename', 'size', 'owner', 'links',)
+        meta_fields = ['size', 'filename']
 
     class JSONAPIMeta:
         included_resources = ['owner', ]

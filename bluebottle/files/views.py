@@ -1,5 +1,6 @@
 import mimetypes
 
+from django.conf import settings
 from django.http import HttpResponse
 
 from rest_framework.parsers import FileUploadParser
@@ -44,12 +45,15 @@ class FileContentView(RetrieveAPIView):
 
         file = getattr(instance, self.field).file
 
-        thumbnail = get_thumbnail(file, self.kwargs['size'])
+        thumbnail = get_thumbnail(file.file, self.kwargs['size'])
         content_type = mimetypes.guess_type(file.name)[0]
 
-        response = HttpResponse()
+        if settings.DEBUG:
+            response = HttpResponse(content=thumbnail.read())
+        else:
+            response = HttpResponse()
+            response['X-Accel-Redirect'] = thumbnail.url
 
-        response['X-Accel-Redirect'] = thumbnail.url
         response['Content-Type'] = content_type
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(
             file

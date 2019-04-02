@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import ResourceRelatedField
 
-from bluebottle.files.serializers import FileField
+from bluebottle.files.serializers import FileField, FileSerializer
 from bluebottle.initiatives.models import Initiative
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ImageSerializer, SorlImageField
@@ -55,6 +55,14 @@ class MemberSerializer(ModelSerializer):
         resource_name = 'user-previews'
 
 
+class InitiativeImageSerializer(FileSerializer):
+    sizes = {
+        'preview':'200x300',
+        'large': '400x500'
+    }
+    content_view_name = 'initiative-image'
+
+
 class InitiativeSerializer(ModelSerializer):
     review_status = FSMField(read_only=True)
     story = SafeField(required=False)
@@ -65,8 +73,7 @@ class InitiativeSerializer(ModelSerializer):
 
     image = FileField(
         required=False,
-        content_view_name='initiative-image',
-        sizes=['200x300', '400x500']
+        allow_null=True,
     )
 
     owner = ResourceRelatedField(read_only=True)
@@ -78,6 +85,7 @@ class InitiativeSerializer(ModelSerializer):
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
+        'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
     }
 
     class Meta:
@@ -88,5 +96,5 @@ class InitiativeSerializer(ModelSerializer):
         )
 
     class JSONAPIMeta:
-        included_resources = ['owner', 'reviewer', 'categories', 'theme',]
+        included_resources = ['owner', 'reviewer', 'categories', 'theme', 'image']
         resource_name = 'initiatives'

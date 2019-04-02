@@ -40,6 +40,7 @@ class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
         'reviewer': ['reviewer'],
         'theme': ['theme'],
         'categories': ['categories'],
+        'image': ['image'],
     }
 
     def perform_create(self, serializer):
@@ -67,6 +68,7 @@ class InitiativeDetail(AutoPrefetchMixin, RetrieveUpdateAPIView):
         'reviewer': ['reviewer'],
         'theme': ['theme'],
         'categories': ['categories'],
+        'image': ['image'],
     }
 
 

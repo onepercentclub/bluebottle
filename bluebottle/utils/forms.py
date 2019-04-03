@@ -4,18 +4,26 @@ from django.forms.models import ModelFormMetaclass
 from django_fsm import FSMField
 
 
-class FSMModelFormMetaCLass(ModelFormMetaclass):
+class ButtonSelectWidget(forms.Select):
+    template_name = 'admin/button_select.html'
+    option_template_name = 'admin/button_select_option.html'
+
+
+class FSMModelFormMetaClass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
         if 'Meta' in attrs:
             for field in attrs['Meta'].model._meta.fields:
                 if isinstance(field, FSMField):
-                    attrs['{}_transition'.format(field.name)] = forms.ChoiceField(required=False)
+                    attrs['{}_transition'.format(field.name)] = forms.ChoiceField(
+                        required=False,
+                        widget=ButtonSelectWidget()
+                    )
 
-        return super(FSMModelFormMetaCLass, cls).__new__(cls, name, bases, attrs)
+        return super(FSMModelFormMetaClass, cls).__new__(cls, name, bases, attrs)
 
 
 class FSMModelForm(forms.ModelForm):
-    __metaclass__ = FSMModelFormMetaCLass
+    __metaclass__ = FSMModelFormMetaClass
 
     def __init__(self, *args, **kwargs):
         super(FSMModelForm, self).__init__(*args, **kwargs)

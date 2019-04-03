@@ -1,0 +1,9 @@
+<ul name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
+    {% for group_name, group_choices, group_index in widget.optgroups %}
+        {% for option in group_choices %}
+            {% if option.value %}
+                {% include option.template_name with widget=option %}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+</ul>

@@ -64,6 +64,7 @@ install_requires = [
     'django-uuidfield==0.5.0',
     'django-wysiwyg==0.8.0',
     'djangorestframework-jwt==1.11.0',
+    'djangorestframework-jsonapi==2.7.0',
     'djangorestframework==3.8.2',
     'dkimpy==0.6.1',
     'elasticsearch==6.3.0',

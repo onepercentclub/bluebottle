@@ -333,6 +333,7 @@ TENANT_APPS = (
     'bluebottle.projects',
     'bluebottle.organizations',
 
+    'bluebottle.files',
     'bluebottle.initiatives',
 
     'bluebottle.tasks',
@@ -427,7 +428,6 @@ SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85
-THUMBNAIL_DUMMY = True
 THUMBNAIL_PRESERVE_FORMAT = True
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB

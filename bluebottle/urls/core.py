@@ -70,6 +70,8 @@ urlpatterns = [
         include('bluebottle.cms.urls.api')),
     url(r'^api/initiatives/',
         include('bluebottle.initiatives.urls.api')),
+    url(r'^api/files/',
+        include('bluebottle.files.urls.api')),
 
     url(r'^payments_mock/',
         include('bluebottle.payments_mock.urls.core')),

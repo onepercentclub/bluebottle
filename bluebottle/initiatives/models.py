@@ -7,6 +7,8 @@ from parler.models import TranslatedFields
 
 from sorl.thumbnail import ImageField
 
+from bluebottle.geo.models import InitiativePlace
+from bluebottle.files.models import File
 from bluebottle.utils.models import ReviewModel, SortableTranslatableModel
 
 
@@ -23,13 +25,8 @@ class Initiative(ReviewModel):
     theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True, on_delete=SET_NULL)
     categories = models.ManyToManyField('categories.Category', blank=True)
 
-    image = ImageField(
-        _('image'),
-        max_length=255,
-        blank=True,
-        upload_to='project_images/',
-        help_text=_('Main project picture')
-    )
+    image = models.ForeignKey(File, null=True, blank=True, on_delete=SET_NULL)
+
     video_url = models.URLField(
         _('video'),
         max_length=100,
@@ -42,12 +39,8 @@ class Initiative(ReviewModel):
             "You can paste the link to YouTube or Vimeo video here"
         )
     )
-    place = models.CharField(
-        help_text=_('Geographical impact location'),
-        max_length=200,
-        null=True,
-        blank=True
-    )  # TODO:  Make this a foreign key to an address
+
+    place = models.ForeignKey(InitiativePlace, null=True, blank=True, on_delete=SET_NULL)
 
     class Meta:
         verbose_name = _("Initiative")

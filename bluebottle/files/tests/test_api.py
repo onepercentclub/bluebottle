@@ -1,0 +1,61 @@
+import json
+
+from django.core.urlresolvers import reverse
+from django.test import TestCase
+
+from bluebottle.files.models import File
+from bluebottle.test.utils import JSONAPITestClient
+from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
+
+
+class FileListAPITestCase(TestCase):
+    def setUp(self):
+        self.client = JSONAPITestClient()
+        self.owner = BlueBottleUserFactory.create()
+        self.url = reverse('file-list')
+        self.file_path = './bluebottle/files/tests/files/test-image.png'
+
+        super(FileListAPITestCase, self).setUp()
+
+    def test_create_file(self):
+        with open(self.file_path) as test_file:
+            response = self.client.post(
+                self.url,
+                test_file.read(),
+                content_type="image/jpg",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="filename.jpg"',
+                user=self.owner
+            )
+
+        data = json.loads(response.content)
+
+        file = File.objects.get(pk=data['data']['id'])
+
+        self.assertEqual(data['data']['type'], 'files')
+        self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+        self.assertTrue(file.file.name.endswith(data['data']['attributes']['filename']))
+        self.assertEqual(data['data']['attributes']['size'], 1145)
+        self.assertTrue('created' in data['data']['attributes'])
+
+    def test_create_file_anonymous(self):
+        with open(self.file_path) as test_file:
+            response = self.client.post(
+                self.url,
+                test_file.read(),
+                content_type="text/html",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="filename.jpg"',
+            )
+
+        self.assertEqual(response.status_code, 401)
+
+    def test_create_file_spoofed_mime_type(self):
+        with open(self.file_path) as test_file:
+            response = self.client.post(
+                self.url,
+                test_file.read(),
+                content_type="text/html",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="filename.jpg"',
+                user=self.owner
+            )
+
+        self.assertEqual(response.status_code, 400)

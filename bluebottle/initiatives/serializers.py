@@ -30,16 +30,6 @@ class ThemeSerializer(ModelSerializer):
         resource_name = 'themes'
 
 
-class PlaceSerializer(ModelSerializer):
-    country = ResourceRelatedField(queryset=Country.objects.all())
-
-    class Meta:
-        model = InitiativePlace
-        fields = (
-            'id', 'street', 'street_number', 'locality', 'province', 'country',
-            'position', 'formatted_address',
-        )
-
 class CategorySerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
     image = ImageSerializer(required=False)
@@ -97,7 +87,7 @@ class InitiativeSerializer(ModelSerializer):
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
-        'place': 'bluebottle.initiatives.serializers.PlaceSerializer',
+        'place': 'bluebottle.geo.serializers.InitiativePlaceSerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
     }
 

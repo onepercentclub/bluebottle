@@ -41,7 +41,7 @@ class StripePayoutAccountAdmin(PayoutAccountProjectLinkMixin, PolymorphicChildMo
 
     def details(self, obj):
         return format_html("<br/>".join([
-            "<b>{}</b>: {}".format(key, value) for key, value in obj.short_details.items()
+            u"<b>{}</b>: {}".format(key, value) for key, value in obj.short_details.items()
         ]))
     details.short_description = _('Account details')
 

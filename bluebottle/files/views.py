@@ -45,7 +45,7 @@ class FileContentView(RetrieveAPIView):
 
         file = getattr(instance, self.field).file
 
-        thumbnail = get_thumbnail(file.file, self.kwargs['size'])
+        thumbnail = get_thumbnail(file, self.kwargs['size'])
         content_type = mimetypes.guess_type(file.name)[0]
 
         if settings.DEBUG:

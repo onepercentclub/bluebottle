@@ -7,6 +7,7 @@ from bluebottle.initiatives.models import Initiative
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ImageSerializer, SorlImageField
 )
+from bluebottle.geo.models import InitiativePlace, Country
 from bluebottle.initiatives.models import Initiative
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.categories.serializers import CategorySerializer
@@ -20,6 +21,7 @@ from bluebottle.utils.serializers import (
 
 
 class ThemeSerializer(ModelSerializer):
+
     class Meta:
         model = ProjectTheme
         fields = ('id', 'slug', 'name', 'description')
@@ -27,6 +29,16 @@ class ThemeSerializer(ModelSerializer):
     class JSONAPIMeta:
         resource_name = 'themes'
 
+
+class PlaceSerializer(ModelSerializer):
+    country = ResourceRelatedField(queryset=Country.objects.all())
+
+    class Meta:
+        model = InitiativePlace
+        fields = (
+            'id', 'street', 'street_number', 'locality', 'province', 'country',
+            'position', 'formatted_address',
+        )
 
 class CategorySerializer(ModelSerializer):
     slug = serializers.CharField(read_only=True)
@@ -85,6 +97,7 @@ class InitiativeSerializer(ModelSerializer):
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
+        'place': 'bluebottle.initiatives.serializers.PlaceSerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
     }
 
@@ -92,9 +105,9 @@ class InitiativeSerializer(ModelSerializer):
         model = Initiative
         fields = (
             'id', 'title', 'pitch', 'review_status', 'categories', 'owner', 'reviewer', 'slug',
-            'story', 'video_html', 'image', 'theme', 'permissions',
+            'story', 'video_html', 'image', 'theme', 'place', 'permissions',
         )
 
     class JSONAPIMeta:
-        included_resources = ['owner', 'reviewer', 'categories', 'theme', 'image']
+        included_resources = ['owner', 'reviewer', 'categories', 'theme', 'place', 'image']
         resource_name = 'initiatives'

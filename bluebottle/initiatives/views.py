@@ -39,6 +39,7 @@ class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
         'owner': ['owner'],
         'reviewer': ['reviewer'],
         'theme': ['theme'],
+        'place': ['place'],
         'categories': ['categories'],
         'image': ['image'],
     }
@@ -67,6 +68,7 @@ class InitiativeDetail(AutoPrefetchMixin, RetrieveUpdateAPIView):
         'owner': ['owner'],
         'reviewer': ['reviewer'],
         'theme': ['theme'],
+        'place': ['place'],
         'categories': ['categories'],
         'image': ['image'],
     }

@@ -119,7 +119,7 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
         with patch(
             'stripe.Charge.create',
             side_effect=stripe.error.CardError('Invalid card', 'api_error', 402)
-        ) as create:
+        ):
             adapter.charge()
             self.assertTrue(adapter.payment.pk)
             self.assertEqual(adapter.payment.status, 'failed')
@@ -129,7 +129,7 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
         with patch(
             'stripe.Charge.create',
             side_effect=stripe.error.APIConnectionError('Could not connect')
-        ) as create:
+        ):
             self.assertRaises(
                 PaymentException,
                 adapter.charge

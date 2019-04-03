@@ -189,8 +189,8 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
             with patch(
                 'stripe.Charge.create',
                 side_effect=stripe.error.CardError('The source could not be charged', 'api_error', 400)
-            ) as charge:
-                response = self.client.post(
+            ):
+                self.client.post(
                     reverse('stripe-webhook'),
                     HTTP_STRIPE_SIGNATURE='some signature'
                 )

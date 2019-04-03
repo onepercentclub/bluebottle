@@ -11,6 +11,7 @@ from bluebottle.test.factory_models.payouts import StripePayoutAccountFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
 
+from bluebottle.payments.exception import PaymentException
 from bluebottle.payments_stripe.adapters import StripePaymentAdapter
 
 
@@ -113,10 +114,34 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
                 self.assertEqual(call_args['metadata']['project_slug'], self.project.slug)
                 self.assertEqual(call_args['metadata']['project_title'], self.project.title)
 
-    def test_check_payment_status(self):
+    def test_payment_charged_card_error(self):
         adapter = StripePaymentAdapter(self.order_payment)
-        adapter.check_payment_status()
-        self.assertEqual(adapter.payment.status, 'started')
+        with patch(
+            'stripe.Charge.create',
+            side_effect=stripe.error.CardError('Invalid card', 'api_error', 402)
+        ):
+            adapter.charge()
+            self.assertTrue(adapter.payment.pk)
+            self.assertEqual(adapter.payment.status, 'failed')
+
+    def test_payment_charged_connection_error(self):
+        adapter = StripePaymentAdapter(self.order_payment)
+        with patch(
+            'stripe.Charge.create',
+            side_effect=stripe.error.APIConnectionError('Could not connect')
+        ):
+            self.assertRaises(
+                PaymentException,
+                adapter.charge
+            )
+
+    def test_check_payment_status(self):
+        source = stripe.Source('some source token')
+        adapter = StripePaymentAdapter(self.order_payment)
+
+        with patch('stripe.Source.retrieve', return_value=source):
+            adapter.check_payment_status()
+            self.assertEqual(adapter.payment.status, 'started')
 
     def test_check_payment_status_charged(self):
         charge = stripe.Charge('some charge token')
@@ -216,6 +241,18 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
                 adapter.check_payment_status()
                 self.assertTrue(adapter.payment.pk)
                 self.assertEqual(adapter.payment.status, 'charged_back')
+
+    def test_check_payment_status_no_charge(self):
+        source = stripe.Source('some source token')
+        source.update({
+            'consumed': True
+        })
+
+        adapter = StripePaymentAdapter(self.order_payment)
+        with patch('stripe.Source.retrieve', return_value=source):
+            adapter.check_payment_status()
+            self.assertTrue(adapter.payment.pk)
+            self.assertEqual(adapter.payment.status, 'failed')
 
     def test_refund(self):
         adapter = StripePaymentAdapter(self.order_payment)

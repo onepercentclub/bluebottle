@@ -4,8 +4,10 @@ import stripe
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
 
+from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.payments_stripe import StripePaymentFactory
+from bluebottle.test.factory_models.payouts import StripePayoutAccountFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 
@@ -53,6 +55,9 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
             source_token=source_token,
             order_payment=order_payment
         )
+        donation = DonationFactory.create(order=order_payment.order)
+        donation.project.payout_account = StripePayoutAccountFactory.create()
+        donation.project.save()
 
         class MockEvent(object):
             def __init__(self, type, object):
@@ -170,3 +175,24 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
                 HTTP_STRIPE_SIGNATURE='some signature'
             )
             self.assertEqual(response.status_code, 400)
+
+    def test_chargeable_error(self):
+        self.payment.charge_token = None
+        self.payment.save()
+
+        with patch(
+            'stripe.Webhook.construct_event',
+            return_value=self.MockEvent(
+                'source.chargeable', {'id': self.payment.source_token}
+            )
+        ):
+            with patch(
+                'stripe.Charge.create',
+                side_effect=stripe.error.CardError('The source could not be charged', 'api_error', 400)
+            ):
+                self.client.post(
+                    reverse('stripe-webhook'),
+                    HTTP_STRIPE_SIGNATURE='some signature'
+                )
+                self.payment.refresh_from_db()
+                self.assertEqual(self.payment.status, 'failed')

@@ -1,10 +1,8 @@
 import json
 
 from django.core.urlresolvers import reverse
-from django.test import TestCase
-
-from rest_framework import status
 from django.test import Client
+from django.test import TestCase
 
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory, ThemeFactory
@@ -18,13 +16,11 @@ class JSONAPITestClient(Client):
     def post(self, path, data='', content_type='application/vnd.api+json', follow=False, secure=False, **extra):
         return super(JSONAPITestClient, self).post(path, data, content_type, follow, secure, **extra)
 
-
     def generic(self, method, path, data='', content_type='application/vnd.api+json', secure=False, user=None, **extra):
         if user:
-            extra['HTTP_AUTHORIZATION'] ="JWT {0}".format(user.get_jwt_token())
+            extra['HTTP_AUTHORIZATION'] = "JWT {0}".format(user.get_jwt_token())
 
         return super(JSONAPITestClient, self).generic(method, path, data, content_type, secure, **extra)
-
 
 
 class InitiativeAPITestCase(TestCase):

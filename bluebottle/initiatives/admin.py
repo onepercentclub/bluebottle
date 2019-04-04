@@ -2,18 +2,11 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.initiatives.models import Initiative
-from bluebottle.utils.forms import FSMModelForm
+from bluebottle.utils.admin import ReviewAdmin
 
 
-class InitiativeAdminForm(FSMModelForm):
-    class Meta:
-        model = Initiative
-        fields = '__all__'
-
-
-class InitiativeAdmin(admin.ModelAdmin):
+class InitiativeAdmin(ReviewAdmin):
     raw_id_fields = ('owner', 'reviewer',)
-    form = FSMModelForm
 
     list_display = ['title']
     readonly_fields = ['review_status']

@@ -23,9 +23,8 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
     status_mapping = {
         'succeeded': StatusDefinition.SETTLED,
-        'pending': StatusDefinition.AUTHORIZED,  # TODO: Make sure this is correct!
+        'pending': StatusDefinition.AUTHORIZED,
         'failed': StatusDefinition.FAILED,
-
     }
 
     def __init__(self, order_payment):
@@ -71,17 +70,27 @@ class StripePaymentAdapter(BasePaymentAdapter):
                 },
                 api_key=self.credentials['secret_key']
             )
-            transfer = stripe.Transfer.retrieve(
-                charge['transfer'],
-                api_key=self.credentials['secret_key']
-            )
-            self.update_from_transfer(transfer)
+            if 'transfer' in charge:
+                transfer = stripe.Transfer.retrieve(
+                    charge['transfer'],
+                    api_key=self.credentials['secret_key']
+                )
+
+                self.update_from_transfer(transfer)
             self.payment.charge_token = charge.id
             self.update_from_charge(charge)
 
     def update_from_charge(self, charge):
         self.payment.data = json.loads(unicode(charge))
         self.payment.status = self._get_mapped_status(charge.status)
+
+        if 'dispute' in charge and charge.dispute:
+            dispute = stripe.Dispute.retrieve(
+                charge.dispute,
+                api_key=self.credentials['secret_key']
+            )
+            if dispute.status == 'lost':
+                self.payment.status = StatusDefinition.CHARGED_BACK
 
         if charge.refunded:
             self.payment.status = StatusDefinition.REFUNDED
@@ -108,11 +117,13 @@ class StripePaymentAdapter(BasePaymentAdapter):
                 api_key=self.credentials['secret_key']
             )
             self.update_from_charge(charge)
-            transfer = stripe.Transfer.retrieve(
-                charge['transfer'],
-                api_key=self.credentials['secret_key']
-            )
-            self.update_from_transfer(transfer)
+
+            if 'transfer' in charge:
+                transfer = stripe.Transfer.retrieve(
+                    charge['transfer'],
+                    api_key=self.credentials['secret_key']
+                )
+                self.update_from_transfer(transfer)
 
     def refund_payment(self):
         stripe.Refund.create(

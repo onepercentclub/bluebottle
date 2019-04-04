@@ -99,7 +99,7 @@ class CurrentUserSerializer(UserPreviewSerializer):
             'id_for_ember', 'primary_language', 'email', 'full_name', 'phone_number',
             'last_login', 'date_joined', 'task_count', 'project_count',
             'has_projects', 'donation_count', 'fundraiser_count', 'location',
-            'verified', 'permissions', 'partner_organization',
+            'verified', 'permissions', 'partner_organization', 'matching_options_set',
         )
 
 

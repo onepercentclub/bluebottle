@@ -1,0 +1,15 @@
+{% extends "admin/confirmation.html" %}
+{% load i18n l10n admin_urls %}
+
+{% block confirmation_message %}
+    <p>
+        {% blocktrans with target=target source=source %}
+            Are you sure you want to change status from <b>{{source}}</b> to <b>{{target}}</b>?<br/>
+            This will send out like a gazillion emails and stuff...
+        {% endblocktrans %}
+    </p>
+{% endblock %} 
+
+{% block confirmation_content %}
+  <h2>{{ obj.title }}</h2>
+{% endblock %}

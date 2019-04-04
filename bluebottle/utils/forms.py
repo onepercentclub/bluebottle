@@ -1,5 +1,6 @@
 from django import forms
 from django.forms.models import ModelFormMetaclass
+from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField
 
@@ -48,3 +49,7 @@ class FSMModelForm(forms.ModelForm):
     @property
     def fsm_fields(self):
         return [field.name for field in self.instance._meta.fields if isinstance(field, FSMField)]
+
+
+class TransitionConfirmationForm(forms.Form):
+    title = _('Transition')

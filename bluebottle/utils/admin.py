@@ -1,11 +1,9 @@
 import csv
-from moneyed import Money
 import urllib
 
 from adminfilters.multiselect import UnionFieldListFilter
-from django_singleton_admin.admin import SingletonAdmin
-
 from django.conf import settings
+from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.admin.views.main import ChangeList
@@ -15,17 +13,22 @@ from django.db.models.aggregates import Sum
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
+from django.http import HttpResponseRedirect
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
+from django_singleton_admin.admin import SingletonAdmin
+from moneyed import Money
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.bluebottle_dashboard.decorators import transition_confirmation_form
 from bluebottle.clients import properties
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
+from bluebottle.utils.forms import TransitionConfirmationForm
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
 from bluebottle.tasks.models import TaskMember
 from bluebottle.utils.exchange_rates import convert
-
+from bluebottle.utils.forms import FSMModelForm
 from .models import Language
 
 
@@ -281,3 +284,29 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
         action_flag=action_flag,
         change_message=change_message
     )
+
+
+class ReviewAdmin(admin.ModelAdmin):
+
+    form = FSMModelForm
+
+    @transition_confirmation_form(
+        TransitionConfirmationForm,
+        template='admin/transition_confirmation.html'
+    )
+    def transition(self, request, obj, target):
+        obj.transition_to(target)
+        object_url = '{}-{}-transition'.format(self.model._meta.app_label, self.model._meta.model_name)
+        link = reverse(object_url, args=(obj.id, ))
+        return HttpResponseRedirect(link)
+
+    def get_urls(self):
+        urls = super(ReviewAdmin, self).get_urls()
+        custom_urls = [
+            url(
+                r'^(?P<pk>.+)/transition/(?P<target>.+)$',
+                self.transition,
+                name='{}-{}-transition'.format(self.model._meta.app_label, self.model._meta.model_name),
+            ),
+        ]
+        return custom_urls + urls

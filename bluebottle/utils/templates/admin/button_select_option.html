@@ -1,2 +1,5 @@
-<input type="button" value="{{ widget.value|stringformat:'s' }}" {% include "django/forms/widgets/attrs.html" %}>
+<a href="{% url 'admin:initiatives-initiative-transition' 1 widget.value|stringformat:'s' %}"
+       class="button_select_option button" {% include "django/forms/widgets/attrs.html" %}>
+{{ widget.value|stringformat:'s' }}
+</a>
 

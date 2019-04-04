@@ -215,6 +215,14 @@ class ReviewModel(models.Model):
     def reopen(self):
         pass
 
+    def get_transition(self, target, source=None):
+        for trans in self.get_available_review_status_transitions():
+            if trans.target == target and (source and source == trans.source):
+                return getattr(self, trans.name)
+
+    def transition_to(self, target, source=None):
+        self.get_transition(target, source)()
+
     @classmethod
     def is_accepted(cls, instance):
         return instance.review_status == ReviewModel.ReviewStatus.accepted

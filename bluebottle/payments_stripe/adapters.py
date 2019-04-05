@@ -25,6 +25,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
         'succeeded': StatusDefinition.SETTLED,
         'pending': StatusDefinition.AUTHORIZED,
         'failed': StatusDefinition.FAILED,
+        'canceled': StatusDefinition.CANCELLED,
     }
 
     def __init__(self, order_payment):
@@ -111,6 +112,15 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
         self.payment.save()
 
+    def update_from_source(self, source):
+        if source.status in ('canceled', 'failed'):
+            self.payment.status = self.status_mapping[source.status]
+            self.payment.save()
+
+        if not self.payment.charge_token and source.get('consumed'):
+            self.payment.status = StatusDefinition.FAILED
+            self.payment.save()
+
     def check_payment_status(self):
         if self.payment.charge_token:
             charge = stripe.Charge.retrieve(
@@ -130,9 +140,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
                 self.payment.source_token,
                 api_key=self.credentials['secret_key']
             )
-            if source.get('consumed'):
-                self.payment.status = StatusDefinition.FAILED
-                self.payment.save()
+            self.update_from_source(source)
 
     def refund_payment(self):
         stripe.Refund.create(

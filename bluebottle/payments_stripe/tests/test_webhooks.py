@@ -112,6 +112,44 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
                 charge.assert_called_once()
                 self.assertEqual(response.status_code, 200)
 
+    def test_source_cancelled(self):
+        """
+        Test Flutterwave payment that turns to success without otp (one time pin)
+        """
+        with patch(
+            'stripe.Webhook.construct_event',
+            return_value=self.MockEvent(
+                'source.canceled', {'id': self.payment.source_token, 'status': 'canceled'}
+            )
+        ):
+            response = self.client.post(
+                reverse('stripe-webhook'),
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, 200)
+            self.payment.refresh_from_db()
+
+            self.assertEqual(self.payment.status, 'cancelled')
+
+    def test_source_failed(self):
+        """
+        Test Flutterwave payment that turns to success without otp (one time pin)
+        """
+        with patch(
+            'stripe.Webhook.construct_event',
+            return_value=self.MockEvent(
+                'source.failed', {'id': self.payment.source_token, 'status': 'failed'}
+            )
+        ):
+            response = self.client.post(
+                reverse('stripe-webhook'),
+                HTTP_STRIPE_SIGNATURE='some signature'
+            )
+            self.assertEqual(response.status_code, 200)
+            self.payment.refresh_from_db()
+
+            self.assertEqual(self.payment.status, 'failed')
+
     def test_source_dispute(self):
         self.payment.charge_token = 'some charge token'
         self.payment.status = 'settled'

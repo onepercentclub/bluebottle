@@ -7,16 +7,12 @@ from bluebottle.initiatives.models import Initiative
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ImageSerializer, SorlImageField
 )
-from bluebottle.geo.models import InitiativePlace, Country
-from bluebottle.initiatives.models import Initiative
 from bluebottle.bb_projects.models import ProjectTheme
-from bluebottle.categories.serializers import CategorySerializer
 from bluebottle.categories.models import Category
-from bluebottle.members.serializers import UserPreviewSerializer
 from bluebottle.members.models import Member
 from bluebottle.utils.fields import SafeField, FSMField
 from bluebottle.utils.serializers import (
-    ResourcePermissionField, FSMModelSerializer
+    ResourcePermissionField
 )
 
 
@@ -59,7 +55,7 @@ class MemberSerializer(ModelSerializer):
 
 class InitiativeImageSerializer(FileSerializer):
     sizes = {
-        'preview':'200x300',
+        'preview': '200x300',
         'large': '400x500'
     }
     content_view_name = 'initiative-image'
@@ -67,7 +63,7 @@ class InitiativeImageSerializer(FileSerializer):
 
 class InitiativeSerializer(ModelSerializer):
     review_status = FSMField(read_only=True)
-    story = SafeField(required=False)
+    story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True, required=False)
     slug = serializers.CharField(read_only=True)
 

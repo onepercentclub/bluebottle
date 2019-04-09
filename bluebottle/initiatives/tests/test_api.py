@@ -3,8 +3,6 @@ import json
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
-from rest_framework import status
-
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -123,7 +121,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                         'data': {
                             'type': 'files',
                             'id': file_data['data']['id']
-                          }
+                        }
                     }
                 }
             }
@@ -177,3 +175,28 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(data['data']['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
         self.assertEqual(len(data['included']), 3)
+
+
+class InitiativeListFilterAPITestCase(InitiativeAPITestCase):
+    def setUp(self):
+        super(InitiativeListFilterAPITestCase, self).setUp()
+        self.url = reverse('initiative-list')
+
+    def test_no_filter(self):
+        InitiativeFactory.create(owner=self.owner)
+        InitiativeFactory.create()
+
+        response = self.client.get(self.url)
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+    def test_filter_owner(self):
+        InitiativeFactory.create(owner=self.owner)
+        InitiativeFactory.create()
+
+        response = self.client.get(self.url + '?filter[owner.id]={}'.format(self.owner.pk))
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))

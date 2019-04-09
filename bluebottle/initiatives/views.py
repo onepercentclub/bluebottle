@@ -1,5 +1,4 @@
-from rest_framework.permissions import IsAuthenticated
-
+from rest_framework_json_api import django_filters
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
@@ -24,8 +23,12 @@ class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
     serializer_class = InitiativeSerializer
     pagination_class = InitiativePagination
 
-    permission_classes = (IsAuthenticated,)
-
+    filter_backends = (
+        django_filters.DjangoFilterBackend,
+    )
+    filter_fields = {
+        'owner__id': ('exact', 'in', ),
+    }
     authentication_classes = (
         JSONWebTokenAuthentication,
     )
@@ -50,8 +53,6 @@ class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
 class InitiativeDetail(AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
-
-    permission_classes = (IsAuthenticated,)
 
     authentication_classes = (
         JSONWebTokenAuthentication,

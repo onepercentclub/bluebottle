@@ -106,7 +106,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             response = self.client.post(
                 reverse('file-list'),
                 test_file.read(),
-                content_type="image/jpg",
+                content_type="image/png",
                 HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.jpg"',
                 HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
             )

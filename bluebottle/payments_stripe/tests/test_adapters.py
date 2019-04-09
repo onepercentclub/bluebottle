@@ -137,6 +137,9 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
 
     def test_check_payment_status(self):
         source = stripe.Source('some source token')
+        source.update({
+            'status': 'started'
+        })
         adapter = StripePaymentAdapter(self.order_payment)
 
         with patch('stripe.Source.retrieve', return_value=source):
@@ -245,7 +248,8 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
     def test_check_payment_status_no_charge(self):
         source = stripe.Source('some source token')
         source.update({
-            'consumed': True
+            'consumed': True,
+            'status': 'canceled'
         })
 
         adapter = StripePaymentAdapter(self.order_payment)

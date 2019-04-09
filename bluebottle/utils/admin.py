@@ -302,8 +302,9 @@ class ReviewAdmin(admin.ModelAdmin):
         template='admin/transition_confirmation.html'
     )
     def transition(self, request, obj, target):
-        obj.transition_to(target)
-        object_url = '{}-{}-transition'.format(self.model._meta.app_label, self.model._meta.model_name)
+        getattr(obj, target)()
+        obj.save()
+        object_url = 'admin:{}_{}_change'.format(self.model._meta.app_label, self.model._meta.model_name)
         link = reverse(object_url, args=(obj.id, ))
         return HttpResponseRedirect(link)
 
@@ -313,7 +314,7 @@ class ReviewAdmin(admin.ModelAdmin):
             url(
                 r'^(?P<pk>.+)/transition/(?P<target>.+)$',
                 self.transition,
-                name='{}-{}-transition'.format(self.model._meta.app_label, self.model._meta.model_name),
+                name='{}_{}_transition'.format(self.model._meta.app_label, self.model._meta.model_name),
             ),
         ]
         return custom_urls + urls

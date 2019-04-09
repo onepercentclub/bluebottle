@@ -1,7 +1,6 @@
 
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_json_api.parsers import JSONParser
-from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
@@ -53,7 +52,7 @@ class InitiativePlaceList(AutoPrefetchMixin, CreateAPIView):
     serializer_class = InitiativePlaceSerializer
 
     authentication_classes = (
-       JSONWebTokenAuthentication,
+        JSONWebTokenAuthentication,
     )
 
     parser_classes = (JSONParser, )

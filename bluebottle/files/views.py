@@ -6,7 +6,6 @@ from django.http import HttpResponse
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated
 
-from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.views import AutoPrefetchMixin
 
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
@@ -28,7 +27,7 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
     permission_classes = (IsAuthenticated, )
 
     authentication_classes = (
-       JSONWebTokenAuthentication,
+        JSONWebTokenAuthentication,
     )
 
     prefetch_for_includes = {

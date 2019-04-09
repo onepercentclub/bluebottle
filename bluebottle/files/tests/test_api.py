@@ -22,8 +22,8 @@ class FileListAPITestCase(TestCase):
             response = self.client.post(
                 self.url,
                 test_file.read(),
-                content_type="image/jpg",
-                HTTP_CONTENT_DISPOSITION='attachment; filename="filename.jpg"',
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="filename.png"',
                 user=self.owner
             )
 
@@ -33,17 +33,16 @@ class FileListAPITestCase(TestCase):
 
         self.assertEqual(data['data']['type'], 'files')
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.owner.pk))
-        self.assertTrue(file.file.name.endswith(data['data']['attributes']['filename']))
-        self.assertEqual(data['data']['attributes']['size'], 1145)
-        self.assertTrue('created' in data['data']['attributes'])
+        self.assertTrue(file.file.name.endswith(data['data']['meta']['filename']))
+        self.assertEqual(data['data']['meta']['size'], 1145)
 
     def test_create_file_anonymous(self):
         with open(self.file_path) as test_file:
             response = self.client.post(
                 self.url,
                 test_file.read(),
-                content_type="text/html",
-                HTTP_CONTENT_DISPOSITION='attachment; filename="filename.jpg"',
+                content_type="image/png",
+                HTTP_CONTENT_DISPOSITION='attachment; filename="filename.png"',
             )
 
         self.assertEqual(response.status_code, 401)
@@ -54,7 +53,7 @@ class FileListAPITestCase(TestCase):
                 self.url,
                 test_file.read(),
                 content_type="text/html",
-                HTTP_CONTENT_DISPOSITION='attachment; filename="filename.jpg"',
+                HTTP_CONTENT_DISPOSITION='attachment; filename="filename.png"',
                 user=self.owner
             )
 

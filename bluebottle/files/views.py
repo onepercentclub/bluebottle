@@ -1,8 +1,10 @@
+import magic
 import mimetypes
 
 from django.conf import settings
 from django.http import HttpResponse
 
+from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated
 
@@ -16,6 +18,9 @@ from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.files.models import File
 from bluebottle.files.serializers import FileSerializer
 from bluebottle.utils.views import CreateAPIView, RetrieveAPIView
+
+
+mime = magic.Magic(mime=True)
 
 
 class FileList(AutoPrefetchMixin, CreateAPIView):
@@ -35,6 +40,10 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
     }
 
     def perform_create(self, serializer):
+        uploaded_file = self.request.FILES['file']
+        if not mime.from_buffer(uploaded_file.read()) == uploaded_file.content_type:
+            raise ValidationError('Mime-type does not match Content-Type')
+
         serializer.save(owner=self.request.user)
 
 

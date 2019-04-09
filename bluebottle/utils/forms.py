@@ -32,12 +32,11 @@ class FSMModelForm(forms.ModelForm):
             transitions = getattr(
                 self.instance, 'get_available_{}_transitions'.format(fsm_field)
             )()
-            choices = [
+            field_name = '{}_transition'.format(fsm_field)
+            self.fields[field_name].choices = [
                 (transition.name, transition.name) for transition in transitions
             ]
-            self.fields[
-                '{}_transition'.format(fsm_field)
-            ].choices = [(None, '')] + choices
+            self.fields[field_name].widget.attrs['obj'] = self.instance
 
     def clean(self, *args, **kwargs):
         for field_name in self.fsm_fields:

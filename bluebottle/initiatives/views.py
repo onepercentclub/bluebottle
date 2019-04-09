@@ -6,6 +6,7 @@ from rest_framework_json_api.exceptions import exception_handler
 
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
+from bluebottle.utils.permissions import ResourceOwnerPermission
 from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateAPIView
 
 from bluebottle.initiatives.models import Initiative
@@ -22,6 +23,8 @@ class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
     pagination_class = InitiativePagination
+
+    permission_classes = (ResourceOwnerPermission,)
 
     filter_backends = (
         django_filters.DjangoFilterBackend,
@@ -53,6 +56,8 @@ class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
 class InitiativeDetail(AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
+
+    permission_classes = (ResourceOwnerPermission,)
 
     authentication_classes = (
         JSONWebTokenAuthentication,

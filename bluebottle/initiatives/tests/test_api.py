@@ -141,7 +141,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
         response = self.client.get(
-            data['data']['relationships']['image']['links']['200x300'],
+            data['included'][0]['attributes']['links']['large'],
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
         self.assertTrue(
@@ -151,22 +151,45 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
     def test_patch_anonymous(self):
+        data = {
+            'data': {
+                'id': self.initiative.id,
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title'
+                }
+            }
+        }
+
         response = self.client.patch(
             self.url,
-            json.dumps({}),
+            json.dumps(data),
         )
         self.assertEqual(response.status_code, 401)
 
     def test_patch_wrong_user(self):
+        data = {
+            'data': {
+                'id': self.initiative.id,
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title'
+                }
+            }
+        }
+
         response = self.client.patch(
             self.url,
-            json.dumps({}),
+            json.dumps(data),
             user=BlueBottleUserFactory.create()
         )
         self.assertEqual(response.status_code, 403)
 
     def test_get(self):
-        response = self.client.get(self.url)
+        response = self.client.get(
+            self.url,
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
         data = json.loads(response.content)
 
         self.assertEqual(response.status_code, 200)
@@ -186,7 +209,10 @@ class InitiativeListFilterAPITestCase(InitiativeAPITestCase):
         InitiativeFactory.create(owner=self.owner)
         InitiativeFactory.create()
 
-        response = self.client.get(self.url)
+        response = self.client.get(
+            self.url,
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 2)
@@ -195,7 +221,11 @@ class InitiativeListFilterAPITestCase(InitiativeAPITestCase):
         InitiativeFactory.create(owner=self.owner)
         InitiativeFactory.create()
 
-        response = self.client.get(self.url + '?filter[owner.id]={}'.format(self.owner.pk))
+        response = self.client.get(
+            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
         data = json.loads(response.content)
 
         self.assertEqual(data['meta']['pagination']['count'], 1)

@@ -12,7 +12,7 @@ from django.core.urlresolvers import reverse
 from django.db.models.aggregates import Sum
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html
@@ -294,9 +294,12 @@ class ReviewAdmin(admin.ModelAdmin):
         TransitionConfirmationForm,
         template='admin/transition_confirmation.html'
     )
-    def transition(self, request, obj, target):
-        getattr(obj, target)()
+    def transition(self, request, obj, transition):
+        if not request.user.has_perm('initiative.change_initiative'):
+            return HttpResponseForbidden('Missing permission: initiative.change_initiative')
+        getattr(obj, transition)()
         obj.save()
+        log_action(obj, request.user, 'Changed status to {}'.format(transition))
         object_url = 'admin:{}_{}_change'.format(self.model._meta.app_label, self.model._meta.model_name)
         link = reverse(object_url, args=(obj.id, ))
         return HttpResponseRedirect(link)

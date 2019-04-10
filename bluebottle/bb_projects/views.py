@@ -235,7 +235,7 @@ class ProjectListSearchMixin(object):
                 SF({
                     'script_score': {
                         'script': {
-                            'source': '(!doc["amount_needed"] && doc["people_needed"]) > 0 ? 4 : 0',
+                            'source': '(!doc["amount_asked"] && doc["people_needed"]) > 0 ? 4 : 0',
                             'lang': 'expression',
                         },
                     },

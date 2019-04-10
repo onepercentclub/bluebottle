@@ -1,5 +1,4 @@
-from rest_framework.permissions import IsAuthenticated
-
+from rest_framework_json_api import django_filters
 from rest_framework_json_api.views import AutoPrefetchMixin
 from rest_framework_json_api.parsers import JSONParser
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
@@ -7,6 +6,7 @@ from rest_framework_json_api.exceptions import exception_handler
 
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
+from bluebottle.utils.permissions import ResourceOwnerPermission
 from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateAPIView
 
 from bluebottle.initiatives.models import Initiative
@@ -24,8 +24,14 @@ class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
     serializer_class = InitiativeSerializer
     pagination_class = InitiativePagination
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (ResourceOwnerPermission,)
 
+    filter_backends = (
+        django_filters.DjangoFilterBackend,
+    )
+    filter_fields = {
+        'owner__id': ('exact', 'in', ),
+    }
     authentication_classes = (
         JSONWebTokenAuthentication,
     )
@@ -51,7 +57,7 @@ class InitiativeDetail(AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (ResourceOwnerPermission,)
 
     authentication_classes = (
         JSONWebTokenAuthentication,

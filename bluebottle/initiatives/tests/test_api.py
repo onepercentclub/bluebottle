@@ -3,8 +3,6 @@ import json
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
-from rest_framework import status
-
 from bluebottle.initiatives.models import Initiative
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
@@ -108,7 +106,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             response = self.client.post(
                 reverse('file-list'),
                 test_file.read(),
-                content_type="image/jpg",
+                content_type="image/png",
                 HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.jpg"',
                 HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
             )
@@ -123,7 +121,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                         'data': {
                             'type': 'files',
                             'id': file_data['data']['id']
-                          }
+                        }
                     }
                 }
             }
@@ -143,7 +141,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
         response = self.client.get(
-            data['data']['relationships']['image']['links']['200x300'],
+            data['included'][0]['attributes']['links']['large'],
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
         self.assertTrue(
@@ -153,22 +151,45 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         )
 
     def test_patch_anonymous(self):
+        data = {
+            'data': {
+                'id': self.initiative.id,
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title'
+                }
+            }
+        }
+
         response = self.client.patch(
             self.url,
-            json.dumps({}),
+            json.dumps(data),
         )
         self.assertEqual(response.status_code, 401)
 
     def test_patch_wrong_user(self):
+        data = {
+            'data': {
+                'id': self.initiative.id,
+                'type': 'initiatives',
+                'attributes': {
+                    'title': 'Some title'
+                }
+            }
+        }
+
         response = self.client.patch(
             self.url,
-            json.dumps({}),
+            json.dumps(data),
             user=BlueBottleUserFactory.create()
         )
         self.assertEqual(response.status_code, 403)
 
     def test_get(self):
-        response = self.client.get(self.url)
+        response = self.client.get(
+            self.url,
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
         data = json.loads(response.content)
 
         self.assertEqual(response.status_code, 200)
@@ -177,3 +198,35 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(data['data']['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
         self.assertEqual(len(data['included']), 3)
+
+
+class InitiativeListFilterAPITestCase(InitiativeAPITestCase):
+    def setUp(self):
+        super(InitiativeListFilterAPITestCase, self).setUp()
+        self.url = reverse('initiative-list')
+
+    def test_no_filter(self):
+        InitiativeFactory.create(owner=self.owner)
+        InitiativeFactory.create()
+
+        response = self.client.get(
+            self.url,
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+
+    def test_filter_owner(self):
+        InitiativeFactory.create(owner=self.owner)
+        InitiativeFactory.create()
+
+        response = self.client.get(
+            self.url + '?filter[owner.id]={}'.format(self.owner.pk),
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 1)
+        self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))

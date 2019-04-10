@@ -1,6 +1,5 @@
 import os
 from django.core.urlresolvers import reverse
-from django.conf import settings
 
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
@@ -27,7 +26,7 @@ class FileSerializer(ModelSerializer):
     }
 
     def get_filename(self, instance):
-        return  os.path.basename(instance.file.name)
+        return os.path.basename(instance.file.name)
 
     def get_links(self, obj):
         if hasattr(self, 'sizes'):

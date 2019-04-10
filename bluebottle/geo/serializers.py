@@ -64,5 +64,3 @@ class InitiativePlaceSerializer(ModelSerializer):
     class JSONAPIMeta:
         included_resources = ['country', ]
         resource_name = 'places'
-
-

@@ -9,6 +9,29 @@ JET_DEFAULT_THEME = 'goodup'
 
 JET_SIDE_MENU_ITEMS = [  # A list of application or custom item dicts
     {
+        'label': _('Initiatives'),
+        'app_label': 'initiatives',
+        'permissions': ['initiatives.change_initiative'],
+        'items': [
+            {
+                'name': 'initiatives.initiative',
+                'permissions': ['initiatives.change_initiative']
+            },
+            {
+                'name': 'categories.category',
+                'permissions': ['categories.change_category']
+            },
+            {
+                'name': 'bb_projects.projecttheme',
+                'permissions': ['bb_projects.change_projecttheme']
+            },
+            {
+                'name': 'organizations.organization',
+                'permissions': ['organizations.organization']
+            },
+        ]
+    },
+    {
         'label': _('Projects'),
         'app_label': 'projects',
         'permissions': ['projects.change_project'],

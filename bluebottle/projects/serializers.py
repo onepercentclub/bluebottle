@@ -466,7 +466,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'people_needed',
                   'people_registered',
                   'pitch',
-                  'place',
                   'project_location',
                   'project_type',
                   'promoter',

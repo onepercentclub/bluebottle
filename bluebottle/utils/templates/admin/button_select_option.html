@@ -1,0 +1,5 @@
+<a href="{% url 'admin:initiatives_initiative_transition' obj.id widget.value|stringformat:'s' %}"
+       class="button_select_option button" {% include "django/forms/widgets/attrs.html" %}>
+{{ widget.value|stringformat:'s' }}
+</a>
+

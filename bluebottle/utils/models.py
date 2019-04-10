@@ -127,7 +127,7 @@ class ReviewModel(models.Model):
         created = ChoiceItem('created', _('created'))
         submitted = ChoiceItem('submitted', _('submitted'))
         needs_work = ChoiceItem('needs_work', _('needs work'))
-        accepted = ChoiceItem('accepted', _('accepted'))
+        approved = ChoiceItem('approved', _('approved'))
         cancelled = ChoiceItem('cancelled', _('cancelled'))
         rejected = ChoiceItem('rejected', _('rejected'))
 
@@ -182,10 +182,10 @@ class ReviewModel(models.Model):
     @transition(
         field='review_status',
         source=ReviewStatus.submitted,
-        target=ReviewStatus.accepted,
-        custom={'button_name': _('accept')}
+        target=ReviewStatus.approved,
+        custom={'button_name': _('approve')}
     )
-    def accept(self):
+    def approve(self):
         pass
 
     @transition(
@@ -199,7 +199,7 @@ class ReviewModel(models.Model):
 
     @transition(
         field='review_status',
-        source=[ReviewStatus.accepted, ReviewStatus.submitted, ReviewStatus.needs_work],
+        source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
         target=ReviewStatus.cancelled,
         custom={'button_name': _('cancel')}
     )
@@ -208,13 +208,13 @@ class ReviewModel(models.Model):
 
     @transition(
         field='review_status',
-        source=[ReviewStatus.cancelled, ReviewStatus.accepted, ReviewStatus.rejected],
+        source=[ReviewStatus.cancelled, ReviewStatus.approved, ReviewStatus.rejected],
         target=ReviewStatus.submitted,
-        custom={'button_name': _('repoen')}
+        custom={'button_name': _('re-open')}
     )
     def reopen(self):
         pass
 
     @classmethod
-    def is_accepted(cls, instance):
-        return instance.review_status == ReviewModel.ReviewStatus.accepted
+    def is_approved(cls, instance):
+        return instance.review_status == ReviewModel.ReviewStatus.approved

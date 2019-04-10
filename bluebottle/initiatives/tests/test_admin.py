@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.contrib.admin.sites import AdminSite
+from django.contrib.messages import get_messages
 from django.urls.base import reverse
 
 from bluebottle.initiatives.admin import InitiativeAdmin
@@ -21,7 +22,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
     def test_review_initiative(self):
         self.client.force_login(self.superuser)
         review_url = reverse('admin:initiatives_initiative_transition',
-                             args=(self.initiative.id, 'accept'))
+                             args=(self.initiative.id, 'approve'))
         response = self.client.get(review_url)
 
         # Should show confirmation page
@@ -32,13 +33,37 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.post(review_url, {'confirm': True})
         self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'accepted')
+        self.assertEqual(self.initiative.review_status, 'approved')
+
+    def test_review_initiative_illegal_transition(self):
+        self.client.force_login(self.superuser)
+        # reject the
+        self.initiative.reject()
+        self.initiative.save()
+
+        review_url = reverse('admin:initiatives_initiative_transition',
+                             args=(self.initiative.id, 'approve'))
+        response = self.client.get(review_url)
+
+        # Should show confirmation page
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Are you sure you want to change')
+
+        # Confirm should change status
+        response = self.client.post(review_url, {'confirm': True})
+        self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
+        self.initiative = Initiative.objects.get(pk=self.initiative.id)
+        self.assertEqual(self.initiative.review_status, 'rejected')
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(str(messages[0]), 'Transition not allowed: approve')
 
     def test_review_initiative_unauthorized(self):
         review_url = reverse('admin:initiatives_initiative_transition',
-                             args=(self.initiative.id, 'accept'))
+                             args=(self.initiative.id, 'approve'))
         response = self.client.post(review_url, {'confirm': False})
-        # Should be denied
-        self.assertEqual(response.status_code, 403)
+        # Should redirect with message
+        self.assertEqual(response.status_code, 302)
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.review_status, 'submitted')
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(str(messages[0]), 'Missing permission: initiative.change_initiative')

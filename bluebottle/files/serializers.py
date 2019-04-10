@@ -1,6 +1,6 @@
 import os
-from django.core.urlresolvers import reverse
 
+from django.core.urlresolvers import reverse
 from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer

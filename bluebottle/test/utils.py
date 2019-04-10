@@ -16,7 +16,6 @@ from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.utils import LanguageFactory
 from bluebottle.utils.models import Language
 
-
 # TODO: remove this temporary work around to not verify ssl certs
 #       when docdata fix their ssl cert chain on their testing server.
 import ssl
@@ -165,6 +164,7 @@ class BluebottleAdminTestCase(WebTestMixin, BluebottleTestCase):
     payout_url = reverse('admin:payouts_projectpayout_changelist')
     response = self.app.get(payout_url, user=self.superuser)
     """
+
     def setUp(self):
         self.app.extra_environ['HTTP_HOST'] = str(self.tenant.domain_url)
         self.superuser = BlueBottleUserFactory.create(is_staff=True, is_superuser=True)
@@ -236,13 +236,19 @@ class FsmTestMixin(object):
 
 
 class JSONAPITestClient(Client):
-    def patch(self, path, data='', content_type='application/vnd.api+json', follow=False, secure=False, **extra):
+    def patch(self, path, data='',
+              content_type='application/vnd.api+json',
+              follow=False, secure=False, **extra):
         return super(JSONAPITestClient, self).put(path, data, content_type, follow, secure, **extra)
 
-    def post(self, path, data='', content_type='application/vnd.api+json', follow=False, secure=False, **extra):
+    def post(self, path, data='',
+             content_type='application/vnd.api+json',
+             follow=False, secure=False, **extra):
         return super(JSONAPITestClient, self).post(path, data, content_type, follow, secure, **extra)
 
-    def generic(self, method, path, data='', content_type='application/vnd.api+json', secure=False, user=None, **extra):
+    def generic(self, method, path, data='',
+                content_type='application/vnd.api+json',
+                secure=False, user=None, **extra):
         if user:
             extra['HTTP_AUTHORIZATION'] = "JWT {0}".format(user.get_jwt_token())
 

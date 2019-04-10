@@ -3,15 +3,10 @@ import mimetypes
 
 from django.conf import settings
 from django.http import HttpResponse
-
-from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated
-
 from rest_framework_json_api.views import AutoPrefetchMixin
-
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-
 from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
@@ -27,9 +22,9 @@ class FileList(AutoPrefetchMixin, CreateAPIView):
     queryset = File.objects.all()
     serializer_class = FileSerializer
 
-    renderer_classes = (BluebottleJSONAPIRenderer, )
+    renderer_classes = (BluebottleJSONAPIRenderer,)
     parser_classes = (FileUploadParser,)
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     authentication_classes = (
         JSONWebTokenAuthentication,

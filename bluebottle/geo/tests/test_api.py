@@ -82,6 +82,7 @@ class LocationListTestCase(GeoTestCase):
 
     Endpoint: /api/geo/locations
     """
+
     def setUp(self):
         super(GeoTestCase, self).setUp()
 

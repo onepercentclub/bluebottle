@@ -28,13 +28,13 @@ def _convert_timestamp(timestamp):
         sec = (timestamp - EPOCH).total_seconds()
 
         def _handle_precision():
-            if TIME_PRECISION is 'n':
+            if TIME_PRECISION == 'n':
                 return sec * 1e9
-            elif TIME_PRECISION is 'u':
+            elif TIME_PRECISION == 'u':
                 return sec * 1e6
-            elif TIME_PRECISION is 'ms':
+            elif TIME_PRECISION == 'ms':
                 return sec * 1e3
-            elif TIME_PRECISION is 's':
+            elif TIME_PRECISION == 's':
                 return sec
 
             msg = 'Unhandled TIME_PRECISION of \'{}\''.format(TIME_PRECISION)

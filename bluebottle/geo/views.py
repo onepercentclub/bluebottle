@@ -1,17 +1,13 @@
-
-from rest_framework_json_api.views import AutoPrefetchMixin
-from rest_framework_json_api.parsers import JSONParser
-
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
+from rest_framework_json_api.parsers import JSONParser
+from rest_framework_json_api.views import AutoPrefetchMixin
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.geo.models import Location, Country, InitiativePlace
 from bluebottle.geo.serializers import LocationSerializer, InitiativePlaceSerializer
 from bluebottle.projects.models import Project
 from bluebottle.utils.views import TranslatedApiViewMixin
-
 from .serializers import CountrySerializer
 
 
@@ -55,9 +51,9 @@ class InitiativePlaceList(AutoPrefetchMixin, CreateAPIView):
         JSONWebTokenAuthentication,
     )
 
-    parser_classes = (JSONParser, )
+    parser_classes = (JSONParser,)
 
-    renderer_classes = (BluebottleJSONAPIRenderer, )
+    renderer_classes = (BluebottleJSONAPIRenderer,)
 
     prefetch_for_includes = {
         'country': ['country'],

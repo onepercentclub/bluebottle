@@ -79,7 +79,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             owner=self.owner
         )
 
-        self.url = reverse('initiative-detail', args=(self.initiative.pk, ))
+        self.url = reverse('initiative-detail', args=(self.initiative.pk,))
 
     def test_patch(self):
         data = {

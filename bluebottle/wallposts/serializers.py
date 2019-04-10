@@ -123,10 +123,10 @@ class TextWallpostSerializer(WallpostSerializerBase):
 
     def validate(self, data):
         if (
-            'donation' in data and
-            TextWallpost.objects.filter(donation=data['donation'])
+                'donation' in data and
+                TextWallpost.objects.filter(donation=data['donation'])
         ):
-                raise ValidationError("Wallpost for donation already exists.")
+            raise ValidationError("Wallpost for donation already exists.")
 
         return super(WallpostSerializerBase, self).validate(data)
 

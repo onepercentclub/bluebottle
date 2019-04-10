@@ -1,11 +1,10 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from geoposition.fields import GeopositionField
-from sorl.thumbnail import ImageField
 from parler.models import TranslatedFields
+from sorl.thumbnail import ImageField
 
 from bluebottle.utils.models import SortableTranslatableModel
 from .validators import Alpha2CodeValidator, Alpha3CodeValidator, \

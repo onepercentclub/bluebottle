@@ -3,8 +3,8 @@ from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
 
-from bluebottle.geo.models import InitiativePlace
 from bluebottle.files.models import File
+from bluebottle.geo.models import InitiativePlace
 from bluebottle.utils.models import ReviewModel
 
 

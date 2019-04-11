@@ -1,18 +1,16 @@
-from mock import patch
 import stripe
-
 from django.test.utils import override_settings
+from mock import patch
 from moneyed import Money
 
+from bluebottle.payments.exception import PaymentException
+from bluebottle.payments_stripe.adapters import StripePaymentAdapter
 from bluebottle.test.factory_models.donations import DonationFactory
 from bluebottle.test.factory_models.orders import OrderFactory
 from bluebottle.test.factory_models.payments import OrderPaymentFactory
 from bluebottle.test.factory_models.payouts import StripePayoutAccountFactory
 from bluebottle.test.factory_models.projects import ProjectFactory
 from bluebottle.test.utils import BluebottleTestCase
-
-from bluebottle.payments.exception import PaymentException
-from bluebottle.payments_stripe.adapters import StripePaymentAdapter
 
 
 class MockEvent(object):
@@ -116,13 +114,14 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
 
     def test_payment_charged_card_error(self):
         adapter = StripePaymentAdapter(self.order_payment)
-        with patch(
-            'stripe.Charge.create',
-            side_effect=stripe.error.CardError('Invalid card', 'api_error', 402)
-        ):
-            adapter.charge()
-            self.assertTrue(adapter.payment.pk)
-            self.assertEqual(adapter.payment.status, 'failed')
+        with self.assertRaisesMessage(PaymentException, 'Invalid card'):
+            with patch(
+                'stripe.Charge.create',
+                side_effect=stripe.error.CardError('Invalid card', 'api_error', 402)
+            ):
+                adapter.charge()
+                self.assertTrue(adapter.payment.pk)
+                self.assertEqual(adapter.payment.status, 'failed')
 
     def test_payment_charged_connection_error(self):
         adapter = StripePaymentAdapter(self.order_payment)
@@ -271,3 +270,19 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
                 charge=adapter.payment.charge_token,
                 api_key=MERCHANT_ACCOUNTS[0]['secret_key']
             )
+
+    def test_payment_charge_fails(self):
+        self.order_payment.card_data['chargeable'] = True
+        charge = stripe.Charge('some charge token')
+        charge.update({
+            'status': 'failed',
+            'refunded': False
+        })
+        with patch(
+                'stripe.Charge.create',
+                side_effect=stripe.error.CardError('Insufficient fund', 'api_error', 402)
+        ):
+            with self.assertRaisesMessage(PaymentException, 'Insufficient fund'):
+                adapter = StripePaymentAdapter(self.order_payment)
+                self.assertTrue(adapter.payment.pk)
+                self.assertEqual(adapter.payment.status, 'failed')

@@ -76,9 +76,10 @@ class StripePaymentAdapter(BasePaymentAdapter):
                     self.update_from_transfer(transfer)
                 self.payment.charge_token = charge.id
                 self.update_from_charge(charge)
-            except (stripe.error.CardError, stripe.error.InvalidRequestError):
+            except (stripe.error.CardError, stripe.error.InvalidRequestError) as e:
                 self.payment.status = StatusDefinition.FAILED
                 self.payment.save()
+                raise PaymentException(e.message)
             except StripeError as e:
                 raise PaymentException(e.message)
 
@@ -159,6 +160,8 @@ class StripePaymentAdapter(BasePaymentAdapter):
             # Check if we should redirect the user
             if source['flow'] == 'redirect':
                 return {'type': 'redirect', 'method': 'get', 'url': source['redirect']['url']}
+        if self.payment.status == 'failed':
+            raise PaymentException("Payment failed")
         return {
             'type': 'success'
         }

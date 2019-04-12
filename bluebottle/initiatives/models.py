@@ -3,8 +3,8 @@ from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
 
+from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import InitiativePlace
-from bluebottle.files.models import File
 from bluebottle.utils.models import ReviewModel
 
 
@@ -21,7 +21,7 @@ class Initiative(ReviewModel):
     theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True, on_delete=SET_NULL)
     categories = models.ManyToManyField('categories.Category', blank=True)
 
-    image = models.ForeignKey(File, null=True, blank=True, on_delete=SET_NULL)
+    image = ImageField()
 
     video_url = models.URLField(
         _('video'),

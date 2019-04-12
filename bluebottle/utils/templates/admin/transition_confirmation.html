@@ -5,8 +5,14 @@
     <p>
         {% blocktrans with target=target source=source %}
             Are you sure you want to change status from <b>{{source}}</b> to <b>{{target}}</b>?<br/>
-            This will send out like a gazillion emails and stuff...
         {% endblocktrans %}
+
+        {% if messages %}
+
+            {% blocktrans with message_count=messages|length %}
+            This will send out {{message_count}} email(s).
+            {% endblocktrans %}
+        {% endif %}
     </p>
 {% endblock %} 
 

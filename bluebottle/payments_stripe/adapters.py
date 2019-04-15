@@ -146,6 +146,7 @@ class StripePaymentAdapter(BasePaymentAdapter):
     def refund_payment(self):
         stripe.Refund.create(
             charge=self.payment.charge_token,
+            reverse_transfer=True,
             api_key=self.credentials['secret_key']
         )
         self.payment.status = StatusDefinition.REFUND_REQUESTED

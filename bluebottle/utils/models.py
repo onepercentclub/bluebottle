@@ -5,10 +5,12 @@ from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
-from django_fsm import FSMField, transition
+from django_fsm import FSMField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel
 
+from bluebottle.initiatives.messages import InitiativeApproveOwnerMessage
+from bluebottle.notifications.decorators import transition
 from bluebottle.utils.managers import SortableTranslatableManager, PublishedManager
 
 import bluebottle.utils.monkey_patch_migration  # noqa
@@ -122,23 +124,6 @@ class PublishableModel(models.Model):
         abstract = True
 
 
-class messages(object):
-    def __init__(self, transition):
-        self.transition = transition
-
-    def __call__(self, f):
-        self.transition.messages = f
-        return f
-
-
-class Message(object):
-    def __init__(self, subject):
-        self.subject = subject
-
-    def __unicode__(self):
-        return self.subject
-
-
 class ReviewModel(models.Model):
     class ReviewStatus(DjangoChoices):
         created = ChoiceItem('created', _('created'))
@@ -178,12 +163,6 @@ class ReviewModel(models.Model):
     def submit(self):
         pass
 
-    @messages(submit)
-    def submit_messages(self):
-        return [
-            Message('A project has been resubmitted')
-        ]
-
     @transition(
         field='review_status',
         source=ReviewStatus.needs_work,
@@ -192,12 +171,6 @@ class ReviewModel(models.Model):
     )
     def resubmit(self):
         pass
-
-    @messages(resubmit)
-    def resubmit_messages(self):
-        return [
-            Message('A project has been resubmitted')
-        ]
 
     @transition(
         field='review_status',
@@ -212,6 +185,7 @@ class ReviewModel(models.Model):
         field='review_status',
         source=ReviewStatus.submitted,
         target=ReviewStatus.approved,
+        messages=[InitiativeApproveOwnerMessage],
         custom={'button_name': _('approve')}
     )
     def approve(self):
@@ -247,15 +221,3 @@ class ReviewModel(models.Model):
     @classmethod
     def is_approved(cls, instance):
         return instance.review_status == ReviewModel.ReviewStatus.approved
-
-
-from django.dispatch import receiver
-from django_fsm.signals import post_transition
-
-
-@receiver(post_transition)
-def send_messages(sender, instance, name, source, target, **kwargs):
-    transition = getattr(instance, name)
-    if hasattr(transition, 'messages'):
-        messages = transition.messages(instance)
-        print messages

@@ -36,6 +36,7 @@ def confirmation_form(form_class, model, template):
 
 
 def transition_confirmation_form(form_class, template):
+
     def decorator(func):
         @functools.wraps(func)
         def wrapper(self, request, pk, target):
@@ -45,7 +46,12 @@ def transition_confirmation_form(form_class, template):
             if 'confirm' in request.POST and request.POST['confirm']:
                 form = form_class(request.POST)
                 if form.is_valid():
-                    return func(self, request, obj, target)
+                    return func(self, request, obj, target,
+                                send_messages=form.cleaned_data['send_messages'])
+
+            messages = []
+            for message_list in [message(obj).list_messages() for message in getattr(obj, target).messages]:
+                messages += message_list
 
             context = dict(
                 self.admin_site.each_context(request),
@@ -56,8 +62,8 @@ def transition_confirmation_form(form_class, template):
                 pk=pk,
                 form=form,
                 source=obj.review_status,
+                notifications=messages,
                 target=target,
-                action_checkbox_name=helpers.ACTION_CHECKBOX_NAME
             )
 
             return TemplateResponse(request, template, context)

@@ -14,20 +14,20 @@ class TransitionMessage(object):
     def get_template(self):
         return self.template
 
-    def list_messages(self):
+    def get_messages(self):
         return [
             Message(
                 template=self.get_template(),
                 subject=self.subject,
                 content_object=self.obj,
                 recipient=recipient
-            ) for recipient in self.list_recipients()
+            ) for recipient in self.get_recipients()
         ]
 
-    def list_recipients(self):
+    def get_recipients(self):
         return [self.obj.owner]
 
     def compose_and_send(self):
-        for message in self.list_messages():
+        for message in self.get_messages():
             message.send()
             message.save()

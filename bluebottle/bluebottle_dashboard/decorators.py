@@ -50,7 +50,7 @@ def transition_confirmation_form(form_class, template):
                                 send_messages=form.cleaned_data['send_messages'])
 
             messages = []
-            for message_list in [message(obj).list_messages() for message in getattr(obj, target).messages]:
+            for message_list in [message(obj).get_messages() for message in getattr(obj, target).messages]:
                 messages += message_list
 
             context = dict(

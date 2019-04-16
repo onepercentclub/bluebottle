@@ -9,7 +9,7 @@ from django_fsm import FSMField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel
 
-from bluebottle.initiatives.messages import InitiativeApproveOwnerMessage
+from bluebottle.initiatives.messages import InitiativeApproveOwnerMessage, InitiativeClosedOwnerMessage
 from bluebottle.notifications.decorators import transition
 from bluebottle.utils.managers import SortableTranslatableManager, PublishedManager
 
@@ -195,6 +195,7 @@ class ReviewModel(models.Model):
         field='review_status',
         source=ReviewStatus.submitted,
         target=ReviewStatus.rejected,
+        messages=[InitiativeClosedOwnerMessage],
         custom={'button_name': _('reject')}
     )
     def reject(self):

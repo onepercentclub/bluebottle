@@ -16,10 +16,9 @@ class FileField(ResourceRelatedField):
 class FileSerializer(ModelSerializer):
     file = serializers.FileField(write_only=True)
     filename = serializers.SerializerMethodField()
-    size = serializers.IntegerField(read_only=True, source='file.size')
-    owner = ResourceRelatedField(read_only=True)
-
     links = serializers.SerializerMethodField()
+    owner = ResourceRelatedField(read_only=True)
+    size = serializers.IntegerField(read_only=True, source='file.size')
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',

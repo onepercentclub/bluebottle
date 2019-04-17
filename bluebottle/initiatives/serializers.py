@@ -27,9 +27,9 @@ class ThemeSerializer(ModelSerializer):
 
 
 class CategorySerializer(ModelSerializer):
-    slug = serializers.CharField(read_only=True)
     image = OldImageSerializer(required=False)
     image_logo = OldImageSerializer(required=False)
+    slug = serializers.CharField(read_only=True)
 
     class Meta:
         model = Category
@@ -42,8 +42,8 @@ class CategorySerializer(ModelSerializer):
 class MemberSerializer(ModelSerializer):
     avatar = SorlImageField('133x133', source='picture', crop='center')
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
-    short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
+    short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
 
     class Meta:
         model = Member
@@ -62,23 +62,23 @@ class InitiativeImageSerializer(ImageSerializer):
 
 
 class InitiativeSerializer(ModelSerializer):
+    image = ImageField(required=False, allow_null=True)
+    owner = ResourceRelatedField(read_only=True)
+    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     review_status = FSMField(read_only=True)
+    reviewer = ResourceRelatedField(read_only=True)
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True, required=False)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
-    image = ImageField(required=False, allow_null=True)
-    owner = ResourceRelatedField(read_only=True)
-    reviewer = ResourceRelatedField(read_only=True)
-    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
 
     included_serializers = {
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
-        'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
-        'place': 'bluebottle.geo.serializers.InitiativePlaceSerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'place': 'bluebottle.geo.serializers.InitiativePlaceSerializer',
+        'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
     }
 
     class Meta:

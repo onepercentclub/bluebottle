@@ -292,7 +292,6 @@ class ManageTaskSerializer(serializers.ModelSerializer):
                   'skill',
                   'time_needed',
                   'title',
-                  'place',
                   'type',)
 
 

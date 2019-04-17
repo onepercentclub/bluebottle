@@ -105,7 +105,6 @@ class StripePayoutAccount(PayoutAccount):
     def check_status(self):
         if self.account:
             del self.account
-
         if (
             self.account_details and
             self.account_details.verification.status == 'verified' and

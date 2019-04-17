@@ -85,15 +85,19 @@ class InitiativeSerializer(ModelSerializer):
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'place': 'bluebottle.geo.serializers.InitiativePlaceSerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
+        'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
     }
 
     class Meta:
         model = Initiative
         fields = (
-            'id', 'title', 'pitch', 'review_status', 'categories', 'owner', 'reviewer', 'slug',
-            'story', 'video_html', 'image', 'theme', 'place', 'permissions',
+            'id', 'title', 'pitch', 'review_status', 'categories', 'owner',
+            'reviewer', 'slug', 'has_organization', 'organization',
+            'organization_contact', 'story', 'video_html', 'image',
+            'theme', 'place', 'permissions',
         )
 
     class JSONAPIMeta:
-        included_resources = ['owner', 'reviewer', 'categories', 'theme', 'place', 'image']
+        included_resources = ['owner', 'reviewer', 'categories', 'theme', 'place', 'image', 'organizatiion']
         resource_name = 'initiatives'

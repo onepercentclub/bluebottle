@@ -11,8 +11,9 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
-from bluebottle.files.models import Document, Image
-from bluebottle.files.serializers import FileSerializer
+from bluebottle.files.models import Document
+from bluebottle.files.serializers import FileSerializer, ImageSerializer
+from bluebottle.initiatives.models import Initiative
 from bluebottle.utils.views import CreateAPIView, RetrieveAPIView
 
 mime = magic.Magic(mime=True)
@@ -66,4 +67,5 @@ class FileContentView(RetrieveAPIView):
 
 
 class ImageList(FileList):
-    queryset = Image.objects.all()
+    queryset = Initiative.objects.all()
+    serializer_class = ImageSerializer

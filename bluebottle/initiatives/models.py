@@ -21,7 +21,7 @@ class Initiative(ReviewModel):
     theme = models.ForeignKey('bb_projects.ProjectTheme', null=True, blank=True, on_delete=SET_NULL)
     categories = models.ManyToManyField('categories.Category', blank=True)
 
-    image = ImageField()
+    image = ImageField(blank=True, null=True)
 
     video_url = models.URLField(
         _('video'),

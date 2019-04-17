@@ -268,6 +268,7 @@ class StripePaymentAdapterTestCase(BluebottleTestCase):
             self.assertEqual(adapter.payment.status, 'refund_requested')
             create_refund.assert_called_with(
                 charge=adapter.payment.charge_token,
+                reverse_transfer=True,
                 api_key=MERCHANT_ACCOUNTS[0]['secret_key']
             )
 

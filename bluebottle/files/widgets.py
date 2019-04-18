@@ -8,5 +8,8 @@ class ImageWidget(Select):
 
     def get_context(self, name, value, attrs):
         context = super(ImageWidget, self).get_context(name, value, attrs)
-        context['file'] = Image.objects.get(pk=value).file
+        if value:
+            context['file'] = Image.objects.get(pk=value).file
+        else:
+            context['file'] = None
         return context

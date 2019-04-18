@@ -37,6 +37,8 @@ class Initiative(ReviewModel):
     )
 
     place = models.ForeignKey(InitiativePlace, null=True, blank=True, on_delete=SET_NULL)
+    location = models.ForeignKey('geo.Location', null=True, blank=True, on_delete=SET_NULL)
+    language = models.ForeignKey('utils.Language', blank=True, null=True)
 
     class Meta:
         verbose_name = _("Initiative")

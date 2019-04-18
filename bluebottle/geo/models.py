@@ -155,7 +155,5 @@ class InitiativePlace(models.Model):
     locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
     province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
     country = models.ForeignKey('geo.Country')
-
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
-
     position = GeopositionField()

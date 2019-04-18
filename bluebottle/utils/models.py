@@ -153,6 +153,7 @@ class ReviewModel(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('-created', )
 
     @transition(
         field='review_status',

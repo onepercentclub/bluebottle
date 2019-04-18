@@ -11,7 +11,6 @@ import django_fsm
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('utils', '0003_delete_metadatamodel'),
         ('geo', '0010_initiativeplace'),
         ('initiatives', '0003_auto_20190403_1619'),
     ]

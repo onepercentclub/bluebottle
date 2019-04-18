@@ -1,0 +1,15 @@
+{% extends "base.mail.txt" %}
+{% load i18n %}
+
+{% block content %}
+{% blocktrans with recipient_name=user.name initiative_title=obj.title %}
+Hi {{ receiver_name }},
+Your initiative "{{ initiative_title }}" needs more work.
+{% endblocktrans %}
+
+{% endblock %}
+
+{% block action %}
+    <a href="{{ site }}{{ obj.full_url }}"
+       class="action-email">{% trans 'view initiative' context 'email' %}</a>
+{% endblock %}`

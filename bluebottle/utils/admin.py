@@ -302,13 +302,14 @@ class ReviewAdmin(admin.ModelAdmin):
         TransitionConfirmationForm,
         template='admin/transition_confirmation.html'
     )
-    def transition(self, request, obj, transition):
+    def transition(self, request, obj, transition, send_messages=True):
         object_url = 'admin:{}_{}_change'.format(self.model._meta.app_label, self.model._meta.model_name)
         link = reverse(object_url, args=(obj.id, ))
         if not request.user.has_perm('initiative.change_initiative'):
             messages.add_message(request, messages.ERROR, 'Missing permission: initiative.change_initiative')
             return HttpResponseRedirect(link)
         try:
+            obj.send_messages = send_messages
             getattr(obj, transition)()
             obj.save()
         except TransitionNotAllowed:

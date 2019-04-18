@@ -350,6 +350,7 @@ TENANT_APPS = (
     'bluebottle.geo',
     'bluebottle.pages',
     'bluebottle.mails',
+    'bluebottle.notifications',
     'bluebottle.news',
     'bluebottle.slides',
     'bluebottle.quotes',

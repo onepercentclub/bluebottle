@@ -5,21 +5,20 @@ from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
-from bluebottle.files.models import File
+from bluebottle.files.models import Document, Image
 
 
 class FileField(ResourceRelatedField):
     def get_queryset(self):
-        return File.objects.all()
+        return Document.objects.all()
 
 
 class FileSerializer(ModelSerializer):
     file = serializers.FileField(write_only=True)
     filename = serializers.SerializerMethodField()
-    size = serializers.IntegerField(read_only=True, source='file.size')
-    owner = ResourceRelatedField(read_only=True)
-
     links = serializers.SerializerMethodField()
+    owner = ResourceRelatedField(read_only=True)
+    size = serializers.IntegerField(read_only=True, source='file.size')
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
@@ -39,9 +38,21 @@ class FileSerializer(ModelSerializer):
             )
 
     class Meta:
-        model = File
+        model = Document
         fields = ('id', 'file', 'filename', 'size', 'owner', 'links',)
         meta_fields = ['size', 'filename']
 
     class JSONAPIMeta:
         included_resources = ['owner', ]
+
+
+class ImageField(ResourceRelatedField):
+    def get_queryset(self):
+        return Image.objects.all()
+
+
+class ImageSerializer(FileSerializer):
+    class Meta:
+        model = Image
+        fields = ('id', 'file', 'filename', 'size', 'owner', 'links',)
+        meta_fields = ['size', 'filename']

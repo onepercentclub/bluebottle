@@ -1,14 +1,14 @@
 from rest_framework import serializers
-from rest_framework_json_api.serializers import ModelSerializer
 from rest_framework_json_api.relations import ResourceRelatedField
+from rest_framework_json_api.serializers import ModelSerializer
 
-from bluebottle.files.serializers import FileField, FileSerializer
-from bluebottle.initiatives.models import Initiative
-from bluebottle.bluebottle_drf2.serializers import (
-    OEmbedField, ImageSerializer, SorlImageField
-)
 from bluebottle.bb_projects.models import ProjectTheme
+from bluebottle.bluebottle_drf2.serializers import (
+    OEmbedField, ImageSerializer as OldImageSerializer, SorlImageField
+)
 from bluebottle.categories.models import Category
+from bluebottle.files.serializers import ImageField, ImageSerializer
+from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.utils.fields import SafeField, FSMField
 from bluebottle.utils.serializers import (
@@ -27,9 +27,9 @@ class ThemeSerializer(ModelSerializer):
 
 
 class CategorySerializer(ModelSerializer):
+    image = OldImageSerializer(required=False)
+    image_logo = OldImageSerializer(required=False)
     slug = serializers.CharField(read_only=True)
-    image = ImageSerializer(required=False)
-    image_logo = ImageSerializer(required=False)
 
     class Meta:
         model = Category
@@ -42,8 +42,8 @@ class CategorySerializer(ModelSerializer):
 class MemberSerializer(ModelSerializer):
     avatar = SorlImageField('133x133', source='picture', crop='center')
     full_name = serializers.ReadOnlyField(source='get_full_name', read_only=True)
-    short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
     is_active = serializers.BooleanField(read_only=True)
+    short_name = serializers.ReadOnlyField(source='get_short_name', read_only=True)
 
     class Meta:
         model = Member
@@ -53,7 +53,7 @@ class MemberSerializer(ModelSerializer):
         resource_name = 'user-previews'
 
 
-class InitiativeImageSerializer(FileSerializer):
+class InitiativeImageSerializer(ImageSerializer):
     sizes = {
         'preview': '200x300',
         'large': '400x500'
@@ -62,29 +62,23 @@ class InitiativeImageSerializer(FileSerializer):
 
 
 class InitiativeSerializer(ModelSerializer):
+    image = ImageField(required=False, allow_null=True)
+    owner = ResourceRelatedField(read_only=True)
+    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     review_status = FSMField(read_only=True)
+    reviewer = ResourceRelatedField(read_only=True)
+    slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True, required=False)
-    slug = serializers.CharField(read_only=True)
-
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
 
-    image = FileField(
-        required=False,
-        allow_null=True,
-    )
-
-    owner = ResourceRelatedField(read_only=True)
-    reviewer = ResourceRelatedField(read_only=True)
-    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-
     included_serializers = {
-        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
-        'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
-        'place': 'bluebottle.geo.serializers.InitiativePlaceSerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
+        'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'place': 'bluebottle.geo.serializers.InitiativePlaceSerializer',
+        'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
     }
 
     class Meta:

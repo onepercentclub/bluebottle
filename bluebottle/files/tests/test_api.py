@@ -3,7 +3,7 @@ import json
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 
-from bluebottle.files.models import File
+from bluebottle.files.models import Image
 from bluebottle.test.utils import JSONAPITestClient
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 
@@ -12,7 +12,7 @@ class FileListAPITestCase(TestCase):
     def setUp(self):
         self.client = JSONAPITestClient()
         self.owner = BlueBottleUserFactory.create()
-        self.url = reverse('file-list')
+        self.url = reverse('image-list')
         self.file_path = './bluebottle/files/tests/files/test-image.png'
 
         super(FileListAPITestCase, self).setUp()
@@ -29,11 +29,11 @@ class FileListAPITestCase(TestCase):
 
         data = json.loads(response.content)
 
-        file = File.objects.get(pk=data['data']['id'])
+        file_field = Image.objects.get(pk=data['data']['id'])
 
-        self.assertEqual(data['data']['type'], 'files')
+        self.assertEqual(data['data']['type'], 'images')
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.owner.pk))
-        self.assertTrue(file.file.name.endswith(data['data']['meta']['filename']))
+        self.assertTrue(file_field.file.name.endswith(data['data']['meta']['filename']))
         self.assertEqual(data['data']['meta']['size'], 1145)
 
     def test_create_file_anonymous(self):

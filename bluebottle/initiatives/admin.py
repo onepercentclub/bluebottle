@@ -7,8 +7,8 @@ from bluebottle.utils.admin import ReviewAdmin
 
 
 class InitiativeAdmin(ReviewAdmin):
-    raw_id_fields = ('owner', 'reviewer',)
 
+    raw_id_fields = ('owner', 'reviewer')
     list_display = ['title']
     readonly_fields = ['review_status']
 

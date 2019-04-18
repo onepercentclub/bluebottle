@@ -29,5 +29,5 @@ class TransitionMessage(object):
 
     def compose_and_send(self):
         for message in self.get_messages():
-            message.send()
             message.save()
+            message.send()

@@ -31,4 +31,15 @@ class Migration(migrations.Migration):
             name='review_status',
             field=django_fsm.FSMField(choices=[(b'created', 'created'), (b'submitted', 'submitted'), (b'needs_work', 'needs work'), (b'approved', 'approved'), (b'cancelled', 'cancelled'), (b'rejected', 'rejected')], default=b'created', max_length=50, protected=True),
         ),
+        migrations.AddField(
+            model_name='initiative',
+            name='created',
+            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+            preserve_default=False,
+        ),
+        migrations.AddField(
+            model_name='initiative',
+            name='updated',
+            field=models.DateTimeField(auto_now=True),
+        ),
     ]

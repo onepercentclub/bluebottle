@@ -43,6 +43,7 @@ class Initiative(ReviewModel):
     class Meta:
         verbose_name = _("Initiative")
         verbose_name_plural = _("Initiatives")
+        ordering = ('-created',)
         permissions = (
             ('api_read_initiative', 'Can view initiative through the API'),
             ('api_add_initiative', 'Can add initiative through the API'),

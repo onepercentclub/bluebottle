@@ -24,18 +24,11 @@ class FileSerializer(ModelSerializer):
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
+    def get_links(self, obj):
+        return 'Not implemented'
+
     def get_filename(self, instance):
         return os.path.basename(instance.file.name)
-
-    def get_links(self, obj):
-        if hasattr(self, 'sizes'):
-            parent_id = self.context['view'].kwargs['pk']
-            return dict(
-                (
-                    key,
-                    reverse(self.content_view_name, args=(parent_id, size))
-                ) for key, size in self.sizes.items()
-            )
 
     class Meta:
         model = Document
@@ -52,6 +45,17 @@ class ImageField(ResourceRelatedField):
 
 
 class ImageSerializer(FileSerializer):
+
+    def get_links(self, obj):
+        if hasattr(self, 'sizes'):
+            parent_id = self.context['view'].kwargs['pk']
+            return dict(
+                (
+                    key,
+                    reverse(self.content_view_name, args=(parent_id, size))
+                ) for key, size in self.sizes.items()
+            )
+
     class Meta:
         model = Image
         fields = ('id', 'file', 'filename', 'size', 'owner', 'links',)

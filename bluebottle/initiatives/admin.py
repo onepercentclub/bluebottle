@@ -9,7 +9,10 @@ from bluebottle.utils.admin import ReviewAdmin
 class InitiativeAdmin(ReviewAdmin):
 
     raw_id_fields = ('owner', 'reviewer')
-    list_display = ['title']
+    list_display = ['title', 'created', 'review_status']
+    list_filter = ['review_status']
+    search_fields = ['title', 'pitch', 'story',
+                     'owner__first_name', 'owner__last_name', 'owner__email']
     readonly_fields = ['review_status']
 
     def get_fieldsets(self, request, obj=None):

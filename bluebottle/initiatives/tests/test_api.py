@@ -79,7 +79,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             owner=self.owner
         )
 
-        self.url = reverse('initiative-detail', args=(self.initiative.pk, ))
+        self.url = reverse('initiative-detail', args=(self.initiative.pk,))
 
     def test_patch(self):
         data = {
@@ -139,12 +139,10 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             data['data']['relationships']['image']['data']['id'],
             file_data['data']['id']
         )
-
         response = self.client.get(
             data['included'][0]['attributes']['links']['large'],
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
-        print data
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
             response['X-Accel-Redirect'].startswith(

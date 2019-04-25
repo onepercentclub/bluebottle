@@ -52,11 +52,51 @@ class StripePayoutTestAdmin(BluebottleAdminTestCase):
         details = self.admin.details(self.payout)
         self.assertEqual(details,
                          '<b>account number</b>: *************1234<br/>'
-                         '<b>account holder name</b>: Malle Eppie<br/>'
+                         u'<b>account holder name</b>: M\xe5lle Eppie<br/>'
                          '<b>last name</b>: Eppie<br/>'
                          '<b>country</b>: NL<br/>'
                          '<b>bank country</b>: DE<br/><b>currency</b>: eur<br/>'
-                         '<b>first name</b>: Malle')
+                         u'<b>first name</b>: M\xe5lle')
+
+    @patch('bluebottle.payouts.models.stripe.Account.retrieve')
+    def test_stripe_cached_details(self, stripe_retrieve):
+        stripe_retrieve.return_value = json2obj(
+            open(os.path.dirname(__file__) + '/data/stripe_account_unverified.json').read()
+        )
+        details = self.admin.details(self.payout)
+        self.assertEqual(details,
+                         '<b>account number</b>: *************1234<br/>'
+                         '<b>account holder name</b>: Dolle Mina<br/>'
+                         '<b>last name</b>: Mina<br/>'
+                         '<b>country</b>: NL<br/>'
+                         '<b>bank country</b>: DE<br/><b>currency</b>: eur<br/>'
+                         '<b>first name</b>: Dolle')
+
+        # Change Stripe response
+        stripe_retrieve.return_value = json2obj(
+            open(os.path.dirname(__file__) + '/data/stripe_account_verified.json').read()
+        )
+
+        # Should be cached
+        details = self.admin.details(self.payout)
+        self.assertEqual(details,
+                         '<b>account number</b>: *************1234<br/>'
+                         '<b>account holder name</b>: Dolle Mina<br/>'
+                         '<b>last name</b>: Mina<br/>'
+                         '<b>country</b>: NL<br/>'
+                         '<b>bank country</b>: DE<br/><b>currency</b>: eur<br/>'
+                         '<b>first name</b>: Dolle')
+
+        # Check status should update it
+        self.payout.check_status()
+        details = self.admin.details(self.payout)
+        self.assertEqual(details,
+                         '<b>account number</b>: *************1234<br/>'
+                         u'<b>account holder name</b>: M\xe5lle Eppie<br/>'
+                         '<b>last name</b>: Eppie<br/>'
+                         '<b>country</b>: NL<br/>'
+                         '<b>bank country</b>: DE<br/><b>currency</b>: eur<br/>'
+                         u'<b>first name</b>: M\xe5lle')
 
 
 class PayoutAccountAdminTestCase(BluebottleAdminTestCase):

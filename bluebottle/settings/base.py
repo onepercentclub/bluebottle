@@ -425,6 +425,7 @@ TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
+SESSION_ENGINE = 'bluebottle.clients.session_backends'
 
 THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85

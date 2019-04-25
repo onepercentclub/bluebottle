@@ -23,9 +23,9 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
     status_mapping = {
         'succeeded': StatusDefinition.SETTLED,
-        'pending': StatusDefinition.AUTHORIZED,  # TODO: Make sure this is correct!
+        'pending': StatusDefinition.AUTHORIZED,
         'failed': StatusDefinition.FAILED,
-
+        'canceled': StatusDefinition.CANCELLED,
     }
 
     def __init__(self, order_payment):
@@ -42,46 +42,57 @@ class StripePaymentAdapter(BasePaymentAdapter):
         self.payment.save()
 
         if chargeable:
-            try:
-                self.charge()
-            except StripeError as e:
-                raise PaymentException(e.message)
-
+            self.charge()
         return self.payment
 
     def charge(self):
         if not self.payment.charge_token:
-
             account_id = self.order_payment.project.payout_account.account_id
             tenant = connection.tenant
 
-            charge = stripe.Charge.create(
-                amount=self.payment.amount,
-                currency=self.payment.currency,
-                description=self.payment.description,
-                source=self.payment.source_token,
-                destination={
-                    "account": account_id,
-                },
-                metadata={
-                    "tenant_name": tenant.client_name,
-                    "tenant_domain": tenant.domain_url,
-                    "project_slug": self.order_payment.project.slug,
-                    "project_title": self.order_payment.project.title,
-                },
-                api_key=self.credentials['secret_key']
-            )
-            transfer = stripe.Transfer.retrieve(
-                charge['transfer'],
-                api_key=self.credentials['secret_key']
-            )
-            self.update_from_transfer(transfer)
-            self.payment.charge_token = charge.id
-            self.update_from_charge(charge)
+            try:
+                charge = stripe.Charge.create(
+                    amount=self.payment.amount,
+                    currency=self.payment.currency,
+                    description=self.payment.description,
+                    source=self.payment.source_token,
+                    destination={
+                        "account": account_id,
+                    },
+                    metadata={
+                        "tenant_name": tenant.client_name,
+                        "tenant_domain": tenant.domain_url,
+                        "project_slug": self.order_payment.project.slug,
+                        "project_title": self.order_payment.project.title,
+                    },
+                    api_key=self.credentials['secret_key']
+                )
+                if 'transfer' in charge:
+                    transfer = stripe.Transfer.retrieve(
+                        charge['transfer'],
+                        api_key=self.credentials['secret_key']
+                    )
+
+                    self.update_from_transfer(transfer)
+                self.payment.charge_token = charge.id
+                self.update_from_charge(charge)
+            except (stripe.error.CardError, stripe.error.InvalidRequestError):
+                self.payment.status = StatusDefinition.FAILED
+                self.payment.save()
+            except StripeError as e:
+                raise PaymentException(e.message)
 
     def update_from_charge(self, charge):
         self.payment.data = json.loads(unicode(charge))
         self.payment.status = self._get_mapped_status(charge.status)
+
+        if 'dispute' in charge and charge.dispute:
+            dispute = stripe.Dispute.retrieve(
+                charge.dispute,
+                api_key=self.credentials['secret_key']
+            )
+            if dispute.status == 'lost':
+                self.payment.status = StatusDefinition.CHARGED_BACK
 
         if charge.refunded:
             self.payment.status = StatusDefinition.REFUNDED
@@ -101,6 +112,15 @@ class StripePaymentAdapter(BasePaymentAdapter):
 
         self.payment.save()
 
+    def update_from_source(self, source):
+        if source.status in ('canceled', 'failed'):
+            self.payment.status = self.status_mapping[source.status]
+            self.payment.save()
+
+        if not self.payment.charge_token and source.get('consumed'):
+            self.payment.status = StatusDefinition.FAILED
+            self.payment.save()
+
     def check_payment_status(self):
         if self.payment.charge_token:
             charge = stripe.Charge.retrieve(
@@ -108,11 +128,19 @@ class StripePaymentAdapter(BasePaymentAdapter):
                 api_key=self.credentials['secret_key']
             )
             self.update_from_charge(charge)
-            transfer = stripe.Transfer.retrieve(
-                charge['transfer'],
+
+            if 'transfer' in charge:
+                transfer = stripe.Transfer.retrieve(
+                    charge['transfer'],
+                    api_key=self.credentials['secret_key']
+                )
+                self.update_from_transfer(transfer)
+        else:
+            source = stripe.Source.retrieve(
+                self.payment.source_token,
                 api_key=self.credentials['secret_key']
             )
-            self.update_from_transfer(transfer)
+            self.update_from_source(source)
 
     def refund_payment(self):
         stripe.Refund.create(

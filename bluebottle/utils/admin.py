@@ -154,6 +154,13 @@ def mark_as_plan_new(modeladmin, request, queryset):
 mark_as_plan_new.short_description = _("Mark selected projects as status Plan New")
 
 
+def escape_csv_formulas(item):
+    if item and item[0] in ['=', '+', '-', '@']:
+        return "'" + item
+    else:
+        return item
+
+
 def export_as_csv_action(description="Export as CSV", fields=None, exclude=None, header=True,
                          manyToManySep=';'):
     """ This function returns an export csv action. """
@@ -193,7 +200,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
             if queryset.model is Member or queryset.model is TaskMember:
                 for field in CustomMemberFieldSettings.objects.all():
                     labels.append(field.name)
-            writer.writerow(row)
+            writer.writerow([escape_csv_formulas(item) for item in row])
 
         for obj in queryset:
             row = [prep_field(request, obj, field, manyToManySep) for field in field_names]
@@ -219,7 +226,7 @@ def export_as_csv_action(description="Export as CSV", fields=None, exclude=None,
                     except CustomMemberField.DoesNotExist:
                         value = ''
                     row.append(value.encode('utf-8'))
-            writer.writerow(row)
+            writer.writerow([escape_csv_formulas(item) for item in row])
         return response
 
     export_as_csv.short_description = description

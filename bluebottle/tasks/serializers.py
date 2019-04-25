@@ -231,7 +231,9 @@ class BaseTaskSerializer(serializers.ModelSerializer):
                     setattr(place, key, value)
                 place.save()
             else:
-                Place.objects.create(content_object=instance, **validated_data.pop('place'))
+                place = validated_data.pop('place')
+                if place:
+                    Place.objects.create(content_object=instance, **place)
         else:
             if instance.place:
                 instance.place.delete()

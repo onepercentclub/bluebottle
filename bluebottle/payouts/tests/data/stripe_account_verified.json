@@ -19,7 +19,7 @@
     "data": [
       {
         "account": "acct_1DhHdvsdvsdBY",
-        "account_holder_name": "Malle Eppie",
+        "account_holder_name": "Målle Eppie",
         "account_holder_type": "individual",
         "bank_name": "STRIPE TEST BANK",
         "country": "DE",
@@ -57,7 +57,7 @@
       "month": 1,
       "year": 1980
     },
-    "first_name": "Malle",
+    "first_name": "Målle",
     "last_name": "Eppie",
     "personal_address": {
       "city": null,

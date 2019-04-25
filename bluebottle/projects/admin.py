@@ -233,11 +233,19 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
                 self.cleaned_data['status'].slug == 'campaign' and \
                 'amount_asked' in self.cleaned_data and \
                 self.cleaned_data['amount_asked'].amount > 0 and \
-                hasattr(self.cleaned_data['payout_account'], 'reviewed') and \
-                not self.cleaned_data['payout_account'].reviewed:
-            link_url = reverse('admin:payouts_payoutaccount_change',
-                               args=(self.cleaned_data['payout_account'].id,))
-            link = "<br/><a href='{}'>{}</a>".format(link_url, _("Review payout account"))
+                (
+                    not self.cleaned_data['payout_account'] or (
+                        hasattr(self.cleaned_data['payout_account'], 'reviewed') and
+                        not self.cleaned_data['payout_account'].reviewed
+                    )
+                ):
+            if self.cleaned_data['payout_account']:
+                link_url = reverse('admin:payouts_payoutaccount_change',
+                                   args=(self.cleaned_data['payout_account'].id,))
+                link = "<br/><a href='{}'>{}</a>".format(link_url, _("Review payout account"))
+            else:
+                link = ''
+
             raise forms.ValidationError(
                 format_html(_('The bank details need to be reviewed before approving a project') + link)
             )
@@ -361,7 +369,6 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ('location__group', 'region'),
         ('country', 'country'),
         ('location', 'location'),
-        ('place', 'place'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),
         ('campaign_started', 'campaign started'),
@@ -657,7 +664,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'pitch', 'story',
             'image', 'video_url',
             'theme', 'categories',
-            'country', 'place',
+            'country',
         ]})
 
         if Location.objects.count():

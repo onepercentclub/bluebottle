@@ -35,11 +35,15 @@ class EmailMultiAlternatives(BaseEmailMultiAlternatives):
     address, if available
     """
 
-    def __init__(self, from_email=None, *args, **kwargs):
-        tenant_from = construct_from_header()
-        if from_email:
-            kwargs['from_email'] = from_email
-        elif tenant_from:
-            kwargs['from_email'] = tenant_from
+    def __init__(self, from_email=None, headers=None, *args, **kwargs):
+        if headers is None:
+            headers = {}
 
-        super(EmailMultiAlternatives, self).__init__(*args, **kwargs)
+        return_path = properties.TENANT_MAIL_PROPERTIES.get('return_path')
+        if return_path:
+            headers['Return-Path'] = return_path
+
+        if not from_email:
+            from_email = construct_from_header()
+
+        super(EmailMultiAlternatives, self).__init__(from_email=from_email, headers=headers, *args, **kwargs)

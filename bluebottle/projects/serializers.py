@@ -292,7 +292,6 @@ class ManageTaskSerializer(serializers.ModelSerializer):
                   'skill',
                   'time_needed',
                   'title',
-                  'place',
                   'type',)
 
 
@@ -380,11 +379,15 @@ class ManageProjectSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
+        if self.instance and \
+                self.instance.status.slug not in ('plan-new', 'plan-needs-work') and \
+                'payout_account' in data:
+            # Don't write payout account if not in draft
+            data.pop('payout_account')
         if self.instance and self.instance.status.slug in ('campaign', 'voting'):
             # When project is running, only a subset of the fields canb be changed
             for field, value in data.items():
                 current = getattr(self.instance, field)
-
                 if field not in self.editable_fields:
                     try:
                         # If we check a many to many field, make convert both sides to a set

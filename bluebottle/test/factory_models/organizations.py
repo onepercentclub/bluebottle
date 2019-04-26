@@ -23,4 +23,3 @@ class OrganizationContactFactory(factory.DjangoModelFactory):
     phone = factory.Sequence(lambda n: '555-{0}'.format(n))
     email = factory.Sequence(lambda n: '{0}@example.com'.format(n))
     owner = factory.SubFactory(BlueBottleUserFactory)
-    organization = factory.SubFactory(OrganizationFactory)

@@ -1,6 +1,6 @@
 import factory
 
-from bluebottle.organizations.models import OrganizationContact, Organization, OrganizationMember
+from bluebottle.organizations.models import OrganizationContact, Organization
 from .geo import CountryFactory
 from .accounts import BlueBottleUserFactory
 
@@ -33,13 +33,4 @@ class OrganizationContactFactory(factory.DjangoModelFactory):
     phone = factory.Sequence(lambda n: '555-{0}'.format(n))
     email = factory.Sequence(lambda n: '{0}@example.com'.format(n))
     owner = factory.SubFactory(BlueBottleUserFactory)
-    organization = factory.SubFactory(OrganizationFactory)
-
-
-class OrganizationMemberFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = OrganizationMember
-
-    user = factory.SubFactory(BlueBottleUserFactory)
-    function = 'owner'
     organization = factory.SubFactory(OrganizationFactory)

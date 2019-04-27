@@ -3,15 +3,14 @@ import urllib
 
 from django.core.urlresolvers import reverse
 from django.test.utils import override_settings
-
-
-from bluebottle.organizations.models import Organization, OrganizationMember
-from bluebottle.test.utils import BluebottleTestCase
 from rest_framework import status
 
+from bluebottle.organizations.models import Organization
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (
-    OrganizationContactFactory, OrganizationFactory, OrganizationMemberFactory)
+    OrganizationContactFactory, OrganizationFactory
+)
+from bluebottle.test.utils import BluebottleTestCase
 
 
 class OrganizationsEndpointTestCase(BluebottleTestCase):
@@ -30,18 +29,26 @@ class OrganizationsEndpointTestCase(BluebottleTestCase):
 
         self.user_2 = BlueBottleUserFactory.create()
 
-        self.organization_1 = OrganizationFactory.create(name='Evil Knight')
-        self.organization_2 = OrganizationFactory.create(name='Evel Knievel')
-        self.organization_3 = OrganizationFactory.create(name='Hanson Kids')
-        self.organization_4 = OrganizationFactory.create(name='Knight Rider')
-        self.organization_5 = OrganizationFactory.create(name='Kids Club')
-
-        self.member_1 = OrganizationMemberFactory.create(
-            user=self.user_1, organization=self.organization_1)
-        self.member_2 = OrganizationMemberFactory.create(
-            user=self.user_1, organization=self.organization_2)
-        self.member_3 = OrganizationMemberFactory.create(
-            user=self.user_2, organization=self.organization_3)
+        self.organization_1 = OrganizationFactory.create(
+            owner=self.user_1,
+            name='Evil Knight'
+        )
+        self.organization_2 = OrganizationFactory.create(
+            owner=self.user_1,
+            name='Evel Knievel'
+        )
+        self.organization_3 = OrganizationFactory.create(
+            owner=self.user_1,
+            name='Hanson Kids'
+        )
+        self.organization_4 = OrganizationFactory.create(
+            owner=self.user_1,
+            name='Knight Rider'
+        )
+        self.organization_5 = OrganizationFactory.create(
+            owner=self.user_2,
+            name='Kids Club'
+        )
 
 
 class OrganizationListTestCase(OrganizationsEndpointTestCase):
@@ -67,22 +74,18 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
                                    token=self.user_1_token)
 
         self.assertEqual(response.status_code, 200)
-
-        # Fetching organizations is only possible via a search term
-        data = json.loads(response.content)
-        self.assertEqual(data['count'], 0)
+        self.assertEqual(response.data['meta']['pagination']['count'], 5)
 
     def test_api_organizations_search(self):
         """
         Tests that the organizations search is not intelligent.
         """
         # Search for organizations with "evil" in their name.
-        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'Evil Knievel'}))
+        url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'Evil'}))
         response = self.client.get(url, token=self.user_1_token)
         self.assertEqual(response.status_code, 200)
         # Expect two organizations with 'ev'
-        data = json.loads(response.content)
-        self.assertEqual(data['count'], 0)
+        self.assertEqual(response.data['meta']['pagination']['count'], 1)
 
     def test_api_organizations_search_extended(self):
         """
@@ -92,9 +95,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'Knight'}))
         response = self.client.get(url, token=self.user_1_token)
         self.assertEqual(response.status_code, 200)
-
-        data = json.loads(response.content)
-        self.assertEqual(data['count'], 2)
+        self.assertEqual(response.data['meta']['pagination']['count'], 2)
 
     def test_api_organizations_search_case_insensitve(self):
         """
@@ -103,9 +104,7 @@ class OrganizationListTestCase(OrganizationsEndpointTestCase):
         url = "{}?{}".format(reverse('organization_list'), urllib.urlencode({'search': 'kids'}))
         response = self.client.get(url, token=self.user_1_token)
         self.assertEqual(response.status_code, 200)
-
-        data = json.loads(response.content)
-        self.assertEqual(data['count'], 2)
+        self.assertEqual(response.data['meta']['pagination']['count'], 2)
 
 
 class OrganizationDetailTestCase(OrganizationsEndpointTestCase):
@@ -135,27 +134,16 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
 
         self.post_data = {
             'name': '1% Club',
-            'address_line1': "'s Gravenhekje 1a",
-            'address_line2': '1011 TG',
-            'city': 'Amsterdam',
-            'state': 'North Holland',
             'description': 'some description',
-            'country': self.organization_1.country.pk,
-            'postal_code': '1011TG',
-            'phone_number': '(+31) 20 715 8980',
             'website': 'http://onepercentclub.com',
-            'email': 'info@onepercentclub.com',
         }
 
     def test_api_manage_organizations_list_user_filter(self):
         """
         Tests that no organizations are returned if there is not a search term supplied.
         """
-        response = self.client.get(
-            reverse('organization_list'), token=self.user_1_token)
-
+        response = self.client.get(reverse('organization_list'), token=self.user_1_token)
         self.assertEqual(response.status_code, 200)
-
         data = json.loads(response.content)
         self.assertEqual(data['count'], 0)
 
@@ -215,9 +203,6 @@ class ManageOrganizationListTestCase(OrganizationsEndpointTestCase):
             token=self.user_1_token)
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(OrganizationMember.objects.filter(user=self.user_1,
-                                                           organization_id=response.data['id']
-                                                           ).count(), 1)
 
 
 class ManageOrganizationContactTestCase(OrganizationsEndpointTestCase):

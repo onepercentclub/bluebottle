@@ -28,10 +28,8 @@ class OrganizationContactList(AutoPrefetchMixin, generics.CreateAPIView):
     queryset = OrganizationContact.objects.all()
     serializer_class = OrganizationContactSerializer
     permission_classes = (IsAuthenticated, )
-
     renderer_classes = (BluebottleJSONAPIRenderer, )
     parser_classes = (JSONParser, )
-    permission_classes = (IsAuthenticated, )
     authentication_classes = (
         JSONWebTokenAuthentication,
     )
@@ -55,15 +53,13 @@ class OrganizationContactDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIVie
 class OrganizationList(AutoPrefetchMixin, generics.ListCreateAPIView):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-
     pagination_class = OrganizationPagination
-
     filter_backends = (filters.SearchFilter,)
+    search_fields = ['name']
     permission_classes = (IsAuthenticated,)
-
     renderer_classes = (BluebottleJSONAPIRenderer, )
     parser_classes = (JSONParser, )
-    permission_classes = (IsAuthenticated, )
+
     authentication_classes = (
         JSONWebTokenAuthentication,
     )
@@ -80,10 +76,8 @@ class OrganizationDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIView):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     permission_classes = (IsAuthenticated,)
-
     renderer_classes = (BluebottleJSONAPIRenderer, )
     parser_classes = (JSONParser, )
-    permission_classes = (IsAuthenticated, )
     authentication_classes = (
         JSONWebTokenAuthentication,
     )

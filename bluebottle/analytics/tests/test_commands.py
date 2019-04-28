@@ -251,7 +251,6 @@ class TestParticipationXls(SetupDataMixin, BluebottleTestCase):
             # Check participants
             self.assertEqual(workbook.worksheets[0]['A1'].value, 'Email Address')
             self.assertEqual(workbook.worksheets[0]['A2'].value, self.users[0].email)
-            self.assertEqual(workbook.worksheets[0]['A3'].value, self.users[11].email)
 
             # Check some sheet titles
             self.assertEqual(workbook.worksheets[0].title, 'Participants - {}'.format(self.year))
@@ -274,4 +273,4 @@ class TestExportAnalytics(SetupDataMixin, BluebottleTestCase):
                      '--start', '%s-01-01' % self.year,
                      '--end', '%s-12-31' % self.year,
                      '--tenant', 'test')
-        self.assertEqual(mock_queue.call_count, 604)
+        self.assertEqual(mock_queue.call_count, 608)

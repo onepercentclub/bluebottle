@@ -236,10 +236,16 @@ class FsmTestMixin(object):
 
 
 class JSONAPITestClient(Client):
+
     def patch(self, path, data='',
               content_type='application/vnd.api+json',
               follow=False, secure=False, **extra):
         return super(JSONAPITestClient, self).put(path, data, content_type, follow, secure, **extra)
+
+    def put(self, path, data='',
+            content_type='application/vnd.api+json',
+            follow=False, secure=False, **extra):
+        return super(JSONAPITestClient, self).patch(path, data, content_type, follow, secure, **extra)
 
     def post(self, path, data='',
              content_type='application/vnd.api+json',

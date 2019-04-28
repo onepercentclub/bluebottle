@@ -28,6 +28,8 @@ class OrganizationContactList(AutoPrefetchMixin, generics.CreateAPIView):
     queryset = OrganizationContact.objects.all()
     serializer_class = OrganizationContactSerializer
     permission_classes = (IsAuthenticated, )
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ['name']
     renderer_classes = (BluebottleJSONAPIRenderer, )
     parser_classes = (JSONParser, )
     authentication_classes = (

@@ -289,6 +289,7 @@ class MemberAdmin(UserAdmin):
         ('amount_donated', 'amount donated'),
         ('is_volunteer', 'is volunteer'),
         ('time_spent', 'time spent'),
+        ('subscribed', 'subscribed to matching projects'),
     )
 
     actions = (export_as_csv_action(fields=export_fields),)

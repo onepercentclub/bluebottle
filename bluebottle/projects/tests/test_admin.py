@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import csv
+from datetime import datetime, timedelta
 import json
 import mock
 from moneyed import Money
@@ -659,6 +660,28 @@ class ProjectAdminFormTest(BluebottleTestCase):
             'payout_account': PlainPayoutAccountFactory.create(
                 reviewed=False
             ),
+        }
+        self.form.clean()
+
+    def test_deadline_too_far(self):
+        self.form.cleaned_data = {
+            'status': ProjectPhase.objects.get(slug='campaign'),
+            'deadline': datetime.now() + timedelta(days=70),
+            'amount_asked': Money(100, 'EUR')
+        }
+        with self.assertRaises(ValidationError) as error:
+            self.form.clean()
+
+        self.assertTrue(
+            'Crowdfunding projects cannot run longer then 60 days' in
+            error.exception.message
+        )
+
+    def test_deadline(self):
+        self.form.cleaned_data = {
+            'status': ProjectPhase.objects.get(slug='campaign'),
+            'deadline': datetime.now() + timedelta(days=40),
+            'amount_asked': Money(100, 'EUR')
         }
         self.form.clean()
 

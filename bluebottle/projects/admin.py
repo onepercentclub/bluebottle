@@ -1,6 +1,7 @@
 import csv
 import logging
 from collections import OrderedDict
+from datetime import datetime, timedelta
 
 import six
 from adminfilters.multiselect import UnionFieldListFilter
@@ -233,6 +234,7 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
                 self.cleaned_data['status'].slug == 'campaign' and \
                 'amount_asked' in self.cleaned_data and \
                 self.cleaned_data['amount_asked'].amount > 0 and \
+                'payout_account' in self.cleaned_data and \
                 (
                     not self.cleaned_data['payout_account'] or (
                         hasattr(self.cleaned_data['payout_account'], 'reviewed') and
@@ -248,6 +250,18 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
 
             raise forms.ValidationError(
                 format_html(_('The bank details need to be reviewed before approving a project') + link)
+            )
+
+        if (
+            'status' in self.cleaned_data and
+            self.cleaned_data['status'].slug == 'campaign' and
+            'amount_asked' in self.cleaned_data and
+            self.cleaned_data['amount_asked'].amount > 0 and
+            'deadline' in self.cleaned_data and
+            self.cleaned_data['deadline'] > datetime.now() + timedelta(days=60)
+        ):
+            raise forms.ValidationError(
+                _('Crowdfunding projects cannot run longer then 60 days')
             )
 
     def save(self, commit=True):

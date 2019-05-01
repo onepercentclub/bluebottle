@@ -195,6 +195,8 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(data['data']['attributes']['title'], self.initiative.title)
+        self.assertEqual(data['data']['meta']['review-status'], self.initiative.review_status)
+        self.assertEqual(data['data']['meta']['transitions'], ['submit'])
         self.assertEqual(data['data']['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
         self.assertEqual(len(data['included']), 3)
@@ -230,3 +232,75 @@ class InitiativeListFilterAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+
+
+class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
+    def setUp(self):
+        super(InitiativeReviewTransitionListAPITestCase, self).setUp()
+
+        self.url = reverse('initiative-review-transition-list')
+
+        self.initiative = InitiativeFactory(
+            owner=self.owner
+        )
+
+    def test_transition_to_submitted(self):
+        data = {
+            'data': {
+                'type': 'transitions',
+                'attributes': {
+                    'transition': 'submit',
+                },
+                'relationships': {
+                    'resource': {
+                        'data': {
+                            'type': 'initiatives',
+                            'id': self.initiative.pk
+                        }
+                    }
+                }
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.content)
+
+        initiative = Initiative.objects.get(pk=self.initiative.pk)
+        self.assertEqual(initiative.review_status, 'submitted')
+        self.assertTrue(data['data']['id'])
+        self.assertTrue(data['data']['attributes']['transition'], 'submit')
+
+    def test_transition_disallowed(self):
+        data = {
+            'data': {
+                'type': 'transitions',
+                'attributes': {
+                    'transition': 'approve',
+                },
+                'relationships': {
+                    'resource': {
+                        'data': {
+                            'type': 'initiatives',
+                            'id': self.initiative.pk
+                        }
+                    }
+                }
+            }
+        }
+
+        response = self.client.post(
+            self.url,
+            json.dumps(data),
+            user=self.owner
+        )
+        self.assertEqual(response.status_code, 400)
+        data = json.loads(response.content)
+        self.assertEqual(data['errors'][0], u'Transition is not available')
+
+        initiative = Initiative.objects.get(pk=self.initiative.pk)
+        self.assertEqual(initiative.review_status, 'created')

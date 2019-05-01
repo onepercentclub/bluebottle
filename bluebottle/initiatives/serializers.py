@@ -13,7 +13,9 @@ from bluebottle.categories.models import Category
 from bluebottle.files.serializers import ImageField, ImageSerializer
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
-from bluebottle.transitions.serializers import AvailableTransitionsField, TransitionSerializer
+from bluebottle.transitions.serializers import (
+    AvailableTransitionsField, TransitionSerializer
+)
 from bluebottle.utils.serializers import (
     ResourcePermissionField
 )
@@ -114,7 +116,5 @@ class InitiativeSerializer(ModelSerializer):
 
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=Initiative.objects.all())
     field = 'review_status'
-
-    class Meta:
-        model = Initiative

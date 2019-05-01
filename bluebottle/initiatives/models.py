@@ -64,6 +64,9 @@ class Initiative(ReviewModel):
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
 
+    class JSONAPIMeta:
+        resource_name = 'initiatives'
+
     def __unicode__(self):
         return self.title
 

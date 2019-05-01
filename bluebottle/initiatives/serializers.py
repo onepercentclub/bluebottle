@@ -59,6 +59,7 @@ class InitiativeImageSerializer(ImageSerializer):
         'large': '400x500'
     }
     content_view_name = 'initiative-image'
+    relationship = 'initiative_set'
 
 
 class InitiativeSerializer(ModelSerializer):

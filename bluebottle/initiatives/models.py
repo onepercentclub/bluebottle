@@ -71,7 +71,4 @@ class Initiative(ReviewModel):
         if not self.slug:
             self.slug = slugify(self.title)
 
-        if self.has_organization and not self.organization_contact:
-            self.organization_contact = OrganizationContact.create()
-
         super(Initiative, self).save(**kwargs)

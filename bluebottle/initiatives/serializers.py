@@ -47,10 +47,13 @@ class MemberSerializer(ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ('id', 'first_name', 'last_name', 'initials', 'avatar', 'full_name', 'short_name', 'is_active')
+        fields = (
+            'id', 'first_name', 'last_name', 'initials', 'avatar',
+            'full_name', 'short_name', 'is_active', 'date_joined'
+        )
 
     class JSONAPIMeta:
-        resource_name = 'user-previews'
+        resource_name = 'members'
 
 
 class InitiativeImageSerializer(ImageSerializer):
@@ -78,7 +81,7 @@ class InitiativeSerializer(ModelSerializer):
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'promotor': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
         'place': 'bluebottle.geo.serializers.InitiativePlaceSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
         'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
@@ -89,14 +92,14 @@ class InitiativeSerializer(ModelSerializer):
         model = Initiative
         fields = (
             'id', 'title', 'pitch', 'review_status', 'categories', 'owner',
-            'reviewer', 'promotor', 'slug', 'has_organization', 'organization',
+            'reviewer', 'promoter', 'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_html', 'image',
             'theme', 'place', 'permissions',
         )
 
     class JSONAPIMeta:
         included_resources = [
-            'owner', 'reviewer', 'promotor', 'categories', 'theme', 'place', 'image',
+            'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'image',
             'organizatiion',
         ]
         resource_name = 'initiatives'

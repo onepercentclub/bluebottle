@@ -41,7 +41,7 @@ class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
     prefetch_for_includes = {
         'owner': ['owner'],
         'reviewer': ['reviewer'],
-        'promotor': ['promotor'],
+        'promoter': ['promoter'],
         'theme': ['theme'],
         'place': ['place'],
         'categories': ['categories'],

@@ -13,7 +13,6 @@ from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
 from bluebottle.geo.serializers import CountrySerializer, PlaceSerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
-from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.payouts.serializers import PayoutAccountSerializer
 from bluebottle.projects.models import (
     ProjectBudgetLine, Project, ProjectImage,
@@ -136,7 +135,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     image = ImageSerializer(required=False)
     is_funding = serializers.ReadOnlyField()
     location = serializers.PrimaryKeyRelatedField(required=False, queryset=Location.objects)
-    organization = OrganizationPreviewSerializer(read_only=True)
     owner = UserProfileSerializer()
     people_needed = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
@@ -190,7 +188,6 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'longitude',
                   'project_location',
                   'open_task_count',
-                  'organization',
                   'owner',
                   'people_needed',
                   'people_registered',
@@ -460,7 +457,6 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'latitude',
                   'location',
                   'longitude',
-                  'organization',
                   'payout_account',
                   'people_needed',
                   'people_registered',

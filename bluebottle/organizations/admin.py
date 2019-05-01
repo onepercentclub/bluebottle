@@ -1,9 +1,6 @@
 from django.db import models
-from django.contrib import admin, messages
+from django.contrib import admin
 from django.core.urlresolvers import reverse
-from django.template.response import TemplateResponse
-from django.http.response import HttpResponseRedirect
-from django.utils.translation import ugettext_lazy as _
 from django.utils.html import format_html
 
 from bluebottle.organizations.models import Organization, OrganizationContact
@@ -11,35 +8,6 @@ from bluebottle.projects.models import Project
 from bluebottle.members.models import Member
 from bluebottle.utils.admin import export_as_csv_action
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
-
-
-def merge(modeladmin, request, queryset):
-    if len(queryset) < 2:
-        messages.add_message(request, messages.WARNING, _('Select at least 2 organizations to merge'))
-
-        return HttpResponseRedirect(
-            reverse('admin:organizations_organization_changelist')
-        )
-    if 'master' in request.POST:
-        master = queryset.get(pk=request.POST['master'])
-        master.merge(queryset.exclude(pk=master.pk))
-        return HttpResponseRedirect(
-            reverse('admin:organizations_organization_changelist')
-        )
-    else:
-        return TemplateResponse(
-            request,
-            'admin/merge_preview.html',
-            {
-                'organizations': queryset,
-                'current_app': modeladmin.admin_site.name,
-                'title': _('Merge organizations'),
-                'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME
-            }
-        )
-
-
-merge.short_description = _('Merge Organizations')
 
 
 class OrganizationProjectInline(admin.TabularInline):
@@ -61,76 +29,33 @@ class OrganizationProjectInline(admin.TabularInline):
         return False
 
 
-class OrganizationContactInline(admin.TabularInline):
-    model = OrganizationContact
-    verbose_name = "Contact"
-    verbose_name_plural = "Contacts"
-    readonly_fields = ('name', 'email', 'phone', 'creator')
-    fields = ('name', 'email', 'phone', 'creator')
-
-    def creator(self, obj):
-        owner = obj.owner
-        url = reverse('admin:{0}_{1}_change'.format(owner._meta.app_label,
-                                                    owner._meta.model_name),
-                      args=[owner.id])
-        return format_html(u"<a href='{}'>{} {}</a>", str(url), owner.first_name, owner.last_name)
-
-    creator.short_description = _('Creator')
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-
-class PartnerOrganizationMembersInline(admin.TabularInline):
-    model = Member
-    verbose_name = "Partner Organization Member"
-    verbose_name_plural = "Partner Organization Members"
-    readonly_fields = ('member', 'phone_number', 'date_joined')
-    fields = ('member', 'email', 'phone_number', 'date_joined')
-
-    def member(self, obj):
-        url = reverse('admin:{0}_{1}_change'.format(obj._meta.app_label, obj._meta.model_name), args=[obj.id])
-        return format_html(u"<a href='{}'>{}</a>", str(url), obj.full_name)
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-
 class OrganizationContactAdmin(admin.ModelAdmin):
     model = Member
-    fields = ('name', 'organization', 'email', 'phone', )
-    list_display = ('name', 'organization', 'email', 'phone', )
+    fields = ('name', 'email', 'phone', )
+    list_display = ('name', 'email', 'phone', )
 
     export_fields = [
         ('name', 'name'),
-        ('organization__name', 'organization'),
         ('email', 'email'),
         ('phone', 'Phone Number'),
     ]
 
-    actions = (export_as_csv_action(fields=export_fields), merge)
+    actions = (export_as_csv_action(fields=export_fields), )
 
 
 class OrganizationAdmin(admin.ModelAdmin):
-    inlines = (OrganizationProjectInline, OrganizationContactInline, PartnerOrganizationMembersInline)
+    inlines = (OrganizationProjectInline, )
 
-    list_display = ('name', 'email', 'website', 'phone_number', 'created')
+    list_display = ('name', 'website', 'created')
     list_filter = (
         ('projects__theme', admin.RelatedOnlyFieldListFilter),
         ('projects__location', admin.RelatedOnlyFieldListFilter),
     )
-    fields = ('name', 'email', 'phone_number', 'website', 'description', 'logo')
+    fields = ('name', 'website', 'description', 'logo')
     search_fields = ('name',)
     export_fields = [
         ('name', 'name'),
         ('website', 'website'),
-        ('email', 'email'),
         ('created', 'created'),
     ]
 
@@ -144,7 +69,7 @@ class OrganizationAdmin(admin.ModelAdmin):
             return []
         return super(OrganizationAdmin, self).get_inline_instances(request, obj)
 
-    actions = (export_as_csv_action(fields=export_fields), merge)
+    actions = (export_as_csv_action(fields=export_fields), )
 
 
 admin.site.register(Organization, OrganizationAdmin)

@@ -5,6 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import InitiativePlace
+from bluebottle.organizations.models import Organization, OrganizationContact
 from bluebottle.utils.models import ReviewModel
 
 
@@ -23,6 +24,12 @@ class Initiative(ReviewModel):
 
     image = ImageField(blank=True, null=True)
 
+    promoter = models.ForeignKey(
+        'members.Member',
+        verbose_name=_('owner'),
+        null=True,
+    )
+
     video_url = models.URLField(
         _('video'),
         max_length=100,
@@ -37,6 +44,9 @@ class Initiative(ReviewModel):
     )
 
     place = models.ForeignKey(InitiativePlace, null=True, blank=True, on_delete=SET_NULL)
+    has_organization = models.NullBooleanField(null=True, default=None)
+    organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
+    organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
     class Meta:
         verbose_name = _("Initiative")
@@ -60,5 +70,8 @@ class Initiative(ReviewModel):
     def save(self, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+
+        if self.has_organization and not self.organization_contact:
+            self.organization_contact = OrganizationContact.create()
 
         super(Initiative, self).save(**kwargs)

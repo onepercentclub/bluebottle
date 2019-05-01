@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from ..views import CountryList, UsedCountryList, CountryDetail, LocationList
+from ..views import CountryList, UsedCountryList, CountryDetail, LocationList, InitiativePlaceList
 
 urlpatterns = [
     url(r'^countries/$', CountryList.as_view(),
@@ -10,4 +10,6 @@ urlpatterns = [
         name='used-country-list'),
     url(r'^locations/$', LocationList.as_view(),
         name='location-list'),
+    url(r'^places$', InitiativePlaceList.as_view(),
+        name='place-list'),
 ]

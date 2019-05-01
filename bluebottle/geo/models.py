@@ -130,10 +130,6 @@ class Location(models.Model):
     def __unicode__(self):
         return self.name
 
-    @property
-    def position_tuple(self):
-        return (self.position.longitude, self.position.latitude)
-
 
 class Place(models.Model):
     street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
@@ -151,6 +147,15 @@ class Place(models.Model):
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    @property
-    def position_tuple(self):
-        return (self.position.longitude, self.position.latitude)
+
+class InitiativePlace(models.Model):
+    street_number = models.CharField(_('Street Number'), max_length=255, blank=True, null=True)
+    street = models.CharField(_('Street'), max_length=255, blank=True, null=True)
+    postal_code = models.CharField(_('Postal Code'), max_length=255, blank=True, null=True)
+    locality = models.CharField(_('Locality'), max_length=255, blank=True, null=True)
+    province = models.CharField(_('Province'), max_length=255, blank=True, null=True)
+    country = models.ForeignKey('geo.Country')
+
+    formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
+
+    position = GeopositionField()

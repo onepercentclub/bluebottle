@@ -20,9 +20,6 @@ class TestDonationEmails(BluebottleTestCase):
         self.init_projects()
 
         self.user = BlueBottleUserFactory.create(first_name='Michael', last_name='Jackson')
-        self.user.address.line1 = "'s Gravenhekje 1A"
-        self.user.address.city = "Mokum A"
-        self.user.save()
 
         self.project_owner = BlueBottleUserFactory.create(first_name='projectowner')
         campaign_status = ProjectPhase.objects.get(slug='campaign')
@@ -78,8 +75,6 @@ class TestDonationEmails(BluebottleTestCase):
 
         # Test that last name is found in the email
         self.assertTrue(self.user.last_name in mail.outbox[0].body)
-        # self.assertTrue(self.user.address.line1 in mail.outbox[0].body)
-        # self.assertTrue(self.user.address.city in mail.outbox[0].body)
         self.assertTrue("{0}".format(self.donation.amount.amount) in mail.outbox[0].body)
 
     def test_mail_owner_successful_anonymous_donation(self):
@@ -109,7 +104,6 @@ class TestDonationEmails(BluebottleTestCase):
         # Test that last name is *not* found in the email
         self.assertFalse(self.user.first_name in mail.outbox[0].body)
         self.assertFalse(self.user.last_name in mail.outbox[0].body)
-        self.assertFalse(self.user.address.line1 in mail.outbox[0].body)
         self.assertTrue('an anonymous person' in mail.outbox[0].body)
 
     def test_mail_external_project_owner_successful_donation(self):
@@ -141,7 +135,6 @@ class TestDonationEmails(BluebottleTestCase):
         # Test that last name is *not* found in the email
         self.assertTrue(self.user.first_name in mail.outbox[0].body)
         self.assertFalse(self.user.last_name in mail.outbox[0].body)
-        self.assertFalse(self.user.address.line1 in mail.outbox[0].body)
 
     def test_mail_donor_successful_donation(self):
         """ Test that an email is sent to the donor after a succesful donation """

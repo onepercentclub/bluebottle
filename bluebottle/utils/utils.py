@@ -14,6 +14,7 @@ from django.contrib.auth.models import Permission, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.signing import TimestampSigner
 from django.core.urlresolvers import reverse
+from django.db import connection
 
 from django_fsm import TransitionNotAllowed
 from django_tools.middlewares import ThreadLocal
@@ -91,9 +92,15 @@ class FSMTransition(object):
             instance_method = getattr(self, transition_method.__name__)
             instance_method()
         except UnboundLocalError:
+            tenant = connection.tenant.schema_name
             raise TransitionNotAllowed(
-                "Can't switch from state '{0}' to state '{1}' for {2}".format(
-                    self.status, new_status, self.__class__.__name__))
+                "Can't switch from state '{0}' to state '{1}' for {2} {3} {4}".format(
+                    self.status,
+                    new_status,
+                    self.__class__.__name__,
+                    self.id,
+                    tenant
+                ))
 
         if save:
             self.save()

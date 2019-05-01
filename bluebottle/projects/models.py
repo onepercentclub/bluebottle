@@ -21,7 +21,7 @@ from django_summernote.models import AbstractAttachment
 
 from moneyed.classes import Money
 from polymorphic.models import PolymorphicModel
-from select_multiple_field.models import SelectMultipleField
+from multiselectfield import MultiSelectField
 
 from bluebottle.analytics.tasks import queue_analytics_record
 from bluebottle.bb_metrics.utils import bb_track
@@ -144,6 +144,7 @@ class Project(BaseProject, PreviousStatusMixin):
         _("future"), blank=True, null=True,
         help_text=_("How will this project be self-sufficient and "
                     "sustainable in the long term?"))
+    # END: Remove these fields?
 
     date_submitted = models.DateTimeField(_('Campaign Submitted'), null=True,
                                           blank=True)
@@ -162,8 +163,10 @@ class Project(BaseProject, PreviousStatusMixin):
 
     categories = models.ManyToManyField('categories.Category', blank=True)
 
-    currencies = SelectMultipleField(max_length=100, default=[],
-                                     choices=lazy(get_currency_choices, tuple)())
+    currencies = MultiSelectField(
+        max_length=100, default=[],
+        choices=lazy(get_currency_choices, tuple)()
+    )
 
     celebrate_results = models.BooleanField(
         _('Celebrate Results'),
@@ -807,10 +810,10 @@ class ProjectPlatformSettings(BasePlatformSettings):
         ('email', _('Email')),
     )
 
-    create_types = SelectMultipleField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
-    contact_types = SelectMultipleField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
-    share_options = SelectMultipleField(
-        max_length=100, choices=PROJECT_SHARE_OPTIONS, blank=True, include_blank=False
+    create_types = MultiSelectField(max_length=100, choices=PROJECT_CREATE_OPTIONS)
+    contact_types = MultiSelectField(max_length=100, choices=PROJECT_CONTACT_TYPE_OPTIONS)
+    share_options = MultiSelectField(
+        max_length=100, choices=PROJECT_SHARE_OPTIONS, blank=True
     )
     facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
     allow_anonymous_rewards = models.BooleanField(
@@ -818,9 +821,8 @@ class ProjectPlatformSettings(BasePlatformSettings):
     )
     create_flow = models.CharField(max_length=100, choices=PROJECT_CREATE_FLOW_OPTIONS)
     contact_method = models.CharField(max_length=100, choices=PROJECT_CONTACT_OPTIONS)
-    match_options = SelectMultipleField(
-        max_length=100, choices=PROJECT_MATCH_OPTIONS,
-        blank=True, include_blank=False
+    match_options = MultiSelectField(
+        max_length=100, choices=PROJECT_MATCH_OPTIONS, blank=True
     )
 
     class Meta:

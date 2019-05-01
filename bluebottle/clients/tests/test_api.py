@@ -202,7 +202,10 @@ class TestPlatformSettingsApi(BluebottleTestCase):
         ]
 
         response = self.client.get(self.settings_url)
-        self.assertEqual(response.data['platform']['projects']['create_types'], ['funding', 'sourcing'])
+        self.assertEqual(
+            set(response.data['platform']['projects']['create_types']),
+            set(['funding', 'sourcing'])
+        )
         self.assertEqual(response.data['platform']['projects']['contact_types'], ['organization'])
         self.assertEqual(response.data['platform']['projects']['contact_method'], 'email')
         self.assertEqual(response.data['platform']['projects']['filters'], filters)

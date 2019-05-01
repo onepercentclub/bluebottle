@@ -1,51 +1,53 @@
-from bluebottle.utils.views import (
-    ListCreateAPIView, RetrieveUpdateAPIView, CreateAPIView
-)
-from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission
-)
-
-from rest_framework_json_api.views import AutoPrefetchMixin
-from rest_framework_json_api.parsers import JSONParser
+from rest_framework_json_api import django_filters
+from rest_framework_json_api.exceptions import exception_handler
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
+from rest_framework_json_api.parsers import JSONParser
+from rest_framework_json_api.views import AutoPrefetchMixin
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from bluebottle.initiatives.models import Initiative
-from bluebottle.initiatives.serializers import InitiativeSerializer, TransitionSerializer
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
+from bluebottle.files.views import FileContentView
+from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.serializers import InitiativeSerializer
+from bluebottle.utils.permissions import ResourceOwnerPermission
+from bluebottle.utils.views import (
+    ListCreateAPIView, RetrieveUpdateAPIView
+)
 
 
 class InitiativePagination(JsonApiPageNumberPagination):
     page_size = 8
 
 
-
-class TransitionList(CreateAPIView):
-    queryset = Initiative.objects.all()
-    serializer_class = TransitionSerializer
-
-    parser_classes = (JSONParser, )
-    renderer_classes = (BluebottleJSONAPIRenderer, )
-
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
-
-
-class InitiativeList(ListCreateAPIView):
+class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
     pagination_class = InitiativePagination
 
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
-    )
-    parser_classes = (JSONParser, )
+    permission_classes = (ResourceOwnerPermission,)
 
-    renderer_classes = (BluebottleJSONAPIRenderer, )
+    filter_backends = (
+        django_filters.DjangoFilterBackend,
+    )
+    filter_fields = {
+        'owner__id': ('exact', 'in',),
+    }
+    authentication_classes = (
+        JSONWebTokenAuthentication,
+    )
+
+    parser_classes = (JSONParser,)
+
+    renderer_classes = (BluebottleJSONAPIRenderer,)
 
     prefetch_for_includes = {
         'owner': ['owner'],
-        'reviewer': ['reviewer']
+        'reviewer': ['reviewer'],
+        'promoter': ['promoter'],
+        'theme': ['theme'],
+        'place': ['place'],
+        'categories': ['categories'],
+        'image': ['image'],
     }
 
     def perform_create(self, serializer):
@@ -56,16 +58,28 @@ class InitiativeDetail(AutoPrefetchMixin, RetrieveUpdateAPIView):
     queryset = Initiative.objects.all()
     serializer_class = InitiativeSerializer
 
-    permission_classes = (
-        OneOf(ResourcePermission, ResourceOwnerPermission),
+    permission_classes = (ResourceOwnerPermission,)
+
+    authentication_classes = (
+        JSONWebTokenAuthentication,
     )
 
-    parser_classes = (JSONParser, )
-    renderer_classes = (BluebottleJSONAPIRenderer, )
+    def get_exception_handler(self):
+        return exception_handler
+
+    parser_classes = (JSONParser,)
+    renderer_classes = (BluebottleJSONAPIRenderer,)
 
     prefetch_for_includes = {
         'owner': ['owner'],
-        'reviewer': ['reviewer']
+        'reviewer': ['reviewer'],
+        'theme': ['theme'],
+        'place': ['place'],
+        'categories': ['categories'],
+        'image': ['image'],
     }
 
 
+class InitiativeImage(FileContentView):
+    queryset = Initiative.objects
+    field = 'image'

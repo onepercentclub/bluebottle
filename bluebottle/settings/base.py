@@ -127,14 +127,16 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-                'social.apps.django_app.context_processors.backends',
-                'social.apps.django_app.context_processors.login_redirect',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
                 'tenant_extras.context_processors.conf_settings',
                 'tenant_extras.context_processors.tenant_properties'
             ],
         },
     },
 ]
+
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',
@@ -184,13 +186,8 @@ JWT_AUTH = {
     # After the renewal limit it isn't possible to request a token refresh
     # => time token first created + renewal limit.
     'JWT_TOKEN_RENEWAL_LIMIT': datetime.timedelta(days=90),
+    'JWT_GET_USER_SECRET_KEY': 'bluebottle.members.utils.get_jwt_secret',
 
-    # Override the JWT token handlers, use tenant aware ones.
-    'JWT_ENCODE_HANDLER':
-        'tenant_extras.jwt_utils.jwt_encode_handler',
-
-    'JWT_DECODE_HANDLER':
-        'tenant_extras.jwt_utils.jwt_decode_handler',
 }
 
 # Time between attempts to refresh the jwt token automatically on standard request
@@ -207,7 +204,7 @@ LOCALE_REDIRECT_IGNORE = ('/docs', '/go', '/api', '/payments_docdata',
                           '/surveys', '/token', '/jet')
 
 SOCIAL_AUTH_STRATEGY = 'social.strategies.django_strategy.DjangoStrategy'
-SOCIAL_AUTH_STORAGE = 'social.apps.django_app.default.models.DjangoStorage'
+SOCIAL_AUTH_STORAGE = 'social_django.models.DjangoStorage'
 
 
 PASSWORD_HASHERS = (
@@ -288,14 +285,15 @@ SHARED_APPS = (
     'adminsortable',
     'django_summernote',
     'django_singleton_admin',
-    'django_filters'
+    'django_filters',
+    'multiselectfield',
 )
 
 TENANT_APPS = (
     'polymorphic',
     'modeltranslation',
 
-    'social.apps.django_app.default',
+    'social_django',
     'django.contrib.contenttypes',
     # Allow the Bluebottle common app to override the admin branding
     'bluebottle.common',
@@ -335,6 +333,8 @@ TENANT_APPS = (
     'bluebottle.projects',
     'bluebottle.organizations',
 
+    'bluebottle.transitions',
+    'bluebottle.files',
     'bluebottle.initiatives',
 
     'bluebottle.tasks',
@@ -412,23 +412,24 @@ TENANT_APPS = (
     'djmoney',
     'django_singleton_admin',
     'nested_inline',
-    'permissions_widget'
+    'permissions_widget',
+    'django.forms',
 )
 
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
 
-CSRF_COOKIE_SECURE = True
+CSRF_USE_SESSIONS = True
 SESSION_COOKIE_SECURE = True
 
 TENANT_MODEL = "clients.Client"
 TENANT_PROPERTIES = "bluebottle.clients.properties"
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
+SESSION_ENGINE = 'bluebottle.clients.session_backends'
 
 THUMBNAIL_DEBUG = False
 THUMBNAIL_QUALITY = 85
-THUMBNAIL_DUMMY = True
 THUMBNAIL_PRESERVE_FORMAT = True
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
@@ -936,3 +937,4 @@ LOOKER_SESSION_LENGTH = 60 * 60
 TOKEN_LOGIN_TIMEOUT = 30
 
 JSON_API_FORMAT_FIELD_NAMES = 'dasherize'
+JSON_API_UNIFORM_EXCEPTIONS = True

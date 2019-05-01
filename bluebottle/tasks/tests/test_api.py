@@ -519,6 +519,7 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
         # Task deadline time should changed be just before midnight after setting.
         response = self.client.post(self.tasks_url, task_data,
                                     HTTP_AUTHORIZATION=self.some_token)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_update_task_with_place(self):
@@ -595,6 +596,34 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
         self.assertEqual(
             task.place.locality, 'Amsterdam'
         )
+
+    def test_update_task_with_place_null(self):
+        task = TaskFactory.create(
+            author=self.some_user,
+            project=self.some_project
+        )
+
+        task_detail_url = reverse('task_detail', kwargs={'pk': task.pk})
+        response = self.client.put(
+            task_detail_url,
+            {
+                'id': task.pk,
+                'people_needed': task.people_needed,
+                'deadline': task.deadline,
+                'deadline_to_apply': task.deadline_to_apply,
+                'title': task.title,
+                'description': task.description,
+                'project': self.some_project.slug,
+                'location': task.location,
+                'skill': task.skill.pk,
+                'time_needed': task.time_needed,
+                'type': task.type,
+                'place': None,
+            },
+            token=self.some_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNone(task.place)
 
     def test_update_task_remove_place(self):
         task = TaskFactory.create(

@@ -1,6 +1,7 @@
 from django.db import models
-from bluebottle.payments.models import Payment
 from django.utils.translation import ugettext_lazy as _
+
+from bluebottle.payments.models import Payment
 
 
 class StripePayment(Payment):
@@ -17,6 +18,13 @@ class StripePayment(Payment):
     description = models.CharField(max_length=300, null=True)
 
     data = models.TextField(null=True)
+
+    def get_method_name(self):
+        """ Return the payment method name.
+
+        In Docdata, this is the default_pm field.
+        """
+        return self.order_payment.payment_method.replace('stripe', '')
 
     def get_fee(self):
         """

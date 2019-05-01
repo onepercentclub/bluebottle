@@ -19,13 +19,13 @@ from django.utils.http import int_to_base36
 from django.utils.translation import ugettext_lazy as _
 from permissions_widget.forms import PermissionSelectMultipleField
 
-from bluebottle.bb_accounts.models import UserAddress
 from bluebottle.bb_accounts.utils import send_welcome_mail
 from bluebottle.bb_follow.models import Follow
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Location
+from bluebottle.geo.admin import PlaceInline
 from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
@@ -161,13 +161,6 @@ class MemberChangeForm(six.with_metaclass(CustomAdminFormMetaClass, MemberForm))
             extra.value = self.cleaned_data.get(field.slug, None)
             extra.save()
         return member
-
-
-class UserAddressInline(admin.StackedInline):
-    model = UserAddress
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 
 class MemberAdmin(UserAdmin):
@@ -314,7 +307,7 @@ class MemberAdmin(UserAdmin):
                     'date_joined', 'is_active', 'login_as_link')
     ordering = ('-date_joined', 'email',)
 
-    inlines = (UserAddressInline, )
+    inlines = (PlaceInline, )
 
     def projects_managed(self, obj):
         url = reverse('admin:projects_project_changelist')

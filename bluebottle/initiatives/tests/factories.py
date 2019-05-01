@@ -1,15 +1,9 @@
 import factory
 
-from bluebottle.initiatives.models import Initiative, Theme
+from bluebottle.initiatives.models import Initiative
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-
-
-class ThemeFactory(factory.DjangoModelFactory):
-    class Meta(object):
-        model = Theme
-
-    name = factory.Sequence(lambda n: 'Theme {0}'.format(n))
+from bluebottle.test.factory_models.projects import ProjectThemeFactory
 
 
 class InitiativeFactory(factory.DjangoModelFactory):
@@ -20,4 +14,4 @@ class InitiativeFactory(factory.DjangoModelFactory):
     title = factory.Sequence(lambda n: 'Initiative {0}'.format(n))
     owner = factory.SubFactory(BlueBottleUserFactory)
     reviewer = factory.SubFactory(BlueBottleUserFactory)
-    theme = factory.SubFactory(ThemeFactory)
+    theme = factory.SubFactory(ProjectThemeFactory)

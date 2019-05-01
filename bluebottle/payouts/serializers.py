@@ -58,11 +58,13 @@ class PlainPayoutAccountSerializer(serializers.ModelSerializer):
 class StripePayoutAccountSerializer(serializers.ModelSerializer):
     account_token = serializers.CharField(write_only=True, required=False, allow_blank=True)
     bank_account_token = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    country = serializers.CharField(required=False, allow_blank=True)
     account_id = serializers.CharField(read_only=True)
 
     legal_entity = serializers.SerializerMethodField()
     bank_account = serializers.SerializerMethodField()
     verification = serializers.SerializerMethodField()
+    fields_needed = serializers.SerializerMethodField()
 
     def get_legal_entity(self, obj):
         try:
@@ -77,6 +79,12 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
         except AttributeError:
             return {}
 
+    def get_fields_needed(self, obj):
+        try:
+            return obj.account.verification.fields_needed
+        except (KeyError, AttributeError):
+            return []
+
     def get_bank_account(self, obj):
         try:
             return obj.account.external_accounts.data[0].to_dict()
@@ -85,7 +93,8 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
 
     def create_stripe_account(self, data):
         account_token = data.pop('account_token', None)
-        if account_token and data['country']:
+        country = data.pop('country', None)
+        if account_token and country:
             tenant = connection.tenant
             secret_key = get_secret_key()
 
@@ -95,7 +104,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
 
             account = stripe.Account.create(
                 account_token=account_token,
-                country=data['country'],
+                country=country,
                 type='custom',
                 payout_schedule={'interval': 'manual'},
                 api_key=secret_key,
@@ -111,6 +120,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
 
     def update_stripe_account(self, instance, account, data):
         account_token = data.pop('account_token', None)
+        data.pop('country', None)
         if account_token:
             account.account_token = account_token
             account.save()
@@ -177,6 +187,7 @@ class StripePayoutAccountSerializer(serializers.ModelSerializer):
             'reviewed',
             'bank_account',
             'verification',
+            'fields_needed',
             'legal_entity',
         )
 

@@ -494,8 +494,10 @@ class TestProjectRefundAdmin(BluebottleAdminTestCase):
     @override_settings(ENABLE_REFUNDS=False)
     def test_refunds_not_confirmed(self):
         with mock.patch.object(refund_project, 'delay') as refund_mock:
-            del self.request.POST['confirm']
-            response = self.project_admin.refund(self.request, self.project.pk)
+            request = self.request_factory.post('/')
+            request.user = MockUser(['payments.refund_orderpayment'])
+
+            response = self.project_admin.refund(request, self.project.pk)
 
             self.assertEqual(response.status_code, 200)
             refund_mock.assert_not_called()
@@ -637,6 +639,20 @@ class ProjectAdminFormTest(BluebottleTestCase):
             error.exception.message
         )
 
+    def test_payout_account_none(self):
+        self.form.cleaned_data = {
+            'status': ProjectPhase.objects.get(slug='campaign'),
+            'payout_account': None,
+            'amount_asked': Money(100, 'EUR')
+        }
+        with self.assertRaises(ValidationError) as error:
+            self.form.clean()
+
+        self.assertTrue(
+            'The bank details need to be reviewed before approving a project' in
+            error.exception.message
+        )
+
     def test_payout_account_reviewed_no_amount(self):
         self.form.cleaned_data = {
             'status': ProjectPhase.objects.get(slug='campaign'),
@@ -713,6 +729,9 @@ class ProjectAdminExportTest(BluebottleTestCase):
 
     def test_project_export(self):
         project = ProjectFactory(title='Just an example')
+        project.projectlocation.latitude = '43.068620000000000000'
+        project.projectlocation.longitude = '23.676374000000000000'
+        project.projectlocation.save()
         CustomProjectFieldSettings.objects.create(name='Extra Info')
         field = CustomProjectFieldSettings.objects.create(name='How is it')
         CustomProjectField.objects.create(project=project, value='This is nice!', field=field)
@@ -726,7 +745,9 @@ class ProjectAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'title')
-        self.assertEqual(headers[28], 'Extra Info')
+        self.assertEqual(headers[27], 'latitude')
+        self.assertEqual(headers[29], 'Extra Info')
         self.assertEqual(data[0], 'Just an example')
-        self.assertEqual(data[28], '')
-        self.assertEqual(data[29], 'This is nice!')
+        self.assertEqual(data[27], '43.068620000000000000')
+        self.assertEqual(data[30], 'This is nice!')
+        self.assertEqual(data[29], '')

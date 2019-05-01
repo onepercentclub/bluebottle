@@ -21,7 +21,7 @@ from bluebottle.members.tokens import login_token_generator
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.organizations import (OrganizationFactory, OrganizationContactFactory,
                                                           OrganizationMemberFactory)
-from bluebottle.test.factory_models.geo import LocationFactory, CountryFactory
+from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory
 from bluebottle.test.utils import BluebottleTestCase
 
 ASSERTION_MAPPING = {
@@ -80,7 +80,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         for field in serializer_fields:
             self.assertTrue(field in response.data)
 
-        excluded_fields = ['email', 'address', 'newsletter',
+        excluded_fields = ['email', 'newsletter',
                            'campaign_notifications',
                            'birthdate', 'gender', 'first_name', 'last_name',
                            'password']
@@ -116,7 +116,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         # Fields taken from the serializer
         excluded_fields = ['last_name', 'avatar', 'about_me', 'twitter',
                            'facebook', 'skypename', 'picture', 'url',
-                           'email', 'address', 'newsletter',
+                           'email', 'newsletter',
                            'campaign_notifications', 'phone_number',
                            'birthdate', 'gender', 'first_name', 'last_name',
                            'password']
@@ -144,7 +144,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'fundraiser_count', 'task_count', 'time_spent',
                              'website', 'twitter', 'facebook', 'skypename',
                              'email', 'phone_number',
-                             'address', 'newsletter', 'campaign_notifications',
+                             'newsletter', 'campaign_notifications',
                              'birthdate', 'gender', 'first_name', 'last_name', 'partner_organization']
         for field in serializer_fields:
             self.assertTrue(field in response.data)
@@ -207,13 +207,12 @@ class UserApiIntegrationTest(BluebottleTestCase):
         response = self.client.get(user_profile_url, token=self.user_1_token)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.user_1.id)
+        self.assertEqual(response.data['subscribed'], False)
 
         data = {
             'first_name': 'Nijntje',
             'last_name': 'het Konijntje',
-            'address': {
-                'line1': 'test line 1'
-            }
+            'subscribed': True
         }
 
         # Profile should not be able to be updated by anonymous users.
@@ -230,25 +229,96 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['first_name'], data['first_name'])
         self.assertEqual(response.data['last_name'], data['last_name'])
-        self.assertEqual(response.data['address']['line1'], data['address']['line1'])
 
         self.client.logout()
 
-    def test_user_profile_location_update(self):
+    def test_user_set_place(self):
         """
-        Test that updating your location sets your country
+        Test updating a user with the api and setting a place.
         """
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        # Create a user.
         country = CountryFactory.create()
-        location = LocationFactory.create(country=country)
-        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.id})
-        changes = {'location': location.id}
+        data = {
+            'email': 'nijntje27@hetkonijntje.nl',
+            'password': 'test-password',
+            'place': {
+                'country': country.pk,
+                'locality': 'Amsterdam',
+                'position': (52.0, 43.4)
+            }
+        }
 
-        # Profile should not be able to be updated by anonymous users.
-        response = self.client.put(user_profile_url, changes,
-                                   token=self.user_1_token)
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['place']['locality'], 'Amsterdam'
+        )
+        self.assertEqual(
+            response.data['place']['country'], country.pk
+        )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(country.id, response.data['address']['country'])
+    def test_user_update_place(self):
+        """
+        Test updating a user with the api and setting a place.
+        """
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        # Create a user.
+        PlaceFactory.create(
+            content_object=self.user_1
+        )
+
+        country = CountryFactory.create()
+        data = {
+            'email': 'nijntje27@hetkonijntje.nl',
+            'password': 'test-password',
+            'place': {
+                'country': country.pk,
+                'locality': 'Amsterdam',
+                'position': (52.0, 43.4)
+            }
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(
+            response.data['place']['locality'], 'Amsterdam'
+        )
+        self.assertEqual(
+            response.data['place']['country'], country.pk
+        )
+
+    def test_user_delete_place(self):
+        """
+        Test updating a user with the api and setting a place.
+        """
+        user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_1.pk})
+        PlaceFactory.create(
+            content_object=self.user_1
+        )
+        data = {
+            'email': 'nijntje27@hetkonijntje.nl',
+            'password': 'test-password',
+        }
+
+        response = self.client.put(
+            user_profile_url,
+            data,
+            token=self.user_1_token
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.user_1.refresh_from_db()
+        self.assertIsNone(
+            self.user_1.place
+        )
 
     def test_unauthenticated_user(self):
         """
@@ -291,7 +361,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
 
         welcome_email = mail.outbox[0]
         self.assertEqual(welcome_email.to, [new_user_email])
-        self.assertTrue('Take me there' in welcome_email.body)
+        self.assertTrue('Take me there: https://testserver\n' in welcome_email.body)
 
     def test_user_create_required_email(self):
         response = self.client.post(self.user_create_api_url, {'password': 'test-password'})

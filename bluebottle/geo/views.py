@@ -1,11 +1,18 @@
-from rest_framework.generics import ListAPIView, RetrieveAPIView
-from bluebottle.geo.models import Location
-from bluebottle.geo.serializers import LocationSerializer
+
+from rest_framework_json_api.views import AutoPrefetchMixin
+from rest_framework_json_api.parsers import JSONParser
+
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
+
+from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
+from bluebottle.geo.models import Location, Country, InitiativePlace
+from bluebottle.geo.serializers import LocationSerializer, InitiativePlaceSerializer
 from bluebottle.projects.models import Project
 from bluebottle.utils.views import TranslatedApiViewMixin
 
 from .serializers import CountrySerializer
-from .models import Country
 
 
 class CountryList(TranslatedApiViewMixin, ListAPIView):
@@ -38,3 +45,20 @@ class UsedCountryList(CountryList):
 class LocationList(ListAPIView):
     serializer_class = LocationSerializer
     queryset = Location.objects.all()
+
+
+class InitiativePlaceList(AutoPrefetchMixin, CreateAPIView):
+    queryset = InitiativePlace.objects.all()
+    serializer_class = InitiativePlaceSerializer
+
+    authentication_classes = (
+        JSONWebTokenAuthentication,
+    )
+
+    parser_classes = (JSONParser, )
+
+    renderer_classes = (BluebottleJSONAPIRenderer, )
+
+    prefetch_for_includes = {
+        'country': ['country'],
+    }

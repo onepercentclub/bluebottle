@@ -2,26 +2,24 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.initiatives.models import Initiative
-from bluebottle.utils.forms import FSMModelForm
+from bluebottle.utils.admin import ReviewAdmin
 
 
-class InitiativeAdminForm(FSMModelForm):
-    class Meta:
-        model = Initiative
-        fields = '__all__'
+class InitiativeAdmin(ReviewAdmin):
 
-
-class InitiativeAdmin(admin.ModelAdmin):
-    raw_id_fields = ('owner', 'reviewer',)
-    form = FSMModelForm
+    raw_id_fields = ('owner', 'reviewer')
+    list_display = ['title', 'created', 'review_status']
+    list_filter = ['review_status']
+    search_fields = ['title', 'pitch', 'story',
+                     'owner__first_name', 'owner__last_name', 'owner__email']
+    readonly_fields = ['review_status']
 
     def get_fieldsets(self, request, obj=None):
         return (
             (_('Basic'), {'fields': ('title', 'slug', 'owner', 'image', 'video_url')}),
+            (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories')}),
             (_('Review'), {'fields': ('reviewer', 'review_status', 'review_status_transition')}),
         )
-
-    readonly_fields = ['review_status']
 
 
 admin.site.register(Initiative, InitiativeAdmin)

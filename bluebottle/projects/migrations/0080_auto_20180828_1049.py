@@ -14,9 +14,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
+        migrations.AlterField(
             model_name='project',
             name='popularity',
+            field=models.FloatField(null=True),
         ),
         migrations.AlterField(
             model_name='project',

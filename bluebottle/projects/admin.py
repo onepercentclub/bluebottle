@@ -46,7 +46,7 @@ from bluebottle.rewards.models import Reward
 from bluebottle.tasks.admin import TaskAdminInline
 from bluebottle.utils.admin import export_as_csv_action, prep_field, LatLongMapPickerMixin, BasePlatformSettingsAdmin, \
     TranslatedUnionFieldListFilter, log_action
-from bluebottle.utils.widgets import CheckboxSelectMultipleWidget, SecureAdminURLFieldWidget
+from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from bluebottle.votes.models import Vote
 from .models import (ProjectBudgetLine, Project,
                      ProjectPhaseLog)
@@ -199,7 +199,6 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
         model = Project
         fields = '__all__'
         widgets = {
-            'currencies': CheckboxSelectMultipleWidget,
             'story': SummernoteWidget()
         }
 
@@ -234,11 +233,19 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
                 self.cleaned_data['status'].slug == 'campaign' and \
                 'amount_asked' in self.cleaned_data and \
                 self.cleaned_data['amount_asked'].amount > 0 and \
-                hasattr(self.cleaned_data['payout_account'], 'reviewed') and \
-                not self.cleaned_data['payout_account'].reviewed:
-            link_url = reverse('admin:payouts_payoutaccount_change',
-                               args=(self.cleaned_data['payout_account'].id,))
-            link = "<br/><a href='{}'>{}</a>".format(link_url, _("Review payout account"))
+                (
+                    not self.cleaned_data['payout_account'] or (
+                        hasattr(self.cleaned_data['payout_account'], 'reviewed') and
+                        not self.cleaned_data['payout_account'].reviewed
+                    )
+                ):
+            if self.cleaned_data['payout_account']:
+                link_url = reverse('admin:payouts_payoutaccount_change',
+                                   args=(self.cleaned_data['payout_account'].id,))
+                link = "<br/><a href='{}'>{}</a>".format(link_url, _("Review payout account"))
+            else:
+                link = ''
+
             raise forms.ValidationError(
                 format_html(_('The bank details need to be reviewed before approving a project') + link)
             )
@@ -362,7 +369,6 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ('location__group', 'region'),
         ('country', 'country'),
         ('location', 'location'),
-        ('place', 'place'),
         ('deadline', 'deadline'),
         ('date_submitted', 'date submitted'),
         ('campaign_started', 'campaign started'),
@@ -377,6 +383,8 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
         ('organization__name', 'organization'),
         ('amount_extra', 'amount matched'),
         ('expertise_based', 'expertise based'),
+        ('projectlocation__latitude', 'latitude'),
+        ('projectlocation__longitude', 'longitude'),
     ]
 
     actions = [export_as_csv_action(fields=export_fields), ]
@@ -656,7 +664,7 @@ class ProjectAdmin(AdminImageMixin, PolymorphicInlineSupportMixin, ImprovedModel
             'pitch', 'story',
             'image', 'video_url',
             'theme', 'categories',
-            'country', 'place',
+            'country',
         ]})
 
         if Location.objects.count():
@@ -779,14 +787,6 @@ class ProjectCreateTemplateInline(admin.StackedInline, SummernoteInlineModelAdmi
 
 
 class ProjectPlatformSettingsAdminForm(forms.ModelForm):
-    class Meta:
-        widgets = {
-            'create_types': CheckboxSelectMultipleWidget,
-            'contact_types': CheckboxSelectMultipleWidget,
-            'share_options': CheckboxSelectMultipleWidget,
-            'match_options': CheckboxSelectMultipleWidget,
-        }
-
     extra = 0
 
 

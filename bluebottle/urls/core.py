@@ -70,6 +70,10 @@ urlpatterns = [
         include('bluebottle.cms.urls.api')),
     url(r'^api/initiatives/',
         include('bluebottle.initiatives.urls.api')),
+    url(r'^api/files/',
+        include('bluebottle.files.urls.api')),
+    url(r'^api/transitions/',
+        include('bluebottle.transitions.urls.api')),
 
     url(r'^payments_mock/',
         include('bluebottle.payments_mock.urls.core')),
@@ -100,10 +104,6 @@ urlpatterns = [
         include('bluebottle.votes.urls.api')),
     url(r'^api/surveys/',
         include('bluebottle.surveys.urls.api')),
-
-    # Organization urls for private documents
-    url(r'^documents/',
-        include('bluebottle.organizations.urls.documents')),
 
     url(r'^api/organizations/',
         include('bluebottle.organizations.urls.api')),
@@ -155,7 +155,7 @@ urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += [
 
-    url('', include('social.apps.django_app.urls',
+    url('', include('social_django.urls',
                     namespace='social')),
     url(r'^api/social-login/(?P<backend>[^/]+)/$',
         GetAuthToken.as_view()),

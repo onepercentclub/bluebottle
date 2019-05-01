@@ -5,7 +5,7 @@ from django_elasticsearch_dsl import Index, DocType, fields
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
-from bluebottle.geo.models import Location, Country
+from bluebottle.geo.models import Location, Country, Place
 from bluebottle.projects.models import Project, ProjectLocation
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.votes.models import Vote
@@ -20,6 +20,7 @@ class MultiTenantIndex(Index):
 
     @_name.setter
     def _name(self, value):
+
         if value and value.startswith(connection.tenant.schema_name):
             value = value.replace(connection.tenant.schema_name + '-', '')
 
@@ -69,7 +70,6 @@ class ProjectDocument(DocType):
 
     location = fields.NestedField(properties={
         'id': fields.LongField(),
-        'position': fields.GeoPointField(attr='position_tuple'),
         'city': fields.TextField(),
         'name': fields.TextField()
     })
@@ -78,12 +78,11 @@ class ProjectDocument(DocType):
         'id': fields.LongField(),
     })
 
-    theme = fields.ObjectField(properties={
-        'id': fields.LongField(),
-    })
+    theme = fields.LongField()
 
     categories = fields.NestedField(properties={
         'id': fields.LongField(),
+        'slug': fields.KeywordField(),
     })
 
     skills = fields.LongField()
@@ -98,7 +97,7 @@ class ProjectDocument(DocType):
     class Meta:
         model = Project
         related_models = (
-            Task, TaskMember, ProjectPhase, Location, Country, Vote, Donation,
+            Task, TaskMember, ProjectPhase, Location, Country, Vote, Donation, Place
         )
 
     def get_queryset(self):
@@ -123,6 +122,20 @@ class ProjectDocument(DocType):
             return related_instance.project
         elif isinstance(related_instance, Donation):
             return related_instance.project
+        elif isinstance(related_instance, Place) and isinstance(related_instance.content_object, Task):
+            return related_instance.content_object.project
+
+    def prepare_position(self, instance):
+        if instance.location:
+            position = instance.location.position
+        else:
+            try:
+                position = instance.projectlocation
+            except ProjectLocation.DoesNotExist:
+                return None
+
+        if position and position.latitude and position.longitude:
+            return {'lat': position.latitude, 'lon': position.longitude}
 
     def prepare_amount_asked(self, instance):
         return instance.amount_asked.amount
@@ -139,20 +152,18 @@ class ProjectDocument(DocType):
             in instance.donation_set.filter(order__status__in=('pending', 'success'))
         ]
 
-    def prepare_position(self, instance):
-        try:
-            return instance.projectlocation.position
-        except ProjectLocation.DoesNotExist:
-            return None
-
     def prepare_task_positions(self, instance):
         return [
-            task.place.position_tuple for task
+            {'lat': task.place.position.latitude, 'lon': task.place.position.longitude} for task
             in instance.task_set.all() if task.place and task.place.position
         ]
 
     def prepare_skills(self, instance):
         return [task.skill.id for task in instance.task_set.all() if task.skill]
+
+    def prepare_theme(self, instance):
+        if instance.theme:
+            return instance.theme.pk
 
     def prepare_task_members(self, instance):
         result = []

@@ -11,9 +11,8 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
 from bluebottle.geo.models import Country, Location
-from bluebottle.geo.serializers import CountrySerializer
+from bluebottle.geo.serializers import CountrySerializer, PlaceSerializer
 from bluebottle.members.serializers import UserProfileSerializer, UserPreviewSerializer
-from bluebottle.organizations.serializers import OrganizationPreviewSerializer
 from bluebottle.payouts.serializers import PayoutAccountSerializer
 from bluebottle.projects.models import (
     ProjectBudgetLine, Project, ProjectImage,
@@ -136,7 +135,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     image = ImageSerializer(required=False)
     is_funding = serializers.ReadOnlyField()
     location = serializers.PrimaryKeyRelatedField(required=False, queryset=Location.objects)
-    organization = OrganizationPreviewSerializer(read_only=True)
     owner = UserProfileSerializer()
     people_needed = serializers.ReadOnlyField()
     people_registered = serializers.ReadOnlyField()
@@ -190,13 +188,11 @@ class ProjectSerializer(serializers.ModelSerializer):
                   'longitude',
                   'project_location',
                   'open_task_count',
-                  'organization',
                   'owner',
                   'people_needed',
                   'people_registered',
                   'permissions',
                   'pitch',
-                  'place',
                   'project_type',
                   'promoter',
                   'realized_task_count',
@@ -255,7 +251,6 @@ class ProjectPreviewSerializer(ProjectSerializer):
                   'people_needed',
                   'people_registered',
                   'pitch',
-                  'place',
                   'project_type',
                   'realized_task_count',
                   'skills',
@@ -282,6 +277,7 @@ class ProjectTinyPreviewSerializer(serializers.ModelSerializer):
 class ManageTaskSerializer(serializers.ModelSerializer):
     skill = serializers.PrimaryKeyRelatedField(queryset=Skill.objects)
     time_needed = serializers.DecimalField(min_value=0.0, max_digits=5, decimal_places=2)
+    place = PlaceSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Task
@@ -380,11 +376,15 @@ class ManageProjectSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
+        if self.instance and \
+                self.instance.status.slug not in ('plan-new', 'plan-needs-work') and \
+                'payout_account' in data:
+            # Don't write payout account if not in draft
+            data.pop('payout_account')
         if self.instance and self.instance.status.slug in ('campaign', 'voting'):
             # When project is running, only a subset of the fields canb be changed
             for field, value in data.items():
                 current = getattr(self.instance, field)
-
                 if field not in self.editable_fields:
                     try:
                         # If we check a many to many field, make convert both sides to a set
@@ -457,12 +457,10 @@ class ManageProjectSerializer(serializers.ModelSerializer):
                   'latitude',
                   'location',
                   'longitude',
-                  'organization',
                   'payout_account',
                   'people_needed',
                   'people_registered',
                   'pitch',
-                  'place',
                   'project_location',
                   'project_type',
                   'promoter',

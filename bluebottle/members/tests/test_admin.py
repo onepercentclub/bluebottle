@@ -324,11 +324,11 @@ class MemberAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'username')
-        self.assertEqual(headers[11], 'Extra Info')
-        self.assertEqual(headers[12], 'How are you')
+        self.assertEqual(headers[12], 'Extra Info')
+        self.assertEqual(headers[13], 'How are you')
         self.assertEqual(data[0], 'malle-eppie')
-        self.assertEqual(data[11], '')
-        self.assertEqual(data[12], 'Fine')
+        self.assertEqual(data[12], '')
+        self.assertEqual(data[13], 'Fine')
 
     def test_member_unicode_export(self):
         member = BlueBottleUserFactory.create(username='stimpy')
@@ -344,6 +344,6 @@ class MemberAdminExportTest(BluebottleTestCase):
 
         # Test basic info and extra field are in the csv export
         self.assertEqual(headers[0], 'username')
-        self.assertEqual(headers[11], 'Best friend')
+        self.assertEqual(headers[12], 'Best friend')
         self.assertEqual(data[0], 'stimpy')
-        self.assertEqual(data[11], 'Ren Höek')
+        self.assertEqual(data[12], 'Ren Höek')

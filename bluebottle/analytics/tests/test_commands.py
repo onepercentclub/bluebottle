@@ -20,6 +20,7 @@ from bluebottle.analytics.management.commands.export_analytics_data import (
     Command as AnalyticsCommand,
 )
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.members.models import Member
 from bluebottle.tasks.models import TaskMember
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.factory_models.donations import DonationFactory
@@ -118,7 +119,6 @@ class TestEngagementMetricsXls(BluebottleTestCase):
     def setUp(self):
         super(TestEngagementMetricsXls, self).setUp()
         self.init_projects()
-
         self.year = datetime.now().year
 
         # Project Phases
@@ -218,13 +218,13 @@ class TestEngagementMetricsXls(BluebottleTestCase):
             # Test Tenant test
             self.assertEqual(worksheet.cell(row=3, column=1).value, 'test')
             self.assertEqual(worksheet.cell(row=3, column=2).value, 1, msg='no. of platforms')
-            self.assertEqual(worksheet.cell(row=3, column=3).value, 2, msg='total members')
-            self.assertEqual(worksheet.cell(row=3, column=4).value, 1, msg='not engaged members')
+            self.assertEqual(worksheet.cell(row=3, column=3).value, 4, msg='total members')
+            self.assertEqual(worksheet.cell(row=3, column=4).value, 3, msg='not engaged members')
             self.assertEqual(worksheet.cell(row=3, column=5).value, 0, msg='little engaged members')
             self.assertEqual(worksheet.cell(row=3, column=6).value, 0, msg='engaged members')
             self.assertEqual(worksheet.cell(row=3, column=7).value, 1, msg='very engaged members')
             self.assertEqual(worksheet.cell(row=3, column=8).value, 1, msg='total engaged members')
-            self.assertEqual(worksheet.cell(row=3, column=9).value, 50, msg='% total engaged members')
+            self.assertEqual(worksheet.cell(row=3, column=9).value, 25, msg='% total engaged members')
             self.assertEqual(worksheet.cell(row=3, column=10).value, 1, msg='projects realised')
             self.assertEqual(worksheet.cell(row=3, column=11).value, 1, msg='projects done')
             self.assertEqual(worksheet.cell(row=3, column=12).value, 1, msg='guest donations')
@@ -237,6 +237,7 @@ class TestParticipationXls(SetupDataMixin, BluebottleTestCase):
 
     def setUp(self):
         super(TestParticipationXls, self).setUp()
+        Member.objects.all().delete()
         self.init_projects()
         self.initTestData()
         self.command = ParticipationCommand()
@@ -250,7 +251,6 @@ class TestParticipationXls(SetupDataMixin, BluebottleTestCase):
             # Check participants
             self.assertEqual(workbook.worksheets[0]['A1'].value, 'Email Address')
             self.assertEqual(workbook.worksheets[0]['A2'].value, self.users[0].email)
-            self.assertEqual(workbook.worksheets[0]['A3'].value, self.users[11].email)
 
             # Check some sheet titles
             self.assertEqual(workbook.worksheets[0].title, 'Participants - {}'.format(self.year))
@@ -273,4 +273,4 @@ class TestExportAnalytics(SetupDataMixin, BluebottleTestCase):
                      '--start', '%s-01-01' % self.year,
                      '--end', '%s-12-31' % self.year,
                      '--tenant', 'test')
-        self.assertEqual(mock_queue.call_count, 604)
+        self.assertEqual(mock_queue.call_count, 608)

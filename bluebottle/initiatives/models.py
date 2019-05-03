@@ -26,7 +26,7 @@ class Initiative(ReviewModel):
 
     promoter = models.ForeignKey(
         'members.Member',
-        verbose_name=_('owner'),
+        verbose_name=_('promoter'),
         null=True,
     )
 

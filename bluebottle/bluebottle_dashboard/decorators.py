@@ -1,7 +1,13 @@
 import functools
 
+from django.contrib.messages import error
 from django.contrib.admin import helpers
+from django.core.urlresolvers import reverse
+from django.http import HttpResponseRedirect
+from django.template import loader
 from django.template.response import TemplateResponse
+from django.forms.models import model_to_dict
+from django.utils.module_loading import import_string
 
 
 def confirmation_form(form_class, model, template):
@@ -43,6 +49,21 @@ def transition_confirmation_form(form_class, template):
             form = form_class()
             model = self.model
             obj = model.objects.get(pk=pk)
+            transition = getattr(obj, target)
+
+            if hasattr(transition, 'form'):
+
+                form = import_string(transition.form)(data=model_to_dict(obj))
+                if form.errors:
+                    errors = loader.get_template('admin/transition_errors.html').render(
+                        {'errors': dict((form.fields[field].label, errors) for field, errors in form.errors.items())}
+                    )
+                    error(request, errors)
+                    object_url = 'admin:{}_{}_change'.format(self.model._meta.app_label, self.model._meta.model_name)
+                    return HttpResponseRedirect(
+                        reverse(object_url, args=(obj.pk, ))
+                    )
+
             if 'confirm' in request.POST and request.POST['confirm']:
                 form = form_class(request.POST)
                 if form.is_valid():
@@ -50,7 +71,7 @@ def transition_confirmation_form(form_class, template):
                                 send_messages=form.cleaned_data['send_messages'])
 
             messages = []
-            for message_list in [message(obj).get_messages() for message in getattr(obj, target).messages]:
+            for message_list in [message(obj).get_messages() for message in transition.messages]:
                 messages += message_list
 
             context = dict(

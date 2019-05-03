@@ -9,6 +9,7 @@ from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import InitiativePlace
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
 from bluebottle.notifications.decorators import transition
+from bluebottle.organizations.models import Organization, OrganizationContact
 
 
 class Initiative(models.Model):
@@ -54,6 +55,12 @@ class Initiative(models.Model):
 
     image = ImageField(blank=True, null=True)
 
+    promoter = models.ForeignKey(
+        'members.Member',
+        verbose_name=_('promoter'),
+        null=True,
+    )
+
     video_url = models.URLField(
         _('video'),
         max_length=100,
@@ -68,6 +75,9 @@ class Initiative(models.Model):
     )
 
     place = models.ForeignKey(InitiativePlace, null=True, blank=True, on_delete=SET_NULL)
+    has_organization = models.NullBooleanField(null=True, default=None)
+    organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
+    organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
     location = models.ForeignKey('geo.Location', null=True, blank=True, on_delete=SET_NULL)
     language = models.ForeignKey('utils.Language', blank=True, null=True)
 

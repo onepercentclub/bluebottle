@@ -48,7 +48,7 @@ class ImageSerializer(FileSerializer):
 
     def get_links(self, obj):
         if hasattr(self, 'sizes'):
-            parent_id = self.context['view'].kwargs['pk']
+            parent_id = getattr(obj, self.relationship).get().pk
             return dict(
                 (
                     key,

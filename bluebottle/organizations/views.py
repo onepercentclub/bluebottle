@@ -1,80 +1,85 @@
-import os
-
-from django.http.response import HttpResponseForbidden
-from django.views.generic.detail import DetailView
-
-from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics
 from rest_framework import filters
 
-from bluebottle.bluebottle_drf2.pagination import BluebottlePagination
-from bluebottle.organizations.serializers import (OrganizationSerializer,
-                                                  OrganizationContactSerializer)
-from bluebottle.organizations.models import (
-    Organization, OrganizationMember, OrganizationContact
+from rest_framework.permissions import IsAuthenticated
+
+from rest_framework_json_api.pagination import JsonApiPageNumberPagination
+from rest_framework_json_api.parsers import JSONParser
+from rest_framework_json_api.views import AutoPrefetchMixin
+
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+
+
+from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
+
+from bluebottle.organizations.serializers import (
+    OrganizationSerializer, OrganizationContactSerializer
 )
-from .permissions import IsContactOwner
+from bluebottle.organizations.models import (
+    Organization, OrganizationContact
+)
 
-from filetransfers.api import serve_file
+
+class OrganizationPagination(JsonApiPageNumberPagination):
+    page_size = 8
 
 
-class OrganizationContactList(generics.CreateAPIView):
-    queryset = OrganizationContact
+class OrganizationContactList(AutoPrefetchMixin, generics.CreateAPIView):
+    queryset = OrganizationContact.objects.all()
     serializer_class = OrganizationContactSerializer
     permission_classes = (IsAuthenticated, )
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ['name']
+    renderer_classes = (BluebottleJSONAPIRenderer, )
+    parser_classes = (JSONParser, )
+    authentication_classes = (
+        JSONWebTokenAuthentication,
+    )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
 
-class OrganizationContactDetail(generics.UpdateAPIView):
-    queryset = OrganizationContact
+class OrganizationContactDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIView):
+    queryset = OrganizationContact.objects.all()
     serializer_class = OrganizationContactSerializer
-    permission_classes = (IsContactOwner,)
+
+    renderer_classes = (BluebottleJSONAPIRenderer, )
+    parser_classes = (JSONParser, )
+    permission_classes = (IsAuthenticated, )
+    authentication_classes = (
+        JSONWebTokenAuthentication,
+    )
 
 
-class OrganizationDetail(generics.RetrieveAPIView):
+class OrganizationList(AutoPrefetchMixin, generics.ListCreateAPIView):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-    permission_classes = (IsAuthenticated,)
-
-
-class OrganizationList(generics.ListCreateAPIView):
-    serializer_class = OrganizationSerializer
-    pagination_class = BluebottlePagination
+    pagination_class = OrganizationPagination
     filter_backends = (filters.SearchFilter,)
+    search_fields = ['name']
     permission_classes = (IsAuthenticated,)
-    search_fields = ('name',)
+    renderer_classes = (BluebottleJSONAPIRenderer, )
+    parser_classes = (JSONParser, )
 
-    def get_queryset(self):
-        q = self.request.query_params
-
-        # Only allow query if a search term is provided
-        if ('search' in q and q['search'] != ''):
-            return Organization.objects.all()
-
-        return Organization.objects.none()
+    authentication_classes = (
+        JSONWebTokenAuthentication,
+    )
 
     def perform_create(self, serializer):
-        organization = serializer.save()
-        member = OrganizationMember(organization=organization, user=self.request.user)
-        member.save()
+        serializer.save(owner=self.request.user)
+
+    prefetch_for_includes = {
+        'owner': ['owner'],
+    }
 
 
-#
-# Non API views
-#
-
-# Download private documents
-
-class RegistrationDocumentDownloadView(DetailView):
+class OrganizationDetail(AutoPrefetchMixin, generics.RetrieveUpdateAPIView):
     queryset = Organization.objects.all()
-
-    def get(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if request.user.is_staff:
-            f = obj.registration.file
-            file_name = os.path.basename(f.name)
-            return serve_file(request, f, save_as=file_name)
-
-        return HttpResponseForbidden()
+    serializer_class = OrganizationSerializer
+    permission_classes = (IsAuthenticated,)
+    renderer_classes = (BluebottleJSONAPIRenderer, )
+    parser_classes = (JSONParser, )
+    authentication_classes = (
+        JSONWebTokenAuthentication,
+    )

@@ -6,6 +6,7 @@ from django.utils import timezone
 from moneyed.classes import Money
 
 from bluebottle.bb_projects.models import ProjectPhase
+from bluebottle.members.models import Member
 from bluebottle.statistics.participation import Statistics as ParticipationStatistics
 from bluebottle.statistics.views import Statistics
 from bluebottle.tasks.models import Task
@@ -23,8 +24,8 @@ from bluebottle.utils.utils import StatusDefinition
 class InitialStatisticsTest(BluebottleTestCase):
     def setUp(self):
         super(InitialStatisticsTest, self).setUp()
-
         self.stats = Statistics()
+        Member.objects.all().delete()
 
         # Required by Project model save method
         self.init_projects()
@@ -52,8 +53,8 @@ class InitialStatisticsTest(BluebottleTestCase):
 class StatisticsTest(BluebottleTestCase):
     def setUp(self):
         super(StatisticsTest, self).setUp()
-
         self.stats = Statistics()
+        Member.objects.all().delete()
 
         # Required by Project model save method
         self.init_projects()
@@ -324,7 +325,6 @@ class StatisticsTest(BluebottleTestCase):
 
     def test_members_stats(self):
         BlueBottleUserFactory.create(is_active=False)
-
         self.assertEqual(self.stats.members, 3)
 
 

@@ -22,8 +22,7 @@ class InitiativeAdmin(ReviewAdmin):
             (_('Review'), {'fields': ('reviewer', 'review_status', 'review_status_transition')}),
         )
 
-    def get_inline_instances(self, request, obj=None):
-        return [MessageAdminInline(self.model, self.admin_site), ]
+    inlines = [MessageAdminInline, ]
 
 
 admin.site.register(Initiative, InitiativeAdmin)

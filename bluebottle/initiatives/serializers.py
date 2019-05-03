@@ -47,10 +47,13 @@ class MemberSerializer(ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ('id', 'first_name', 'last_name', 'initials', 'avatar', 'full_name', 'short_name', 'is_active')
+        fields = (
+            'id', 'first_name', 'last_name', 'initials', 'avatar',
+            'full_name', 'short_name', 'is_active', 'date_joined'
+        )
 
     class JSONAPIMeta:
-        resource_name = 'user-previews'
+        resource_name = 'members'
 
 
 class InitiativeImageSerializer(ImageSerializer):
@@ -59,6 +62,7 @@ class InitiativeImageSerializer(ImageSerializer):
         'large': '400x500'
     }
     content_view_name = 'initiative-image'
+    relationship = 'initiative_set'
 
 
 class InitiativeSerializer(ModelSerializer):
@@ -76,18 +80,26 @@ class InitiativeSerializer(ModelSerializer):
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
         'image': 'bluebottle.initiatives.serializers.InitiativeImageSerializer',
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
-        'place': 'bluebottle.geo.serializers.InitiativePlaceSerializer',
         'reviewer': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'promoter': 'bluebottle.initiatives.serializers.MemberSerializer',
+        'place': 'bluebottle.geo.serializers.InitiativePlaceSerializer',
         'theme': 'bluebottle.initiatives.serializers.ThemeSerializer',
+        'organization': 'bluebottle.organizations.serializers.OrganizationSerializer',
+        'organization_contact': 'bluebottle.organizations.serializers.OrganizationContactSerializer',
     }
 
     class Meta:
         model = Initiative
         fields = (
-            'id', 'title', 'pitch', 'review_status', 'categories', 'owner', 'reviewer', 'slug',
-            'story', 'video_html', 'image', 'theme', 'place', 'permissions',
+            'id', 'title', 'pitch', 'review_status', 'categories', 'owner',
+            'reviewer', 'promoter', 'slug', 'has_organization', 'organization',
+            'organization_contact', 'story', 'video_html', 'image',
+            'theme', 'place', 'permissions',
         )
 
     class JSONAPIMeta:
-        included_resources = ['owner', 'reviewer', 'categories', 'theme', 'place', 'image']
+        included_resources = [
+            'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'image',
+            'organizatiion',
+        ]
         resource_name = 'initiatives'

@@ -519,6 +519,7 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
         # Task deadline time should changed be just before midnight after setting.
         response = self.client.post(self.tasks_url, task_data,
                                     HTTP_AUTHORIZATION=self.some_token)
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_update_task_with_place(self):

@@ -64,37 +64,27 @@ class TestProjectMails(BluebottleTestCase):
 
     def test_complete_with_organization(self):
         self.survey = SurveyFactory(link='https://example.com/survey/1/', active=True)
-        self.project.organization = OrganizationFactory.create(email='organization@example.com')
+        self.project.organization = OrganizationFactory.create()
         self.project.status = self.complete
         self.project.save()
 
-        self.assertEquals(len(mail.outbox), 2)
+        self.assertEquals(len(mail.outbox), 1)
         initiator_email = mail.outbox[0]
         self.assertEqual(initiator_email.to, [self.project.owner.email])
         self.assertTrue('has been realised' in initiator_email.subject)
         self.assertTrue(Survey.url(self.project, user_type='initiator') in initiator_email.body)
 
-        organization_email = mail.outbox[1]
-        self.assertEqual(organization_email.to, [self.project.organization.email])
-        self.assertTrue('has been realised' in organization_email.subject)
-        self.assertTrue(Survey.url(self.project, user_type='organization') in organization_email.body)
-
     def test_complete_inactive_survey_with_organization(self):
         self.survey = SurveyFactory(link='https://example.com/survey/1/', active=False)
-        self.project.organization = OrganizationFactory.create(email='organization@example.com')
+        self.project.organization = OrganizationFactory.create()
         self.project.status = self.complete
         self.project.save()
 
-        self.assertEquals(len(mail.outbox), 2)
+        self.assertEquals(len(mail.outbox), 1)
         initiator_email = mail.outbox[0]
         self.assertEqual(initiator_email.to, [self.project.owner.email])
         self.assertTrue('has been realised' in initiator_email.subject)
         self.assertFalse('survey' in initiator_email.body)
-
-        organization_email = mail.outbox[1]
-        self.assertEqual(organization_email.to, [self.project.organization.email])
-        self.assertTrue('has been realised' in organization_email.subject)
-        self.assertFalse('survey' in organization_email.body)
 
     def test_incomplete(self):
         self.project.status = self.incomplete

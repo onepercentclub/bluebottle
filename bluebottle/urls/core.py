@@ -103,10 +103,6 @@ urlpatterns = [
     url(r'^api/surveys/',
         include('bluebottle.surveys.urls.api')),
 
-    # Organization urls for private documents
-    url(r'^documents/',
-        include('bluebottle.organizations.urls.documents')),
-
     url(r'^api/organizations/',
         include('bluebottle.organizations.urls.api')),
 

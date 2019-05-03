@@ -1,6 +1,5 @@
 import mimetypes
 from babel.numbers import get_currency_name
-from django_fsm import FSMField as FSMFieldBase
 
 from rest_framework import serializers
 
@@ -191,7 +190,7 @@ class FSMStatusValidator(object):
             )
 
 
-class FSMField(FSMFieldBase):
+class FSMField(serializers.CharField):
     def __init__(self, **kwargs):
         super(FSMField, self).__init__(**kwargs)
         validator = FSMStatusValidator()

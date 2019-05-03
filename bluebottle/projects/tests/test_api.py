@@ -860,7 +860,7 @@ class ProjectManageApiIntegrationTest(BluebottleTestCase):
         self.manage_projects_url = reverse('project_manage_list')
         self.manage_budget_lines_url = reverse('project-budgetline-list')
 
-        self.some_photo = './bluebottle/projects/test_images/upload.png'
+        self.some_photo = './bluebottle/cms/tests/test_images/mini.gif'
 
         self.signer = TimestampSigner()
 
@@ -1407,8 +1407,8 @@ class ProjectWallpostApiIntegrationTest(BluebottleTestCase):
         self.some_project = ProjectFactory.create(slug='someproject')
         self.another_project = ProjectFactory.create(slug='anotherproject')
 
-        self.some_photo = './bluebottle/projects/test_images/loading.gif'
-        self.another_photo = './bluebottle/projects/test_images/upload.png'
+        self.some_photo = './bluebottle/cms/tests/test_images/mini.png'
+        self.another_photo = './bluebottle/cms/tests/test_images/mini.gif'
 
         self.media_wallposts_url = reverse('media_wallpost_list')
         self.media_wallpost_photos_url = reverse('mediawallpost_photo_list')
@@ -2379,7 +2379,7 @@ class ProjectImageApiTest(BluebottleTestCase):
         self.user_token = "JWT {0}".format(self.user.get_jwt_token())
 
         self.init_projects()
-        self.image_path = './bluebottle/projects/test_images/upload.png'
+        self.image_path = './bluebottle/cms/tests/test_images/mini.gif'
 
         self.project = ProjectFactory.create(owner=self.user, task_manager=self.user)
         self.url = reverse('project-image-create')
@@ -2404,7 +2404,7 @@ class ProjectPlatformSettingsTestCase(BluebottleTestCase):
     def setUp(self):
         super(ProjectPlatformSettingsTestCase, self).setUp()
         self.init_projects()
-        image_file = './bluebottle/projects/test_images/upload.png'
+        image_file = './bluebottle/cms/tests/test_images/mini.png'
         self.some_image = SimpleUploadedFile(name='test_image.png', content=open(image_file, 'rb').read(),
                                              content_type='image/png')
 

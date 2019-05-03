@@ -10,8 +10,7 @@ from bluebottle.test.utils import BluebottleTestCase
 from bluebottle.utils.utils import StatusDefinition
 
 
-@unittest.skip(
-    "The tests fail because the status of a MockPayment is NULL when saving, triggering an integrity error")
+@unittest.skip("The tests fail because the status of a MockPayment is NULL when saving, triggering an integrity error")
 class PaymentMockTests(BluebottleTestCase):
     """
     Tests for updating and order payment via mock PSP listener. The listener calls the service to fetch the
@@ -33,7 +32,9 @@ class PaymentMockTests(BluebottleTestCase):
 
         data = {'order_payment_id': self.order_payment.id, 'status': status}
         response = self.client.post(
-            reverse('payment-service-provider-status-update'), data)
+            reverse('payment-service-provider-status-update'),
+            data,
+            token=self.user1_token)
 
         self.assertEqual(response.status_code, 200)
         order_payment = OrderPayment.objects.get(id=self.order_payment.id)

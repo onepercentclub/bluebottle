@@ -413,7 +413,7 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
         )
 
         resume_file = open(
-            './bluebottle/projects/test_images/upload.png',
+            './bluebottle/cms/tests/test_images/mini.gif',
             mode='rb'
         )
 
@@ -436,7 +436,7 @@ class TaskApiTestcase(ESTestCase, BluebottleTestCase):
             resume['url'].startswith('/downloads/taskmember/resume')
         )
         self.assertTrue(
-            resume['name'].startswith('upload')
+            resume['name'].startswith('mini')
         )
 
         task_member = TaskMember.objects.get(pk=response.data['id'])

@@ -31,7 +31,7 @@ class FundraiserAPITestCase(BluebottleTestCase):
             owner=self.some_user,
             deadline=timezone.now() + timezone.timedelta(days=15))
 
-        self.image = File(open('./bluebottle/fundraisers/tests/images/upload.png'))
+        self.image = File(open('./bluebottle/cms/tests/test_images/mini.gif'))
 
     def test_fundraiser_deadline_exceeds_project_deadline(self):
         future_date = self.some_project.deadline + timezone.timedelta(days=5)

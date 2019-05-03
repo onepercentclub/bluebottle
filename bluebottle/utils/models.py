@@ -10,6 +10,12 @@ from parler.models import TranslatableModel
 
 from bluebottle.utils.managers import SortableTranslatableManager, PublishedManager
 
+import bluebottle.utils.monkey_patch_migration  # noqa
+import bluebottle.utils.monkey_patch_corsheaders  # noqa
+import bluebottle.utils.monkey_patch_parler  # noqa
+import bluebottle.utils.monkey_patch_money_readonly_fields  # noqa
+import bluebottle.utils.monkey_patch_django_elasticsearch_dsl  # noqa
+
 
 class Language(models.Model):
     """

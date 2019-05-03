@@ -5,32 +5,50 @@ from rest_framework import serializers
 from rest_framework_json_api.relations import ResourceRelatedField
 from rest_framework_json_api.serializers import ModelSerializer
 
-from bluebottle.files.models import File
+from bluebottle.files.models import Document, Image
 
 
 class FileField(ResourceRelatedField):
     def get_queryset(self):
-        return File.objects.all()
+        return Document.objects.all()
 
 
 class FileSerializer(ModelSerializer):
     file = serializers.FileField(write_only=True)
     filename = serializers.SerializerMethodField()
-    size = serializers.IntegerField(read_only=True, source='file.size')
-    owner = ResourceRelatedField(read_only=True)
-
     links = serializers.SerializerMethodField()
+    owner = ResourceRelatedField(read_only=True)
+    size = serializers.IntegerField(read_only=True, source='file.size')
 
     included_serializers = {
         'owner': 'bluebottle.initiatives.serializers.MemberSerializer',
     }
 
+    def get_links(self, obj):
+        return 'Not implemented'
+
     def get_filename(self, instance):
         return os.path.basename(instance.file.name)
 
+    class Meta:
+        model = Document
+        fields = ('id', 'file', 'filename', 'size', 'owner', 'links',)
+        meta_fields = ['size', 'filename']
+
+    class JSONAPIMeta:
+        included_resources = ['owner', ]
+
+
+class ImageField(ResourceRelatedField):
+    def get_queryset(self):
+        return Image.objects.all()
+
+
+class ImageSerializer(FileSerializer):
+
     def get_links(self, obj):
         if hasattr(self, 'sizes'):
-            parent_id = self.context['view'].kwargs['pk']
+            parent_id = getattr(obj, self.relationship).get().pk
             return dict(
                 (
                     key,
@@ -39,9 +57,6 @@ class FileSerializer(ModelSerializer):
             )
 
     class Meta:
-        model = File
+        model = Image
         fields = ('id', 'file', 'filename', 'size', 'owner', 'links',)
         meta_fields = ['size', 'filename']
-
-    class JSONAPIMeta:
-        included_resources = ['owner', ]

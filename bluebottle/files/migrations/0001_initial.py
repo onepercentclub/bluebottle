@@ -19,13 +19,29 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='File',
+            name='Document',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('created', models.DateField(default=django.utils.timezone.now, verbose_name='created')),
                 ('file', models.FileField(upload_to=b'files', verbose_name='file')),
                 ('used', models.BooleanField(default=False, verbose_name='used')),
-                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='own_file', to=settings.AUTH_USER_MODEL, verbose_name='owner')),
+                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='own_document', to=settings.AUTH_USER_MODEL, verbose_name='owner')),
             ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
+            name='Image',
+            fields=[
+                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('created', models.DateField(default=django.utils.timezone.now, verbose_name='created')),
+                ('file', models.FileField(upload_to=b'files', verbose_name='file')),
+                ('used', models.BooleanField(default=False, verbose_name='used')),
+                ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='own_image', to=settings.AUTH_USER_MODEL, verbose_name='owner')),
+            ],
+            options={
+                'abstract': False,
+            },
         ),
     ]

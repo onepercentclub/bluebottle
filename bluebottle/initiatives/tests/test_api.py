@@ -79,7 +79,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             owner=self.owner
         )
 
-        self.url = reverse('initiative-detail', args=(self.initiative.pk, ))
+        self.url = reverse('initiative-detail', args=(self.initiative.pk,))
 
     def test_patch(self):
         data = {
@@ -104,7 +104,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         file_path = './bluebottle/files/tests/files/test-image.png'
         with open(file_path) as test_file:
             response = self.client.post(
-                reverse('file-list'),
+                reverse('image-list'),
                 test_file.read(),
                 content_type="image/png",
                 HTTP_CONTENT_DISPOSITION='attachment; filename="some_file.jpg"',
@@ -119,7 +119,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
                 'relationships': {
                     'image': {
                         'data': {
-                            'type': 'files',
+                            'type': 'images',
                             'id': file_data['data']['id']
                         }
                     }
@@ -139,11 +139,11 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
             data['data']['relationships']['image']['data']['id'],
             file_data['data']['id']
         )
-
         response = self.client.get(
             data['included'][0]['attributes']['links']['large'],
             HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
         )
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(
             response['X-Accel-Redirect'].startswith(
                 '/media/cache/'

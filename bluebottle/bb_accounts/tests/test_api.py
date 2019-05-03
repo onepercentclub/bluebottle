@@ -19,8 +19,9 @@ from rest_framework import status
 from bluebottle.members.tokens import login_token_generator
 
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
-from bluebottle.test.factory_models.organizations import (OrganizationFactory, OrganizationContactFactory,
-                                                          OrganizationMemberFactory)
+from bluebottle.test.factory_models.organizations import (
+    OrganizationFactory, OrganizationContactFactory
+)
 from bluebottle.test.factory_models.geo import CountryFactory, PlaceFactory
 from bluebottle.test.utils import BluebottleTestCase
 
@@ -53,8 +54,7 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.organization = OrganizationFactory.create(name='Partner Organization',
                                                        slug='partner-organization',
                                                        website='http://partnerorg.nl')
-        self.organization_contact = OrganizationContactFactory.create(organization=self.organization)
-        self.organization_member = OrganizationMemberFactory.create(organization=self.organization)
+        self.organization_contact = OrganizationContactFactory.create()
         self.user_with_partner_organization.partner_organization = self.organization
         self.user_with_partner_organization.save()
 
@@ -75,10 +75,10 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'primary_language', 'about_me', 'location',
                              'project_count', 'donation_count', 'date_joined',
                              'fundraiser_count', 'task_count', 'time_spent',
-                             'website', 'twitter', 'facebook', 'skypename', 'partner_organization']
+                             'website', 'twitter', 'facebook', 'skypename']
 
         for field in serializer_fields:
-            self.assertTrue(field in response.data)
+            self.assertTrue(field in response.data, "Missing field {}".format(field))
 
         excluded_fields = ['email', 'newsletter',
                            'campaign_notifications',
@@ -145,11 +145,9 @@ class UserApiIntegrationTest(BluebottleTestCase):
                              'website', 'twitter', 'facebook', 'skypename',
                              'email', 'phone_number',
                              'newsletter', 'campaign_notifications',
-                             'birthdate', 'gender', 'first_name', 'last_name', 'partner_organization']
+                             'birthdate', 'gender', 'first_name', 'last_name']
         for field in serializer_fields:
-            self.assertTrue(field in response.data)
-
-        self.assertEqual(response.data['partner_organization'], None)
+            self.assertTrue(field in response.data, "Missing field {}".format(field))
 
     def test_user_with_partner_organization(self):
         user_profile_url = reverse('manage-profile', kwargs={'pk': self.user_with_partner_organization.id})
@@ -157,13 +155,6 @@ class UserApiIntegrationTest(BluebottleTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         self.assertEqual(response.data['id'], self.user_with_partner_organization.id)
-
-        self.assertTrue('partner_organization' in response.data)
-        partner_organization_data = response.data['partner_organization']
-        self.assertEqual(partner_organization_data['name'], 'Partner Organization')
-        self.assertEqual(partner_organization_data['slug'], 'partner-organization')
-        self.assertEqual(partner_organization_data['website'], 'http://partnerorg.nl')
-        self.assertEqual(partner_organization_data['logo'], None)
 
     @override_settings(TOKEN_AUTH=ASSERTION_MAPPING)
     def test_user_profile_read_only_forbidden(self):

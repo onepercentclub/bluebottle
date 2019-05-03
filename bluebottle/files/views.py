@@ -1,30 +1,26 @@
-import magic
 import mimetypes
 
+import magic
 from django.conf import settings
 from django.http import HttpResponse
-
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAuthenticated
-
 from rest_framework_json_api.views import AutoPrefetchMixin
-
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-
 from sorl.thumbnail.shortcuts import get_thumbnail
 
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
-from bluebottle.files.models import File
-from bluebottle.files.serializers import FileSerializer
+from bluebottle.files.models import Document
+from bluebottle.files.serializers import FileSerializer, ImageSerializer
+from bluebottle.initiatives.models import Initiative
 from bluebottle.utils.views import CreateAPIView, RetrieveAPIView
-
 
 mime = magic.Magic(mime=True)
 
 
 class FileList(AutoPrefetchMixin, CreateAPIView):
-    queryset = File.objects.all()
+    queryset = Document.objects.all()
     serializer_class = FileSerializer
 
     renderer_classes = (BluebottleJSONAPIRenderer, )
@@ -68,3 +64,8 @@ class FileContentView(RetrieveAPIView):
         )
 
         return response
+
+
+class ImageList(FileList):
+    queryset = Initiative.objects.all()
+    serializer_class = ImageSerializer

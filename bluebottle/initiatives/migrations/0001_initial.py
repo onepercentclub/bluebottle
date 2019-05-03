@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                 ('video_url', models.URLField(blank=True, default=b'', help_text="Do you have a video pitch or a short movie that explains your initiative? Cool! We can't wait to see it! You can paste the link to YouTube or Vimeo video here", max_length=100, null=True, verbose_name='video')),
                 ('place', models.CharField(blank=True, help_text='Geographical impact location', max_length=200, null=True)),
                 ('categories', models.ManyToManyField(blank=True, to='categories.Category')),
-                ('image', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='files.File')),
+                ('image', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='files.Image')),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='own_initiative', to=settings.AUTH_USER_MODEL, verbose_name='owner')),
                 ('reviewer', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='review_initiative', to=settings.AUTH_USER_MODEL, verbose_name='reviewer')),
                 ('theme', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='bb_projects.ProjectTheme')),

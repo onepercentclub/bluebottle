@@ -54,7 +54,9 @@ class OrganizationContact(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('owner'))
 
     created = CreationDateTimeField(
-        _('created'), help_text=_('When this contact was created.'))
+        _('created'),
+        help_text=_('When this contact was created.')
+    )
     updated = ModificationDateTimeField(_('updated'))
 
     class Meta:

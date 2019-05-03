@@ -5,10 +5,12 @@ from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import CreationDateTimeField, ModificationDateTimeField
-from django_fsm import FSMField, transition
+from django_fsm import FSMField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from parler.models import TranslatableModel
 
+from bluebottle.initiatives.messages import InitiativeApproveOwnerMessage, InitiativeClosedOwnerMessage
+from bluebottle.notifications.decorators import transition
 from bluebottle.utils.managers import SortableTranslatableManager, PublishedManager
 
 import bluebottle.utils.monkey_patch_migration  # noqa
@@ -186,6 +188,7 @@ class ReviewModel(models.Model):
         field='review_status',
         source=ReviewStatus.submitted,
         target=ReviewStatus.approved,
+        messages=[InitiativeApproveOwnerMessage],
         custom={'button_name': _('approve')}
     )
     def approve(self):
@@ -195,6 +198,7 @@ class ReviewModel(models.Model):
         field='review_status',
         source=ReviewStatus.submitted,
         target=ReviewStatus.rejected,
+        messages=[InitiativeClosedOwnerMessage],
         custom={'button_name': _('reject')}
     )
     def reject(self):

@@ -1,7 +1,9 @@
 from django.conf.urls import url
 
-from bluebottle.organizations.views import (OrganizationList, OrganizationDetail,
-                                            OrganizationContactList, OrganizationContactDetail)
+from bluebottle.organizations.views import (
+    OrganizationList, OrganizationDetail,
+    OrganizationContactList, OrganizationContactDetail
+)
 
 urlpatterns = [
     url(r'^$', OrganizationList.as_view(), name='organization_list'),

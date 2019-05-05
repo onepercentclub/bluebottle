@@ -32,6 +32,7 @@ from bluebottle.tasks.models import Task
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
 
 from bluebottle.utils.email_backend import send_mail
+from bluebottle.utils.utils import get_current_host
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member
 
@@ -455,9 +456,10 @@ class MemberAdmin(UserAdmin):
     def login_as_redirect(self, *args, **kwargs):
         user = Member.objects.get(id=kwargs.get('user_id', None))
         token = user.get_login_token()
-        url = "/login-with/{}/{}".format(user.pk, token)
-
-        return HttpResponseRedirect(url)
+        login_url = "/login-with/{}/{}".format(user.pk, token)
+        if 'localhost' in get_current_host():
+            login_url = get_current_host().replace('8000', '4200') + login_url
+        return HttpResponseRedirect(login_url)
 
     def login_as_link(self, obj):
         return format_html(

@@ -1,59 +1,63 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load i18n %}
 
 {% block content %}
-<h2>Loading...</h2>
+    <p>{% trans "Redirecting..." %}</p>
 {% endblock %}
 
 {% block script %}
 
-<script>
-    var token = "{{ token }}";
-    var user_id = "{{ user_id }}";
-    var link = location.search.replace("?next=", "");
-    link = link ? link : '/';
+    <script>
+        var token = "{{ token }}";
+        var user_id = "{{ user_id }}";
+        // Strip deep link from search params
+        var link = location.search.replace("?next=", "");
+        link = link ? link : '/';
 
-    function setToken(token) {
-        var authStorage;
-        try {
-            localStorage.setItem('testLocalStorage', 'testLocalStorage');
-            localStorage.removeItem('testLocalStorage');
-            authStorage = localStorage;
-        } catch (ex) {
-            authStorage = {
-                _data: {},
-                setItem(id, val) {
-                    try {
-                        return setCookie(id, value, 100);
-                    } catch (ex) {
-                        return (this._data[id] = String(val));
+        function storeToken(token) {
+            // Create fallback for localStorage
+            var authStorage;
+            try {
+                localStorage.setItem('testLocalStorage', 'testLocalStorage');
+                localStorage.removeItem('testLocalStorage');
+                authStorage = localStorage;
+            } catch (ex) {
+                authStorage = {
+                    _data: {},
+                    setItem(id, val) {
+                        try {
+                            return setCookie(id, value, 100);
+                        } catch (ex) {
+                            return (this._data[id] = String(val));
+                        }
                     }
-                }
-            };
+                };
+            }
+            // Store jwtToken
+            authStorage['jwtToken'] = token;
         }
 
-        authStorage['jwtToken'] = token;
-    }
+        function getToken(user_id, token) {
+            // Change one-time login token for jwtToken
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/users/tokenlogin');
+            xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+            xhr.onload = function() {
+                if (xhr.status === 201) {
+                    storeToken(JSON.parse(xhr.responseText).token);
+                    // Redirect to deep link
+                    location.href = link;
 
-    function getToken(user_id, token) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/users/tokenlogin');
-        xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-        xhr.onload = function() {
-            if (xhr.status === 201) {
-                console.log(xhr.responseText);
-                setToken(JSON.parse(xhr.responseText).token);
-                location.href = link;
+                } else {
+                    console.log('Request failed.  Returned status of ' + xhr.status);
+                }
+            };
+            xhr.send(JSON.stringify({user_id, token}));
+        }
 
-            } else if (xhr.status !== 201) {
-                console.log('Request failed.  Returned status of ' + xhr.status);
-            }
-        };
-        xhr.send(JSON.stringify({user_id, token}));
-    }
+        getToken(user_id, token);
 
-    getToken(user_id, token);
-
-</script>
+    </script>
 
 {% endblock %}

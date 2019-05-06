@@ -129,6 +129,7 @@ urlpatterns = [
 
     url(r'^api/scim/v2/', include('bluebottle.scim.urls.api')),
 
+    url(r'^downloads/', include('bluebottle.payouts.urls.media')),
     url(r'^login-with/(?P<user_id>[0-9]+)/(?P<token>[0-9A-Za-z:\-_]{1,200})',
         LoginWithView.as_view(), name='login-with'),
 

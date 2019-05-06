@@ -404,7 +404,7 @@ class MemberAdmin(UserAdmin):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = [
-            url(r'^login-as/(?P<user_id>\d+)/$', self.admin_site.admin_view(self.login_as_redirect)),
+            url(r'^login-as/(?P<user_id>\d+)/$', self.admin_site.admin_view(self.login_as)),
             url(r'^password-reset/(?P<user_id>\d+)/$',
                 self.send_password_reset_mail,
                 name='auth_user_password_reset_mail'
@@ -453,11 +453,13 @@ class MemberAdmin(UserAdmin):
 
         return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
 
-    def login_as_redirect(self, request, *args, **kwargs):
+    def login_as(self, request, *args, **kwargs):
         user = Member.objects.get(id=kwargs.get('user_id', None))
         template = loader.get_template('utils/login_with.html')
         context = {'token': user.get_jwt_token(), 'link': '/'}
-        return HttpResponse(template.render(context, request), content_type='text/html')
+        response = HttpResponse(template.render(context, request), content_type='text/html')
+        response['cache-control'] = "no-store, no-cache, private"
+        return response
 
     def login_as_link(self, obj):
         return format_html(

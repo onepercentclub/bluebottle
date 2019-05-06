@@ -10,10 +10,7 @@
 
     <script>
         var token = "{{ token }}";
-        var user_id = "{{ user_id }}";
-        // Strip deep link from search params
-        var link = location.search.replace("?next=", "");
-        link = link ? link : '/';
+        var link = "{{ link }}";
 
         function storeToken(token) {
             // Create fallback for localStorage
@@ -37,26 +34,9 @@
             // Store jwtToken
             authStorage['jwtToken'] = token;
         }
-
-        function getToken(user_id, token) {
-            // Change one-time login token for jwtToken
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/api/users/tokenlogin');
-            xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-            xhr.onload = function() {
-                if (xhr.status === 201) {
-                    storeToken(JSON.parse(xhr.responseText).token);
-                    // Redirect to deep link
-                    location.href = link;
-
-                } else {
-                    console.log('Request failed.  Returned status of ' + xhr.status);
-                }
-            };
-            xhr.send(JSON.stringify({user_id, token}));
-        }
-
-        getToken(user_id, token);
+        storeToken(token);
+        // Redirect to deep link
+        location.href = link;
 
     </script>
 

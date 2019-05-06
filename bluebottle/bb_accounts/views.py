@@ -253,6 +253,7 @@ class PasswordSet(views.APIView):
 
 
 class TokenLogin(generics.CreateAPIView):
+
     serializer_class = TokenLoginSerializer
 
     def post(self, request, *args, **kwargs):

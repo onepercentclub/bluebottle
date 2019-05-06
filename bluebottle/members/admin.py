@@ -1,8 +1,8 @@
 import functools
+
 import six
 from adminfilters.multiselect import UnionFieldListFilter
 from adminsortable.admin import SortableTabularInline, NonSortableParentAdmin
-from django.db import models
 from django import forms
 from django.conf.urls import url
 from django.contrib import admin
@@ -11,7 +11,9 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.auth.tokens import default_token_generator
 from django.core.urlresolvers import reverse
 from django.db import connection
+from django.db import models
 from django.forms.models import ModelFormMetaclass
+from django.http import HttpResponse
 from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template import loader
 from django.utils.html import format_html
@@ -24,13 +26,12 @@ from bluebottle.bb_follow.models import Follow
 from bluebottle.clients import properties
 from bluebottle.clients.utils import tenant_url
 from bluebottle.donations.models import Donation
-from bluebottle.geo.models import Location
 from bluebottle.geo.admin import PlaceInline
+from bluebottle.geo.models import Location
 from bluebottle.members.models import CustomMemberFieldSettings, CustomMemberField, MemberPlatformSettings
 from bluebottle.projects.models import Project
 from bluebottle.tasks.models import Task
 from bluebottle.utils.admin import export_as_csv_action, BasePlatformSettingsAdmin
-
 from bluebottle.utils.email_backend import send_mail
 from bluebottle.utils.widgets import SecureAdminURLFieldWidget
 from .models import Member
@@ -403,7 +404,7 @@ class MemberAdmin(UserAdmin):
         urls = super(MemberAdmin, self).get_urls()
 
         extra_urls = [
-            url(r'^login-as/(?P<user_id>\d+)/$', self.admin_site.admin_view(self.login_as_redirect)),
+            url(r'^login-as/(?P<user_id>\d+)/$', self.admin_site.admin_view(self.login_as)),
             url(r'^password-reset/(?P<user_id>\d+)/$',
                 self.send_password_reset_mail,
                 name='auth_user_password_reset_mail'
@@ -452,12 +453,13 @@ class MemberAdmin(UserAdmin):
 
         return HttpResponseRedirect(reverse('admin:members_member_change', args=(user.id, )))
 
-    def login_as_redirect(self, *args, **kwargs):
+    def login_as(self, request, *args, **kwargs):
         user = Member.objects.get(id=kwargs.get('user_id', None))
-        token = user.get_login_token()
-        url = "/login-with/{}/{}".format(user.pk, token)
-
-        return HttpResponseRedirect(url)
+        template = loader.get_template('utils/login_with.html')
+        context = {'token': user.get_jwt_token(), 'link': '/'}
+        response = HttpResponse(template.render(context, request), content_type='text/html')
+        response['cache-control'] = "no-store, no-cache, private"
+        return response
 
     def login_as_link(self, obj):
         return format_html(

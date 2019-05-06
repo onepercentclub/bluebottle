@@ -34,19 +34,15 @@ from bluebottle.clients.models import Client
 class ProjectSearchTest(ESTestCase, BluebottleTestCase):
     def setUp(self):
         super(ProjectSearchTest, self).setUp()
-
         self.factory = RequestFactory()
         self.view = ProjectPreviewList().as_view()
         self.status = ProjectPhase.objects.get(slug='campaign')
 
     def search(self, query=None, user=None):
         url = reverse('project_preview_list')
-
         request = self.factory.get(url, query)
-
         if user:
             request.user = user
-
         return self.view(request)
 
     def test_no_filter(self):

@@ -10,7 +10,7 @@
 <script>
     var token = "{{ token }}";
     var user_id = "{{ user_id }}";
-    var link = location.search.replace("?", "");
+    var link = location.search.replace("?next=", "");
     link = link ? link : '/';
 
     function setToken(token) {

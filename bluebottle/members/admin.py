@@ -319,22 +319,35 @@ class MemberAdmin(UserAdmin):
         plan = Project.objects.filter(owner=obj, status__slug__in=['plan-new', 'plan-needs-work']).count()
         links = []
         if completed:
-            links.append('<a href="{}?owner={}&status_filter=8%2C9">{} {}</a>'.format(
-                url, obj.id, completed, _('completed')
-            ))
+            links.append(
+                format_html(
+                    '<a href="{}?owner={}&status_filter=8%2C9">{} {}</a>',
+                    url, obj.id, completed, _('completed')
+                )
+            )
         if campaign:
-            links.append('<a href="{}?owner={}&status_filter=11%2C5">{} {}</a>'.format(
-                url, obj.id, campaign, _('campaigning')
-            ))
+            links.append(
+                format_html(
+                    '<a href="{}?owner={}&status_filter=11%2C5">{} {}</a>',
+                    url, obj.id, campaign, _('campaigning')
+                )
+            )
         if plan:
-            links.append('<a href="{}?owner={}&status_filter=1%2C3">{} {}</a>'.format(
-                url, obj.id, plan, _('plan')
-            ))
+            links.append(
+                format_html(
+                    '<a href="{}?owner={}&status_filter=1%2C3">{} {}</a>',
+                    url, obj.id, plan, _('plan')
+                )
+            )
         if submitted:
-            links.append('<a href="{}?owner={}&status_filter=2">{} {}</a>'.format(
-                url, obj.id, submitted, _('submitted')
-            ))
+            links.append(
+                format_html(
+                    '<a href="{}?owner={}&status_filter=2">{} {}</a>',
+                    url, obj.id, submitted, _('submitted')
+                )
+            )
         return format_html(', '.join(links) or _('None'))
+
     projects_managed.short_description = _('Projects Managed')
 
     def tasks(self, obj):
@@ -349,13 +362,19 @@ class MemberAdmin(UserAdmin):
             ))
         if applied:
             links.append(
-                '<a href="{}?members__member_id={}&members__status[]=applied'
-                '&members__status[]=accepted">{} {}</a>'.format(url, obj.id, applied, _('applied'))
+                format_html(
+                    '<a href="{}?members__member_id={}&members__status[]=applied'
+                    '&members__status[]=accepted">{} {}</a>',
+                    url, obj.id, applied, _('applied')
+                )
             )
         if realized:
-            links.append('<a href="{}?members__member_id={}">{} {}</a>'.format(
-                url, obj.id, realized, _('realised')
-            ))
+            links.append(
+                format_html(
+                    '<a href="{}?members__member_id={}">{} {}</a>',
+                    url, obj.id, realized, _('realised')
+                )
+            )
         return format_html(', '.join(links) or _('None'))
     tasks.short_description = _('Tasks')
 

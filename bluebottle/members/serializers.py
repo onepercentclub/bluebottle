@@ -358,9 +358,7 @@ class EmailSetSerializer(PasswordProtectedMemberSerializer):
 
 
 class PasswordUpdateSerializer(PasswordProtectedMemberSerializer):
-    new_password = serializers.CharField(
-        write_only=True, required=True, max_length=128
-    )
+    new_password = PasswordField(write_only=True, required=True, max_length=128)
 
     def save(self):
         self.instance.set_password(self.validated_data['new_password'])

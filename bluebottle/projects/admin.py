@@ -242,7 +242,11 @@ class ProjectAdminForm(six.with_metaclass(CustomAdminFormMetaClass, forms.ModelF
             if self.cleaned_data['payout_account']:
                 link_url = reverse('admin:payouts_payoutaccount_change',
                                    args=(self.cleaned_data['payout_account'].id,))
-                link = "<br/><a href='{}'>{}</a>".format(link_url, _("Review payout account"))
+                link = format_html(
+                    "<br/><a href='{}'>{}</a>",
+                    link_url,
+                    _("Review payout account")
+                )
             else:
                 link = ''
 
@@ -753,7 +757,11 @@ class ProjectPhaseAdmin(TranslatableAdmin):
 
     def project_link(self, obj):
         url = "{}?status_filter={}".format(reverse('admin:projects_project_changelist'), obj.id)
-        return format_html("<a href='{}'>{} projects</a>".format(url, obj.project_set.count()))
+        return format_html(
+            "<a href='{}'>{} projects</a>",
+            url,
+            obj.project_set.count()
+        )
 
     def has_delete_permission(self, request, obj=None):
         return False

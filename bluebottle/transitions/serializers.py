@@ -14,10 +14,12 @@ class Transition(object):
 
 class AvailableTransitionsField(ReadOnlyField):
     def to_representation(self, value):
-        instance = self.parent.instance
-        transitions = getattr(instance, 'get_available_{}_transitions'.format(self.source))()
+        transitions = getattr(value, 'get_available_{}_transitions'.format(self.source))()
 
-        return [transition.name for transition in transitions]
+        return dict((transition.name, {'target': transition.target}) for transition in transitions)
+
+    def get_attribute(self, instance):
+        return instance
 
 
 class TransitionSerializer(serializers.Serializer):

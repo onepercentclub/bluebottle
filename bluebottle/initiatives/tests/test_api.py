@@ -196,7 +196,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(data['data']['attributes']['title'], self.initiative.title)
         self.assertEqual(data['data']['meta']['review-status'], self.initiative.review_status)
-        self.assertEqual(data['data']['meta']['transitions'], ['submit'])
+        self.assertEqual(data['data']['meta']['transitions'], {'submit': {'target': 'submitted'}})
         self.assertEqual(data['data']['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
         self.assertEqual(len(data['included']), 3)

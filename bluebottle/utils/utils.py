@@ -124,7 +124,7 @@ def get_client_ip(request=None):
         x_forwarded_for = None
 
     if x_forwarded_for:
-        ipa = x_forwarded_for.split(',')[0]
+        ipa = x_forwarded_for.split(',')[-1]
     else:
         try:
             ipa = request.META.get('REMOTE_ADDR')

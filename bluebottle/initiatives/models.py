@@ -107,7 +107,7 @@ class Initiative(models.Model):
         form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('submit')}
     )
-    def submit(self):
+    def submit(self, **kwargs):
         pass
 
     @transition(
@@ -116,7 +116,7 @@ class Initiative(models.Model):
         target=ReviewStatus.submitted,
         custom={'button_name': _('resubmit')}
     )
-    def resubmit(self):
+    def resubmit(self, **kwargs):
         pass
 
     @transition(
@@ -125,7 +125,7 @@ class Initiative(models.Model):
         target=ReviewStatus.needs_work,
         custom={'button_name': _('needs work')}
     )
-    def needs_work(self):
+    def needs_work(self, **kwargs):
         pass
 
     @transition(
@@ -135,7 +135,7 @@ class Initiative(models.Model):
         messages=[InitiativeApproveOwnerMessage],
         custom={'button_name': _('approve')}
     )
-    def approve(self):
+    def approve(self, **kwargs):
         pass
 
     @transition(
@@ -145,7 +145,7 @@ class Initiative(models.Model):
         messages=[InitiativeClosedOwnerMessage],
         custom={'button_name': _('reject')}
     )
-    def reject(self):
+    def reject(self, **kwargs):
         pass
 
     @transition(
@@ -154,7 +154,7 @@ class Initiative(models.Model):
         target=ReviewStatus.cancelled,
         custom={'button_name': _('cancel')}
     )
-    def cancel(self):
+    def cancel(self, **kwargs):
         pass
 
     @transition(
@@ -163,7 +163,7 @@ class Initiative(models.Model):
         target=ReviewStatus.submitted,
         custom={'button_name': _('re-open')}
     )
-    def reopen(self):
+    def reopen(sel, **kwargsf):
         pass
 
     @classmethod

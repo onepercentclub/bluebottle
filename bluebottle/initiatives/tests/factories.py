@@ -12,6 +12,8 @@ class InitiativeFactory(factory.DjangoModelFactory):
 
     review_status = Initiative.ReviewStatus.created
     title = factory.Sequence(lambda n: 'Initiative {0}'.format(n))
+    story = factory.Faker('text')
+    pitch = factory.Faker('text')
     owner = factory.SubFactory(BlueBottleUserFactory)
     reviewer = factory.SubFactory(BlueBottleUserFactory)
     theme = factory.SubFactory(ProjectThemeFactory)

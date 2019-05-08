@@ -22,7 +22,7 @@
             } catch (ex) {
                 authStorage = {
                     _data: {},
-                    setItem(id, val) {
+                    setItem: function (id, val) {
                         try {
                             return setCookie(id, value, 100);
                         } catch (ex) {

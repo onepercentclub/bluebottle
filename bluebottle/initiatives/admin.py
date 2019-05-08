@@ -2,10 +2,12 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
 from bluebottle.initiatives.models import Initiative
-from bluebottle.utils.admin import ReviewAdmin
+from bluebottle.notifications.admin import MessageAdminInline
+from bluebottle.utils.admin import FSMAdmin
 
 
-class InitiativeAdmin(ReviewAdmin):
+class InitiativeAdmin(FSMAdmin):
+    fsm_field = 'review_status'
 
     raw_id_fields = ('owner', 'reviewer')
     list_display = ['title', 'created', 'review_status']
@@ -20,6 +22,8 @@ class InitiativeAdmin(ReviewAdmin):
             (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories')}),
             (_('Review'), {'fields': ('reviewer', 'review_status', 'review_status_transition')}),
         )
+
+    inlines = [MessageAdminInline, ]
 
 
 admin.site.register(Initiative, InitiativeAdmin)

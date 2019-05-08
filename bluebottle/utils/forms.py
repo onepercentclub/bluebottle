@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import CheckboxInput
 from django.forms.models import ModelFormMetaclass
 from django.utils.translation import ugettext_lazy as _
 
@@ -52,3 +53,10 @@ class FSMModelForm(forms.ModelForm):
 
 class TransitionConfirmationForm(forms.Form):
     title = _('Transition')
+    send_messages = forms.BooleanField(
+        initial=True,
+        required=False,
+        widget=CheckboxInput,
+        label=_('Send messages'),
+        help_text=_('Should messages be send or should we transition without notifying users?')
+    )

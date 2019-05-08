@@ -3,13 +3,46 @@ from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
 
+from djchoices.choices import DjangoChoices, ChoiceItem
+from django_fsm import FSMField
+from bluebottle.notifications.decorators import transition
+
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import InitiativePlace
+from bluebottle.initiatives.messages import InitiativeApproveOwnerMessage, InitiativeClosedOwnerMessage
 from bluebottle.organizations.models import Organization, OrganizationContact
-from bluebottle.utils.models import ReviewModel
 
 
-class Initiative(ReviewModel):
+class Initiative(models.Model):
+    class ReviewStatus(DjangoChoices):
+        created = ChoiceItem('created', _('created'))
+        submitted = ChoiceItem('submitted', _('submitted'))
+        needs_work = ChoiceItem('needs_work', _('needs work'))
+        approved = ChoiceItem('approved', _('approved'))
+        cancelled = ChoiceItem('cancelled', _('cancelled'))
+        rejected = ChoiceItem('rejected', _('rejected'))
+
+    review_status = FSMField(
+        default=ReviewStatus.created,
+        choices=ReviewStatus.choices,
+        protected=True
+    )
+    owner = models.ForeignKey(
+        'members.Member',
+        verbose_name=_('owner'),
+        related_name='own_%(class)s',
+    )
+    reviewer = models.ForeignKey(
+        'members.Member',
+        null=True,
+        blank=True,
+        verbose_name=_('reviewer'),
+        related_name='review_%(class)s',
+    )
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
     title = models.CharField(_('title'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100)
 
@@ -26,7 +59,7 @@ class Initiative(ReviewModel):
 
     promoter = models.ForeignKey(
         'members.Member',
-        verbose_name=_('owner'),
+        verbose_name=_('promoter'),
         null=True,
     )
 
@@ -66,6 +99,76 @@ class Initiative(ReviewModel):
 
     class JSONAPIMeta:
         resource_name = 'initiatives'
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.created,
+        target=ReviewStatus.submitted,
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        custom={'button_name': _('submit')}
+    )
+    def submit(self, **kwargs):
+        pass
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.needs_work,
+        target=ReviewStatus.submitted,
+        custom={'button_name': _('resubmit')}
+    )
+    def resubmit(self, **kwargs):
+        pass
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.needs_work,
+        custom={'button_name': _('needs work')}
+    )
+    def needs_work(self, **kwargs):
+        pass
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.approved,
+        messages=[InitiativeApproveOwnerMessage],
+        custom={'button_name': _('approve')}
+    )
+    def approve(self, **kwargs):
+        pass
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.rejected,
+        messages=[InitiativeClosedOwnerMessage],
+        custom={'button_name': _('reject')}
+    )
+    def reject(self, **kwargs):
+        pass
+
+    @transition(
+        field='review_status',
+        source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
+        target=ReviewStatus.cancelled,
+        custom={'button_name': _('cancel')}
+    )
+    def cancel(self, **kwargs):
+        pass
+
+    @transition(
+        field='review_status',
+        source=[ReviewStatus.cancelled, ReviewStatus.approved, ReviewStatus.rejected],
+        target=ReviewStatus.submitted,
+        custom={'button_name': _('re-open')}
+    )
+    def reopen(sel, **kwargsf):
+        pass
+
+    @classmethod
+    def is_approved(cls, instance):
+        return instance.review_status == Initiative.ReviewStatus.approved
 
     def __unicode__(self):
         return self.title

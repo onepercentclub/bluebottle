@@ -350,11 +350,9 @@ class FSMAdmin(admin.ModelAdmin):
                         'admin/transition_errors.html'
                     )
                     errors = template.render({
-                        'errors': dict(
-                            (form.fields[field].label, errors)
-                            for field, errors in e.errors.items()
-                        )
+                        'errors': e.args[0]
                     })
+
                     messages.error(request, errors)
                     return HttpResponseRedirect(link)
 

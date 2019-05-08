@@ -12,7 +12,12 @@ def validate_transition_form(sender, instance, name, method_kwargs, **kwargs):
     if transition.form:
         form = transition.form(data=model_to_dict(instance))
         if form.errors:
-            raise ValidationError(form.errors)
+            raise ValidationError(
+                dict(
+                    (form.fields[field].label, errors)
+                    for field, errors in form.errors.items()
+                )
+            )
 
 
 @receiver(post_transition)

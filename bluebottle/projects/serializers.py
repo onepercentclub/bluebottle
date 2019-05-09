@@ -288,6 +288,7 @@ class ManageTaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = ('id',
                   'deadline',
+                  'deadline_to_apply',
                   'description',
                   'location',
                   'people_needed',

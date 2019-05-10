@@ -1,12 +1,11 @@
 from django.contrib import admin
 from polymorphic.admin import (
-    PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter
-)
+    PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter)
 
 from bluebottle.activities.models import Activity
 from bluebottle.events.models import Event
-from bluebottle.jobs.models import Job
 from bluebottle.funding.models import Funding
+from bluebottle.jobs.models import Job
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin):
@@ -22,3 +21,10 @@ class ActivityAdmin(PolymorphicParentModelAdmin):
 
 
 admin.site.register(Activity, ActivityAdmin)
+
+
+class ActivityAdminInline(admin.TabularInline):
+    model = Activity
+    readonly_fields = ['title', 'created', 'updated', 'status']
+    fields = readonly_fields
+    extra = 0

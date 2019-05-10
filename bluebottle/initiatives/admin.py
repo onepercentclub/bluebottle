@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
+from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.initiatives.models import Initiative
 from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import ReviewAdmin
@@ -22,7 +23,7 @@ class InitiativeAdmin(ReviewAdmin):
             (_('Review'), {'fields': ('reviewer', 'review_status', 'review_status_transition')}),
         )
 
-    inlines = [MessageAdminInline, ]
+    inlines = [ActivityAdminInline, MessageAdminInline]
 
 
 admin.site.register(Initiative, InitiativeAdmin)

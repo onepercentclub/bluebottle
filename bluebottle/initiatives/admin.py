@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from polymorphic.admin import PolymorphicInlineSupportMixin
 
 from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.initiatives.models import Initiative
@@ -7,7 +8,7 @@ from bluebottle.notifications.admin import MessageAdminInline
 from bluebottle.utils.admin import ReviewAdmin
 
 
-class InitiativeAdmin(ReviewAdmin):
+class InitiativeAdmin(PolymorphicInlineSupportMixin, ReviewAdmin):
 
     raw_id_fields = ('owner', 'reviewer')
     list_display = ['title', 'created', 'review_status']

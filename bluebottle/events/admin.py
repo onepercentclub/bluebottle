@@ -16,7 +16,7 @@ class ParticipantInline(admin.TabularInline):
     model = Participant
 
     raw_id_fields = ('user', )
-    readonlyfields = ('time_spent', 'status', )
+    readonly_fields = ('time_spent', 'status', )
     extra = 0
 
 

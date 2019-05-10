@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import transition
 from djchoices.choices import ChoiceItem
 from moneyed.classes import Money
-from select_multiple_field.models import SelectMultipleField
+from multiselectfield import MultiSelectField
 
 from bluebottle.activities.models import Activity, Contribution
 from bluebottle.utils.exchange_rates import convert
@@ -20,7 +20,7 @@ class Funding(Activity):
     duration = models.PositiveIntegerField(_('duration'), null=True, blank=True)
 
     target = MoneyField()
-    accepted_currencies = SelectMultipleField(
+    accepted_currencies = MultiSelectField(
         max_length=100, default=[],
         choices=lazy(get_currency_choices, tuple)()
     )

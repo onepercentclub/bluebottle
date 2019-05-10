@@ -16,7 +16,7 @@ class ApplicantInline(admin.TabularInline):
     model = Applicant
 
     raw_id_fields = ('user', )
-    readonlyfields = ('time_spent', 'status', )
+    readonly_fields = ('time_spent', 'status', )
 
 
 class JobAdmin(ActivityChildAdmin):

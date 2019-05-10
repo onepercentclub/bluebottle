@@ -16,13 +16,16 @@ class DonationInline(admin.TabularInline):
     model = Donation
 
     raw_id_fields = ('user', )
-    readonlyfields = ('time_spent', 'status', )
+    readonly_fields = ('time_spent', 'status', )
+    extra = 0
+
+    def has_add_permission(self, request):
+        return False
 
 
 class FundingAdmin(ActivityChildAdmin):
     form = FundingAdminForm
     inlines = (DonationInline, )
-
     base_model = Funding
 
 

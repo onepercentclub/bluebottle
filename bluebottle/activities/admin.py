@@ -1,6 +1,7 @@
 from django.contrib import admin
 from polymorphic.admin import (
-    PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter)
+    PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
+    StackedPolymorphicInline)
 
 from bluebottle.activities.models import Activity
 from bluebottle.events.models import Event
@@ -23,8 +24,35 @@ class ActivityAdmin(PolymorphicParentModelAdmin):
 admin.site.register(Activity, ActivityAdmin)
 
 
-class ActivityAdminInline(admin.TabularInline):
+class ActivityAdminInline(StackedPolymorphicInline):
     model = Activity
     readonly_fields = ['title', 'created', 'updated', 'status']
     fields = readonly_fields
     extra = 0
+
+    class EventInline(StackedPolymorphicInline.Child):
+        readonly_fields = ['title', 'created', 'updated', 'status']
+        fields = readonly_fields
+        model = Event
+
+    class FundingInline(StackedPolymorphicInline.Child):
+        readonly_fields = ['title', 'created', 'updated', 'status']
+        fields = readonly_fields
+        model = Funding
+
+    class JobInline(StackedPolymorphicInline.Child):
+        readonly_fields = ['title', 'created', 'updated', 'status']
+        fields = readonly_fields
+        model = Job
+
+    child_inlines = (
+        EventInline,
+        FundingInline,
+        JobInline
+    )
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request):
+        return False

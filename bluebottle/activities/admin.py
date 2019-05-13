@@ -7,6 +7,7 @@ from bluebottle.activities.models import Activity
 from bluebottle.events.models import Event
 from bluebottle.funding.models import Funding
 from bluebottle.jobs.models import Job
+from bluebottle.utils.admin import ReviewAdmin
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin):
@@ -15,10 +16,15 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin):
     readonly_fields = ['status']
 
 
-class ActivityAdmin(PolymorphicParentModelAdmin):
+class ActivityAdmin(PolymorphicParentModelAdmin, ReviewAdmin):
     base_model = Activity
     child_models = (Event, Funding, Job)
     list_filter = (PolymorphicChildModelFilter,)
+
+    list_display = ['created', 'title', 'type', 'contribution_count']
+
+    def type(self, obj):
+        return obj.get_real_instance_class().__name__
 
 
 admin.site.register(Activity, ActivityAdmin)
@@ -31,18 +37,18 @@ class ActivityAdminInline(StackedPolymorphicInline):
     extra = 0
 
     class EventInline(StackedPolymorphicInline.Child):
-        readonly_fields = ['title', 'created', 'updated', 'status']
-        fields = readonly_fields
+        readonly_fields = ['title', 'created', 'updated']
+        fields = ['status'], readonly_fields
         model = Event
 
     class FundingInline(StackedPolymorphicInline.Child):
-        readonly_fields = ['title', 'created', 'updated', 'status']
-        fields = readonly_fields
+        readonly_fields = ['title', 'target', 'created', 'updated']
+        fields = ['status'], readonly_fields
         model = Funding
 
     class JobInline(StackedPolymorphicInline.Child):
-        readonly_fields = ['title', 'created', 'updated', 'status']
-        fields = readonly_fields
+        readonly_fields = ['title', 'created', 'updated']
+        fields = ['status'], readonly_fields
         model = Job
 
     child_inlines = (

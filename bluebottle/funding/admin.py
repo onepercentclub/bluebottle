@@ -16,7 +16,7 @@ class DonationInline(admin.TabularInline):
     model = Donation
 
     raw_id_fields = ('user', )
-    readonly_fields = ('time_spent', 'status', )
+    readonly_fields = ('amount', 'status', )
     extra = 0
 
     def has_add_permission(self, request):

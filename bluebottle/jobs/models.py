@@ -1,9 +1,9 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django_fsm import transition
 from djchoices.choices import ChoiceItem
 
 from bluebottle.activities.models import Activity, Contribution
+from bluebottle.notifications.decorators import transition
 
 
 class Job(Activity):

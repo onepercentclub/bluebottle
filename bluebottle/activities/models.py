@@ -66,6 +66,10 @@ class Activity(PolymorphicModel):
     def __unicode__(self):
         return self.title
 
+    @property
+    def contribution_count(self):
+        return self.contributions.count()
+
     def save(self, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)

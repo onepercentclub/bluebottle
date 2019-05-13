@@ -5,12 +5,12 @@ from django.db.models.aggregates import Sum
 from django.utils import timezone
 from django.utils.functional import lazy
 from django.utils.translation import ugettext_lazy as _
-from django_fsm import transition
 from djchoices.choices import ChoiceItem
 from moneyed.classes import Money
 from multiselectfield import MultiSelectField
 
 from bluebottle.activities.models import Activity, Contribution
+from bluebottle.notifications.decorators import transition
 from bluebottle.utils.exchange_rates import convert
 from bluebottle.utils.fields import MoneyField, get_currency_choices
 

@@ -69,7 +69,7 @@ class InitiativeSerializer(ModelSerializer):
     image = ImageField(required=False, allow_null=True)
     owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    review_status = FSMField(read_only=True)
+    status = FSMField(read_only=True)
     reviewer = ResourceRelatedField(read_only=True)
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
@@ -91,7 +91,7 @@ class InitiativeSerializer(ModelSerializer):
     class Meta:
         model = Initiative
         fields = (
-            'id', 'title', 'pitch', 'review_status', 'categories', 'owner',
+            'id', 'title', 'pitch', 'status', 'categories', 'owner',
             'reviewer', 'promoter', 'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_html', 'image',
             'theme', 'place', 'permissions',

@@ -21,7 +21,7 @@ class Initiative(models.Model):
         cancelled = ChoiceItem('cancelled', _('cancelled'))
         rejected = ChoiceItem('rejected', _('rejected'))
 
-    review_status = FSMField(
+    status = FSMField(
         default=ReviewStatus.created,
         choices=ReviewStatus.choices,
         protected=True
@@ -81,7 +81,7 @@ class Initiative(models.Model):
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
     @transition(
-        field='review_status',
+        field='status',
         source=ReviewStatus.created,
         target=ReviewStatus.submitted,
         custom={'button_name': _('submit')}
@@ -90,7 +90,7 @@ class Initiative(models.Model):
         pass
 
     @transition(
-        field='review_status',
+        field='status',
         source=ReviewStatus.needs_work,
         target=ReviewStatus.submitted,
         custom={'button_name': _('resubmit')}
@@ -99,7 +99,7 @@ class Initiative(models.Model):
         pass
 
     @transition(
-        field='review_status',
+        field='status',
         source=ReviewStatus.submitted,
         target=ReviewStatus.needs_work,
         custom={'button_name': _('needs work')}
@@ -108,7 +108,7 @@ class Initiative(models.Model):
         pass
 
     @transition(
-        field='review_status',
+        field='status',
         source=ReviewStatus.submitted,
         target=ReviewStatus.approved,
         messages=[InitiativeApproveOwnerMessage],
@@ -118,7 +118,7 @@ class Initiative(models.Model):
         pass
 
     @transition(
-        field='review_status',
+        field='status',
         source=ReviewStatus.submitted,
         target=ReviewStatus.rejected,
         messages=[InitiativeClosedOwnerMessage],
@@ -128,7 +128,7 @@ class Initiative(models.Model):
         pass
 
     @transition(
-        field='review_status',
+        field='status',
         source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
         target=ReviewStatus.cancelled,
         custom={'button_name': _('cancel')}
@@ -137,7 +137,7 @@ class Initiative(models.Model):
         pass
 
     @transition(
-        field='review_status',
+        field='status',
         source=[ReviewStatus.cancelled, ReviewStatus.approved, ReviewStatus.rejected],
         target=ReviewStatus.submitted,
         custom={'button_name': _('re-open')}
@@ -147,7 +147,7 @@ class Initiative(models.Model):
 
     @classmethod
     def is_approved(cls, instance):
-        return instance.review_status == cls.ReviewStatus.approved
+        return instance.status == cls.ReviewStatus.approved
 
     class Meta:
         verbose_name = _("Initiative")

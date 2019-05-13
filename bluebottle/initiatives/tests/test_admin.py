@@ -34,7 +34,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.post(review_url, {'confirm': True, 'send_messages': True})
         self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'approved')
+        self.assertEqual(self.initiative.status, 'approved')
         # Should send out one mail
         self.assertEqual(len(mail.outbox), 1)
 
@@ -52,7 +52,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.post(review_url, {'confirm': True, 'send_messages': False})
         self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'approved')
+        self.assertEqual(self.initiative.status, 'approved')
         # No mail should be sent
         self.assertEqual(len(mail.outbox), 0)
 
@@ -74,7 +74,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.post(review_url, {'confirm': True})
         self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'rejected')
+        self.assertEqual(self.initiative.status, 'rejected')
         messages = list(get_messages(response.wsgi_request))
         self.assertEqual(str(messages[0]), 'Transition not allowed: approve')
 
@@ -85,6 +85,6 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         # Should redirect with message
         self.assertEqual(response.status_code, 302)
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'submitted')
+        self.assertEqual(self.initiative.status, 'submitted')
         messages = list(get_messages(response.wsgi_request))
         self.assertEqual(str(messages[0]), 'Missing permission: initiative.change_initiative')

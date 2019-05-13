@@ -10,7 +10,7 @@ class InitiativeFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Initiative
 
-    review_status = Initiative.ReviewStatus.created
+    status = Initiative.ReviewStatus.created
     title = factory.Sequence(lambda n: 'Initiative {0}'.format(n))
     owner = factory.SubFactory(BlueBottleUserFactory)
     reviewer = factory.SubFactory(BlueBottleUserFactory)

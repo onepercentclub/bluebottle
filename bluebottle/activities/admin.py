@@ -37,18 +37,18 @@ class ActivityAdminInline(StackedPolymorphicInline):
     extra = 0
 
     class EventInline(StackedPolymorphicInline.Child):
-        readonly_fields = ['title', 'created', 'updated']
-        fields = ['status'], readonly_fields
+        readonly_fields = ['title', 'created', 'updated', 'status']
+        fields = readonly_fields
         model = Event
 
     class FundingInline(StackedPolymorphicInline.Child):
-        readonly_fields = ['title', 'target', 'created', 'updated']
-        fields = ['status'], readonly_fields
+        readonly_fields = ['title', 'target', 'created', 'updated', 'status']
+        fields = readonly_fields
         model = Funding
 
     class JobInline(StackedPolymorphicInline.Child):
-        readonly_fields = ['title', 'created', 'updated']
-        fields = ['status'], readonly_fields
+        readonly_fields = ['title', 'created', 'updated', 'status']
+        fields = readonly_fields
         model = Job
 
     child_inlines = (

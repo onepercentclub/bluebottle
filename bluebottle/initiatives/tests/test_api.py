@@ -1,7 +1,15 @@
+import datetime
 import json
+
+
+from django.test.utils import override_settings
+from django.test import tag
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
+from django.utils.timezone import get_current_timezone
+
+from django_elasticsearch_dsl.test import ESTestCase
 
 from bluebottle.initiatives.tests.factories import InitiativeFactory
 from bluebottle.initiatives.models import Initiative
@@ -202,9 +210,14 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(len(data['included']), 5)
 
 
-class InitiativeListFilterAPITestCase(InitiativeAPITestCase):
+@override_settings(
+    ELASTICSEARCH_DSL_AUTOSYNC=True,
+    ELASTICSEARCH_DSL_AUTO_REFRESH=True
+)
+@tag('elasticsearch')
+class InitiativeListSearchAPITestCase(ESTestCase, InitiativeAPITestCase):
     def setUp(self):
-        super(InitiativeListFilterAPITestCase, self).setUp()
+        super(InitiativeListSearchAPITestCase, self).setUp()
         self.url = reverse('initiative-list')
 
     def test_no_filter(self):
@@ -232,6 +245,79 @@ class InitiativeListFilterAPITestCase(InitiativeAPITestCase):
 
         self.assertEqual(data['meta']['pagination']['count'], 1)
         self.assertEqual(data['data'][0]['relationships']['owner']['data']['id'], unicode(self.owner.pk))
+
+    def test_search(self):
+        first = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', pitch="Lorem ipsum")
+        InitiativeFactory.create(title='consectetur adipiscing elit')
+        InitiativeFactory.create(title='Nam eu turpis erat')
+        second = InitiativeFactory.create(title='Lorem ipsum dolor sit amet')
+
+        response = self.client.get(
+            self.url + '?filter[search]=lorem ipsum',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][1]['id'], unicode(second.pk))
+
+    def test_search_boost(self):
+        first = InitiativeFactory.create(title='Something else', pitch='Lorem ipsum dolor sit amet')
+        second = InitiativeFactory.create(title='Lorem ipsum dolor sit amet', pitch="Something else")
+
+        response = self.client.get(
+            self.url + '?filter[search]=lorem ipsum',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 2)
+        self.assertEqual(data['data'][0]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+
+    def test_sort_title(self):
+        second = InitiativeFactory.create(title='B: something else')
+        first = InitiativeFactory.create(title='A: something')
+        third = InitiativeFactory.create(title='C: More')
+
+        response = self.client.get(
+            self.url + '?sort=alphabetical',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+        self.assertEqual(data['data'][0]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][1]['id'], unicode(second.pk))
+        self.assertEqual(data['data'][2]['id'], unicode(third.pk))
+
+    def test_sort_created(self):
+        first = InitiativeFactory.create()
+        second = InitiativeFactory.create()
+        third = InitiativeFactory.create()
+
+        first.created = datetime.datetime(2018, 5, 8, tzinfo=get_current_timezone())
+        first.save()
+        second.created = datetime.datetime(2018, 5, 7, tzinfo=get_current_timezone())
+        second.save()
+        third.created = datetime.datetime(2018, 5, 9, tzinfo=get_current_timezone())
+        third.save()
+
+        response = self.client.get(
+            self.url + '?sort=date',
+            HTTP_AUTHORIZATION="JWT {0}".format(self.owner.get_jwt_token())
+        )
+
+        data = json.loads(response.content)
+
+        self.assertEqual(data['meta']['pagination']['count'], 3)
+        self.assertEqual(data['data'][0]['id'], unicode(third.pk))
+        self.assertEqual(data['data'][1]['id'], unicode(first.pk))
+        self.assertEqual(data['data'][2]['id'], unicode(second.pk))
 
 
 class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):

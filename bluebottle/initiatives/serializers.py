@@ -105,7 +105,7 @@ class InitiativeSerializer(ModelSerializer):
             'theme', 'place',
         )
 
-        meta_fields = ('permissions', 'transitions', 'review_status', )
+        meta_fields = ('permissions', 'transitions', 'review_status', 'created',)
 
     class JSONAPIMeta:
         included_resources = [

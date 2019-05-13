@@ -30,14 +30,14 @@ class Initiative(models.Model):
     owner = models.ForeignKey(
         'members.Member',
         verbose_name=_('owner'),
-        related_name='own_%(class)s',
+        related_name='own_%(class)ss',
     )
     reviewer = models.ForeignKey(
         'members.Member',
         null=True,
         blank=True,
         verbose_name=_('reviewer'),
-        related_name='review_%(class)s',
+        related_name='review_%(class)ss',
     )
 
     created = models.DateTimeField(auto_now_add=True)

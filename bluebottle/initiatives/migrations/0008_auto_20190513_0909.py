@@ -11,7 +11,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('initiatives', '0007_merge_20190501_0922'),
+        ('initiatives', '0007_merge_20190503_1246'),
     ]
 
     operations = [
@@ -19,15 +19,5 @@ class Migration(migrations.Migration):
             model_name='initiative',
             old_name='review_status',
             new_name='status',
-        ),
-        migrations.AlterField(
-            model_name='initiative',
-            name='image',
-            field=bluebottle.files.fields.ImageField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='files.Image'),
-        ),
-        migrations.AlterField(
-            model_name='initiative',
-            name='promoter',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='promoter'),
-        ),
+        )
     ]

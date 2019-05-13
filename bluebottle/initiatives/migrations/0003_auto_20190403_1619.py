@@ -10,6 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('initiatives', '0002_copy_permissions'),
+        ('geo', '0010_initiativeplace')
     ]
 
     operations = [

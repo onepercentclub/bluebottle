@@ -7,7 +7,7 @@ from djchoices import DjangoChoices, ChoiceItem
 
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import InitiativePlace
-from bluebottle.initiatives.messages import InitiativeApproveOwnerMessage, InitiativeClosedOwnerMessage
+from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
 from bluebottle.notifications.decorators import transition
 from bluebottle.organizations.models import Organization, OrganizationContact
 
@@ -79,79 +79,13 @@ class Initiative(models.Model):
     has_organization = models.NullBooleanField(null=True, default=None)
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
-
-    @transition(
-        field='status',
-        source=ReviewStatus.created,
-        target=ReviewStatus.submitted,
-        custom={'button_name': _('submit')}
-    )
-    def submit(self):
-        pass
-
-    @transition(
-        field='status',
-        source=ReviewStatus.needs_work,
-        target=ReviewStatus.submitted,
-        custom={'button_name': _('resubmit')}
-    )
-    def resubmit(self):
-        pass
-
-    @transition(
-        field='status',
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.needs_work,
-        custom={'button_name': _('needs work')}
-    )
-    def needs_work(self):
-        pass
-
-    @transition(
-        field='status',
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.approved,
-        messages=[InitiativeApproveOwnerMessage],
-        custom={'button_name': _('approve')}
-    )
-    def approve(self):
-        pass
-
-    @transition(
-        field='status',
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.rejected,
-        messages=[InitiativeClosedOwnerMessage],
-        custom={'button_name': _('reject')}
-    )
-    def reject(self):
-        pass
-
-    @transition(
-        field='status',
-        source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
-        target=ReviewStatus.cancelled,
-        custom={'button_name': _('cancel')}
-    )
-    def cancel(self):
-        pass
-
-    @transition(
-        field='status',
-        source=[ReviewStatus.cancelled, ReviewStatus.approved, ReviewStatus.rejected],
-        target=ReviewStatus.submitted,
-        custom={'button_name': _('re-open')}
-    )
-    def reopen(self):
-        pass
-
-    @classmethod
-    def is_approved(cls, instance):
-        return instance.status == cls.ReviewStatus.approved
+    location = models.ForeignKey('geo.Location', null=True, blank=True, on_delete=SET_NULL)
+    language = models.ForeignKey('utils.Language', blank=True, null=True)
 
     class Meta:
         verbose_name = _("Initiative")
         verbose_name_plural = _("Initiatives")
+        ordering = ('-created',)
         permissions = (
             ('api_read_initiative', 'Can view initiative through the API'),
             ('api_add_initiative', 'Can add initiative through the API'),
@@ -167,6 +101,75 @@ class Initiative(models.Model):
 
     def __unicode__(self):
         return self.title
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.created,
+        target=ReviewStatus.submitted,
+        custom={'button_name': _('submit')}
+    )
+    def submit(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.needs_work,
+        target=ReviewStatus.submitted,
+        custom={'button_name': _('resubmit')}
+    )
+    def resubmit(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.needs_work,
+        custom={'button_name': _('needs work')}
+    )
+    def needs_work(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=[ReviewStatus.submitted, ReviewStatus.needs_work, ReviewStatus.created],
+        target=ReviewStatus.approved,
+        messages=[InitiativeApproveOwnerMessage],
+        custom={'button_name': _('approve')}
+    )
+    def approve(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=[ReviewStatus.submitted, ReviewStatus.needs_work, ReviewStatus.created],
+        target=ReviewStatus.rejected,
+        messages=[InitiativeClosedOwnerMessage],
+        custom={'button_name': _('reject')}
+    )
+    def reject(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
+        target=ReviewStatus.cancelled,
+        custom={'button_name': _('cancel')}
+    )
+    def cancel(self):
+        pass
+
+    @transition(
+        field='review_status',
+        source=[ReviewStatus.cancelled, ReviewStatus.approved, ReviewStatus.rejected],
+        target=ReviewStatus.submitted,
+        custom={'button_name': _('re-open')}
+    )
+    def reopen(self):
+        pass
+
+    @classmethod
+    def is_approved(cls, instance):
+        return instance.review_status == cls.ReviewStatus.approved
 
     def save(self, **kwargs):
         if not self.slug:

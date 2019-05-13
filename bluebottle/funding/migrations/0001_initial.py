@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.db import migrations, models
 import django.db.models.deletion
 import djmoney.models.fields
-from multiselectfield import MultiSelectField
+import multiselectfield
 
 
 class Migration(migrations.Migration):
@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
                 ('duration', models.PositiveIntegerField(blank=True, null=True, verbose_name='duration')),
                 ('target_currency', djmoney.models.fields.CurrencyField(choices=[(b'EUR', 'Euro')], default='EUR', editable=False, max_length=3)),
                 ('target', bluebottle.utils.fields.MoneyField(currency_choices="[('EUR', u'Euro')]", decimal_places=2, default=Decimal('0.0'), max_digits=12)),
-                ('accepted_currencies', MultiSelectField(choices=[(b'EUR', 'Euro')], default=[], max_length=100)),
+                ('accepted_currencies', multiselectfield.MultiSelectField(choices=[(b'EUR', 'Euro')], default=[], max_length=100)),
             ],
             options={
                 'verbose_name': 'Funding',

@@ -5,6 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField
 
+from bluebottle.activities.models import Activity
+
 
 class ButtonSelectWidget(forms.Select):
     template_name = 'admin/button_select.html'
@@ -38,6 +40,14 @@ class FSMModelForm(forms.ModelForm):
                 (transition.name, transition.name) for transition in transitions
             ]
             self.fields[field_name].widget.attrs['obj'] = self.instance
+            if isinstance(self.instance, Activity):
+                # Catch polymorphic activity
+                self.fields[field_name].widget.attrs['action_url'] = 'admin:activities_activity_transition'
+            else:
+                self.fields[field_name].widget.attrs['action_url'] = 'admin:{}_{}_transition'.format(
+                    self.instance._meta.app_label,
+                    self.instance._meta.model_name
+                )
 
     def clean(self, *args, **kwargs):
         for field_name in self.fsm_fields:

@@ -17,9 +17,9 @@ SELECT current_schema() as tenant,
 	null::VARCHAR as grand_parent_description,
 	p.campaign_ended AT TIME ZONE 'Europe/Amsterdam' as timestamp,
 	pp.slug::varchar(20) as status,
-	concat(pp.id, ' - ', pp.name)::varchar(80) as status_friendly,
+	concat(pp.id, ' - ', ppt.name)::varchar(80) as status_friendly,
 	pl.start AT TIME ZONE 'Europe/Amsterdam' as event_timestamp,
-	plp.slug::varchar(20) as event_status,
+	pp.slug::varchar(20) as event_status,
 	p.owner_id as user_id,
 	m.email as user_email,
 	m.remote_id as user_remote_id,
@@ -35,10 +35,10 @@ LEFT JOIN projects_projectphaselog as pl
 ON pl.project_id = p.id
 LEFT JOIN members_member as m
 ON m.id = p.owner_id
-LEFT JOIN bb_projects_projectphase as plp
-ON plp.id = pl.status_id
 LEFT JOIN bb_projects_projectphase as pp
 ON pp.id = p.status_id
+LEFT JOIN bb_projects_projectphase_translation as ppt
+ON pp.id = ppt.master_id
 LEFT JOIN geo_location as l
 ON p.location_id = l.id
 LEFT JOIN geo_locationgroup as lg

@@ -61,7 +61,7 @@ def transition_confirmation_form(form_class, template):
                 obj=obj,
                 pk=pk,
                 form=form,
-                source=obj.review_status,
+                source=obj.status,
                 notifications=messages,
                 target=target,
             )

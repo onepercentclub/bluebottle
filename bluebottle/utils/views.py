@@ -17,10 +17,15 @@ from parler.utils.i18n import get_language
 
 from rest_framework import generics
 from rest_framework import views, response
+from rest_framework_json_api.pagination import JsonApiPageNumberPagination
+from rest_framework_json_api.parsers import JSONParser
+from rest_framework_json_api.views import AutoPrefetchMixin
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from sorl.thumbnail.shortcuts import get_thumbnail
 from taggit.models import Tag
 from tenant_extras.utils import TenantLanguage
 
+from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.clients import properties
 from bluebottle.projects.models import Project
 from bluebottle.utils.email_backend import send_mail
@@ -290,3 +295,17 @@ class TranslatedApiViewMixin(object):
         )
         qs = qs.order_by(*qs.model._meta.ordering)
         return qs
+
+
+class JsonApiPagination(JsonApiPageNumberPagination):
+    page_size = 8
+
+
+class JsonApiViewMixin(AutoPrefetchMixin):
+
+    pagination_class = JsonApiPagination
+
+    parser_classes = (JSONParser,)
+    renderer_classes = (BluebottleJSONAPIRenderer,)
+
+    authentication_classes = (JSONWebTokenAuthentication,)

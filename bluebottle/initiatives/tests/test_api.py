@@ -49,20 +49,21 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             user=self.owner
         )
         self.assertEqual(response.status_code, 201)
-        data = json.loads(response.content)
+        response_data = json.loads(response.content)
 
-        initiative = Initiative.objects.get(pk=data['data']['id'])
+        initiative = Initiative.objects.get(pk=response_data['data']['id'])
 
-        self.assertEqual(data['data']['attributes']['title'], initiative.title)
+        self.assertEqual(response_data['data']['attributes']['title'], 'Some title')
+        self.assertEqual(initiative.title, 'Some title')
         self.assertEqual(
-            data['data']['relationships']['owner']['data']['id'],
+            response_data['data']['relationships']['owner']['data']['id'],
             unicode(self.owner.pk)
         )
         self.assertEqual(
-            data['data']['relationships']['theme']['data']['id'],
+            response_data['data']['relationships']['theme']['data']['id'],
             unicode(initiative.theme.pk)
         )
-        self.assertEqual(len(data['included']), 2)
+        self.assertEqual(len(response_data['included']), 2)
 
     def test_create_anonymous(self):
         response = self.client.post(

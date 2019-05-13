@@ -7,7 +7,7 @@ from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ImageSerializer as OldImageSerializer, SorlImageField
 )
 from bluebottle.categories.models import Category
-from bluebottle.files.serializers import ImageField, ImageSerializer
+from bluebottle.files.serializers import ImageSerializer
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.utils.fields import SafeField, FSMField
@@ -66,10 +66,9 @@ class InitiativeImageSerializer(ImageSerializer):
 
 
 class InitiativeSerializer(ModelSerializer):
-    image = ImageField(required=False, allow_null=True)
-    owner = ResourceRelatedField(read_only=True)
     permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    review_status = FSMField(read_only=True)
+    status = FSMField(read_only=True)
+    owner = ResourceRelatedField(read_only=True)
     reviewer = ResourceRelatedField(read_only=True)
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
@@ -91,7 +90,7 @@ class InitiativeSerializer(ModelSerializer):
     class Meta:
         model = Initiative
         fields = (
-            'id', 'title', 'pitch', 'review_status', 'categories', 'owner',
+            'id', 'title', 'pitch', 'status', 'categories', 'owner',
             'reviewer', 'promoter', 'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_html', 'image',
             'theme', 'place', 'permissions',
@@ -100,6 +99,6 @@ class InitiativeSerializer(ModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'image',
-            'organizatiion',
+            'organization',
         ]
         resource_name = 'initiatives'

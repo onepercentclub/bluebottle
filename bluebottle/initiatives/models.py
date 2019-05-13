@@ -2,14 +2,26 @@ from django.db import models
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
+from django_fsm import FSMField
+from djchoices import DjangoChoices, ChoiceItem
 
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import InitiativePlace
+from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
+from bluebottle.notifications.decorators import transition
 from bluebottle.organizations.models import Organization, OrganizationContact
-from bluebottle.utils.models import ReviewModel
 
 
-class Initiative(ReviewModel):
+class Initiative(models.Model):
+
+    class ReviewStatus(DjangoChoices):
+        created = ChoiceItem('created', _('created'))
+        submitted = ChoiceItem('submitted', _('submitted'))
+        needs_work = ChoiceItem('needs_work', _('needs work'))
+        approved = ChoiceItem('approved', _('approved'))
+        cancelled = ChoiceItem('cancelled', _('cancelled'))
+        rejected = ChoiceItem('rejected', _('rejected'))
+
     title = models.CharField(_('title'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100)
 
@@ -47,6 +59,96 @@ class Initiative(ReviewModel):
     has_organization = models.NullBooleanField(null=True, default=None)
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
+
+    status = FSMField(
+        default=ReviewStatus.created,
+        choices=ReviewStatus.choices,
+        protected=True
+    )
+    owner = models.ForeignKey(
+        'members.Member',
+        verbose_name=_('owner'),
+        related_name='own_%(class)s',
+    )
+    reviewer = models.ForeignKey(
+        'members.Member',
+        null=True,
+        blank=True,
+        verbose_name=_('reviewer'),
+        related_name='review_%(class)s',
+    )
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    @transition(
+        field='status',
+        source=ReviewStatus.created,
+        target=ReviewStatus.submitted,
+        custom={'button_name': _('submit')}
+    )
+    def submit(self):
+        pass
+
+    @transition(
+        field='status',
+        source=ReviewStatus.needs_work,
+        target=ReviewStatus.submitted,
+        custom={'button_name': _('resubmit')}
+    )
+    def resubmit(self):
+        pass
+
+    @transition(
+        field='status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.needs_work,
+        custom={'button_name': _('needs work')}
+    )
+    def needs_work(self):
+        pass
+
+    @transition(
+        field='status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.approved,
+        messages=[InitiativeApproveOwnerMessage],
+        custom={'button_name': _('approve')}
+    )
+    def approve(self):
+        pass
+
+    @transition(
+        field='status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.rejected,
+        messages=[InitiativeClosedOwnerMessage],
+        custom={'button_name': _('reject')}
+    )
+    def reject(self):
+        pass
+
+    @transition(
+        field='status',
+        source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
+        target=ReviewStatus.cancelled,
+        custom={'button_name': _('cancel')}
+    )
+    def cancel(self):
+        pass
+
+    @transition(
+        field='status',
+        source=[ReviewStatus.cancelled, ReviewStatus.approved, ReviewStatus.rejected],
+        target=ReviewStatus.submitted,
+        custom={'button_name': _('re-open')}
+    )
+    def reopen(self):
+        pass
+
+    @classmethod
+    def is_approved(cls, instance):
+        return instance.status == cls.ReviewStatus.approved
 
     class Meta:
         verbose_name = _("Initiative")

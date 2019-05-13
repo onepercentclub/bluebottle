@@ -335,6 +335,10 @@ TENANT_APPS = (
 
     'bluebottle.files',
     'bluebottle.initiatives',
+    'bluebottle.activities',
+    'bluebottle.events',
+    'bluebottle.jobs',
+    'bluebottle.funding',
 
     'bluebottle.tasks',
     'bluebottle.homepage',

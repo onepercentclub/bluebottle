@@ -669,5 +669,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(sql, '')
+        # migrations.RunSQL(sql, '')
     ]

@@ -22,5 +22,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrate_analytics_platform_settings, dummy)
+        # migrations.RunPython(migrate_analytics_platform_settings, dummy)
     ]

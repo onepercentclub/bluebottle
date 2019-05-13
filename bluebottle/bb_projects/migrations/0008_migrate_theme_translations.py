@@ -40,5 +40,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(translate_skills)
+        # migrations.RunPython(translate_skills)
     ]

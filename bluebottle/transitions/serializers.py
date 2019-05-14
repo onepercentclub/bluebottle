@@ -1,5 +1,7 @@
 import uuid
 
+from django.forms.models import model_to_dict
+
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
@@ -16,7 +18,11 @@ class AvailableTransitionsField(ReadOnlyField):
     def to_representation(self, value):
         transitions = getattr(value, 'get_available_{}_transitions'.format(self.source))()
 
-        return dict((transition.name, {'target': transition.target}) for transition in transitions)
+        return (
+            {'name': transition.name, 'target': transition.target}
+            for transition in transitions
+            if not transition.form or transition.form(data=model_to_dict(value)).is_valid()
+        )
 
     def get_attribute(self, instance):
         return instance

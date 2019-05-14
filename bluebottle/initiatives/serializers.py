@@ -118,3 +118,6 @@ class InitiativeSerializer(ModelSerializer):
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Initiative.objects.all())
     field = 'review_status'
+
+    class JSONAPIMeta:
+        resource_name = 'initiative-transitions'

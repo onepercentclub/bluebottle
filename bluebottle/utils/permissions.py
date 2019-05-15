@@ -56,7 +56,6 @@ class BasePermission(permissions.BasePermission):
 
         Return `True` if permission is granted, `False` otherwise.
         """
-
         try:
             model_cls = self.get_view_model(view)
             return self.has_action_permission(

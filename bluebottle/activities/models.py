@@ -31,7 +31,6 @@ class Activity(PolymorphicModel):
         choices=Status.choices,
         protected=True
     )
-
     initiative = models.ForeignKey('initiatives.Initiative', related_name='activites')
 
     title = models.CharField(_('title'), max_length=255, unique=True, db_index=True)

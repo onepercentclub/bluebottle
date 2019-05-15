@@ -4,7 +4,8 @@ from bluebottle.activities.permissions import ActivityPermission
 from bluebottle.events.models import Event, Participant
 from bluebottle.events.serializers import EventSerializer, ParticipantSerializer
 from bluebottle.utils.permissions import (
-    OneOf, ResourcePermission, ResourceOwnerPermission)
+    OneOf, ResourcePermission, ResourceOwnerPermission
+)
 from bluebottle.utils.views import RetrieveUpdateAPIView, ListCreateAPIView, JsonApiViewMixin
 
 
@@ -29,9 +30,7 @@ class EventDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
 
     lookup_field = 'slug'
 
-    permission_classes = (
-        ActivityPermission,
-    )
+    permission_classes = (ActivityPermission,)
 
 
 class ParticipantList(ListCreateAPIView):

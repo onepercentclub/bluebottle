@@ -110,7 +110,7 @@ class InitiativeSerializer(ModelSerializer):
     class JSONAPIMeta:
         included_resources = [
             'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'image',
-            'organizatiion',
+            'organization', 'organization_contact',
         ]
         resource_name = 'initiatives'
 

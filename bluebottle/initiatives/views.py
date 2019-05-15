@@ -48,6 +48,8 @@ class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
         'place': ['place'],
         'categories': ['categories'],
         'image': ['image'],
+        'organization': ['organization'],
+        'organization_contact': ['organization_contact'],
     }
 
     def perform_create(self, serializer):
@@ -73,10 +75,13 @@ class InitiativeDetail(AutoPrefetchMixin, RetrieveUpdateAPIView):
     prefetch_for_includes = {
         'owner': ['owner'],
         'reviewer': ['reviewer'],
+        'promoter': ['promoter'],
         'theme': ['theme'],
         'place': ['place'],
         'categories': ['categories'],
         'image': ['image'],
+        'organization': ['organization'],
+        'organization_contact': ['organization_contact'],
     }
 
 

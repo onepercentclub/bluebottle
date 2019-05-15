@@ -6,7 +6,10 @@ from django_fsm import pre_transition, post_transition
 
 
 @receiver(pre_transition)
-def validate_transition_form(sender, instance, name, method_kwargs, **kwargs):
+def validate_transition_form(sender, instance, name=None, method_kwargs=None, **kwargs):
+    if not method_kwargs:
+        return
+
     transition = method_kwargs['transition']
 
     if transition.form:
@@ -21,7 +24,10 @@ def validate_transition_form(sender, instance, name, method_kwargs, **kwargs):
 
 
 @receiver(post_transition)
-def transition_messages(sender, instance, name, method_kwargs, **kwargs):
+def transition_messages(sender, instance, name=None, method_kwargs=None, **kwargs):
+    if not method_kwargs:
+        return
+
     # Only try to send messages if 'send_messages' is not False.
     transition = method_kwargs['transition']
     if method_kwargs.get('send_messages'):

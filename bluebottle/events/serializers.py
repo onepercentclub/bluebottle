@@ -1,4 +1,4 @@
-from bluebottle.activities.serializers import BaseActivitySerializer, ContributionSerializer
+from bluebottle.activities.utils import BaseActivitySerializer, BaseContributionSerializer
 from bluebottle.events.models import Event, Participant
 from bluebottle.utils.serializers import ResourcePermissionField
 
@@ -25,7 +25,7 @@ class EventSerializer(BaseActivitySerializer):
         resource_name = 'events'
 
 
-class ParticipantSerializer(ContributionSerializer):
+class ParticipantSerializer(BaseContributionSerializer):
     class Meta:
         model = Participant
-        fields = ContributionSerializer.Meta.fields + ('time_spent', )
+        fields = BaseContributionSerializer.Meta.fields + ('time_spent', )

@@ -41,7 +41,7 @@ class FSMModelForm(forms.ModelForm):
             ]
             self.fields[field_name].widget.attrs['obj'] = self.instance
             if isinstance(self.instance, Activity):
-                # Catch polymorphic activity
+                # Default polymorphic activities to base activity
                 self.fields[field_name].widget.attrs['action_url'] = 'admin:activities_activity_transition'
             else:
                 self.fields[field_name].widget.attrs['action_url'] = 'admin:{}_{}_transition'.format(

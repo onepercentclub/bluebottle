@@ -146,10 +146,6 @@ class Initiative(models.Model):
     def reopen(self):
         pass
 
-    @classmethod
-    def is_approved(cls, instance):
-        return instance.status == cls.ReviewStatus.approved
-
     class Meta:
         verbose_name = _("Initiative")
         verbose_name_plural = _("Initiatives")

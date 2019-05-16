@@ -1,22 +1,21 @@
-from bluebottle.activities.serializers import BaseActivitySerializer, ContributionSerializer
+from bluebottle.activities.utils import BaseContributionSerializer, BaseActivitySerializer
 from bluebottle.funding.models import Funding, Donation
 from bluebottle.utils.serializers import MoneySerializer
 
 
 class FundingSerializer(BaseActivitySerializer):
     target = MoneySerializer()
-    amount_donated = MoneySerializer()
 
     class Meta:
         model = Funding
         fields = BaseActivitySerializer.Meta.fields + (
-            'deadline', 'duration', 'target' 'amount_donated',
+            'deadline', 'duration', 'target',
         )
 
 
-class DonationSerializer(ContributionSerializer):
+class DonationSerializer(BaseContributionSerializer):
     amount = MoneySerializer()
 
     class Meta:
         model = Donation
-        fields = ContributionSerializer.Meta.fields + ('amount', )
+        fields = BaseContributionSerializer.Meta.fields + ('amount', )

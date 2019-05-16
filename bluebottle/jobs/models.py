@@ -56,7 +56,6 @@ class Job(Activity):
         field='status',
         source=Activity.Status.open,
         target=Activity.Status.running,
-        conditions=[Activity.initiative_is_approved]
     )
     def start(self):
         pass
@@ -65,7 +64,6 @@ class Job(Activity):
         field='status',
         source=Activity.Status.running,
         target=Activity.Status.done,
-        conditions=[Activity.initiative_is_approved]
     )
     def success(self):
         for member in self.accepted_applicants:
@@ -76,7 +74,6 @@ class Job(Activity):
         field='status',
         source=Activity.Status.running,
         target=Activity.Status.closed,
-        conditions=[Activity.initiative_is_approved]
     )
     def close(self):
         for member in self.accepted_applicants:
@@ -87,7 +84,6 @@ class Job(Activity):
         field='status',
         source=[Activity.Status.closed, Activity.Status.done, Activity.Status.running],
         target=Activity.Status.open,
-        conditions=[Activity.initiative_is_approved]
     )
     def extend_deadline(self):
         pass
@@ -96,7 +92,6 @@ class Job(Activity):
         field='status',
         source=[Activity.Status.closed, Activity.Status.done],
         target=Activity.Status.running,
-        conditions=[Activity.initiative_is_approved]
     )
     def extend(self):
         pass

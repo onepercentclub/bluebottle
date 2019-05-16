@@ -70,7 +70,6 @@ class Event(Activity):
         field='status',
         source=Activity.Status.open,
         target=Activity.Status.full,
-        conditions=[Activity.initiative_is_approved]
     )
     def full(self):
         pass
@@ -79,7 +78,6 @@ class Event(Activity):
         field='status',
         source=Activity.Status.full,
         target=Activity.Status.open,
-        conditions=[Activity.initiative_is_approved]
     )
     def reopen(self):
         pass
@@ -88,7 +86,6 @@ class Event(Activity):
         field='status',
         source=[Activity.Status.full, Activity.Status.open],
         target=Activity.Status.running,
-        conditions=[Activity.initiative_is_approved]
     )
     def started(self):
         for member in self.accepted_members:
@@ -99,7 +96,6 @@ class Event(Activity):
         field='status',
         source=Activity.Status.running,
         target=Activity.Status.done,
-        conditions=[Activity.initiative_is_approved]
     )
     def done(self):
         for member in self.attending_members:
@@ -110,7 +106,6 @@ class Event(Activity):
         field='status',
         source=Activity.Status.open,
         target=Activity.Status.closed,
-        conditions=[Activity.initiative_is_approved]
     )
     def closed(self):
         pass
@@ -119,7 +114,6 @@ class Event(Activity):
         field='status',
         source=Activity.Status.closed,
         target=Activity.Status.open,
-        conditions=[Activity.initiative_is_approved]
     )
     def extend(self):
         pass

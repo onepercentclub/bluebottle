@@ -41,27 +41,18 @@ class Funding(Activity):
         )
 
     @property
-    def preview_data(self):
-        return {
-            'deadline': self.start,
-            'target': self.target,
-            'amount_raised': self.amount_raised
-        }
-
-    @property
     def amount_raised(self):
         """
-        The sum of all donations converted to the targets currency
+        The sum of all contributions (donations) converted to the targets currency
         """
-        totals = self.donations.filter(
+        totals = self.contributions.filter(
             status='success'
-        ).donations.values(
-            'amount_currency'
+        ).values(
+            'donation__amount_currency'
         ).annotate(
-            total=Sum('amount')
+            total=Sum('donation__amount')
         )
-
-        amounts = [Money(total['total'], total['amount_currency']) for total in totals]
+        amounts = [Money(total['total'], total['donation__amount_currency']) for total in totals]
         amounts = [convert(amount, self.target.currency) for amount in amounts]
 
         return sum(amounts) or Money(0, self.target.currency)
@@ -73,7 +64,6 @@ class Funding(Activity):
         field='status',
         source=Activity.Status.open,
         target=Activity.Status.running,
-        conditions=[Activity.initiative_is_approved]
     )
     def start(self):
         if self.duration:
@@ -83,7 +73,6 @@ class Funding(Activity):
         field='status',
         source=Activity.Status.running,
         target=Activity.Status.done,
-        conditions=[Activity.initiative_is_approved]
     )
     def done(self):
         pass
@@ -92,7 +81,6 @@ class Funding(Activity):
         field='status',
         source=Activity.Status.running,
         target=Activity.Status.closed,
-        conditions=[Activity.initiative_is_approved]
     )
     def closed(self):
         pass
@@ -101,7 +89,7 @@ class Funding(Activity):
         field='status',
         source=[Activity.Status.done, Activity.Status.closed],
         target=Activity.Status.running,
-        conditions=[Activity.initiative_is_approved, deadline_in_future]
+        conditions=[deadline_in_future]
     )
     def extend(self):
         pass
@@ -113,14 +101,14 @@ class Donation(Contribution):
 
     amount = MoneyField()
 
-    def event_is_running(self):
-        return self.event_.status == Activity.Status.open
+    def funding_is_running(self):
+        return self.activity.status == Activity.Status.open
 
     @transition(
         field='status',
-        source=[Status.new, Status.refunded],
+        source=[Status.new, Status.success],
         target=Status.refunded,
-        conditions=[event_is_running]
+        conditions=[funding_is_running]
     )
     def refund(self):
         pass
@@ -129,7 +117,7 @@ class Donation(Contribution):
         field='status',
         source=[Status.new, Status.success],
         target=Status.failed,
-        conditions=[event_is_running]
+        conditions=[funding_is_running]
     )
     def fail(self):
         pass
@@ -138,7 +126,7 @@ class Donation(Contribution):
         field='status',
         source=[Status.new, Status.failed],
         target=Status.success,
-        conditions=[event_is_running]
+        conditions=[funding_is_running]
     )
     def success(self):
         pass

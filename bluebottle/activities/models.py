@@ -4,9 +4,6 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField
 from djchoices.choices import DjangoChoices, ChoiceItem
 from polymorphic.models import PolymorphicModel
-from sorl.thumbnail import ImageField
-
-from bluebottle.initiatives.models import Initiative
 
 
 class Activity(PolymorphicModel):
@@ -39,21 +36,6 @@ class Activity(PolymorphicModel):
         _('description'), blank=True
     )
 
-    image = ImageField(
-        _('image'),
-        max_length=255,
-        blank=True,
-        upload_to='activity_images/',
-        help_text=_('Main activity picture')
-    )
-    video_url = models.URLField(
-        _('video'),
-        max_length=100,
-        blank=True,
-        null=True,
-        default='',
-    )
-
     class Meta:
         verbose_name = _("Activity")
         verbose_name_plural = _("Activities")
@@ -75,14 +57,8 @@ class Activity(PolymorphicModel):
 
         super(Activity, self).save(**kwargs)
 
-    @classmethod
-    def initiative_is_approved(cls, instance):
-        if not instance.id:
-            return True
-        return Initiative.is_approved(instance.initiative)
 
-
-class Contribution(models.Model):
+class Contribution(PolymorphicModel):
     class Status(DjangoChoices):
         new = ChoiceItem('new', _('new'))
         success = ChoiceItem('success', _('success'))

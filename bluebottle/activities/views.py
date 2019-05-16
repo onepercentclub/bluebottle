@@ -9,6 +9,7 @@ from bluebottle.utils.views import ListAPIView, JsonApiViewMixin
 class ActivityList(JsonApiViewMixin, ListAPIView):
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
+    model = Activity
 
     permission_classes = (
         OneOf(ResourcePermission, ResourceOwnerPermission),

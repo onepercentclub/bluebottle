@@ -1,7 +1,6 @@
-from django.db import connection
+from django_elasticsearch_dsl import DocType, fields
 
-from django_elasticsearch_dsl import Index, DocType, fields
-
+from bluebottle.utils.documents import MultiTenantIndex
 from bluebottle.bb_projects.models import ProjectPhase
 from bluebottle.categories.models import Category
 from bluebottle.donations.models import Donation
@@ -9,22 +8,6 @@ from bluebottle.geo.models import Location, Country, Place
 from bluebottle.projects.models import Project, ProjectLocation
 from bluebottle.tasks.models import Task, TaskMember
 from bluebottle.votes.models import Vote
-
-
-class MultiTenantIndex(Index):
-    @property
-    def _name(self):
-        if connection.tenant.schema_name != 'public':
-            return '{}-{}'.format(connection.tenant.schema_name, self.__name)
-        return self.__name
-
-    @_name.setter
-    def _name(self, value):
-
-        if value and value.startswith(connection.tenant.schema_name):
-            value = value.replace(connection.tenant.schema_name + '-', '')
-
-        self.__name = value
 
 
 # The name of your index

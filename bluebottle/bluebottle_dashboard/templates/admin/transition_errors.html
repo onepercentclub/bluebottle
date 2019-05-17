@@ -1,0 +1,9 @@
+<h3>Cannot transition to the requested status:</h3>
+{% for label, errors in errors.items %}
+    <p>
+        {{label}}:
+        {% for error in errors %}
+            {{error}}
+        {% endfor %}
+    </p>
+{% endfor %}

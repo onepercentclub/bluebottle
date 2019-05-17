@@ -68,7 +68,7 @@ urlpatterns = [
         include('bluebottle.projects.urls.api')),
     url(r'^api/cms/',
         include('bluebottle.cms.urls.api')),
-    url(r'^api/initiatives/',
+    url(r'^api/initiatives',
         include('bluebottle.initiatives.urls.api')),
     url(r'^api/files/',
         include('bluebottle.files.urls.api')),

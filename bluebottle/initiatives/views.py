@@ -1,4 +1,3 @@
-from rest_framework_json_api import django_filters
 from rest_framework_json_api.exceptions import exception_handler
 from rest_framework_json_api.pagination import JsonApiPageNumberPagination
 from rest_framework_json_api.parsers import JSONParser
@@ -8,9 +7,15 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from bluebottle.bluebottle_drf2.renderers import BluebottleJSONAPIRenderer
 from bluebottle.files.views import FileContentView
 from bluebottle.initiatives.models import Initiative
-from bluebottle.initiatives.serializers import InitiativeSerializer
+from bluebottle.initiatives.filters import InitiativeSearchFilter
+from bluebottle.initiatives.serializers import (
+    InitiativeSerializer, InitiativeReviewTransitionSerializer
+)
+from bluebottle.transitions.views import TransitionList
 from bluebottle.utils.permissions import ResourceOwnerPermission
-from bluebottle.utils.views import ListCreateAPIView, RetrieveUpdateAPIView
+from bluebottle.utils.views import (
+    ListCreateAPIView, RetrieveUpdateAPIView
+)
 
 
 class InitiativePagination(JsonApiPageNumberPagination):
@@ -25,11 +30,8 @@ class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
     permission_classes = (ResourceOwnerPermission,)
 
     filter_backends = (
-        django_filters.DjangoFilterBackend,
+        InitiativeSearchFilter,
     )
-    filter_fields = {
-        'owner__id': ('exact', 'in',),
-    }
     authentication_classes = (
         JSONWebTokenAuthentication,
     )
@@ -46,6 +48,8 @@ class InitiativeList(AutoPrefetchMixin, ListCreateAPIView):
         'place': ['place'],
         'categories': ['categories'],
         'image': ['image'],
+        'organization': ['organization'],
+        'organization_contact': ['organization_contact'],
     }
 
     def perform_create(self, serializer):
@@ -71,13 +75,21 @@ class InitiativeDetail(AutoPrefetchMixin, RetrieveUpdateAPIView):
     prefetch_for_includes = {
         'owner': ['owner'],
         'reviewer': ['reviewer'],
+        'promoter': ['promoter'],
         'theme': ['theme'],
         'place': ['place'],
         'categories': ['categories'],
         'image': ['image'],
+        'organization': ['organization'],
+        'organization_contact': ['organization_contact'],
     }
 
 
 class InitiativeImage(FileContentView):
     queryset = Initiative.objects
     field = 'image'
+
+
+class InitiativeReviewTransitionList(TransitionList):
+    serializer_class = InitiativeReviewTransitionSerializer
+    queryset = Initiative.objects.all()

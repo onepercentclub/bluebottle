@@ -86,6 +86,7 @@ class Initiative(models.Model):
         field='status',
         source=ReviewStatus.created,
         target=ReviewStatus.submitted,
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('submit')}
     )
     def submit(self, **kwargs):
@@ -95,6 +96,7 @@ class Initiative(models.Model):
         field='status',
         source=ReviewStatus.needs_work,
         target=ReviewStatus.submitted,
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('resubmit')}
     )
     def resubmit(self, **kwargs):
@@ -105,6 +107,7 @@ class Initiative(models.Model):
         source=ReviewStatus.submitted,
         target=ReviewStatus.needs_work,
         messages=[InitiativeNeedsWorkOwnerMessage],
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('needs work')}
     )
     def needs_work(self, **kwargs):
@@ -115,6 +118,7 @@ class Initiative(models.Model):
         source=ReviewStatus.submitted,
         target=ReviewStatus.approved,
         messages=[InitiativeApproveOwnerMessage],
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('approve')}
     )
     def approve(self, **kwargs):
@@ -125,6 +129,7 @@ class Initiative(models.Model):
         source=ReviewStatus.submitted,
         target=ReviewStatus.rejected,
         messages=[InitiativeClosedOwnerMessage],
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('reject')}
     )
     def reject(self, **kwargs):
@@ -134,6 +139,7 @@ class Initiative(models.Model):
         field='status',
         source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
         target=ReviewStatus.cancelled,
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('cancel')}
     )
     def cancel(self, **kwargs):
@@ -143,6 +149,7 @@ class Initiative(models.Model):
         field='status',
         source=[ReviewStatus.cancelled, ReviewStatus.approved, ReviewStatus.rejected],
         target=ReviewStatus.submitted,
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('re-open')}
     )
     def reopen(self, **kwargs):

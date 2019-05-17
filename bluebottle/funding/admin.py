@@ -23,7 +23,10 @@ class DonationInline(admin.TabularInline):
 
     def donation(self, obj):
         url = reverse('admin:funding_donation_change', args=(obj.id,))
-        return format_html('<a href="{}">{} {}</a>', url, obj.created.date(), obj.created.strftime('%H:%M'))
+        return format_html('<a href="{}">{} {}</a>',
+                           url,
+                           obj.created.date(),
+                           obj.created.strftime('%H:%M'))
 
 
 class FundingAdmin(ActivityChildAdmin):

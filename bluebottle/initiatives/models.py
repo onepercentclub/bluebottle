@@ -167,7 +167,7 @@ class Initiative(models.Model):
 
     @classmethod
     def is_approved(cls, instance):
-        return instance.review_status == Initiative.ReviewStatus.approved
+        return instance.status == Initiative.ReviewStatus.approved
 
     def __unicode__(self):
         return self.title

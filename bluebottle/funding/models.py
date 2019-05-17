@@ -65,7 +65,7 @@ class Funding(Activity):
         source=Activity.Status.open,
         target=Activity.Status.running,
     )
-    def start(self):
+    def start(self, **kwargs):
         if self.duration:
             self.deadline = timezone.now().date() + datetime.timedelta(days=self.duration)
 
@@ -74,7 +74,7 @@ class Funding(Activity):
         source=Activity.Status.running,
         target=Activity.Status.done,
     )
-    def done(self):
+    def done(self, **kwargs):
         pass
 
     @transition(
@@ -82,7 +82,7 @@ class Funding(Activity):
         source=Activity.Status.running,
         target=Activity.Status.closed,
     )
-    def closed(self):
+    def closed(self, **kwargs):
         pass
 
     @transition(
@@ -91,7 +91,7 @@ class Funding(Activity):
         target=Activity.Status.running,
         conditions=[deadline_in_future]
     )
-    def extend(self):
+    def extend(self, **kwargs):
         pass
 
 

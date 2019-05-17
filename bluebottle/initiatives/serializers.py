@@ -104,7 +104,7 @@ class InitiativeSerializer(ModelSerializer):
             'theme', 'place',
         )
 
-        meta_fields = ('permissions', 'transitions', 'review_status', 'created',)
+        meta_fields = ('permissions', 'transitions', 'status', 'created',)
 
     class JSONAPIMeta:
         included_resources = [
@@ -116,7 +116,7 @@ class InitiativeSerializer(ModelSerializer):
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Initiative.objects.all())
-    field = 'review_status'
+    field = 'status'
 
     class JSONAPIMeta:
         resource_name = 'initiative-transitions'

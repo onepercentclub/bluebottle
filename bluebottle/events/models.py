@@ -49,17 +49,6 @@ class Event(Activity):
             status__in=(Participant.Status.attending, Participant.Status.accepted)
         )
 
-    @property
-    def preview_data(self):
-        return {
-            'start': self.start,
-            'end': self.end,
-            'registration_deadline': self.registration_deadline,
-            'capacity': self.capacity,
-            'address': self.address,
-            'attending': len(self.attending_members),
-        }
-
     def check_capcity(self):
         if len(self.accepted_members) >= self.capacity and self.status == Activity.Status.open:
             self.full()
@@ -144,7 +133,7 @@ class Participant(Contribution):
         target=Status.accepted,
         conditions=[event_is_open]
     )
-    def accept(self):
+    def accept(self, **kwargs):
         self.activity.check_capcity()
 
     @transition(
@@ -153,7 +142,7 @@ class Participant(Contribution):
         target=Status.rejected,
         conditions=[event_is_open]
     )
-    def reject(self):
+    def reject(self, **kwargs):
         self.activity.check_capcity()
 
     @transition(
@@ -162,7 +151,7 @@ class Participant(Contribution):
         target=Status.withdrawn,
         conditions=[event_is_open]
     )
-    def withdrawn(self):
+    def withdrawn(self, **kwargs):
         self.activity.check_capcity()
 
     @transition(
@@ -170,7 +159,7 @@ class Participant(Contribution):
         source=[Status.new, Status.accepted],
         target=Status.attending,
     )
-    def attending(self):
+    def attending(self, **kwargs):
         pass
 
     @transition(
@@ -178,7 +167,7 @@ class Participant(Contribution):
         source=Status.attending,
         target=Status.success,
     )
-    def success(self):
+    def success(self, **kwargs):
         self.time_spent = self.activity.duration
 
     @transition(
@@ -186,5 +175,5 @@ class Participant(Contribution):
         source=[Status.success, Status.attending],
         target=Status.absent,
     )
-    def absent(self):
+    def absent(self, **kwargs):
         self.time_spent = None

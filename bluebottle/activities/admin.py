@@ -21,6 +21,7 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin):
 
 @admin.register(Activity)
 class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
+    fsm_field = 'status'
     base_model = Activity
     child_models = (Event, Funding, Job)
     list_filter = (PolymorphicChildModelFilter,)

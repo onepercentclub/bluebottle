@@ -7,7 +7,8 @@ from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import InitiativePlace
-from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage
+from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage, \
+    InitiativeNeedsWorkOwnerMessage
 from bluebottle.notifications.decorators import transition
 from bluebottle.organizations.models import Organization, OrganizationContact
 
@@ -103,6 +104,7 @@ class Initiative(models.Model):
         field='status',
         source=ReviewStatus.submitted,
         target=ReviewStatus.needs_work,
+        messages=[InitiativeNeedsWorkOwnerMessage],
         custom={'button_name': _('needs work')}
     )
     def needs_work(self, **kwargs):
@@ -164,10 +166,6 @@ class Initiative(models.Model):
 
     class JSONAPIMeta:
         resource_name = 'initiatives'
-
-    @classmethod
-    def is_approved(cls, instance):
-        return instance.status == Initiative.ReviewStatus.approved
 
     def __unicode__(self):
         return self.title

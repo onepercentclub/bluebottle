@@ -204,7 +204,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(data['data']['attributes']['title'], self.initiative.title)
-        self.assertEqual(data['data']['meta']['review-status'], self.initiative.status)
+        self.assertEqual(data['data']['meta']['status'], self.initiative.status)
         self.assertEqual(data['data']['meta']['transitions'], [{'name': 'submit', 'target': 'submitted'}])
         self.assertEqual(data['data']['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))

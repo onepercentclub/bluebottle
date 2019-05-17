@@ -80,7 +80,7 @@ class InitiativeSerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
 
-    transitions = AvailableTransitionsField(source='review_status')
+    transitions = AvailableTransitionsField(source='status')
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',

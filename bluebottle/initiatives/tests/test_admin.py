@@ -99,21 +99,21 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 302)
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'submitted')
-        self.assertEqual(self.initiative.status, 'submitted')
 
     def test_review_initiative_missing_field(self):
         self.client.force_login(self.superuser)
         self.initiative = InitiativeFactory.create(status='created', pitch='')
+        self.assertEqual(self.initiative.status, 'created')
 
         review_url = reverse('admin:initiatives_initiative_transition',
                              args=(self.initiative.id, 'submit'))
 
         response = self.client.post(review_url, {'confirm': True})
-        # Should redirect with message
+
+        # Should redirect with error message
         self.assertEqual(response.status_code, 302)
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'created')
-
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue('This field is required' in messages[0].message)
         self.assertTrue('Pitch' in messages[0].message)
@@ -126,7 +126,8 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
                              args=(self.initiative.id, 'submit'))
 
         response = self.client.post(review_url, {'confirm': True})
-        # Should redirect with message
+
+        # Should redirect with error message
         self.assertEqual(response.status_code, 302)
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
         self.assertEqual(self.initiative.status, 'created')

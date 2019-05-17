@@ -8,12 +8,15 @@ from django.contrib import admin, messages
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models.aggregates import Sum
 from django.db.models.fields.files import FieldFile
 from django.db.models.query import QuerySet
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
+from django.template import loader
+from django.template.response import TemplateResponse
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
@@ -22,7 +25,6 @@ from django_singleton_admin.admin import SingletonAdmin
 from moneyed import Money
 
 from bluebottle.bb_projects.models import ProjectPhase
-from bluebottle.bluebottle_dashboard.decorators import transition_confirmation_form
 from bluebottle.clients import properties
 from bluebottle.members.models import Member, CustomMemberFieldSettings, CustomMemberField
 from bluebottle.projects.models import CustomProjectFieldSettings, Project, CustomProjectField
@@ -294,36 +296,93 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
     )
 
 
-class ReviewAdmin(admin.ModelAdmin):
+class FSMAdmin(admin.ModelAdmin):
 
     form = FSMModelForm
 
-    @transition_confirmation_form(
-        TransitionConfirmationForm,
-        template='admin/transition_confirmation.html'
-    )
-    def transition(self, request, obj, transition, send_messages=True):
-        object_url = 'admin:{}_{}_change'.format(self.model._meta.app_label, self.model._meta.model_name)
-        link = reverse(object_url, args=(obj.id, ))
-        if not request.user.has_perm('{}.change_{}'.format(self.model._meta.app_label, self.model._meta.model_name)):
-            messages.add_message(request, messages.ERROR, 'Missing permission: initiative.change_initiative')
+    def get_transition(self, instance, name):
+        transitions = getattr(
+            instance,
+            'get_all_{}_transitions'.format(self.fsm_field)
+        )()
+        for transition in transitions:
+            if transition.name == name:
+                return transition
+
+    def transition(self, request, pk, transition_name, send_messages=True):
+        link = reverse(
+            'admin:{}_{}_change'.format(
+                self.model._meta.app_label, self.model._meta.model_name
+            ),
+            args=(pk, )
+        )
+
+        if not request.user.has_perm('initiative.change_initiative'):
+            messages.error(request, 'Missing permission: initiative.change_initiative')
             return HttpResponseRedirect(link)
-        try:
-            obj.send_messages = send_messages
-            getattr(obj, transition)()
-            obj.save()
-        except TransitionNotAllowed:
-            messages.add_message(request, messages.ERROR, 'Transition not allowed: {}'.format(transition))
-            return HttpResponseRedirect(link)
-        log_action(obj, request.user, 'Changed status to {}'.format(transition))
-        return HttpResponseRedirect(link)
+
+        instance = self.model.objects.get(pk=pk)
+        form = TransitionConfirmationForm(request.POST)
+        transition = self.get_transition(instance, transition_name)
+
+        if 'confirm' in request.POST and request.POST['confirm']:
+            if form.is_valid():
+                send_messages = form.cleaned_data['send_messages']
+
+                try:
+                    getattr(instance, transition.name)(send_messages=send_messages)
+                    instance.save()
+                    log_action(
+                        instance,
+                        request.user,
+                        'Changed status to {}'.format(transition)
+                    )
+
+                    return HttpResponseRedirect(link)
+                except TransitionNotAllowed:
+                    messages.error(
+                        request,
+                        'Transition not allowed: {}'.format(transition.name)
+                    )
+                    return HttpResponseRedirect(link)
+                except ValidationError, e:
+                    template = loader.get_template(
+                        'admin/transition_errors.html'
+                    )
+                    errors = template.render({
+                        'errors': e.args[0]
+                    })
+
+                    messages.error(request, errors)
+                    return HttpResponseRedirect(link)
+
+        transition_messages = []
+        for message_list in [message(instance).get_messages() for message in transition.messages]:
+            transition_messages += message_list
+
+        context = dict(
+            self.admin_site.each_context(request),
+            title=TransitionConfirmationForm.title,
+            action=transition.name,
+            opts=self.model._meta,
+            obj=instance,
+            pk=instance.pk,
+            form=form,
+            source=getattr(instance, self.fsm_field),
+            notifications=transition_messages,
+            target=transition.name,
+        )
+
+        return TemplateResponse(
+            request, 'admin/transition_confirmation.html', context
+        )
 
     def get_urls(self):
-        urls = super(ReviewAdmin, self).get_urls()
+        urls = super(FSMAdmin, self).get_urls()
         custom_urls = [
             url(
-                r'^(?P<pk>.+)/transition/(?P<target>.+)$',
-                self.transition,
+                r'^(?P<pk>.+)/transition/(?P<transition_name>.+)$',
+                self.admin_site.admin_view(self.transition),
                 name='{}_{}_transition'.format(self.model._meta.app_label, self.model._meta.model_name),
             ),
         ]

@@ -1,16 +1,21 @@
 from rest_framework import serializers
-from rest_framework_json_api.relations import ResourceRelatedField
+
 from rest_framework_json_api.serializers import ModelSerializer
+from rest_framework_json_api.relations import ResourceRelatedField
+
 
 from bluebottle.bb_projects.models import ProjectTheme
 from bluebottle.bluebottle_drf2.serializers import (
     OEmbedField, ImageSerializer as OldImageSerializer, SorlImageField
 )
+from bluebottle.utils.fields import SafeField
 from bluebottle.categories.models import Category
-from bluebottle.files.serializers import ImageSerializer
+from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
-from bluebottle.utils.fields import SafeField, FSMField
+from bluebottle.transitions.serializers import (
+    AvailableTransitionsField, TransitionSerializer
+)
 from bluebottle.utils.serializers import (
     ResourcePermissionField
 )
@@ -66,14 +71,16 @@ class InitiativeImageSerializer(ImageSerializer):
 
 
 class InitiativeSerializer(ModelSerializer):
-    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
-    status = FSMField(read_only=True)
+    image = ImageField(required=False, allow_null=True)
     owner = ResourceRelatedField(read_only=True)
+    permissions = ResourcePermissionField('initiative-detail', view_args=('pk',))
     reviewer = ResourceRelatedField(read_only=True)
     slug = serializers.CharField(read_only=True)
     story = SafeField(required=False, allow_blank=True, allow_null=True)
     title = serializers.CharField(allow_blank=True, required=False)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
+
+    transitions = AvailableTransitionsField(source='review_status')
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -89,16 +96,27 @@ class InitiativeSerializer(ModelSerializer):
 
     class Meta:
         model = Initiative
+        fsm_fields = ['status']
         fields = (
-            'id', 'title', 'pitch', 'status', 'categories', 'owner',
+            'id', 'title', 'pitch', 'categories', 'owner',
             'reviewer', 'promoter', 'slug', 'has_organization', 'organization',
             'organization_contact', 'story', 'video_html', 'image',
-            'theme', 'place', 'permissions',
+            'theme', 'place',
         )
+
+        meta_fields = ('permissions', 'transitions', 'review_status', 'created',)
 
     class JSONAPIMeta:
         included_resources = [
             'owner', 'reviewer', 'promoter', 'categories', 'theme', 'place', 'image',
-            'organization',
+            'organization', 'organization_contact',
         ]
         resource_name = 'initiatives'
+
+
+class InitiativeReviewTransitionSerializer(TransitionSerializer):
+    resource = ResourceRelatedField(queryset=Initiative.objects.all())
+    field = 'review_status'
+
+    class JSONAPIMeta:
+        resource_name = 'initiative-transitions'

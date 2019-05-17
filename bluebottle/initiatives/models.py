@@ -3,7 +3,7 @@ from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField
-from djchoices import DjangoChoices, ChoiceItem
+from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import InitiativePlace
@@ -13,7 +13,6 @@ from bluebottle.organizations.models import Organization, OrganizationContact
 
 
 class Initiative(models.Model):
-
     class ReviewStatus(DjangoChoices):
         created = ChoiceItem('created', _('created'))
         submitted = ChoiceItem('submitted', _('submitted'))
@@ -23,6 +22,28 @@ class Initiative(models.Model):
         rejected = ChoiceItem('rejected', _('rejected'))
 
     title = models.CharField(_('title'), max_length=255)
+
+    status = FSMField(
+        default=ReviewStatus.created,
+        choices=ReviewStatus.choices,
+        protected=True
+    )
+    owner = models.ForeignKey(
+        'members.Member',
+        verbose_name=_('owner'),
+        related_name='own_%(class)ss',
+    )
+    reviewer = models.ForeignKey(
+        'members.Member',
+        null=True,
+        blank=True,
+        verbose_name=_('reviewer'),
+        related_name='review_%(class)ss',
+    )
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
     slug = models.SlugField(_('slug'), max_length=100)
 
     pitch = models.TextField(
@@ -60,34 +81,13 @@ class Initiative(models.Model):
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
-    status = FSMField(
-        default=ReviewStatus.created,
-        choices=ReviewStatus.choices,
-        protected=True
-    )
-    owner = models.ForeignKey(
-        'members.Member',
-        verbose_name=_('owner'),
-        related_name='own_%(class)s',
-    )
-    reviewer = models.ForeignKey(
-        'members.Member',
-        null=True,
-        blank=True,
-        verbose_name=_('reviewer'),
-        related_name='review_%(class)s',
-    )
-
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
     @transition(
         field='status',
         source=ReviewStatus.created,
         target=ReviewStatus.submitted,
         custom={'button_name': _('submit')}
     )
-    def submit(self):
+    def submit(self, **kwargs):
         pass
 
     @transition(
@@ -96,7 +96,7 @@ class Initiative(models.Model):
         target=ReviewStatus.submitted,
         custom={'button_name': _('resubmit')}
     )
-    def resubmit(self):
+    def resubmit(self, **kwargs):
         pass
 
     @transition(
@@ -105,7 +105,7 @@ class Initiative(models.Model):
         target=ReviewStatus.needs_work,
         custom={'button_name': _('needs work')}
     )
-    def needs_work(self):
+    def needs_work(self, **kwargs):
         pass
 
     @transition(
@@ -115,7 +115,7 @@ class Initiative(models.Model):
         messages=[InitiativeApproveOwnerMessage],
         custom={'button_name': _('approve')}
     )
-    def approve(self):
+    def approve(self, **kwargs):
         pass
 
     @transition(
@@ -125,7 +125,7 @@ class Initiative(models.Model):
         messages=[InitiativeClosedOwnerMessage],
         custom={'button_name': _('reject')}
     )
-    def reject(self):
+    def reject(self, **kwargs):
         pass
 
     @transition(
@@ -134,7 +134,7 @@ class Initiative(models.Model):
         target=ReviewStatus.cancelled,
         custom={'button_name': _('cancel')}
     )
-    def cancel(self):
+    def cancel(self, **kwargs):
         pass
 
     @transition(
@@ -143,7 +143,7 @@ class Initiative(models.Model):
         target=ReviewStatus.submitted,
         custom={'button_name': _('re-open')}
     )
-    def reopen(self):
+    def reopen(self, **kwargs):
         pass
 
     class Meta:
@@ -161,6 +161,13 @@ class Initiative(models.Model):
             ('api_change_own_running_initiative', 'Can change own initiative through the API'),
             ('api_delete_own_initiative', 'Can delete own initiative through the API'),
         )
+
+    class JSONAPIMeta:
+        resource_name = 'initiatives'
+
+    @classmethod
+    def is_approved(cls, instance):
+        return instance.review_status == Initiative.ReviewStatus.approved
 
     def __unicode__(self):
         return self.title

@@ -110,7 +110,7 @@ class Donation(Contribution):
         target=Status.refunded,
         conditions=[funding_is_running]
     )
-    def refund(self):
+    def refund(self, **kwargs):
         pass
 
     @transition(
@@ -119,7 +119,7 @@ class Donation(Contribution):
         target=Status.failed,
         conditions=[funding_is_running]
     )
-    def fail(self):
+    def fail(self, **kwargs):
         pass
 
     @transition(
@@ -128,5 +128,5 @@ class Donation(Contribution):
         target=Status.success,
         conditions=[funding_is_running]
     )
-    def success(self):
+    def success(self, **kwargs):
         pass

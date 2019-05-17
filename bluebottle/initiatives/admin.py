@@ -5,10 +5,11 @@ from polymorphic.admin import PolymorphicInlineSupportMixin
 from bluebottle.activities.admin import ActivityAdminInline
 from bluebottle.initiatives.models import Initiative
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.admin import ReviewAdmin
+from bluebottle.utils.admin import FSMAdmin
 
 
-class InitiativeAdmin(PolymorphicInlineSupportMixin, ReviewAdmin):
+class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
+    fsm_field = 'status'
 
     raw_id_fields = ('owner', 'reviewer')
     list_display = ['title', 'created', 'status']

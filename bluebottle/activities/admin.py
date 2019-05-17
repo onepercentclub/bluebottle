@@ -10,7 +10,7 @@ from bluebottle.activities.models import Activity
 from bluebottle.events.models import Event
 from bluebottle.funding.models import Funding
 from bluebottle.jobs.models import Job
-from bluebottle.utils.admin import ReviewAdmin
+from bluebottle.utils.admin import FSMAdmin
 
 
 class ActivityChildAdmin(PolymorphicChildModelAdmin):
@@ -19,7 +19,8 @@ class ActivityChildAdmin(PolymorphicChildModelAdmin):
     readonly_fields = ['status']
 
 
-class ActivityAdmin(PolymorphicParentModelAdmin, ReviewAdmin):
+@admin.register(Activity)
+class ActivityAdmin(PolymorphicParentModelAdmin, FSMAdmin):
     base_model = Activity
     child_models = (Event, Funding, Job)
     list_filter = (PolymorphicChildModelFilter,)
@@ -28,9 +29,6 @@ class ActivityAdmin(PolymorphicParentModelAdmin, ReviewAdmin):
 
     def type(self, obj):
         return obj.get_real_instance_class().__name__
-
-
-admin.site.register(Activity, ActivityAdmin)
 
 
 class ActivityAdminInline(StackedPolymorphicInline):
@@ -67,7 +65,8 @@ class ActivityAdminInline(StackedPolymorphicInline):
     child_inlines = (
         EventInline,
         FundingInline,
-        JobInline
+        # FIXME: This throws an error. Dunno why...
+        # JobInline
     )
 
     def has_delete_permission(self, request, obj=None):

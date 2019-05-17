@@ -35,17 +35,6 @@ class Job(Activity):
             ('api_delete_own_job', 'Can delete own job through the API'),
         )
 
-    @property
-    def preview_data(self):
-        return {
-            'registration_deadline': self.registration_deadline,
-            'end': self.end,
-            'capacity': self.capacity,
-            'location': self.address,
-            'applicants': len(self.applicants),
-            'expertise': self.expertise,
-        }
-
     def check_capcity(self):
         if len(self.accepted_applicants) >= self.capacity:
             self.full()
@@ -57,7 +46,7 @@ class Job(Activity):
         source=Activity.Status.open,
         target=Activity.Status.running,
     )
-    def start(self):
+    def start(self, **kwargs):
         pass
 
     @transition(
@@ -65,7 +54,7 @@ class Job(Activity):
         source=Activity.Status.running,
         target=Activity.Status.done,
     )
-    def success(self):
+    def success(self, **kwargs):
         for member in self.accepted_applicants:
             member.success()
             member.save()
@@ -75,7 +64,7 @@ class Job(Activity):
         source=Activity.Status.running,
         target=Activity.Status.closed,
     )
-    def close(self):
+    def close(self, **kwargs):
         for member in self.accepted_applicants:
             member.fail()
             member.save()
@@ -85,7 +74,7 @@ class Job(Activity):
         source=[Activity.Status.closed, Activity.Status.done, Activity.Status.running],
         target=Activity.Status.open,
     )
-    def extend_deadline(self):
+    def extend_deadline(self, **kwargs):
         pass
 
     @transition(
@@ -93,7 +82,7 @@ class Job(Activity):
         source=[Activity.Status.closed, Activity.Status.done],
         target=Activity.Status.running,
     )
-    def extend(self):
+    def extend(self, **kwargs):
         pass
 
 

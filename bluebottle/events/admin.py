@@ -20,11 +20,9 @@ class ParticipantInline(admin.TabularInline):
     extra = 0
 
 
+@admin.register(Event)
 class EventAdmin(ActivityChildAdmin):
     form = EventAdminForm
     inlines = (ParticipantInline, )
 
     base_model = Event
-
-
-admin.site.register(Event, EventAdmin)

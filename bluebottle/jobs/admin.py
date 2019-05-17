@@ -17,6 +17,7 @@ class ApplicantInline(admin.TabularInline):
 
     raw_id_fields = ('user', )
     readonly_fields = ('time_spent', 'status', )
+    extra = 0
 
 
 class JobAdmin(ActivityChildAdmin):

@@ -71,7 +71,7 @@ class Event(Activity):
         source=Activity.Status.open,
         target=Activity.Status.full,
     )
-    def full(self):
+    def full(self, **kwargs):
         pass
 
     @transition(
@@ -79,7 +79,7 @@ class Event(Activity):
         source=Activity.Status.full,
         target=Activity.Status.open,
     )
-    def reopen(self):
+    def reopen(self, **kwargs):
         pass
 
     @transition(
@@ -87,7 +87,7 @@ class Event(Activity):
         source=[Activity.Status.full, Activity.Status.open],
         target=Activity.Status.running,
     )
-    def started(self):
+    def started(self, **kwargs):
         for member in self.accepted_members:
             member.attending()
             member.save()
@@ -97,7 +97,7 @@ class Event(Activity):
         source=Activity.Status.running,
         target=Activity.Status.done,
     )
-    def done(self):
+    def done(self, **kwargs):
         for member in self.attending_members:
             member.done()
             member.save()
@@ -107,7 +107,7 @@ class Event(Activity):
         source=Activity.Status.open,
         target=Activity.Status.closed,
     )
-    def closed(self):
+    def closed(self, **kwargs):
         pass
 
     @transition(
@@ -115,7 +115,7 @@ class Event(Activity):
         source=Activity.Status.closed,
         target=Activity.Status.open,
     )
-    def extend(self):
+    def extend(self, **kwargs):
         pass
 
 

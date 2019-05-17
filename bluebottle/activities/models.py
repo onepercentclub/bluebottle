@@ -68,6 +68,8 @@ class Contribution(PolymorphicModel):
         default=Status.new,
         protected=True
     )
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
     activity = models.ForeignKey(Activity, related_name='contributions')
     user = models.ForeignKey('members.Member', verbose_name=_('user'), null=True)

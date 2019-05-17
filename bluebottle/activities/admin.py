@@ -1,4 +1,7 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
+from django.utils.translation import ugettext_lazy as _
 from polymorphic.admin import (
     PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter,
     StackedPolymorphicInline)
@@ -32,22 +35,32 @@ admin.site.register(Activity, ActivityAdmin)
 
 class ActivityAdminInline(StackedPolymorphicInline):
     model = Activity
-    readonly_fields = ['title', 'created', 'updated', 'status']
+    readonly_fields = ['title', 'created', 'status']
     fields = readonly_fields
     extra = 0
 
-    class EventInline(StackedPolymorphicInline.Child):
-        readonly_fields = ['title', 'created', 'updated', 'status']
+    class ActivityLinkMixin(object):
+        def activity_link(self, obj):
+            url = reverse("admin:{}_{}_change".format(
+                obj._meta.app_label,
+                obj._meta.model_name),
+                args=(obj.id,)
+            )
+            return format_html("<a href='{}'>{}</a>", url, obj.title)
+        activity_link.short_description = _('Activity')
+
+    class EventInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
+        readonly_fields = ['activity_link', 'start', 'status']
         fields = readonly_fields
         model = Event
 
-    class FundingInline(StackedPolymorphicInline.Child):
-        readonly_fields = ['title', 'target', 'created', 'updated', 'status']
+    class FundingInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
+        readonly_fields = ['activity_link', 'target', 'deadline', 'status']
         fields = readonly_fields
         model = Funding
 
-    class JobInline(StackedPolymorphicInline.Child):
-        readonly_fields = ['title', 'created', 'updated', 'status']
+    class JobInline(StackedPolymorphicInline.Child, ActivityLinkMixin):
+        readonly_fields = ['activity_link', 'start', 'status']
         fields = readonly_fields
         model = Job
 

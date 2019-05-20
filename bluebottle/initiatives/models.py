@@ -19,8 +19,7 @@ class Initiative(models.Model):
         submitted = ChoiceItem('submitted', _('submitted'))
         needs_work = ChoiceItem('needs_work', _('needs work'))
         approved = ChoiceItem('approved', _('approved'))
-        cancelled = ChoiceItem('cancelled', _('cancelled'))
-        rejected = ChoiceItem('rejected', _('rejected'))
+        closed = ChoiceItem('closed', _('closed'))
 
     title = models.CharField(_('title'), max_length=255)
 
@@ -126,28 +125,18 @@ class Initiative(models.Model):
 
     @transition(
         field='status',
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.rejected,
-        messages=[InitiativeClosedOwnerMessage],
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
-        custom={'button_name': _('reject')}
-    )
-    def reject(self, **kwargs):
-        pass
-
-    @transition(
-        field='status',
         source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
-        target=ReviewStatus.cancelled,
+        target=ReviewStatus.closed,
         form='bluebottle.initiatives.forms.InitiativeSubmitForm',
-        custom={'button_name': _('cancel')}
+        messages=[InitiativeClosedOwnerMessage],
+        custom={'button_name': _('close')}
     )
-    def cancel(self, **kwargs):
+    def close(self, **kwargs):
         pass
 
     @transition(
         field='status',
-        source=[ReviewStatus.cancelled, ReviewStatus.approved, ReviewStatus.rejected],
+        source=[ReviewStatus.approved, ReviewStatus.closed],
         target=ReviewStatus.submitted,
         form='bluebottle.initiatives.forms.InitiativeSubmitForm',
         custom={'button_name': _('re-open')}

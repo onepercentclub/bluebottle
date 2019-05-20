@@ -520,6 +520,40 @@ class WallpostMailTests(UserTestsMixin, BluebottleTestCase):
         self.assertEqual(m.to, [self.user_a.email])
         self.assertEqual(m.activated_language, self.user_a.primary_language)
 
+    def test_new_wallpost_with_donation_by_b_on_project_by_a(self):
+        """
+        Project by A + Wallpost by B => Mail to (project owner) A
+        """
+        # Object by A
+        # |
+        # +-- Wallpost by B (+)
+
+        TextWallpostFactory.create(
+            content_object=self.project_1,
+            donation=DonationFactory.create(),
+            author=self.user_b
+        )
+
+        # Mailbox should NOT contain an email to project owner.
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_new_media_wallpost_by_b_on_project_by_a(self):
+        """
+        Project by A + Wallpost by B => Mail to (project owner) A
+        """
+        # Object by A
+        # |
+        # +-- Wallpost by B (+)
+
+        MediaWallpostFactory.create(content_object=self.project_1, author=self.user_b)
+
+        # Mailbox should contain an email to project owner.
+        self.assertEqual(len(mail.outbox), 1)
+        m = mail.outbox[0]
+
+        self.assertEqual(m.to, [self.user_a.email])
+        self.assertEqual(m.activated_language, self.user_a.primary_language)
+
     def test_delete_wallpost_by_b_on_project_by_a(self):
         """
         Project by A + Wallpost by B => Mail to (project owner) A

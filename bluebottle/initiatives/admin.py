@@ -21,7 +21,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     def get_fieldsets(self, request, obj=None):
         return (
             (_('Basic'), {'fields': ('title', 'slug', 'owner', 'image', 'video_url')}),
-            (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories')}),
+            (_('Details'), {'fields': ('pitch', 'story', 'theme', 'categories', 'place')}),
             (_('Review'), {'fields': ('reviewer', 'status', 'status_transition')}),
         )
 

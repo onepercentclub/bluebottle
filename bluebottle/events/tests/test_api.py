@@ -54,7 +54,7 @@ class EventTestCase(BluebottleTestCase):
 
     def test_update_event(self):
         event = EventFactory.create(owner=self.user, title='Pollute Katwijk Beach')
-        event_url = reverse('event-detail', args=(event.id,))
+        event_url = reverse('event-detail', args=(event.slug,))
         response = self.client.get(event_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'Pollute Katwijk Beach')
@@ -62,6 +62,7 @@ class EventTestCase(BluebottleTestCase):
         data = {
             'data': {
                 'type': 'events',
+                'id': event.id,
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
                     'start': str(now() + timedelta(days=21)),
@@ -80,7 +81,7 @@ class EventTestCase(BluebottleTestCase):
                 }
             }
         }
-        response = self.client.post(event_url, json.dumps(data), user=self.user)
+        response = self.client.put(event_url, json.dumps(data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'Beach clean-up Katwijk')
 
@@ -112,7 +113,7 @@ class EventTestCase(BluebottleTestCase):
 
     def test_update_event_not_owner(self):
         event = EventFactory.create(title='Pollute Katwijk Beach')
-        event_url = reverse('event-detail', args=(event.id,))
+        event_url = reverse('event-detail', args=(event.slug,))
         response = self.client.get(event_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['title'], 'Pollute Katwijk Beach')
@@ -120,6 +121,7 @@ class EventTestCase(BluebottleTestCase):
         data = {
             'data': {
                 'type': 'events',
+                'id': event.id,
                 'attributes': {
                     'title': 'Beach clean-up Katwijk',
                     'start': str(now() + timedelta(days=21)),
@@ -138,5 +140,5 @@ class EventTestCase(BluebottleTestCase):
                 }
             }
         }
-        response = self.client.post(event_url, json.dumps(data), user=self.user)
+        response = self.client.put(event_url, json.dumps(data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

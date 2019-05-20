@@ -51,12 +51,11 @@ class BasePermission(permissions.BasePermission):
     def has_permission(self, request, view):
         """ This action is called from the views which include this permission.
 
-        The call happens during view initalisation so it will be called with views returning
+        The call happens during view initialisation so it will be called with views returning
         a data set as well as a single object.
 
         Return `True` if permission is granted, `False` otherwise.
         """
-
         try:
             model_cls = self.get_view_model(view)
             return self.has_action_permission(

@@ -17,7 +17,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         super(TestInitiativeAdmin, self).setUp()
         self.site = AdminSite()
         self.initiative_admin = InitiativeAdmin(Initiative, self.site)
-        self.initiative = InitiativeFactory.create(review_status='created')
+        self.initiative = InitiativeFactory.create(status='created')
         self.initiative.submit()
         self.initiative.save()
 
@@ -35,7 +35,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.post(review_url, {'confirm': True, 'send_messages': True})
         self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'approved')
+        self.assertEqual(self.initiative.status, 'approved')
         # Should send out one mail
         self.assertEqual(len(mail.outbox), 1)
 
@@ -53,7 +53,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.post(review_url, {'confirm': True, 'send_messages': False})
         self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'approved')
+        self.assertEqual(self.initiative.status, 'approved')
         # No mail should be sent
         self.assertEqual(len(mail.outbox), 0)
 
@@ -75,7 +75,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         response = self.client.post(review_url, {'confirm': True})
         self.assertEqual(response.status_code, 302, 'Should redirect back to initiative change')
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'rejected')
+        self.assertEqual(self.initiative.status, 'rejected')
         messages = list(get_messages(response.wsgi_request))
         self.assertEqual(str(messages[0]), 'Transition not allowed: approve')
 
@@ -87,7 +87,7 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.url.startswith('/en/admin/login'))
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'submitted')
+        self.assertEqual(self.initiative.status, 'submitted')
 
     def test_review_initiative_no_permission(self):
         self.client.force_login(BlueBottleUserFactory.create(is_staff=True))
@@ -98,37 +98,39 @@ class TestInitiativeAdmin(BluebottleAdminTestCase):
         # Should redirect with message
         self.assertEqual(response.status_code, 302)
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'submitted')
+        self.assertEqual(self.initiative.status, 'submitted')
 
     def test_review_initiative_missing_field(self):
         self.client.force_login(self.superuser)
-        self.initiative = InitiativeFactory.create(review_status='created', pitch='')
+        self.initiative = InitiativeFactory.create(status='created', pitch='')
+        self.assertEqual(self.initiative.status, 'created')
 
         review_url = reverse('admin:initiatives_initiative_transition',
                              args=(self.initiative.id, 'submit'))
 
         response = self.client.post(review_url, {'confirm': True})
-        # Should redirect with message
+
+        # Should redirect with error message
         self.assertEqual(response.status_code, 302)
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'created')
-
+        self.assertEqual(self.initiative.status, 'created')
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue('This field is required' in messages[0].message)
         self.assertTrue('Pitch' in messages[0].message)
 
     def test_review_initiative_missing_theme(self):
         self.client.force_login(self.superuser)
-        self.initiative = InitiativeFactory.create(review_status='created', theme=None)
+        self.initiative = InitiativeFactory.create(status='created', theme=None)
 
         review_url = reverse('admin:initiatives_initiative_transition',
                              args=(self.initiative.id, 'submit'))
 
         response = self.client.post(review_url, {'confirm': True})
-        # Should redirect with message
+
+        # Should redirect with error message
         self.assertEqual(response.status_code, 302)
         self.initiative = Initiative.objects.get(pk=self.initiative.id)
-        self.assertEqual(self.initiative.review_status, 'created')
+        self.assertEqual(self.initiative.status, 'created')
 
         messages = list(get_messages(response.wsgi_request))
         self.assertTrue('This field is required' in messages[0].message)

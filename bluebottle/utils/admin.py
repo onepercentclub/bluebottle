@@ -298,6 +298,8 @@ def log_action(obj, user, change_message='Changed', action_flag=CHANGE):
 
 class FSMAdmin(admin.ModelAdmin):
 
+    fsm_field = 'status'
+
     form = FSMModelForm
 
     def get_transition(self, instance, name):

@@ -37,6 +37,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('bb_projects', '0007_translate_themes'),
+        ('clients', '0001_initial'),
     ]
 
     operations = [

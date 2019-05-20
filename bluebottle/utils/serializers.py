@@ -259,3 +259,23 @@ class FSMModelSerializer(JSONAPIModelSerializer):
             getattr(instance, transition.name)()
 
         return super(FSMModelSerializer, self).update(instance, validated_data)
+
+
+class FSMSerializer(serializers.ModelSerializer):
+    def update(self, instance, validated_data):
+        fsm_fields = dict(
+            (key, validated_data.pop(key)) for key, field in self.fields.items()
+            if isinstance(field, FSMField)
+        )
+        for key, value in fsm_fields.items():
+            transitions = getattr(
+                instance,
+                'get_available_{}_transitions'.format(key)
+            )()
+            transition = [
+                transition for transition in transitions if
+                transition.target == value
+            ][0]
+            getattr(instance, transition.name)()
+
+        return super(FSMSerializer, self).update(instance, validated_data)

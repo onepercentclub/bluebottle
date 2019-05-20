@@ -2,14 +2,14 @@ from django.db import models
 from django.db.models.deletion import SET_NULL
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
-
-from djchoices.choices import DjangoChoices, ChoiceItem
 from django_fsm import FSMField
-from bluebottle.notifications.decorators import transition
+from djchoices.choices import DjangoChoices, ChoiceItem
 
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import InitiativePlace
-from bluebottle.initiatives.messages import InitiativeApproveOwnerMessage, InitiativeClosedOwnerMessage
+from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage, \
+    InitiativeNeedsWorkOwnerMessage
+from bluebottle.notifications.decorators import transition
 from bluebottle.organizations.models import Organization, OrganizationContact
 
 
@@ -22,7 +22,9 @@ class Initiative(models.Model):
         cancelled = ChoiceItem('cancelled', _('cancelled'))
         rejected = ChoiceItem('rejected', _('rejected'))
 
-    review_status = FSMField(
+    title = models.CharField(_('title'), max_length=255)
+
+    status = FSMField(
         default=ReviewStatus.created,
         choices=ReviewStatus.choices,
         protected=True
@@ -43,7 +45,6 @@ class Initiative(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    title = models.CharField(_('title'), max_length=255)
     slug = models.SlugField(_('slug'), max_length=100)
 
     pitch = models.TextField(
@@ -81,6 +82,79 @@ class Initiative(models.Model):
     organization = models.ForeignKey(Organization, null=True, blank=True, on_delete=SET_NULL)
     organization_contact = models.ForeignKey(OrganizationContact, null=True, blank=True, on_delete=SET_NULL)
 
+    @transition(
+        field='status',
+        source=ReviewStatus.created,
+        target=ReviewStatus.submitted,
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        custom={'button_name': _('submit')}
+    )
+    def submit(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
+        source=ReviewStatus.needs_work,
+        target=ReviewStatus.submitted,
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        custom={'button_name': _('resubmit')}
+    )
+    def resubmit(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.needs_work,
+        messages=[InitiativeNeedsWorkOwnerMessage],
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        custom={'button_name': _('needs work')}
+    )
+    def needs_work(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.approved,
+        messages=[InitiativeApproveOwnerMessage],
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        custom={'button_name': _('approve')}
+    )
+    def approve(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
+        source=ReviewStatus.submitted,
+        target=ReviewStatus.rejected,
+        messages=[InitiativeClosedOwnerMessage],
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        custom={'button_name': _('reject')}
+    )
+    def reject(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
+        source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
+        target=ReviewStatus.cancelled,
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        custom={'button_name': _('cancel')}
+    )
+    def cancel(self, **kwargs):
+        pass
+
+    @transition(
+        field='status',
+        source=[ReviewStatus.cancelled, ReviewStatus.approved, ReviewStatus.rejected],
+        target=ReviewStatus.submitted,
+        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
+        custom={'button_name': _('re-open')}
+    )
+    def reopen(self, **kwargs):
+        pass
+
     class Meta:
         verbose_name = _("Initiative")
         verbose_name_plural = _("Initiatives")
@@ -99,76 +173,6 @@ class Initiative(models.Model):
 
     class JSONAPIMeta:
         resource_name = 'initiatives'
-
-    @transition(
-        field='review_status',
-        source=ReviewStatus.created,
-        target=ReviewStatus.submitted,
-        form='bluebottle.initiatives.forms.InitiativeSubmitForm',
-        custom={'button_name': _('submit')}
-    )
-    def submit(self, **kwargs):
-        pass
-
-    @transition(
-        field='review_status',
-        source=ReviewStatus.needs_work,
-        target=ReviewStatus.submitted,
-        custom={'button_name': _('resubmit')}
-    )
-    def resubmit(self, **kwargs):
-        pass
-
-    @transition(
-        field='review_status',
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.needs_work,
-        custom={'button_name': _('needs work')}
-    )
-    def needs_work(self, **kwargs):
-        pass
-
-    @transition(
-        field='review_status',
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.approved,
-        messages=[InitiativeApproveOwnerMessage],
-        custom={'button_name': _('approve')}
-    )
-    def approve(self, **kwargs):
-        pass
-
-    @transition(
-        field='review_status',
-        source=ReviewStatus.submitted,
-        target=ReviewStatus.rejected,
-        messages=[InitiativeClosedOwnerMessage],
-        custom={'button_name': _('reject')}
-    )
-    def reject(self, **kwargs):
-        pass
-
-    @transition(
-        field='review_status',
-        source=[ReviewStatus.approved, ReviewStatus.submitted, ReviewStatus.needs_work],
-        target=ReviewStatus.cancelled,
-        custom={'button_name': _('cancel')}
-    )
-    def cancel(self, **kwargs):
-        pass
-
-    @transition(
-        field='review_status',
-        source=[ReviewStatus.cancelled, ReviewStatus.approved, ReviewStatus.rejected],
-        target=ReviewStatus.submitted,
-        custom={'button_name': _('re-open')}
-    )
-    def reopen(sel, **kwargsf):
-        pass
-
-    @classmethod
-    def is_approved(cls, instance):
-        return instance.review_status == Initiative.ReviewStatus.approved
 
     def __unicode__(self):
         return self.title

@@ -57,20 +57,21 @@ class InitiativeListAPITestCase(InitiativeAPITestCase):
             user=self.owner
         )
         self.assertEqual(response.status_code, 201)
-        data = json.loads(response.content)
+        response_data = json.loads(response.content)
 
-        initiative = Initiative.objects.get(pk=data['data']['id'])
+        initiative = Initiative.objects.get(pk=response_data['data']['id'])
 
-        self.assertEqual(data['data']['attributes']['title'], initiative.title)
+        self.assertEqual(response_data['data']['attributes']['title'], 'Some title')
+        self.assertEqual(initiative.title, 'Some title')
         self.assertEqual(
-            data['data']['relationships']['owner']['data']['id'],
+            response_data['data']['relationships']['owner']['data']['id'],
             unicode(self.owner.pk)
         )
         self.assertEqual(
-            data['data']['relationships']['theme']['data']['id'],
+            response_data['data']['relationships']['theme']['data']['id'],
             unicode(initiative.theme.pk)
         )
-        self.assertEqual(len(data['included']), 2)
+        self.assertEqual(len(response_data['included']), 2)
 
     def test_create_anonymous(self):
         response = self.client.post(
@@ -203,7 +204,7 @@ class InitiativeDetailAPITestCase(InitiativeAPITestCase):
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(data['data']['attributes']['title'], self.initiative.title)
-        self.assertEqual(data['data']['meta']['review-status'], self.initiative.review_status)
+        self.assertEqual(data['data']['meta']['status'], self.initiative.status)
         self.assertEqual(data['data']['meta']['transitions'], [{'name': 'submit', 'target': 'submitted'}])
         self.assertEqual(data['data']['relationships']['theme']['data']['id'], unicode(self.initiative.theme.pk))
         self.assertEqual(data['data']['relationships']['owner']['data']['id'], unicode(self.initiative.owner.pk))
@@ -357,7 +358,7 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
         data = json.loads(response.content)
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
-        self.assertEqual(initiative.review_status, 'submitted')
+        self.assertEqual(initiative.status, 'submitted')
         self.assertTrue(data['data']['id'])
         self.assertTrue(data['data']['attributes']['transition'], 'submit')
 
@@ -390,4 +391,4 @@ class InitiativeReviewTransitionListAPITestCase(InitiativeAPITestCase):
         self.assertEqual(data['errors'][0], u'Transition is not available')
 
         initiative = Initiative.objects.get(pk=self.initiative.pk)
-        self.assertEqual(initiative.review_status, 'created')
+        self.assertEqual(initiative.status, 'created')

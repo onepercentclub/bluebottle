@@ -12,8 +12,8 @@ class InitiativeFactory(factory.DjangoModelFactory):
     class Meta(object):
         model = Initiative
 
-    review_status = Initiative.ReviewStatus.created
-    title = factory.Sequence(lambda n: 'Initiative {0}'.format(n))
+    status = Initiative.ReviewStatus.created
+    title = factory.Faker('sentence')
     story = factory.Faker('text')
     pitch = factory.Faker('text')
     owner = factory.SubFactory(BlueBottleUserFactory)

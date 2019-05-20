@@ -10,7 +10,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 )
 from bluebottle.utils.fields import SafeField
 from bluebottle.categories.models import Category
-from bluebottle.files.serializers import ImageField, ImageSerializer
+from bluebottle.files.serializers import ImageSerializer, ImageField
 from bluebottle.initiatives.models import Initiative
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import (
@@ -34,7 +34,6 @@ class ThemeSerializer(ModelSerializer):
 class CategorySerializer(ModelSerializer):
     image = OldImageSerializer(required=False)
     image_logo = OldImageSerializer(required=False)
-
     slug = serializers.CharField(read_only=True)
 
     class Meta:
@@ -81,7 +80,7 @@ class InitiativeSerializer(ModelSerializer):
     title = serializers.CharField(allow_blank=True, required=False)
     video_html = OEmbedField(source='video_url', maxwidth='560', maxheight='315')
 
-    transitions = AvailableTransitionsField(source='review_status')
+    transitions = AvailableTransitionsField(source='status')
 
     included_serializers = {
         'categories': 'bluebottle.initiatives.serializers.CategorySerializer',
@@ -97,7 +96,7 @@ class InitiativeSerializer(ModelSerializer):
 
     class Meta:
         model = Initiative
-        fsm_fields = ['review_status']
+        fsm_fields = ['status']
         fields = (
             'id', 'title', 'pitch', 'categories', 'owner',
             'reviewer', 'promoter', 'slug', 'has_organization', 'organization',
@@ -105,7 +104,7 @@ class InitiativeSerializer(ModelSerializer):
             'theme', 'place',
         )
 
-        meta_fields = ('permissions', 'transitions', 'review_status', 'created',)
+        meta_fields = ('permissions', 'transitions', 'status', 'created',)
 
     class JSONAPIMeta:
         included_resources = [
@@ -117,7 +116,7 @@ class InitiativeSerializer(ModelSerializer):
 
 class InitiativeReviewTransitionSerializer(TransitionSerializer):
     resource = ResourceRelatedField(queryset=Initiative.objects.all())
-    field = 'review_status'
+    field = 'status'
 
     class JSONAPIMeta:
         resource_name = 'initiative-transitions'

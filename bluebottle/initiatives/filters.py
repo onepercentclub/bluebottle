@@ -12,7 +12,7 @@ class InitiativeSearchFilter(ElasticSearchFilter):
 
     filters = ('owner.id', 'theme.id', 'place.country', 'categories.id', )
     search_fields = (
-        'review_status', 'title', 'story', 'pitch', 'place.locality', 'place.postal_code',
+        'status', 'title', 'story', 'pitch', 'place.locality', 'place.postal_code',
         'theme.name', 'owner.name', 'promoter.name',
     )
 

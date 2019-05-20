@@ -35,7 +35,7 @@ class PlaceSerializer(serializers.ModelSerializer):
         )
 
 
-class InititativeCountrySerializer(ModelSerializer):
+class InitiativeCountrySerializer(ModelSerializer):
     code = serializers.CharField(source='alpha2_code')
     oda = serializers.BooleanField(source='oda_recipient')
 
@@ -51,7 +51,7 @@ class InitiativePlaceSerializer(ModelSerializer):
     country = ResourceRelatedField(queryset=Country.objects.all())
 
     included_serializers = {
-        'country': 'bluebottle.geo.serializers.InititativeCountrySerializer',
+        'country': 'bluebottle.geo.serializers.InitiativeCountrySerializer',
     }
 
     class Meta:

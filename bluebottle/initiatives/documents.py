@@ -23,7 +23,7 @@ class InitiativeDocument(DocType):
     title = fields.TextField(fielddata=True)
     story = fields.TextField()
     pitch = fields.TextField()
-    review_status = fields.KeywordField()
+    status = fields.KeywordField()
     created = fields.DateField()
 
     owner = fields.NestedField(properties={

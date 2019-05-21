@@ -5,12 +5,15 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField
 from djchoices.choices import DjangoChoices, ChoiceItem
 
+from multiselectfield import MultiSelectField
+
 from bluebottle.files.fields import ImageField
 from bluebottle.geo.models import InitiativePlace
 from bluebottle.initiatives.messages import InitiativeClosedOwnerMessage, InitiativeApproveOwnerMessage, \
     InitiativeNeedsWorkOwnerMessage
 from bluebottle.notifications.decorators import transition
 from bluebottle.organizations.models import Organization, OrganizationContact
+from bluebottle.utils.models import BasePlatformSettings
 
 
 class Initiative(models.Model):
@@ -45,7 +48,7 @@ class Initiative(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
-    slug = models.SlugField(_('slug'), max_length=100)
+    slug = models.SlugField(_('slug'), default='new', max_length=100)
 
     pitch = models.TextField(
         _('pitch'), help_text=_('Pitch your smart idea in one sentence'),
@@ -178,7 +181,35 @@ class Initiative(models.Model):
         return self.title
 
     def save(self, **kwargs):
-        if not self.slug:
+        if self.slug == 'new' and self.title:
             self.slug = slugify(self.title)
 
         super(Initiative, self).save(**kwargs)
+
+
+class InitiativePlatformSettings(BasePlatformSettings):
+    ACTIVITY_TYPES = (
+        ('funding', _('Funding')),
+        ('event', _('Events')),
+        ('job', _('Jobs')),
+    )
+
+    SHARE_OPTIONS = (
+        ('twitter', _('Twitter')),
+        ('facebook', _('Facebook')),
+        ('facebookAtWork', _('Facebook at Work')),
+        ('linkedin', _('LinkedIn')),
+        ('whatsapp', _('Whatsapp')),
+        ('email', _('Email')),
+    )
+
+    activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)
+    require_organization = models.BooleanField(default=False)
+    share_options = MultiSelectField(
+        max_length=100, choices=SHARE_OPTIONS, blank=True
+    )
+    facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = _('initiative platform settings')
+        verbose_name = _('initiative platform settings')

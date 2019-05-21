@@ -2,10 +2,11 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from polymorphic.admin import PolymorphicInlineSupportMixin
 
+
 from bluebottle.activities.admin import ActivityAdminInline
-from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.notifications.admin import MessageAdminInline
-from bluebottle.utils.admin import FSMAdmin
+from bluebottle.utils.admin import FSMAdmin, BasePlatformSettingsAdmin
 
 
 class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
@@ -28,4 +29,11 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
     inlines = [ActivityAdminInline, MessageAdminInline]
 
 
+class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
+    fields = (
+        'activitiy_types', 'require_organization', 'share_options',
+    )
+
+
 admin.site.register(Initiative, InitiativeAdmin)
+admin.site.register(InitiativePlatformSettings, InitiativePlatformSettingsAdmin)

@@ -6,7 +6,7 @@ from django.utils.timezone import now
 from rest_framework import status
 
 from bluebottle.events.tests.factories import EventFactory
-from bluebottle.initiatives.tests.factories import InitiativeFactory
+from bluebottle.initiatives.tests.factories import InitiativeFactory, InitiativePlatformSettingsFactory
 from bluebottle.test.factory_models.accounts import BlueBottleUserFactory
 from bluebottle.test.utils import BluebottleTestCase, JSONAPITestClient
 
@@ -15,6 +15,10 @@ class EventTestCase(BluebottleTestCase):
 
     def setUp(self):
         super(EventTestCase, self).setUp()
+        self.settings = InitiativePlatformSettingsFactory.create(
+            activity_types=['event']
+        )
+
         self.client = JSONAPITestClient()
         self.url = reverse('event-list')
         self.user = BlueBottleUserFactory()
@@ -51,6 +55,34 @@ class EventTestCase(BluebottleTestCase):
         response = self.client.post(self.url, json.dumps(data), user=self.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(str(response.data['title'][0]), 'Activity with this title already exists.')
+
+    def test_create_event_disabled(self):
+        self.settings.activity_types = ('funding', )
+        self.settings.save()
+
+        data = {
+            'data': {
+                'type': 'events',
+                'attributes': {
+                    'title': 'Beach clean-up Katwijk',
+                    'start': str(now() + timedelta(days=21)),
+                    'end': str(now() + timedelta(days=21, hours=4)),
+                    'registration_deadline': str(now() + timedelta(days=14)),
+                    'capacity': 10,
+                    'address': 'Zuid-Boulevard Katwijk aan Zee',
+                    'description': 'We will clean up the beach south of Katwijk'
+                },
+                'relationships': {
+                    'initiative': {
+                        'data': {
+                            'type': 'initiatives', 'id': self.initiative.id
+                        },
+                    },
+                }
+            }
+        }
+        response = self.client.post(self.url, json.dumps(data), user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_event(self):
         event = EventFactory.create(owner=self.user, title='Pollute Katwijk Beach')

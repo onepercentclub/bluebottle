@@ -11,7 +11,7 @@ from bluebottle.bluebottle_drf2.serializers import (
 from bluebottle.utils.fields import SafeField
 from bluebottle.categories.models import Category
 from bluebottle.files.serializers import ImageSerializer, ImageField
-from bluebottle.initiatives.models import Initiative
+from bluebottle.initiatives.models import Initiative, InitiativePlatformSettings
 from bluebottle.members.models import Member
 from bluebottle.transitions.serializers import (
     AvailableTransitionsField, TransitionSerializer
@@ -120,3 +120,13 @@ class InitiativeReviewTransitionSerializer(TransitionSerializer):
 
     class JSONAPIMeta:
         resource_name = 'initiative-transitions'
+
+
+class InitiativePlatformSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InitiativePlatformSettings
+
+        fields = (
+            'activity_types',
+            'require_organization',
+        )

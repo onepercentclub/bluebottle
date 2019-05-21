@@ -194,21 +194,8 @@ class InitiativePlatformSettings(BasePlatformSettings):
         ('job', _('Jobs')),
     )
 
-    SHARE_OPTIONS = (
-        ('twitter', _('Twitter')),
-        ('facebook', _('Facebook')),
-        ('facebookAtWork', _('Facebook at Work')),
-        ('linkedin', _('LinkedIn')),
-        ('whatsapp', _('Whatsapp')),
-        ('email', _('Email')),
-    )
-
     activity_types = MultiSelectField(max_length=100, choices=ACTIVITY_TYPES)
     require_organization = models.BooleanField(default=False)
-    share_options = MultiSelectField(
-        max_length=100, choices=SHARE_OPTIONS, blank=True
-    )
-    facebook_at_work_url = models.URLField(max_length=100, null=True, blank=True)
 
     class Meta:
         verbose_name_plural = _('initiative platform settings')

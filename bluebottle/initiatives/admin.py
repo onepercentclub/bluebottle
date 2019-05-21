@@ -30,9 +30,7 @@ class InitiativeAdmin(PolymorphicInlineSupportMixin, FSMAdmin):
 
 
 class InitiativePlatformSettingsAdmin(BasePlatformSettingsAdmin):
-    fields = (
-        'activitiy_types', 'require_organization', 'share_options',
-    )
+    pass
 
 
 admin.site.register(Initiative, InitiativeAdmin)

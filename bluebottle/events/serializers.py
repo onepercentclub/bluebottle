@@ -20,6 +20,7 @@ class EventSerializer(BaseActivitySerializer):
     class JSONAPIMeta:
         included_resources = [
             'owner',
+            'location',
             'initiative'
         ]
         resource_name = 'events'

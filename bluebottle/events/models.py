@@ -8,15 +8,16 @@ from bluebottle.notifications.decorators import transition
 
 
 class Event(Activity):
-    start = models.DateTimeField(_('start'))
-    end = models.DateTimeField(_('end'))
-    registration_deadline = models.DateTimeField(_('registration deadline'))
     capacity = models.PositiveIntegerField(null=True, blank=True)
     automatically_accept = models.BooleanField(default=True)
 
     location = models.ForeignKey(ActivityPlace, verbose_name=_('location'),
                                  null=True, blank=True, on_delete=models.SET_NULL)
     location_hint = models.TextField(_('location hint'), null=True, blank=True)
+
+    start = models.DateTimeField(_('start'))
+    end = models.DateTimeField(_('end'))
+    registration_deadline = models.DateTimeField(_('registration deadline'))
 
     class Meta:
         verbose_name = _("Event")
@@ -84,7 +85,7 @@ class Event(Activity):
         source=[Activity.Status.full, Activity.Status.open],
         target=Activity.Status.running,
     )
-    def start(self, **kwargs):
+    def do_start(self, **kwargs):
         for member in self.accepted_members:
             member.attending()
             member.save()

@@ -1,17 +1,16 @@
 from bluebottle.activities.utils import BaseContributionSerializer, BaseActivitySerializer
-from bluebottle.events.models import Event, Participant
+from bluebottle.jobs.models import Job, Applicant
 
 
 class JobSerializer(BaseActivitySerializer):
     class Meta:
-        model = Event
+        model = Job
         fields = BaseActivitySerializer.Meta.fields + (
             'start', 'end', 'registration_deadline', 'capacity',
-            'address'
         )
 
 
 class JobParticipantSerializer(BaseContributionSerializer):
     class Meta:
-        model = Participant
+        model = Applicant
         fields = BaseContributionSerializer.Meta.fields + ('time_spent', )

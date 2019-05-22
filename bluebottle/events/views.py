@@ -28,7 +28,7 @@ class EventDetail(JsonApiViewMixin, RetrieveUpdateAPIView):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
 
-    lookup_field = 'slug'
+    lookup_field = 'pk'
 
     permission_classes = (ActivityPermission,)
 

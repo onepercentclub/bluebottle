@@ -173,3 +173,6 @@ class ActivityPlace(models.Model):
     formatted_address = models.CharField(_('Address'), max_length=255, blank=True, null=True)
 
     position = PointField()
+
+    class JSONAPIMeta:
+        resource_name = 'locations'

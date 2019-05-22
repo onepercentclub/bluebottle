@@ -42,6 +42,8 @@ class PointField(GeopositionField):
         return super(GeopositionField, self).formfield(**defaults)
 
     def get_prep_value(self, value):
+        if not value:
+            return None
         return "{},{}".format(value.coords[1], value.coords[0])
 
     def to_python(self, value):
